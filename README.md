@@ -1,6 +1,5 @@
 # RoleFerry — Recruiting Mode Workflow  
 
-
 <p align="center">
   <img src="roleferry1.png" alt="RF Logo Concept 1" width="45%" />
   <img src="roleferry2.png" alt="RF Logo Concept 2" width="45%" />
@@ -136,7 +135,7 @@ Carry the right candidate across to the right hiring team: **from role → short
 
 ---
 
-### Agents (where each step lives)
+### Agents 
 
 * **IJP Cartographer** → Step 1
 * **JD Prospector** → Step 2
@@ -151,7 +150,7 @@ Carry the right candidate across to the right hiring team: **from role → short
 
 ---
 
-## Data Model (delta only)
+## Data Model 
 
 ```sql
 -- Contacts
@@ -204,14 +203,14 @@ sendable = [c for c in contacts if c.verification_status in ('valid','accept_all
 
 ## Outreach Snippets (verification-aware)
 
-* **Email (sendable):**
+* **Email:**
   “Quick intro on {{RoleTitle}} at {{Company}} (JD: {{JD\_Link}}). I mapped outcomes to your goals here: {{OnePager}}. Please find some availability in my calendar: {{CalendlyURL}}.”
 * **LinkedIn (fallback when invalid):**
   “Noticed {{TheirRecentThing}}. I’ve worked on {{YourEdge}}—happy to share a 1-pager if useful. Open to a quick intro this week?”
 
 ---
 
-## Acceptance Criteria (short)
+## Acceptance Criteria 
 
 * Contacts show verification badges and can be filtered by sendability.
 * Instantly export includes `verified_status` + `verification_score`.
