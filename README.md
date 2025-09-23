@@ -1,4 +1,4 @@
-p align="center">
+<p align="center">
   <img src="wordmark.png" alt="RoleFerryWordmark" width="90%" />
 </p>
 
