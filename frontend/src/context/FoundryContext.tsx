@@ -8,6 +8,8 @@ export type FoundryState = {
   matches?: any[];
   contacts?: any[];
   sendableOnly?: boolean;
+  seqSubject?: string;
+  seqMessage?: string;
 };
 
 const FoundryCtx = createContext<{

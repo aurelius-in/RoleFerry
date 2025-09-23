@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { useFoundry } from "@/context/FoundryContext";
 import VerificationBadge from "@/components/VerificationBadge";
 import { useState } from "react";
+import { downloadText } from "@/lib/download";
 
 export default function ContactsPage() {
   const { state, setState } = useFoundry();
@@ -34,6 +35,16 @@ export default function ContactsPage() {
         <label className="ml-auto inline-flex items-center gap-2 text-sm">
           <input type="checkbox" checked={!!state.sendableOnly} onChange={toggleSendable} /> Sendable only
         </label>
+        <button
+          onClick={() => {
+            const header = ["name","title","email","verification_status","verification_score"];
+            const rows = list.map((c) => header.map((h) => String((c as any)[h] ?? "")).join(","));
+            downloadText("contacts.csv", [header.join(","), ...rows].join("\n"));
+          }}
+          className="px-3 py-2 rounded bg-white/10 border border-white/10 text-sm"
+        >
+          Export CSV
+        </button>
       </div>
       <div className="rounded-lg border border-white/10 overflow-hidden">
         <table className="w-full text-sm">
@@ -42,6 +53,7 @@ export default function ContactsPage() {
               <th className="text-left p-2">Name</th>
               <th className="text-left p-2">Title</th>
               <th className="text-left p-2">Email</th>
+              <th className="text-left p-2">LinkedIn</th>
               <th className="text-left p-2">Verification</th>
               <th className="text-left p-2">Sendable</th>
             </tr>
@@ -51,7 +63,10 @@ export default function ContactsPage() {
               <tr key={c.id} className="odd:bg-white/0 even:bg-white/[.03]">
                 <td className="p-2">{c.name}</td>
                 <td className="p-2">{c.title}</td>
-                <td className="p-2">{c.email}</td>
+                <td className="p-2">
+                  {c.email} <button onClick={() => navigator.clipboard.writeText(c.email)} className="ml-2 text-xs underline">Copy</button>
+                </td>
+                <td className="p-2">{c.linkedin ? <a className="underline" href={c.linkedin} target="_blank">Profile</a> : ""}</td>
                 <td className="p-2"><VerificationBadge status={c.verification_status} score={c.verification_score} /></td>
                 <td className="p-2">
                   {c.verification_status === "valid" || (c.verification_status === "accept_all" && (c.verification_score || 0) >= 0.8) ? "✅" : "⚠️"}

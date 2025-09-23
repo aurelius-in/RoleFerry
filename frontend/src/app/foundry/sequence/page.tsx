@@ -32,6 +32,15 @@ export default function SequencePage() {
     }
   };
 
+  const pushToInstantly = async () => {
+    try {
+      await api("/sequence/push", "POST", { list_name: "RoleFerry Demo", contacts: rows });
+      alert("Pushed to Instantly (demo)");
+    } catch (e: any) {
+      alert(`Push failed: ${e?.message || e}`);
+    }
+  };
+
   const loadFromContacts = () => {
     const contacts = (state.contacts || []).filter(
       (c) => c.verification_status === "valid" || (c.verification_status === "accept_all" && (c.verification_score || 0) >= 0.8)
@@ -53,12 +62,19 @@ export default function SequencePage() {
     setRows(mapped);
   };
 
+  const applySeqFields = () => {
+    if (!state.seqSubject && !state.seqMessage) return;
+    setRows((prev) => prev.map((r) => ({ ...r, subject: state.seqSubject || r.subject, message: state.seqMessage || r.message })));
+  };
+
   return (
     <main className="max-w-5xl mx-auto p-6 space-y-4">
       <h1 className="text-2xl font-semibold">Sequence Export</h1>
       <div className="flex items-center gap-3">
         <button onClick={exportCsv} className="px-4 py-2 rounded brand-gradient text-black font-medium">Download Instantly CSV</button>
+        <button onClick={pushToInstantly} className="px-3 py-2 rounded bg-white/10 border border-white/10">Push to Instantly</button>
         <button onClick={loadFromContacts} className="px-3 py-2 rounded bg-white/10 border border-white/10">Load from contacts</button>
+        <button onClick={applySeqFields} className="px-3 py-2 rounded bg-white/10 border border-white/10">Apply subject/body</button>
         <span className="text-sm opacity-80">Rows {rows.length} · File instantly.csv</span>
       </div>
       <div className="rounded-lg border border-white/10 overflow-auto">

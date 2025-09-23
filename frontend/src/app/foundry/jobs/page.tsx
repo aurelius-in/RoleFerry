@@ -29,6 +29,9 @@ export default function JobsPage() {
   return (
     <main className="max-w-4xl mx-auto p-6 space-y-4">
       <h1 className="text-2xl font-semibold">Jobs</h1>
+      {Array.isArray((state as any)?.jobs) && (state as any).jobs[0]?.job_id ? (
+        <div className="rounded-md p-2 bg-white/5 border border-white/10 text-sm">Saved job_id: {(state as any).jobs[0].job_id}</div>
+      ) : null}
       <div className="grid grid-cols-1 gap-3">
         <label className="space-y-1">
           <div className="text-sm opacity-80">Search query</div>

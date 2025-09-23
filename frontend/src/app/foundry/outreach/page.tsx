@@ -1,12 +1,15 @@
 "use client";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { useFoundry } from "@/context/FoundryContext";
 
 export default function OutreachPage() {
+  const { setState } = useFoundry();
   const [mode, setMode] = useState("email");
   const [length, setLength] = useState("short");
   const [vars, setVars] = useState({ FirstName: "Alex", Company: "Acme", RoleTitle: "Director of Product", CalendlyURL: "https://calendly.com/you/15" });
   const [variants, setVariants] = useState<any[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
 
   const generate = async () => {
     const res = await api<{ variants: any[] }>("/outreach/generate", "POST", { mode, length, variables: vars });
@@ -31,7 +34,7 @@ export default function OutreachPage() {
       </div>
       <div className="rounded-lg border border-white/10 divide-y divide-white/10">
         {variants.map((v, i) => (
-          <div key={i} className="p-3 space-y-2">
+          <div key={i} className={`p-3 space-y-2 ${selected === i ? 'bg-white/[.08]' : ''}`} onClick={() => setSelected(i)}>
             <div className="text-sm opacity-80">Variant {v.variant}</div>
             {v.subject ? <div className="font-medium">{v.subject}</div> : null}
             <pre className="whitespace-pre-wrap text-sm opacity-90">{v.body}</pre>
@@ -43,6 +46,23 @@ export default function OutreachPage() {
             </button>
           </div>
         ))}
+      </div>
+      {selected !== null ? (
+        <div className="text-sm opacity-80">Calendly line: {vars.CalendlyURL}</div>
+      ) : null}
+      <div>
+        <button
+          disabled={selected === null}
+          onClick={() => {
+            if (selected === null) return;
+            const v = variants[selected];
+            setState({ seqSubject: v.subject || "", seqMessage: v.body || "" });
+            alert("Saved to Sequence fields");
+          }}
+          className="px-4 py-2 rounded bg-white/10 border border-white/10 disabled:opacity-50"
+        >
+          Use selected in Sequence
+        </button>
       </div>
     </main>
   );

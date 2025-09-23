@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 
@@ -27,6 +27,11 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    @app.middleware("http")
+    async def simple_logging(request: Request, call_next):
+        response = await call_next(request)
+        return response
+
     # Core/health
     app.include_router(health.router)
 
@@ -43,10 +48,11 @@ def create_app() -> FastAPI:
     from .routers import settings as settings_router, replies
     app.include_router(settings_router.router)
     app.include_router(replies.router)
-    from .routers import webhooks, onepager, warmangles
+    from .routers import webhooks, onepager, warmangles, audit
     app.include_router(webhooks.router)
     app.include_router(onepager.router)
     app.include_router(warmangles.router)
+    app.include_router(audit.router)
 
     return app
 
