@@ -34,7 +34,7 @@ export default function HealthIndicator() {
   const up = health?.status === "ok";
   const secondsAgo = health?.ts ? Math.max(0, Math.round((Date.now() - new Date(health.ts).getTime()) / 1000)) : null;
   return (
-    <div className="flex items-center gap-2 text-xs opacity-80">
+    <a href="/api/health" target="_blank" className="flex items-center gap-2 text-xs opacity-80">
       <span
         className={`inline-block w-2 h-2 rounded-full ${
           up ? "bg-green-400" : "bg-red-400"
@@ -46,7 +46,7 @@ export default function HealthIndicator() {
       {health?.version ? <span>· v{health.version}</span> : null}
       {secondsAgo !== null ? <span>· {secondsAgo}s</span> : null}
       {error ? <span className="text-red-300">· error</span> : null}
-    </div>
+    </a>
   );
 }
 
