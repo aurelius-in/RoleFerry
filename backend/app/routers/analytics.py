@@ -14,11 +14,25 @@ def analytics_campaign():
     reply_count = sum(1 for m in msgs if m.get("replied")) if msgs else 14
     positive = sum(1 for m in msgs if m.get("label") == "positive") if msgs else 8
     meetings = sum(1 for m in msgs if m.get("label") == "meeting") if msgs else 3
+    # breakdown by variant
+    breakdown = {}
+    for m in msgs:
+        v = m.get("variant") or ""
+        if v not in breakdown:
+            breakdown[v] = {"delivered": 0, "open": 0, "reply": 0, "positive": 0}
+        breakdown[v]["delivered"] += 1
+        if m.get("opened"):
+            breakdown[v]["open"] += 1
+        if m.get("replied"):
+            breakdown[v]["reply"] += 1
+        if m.get("label") == "positive":
+            breakdown[v]["positive"] += 1
     return {
         "delivered": delivered,
         "open": open_count,
         "reply": reply_count,
         "positive": positive,
         "meetings": meetings,
+        "variants": breakdown,
     }
 

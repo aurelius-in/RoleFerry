@@ -63,6 +63,7 @@ async def push_to_instantly(payload: SequencePushRequest):
                 "opened": False,
                 "replied": False,
                 "label": None,
+                "variant": c.get("variant") or "",
             })
         return result
     store.add_audit(None, "instantly_push_csv", {"list_name": list_name, "count": len(payload.contacts)})

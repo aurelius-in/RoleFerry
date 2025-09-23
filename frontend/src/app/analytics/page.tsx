@@ -1,7 +1,7 @@
 import { api } from "@/lib/api";
 
 export default async function Analytics() {
-  const data = await api<{ delivered: number; open: number; reply: number; positive: number; meetings: number }>(
+  const data = await api<{ delivered: number; open: number; reply: number; positive: number; meetings: number; variants?: Record<string, { delivered: number; open: number; reply: number; positive: number }> }>(
     "/analytics/campaign",
     "GET"
   );
@@ -19,6 +19,35 @@ export default async function Analytics() {
         <Stat label="Positive" value={data.positive} suffix={`(${posRate}%)`} />
         <Stat label="Meetings" value={data.meetings} />
       </div>
+      {data.variants && Object.keys(data.variants).length ? (
+        <div>
+          <h2 className="text-xl font-semibold mt-4">Variants</h2>
+          <div className="rounded-lg border border-white/10 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-white/5">
+                <tr>
+                  <th className="text-left p-2">Variant</th>
+                  <th className="text-left p-2">Delivered</th>
+                  <th className="text-left p-2">Open</th>
+                  <th className="text-left p-2">Reply</th>
+                  <th className="text-left p-2">Positive</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(data.variants).map(([v, row]) => (
+                  <tr key={v} className="odd:bg-white/0 even:bg-white/[.03]">
+                    <td className="p-2">{v || "(none)"}</td>
+                    <td className="p-2">{row.delivered}</td>
+                    <td className="p-2">{row.open}</td>
+                    <td className="p-2">{row.reply}</td>
+                    <td className="p-2">{row.positive}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
