@@ -33,6 +33,19 @@ def score_match(candidate: Dict[str, Any], job: Dict[str, Any]) -> Dict[str, Any
     if score == 0:
         blockers.append("Insufficient overlap")
 
+    # Level gap blocker (very basic heuristic)
+    cand_level = (candidate.get("seniority") or "").lower()
+    if "director" in jt and cand_level and cand_level not in ("director", "head", "vp", "principal"):
+        blockers.append("Level gap vs Director role")
+
+    # Evidence from resume metrics/positions if provided
+    metrics = []
+    sections = candidate.get("metrics_json") or {}
+    if isinstance(sections, dict):
+        metrics = sections.get("KeyMetrics") or sections.get("NotableAccomplishments") or []
+    for m in metrics[:3]:
+        evidence.append(m)
+
     return {
         "score": min(100, score),
         "reasons": reasons,

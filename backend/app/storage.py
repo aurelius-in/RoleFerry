@@ -7,6 +7,7 @@ class InMemoryStore:
         self.jobs: Dict[str, List[Dict[str, Any]]] = {}
         self.audit: List[Dict[str, Any]] = []
         self.messages: List[Dict[str, Any]] = []
+        self.last_candidate: Dict[str, Any] | None = None
 
     def save_ijp(self, ijp_id: str, filters: Dict[str, Any]) -> None:
         self.ijps[ijp_id] = filters
@@ -28,6 +29,12 @@ class InMemoryStore:
 
     def clear_messages(self) -> None:
         self.messages = []
+
+    def save_candidate(self, candidate: Dict[str, Any]) -> None:
+        self.last_candidate = candidate
+
+    def get_candidate(self) -> Dict[str, Any] | None:
+        return self.last_candidate
 
 
 store = InMemoryStore()
