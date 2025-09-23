@@ -25,6 +25,8 @@ export default function Navbar() {
         <nav className="hidden sm:flex items-center gap-3 text-sm opacity-90">
           <Link href="/foundry" className="hover:underline">Foundry</Link>
           <Link href="/analytics" className="hover:underline">Analytics</Link>
+          <Link href="/crm" className="hover:underline">CRM</Link>
+          <Link href="/tools" className="hover:underline">Tools</Link>
           <Link href="/settings" className="hover:underline">Settings</Link>
         </nav>
       </div>
