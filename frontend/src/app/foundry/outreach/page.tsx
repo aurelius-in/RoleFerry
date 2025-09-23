@@ -33,6 +33,15 @@ export default function OutreachPage() {
         </select>
         <button onClick={generate} className="px-4 py-2 rounded brand-gradient text-black font-medium">Generate</button>
       </div>
+      <div className="rounded-lg border border-white/10 p-3 space-y-2">
+        <div className="text-sm opacity-80">Variables</div>
+        {Object.entries(vars).map(([k, v]) => (
+          <div key={k} className="flex items-center gap-2">
+            <span className="w-40 text-xs opacity-80">{k}</span>
+            <input className="flex-1 px-3 py-2 rounded bg-white/5 border border-white/10" value={String(v)} onChange={(e) => setVars({ ...vars, [k]: e.target.value })} />
+          </div>
+        ))}
+      </div>
       <div className="rounded-lg border border-white/10 divide-y divide-white/10">
         {variants.map((v, i) => (
           <div key={i} className={`p-3 space-y-2 ${selected === i ? 'bg-white/[.08]' : ''}`} onClick={() => setSelected(i)}>
