@@ -13,6 +13,7 @@ export default async function Settings() {
         <div>MV Threshold: {s.mv_threshold}</div>
         <div>CORS Origins: {Array.isArray(s.cors_origins) ? s.cors_origins.join(", ") : String(s.cors_origins)}</div>
       </div>
+      <div className="text-sm"><a className="underline" href="/replies">Go to Replies tester</a></div>
     </main>
   );
 }

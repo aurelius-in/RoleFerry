@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { useFoundry } from "@/context/FoundryContext";
 import VerificationBadge from "@/components/VerificationBadge";
 import { useState } from "react";
+import { downloadText } from "@/lib/download";
 
 export default function ContactsPage() {
   const { state, setState } = useFoundry();
@@ -34,6 +35,16 @@ export default function ContactsPage() {
         <label className="ml-auto inline-flex items-center gap-2 text-sm">
           <input type="checkbox" checked={!!state.sendableOnly} onChange={toggleSendable} /> Sendable only
         </label>
+        <button
+          onClick={() => {
+            const header = ["name","title","email","verification_status","verification_score"];
+            const rows = list.map((c) => header.map((h) => String((c as any)[h] ?? "")).join(","));
+            downloadText("contacts.csv", [header.join(","), ...rows].join("\n"));
+          }}
+          className="px-3 py-2 rounded bg-white/10 border border-white/10 text-sm"
+        >
+          Export CSV
+        </button>
       </div>
       <div className="rounded-lg border border-white/10 overflow-hidden">
         <table className="w-full text-sm">
