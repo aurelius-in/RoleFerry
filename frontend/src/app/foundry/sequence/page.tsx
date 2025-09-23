@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useFoundry } from "@/context/FoundryContext";
 import { downloadText } from "@/lib/download";
@@ -22,6 +22,18 @@ export default function SequencePage() {
       message: "Hi Alex...",
     },
   ]);
+  const [apiEnabled, setApiEnabled] = useState<boolean>(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/settings", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((s) => {
+        if (!cancelled) setApiEnabled(!!s.instantly_enabled);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   const exportCsv = async () => {
     try {
@@ -43,8 +55,12 @@ export default function SequencePage() {
 
   const pushToInstantly = async () => {
     try {
-      await api("/sequence/push", "POST", { list_name: "RoleFerry Demo", contacts: rows });
-      alert("Pushed to Instantly (demo)");
+      const res = await api<any>("/sequence/push", "POST", { list_name: "RoleFerry Demo", contacts: rows });
+      if (res?.status === "fallback_csv") {
+        alert("CSV fallback used (no API key)");
+      } else {
+        alert(`Pushed via API: ${res?.status || "ok"}${res?.count ? ` · ${res.count} contacts` : ""}`);
+      }
     } catch (e: any) {
       alert(`Push failed: ${e?.message || e}`);
     }
@@ -80,7 +96,7 @@ export default function SequencePage() {
   return (
     <main className="max-w-5xl mx-auto p-6 space-y-4">
       <h1 className="text-2xl font-semibold">Sequence Export</h1>
-      <div className="text-sm opacity-80">Push mode: {process.env.NEXT_PUBLIC_API_BASE ? "API available" : "CSV fallback"}</div>
+      <div className="text-sm opacity-80">Push mode: {apiEnabled ? "API available" : "CSV fallback"}</div>
       <div className="flex items-center gap-3">
         <button onClick={exportCsv} className="px-4 py-2 rounded brand-gradient text-black font-medium">Download Instantly CSV</button>
         <button onClick={pushToInstantly} className="px-3 py-2 rounded bg-white/10 border border-white/10">Push to Instantly</button>
