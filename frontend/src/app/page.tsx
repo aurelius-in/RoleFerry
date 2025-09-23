@@ -28,9 +28,9 @@ export default function Home() {
         <p className="text-base sm:text-lg opacity-90">
           Relationship-first outreach for prospecting and hiring.
         </p>
-        <div className="inline-flex rounded-full px-4 py-2 text-black font-medium brand-gradient">
+        <a href="/foundry" className="inline-flex rounded-full px-4 py-2 text-black font-medium brand-gradient">
           Get started in the Foundry
-        </div>
+        </a>
       </main>
     </div>
   );
