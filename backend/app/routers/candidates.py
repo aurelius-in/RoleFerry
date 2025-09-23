@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List, Optional
+from ..services_resume import parse_resume
 
 
 class CandidateParseRequest(BaseModel):
@@ -25,15 +26,15 @@ router = APIRouter()
 
 @router.post("/parse")
 def parse_candidate(payload: CandidateParseRequest):
-    sections = parse_resume_sections(payload.resume_text)
+    sections = parse_resume(payload.resume_text)
     return {
         "candidate": {
             "id": "cand_demo_1",
             "name": "Demo Candidate",
             "email": None,
             "linkedin": None,
-            "seniority": "Senior",
-            "domains": ["Product"],
+            "seniority": sections.get("Seniority", "Senior"),
+            "domains": sections.get("Domains", ["product"]),
             "resume_text": payload.resume_text[:2000],
             "metrics_json": sections,
         },
