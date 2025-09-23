@@ -59,6 +59,7 @@ export default function ContactsPage() {
               <th className="text-left p-2">City</th>
               <th className="text-left p-2">Verification</th>
               <th className="text-left p-2">Sendable</th>
+              <th className="text-left p-2">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -75,6 +76,18 @@ export default function ContactsPage() {
                 <td className="p-2"><VerificationBadge status={c.verification_status} score={c.verification_score} /></td>
                 <td className="p-2">
                   {c.verification_status === "valid" || (c.verification_status === "accept_all" && (c.verification_score || 0) >= 0.8) ? "✅" : "⚠️"}
+                </td>
+                <td className="p-2">
+                  <button
+                    className="px-2 py-1 rounded bg-white/10 border border-white/10 text-xs"
+                    onClick={async () => {
+                      const id = c.email || c.id;
+                      await fetch("/api/crm/add", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, name: c.name }) });
+                      alert("Added to CRM → People");
+                    }}
+                  >
+                    Add to CRM
+                  </button>
                 </td>
               </tr>
             ))}
