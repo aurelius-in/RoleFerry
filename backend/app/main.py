@@ -40,6 +40,9 @@ def create_app() -> FastAPI:
     app.include_router(outreach.router, prefix="/outreach", tags=["outreach"]) 
     app.include_router(sequence.router, prefix="/sequence", tags=["sequence"]) 
     app.include_router(analytics.router, prefix="/analytics", tags=["analytics"]) 
+    from .routers import settings as settings_router, replies
+    app.include_router(settings_router.router)
+    app.include_router(replies.router)
 
     return app
 

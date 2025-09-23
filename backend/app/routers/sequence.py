@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 import csv
@@ -37,7 +37,10 @@ def export_csv(payload: SequenceExportRequest):
     buffer = io.StringIO()
     writer = csv.DictWriter(buffer, fieldnames=fieldnames)
     writer.writeheader()
-    for row in payload.contacts:
+    for idx, row in enumerate(payload.contacts):
+        missing = [k for k in fieldnames if k not in row]
+        if missing:
+            raise HTTPException(status_code=400, detail={"row": idx, "missing": missing})
         writer.writerow({k: row.get(k, "") for k in fieldnames})
     csv_content = buffer.getvalue()
     return {"filename": "instantly.csv", "content": csv_content}

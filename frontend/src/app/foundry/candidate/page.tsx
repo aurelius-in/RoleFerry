@@ -4,7 +4,7 @@ import { api } from "@/lib/api";
 import { useFoundry } from "@/context/FoundryContext";
 
 export default function CandidatePage() {
-  const { setState } = useFoundry();
+  const { state, setState } = useFoundry();
   const [resume, setResume] = useState("");
 
   const parse = async () => {
@@ -20,6 +20,12 @@ export default function CandidatePage() {
       <div>
         <button onClick={parse} className="px-4 py-2 rounded brand-gradient text-black font-medium">Parse</button>
       </div>
+      {state.candidate ? (
+        <div className="rounded-lg p-4 bg-white/5 border border-white/10">
+          <div className="font-medium">{state.candidate.name || "Candidate"} · {state.candidate.seniority}</div>
+          <div className="text-sm opacity-80">Domains: {(state.candidate.domains || []).join(", ")}</div>
+        </div>
+      ) : null}
     </main>
   );
 }

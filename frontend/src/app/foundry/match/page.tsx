@@ -23,10 +23,18 @@ export default function MatchPage() {
       </div>
       <div className="rounded-lg border border-white/10 divide-y divide-white/10">
         {matches.map((m) => (
-          <div key={m.job_id} className="p-3">
+          <div key={m.job_id} className="p-3 space-y-2">
             <div className="font-medium">{m.job_id} · Score {m.score}</div>
-            <div className="text-sm opacity-80">Reasons: {m.reasons?.join(", ")}</div>
-            <div className="text-sm opacity-80">Blockers: {m.blockers?.join(", ")}</div>
+            <div className="flex flex-wrap gap-2 text-xs">
+              {(m.reasons || []).map((r: string, i: number) => (
+                <span key={i} className="px-2 py-0.5 rounded bg-green-500/20 border border-green-500/30">{r}</span>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs">
+              {(m.blockers || []).map((r: string, i: number) => (
+                <span key={i} className="px-2 py-0.5 rounded bg-red-500/20 border border-red-500/30">{r}</span>
+              ))}
+            </div>
           </div>
         ))}
       </div>
