@@ -31,6 +31,17 @@ services:
     depends_on:
       - db
       - redis
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: roleferry_frontend
+    environment:
+      - NEXT_PUBLIC_API_BASE=http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
     image: redis:7
     container_name: roleferry_redis
     restart: unless-stopped
