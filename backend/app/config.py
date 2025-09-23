@@ -12,6 +12,11 @@ class Settings(BaseModel):
 
     # MillionVerifier gating
     mv_threshold: float = Field(default=float(os.getenv("MV_THRESHOLD", "0.8")))
+    instantly_api_key: str | None = Field(default=os.getenv("INSTANTLY_API_KEY"))
+
+    @property
+    def instantly_enabled(self) -> bool:
+        return bool(self.instantly_api_key)
 
 
 settings = Settings()

@@ -70,6 +70,7 @@ export default function SequencePage() {
   return (
     <main className="max-w-5xl mx-auto p-6 space-y-4">
       <h1 className="text-2xl font-semibold">Sequence Export</h1>
+      <div className="text-sm opacity-80">Push mode: {process.env.NEXT_PUBLIC_API_BASE ? "API available" : "CSV fallback"}</div>
       <div className="flex items-center gap-3">
         <button onClick={exportCsv} className="px-4 py-2 rounded brand-gradient text-black font-medium">Download Instantly CSV</button>
         <button onClick={pushToInstantly} className="px-3 py-2 rounded bg-white/10 border border-white/10">Push to Instantly</button>

@@ -41,4 +41,5 @@ Notes
 
 - CORS is enabled for http://localhost:3000 by default.
 - In-memory storage is used for MVP.
+ - Instantly API v2 (stub): set INSTANTLY_API_KEY in env to enable API push. Webhook receiver at POST /webhooks/instantly logs events to Audit.
 

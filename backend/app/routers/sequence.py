@@ -3,6 +3,9 @@ from pydantic import BaseModel
 from typing import List, Optional
 import csv
 import io
+from ..config import settings
+from ..clients.instantly import InstantlyClient
+from ..storage import store
 
 
 class SequenceExportRequest(BaseModel):
@@ -47,6 +50,13 @@ def export_csv(payload: SequenceExportRequest):
 
 
 @router.post("/push")
-def push_to_instantly(payload: SequencePushRequest):
-    return {"status": "queued", "list_name": payload.list_name or "RoleFerry Run"}
+async def push_to_instantly(payload: SequencePushRequest):
+    list_name = payload.list_name or "RoleFerry Run"
+    if settings.instantly_enabled:
+        client = InstantlyClient(settings.instantly_api_key or "")
+        result = await client.push_contacts(list_name, payload.contacts)
+        store.add_audit(None, "instantly_push", {"list_name": list_name, "count": len(payload.contacts), "result": result})
+        return result
+    store.add_audit(None, "instantly_push_csv", {"list_name": list_name, "count": len(payload.contacts)})
+    return {"status": "fallback_csv", "list_name": list_name}
 

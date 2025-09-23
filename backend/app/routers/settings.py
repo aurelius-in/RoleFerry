@@ -11,5 +11,6 @@ def get_settings():
       "environment": settings.environment,
       "mv_threshold": settings.mv_threshold,
       "cors_origins": settings.cors_origins,
+      "instantly_enabled": settings.instantly_enabled,
   }
 
