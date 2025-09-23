@@ -7,6 +7,7 @@ export default function MatchPage() {
   const { state } = useFoundry();
   const [jobIds, setJobIds] = useState("job_demo_1");
   const [matches, setMatches] = useState<any[]>([]);
+  const [minScore, setMinScore] = useState<number>(0);
 
   const score = async () => {
     const ids = jobIds.split(",").map((s) => s.trim()).filter(Boolean);
@@ -19,10 +20,11 @@ export default function MatchPage() {
       <h1 className="text-2xl font-semibold">Match</h1>
       <div className="flex items-center gap-2">
         <input className="px-3 py-2 rounded bg-white/5 border border-white/10 w-full" value={jobIds} onChange={(e) => setJobIds(e.target.value)} />
+        <input type="number" min={0} max={100} className="px-3 py-2 rounded bg-white/5 border border-white/10 w-24" value={minScore} onChange={(e) => setMinScore(parseInt(e.target.value || "0", 10))} />
         <button onClick={score} className="px-4 py-2 rounded brand-gradient text-black font-medium">Score</button>
       </div>
       <div className="rounded-lg border border-white/10 divide-y divide-white/10">
-        {matches.map((m) => (
+        {[...matches].filter((m) => (m.score ?? 0) >= minScore).sort((a,b) => (b.score ?? 0) - (a.score ?? 0)).map((m) => (
           <div key={m.job_id} className="p-3 space-y-2">
             <div className="font-medium">{m.job_id} · Score {m.score}</div>
             <div className="flex flex-wrap gap-2 text-xs">
