@@ -10,6 +10,7 @@ export type FoundryState = {
   sendableOnly?: boolean;
   seqSubject?: string;
   seqMessage?: string;
+  selectedVariantTag?: string;
 };
 
 const FoundryCtx = createContext<{

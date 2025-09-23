@@ -10,6 +10,7 @@ export default function OutreachPage() {
   const [vars, setVars] = useState({ FirstName: "Alex", Company: "Acme", RoleTitle: "Director of Product", CalendlyURL: "https://calendly.com/you/15" });
   const [variants, setVariants] = useState<any[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
+  const [abHint, setAbHint] = useState<boolean>(true);
 
   const generate = async () => {
     const res = await api<{ variants: any[] }>("/outreach/generate", "POST", { mode, length, variables: vars });
@@ -47,6 +48,9 @@ export default function OutreachPage() {
           </div>
         ))}
       </div>
+      {abHint ? (
+        <div className="text-xs opacity-70">Tip: Try A/B with subject tweaks to lift opens.</div>
+      ) : null}
       {selected !== null ? (
         <div className="text-sm opacity-80">Calendly line: {vars.CalendlyURL}</div>
       ) : null}
@@ -56,7 +60,7 @@ export default function OutreachPage() {
           onClick={() => {
             if (selected === null) return;
             const v = variants[selected];
-            setState({ seqSubject: v.subject || "", seqMessage: v.body || "" });
+            setState({ seqSubject: v.subject || "", seqMessage: v.body || "", selectedVariantTag: v.variant || "" });
             alert("Saved to Sequence fields");
           }}
           className="px-4 py-2 rounded bg-white/10 border border-white/10 disabled:opacity-50"

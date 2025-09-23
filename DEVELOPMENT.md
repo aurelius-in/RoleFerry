@@ -31,3 +31,7 @@ npm run dev
 
 Open http://localhost:3000 and http://localhost:8000/health
 
+Env Notes
+
+- INSTANTLY_API_KEY: set to enable API push; otherwise CSV fallback is used.
+
