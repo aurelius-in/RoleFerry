@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from fastapi import Response
 from ..storage import store
 
 
@@ -35,4 +36,22 @@ def analytics_campaign():
         "meetings": meetings,
         "variants": breakdown,
     }
+
+
+@router.get("/csv")
+def analytics_csv():
+    data = analytics_campaign()
+    lines = ["metric,value"]
+    lines.append(f"delivered,{data['delivered']}")
+    lines.append(f"open,{data['open']}")
+    lines.append(f"reply,{data['reply']}")
+    lines.append(f"positive,{data['positive']}")
+    lines.append(f"meetings,{data['meetings']}")
+    # Variants breakdown
+    lines.append("")
+    lines.append("variant,delivered,open,reply,positive")
+    for v, row in (data.get("variants") or {}).items():
+        lines.append(f"{v},{row.get('delivered',0)},{row.get('open',0)},{row.get('reply',0)},{row.get('positive',0)}")
+    csv_body = "\n".join(lines)
+    return Response(content=csv_body, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=analytics.csv"})
 
