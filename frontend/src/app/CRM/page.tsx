@@ -51,9 +51,15 @@ export default function CRM() {
 
 function Card({ card, onDragStart }: { card: any; onDragStart: (id: string) => void }) {
   const [note, setNote] = useState(card.note || "");
+  const [assignee, setAssignee] = useState(card.assignee || "");
+  const [due, setDue] = useState(card.due_date || "");
   async function saveNote() {
     await fetch("/api/crm/note", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: card.id, note }) });
     alert("Saved");
+  }
+  async function saveMeta() {
+    await fetch("/api/crm/card", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: card.id, assignee, due_date: due }) });
+    alert("Updated");
   }
   return (
     <div draggable onDragStart={() => onDragStart(card.id)} className="p-2 rounded bg-white/10 border border-white/10 cursor-move text-sm">
@@ -61,6 +67,11 @@ function Card({ card, onDragStart }: { card: any; onDragStart: (id: string) => v
       <div className="flex items-center gap-2 mt-1">
         <input className="flex-1 px-2 py-1 rounded bg-white/5 border border-white/10 text-xs" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Next step / note" />
         <button onClick={saveNote} className="px-2 py-1 rounded bg-white/10 border border-white/10 text-xs">Save</button>
+      </div>
+      <div className="flex items-center gap-2 mt-1">
+        <input className="flex-1 px-2 py-1 rounded bg-white/5 border border-white/10 text-xs" value={assignee} onChange={(e) => setAssignee(e.target.value)} placeholder="Assignee" />
+        <input type="date" className="px-2 py-1 rounded bg-white/5 border border-white/10 text-xs" value={due || ""} onChange={(e) => setDue(e.target.value)} />
+        <button onClick={saveMeta} className="px-2 py-1 rounded bg-white/10 border border-white/10 text-xs">Update</button>
       </div>
     </div>
   );

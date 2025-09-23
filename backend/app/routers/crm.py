@@ -32,3 +32,20 @@ def set_note(payload: NoteUpdate):
     store.set_crm_note(payload.id, payload.note)
     return {"ok": True}
 
+
+class CardUpdate(BaseModel):
+    id: str
+    assignee: str | None = None
+    due_date: str | None = None
+
+
+@router.post("/crm/card")
+def update_card(payload: CardUpdate):
+    updates = {}
+    if payload.assignee is not None:
+        updates["assignee"] = payload.assignee
+    if payload.due_date is not None:
+        updates["due_date"] = payload.due_date
+    store.update_crm_card(payload.id, **updates)
+    return {"ok": True}
+
