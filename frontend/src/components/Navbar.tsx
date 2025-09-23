@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import HealthIndicator from "./HealthIndicator";
 
@@ -15,12 +16,17 @@ export default function Navbar() {
 
   return (
     <header className="w-full flex items-center justify-between px-4 sm:px-6 py-3">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
         {dark ? (
           <Image src="/role_ferry_white.png" alt="RoleFerry" width={140} height={38} />
         ) : (
           <Image src="/role_ferry_black.png" alt="RoleFerry" width={140} height={38} />
         )}
+        <nav className="hidden sm:flex items-center gap-3 text-sm opacity-90">
+          <Link href="/foundry" className="hover:underline">Foundry</Link>
+          <Link href="/analytics" className="hover:underline">Analytics</Link>
+          <Link href="/settings" className="hover:underline">Settings</Link>
+        </nav>
       </div>
       <div className="flex items-center gap-4">
         <HealthIndicator />

@@ -26,6 +26,7 @@ export default function ContactsPage() {
   return (
     <main className="max-w-5xl mx-auto p-6 space-y-4">
       <h1 className="text-2xl font-semibold">Contacts</h1>
+      <div className="text-sm opacity-80">Total {(state.contacts || []).length} · Sendable {list.length}</div>
       <div className="flex gap-2">
         <input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Company" className="px-3 py-2 rounded bg-white/5 border border-white/10 w-64" />
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" className="px-3 py-2 rounded bg-white/5 border border-white/10 w-64" />
