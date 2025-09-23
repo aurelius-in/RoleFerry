@@ -27,7 +27,7 @@ def score_matches(payload: MatchScoreRequest):
             "score": s["score"],
             "reasons": s["reasons"],
             "blockers": s["blockers"],
-            "evidence_json": {},
+            "evidence": s.get("evidence", []),
         })
     return {"matches": matches}
 

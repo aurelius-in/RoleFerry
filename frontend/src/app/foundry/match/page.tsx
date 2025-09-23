@@ -35,6 +35,16 @@ export default function MatchPage() {
                 <span key={i} className="px-2 py-0.5 rounded bg-red-500/20 border border-red-500/30">{r}</span>
               ))}
             </div>
+            {Array.isArray(m.evidence) && m.evidence.length ? (
+              <div className="text-xs opacity-80">
+                Evidence:
+                <ul className="list-disc list-inside">
+                  {m.evidence.map((e: string, i: number) => (
+                    <li key={i}>{e}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
         ))}
       </div>
