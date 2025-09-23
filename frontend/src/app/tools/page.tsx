@@ -12,6 +12,7 @@ export default function Tools() {
         <li><a className="underline" href="/api/health" target="_blank">Health</a></li>
         <li><a className="underline" href="/audit">Audit Log</a></li>
         <li><a className="underline" href="/messages">Messages</a></li>
+        <li><a className="underline" href="/onboarding">Onboarding</a></li>
         <li><DemoButtons /></li>
       </ul>
     </main>
