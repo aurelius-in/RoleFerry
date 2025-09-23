@@ -9,6 +9,12 @@ class InMemoryStore:
         self.messages: List[Dict[str, Any]] = []
         self.last_candidate: Dict[str, Any] | None = None
         self.run_to_dataset: Dict[str, str] = {}
+        self.crm_lanes: Dict[str, list] = {
+            "People": [{"id": "alex@example.com", "name": "Alex Example", "note": "", "assignee": "", "due_date": None}],
+            "Conversation": [],
+            "Meeting": [],
+            "Deal": [],
+        }
 
     def save_ijp(self, ijp_id: str, filters: Dict[str, Any]) -> None:
         self.ijps[ijp_id] = filters
@@ -48,6 +54,23 @@ class InMemoryStore:
             if m.get("id") == message_id:
                 m.update(fields)
                 break
+
+    def set_crm_board(self, board: Dict[str, list]) -> None:
+        self.crm_lanes = board
+
+    def set_crm_note(self, contact_id: str, note: str) -> None:
+        for lane in self.crm_lanes.values():
+            for card in lane:
+                if card.get("id") == contact_id:
+                    card["note"] = note
+                    return
+
+    def update_crm_card(self, contact_id: str, **fields: Any) -> None:
+        for lane in self.crm_lanes.values():
+            for card in lane:
+                if card.get("id") == contact_id:
+                    card.update(fields)
+                    return
 
 
 store = InMemoryStore()
