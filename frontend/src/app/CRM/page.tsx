@@ -1,14 +1,13 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 
 export default function CRM() {
   const lanes = ["People", "Conversation", "Meeting", "Deal"] as const;
-  const [items, setItems] = useState<Record<string, string[]>>({
-    People: ["Alex Example"],
-    Conversation: [],
-    Meeting: [],
-    Deal: [],
-  });
+  const [items, setItems] = useState<Record<string, any[]>>({ People: [], Conversation: [], Meeting: [], Deal: [] });
+  useEffect(() => {
+    api<{ lanes: Record<string, any[]> }>("/crm/board", "GET").then((d) => setItems(d.lanes));
+  }, []);
   const [dragId, setDragId] = useState<string | null>(null);
   function onDragStart(id: string) {
     setDragId(id);
@@ -16,14 +15,15 @@ export default function CRM() {
   function onDrop(lane: string) {
     if (!dragId) return;
     setItems((prev) => {
-      const next: Record<string, string[]> = { ...prev };
+      const next: Record<string, any[]> = { ...prev };
       for (const k of Object.keys(next)) {
-        next[k] = next[k].filter((x) => x !== dragId);
+        next[k] = next[k].filter((x) => x.id !== dragId);
       }
-      next[lane] = [...next[lane], dragId];
+      next[lane] = [...next[lane], { id: dragId, name: dragId, note: "" }];
       return next;
     });
     setDragId(null);
+    api("/crm/board", "POST", { lanes: items });
   }
   return (
     <main className="max-w-full mx-auto p-6 space-y-4">
@@ -38,16 +38,31 @@ export default function CRM() {
           >
             <div className="p-3 font-medium border-b border-white/10">{lane}</div>
             <div className="p-3 space-y-2">
-              {items[lane].map((id) => (
-                <div key={id} draggable onDragStart={() => onDragStart(id)} className="p-2 rounded bg-white/10 border border-white/10 cursor-move text-sm">
-                  {id}
-                </div>
+              {items[lane].map((card) => (
+                <Card key={card.id} card={card} onDragStart={onDragStart} />
               ))}
             </div>
           </div>
         ))}
       </div>
     </main>
+  );
+}
+
+function Card({ card, onDragStart }: { card: any; onDragStart: (id: string) => void }) {
+  const [note, setNote] = useState(card.note || "");
+  async function saveNote() {
+    await fetch("/api/crm/note", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: card.id, note }) });
+    alert("Saved");
+  }
+  return (
+    <div draggable onDragStart={() => onDragStart(card.id)} className="p-2 rounded bg-white/10 border border-white/10 cursor-move text-sm">
+      <div className="font-medium">{card.name || card.id}</div>
+      <div className="flex items-center gap-2 mt-1">
+        <input className="flex-1 px-2 py-1 rounded bg-white/5 border border-white/10 text-xs" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Next step / note" />
+        <button onClick={saveNote} className="px-2 py-1 rounded bg-white/10 border border-white/10 text-xs">Save</button>
+      </div>
+    </div>
   );
 }
 
