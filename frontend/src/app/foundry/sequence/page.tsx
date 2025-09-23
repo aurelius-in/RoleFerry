@@ -32,6 +32,8 @@ export default function SequencePage() {
     }
   };
 
+  const clearRows = () => setRows([]);
+
   const pushToInstantly = async () => {
     try {
       await api("/sequence/push", "POST", { list_name: "RoleFerry Demo", contacts: rows });
@@ -77,6 +79,7 @@ export default function SequencePage() {
         <button onClick={pushToInstantly} className="px-3 py-2 rounded bg-white/10 border border-white/10">Push to Instantly</button>
         <button onClick={loadFromContacts} className="px-3 py-2 rounded bg-white/10 border border-white/10">Load from contacts</button>
         <button onClick={applySeqFields} className="px-3 py-2 rounded bg-white/10 border border-white/10">Apply subject/body</button>
+        <button onClick={clearRows} className="px-3 py-2 rounded bg-white/10 border border-white/10">Clear</button>
         <span className="text-sm opacity-80">Rows {rows.length} · File instantly.csv</span>
       </div>
       <div className="rounded-lg border border-white/10 overflow-auto">

@@ -222,6 +222,11 @@ sendable = [c for c in contacts if c.verification_status in ('valid','accept_all
 * Sequencer excludes non-sendable emails; offers LinkedIn export instead.
 * Analytics split rates by verification tier.
 
+Notes
+
+- Email verification threshold (MV) can be adjusted in-app on Settings (MVP stores in-memory).
+- If `INSTANTLY_API_KEY` is set in the environment, push-to-Instantly uses the API path; otherwise CSV export is used.
+
 ---
 
 

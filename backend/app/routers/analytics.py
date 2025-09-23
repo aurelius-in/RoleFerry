@@ -8,11 +8,17 @@ router = APIRouter()
 @router.get("/campaign")
 def analytics_campaign():
     store.add_audit(None, "analytics_campaign", {})
+    msgs = store.messages
+    delivered = len(msgs) if msgs else 100
+    open_count = sum(1 for m in msgs if m.get("opened")) if msgs else 62
+    reply_count = sum(1 for m in msgs if m.get("replied")) if msgs else 14
+    positive = sum(1 for m in msgs if m.get("label") == "positive") if msgs else 8
+    meetings = sum(1 for m in msgs if m.get("label") == "meeting") if msgs else 3
     return {
-        "delivered": 100,
-        "open": 62,
-        "reply": 14,
-        "positive": 8,
-        "meetings": 3,
+        "delivered": delivered,
+        "open": open_count,
+        "reply": reply_count,
+        "positive": positive,
+        "meetings": meetings,
     }
 

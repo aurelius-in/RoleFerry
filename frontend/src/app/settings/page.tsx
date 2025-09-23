@@ -15,7 +15,10 @@ export default async function Settings() {
         <div>Instantly Enabled: {String(s.instantly_enabled)}</div>
       </div>
       <ThresholdForm current={s.mv_threshold} />
-      <div className="text-sm"><a className="underline" href="/replies">Go to Replies tester</a></div>
+      <div className="text-sm space-x-4">
+        <a className="underline" href="/replies">Go to Replies tester</a>
+        <a className="underline" href="/api/metrics" target="_blank">Metrics</a>
+      </div>
     </main>
   );
 }

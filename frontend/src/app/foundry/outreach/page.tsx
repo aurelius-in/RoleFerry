@@ -37,8 +37,18 @@ export default function OutreachPage() {
         {variants.map((v, i) => (
           <div key={i} className={`p-3 space-y-2 ${selected === i ? 'bg-white/[.08]' : ''}`} onClick={() => setSelected(i)}>
             <div className="text-sm opacity-80">Variant {v.variant}</div>
-            {v.subject ? <div className="font-medium">{v.subject}</div> : null}
-            <pre className="whitespace-pre-wrap text-sm opacity-90">{v.body}</pre>
+            <input
+              className="w-full px-3 py-2 rounded bg-white/5 border border-white/10"
+              value={v.subject || ""}
+              onChange={(e) => setVariants((prev) => prev.map((x, idx) => idx === i ? { ...x, subject: e.target.value } : x))}
+              placeholder="Subject"
+            />
+            <textarea
+              className="w-full px-3 py-2 rounded bg-white/5 border border-white/10 min-h-24"
+              value={v.body || ""}
+              onChange={(e) => setVariants((prev) => prev.map((x, idx) => idx === i ? { ...x, body: e.target.value } : x))}
+              placeholder="Body"
+            />
             <button
               onClick={() => navigator.clipboard.writeText(`${v.subject ? v.subject + "\n\n" : ""}${v.body}`)}
               className="px-3 py-1 rounded bg-white/10 border border-white/10 text-sm"
@@ -66,6 +76,18 @@ export default function OutreachPage() {
           className="px-4 py-2 rounded bg-white/10 border border-white/10 disabled:opacity-50"
         >
           Use selected in Sequence
+        </button>
+        <button
+          disabled={selected === null}
+          onClick={() => {
+            if (selected === null) return;
+            const v = variants[selected];
+            const withCal = `${v.body || ""}\n\n${vars.CalendlyURL}`;
+            setVariants((prev) => prev.map((x, idx) => idx === selected ? { ...x, body: withCal } : x));
+          }}
+          className="ml-2 px-4 py-2 rounded bg-white/10 border border-white/10 disabled:opacity-50"
+        >
+          Insert Calendly line
         </button>
       </div>
     </main>
