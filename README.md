@@ -1,5 +1,8 @@
 # RoleFerry — Recruiting Mode Workflow  
 
+![RF Logo Concept 1](assets/roleferry1.png)
+![RF Logo Concept 1](assets/roleferry1.png)
+
 ## 0) Goal
 
 Carry the right candidate across to the right hiring team: **from role → shortlist → verified contact → booked meeting**.
