@@ -11,7 +11,8 @@
 
 ## 0) Goal
 
-Carry the right candidate across to the right hiring team: **from role → shortlist → verified contact → booked meeting**.
+Carry the right candidates across to the right hiring teams: 
+**from role → shortlist → verified contact → booked meeting**.
 
 ---
 
