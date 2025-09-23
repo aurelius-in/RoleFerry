@@ -2,13 +2,17 @@ from fastapi import APIRouter
 from ..config import settings
 from fastapi import APIRouter
 from datetime import datetime, timezone
+from prometheus_client import Counter, generate_latest
 
 
 router = APIRouter()
 
+requests_total = Counter("rf_requests_total", "Total API requests")
+
 
 @router.get("/health")
 def healthcheck():
+    requests_total.inc()
     return {"status": "ok", "env": settings.environment, "version": settings.app_version, "ts": datetime.now(timezone.utc).isoformat()}
 
 
@@ -25,4 +29,9 @@ def ping():
 @router.get("/version")
 def version():
     return {"version": settings.app_version}
+
+
+@router.get("/metrics")
+def metrics():
+    return generate_latest()
 

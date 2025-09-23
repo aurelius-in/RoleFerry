@@ -8,4 +8,5 @@ asyncpg==0.29.0
 psycopg[binary]==3.2.3
 redis==5.0.8
 pgvector==0.2.5
+prometheus-client==0.21.0
 

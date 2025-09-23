@@ -56,8 +56,9 @@ export default function SequencePage() {
       match_score: "",
       verification_status: c.verification_status || "",
       verification_score: c.verification_score || "",
-      subject: "",
-      message: "",
+      subject: state.seqSubject || "",
+      message: state.seqMessage || "",
+      variant: state.selectedVariantTag || "",
     }));
     setRows(mapped);
   };

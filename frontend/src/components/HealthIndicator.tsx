@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-type Health = { status: string; env?: string; version?: string };
+type Health = { status: string; env?: string; version?: string; ts?: string };
 
 export default function HealthIndicator() {
   const [health, setHealth] = useState<Health | null>(null);
@@ -32,6 +32,7 @@ export default function HealthIndicator() {
   }, []);
 
   const up = health?.status === "ok";
+  const secondsAgo = health?.ts ? Math.max(0, Math.round((Date.now() - new Date(health.ts).getTime()) / 1000)) : null;
   return (
     <div className="flex items-center gap-2 text-xs opacity-80">
       <span
@@ -43,6 +44,7 @@ export default function HealthIndicator() {
       <span>{up ? "API" : "API down"}</span>
       {health?.env ? <span>· {health.env}</span> : null}
       {health?.version ? <span>· v{health.version}</span> : null}
+      {secondsAgo !== null ? <span>· {secondsAgo}s</span> : null}
       {error ? <span className="text-red-300">· error</span> : null}
     </div>
   );
