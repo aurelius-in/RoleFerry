@@ -12,6 +12,7 @@ class Settings(BaseModel):
 
     # MillionVerifier gating
     mv_threshold: float = Field(default=float(os.getenv("MV_THRESHOLD", "0.8")))
+    mv_api_key: str | None = Field(default=os.getenv("MV_API_KEY"))
     instantly_api_key: str | None = Field(default=os.getenv("INSTANTLY_API_KEY"))
     apify_token: str | None = Field(default=os.getenv("APIFY_TOKEN"))
     apify_indeed_actor_id: str | None = Field(default=os.getenv("APIFY_INDEED_ACTOR_ID"))
