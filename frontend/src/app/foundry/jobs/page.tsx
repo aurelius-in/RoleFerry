@@ -4,7 +4,7 @@ import { api } from "@/lib/api";
 import { useFoundry } from "@/context/FoundryContext";
 
 export default function JobsPage() {
-  const { setState } = useFoundry();
+  const { state, setState } = useFoundry();
   const [query, setQuery] = useState("Product Manager remote");
   const [urls, setUrls] = useState("");
 
@@ -22,7 +22,7 @@ export default function JobsPage() {
     const job_id = (Array.isArray((state as any)?.jobs) ? (state as any).jobs[0]?.job_id : undefined) as string | undefined;
     if (!job_id) return;
     const res = await api<{ postings: any[] }>(`/jobs/${job_id}`, "GET");
-    alert(`Fetched ${res.postings.length} postings`);
+    setState({ jobs: [{ job_id, postings: res.postings }] });
   };
 
   const inputCls = "px-3 py-2 rounded bg-white/5 border border-white/10 w-full";
@@ -43,6 +43,16 @@ export default function JobsPage() {
           <button onClick={fetchResults} className="px-4 py-2 rounded bg-white/10 border border-white/10">Fetch results</button>
         </div>
       </div>
+      {Array.isArray((state as any)?.jobs) && (state as any).jobs[0]?.postings?.length ? (
+        <div className="rounded-lg border border-white/10 divide-y divide-white/10">
+          {(state as any).jobs[0].postings.map((p: any) => (
+            <div key={p.id} className="p-3">
+              <div className="font-medium">{p.title} · {p.company}</div>
+              <div className="text-sm opacity-80">{p.location} · <a className="underline" href={p.jd_url} target="_blank">JD</a></div>
+            </div>
+          ))}
+        </div>
+      ) : null}
     </main>
   );
 }

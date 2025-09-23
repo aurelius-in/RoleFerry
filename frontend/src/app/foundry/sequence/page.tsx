@@ -1,9 +1,11 @@
 "use client";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { useFoundry } from "@/context/FoundryContext";
 import { downloadText } from "@/lib/download";
 
 export default function SequencePage() {
+  const { state } = useFoundry();
   const [rows, setRows] = useState<any[]>([
     {
       email: "alex@example.com",
@@ -30,11 +32,33 @@ export default function SequencePage() {
     }
   };
 
+  const loadFromContacts = () => {
+    const contacts = (state.contacts || []).filter(
+      (c) => c.verification_status === "valid" || (c.verification_status === "accept_all" && (c.verification_score || 0) >= 0.8)
+    );
+    const mapped = contacts.map((c) => ({
+      email: c.email || "",
+      first_name: (c.name || "").split(" ")[0] || "",
+      last_name: (c.name || "").split(" ").slice(1).join(" ") || "",
+      company: c.company || "",
+      title: c.title || "",
+      jd_link: "",
+      portfolio_url: "",
+      match_score: "",
+      verification_status: c.verification_status || "",
+      verification_score: c.verification_score || "",
+      subject: "",
+      message: "",
+    }));
+    setRows(mapped);
+  };
+
   return (
     <main className="max-w-5xl mx-auto p-6 space-y-4">
       <h1 className="text-2xl font-semibold">Sequence Export</h1>
       <div className="flex items-center gap-3">
         <button onClick={exportCsv} className="px-4 py-2 rounded brand-gradient text-black font-medium">Download Instantly CSV</button>
+        <button onClick={loadFromContacts} className="px-3 py-2 rounded bg-white/10 border border-white/10">Load from contacts</button>
         <span className="text-sm opacity-80">Rows {rows.length} · File instantly.csv</span>
       </div>
       <div className="rounded-lg border border-white/10 overflow-auto">

@@ -5,6 +5,7 @@ class InMemoryStore:
     def __init__(self) -> None:
         self.ijps: Dict[str, Dict[str, Any]] = {}
         self.jobs: Dict[str, List[Dict[str, Any]]] = {}
+        self.audit: List[Dict[str, Any]] = []
 
     def save_ijp(self, ijp_id: str, filters: Dict[str, Any]) -> None:
         self.ijps[ijp_id] = filters
@@ -17,6 +18,9 @@ class InMemoryStore:
 
     def get_jobs(self, job_id: str) -> List[Dict[str, Any]]:
         return self.jobs.get(job_id, [])
+
+    def add_audit(self, user_id: str | None, action: str, payload: Dict[str, Any]) -> None:
+        self.audit.append({"user_id": user_id, "action": action, "payload": payload})
 
 
 store = InMemoryStore()
