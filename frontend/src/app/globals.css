@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0b1020; /* deep navy */
+  --foreground: #e7ecff; /* soft light */
+  --gradient-bg: linear-gradient(135deg, #0b1020 0%, #1b3a7a 60%, #7ab8ff 100%);
+  --accent-gradient: linear-gradient(135deg, #ff4d00 0%, #ffb100 100%);
 }
 
 @theme inline {
@@ -14,13 +16,19 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0b1020;
+    --foreground: #e7ecff;
+    --gradient-bg: linear-gradient(135deg, #0b1020 0%, #0f274a 55%, #3c7bd9 100%);
+    --accent-gradient: linear-gradient(135deg, #ff4d00 0%, #ffb100 100%);
   }
 }
 
 body {
-  background: var(--background);
+  background: var(--gradient-bg);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.brand-gradient {
+  background: var(--accent-gradient);
 }
