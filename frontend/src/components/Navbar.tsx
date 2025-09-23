@@ -28,6 +28,7 @@ export default function Navbar() {
           <Link href="/crm" className="hover:underline">CRM</Link>
           <Link href="/tools" className="hover:underline">Tools</Link>
           <Link href="/settings" className="hover:underline">Settings</Link>
+          <Link href="/about" className="hover:underline">About</Link>
         </nav>
       </div>
       <div className="flex items-center gap-4">
@@ -42,12 +43,19 @@ function ThemeToggle() {
   const [isDark, setIsDark] = useState(false);
   useEffect(() => {
     const root = document.documentElement;
+    const stored = localStorage.getItem("rf_theme");
+    if (stored === "dark") {
+      root.classList.add("dark");
+    } else if (stored === "light") {
+      root.classList.remove("dark");
+    }
     setIsDark(root.classList.contains("dark"));
   }, []);
   const toggle = () => {
     const root = document.documentElement;
     root.classList.toggle("dark");
     setIsDark(root.classList.contains("dark"));
+    localStorage.setItem("rf_theme", root.classList.contains("dark") ? "dark" : "light");
   };
   return (
     <button onClick={toggle} className="px-3 py-1 rounded-md brand-gradient text-black font-medium">

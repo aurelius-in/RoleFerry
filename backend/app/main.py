@@ -32,6 +32,22 @@ def create_app() -> FastAPI:
         response = await call_next(request)
         return response
 
+    # Simple per-IP rate limit (very basic, in-memory)
+    from starlette.responses import JSONResponse
+    rate_counts: dict[str, int] = {}
+
+    @app.middleware("http")
+    async def rate_limit(request: Request, call_next):
+        ip = request.client.host if request.client else "unknown"
+        rate_counts[ip] = rate_counts.get(ip, 0) + 1
+        if rate_counts[ip] > 200:
+            return JSONResponse({"error": "rate_limited"}, status_code=429)
+        return await call_next(request)
+
+    @app.exception_handler(Exception)
+    async def json_error_handler(request: Request, exc: Exception):
+        return JSONResponse({"error": str(exc)}, status_code=500)
+
     # Core/health
     app.include_router(health.router)
 

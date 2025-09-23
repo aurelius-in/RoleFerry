@@ -54,6 +54,8 @@ export default function ContactsPage() {
               <th className="text-left p-2">Title</th>
               <th className="text-left p-2">Email</th>
               <th className="text-left p-2">LinkedIn</th>
+              <th className="text-left p-2">Company</th>
+              <th className="text-left p-2">City</th>
               <th className="text-left p-2">Verification</th>
               <th className="text-left p-2">Sendable</th>
             </tr>
@@ -67,6 +69,8 @@ export default function ContactsPage() {
                   {c.email} <button onClick={() => navigator.clipboard.writeText(c.email)} className="ml-2 text-xs underline">Copy</button>
                 </td>
                 <td className="p-2">{c.linkedin ? <a className="underline" href={c.linkedin} target="_blank">Profile</a> : ""}</td>
+                <td className="p-2">{c.company}</td>
+                <td className="p-2">{c.city}</td>
                 <td className="p-2"><VerificationBadge status={c.verification_status} score={c.verification_score} /></td>
                 <td className="p-2">
                   {c.verification_status === "valid" || (c.verification_status === "accept_all" && (c.verification_score || 0) >= 0.8) ? "✅" : "⚠️"}
