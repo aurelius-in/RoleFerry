@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List, Optional
+from ..storage import store
 
 
 class IJPRequest(BaseModel):
@@ -20,5 +21,7 @@ router = APIRouter()
 
 @router.post("")
 def create_or_update_ijp(payload: IJPRequest):
-    return {"id": "ijp_demo_1", "saved": True, "filters": payload.model_dump()}
+    ijp_id = "ijp_demo_1"
+    store.save_ijp(ijp_id, payload.model_dump())
+    return {"id": ijp_id, "saved": True, "filters": payload.model_dump()}
 
