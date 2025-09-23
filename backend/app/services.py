@@ -19,10 +19,11 @@ def generate_outreach_variant(mode: str, length: str, variables: Dict[str, Any])
     subject = f"Quick intro on {role_title} at {company}"
     base = f"Hi {first_name}, I mapped a few ideas and how {proof} could help."
     if length == "short":
-        body = f"{base} If helpful, grab time: {calendly}"
+        cta = "grab a quick slot"
     elif length == "long":
-        body = f"{base} Happy to share a one-pager and specific examples. If helpful, pick a slot: {calendly}"
+        cta = "dive deeper with a brief call"
     else:
-        body = f"{base} Open to a quick chat? {calendly}"
+        cta = "connect for a few minutes"
+    body = f"{base} If helpful, {cta}: {calendly}"
     return {"subject": subject, "body": body}
 

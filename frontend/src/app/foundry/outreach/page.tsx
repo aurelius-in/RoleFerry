@@ -35,6 +35,12 @@ export default function OutreachPage() {
             <div className="text-sm opacity-80">Variant {v.variant}</div>
             {v.subject ? <div className="font-medium">{v.subject}</div> : null}
             <pre className="whitespace-pre-wrap text-sm opacity-90">{v.body}</pre>
+            <button
+              onClick={() => navigator.clipboard.writeText(`${v.subject ? v.subject + "\n\n" : ""}${v.body}`)}
+              className="px-3 py-1 rounded bg-white/10 border border-white/10 text-sm"
+            >
+              Copy
+            </button>
           </div>
         ))}
       </div>

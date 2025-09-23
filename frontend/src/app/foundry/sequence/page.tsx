@@ -22,15 +22,20 @@ export default function SequencePage() {
   ]);
 
   const exportCsv = async () => {
-    const res = await api<{ filename: string; content: string }>("/sequence/export", "POST", { contacts: rows });
-    downloadText(res.filename, res.content);
+    try {
+      const res = await api<{ filename: string; content: string }>("/sequence/export", "POST", { contacts: rows });
+      downloadText(res.filename, res.content);
+    } catch (e: any) {
+      alert(`Export failed: ${e?.message || e}`);
+    }
   };
 
   return (
     <main className="max-w-5xl mx-auto p-6 space-y-4">
       <h1 className="text-2xl font-semibold">Sequence Export</h1>
-      <div>
+      <div className="flex items-center gap-3">
         <button onClick={exportCsv} className="px-4 py-2 rounded brand-gradient text-black font-medium">Download Instantly CSV</button>
+        <span className="text-sm opacity-80">Rows {rows.length} · File instantly.csv</span>
       </div>
       <div className="rounded-lg border border-white/10 overflow-auto">
         <table className="w-full text-xs">

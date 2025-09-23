@@ -9,14 +9,25 @@ export default function HealthIndicator() {
 
   useEffect(() => {
     let mounted = true;
-    fetch("/api/health", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((j) => {
-        if (mounted) setHealth(j);
-      })
-      .catch((e) => mounted && setError(String(e)));
+    let timer: any;
+    const poll = async () => {
+      try {
+        const r = await fetch("/api/health", { cache: "no-store" });
+        const j = await r.json();
+        if (mounted) {
+          setHealth(j);
+          setError(null);
+        }
+      } catch (e) {
+        if (mounted) setError(String(e));
+      } finally {
+        timer = setTimeout(poll, 5000);
+      }
+    };
+    poll();
     return () => {
       mounted = false;
+      if (timer) clearTimeout(timer);
     };
   }, []);
 
@@ -30,6 +41,7 @@ export default function HealthIndicator() {
         aria-label={up ? "API healthy" : "API down"}
       />
       <span>{up ? "API" : "API down"}</span>
+      {health?.env ? <span>· {health.env}</span> : null}
       {health?.version ? <span>· v{health.version}</span> : null}
       {error ? <span className="text-red-300">· error</span> : null}
     </div>

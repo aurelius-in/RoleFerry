@@ -18,6 +18,13 @@ export default function JobsPage() {
     alert(`Ingest started: ${res.job_id}`);
   };
 
+  const fetchResults = async () => {
+    const job_id = (Array.isArray((state as any)?.jobs) ? (state as any).jobs[0]?.job_id : undefined) as string | undefined;
+    if (!job_id) return;
+    const res = await api<{ postings: any[] }>(`/jobs/${job_id}`, "GET");
+    alert(`Fetched ${res.postings.length} postings`);
+  };
+
   const inputCls = "px-3 py-2 rounded bg-white/5 border border-white/10 w-full";
   return (
     <main className="max-w-4xl mx-auto p-6 space-y-4">
@@ -31,8 +38,9 @@ export default function JobsPage() {
           <div className="text-sm opacity-80">JD URLs (comma or newline)</div>
           <textarea className={inputCls} rows={4} value={urls} onChange={(e) => setUrls(e.target.value)} />
         </label>
-        <div>
+        <div className="flex gap-2">
           <button onClick={ingest} className="px-4 py-2 rounded brand-gradient text-black font-medium">Start ingest</button>
+          <button onClick={fetchResults} className="px-4 py-2 rounded bg-white/10 border border-white/10">Fetch results</button>
         </div>
       </div>
     </main>

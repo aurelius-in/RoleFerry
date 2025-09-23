@@ -21,5 +21,16 @@ def ingest_jobs(payload: JobIngestRequest):
 
 @router.get("/{job_id}")
 def get_jobs(job_id: str):
-    return {"job_id": job_id, "postings": store.get_jobs(job_id)}
+    postings = store.get_jobs(job_id)
+    if not postings:
+        postings = [
+            {
+                "id": "demo_post_1",
+                "title": "Director of Product",
+                "company": "Acme",
+                "location": "Remote",
+                "jd_url": "https://example.com/job",
+            }
+        ]
+    return {"job_id": job_id, "postings": postings}
 
