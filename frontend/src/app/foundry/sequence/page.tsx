@@ -62,6 +62,11 @@ export default function SequencePage() {
     setRows(mapped);
   };
 
+  const applySeqFields = () => {
+    if (!state.seqSubject && !state.seqMessage) return;
+    setRows((prev) => prev.map((r) => ({ ...r, subject: state.seqSubject || r.subject, message: state.seqMessage || r.message })));
+  };
+
   return (
     <main className="max-w-5xl mx-auto p-6 space-y-4">
       <h1 className="text-2xl font-semibold">Sequence Export</h1>
@@ -69,6 +74,7 @@ export default function SequencePage() {
         <button onClick={exportCsv} className="px-4 py-2 rounded brand-gradient text-black font-medium">Download Instantly CSV</button>
         <button onClick={pushToInstantly} className="px-3 py-2 rounded bg-white/10 border border-white/10">Push to Instantly</button>
         <button onClick={loadFromContacts} className="px-3 py-2 rounded bg-white/10 border border-white/10">Load from contacts</button>
+        <button onClick={applySeqFields} className="px-3 py-2 rounded bg-white/10 border border-white/10">Apply subject/body</button>
         <span className="text-sm opacity-80">Rows {rows.length} · File instantly.csv</span>
       </div>
       <div className="rounded-lg border border-white/10 overflow-auto">

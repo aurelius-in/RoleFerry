@@ -53,6 +53,7 @@ export default function ContactsPage() {
               <th className="text-left p-2">Name</th>
               <th className="text-left p-2">Title</th>
               <th className="text-left p-2">Email</th>
+              <th className="text-left p-2">LinkedIn</th>
               <th className="text-left p-2">Verification</th>
               <th className="text-left p-2">Sendable</th>
             </tr>
@@ -62,7 +63,10 @@ export default function ContactsPage() {
               <tr key={c.id} className="odd:bg-white/0 even:bg-white/[.03]">
                 <td className="p-2">{c.name}</td>
                 <td className="p-2">{c.title}</td>
-                <td className="p-2">{c.email}</td>
+                <td className="p-2">
+                  {c.email} <button onClick={() => navigator.clipboard.writeText(c.email)} className="ml-2 text-xs underline">Copy</button>
+                </td>
+                <td className="p-2">{c.linkedin ? <a className="underline" href={c.linkedin} target="_blank">Profile</a> : ""}</td>
                 <td className="p-2"><VerificationBadge status={c.verification_status} score={c.verification_score} /></td>
                 <td className="p-2">
                   {c.verification_status === "valid" || (c.verification_status === "accept_all" && (c.verification_score || 0) >= 0.8) ? "✅" : "⚠️"}

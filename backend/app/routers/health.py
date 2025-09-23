@@ -16,3 +16,13 @@ def healthcheck():
 def root():
     return {"name": "RoleFerry API", "env": settings.environment, "version": settings.app_version}
 
+
+@router.get("/ping")
+def ping():
+    return {"pong": True}
+
+
+@router.get("/version")
+def version():
+    return {"version": settings.app_version}
+

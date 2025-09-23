@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 
@@ -26,6 +26,11 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    @app.middleware("http")
+    async def simple_logging(request: Request, call_next):
+        response = await call_next(request)
+        return response
 
     # Core/health
     app.include_router(health.router)

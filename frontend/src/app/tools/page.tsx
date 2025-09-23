@@ -8,6 +8,7 @@ export default function Tools() {
         <li><a className="underline" href="/onepager">One-pager Generator</a></li>
         <li><a className="underline" href="/deliverability">Deliverability</a></li>
         <li><a className="underline" href="/compliance">Compliance</a></li>
+        <li><a className="underline" href="http://localhost:8000/docs" target="_blank">API Docs (OpenAPI)</a></li>
       </ul>
     </main>
   );
