@@ -1,7 +1,10 @@
 # RoleFerry — Recruiting Mode Workflow  
 
-![RF Logo Concept 1](roleferry1.png)
-![RF Logo Concept 1](roleferry1.png)
+
+<p align="center">
+  <img src="roleferry1.png" alt="RF Logo Concept 1" width="45%" />
+  <img src="roleferry2.png" alt="RF Logo Concept 2" width="45%" />
+</p>
 
 ## 0) Goal
 
