@@ -25,6 +25,13 @@ export default function JobsPage() {
     setState({ jobs: [{ job_id, postings: res.postings }] });
   };
 
+  const pollResults = async () => {
+    const job_id = (Array.isArray((state as any)?.jobs) ? (state as any).jobs[0]?.job_id : undefined) as string | undefined;
+    if (!job_id) return;
+    await api(`/jobs/poll/${job_id}`, "POST");
+    await fetchResults();
+  };
+
   const inputCls = "px-3 py-2 rounded bg-white/5 border border-white/10 w-full";
   return (
     <main className="max-w-4xl mx-auto p-6 space-y-4">
@@ -47,6 +54,7 @@ export default function JobsPage() {
         <div className="flex gap-2">
           <button onClick={ingest} className="px-4 py-2 rounded brand-gradient text-black font-medium">Start ingest</button>
           <button onClick={fetchResults} className="px-4 py-2 rounded bg-white/10 border border-white/10">Fetch results</button>
+          <button onClick={pollResults} className="px-4 py-2 rounded bg-white/10 border border-white/10">Poll</button>
         </div>
       </div>
       {Array.isArray((state as any)?.jobs) && (state as any).jobs[0]?.postings?.length ? (

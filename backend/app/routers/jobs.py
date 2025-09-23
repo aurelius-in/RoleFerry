@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List, Optional
 from ..storage import store
+from ..clients.apify import ApifyClient
 
 
 class JobIngestRequest(BaseModel):
@@ -33,4 +34,12 @@ def get_jobs(job_id: str):
             }
         ]
     return {"job_id": job_id, "postings": postings}
+
+
+@router.post("/poll/{job_id}")
+def poll_job(job_id: str):
+    client = ApifyClient()
+    postings = client.get_job_postings(job_id)
+    store.save_jobs(job_id, postings)
+    return {"job_id": job_id, "count": len(postings)}
 
