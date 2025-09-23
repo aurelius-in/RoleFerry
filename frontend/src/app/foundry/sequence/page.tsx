@@ -32,6 +32,13 @@ export default function SequencePage() {
     }
   };
 
+  const copyCsvPreview = () => {
+    const header = Object.keys(rows[0] || {});
+    const lines = [header.join(","), ...rows.map((r) => header.map((h) => String((r as any)[h] ?? "")).join(","))];
+    navigator.clipboard.writeText(lines.join("\n"));
+    alert("CSV copied to clipboard");
+  };
+
   const clearRows = () => setRows([]);
 
   const pushToInstantly = async () => {
@@ -80,6 +87,7 @@ export default function SequencePage() {
         <button onClick={loadFromContacts} className="px-3 py-2 rounded bg-white/10 border border-white/10">Load from contacts</button>
         <button onClick={applySeqFields} className="px-3 py-2 rounded bg-white/10 border border-white/10">Apply subject/body</button>
         <button onClick={clearRows} className="px-3 py-2 rounded bg-white/10 border border-white/10">Clear</button>
+        <button onClick={copyCsvPreview} className="px-3 py-2 rounded bg-white/10 border border-white/10">Copy CSV</button>
         <span className="text-sm opacity-80">Rows {rows.length} · File instantly.csv</span>
       </div>
       <div className="rounded-lg border border-white/10 overflow-auto">

@@ -9,6 +9,7 @@ export default function Tools() {
         <li><a className="underline" href="/deliverability">Deliverability</a></li>
         <li><a className="underline" href="/compliance">Compliance</a></li>
         <li><a className="underline" href="http://localhost:8000/docs" target="_blank">API Docs (OpenAPI)</a></li>
+        <li><a className="underline" href="/api/health" target="_blank">Health</a></li>
         <li><a className="underline" href="/audit">Audit Log</a></li>
         <li><a className="underline" href="/messages">Messages</a></li>
         <li><DemoButtons /></li>
