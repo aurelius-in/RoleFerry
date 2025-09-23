@@ -35,6 +35,7 @@ export default function ContactsPage() {
         <label className="ml-auto inline-flex items-center gap-2 text-sm">
           <input type="checkbox" checked={!!state.sendableOnly} onChange={toggleSendable} /> Sendable only
         </label>
+        <a href="/foundry/verify" className="px-3 py-2 rounded bg-white/10 border border-white/10 text-sm">Verify…</a>
         <button
           onClick={() => {
             const header = ["name","title","email","verification_status","verification_score"];

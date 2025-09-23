@@ -64,11 +64,13 @@ def create_app() -> FastAPI:
     from .routers import settings as settings_router, replies
     app.include_router(settings_router.router)
     app.include_router(replies.router)
-    from .routers import webhooks, onepager, warmangles, audit
+    from .routers import webhooks, onepager, warmangles, audit, demo, messages
     app.include_router(webhooks.router)
     app.include_router(onepager.router)
     app.include_router(warmangles.router)
     app.include_router(audit.router)
+    app.include_router(demo.router)
+    app.include_router(messages.router)
 
     return app
 
