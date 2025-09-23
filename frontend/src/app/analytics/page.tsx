@@ -12,6 +12,9 @@ export default async function Analytics() {
   return (
     <main className="max-w-4xl mx-auto p-6 space-y-6">
       <h1 className="text-2xl font-semibold">Analytics</h1>
+      <div>
+        <a className="px-3 py-2 rounded bg-white/10 border border-white/10 text-sm" href="/api/analytics/csv" target="_blank">Download CSV</a>
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Stat label="Delivered" value={data.delivered} />
         <Stat label="Open" value={data.open} suffix={`(${openRate}%)`} />
