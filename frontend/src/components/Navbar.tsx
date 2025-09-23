@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import HealthIndicator from "./HealthIndicator";
 
 export default function Navbar() {
   const [dark, setDark] = useState(false);
@@ -21,7 +22,10 @@ export default function Navbar() {
           <Image src="/role_ferry_black.png" alt="RoleFerry" width={140} height={38} />
         )}
       </div>
-      <ThemeToggle />
+      <div className="flex items-center gap-4">
+        <HealthIndicator />
+        <ThemeToggle />
+      </div>
     </header>
   );
 }
