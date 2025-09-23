@@ -1,4 +1,8 @@
-# RoleFerry — Recruiting Mode Workflow  
+p align="center">
+  <img src="wordmark.png" alt="RoleFerryWordmark" width="90%" />
+</p>
+
+# Recruiting Mode Workflow  
 
 <p align="center">
   <img src="role_ferry_white.png" alt="RF Logo Concept 1" width="45%" />
