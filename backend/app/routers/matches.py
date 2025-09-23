@@ -15,7 +15,7 @@ router = APIRouter()
 
 @router.post("/score")
 def score_matches(payload: MatchScoreRequest):
-    candidate = {"id": payload.candidate_id, "title": "Senior PM", "domains": ["product"]}
+    candidate = store.get_candidate() or {"id": payload.candidate_id, "title": "Senior PM", "domains": ["product"]}
     matches = []
     for job_id in payload.job_ids:
         postings = store.get_jobs(job_id)
