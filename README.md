@@ -1,7 +1,7 @@
 # RoleFerry — Recruiting Mode Workflow  
 
-![RF Logo Concept 1](assets/roleferry1.png)
-![RF Logo Concept 1](assets/roleferry1.png)
+![RF Logo Concept 1](roleferry1.png)
+![RF Logo Concept 1](roleferry1.png)
 
 ## 0) Goal
 
