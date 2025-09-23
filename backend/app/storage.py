@@ -43,6 +43,12 @@ class InMemoryStore:
     def get_dataset_for_run(self, run_id: str) -> str | None:
         return self.run_to_dataset.get(run_id)
 
+    def update_message(self, message_id: str, **fields: Any) -> None:
+        for m in self.messages:
+            if m.get("id") == message_id:
+                m.update(fields)
+                break
+
 
 store = InMemoryStore()
 
