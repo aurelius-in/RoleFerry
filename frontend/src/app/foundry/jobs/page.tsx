@@ -32,6 +32,9 @@ export default function JobsPage() {
       {Array.isArray((state as any)?.jobs) && (state as any).jobs[0]?.job_id ? (
         <div className="rounded-md p-2 bg-white/5 border border-white/10 text-sm">Saved job_id: {(state as any).jobs[0].job_id}</div>
       ) : null}
+      {Array.isArray((state as any)?.jobs) && (state as any).jobs[0]?.postings ? (
+        <div className="text-sm opacity-80">Postings: {(state as any).jobs[0].postings.length}</div>
+      ) : null}
       <div className="grid grid-cols-1 gap-3">
         <label className="space-y-1">
           <div className="text-sm opacity-80">Search query</div>

@@ -22,6 +22,15 @@ export default function IJPPage() {
     alert("IJP saved");
   };
 
+  const load = async () => {
+    const res = await api<{ id: string; filters: any }>("/ijps/ijp_demo_1", "GET");
+    const f = res.filters || {};
+    setTitles((f.titles || []).join(", "));
+    setLevels((f.levels || []).join(", "));
+    setLocations((f.locations || []).join(", "));
+    setSkillsMust((f.skills_must || []).join(", "));
+  };
+
   const inputCls = "px-3 py-2 rounded bg-white/5 border border-white/10 w-full";
   return (
     <main className="max-w-4xl mx-auto p-6 space-y-4">
@@ -43,8 +52,9 @@ export default function IJPPage() {
           <div className="text-sm opacity-80">Must-have skills</div>
           <input className={inputCls} value={skillsMust} onChange={(e) => setSkillsMust(e.target.value)} />
         </label>
-        <div>
+        <div className="flex gap-2">
           <button onClick={save} className="px-4 py-2 rounded brand-gradient text-black font-medium">Save IJP</button>
+          <button onClick={load} className="px-4 py-2 rounded bg-white/10 border border-white/10">Load</button>
         </div>
       </div>
     </main>
