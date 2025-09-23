@@ -232,6 +232,21 @@ Notes
 - Email verification threshold (MV) can be adjusted in-app on Settings (MVP stores in-memory).
 - If `INSTANTLY_API_KEY` is set in the environment, push-to-Instantly uses the API path; otherwise CSV export is used.
 
+Environment
+
+Set these in `.env` (root) for full functionality:
+
+```
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/roleferry
+REDIS_URL=redis://localhost:6379/0
+APIFY_TOKEN=...
+APIFY_INDEED_ACTOR_ID=...
+MV_API_KEY=...
+INSTANTLY_API_KEY=...
+OPENAI_API_KEY=...
+CALENDLY_TOKEN=...
+```
+
 ---
 
 
