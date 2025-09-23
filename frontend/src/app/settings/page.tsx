@@ -35,11 +35,13 @@ async function saveThreshold(n: number) {
 
 function ThresholdForm({ current }: { current: number }) {
   const [val, setVal] = (require("react") as any).useState(current);
+  const [saved, setSaved] = (require("react") as any).useState(false);
   return (
     <div className="rounded-lg p-4 bg-white/5 border border-white/10 space-y-2">
       <div className="text-sm">Email verification threshold: {val.toFixed(2)}</div>
       <Slider value={val} onChange={setVal} />
-      <button onClick={() => saveThreshold(val)} className="px-3 py-2 rounded bg-white/10 border border-white/10 text-sm">Save</button>
+      <button onClick={async () => { await saveThreshold(val); setSaved(true); setTimeout(() => setSaved(false), 2000); }} className="px-3 py-2 rounded bg-white/10 border border-white/10 text-sm">Save</button>
+      {saved ? <div className="text-xs opacity-80">Saved</div> : null}
     </div>
   );
 }

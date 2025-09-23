@@ -54,6 +54,9 @@ export default function JobsPage() {
               <div className="text-sm opacity-80">{p.location} · <a className="underline" href={p.jd_url} target="_blank">JD</a></div>
             </div>
           ))}
+          <div className="p-3">
+            <a className="px-3 py-2 rounded bg-white/10 border border-white/10 text-sm" href={(state as any).jobs[0].postings[0]?.jd_url} target="_blank">Open first JD</a>
+          </div>
         </div>
       ) : null}
     </main>

@@ -25,3 +25,9 @@ def create_or_update_ijp(payload: IJPRequest):
     store.save_ijp(ijp_id, payload.model_dump())
     return {"id": ijp_id, "saved": True, "filters": payload.model_dump()}
 
+
+@router.get("/{ijp_id}")
+def get_ijp(ijp_id: str):
+    data = store.get_ijp(ijp_id)
+    return {"id": ijp_id, "filters": data}
+
