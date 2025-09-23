@@ -8,6 +8,7 @@ class InMemoryStore:
         self.audit: List[Dict[str, Any]] = []
         self.messages: List[Dict[str, Any]] = []
         self.last_candidate: Dict[str, Any] | None = None
+        self.run_to_dataset: Dict[str, str] = {}
 
     def save_ijp(self, ijp_id: str, filters: Dict[str, Any]) -> None:
         self.ijps[ijp_id] = filters
@@ -35,6 +36,12 @@ class InMemoryStore:
 
     def get_candidate(self) -> Dict[str, Any] | None:
         return self.last_candidate
+
+    def map_run_to_dataset(self, run_id: str, dataset_id: str) -> None:
+        self.run_to_dataset[run_id] = dataset_id
+
+    def get_dataset_for_run(self, run_id: str) -> str | None:
+        return self.run_to_dataset.get(run_id)
 
 
 store = InMemoryStore()
