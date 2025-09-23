@@ -56,6 +56,14 @@ async def push_to_instantly(payload: SequencePushRequest):
         client = InstantlyClient(settings.instantly_api_key or "")
         result = await client.push_contacts(list_name, payload.contacts)
         store.add_audit(None, "instantly_push", {"list_name": list_name, "count": len(payload.contacts), "result": result})
+        # Store minimal message data for analytics
+        for c in payload.contacts:
+            store.messages.append({
+                "id": c.get("email"),
+                "opened": False,
+                "replied": False,
+                "label": None,
+            })
         return result
     store.add_audit(None, "instantly_push_csv", {"list_name": list_name, "count": len(payload.contacts)})
     return {"status": "fallback_csv", "list_name": list_name}

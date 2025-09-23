@@ -61,6 +61,9 @@ export default function SequencePage() {
       } else {
         alert(`Pushed via API: ${res?.status || "ok"}${res?.count ? ` · ${res.count} contacts` : ""}`);
       }
+      // Show post-push hint
+      const el = document.getElementById("post-push-hint");
+      if (el) el.style.display = "block";
     } catch (e: any) {
       alert(`Push failed: ${e?.message || e}`);
     }
@@ -125,6 +128,9 @@ export default function SequencePage() {
             ))}
           </tbody>
         </table>
+      </div>
+      <div id="post-push-hint" style={{ display: "none" }} className="text-sm opacity-80">
+        View pushed items in <a className="underline" href="/messages">Messages</a>.
       </div>
     </main>
   );
