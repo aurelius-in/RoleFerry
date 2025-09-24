@@ -6,6 +6,7 @@ import HealthIndicator from "./HealthIndicator";
 
 export default function Navbar() {
   const [dark, setDark] = useState(false);
+  const [open, setOpen] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     setDark(mq.matches);
@@ -26,6 +27,22 @@ export default function Navbar() {
           <Link href="/foundry" className="hover:underline">Foundry</Link>
           <Link href="/analytics" className="hover:underline">Analytics</Link>
           <Link href="/crm" className="hover:underline">CRM</Link>
+          <div className="relative">
+            <button onClick={() => setOpen(!open)} className="hover:underline">Data</button>
+            {open ? (
+              <div onMouseLeave={() => setOpen(false)} className="absolute z-20 mt-2 w-56 rounded-md bg-white/5 border border-white/10 backdrop-blur p-2 space-y-1">
+                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/messages">Messages</Link>
+                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/sequence">Sequence Rows</Link>
+                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/campaigns">Campaigns</Link>
+                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/onepager">One‑pagers</Link>
+                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/warm-angles">Warm Angles</Link>
+                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/audit">Audit Log</Link>
+                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/onboarding">Onboarding</Link>
+                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/deliverability">Deliverability</Link>
+                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/compliance">Compliance</Link>
+              </div>
+            ) : null}
+          </div>
           <Link href="/tools" className="hover:underline">Tools</Link>
           <Link href="/settings" className="hover:underline">Settings</Link>
           <Link href="/about" className="hover:underline">About</Link>
