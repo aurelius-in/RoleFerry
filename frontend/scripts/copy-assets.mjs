@@ -24,7 +24,6 @@ const files = [
     const candidates = [
       join(projectRoot, "roleferry_trans.png"),
       join(projectRoot, "roleferry_trans.png.png"),
-      join(projectRoot, "foleferry_trans.png"),
     ];
     for (const c of candidates) {
       if (existsSync(c)) {
