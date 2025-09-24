@@ -96,5 +96,12 @@ body.light .about-link { color: var(--fg); }
 .about-content { display: grid; grid-template-columns: 1fr; gap: 12px; }
 @media (min-width: 720px){ .about-content { grid-template-columns: 1fr 1.2fr; align-items: start; } }
 .about-img { width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--border); }
-.about-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
-.about-text { font-size: 16px; line-height: 1.6; }
+.about-h1 { font-size: 24px; font-weight: 800; margin: 0 0 6px; }
+.about-h2 { font-size: 18px; font-weight: 700; margin: 0 0 4px; }
+.about-lead { font-size: 16px; line-height: 1.6; opacity: 0.9; margin: 0 0 6px; }
+.about-text { font-size: 15px; line-height: 1.6; }
+.about-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+@media (min-width: 720px){ .about-grid { grid-template-columns: 1fr 1fr; } }
+.about-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+.brand-r { color: #ff7a18; }
+.brand-f { color: #60a5fa; }
