@@ -6,7 +6,7 @@
 <p align="center">
   
   <img src="roleferry_trans.png" alt="Setting Sail" width="40%" />
-  <img src="role_ferry_slow.gif.png" alt="Setting Sail" width="45%" />
+  <img src="role_ferry_slow.gif" alt="Setting Sail" width="45%" />
 </p>
 <p align="center">
   <img src="role_ferry_white.png" alt="RF Logo Concept 1" width="45%" />
