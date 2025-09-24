@@ -68,6 +68,12 @@ function RouteTransitionLoader({ onBegin, onEnd }: { onBegin: () => void; onEnd:
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
+  // Ensure the spinner never persists longer than 1200ms even if end() is missed
+  useEffect(() => {
+    const hardStop = setTimeout(onEnd, 1200);
+    return () => clearTimeout(hardStop);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
   return null;
 }
 

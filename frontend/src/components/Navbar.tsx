@@ -4,22 +4,12 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import HealthIndicator from "./HealthIndicator";
+import DataModal from "./DataModal";
 
 export default function Navbar() {
-  const [open, setOpen] = useState(false);
-  const btnRef = useRef<HTMLButtonElement | null>(null);
-  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [dataOpen, setDataOpen] = useState(false);
   const pathname = usePathname();
-  useEffect(() => {
-    const onDoc = (e: MouseEvent) => {
-      if (!open) return;
-      if (menuRef.current && !menuRef.current.contains(e.target as Node) && btnRef.current && !btnRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [open]);
+  useEffect(() => {}, []);
 
   return (
     <header suppressHydrationWarning className="relative w-full flex items-center justify-between px-4 sm:px-6 py-3">
@@ -33,31 +23,18 @@ export default function Navbar() {
         <NavLink href="/foundry" pathname={pathname}>Dashboard</NavLink>
         <NavLink href="/analytics" pathname={pathname}>Analytics</NavLink>
         <NavLink href="/CRM" pathname={pathname}>CRM</NavLink>
-        <NavLink href="/ask" pathname={pathname}>Ask</NavLink>
-        <div className="relative">
-            <button ref={btnRef} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)} className="hover:underline">Data</button>
-            {open ? (
-              <div ref={menuRef} role="menu" className="absolute z-20 mt-2 w-56 rounded-md bg-white/5 border border-white/10 backdrop-blur p-2 space-y-1 shadow-lg">
-                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/messages">Messages</Link>
-                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/sequence">Sequence Rows</Link>
-                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/campaigns">Campaigns</Link>
-                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/onepager">One‑pagers</Link>
-                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/warm-angles">Warm Angles</Link>
-                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/audit">Audit Log</Link>
-                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/onboarding">Onboarding</Link>
-                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/deliverability">Deliverability</Link>
-                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/compliance">Compliance</Link>
-              </div>
-            ) : null}
-          </div>
+        <button onClick={() => setDataOpen(true)} className="hover:underline">Data</button>
         <NavLink href="/tools" pathname={pathname}>Tools</NavLink>
-        <NavLink href="/settings" pathname={pathname}>Settings</NavLink>
-        <NavLink href="/about" pathname={pathname}>About</NavLink>
       </nav>
       <div className="flex items-center gap-4">
         <HealthIndicator />
         <ThemeToggle />
+        <Link href="/settings" aria-label="Settings" className="w-9 h-9 rounded-md flex items-center justify-center border bg-white text-black border-black/20">
+          {/* Hamburger icon */}
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>
+        </Link>
       </div>
+      <DataModal open={dataOpen} onClose={() => setDataOpen(false)} />
     </header>
   );
 }
