@@ -340,7 +340,7 @@
             <div class="small" style="margin-top:8px;"><a class="link" href="https://github.com/aurelius-in/RoleFerry/blob/develop/README.md" target="_blank" rel="noopener noreferrer">License & Notices</a></div>
           </div>
         </div>
-        <div class="small" style="margin-top:8px;">© 2025 Reliable AI Network, LLC.</div>
+
       </div>
     `;
     el.appendChild(panel);
