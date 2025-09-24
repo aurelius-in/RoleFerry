@@ -38,7 +38,8 @@ textarea { width: 100%; min-height: 96px; padding: 8px; border-radius: 6px; back
 .ask-out { margin-top: 8px; font-size: 14px; color: var(--muted); }
 
 .dashboard .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 8px; max-width: 480px; margin-left: auto; margin-right: auto; }
-.tile { position: relative; aspect-ratio: 1 / 1; border-radius: 6px; background: var(--card); border: 1px solid var(--border); display:flex; align-items:center; justify-content:center; text-decoration: none; color: var(--fg); padding: 0; }
+.tile { position: relative; aspect-ratio: 1 / 1; border-radius: 6px; background: var(--card); border: 1px solid var(--border); display:flex; align-items:center; justify-content:center; text-decoration: none; color: var(--fg); padding: 0; cursor: pointer; }
+.tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .icon { font-size: 72px; line-height: 1; }
 .tile .label { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-weight: 800; font-size: 13px; opacity: 0; transition: all .2s ease; }
 .tile:hover .label { opacity: 1; transform: translate(-50%, -2px); }
