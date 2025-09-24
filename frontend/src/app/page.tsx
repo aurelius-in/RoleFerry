@@ -1,5 +1,4 @@
-import dynamic from "next/dynamic";
-const AskBox = dynamic(() => import("@/components/AskBox"), { ssr: false });
+import AskBox from "@/components/AskBox";
 
 export default function Home() {
   return (
