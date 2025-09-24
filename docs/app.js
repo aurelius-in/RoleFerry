@@ -253,21 +253,34 @@
         <button class="icon-btn" id="toolsClose">✕</button>
       </div>
       <div class="body">
-        <div class="list">
-          <a href="#">Reply Classifier</a>
-          <a href="#">Warm Angles</a>
-          <a href="#">One‑pager Generator</a>
-          <a href="#">Deliverability</a>
-          <a href="#">Compliance</a>
-          <a href="#">Audit Log</a>
-          <a href="#">Messages</a>
-          <a href="#">Onboarding</a>
-          <a href="#" target="_blank">Health</a>
-        </div>
+        <div class="list" id="toolsList"></div>
       </div>
     `;
     el.appendChild(panel);
     panel.querySelector('#toolsClose').addEventListener('click', ()=>closeModal(el));
+
+    const list = panel.querySelector('#toolsList');
+    const items = [
+      { label: 'Reply Classifier', target: '#analytics' },
+      { label: 'Warm Angles', target: '#data/Warm%20Angles' },
+      { label: 'One‑pager Generator', target: '#data/One%E2%80%91pagers' },
+      { label: 'Deliverability', target: '#data/Deliverability' },
+      { label: 'Compliance', target: '#data/Compliance' },
+      { label: 'Audit Log', target: '#data/Audit%20Log' },
+      { label: 'Messages', target: '#data/Messages' },
+      { label: 'Onboarding', target: '#data/Onboarding' },
+      { label: 'Health', target: '#analytics' },
+    ];
+    items.forEach(it => {
+      const btn = document.createElement('button');
+      btn.className = 'px-3 py-2 rounded bg-white/10 hover:bg-white/15';
+      btn.textContent = it.label;
+      btn.addEventListener('click', () => {
+        closeModal(el);
+        location.hash = it.target;
+      });
+      list.appendChild(btn);
+    });
   }
   $('#toolsBtn').addEventListener('click', ()=>{ renderToolsModal(); openModal($('#toolsModal')); });
 
