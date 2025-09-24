@@ -13,8 +13,10 @@ body { margin: 0; background: linear-gradient(#000, #0a2a66); color: var(--fg); 
 .nav-right { display: flex; align-items: center; gap: 10px; }
 .icon-btn { width: 36px; height: 36px; display:flex; align-items:center; justify-content:center; border: 1px solid var(--border); border-radius: 6px; background: #fff; color:#000; }
 
-.container { max-width: 1100px; margin: 0 auto; padding: 16px; }
-.hero { text-align: center; margin-top: 10px; }
+.container { max-width: 1100px; margin: 0 auto; padding: 8px 16px 16px; }
+.view { display: none; }
+.view.active { display: block; }
+.hero { text-align: center; margin-top: 0; }
 .hero-gif { width: 320px; max-width: 80vw; border-radius: 6px; }
 .hero h1 { font-size: 28px; margin: 10px 0 6px; }
 .hero p { color: var(--muted); margin: 0 0 8px; }
@@ -30,13 +32,28 @@ textarea { width: 100%; min-height: 96px; padding: 8px; border-radius: 6px; back
 .icon { font-size: 64px; line-height: 1; }
 .tile .label { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); font-weight: 800; font-size: 16px; opacity: 0; transition: all .2s ease; }
 .tile:hover .label { opacity: 1; transform: translate(-50%, -2px); }
+.section-title { font-size: 20px; font-weight: 700; margin: 6px 0 10px; }
+.analytics { height: 180px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; display:flex; align-items:center; justify-content:center; color: var(--muted); }
+.crm-board { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+.crm-board .lane { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow:hidden; }
+.lane .lane-head { padding: 8px 10px; border-bottom: 1px solid var(--border); font-weight: 700; }
+.lane .lane-body { padding: 8px; display:flex; flex-direction:column; gap:8px; }
+.card-sm { padding: 8px; border-radius: 6px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); }
 
 .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); }
 .modal { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; padding: 16px; }
 .hidden { display: none; }
-.modal .panel { width: min(720px, 96vw); background: rgba(10,10,10,0.95); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.modal .panel { width: min(960px, 96vw); background: rgba(10,10,10,0.95); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
 .modal .panel .head { display:flex; align-items:center; justify-content:space-between; padding: 12px; border-bottom: 1px solid var(--border); }
-.modal .panel .body { padding: 12px; }
+.modal .panel .body { padding: 0; }
+.modal .layout { display:flex; min-height: 360px; }
+.modal aside.menu { width: 240px; border-right: 1px solid var(--border); padding: 8px; }
+.modal aside.menu .item { width: 100%; text-align: left; padding: 8px 10px; border-radius: 8px; border: 1px solid transparent; color: var(--fg); background: transparent; cursor: pointer; }
+.modal aside.menu .item:hover { background: rgba(255,255,255,0.06); }
+.modal aside.menu .item.active { background: rgba(255,255,255,0.1); border-color: var(--border); }
+.modal section.content { flex: 1; padding: 12px; }
+.modal .actions { display:flex; align-items:center; gap: 8px; }
+.modal .link-btn { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: rgba(255,255,255,0.06); color: var(--fg); text-decoration: none; }
 .list { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
 .list a { display:block; padding: 10px; border-radius: 8px; background: var(--card); border: 1px solid var(--border); color: var(--fg); text-decoration: none; }
 
