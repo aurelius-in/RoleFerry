@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+from ..storage import store
 
 
 class WarmAnglesRequest(BaseModel):
@@ -13,8 +14,25 @@ router = APIRouter()
 
 @router.post("/warm-angles/find")
 def find_warm_angles(payload: WarmAnglesRequest):
-    return {"warm_angles": [
-        {"type": "mutual", "detail": "You and Alex both know Jordan"},
-        {"type": "alma_mater", "detail": "Shared school: State U"},
-    ]}
+    keys = []
+    if payload.linkedin:
+        keys.append(f"li:{payload.linkedin}")
+    if payload.domain:
+        keys.append(f"domain:{payload.domain}")
+    if payload.schools:
+        for s in payload.schools:
+            keys.append(f"school:{s}")
+    results = []
+    for k in keys:
+        results.extend(store.get_warm_angles(k))
+    # de-dup by (type, detail)
+    seen = set()
+    dedup = []
+    for a in results:
+        key = (a.get("type"), a.get("detail"))
+        if key in seen:
+            continue
+        seen.add(key)
+        dedup.append(a)
+    return {"warm_angles": dedup}
 

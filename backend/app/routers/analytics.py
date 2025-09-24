@@ -55,3 +55,8 @@ def analytics_csv():
     csv_body = "\n".join(lines)
     return Response(content=csv_body, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=analytics.csv"})
 
+
+@router.get("/timeseries")
+def analytics_timeseries():
+    return {"points": store.list_timeseries()}
+

@@ -49,6 +49,28 @@ def export_csv(payload: SequenceExportRequest):
     return {"filename": "instantly.csv", "content": csv_content}
 
 
+@router.get("")
+def list_sequence_rows():
+    return {"rows": store.list_sequence_rows()}
+
+
+@router.get("/runs")
+def list_runs():
+    return {"runs": store.list_sequence_runs()}
+
+
+@router.get("/campaigns")
+def list_campaigns(status: str | None = None, variant: str | None = None, min_list: int | None = None):
+    items = store.list_campaigns()
+    if status:
+        items = [c for c in items if (c.get("status") or "").lower() == status.lower()]
+    if variant:
+        items = [c for c in items if (c.get("variant") or "").lower() == variant.lower()]
+    if min_list is not None:
+        items = [c for c in items if int(c.get("list_size") or 0) >= int(min_list)]
+    return {"campaigns": items}
+
+
 @router.post("/push")
 async def push_to_instantly(payload: SequencePushRequest):
     list_name = payload.list_name or "RoleFerry Run"

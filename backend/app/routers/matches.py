@@ -31,3 +31,8 @@ def score_matches(payload: MatchScoreRequest):
         })
     return {"matches": matches}
 
+
+@router.get("")
+def list_matches():
+    return {"matches": store.list_matches()}
+
