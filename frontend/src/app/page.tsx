@@ -11,7 +11,7 @@ export default function Home() {
           Smooth crossing in rough seas.
         </h1>
         <p className="text-base sm:text-lg opacity-90">
-          When every wave pushes you back, RoleFerry pulls you forward.
+          When every wave pushes you back, <span className="font-bold"><span className="text-orange-400">Role</span><span className="text-blue-400">Ferry</span></span> pulls you forward.
         </p>
         <div className="pt-2">
           <AskBox />
