@@ -2,34 +2,51 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { useFoundry } from "@/context/FoundryContext";
+import { useLoading } from "@/components/LoadingProvider";
 
 export default function JobsPage() {
   const { state, setState } = useFoundry();
+  const { begin, end } = useLoading();
   const [query, setQuery] = useState("Product Manager remote");
   const [urls, setUrls] = useState("");
 
   const ingest = async () => {
+    begin();
     const jd_urls = urls
       .split(/\n|,/) // split by newlines or commas
       .map((s) => s.trim())
       .filter(Boolean);
-    const res = await api<{ job_id: string }>("/jobs/ingest", "POST", { query, jd_urls });
-    setState({ jobs: [{ job_id: res.job_id }] });
-    alert(`Ingest started: ${res.job_id}`);
+    try {
+      const res = await api<{ job_id: string }>("/jobs/ingest", "POST", { query, jd_urls });
+      setState({ jobs: [{ job_id: res.job_id }] });
+    } finally {
+      end();
+    }
   };
 
   const fetchResults = async () => {
     const job_id = (Array.isArray((state as any)?.jobs) ? (state as any).jobs[0]?.job_id : undefined) as string | undefined;
     if (!job_id) return;
-    const res = await api<{ postings: any[] }>(`/jobs/${job_id}`, "GET");
-    setState({ jobs: [{ job_id, postings: res.postings }] });
+    begin();
+    try {
+      const res = await api<{ postings: any[] }>(`/jobs/${job_id}`, "GET");
+      setState({ jobs: [{ job_id, postings: res.postings }] });
+    } finally {
+      end();
+    }
   };
 
   const pollResults = async () => {
     const job_id = (Array.isArray((state as any)?.jobs) ? (state as any).jobs[0]?.job_id : undefined) as string | undefined;
     if (!job_id) return;
-    await api(`/jobs/poll/${job_id}`, "POST");
-    await fetchResults();
+    begin();
+    try {
+      await api(`/jobs/poll/${job_id}`, "POST");
+      const res = await api<{ postings: any[] }>(`/jobs/${job_id}`, "GET");
+      setState({ jobs: [{ job_id, postings: res.postings }] });
+    } finally {
+      end();
+    }
   };
 
   const inputCls = "px-3 py-2 rounded bg-white/5 border border-white/10 w-full";

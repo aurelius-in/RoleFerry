@@ -4,6 +4,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { FoundryProvider } from "@/context/FoundryContext";
 import Footer from "@/components/Footer";
+import { ToastProvider } from "@/components/ToastProvider";
+import { LoadingProvider } from "@/components/LoadingProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,14 +33,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}
       >
         <FoundryProvider>
-          <Navbar />
-          {children}
-          <Footer />
+          <LoadingProvider>
+            <ToastProvider>
+              <Navbar />
+              {children}
+              <Footer />
+            </ToastProvider>
+          </LoadingProvider>
         </FoundryProvider>
       </body>
     </html>
