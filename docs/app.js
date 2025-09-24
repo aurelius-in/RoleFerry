@@ -289,6 +289,27 @@
   }
   $('#settingsBtn').addEventListener('click', ()=>{ renderSettingsModal(); openModal($('#settingsModal')); });
 
+  // About modal
+  function renderAboutModal(){
+    const el = $('#aboutModal');
+    el.innerHTML = '';
+    const panel = document.createElement('div');
+    panel.className = 'panel';
+    panel.innerHTML = `
+      <div class="head">
+        <div class="title">About</div>
+        <button class="icon-btn" id="aboutClose">✕</button>
+      </div>
+      <div class="body">
+        <div class="small">Role <strong style="color:#ff7a18">Role</strong><strong style="color:#60a5fa">Ferry</strong> — relationship‑first outreach engine.</div>
+        <div class="small">© 2025 Reliable AI Network, LLC.</div>
+      </div>
+    `;
+    el.appendChild(panel);
+    panel.querySelector('#aboutClose').addEventListener('click', ()=>closeModal(el));
+  }
+  document.getElementById('aboutFooterBtn').addEventListener('click', ()=>{ renderAboutModal(); openModal(document.getElementById('aboutModal')); });
+
   // Close on backdrop click
   backdrop.addEventListener('click', ()=>{
     ['#dataModal','#toolsModal','#settingsModal'].forEach(sel=>{
