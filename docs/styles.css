@@ -39,3 +39,17 @@ textarea { width: 100%; min-height: 96px; padding: 8px; border-radius: 6px; back
 .modal .panel .body { padding: 12px; }
 .list { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
 .list a { display:block; padding: 10px; border-radius: 8px; background: var(--card); border: 1px solid var(--border); color: var(--fg); text-decoration: none; }
+
+/* Spinner */
+.spinner { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+.spinner img { width: 80px; height: 80px; opacity: 0.9; }
+
+/* Data page */
+.data-page { max-width: 1100px; margin: 0 auto; padding: 12px 16px 24px; }
+.data-head { display:flex; align-items:center; gap: 10px; margin: 8px 0 12px; }
+.data-title { font-size: 20px; font-weight: 700; }
+.table-wrap { overflow:auto; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+thead { position: sticky; top: 0; background: rgba(255,255,255,0.1); }
+th, td { padding: 8px 10px; text-align: left; white-space: nowrap; }
+tbody tr:nth-child(odd) { background: rgba(255,255,255,0.05); }
