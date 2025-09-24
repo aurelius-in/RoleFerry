@@ -8,15 +8,18 @@ export default function Foundry() {
     { key: "verify", label: "Verify", icon: "✅" },
     { key: "outreach", label: "Outreach", icon: "✉️" },
     { key: "sequence", label: "Sequence", icon: "📤" },
+    { key: "offers", label: "Offers", icon: "📄" },
   ];
   return (
-    <main className="max-w-5xl mx-auto p-6 space-y-6">
+    <main className="max-w-6xl mx-auto p-6 space-y-6">
       <h1 className="text-2xl font-semibold">Dashboard</h1>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 gap-4">
         {steps.map((s) => (
-          <a key={s.key} href={`/foundry/${s.key}`} className="rounded-lg p-4 bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2">
-            <span className="text-xl" aria-hidden>{s.icon}</span>
-            <span>{s.label}</span>
+          <a key={s.key} href={`/foundry/${s.key}`} className="relative aspect-square rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center p-[5px] group">
+            <span className="text-6xl md:text-7xl" aria-hidden>{s.icon}</span>
+            <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xl md:text-2xl font-bold opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-y-[-2px] drop-shadow">
+              {s.label}
+            </span>
           </a>
         ))}
       </div>

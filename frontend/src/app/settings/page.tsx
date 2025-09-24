@@ -1,26 +1,52 @@
-async function getSettings() {
-  const r = await fetch("/api/settings", { cache: "no-store" });
-  return await r.json();
-}
+"use client";
+import { api } from "@/lib/api";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
-export default async function Settings() {
-  const s = await getSettings();
+export default function Settings() {
+  const [s, setS] = useState<any | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await api("/settings", "GET");
+        setS(data);
+      } catch (e: any) {
+        setErr(String(e?.message || e));
+      }
+    })();
+  }, []);
   return (
-    <main className="max-w-3xl mx-auto p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Settings</h1>
-      <div className="rounded-lg p-4 bg-white/5 border border-white/10 space-y-2 text-sm">
-        <div>Environment: {s.environment}</div>
-        <div>MV Threshold: {s.mv_threshold}</div>
-        <div>CORS Origins: {Array.isArray(s.cors_origins) ? s.cors_origins.join(", ") : String(s.cors_origins)}</div>
-        <div>Instantly Enabled: {String(s.instantly_enabled)}</div>
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16">
+      <div className="absolute inset-0 bg-black/60" />
+      <div className="relative w-full max-w-xl mx-auto rounded-lg bg-white/10 backdrop-blur border border-white/10 p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl md:text-2xl font-semibold">Settings</h1>
+          <Link href="/" className="px-2 py-1 rounded bg-white/10 border border-white/10 text-sm">Close</Link>
+        </div>
+        {err ? (
+          <div className="text-xs opacity-80 break-all">{err}</div>
+        ) : null}
+        {s ? (
+          <>
+            <div className="rounded-lg p-4 bg-white/5 border border-white/10 space-y-2 text-sm">
+              <div>Environment: {s.environment}</div>
+              <div>MV Threshold: {s.mv_threshold}</div>
+              <div>CORS Origins: {Array.isArray(s.cors_origins) ? s.cors_origins.join(", ") : String(s.cors_origins)}</div>
+              <div>Instantly Enabled: {String(s.instantly_enabled)}</div>
+            </div>
+            <ThresholdForm current={s.mv_threshold} />
+            <Citizenship />
+            <div className="text-sm space-x-4">
+              <Link className="underline" href="/replies">Go to Replies tester</Link>
+              <a className="underline" href="/api/metrics" target="_blank">Metrics</a>
+            </div>
+          </>
+        ) : (
+          <div className="text-sm opacity-80">Loading...</div>
+        )}
       </div>
-      <ThresholdForm current={s.mv_threshold} />
-      <Citizenship />
-      <div className="text-sm space-x-4">
-        <a className="underline" href="/replies">Go to Replies tester</a>
-        <a className="underline" href="/api/metrics" target="_blank">Metrics</a>
-      </div>
-    </main>
+    </div>
   );
 }
 

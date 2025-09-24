@@ -30,7 +30,7 @@ export default function Navbar() {
       </div>
       {/* Center: navigation */}
       <nav className="hidden sm:flex flex-1 items-center justify-center gap-6 text-lg font-semibold">
-        <NavLink href="/foundry" pathname={pathname}>Foundry</NavLink>
+        <NavLink href="/foundry" pathname={pathname}>Dashboard</NavLink>
         <NavLink href="/analytics" pathname={pathname}>Analytics</NavLink>
         <NavLink href="/CRM" pathname={pathname}>CRM</NavLink>
         <NavLink href="/ask" pathname={pathname}>Ask</NavLink>
