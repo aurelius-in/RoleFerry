@@ -1,26 +1,10 @@
-import Image from "next/image";
-
 export default function Home() {
   return (
     <div className="min-h-screen flex items-center justify-center p-8 sm:p-16">
       <main className="w-full max-w-3xl mx-auto text-center space-y-6">
-        <div className="flex items-center justify-center">
-          <Image
-            src="/role_ferry_black.png"
-            alt="RoleFerry logo"
-            width={220}
-            height={60}
-            className="hidden dark:block"
-            priority
-          />
-          <Image
-            src="/role_ferry_white.png"
-            alt="RoleFerry logo"
-            width={220}
-            height={60}
-            className="block dark:hidden"
-            priority
-          />
+        <div className="flex flex-col items-center justify-center gap-3">
+          <img src="/wordmark.png" alt="RoleFerry" className="h-10 md:h-12" />
+          <img src="/roleferry-med.gif" alt="RoleFerry animation" className="w-[260px] md:w-[320px] rounded" />
         </div>
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight">
           Forge your first conversation.

@@ -24,7 +24,7 @@
 }
 
 body {
-  background: var(--gradient-bg);
+  background: linear-gradient(180deg, #000000 0%, #0b1020 25%, #0f274a 60%, #3c7bd9 100%);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
