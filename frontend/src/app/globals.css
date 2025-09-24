@@ -32,3 +32,9 @@ body {
 .brand-gradient {
   background: var(--accent-gradient);
 }
+
+@layer base {
+  button {
+    font-weight: 700 !important;
+  }
+}
