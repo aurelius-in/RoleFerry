@@ -19,11 +19,12 @@ const files = [
   { src: join(projectRoot, "roleferry-med.gif"), dest: join(publicDir, "roleferry-med.gif") },
   { src: join(projectRoot, "ani-sm.gif"), dest: join(publicDir, "ani-sm.gif") },
   { src: join(projectRoot, "about.png"), dest: join(publicDir, "about.png") },
-  // Prefer the transparent logo if present; support a common double-extension typo
+  // Prefer the transparent logo if present; support known filename variants
   ...(function () {
     const candidates = [
       join(projectRoot, "roleferry_trans.png"),
       join(projectRoot, "roleferry_trans.png.png"),
+      join(projectRoot, "foleferry_trans.png"),
     ];
     for (const c of candidates) {
       if (existsSync(c)) {
