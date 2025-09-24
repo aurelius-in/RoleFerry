@@ -77,6 +77,30 @@
         { region:'US', opt_outs:3, dnc:1 },
         { region:'EU', opt_outs:1, dnc:0 },
       ]
+    },
+    'IJPs': {
+      columns: ['id','titles','levels','locations','skills_must'],
+      rows: Array.from({length: 15}).map((_,i)=>({ id:`ijp_${i+1}`, titles:'PM, Sr PM', levels:i%2?'Senior':'Mid', locations: i%3? 'Remote':'SF', skills_must: 'PLG, SQL'}))
+    },
+    Jobs: {
+      columns: ['id','title','company','location','jd_url'],
+      rows: Array.from({length: 25}).map((_,i)=>({ id:`job_${i+1}`, title: i%2?'Senior PM':'Growth PM', company:`Acme ${i%6}`, location: i%3?'Remote':'NYC', jd_url: `https://indeed.example.com/${i+1}` }))
+    },
+    Candidates: {
+      columns: ['id','name','email','seniority','domains'],
+      rows: Array.from({length: 20}).map((_,i)=>({ id:`cand_${i+1}`, name:`Alex ${i}`, email:`alex${i}@example.com`, seniority: i%2?'Senior':'Mid', domains: 'PLG, SaaS' }))
+    },
+    Contacts: {
+      columns: ['id','company','name','title','email','verification_status'],
+      rows: Array.from({length: 40}).map((_,i)=>({ id:`ct_${i+1}`, company:`Globex ${i%5}`, name:`Jordan ${i}`, title: i%2?'VP Product':'Recruiter', email:`j${i}@globex.com`, verification_status: ['valid','accept_all','invalid'][i%3] }))
+    },
+    Matches: {
+      columns: ['candidate','job','score','reasons'],
+      rows: Array.from({length: 18}).map((_,i)=>({ candidate:`Alex ${i}`, job:`PM @ Acme ${i%6}`, score: 70+(i%30), reasons:'PLG experience; rollout velocity' }))
+    },
+    Offers: {
+      columns: ['id','candidate','portfolio_url','deck_url'],
+      rows: Array.from({length: 10}).map((_,i)=>({ id:`off_${i+1}`, candidate:`Alex ${i}`, portfolio_url:`https://portfolio.example.com/${i+1}`, deck_url:`https://docs.example.com/deck/${i+1}` }))
     }
   };
 
@@ -108,21 +132,44 @@
     panel.innerHTML = `
       <div class="head">
         <div class="title">Data</div>
-        <button class="icon-btn" id="dataClose">✕</button>
+        <div class="actions">
+          <a id="viewFull" class="link-btn" href="#" target="_self">View full page</a>
+          <button class="icon-btn" id="dataClose">✕</button>
+        </div>
       </div>
       <div class="body">
-        <div class="list" id="dataList"></div>
+        <div class="layout">
+          <aside class="menu" id="dataMenu"></aside>
+          <section class="content"><div id="previewWrap" class="table-wrap"></div></section>
+        </div>
       </div>
     `;
     el.appendChild(panel);
-    const list = panel.querySelector('#dataList');
+    const menu = panel.querySelector('#dataMenu');
+    const preview = panel.querySelector('#previewWrap');
+    const viewFull = panel.querySelector('#viewFull');
+
+    function select(label){
+      menu.querySelectorAll('.item').forEach(n=>n.classList.remove('active'));
+      const btn = menu.querySelector(`[data-label="${label}"]`);
+      if (btn) btn.classList.add('active');
+      preview.innerHTML='';
+      const ds = MOCK[label];
+      const subset = { columns: ds.columns, rows: ds.rows.slice(0, 8) };
+      preview.appendChild(renderTable(subset));
+      viewFull.setAttribute('href', `#data/${encodeURIComponent(label)}`);
+    }
+
     dataItems.forEach(d => {
-      const a = document.createElement('a');
-      a.href = `#data/${encodeURIComponent(d.label)}`;
-      a.textContent = d.label;
-      a.addEventListener('click', ()=>{ closeModal(el); });
-      list.appendChild(a);
+      const b = document.createElement('button');
+      b.className = 'item';
+      b.textContent = d.label;
+      b.dataset.label = d.label;
+      b.addEventListener('click', ()=> select(d.label));
+      menu.appendChild(b);
     });
+    // default select first
+    if (dataItems[0]) select(dataItems[0].label);
     panel.querySelector('#dataClose').addEventListener('click', ()=>closeModal(el));
   }
   $('#dataBtn').addEventListener('click', ()=>{ renderDataModal(); openModal($('#dataModal')); });
@@ -148,19 +195,28 @@
   $('#dataBack').addEventListener('click', ()=>{ history.pushState({}, '', '#'); hideDataPage(); });
 
   window.addEventListener('hashchange', ()=>{
-    const h = location.hash;
-    if (h.startsWith('#data/')) {
-      const label = decodeURIComponent(h.slice(6));
-      hideDataPage(); showDataPage(label);
-    } else {
-      hideDataPage();
-    }
+    applyRoute();
   });
   // Initial route
-  if (location.hash.startsWith('#data/')) {
-    const label = decodeURIComponent(location.hash.slice(6));
-    showDataPage(label);
+  function applyRoute(){
+    const h = location.hash || '#home';
+    ['#home','#dashboard','#analytics','#crm'].forEach(tag=>{
+      const id = tag.slice(1)+'View';
+      const node = document.getElementById(id); if (node) node.classList.remove('active');
+    });
+    if (h.startsWith('#data/')) {
+      const label = decodeURIComponent(h.slice(6));
+      showDataPage(label);
+      return;
+    }
+    hideDataPage();
+    const viewId = (h.replace('#','')+'View');
+    const viewEl = document.getElementById(viewId);
+    if (viewEl) {
+      showSpinner(); setTimeout(()=>{ viewEl.classList.add('active'); hideSpinner(); }, 150);
+    }
   }
+  applyRoute();
 
   // Tools modal
   function renderToolsModal(){
