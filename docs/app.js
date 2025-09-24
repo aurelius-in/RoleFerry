@@ -314,14 +314,23 @@
         <button class="icon-btn" id="aboutClose">✕</button>
       </div>
       <div class="body">
-        <div class="small">Role <strong style="color:#ff7a18">Role</strong><strong style="color:#60a5fa">Ferry</strong> — relationship‑first outreach engine.</div>
-        <div class="small">© 2025 Reliable AI Network, LLC.</div>
+        <div class="about-content">
+          <img class="about-img" src="assets/about.png" alt="About" />
+          <div>
+            <div class="about-title"><strong style=\"color:#ff7a18\">Role</strong><strong style=\"color:#60a5fa\">Ferry</strong></div>
+            <div class="about-text">
+              About RoleFerry — two creative business owners, <strong>Dave March</strong> and <strong>Oliver Ellison</strong>. Dave’s mission is related to career coaching and end‑to‑end talent sourcing, and Oliver is all about innovating geni solutions for diverse business use cases.
+            </div>
+          </div>
+        </div>
+        <div class="small" style="margin-top:8px;">© 2025 Reliable AI Network, LLC. All rights reserved.</div>
       </div>
     `;
     el.appendChild(panel);
     panel.querySelector('#aboutClose').addEventListener('click', ()=>closeModal(el));
   }
   document.getElementById('aboutFooterBtn').addEventListener('click', ()=>{ renderAboutModal(); openModal(document.getElementById('aboutModal')); });
+  document.getElementById('aboutBtn').addEventListener('click', ()=>{ renderAboutModal(); openModal(document.getElementById('aboutModal')); });
 
   // Close on backdrop click
   backdrop.addEventListener('click', ()=>{
