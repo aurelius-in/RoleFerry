@@ -56,11 +56,6 @@ export function LoadingProvider({ children }: { children: ReactNode }) {
   return (
     <LoadingCtx.Provider value={value}>
       {children}
-      {isLoading ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
-          <img src="/ani-sm.gif" alt="Loading" className="opacity-70 w-24 h-24 transition-opacity" />
-        </div>
-      ) : null}
       <RouteTransitionLoader onBegin={begin} onEnd={end} />
     </LoadingCtx.Provider>
   );
