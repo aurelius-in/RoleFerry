@@ -10,14 +10,14 @@
   function showSpinner(){
     if (spinTimer) clearTimeout(spinTimer);
     spinStart = Date.now();
-    spinner.classList.remove('hidden');
+    if (spinner) spinner.classList.remove('hidden');
   }
   function hideSpinner(){
     const elapsed = Date.now() - spinStart;
     const remaining = Math.max(0, 1000 - elapsed);
-    spinTimer = setTimeout(()=>{ spinner.classList.add('hidden'); }, remaining);
+    spinTimer = setTimeout(()=>{ if (spinner) spinner.classList.add('hidden'); }, remaining);
     // absolute watchdog to avoid stuck state
-    setTimeout(()=>{ spinner.classList.add('hidden'); }, Math.max(remaining, 1200));
+    setTimeout(()=>{ if (spinner) spinner.classList.add('hidden'); }, Math.max(remaining, 1200));
   }
 
   // Theme toggle
