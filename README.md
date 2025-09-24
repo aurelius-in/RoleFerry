@@ -2,13 +2,12 @@
   <img src="wordmark.png" alt="RoleFerryWordmark" width="90%" />
 </p>
 
-<p align="center">
-  <img src="roleferry_trans.png" alt="Setting Sail" width="40%" />
-</p>
-
-
 # Recruiting Mode Workflow  
-
+<p align="center">
+  
+  <img src="roleferry_trans.png" alt="Setting Sail" width="40%" />
+  <img src="role_ferry_slow.gif.png" alt="Setting Sail" width="45%" />
+</p>
 <p align="center">
   <img src="role_ferry_white.png" alt="RF Logo Concept 1" width="45%" />
   <img src="role_ferry_black.png" alt="RF Logo Concept 2" width="45%" />
