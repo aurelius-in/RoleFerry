@@ -10,8 +10,16 @@ const publicDir = join(__dirname, "../public");
 
 mkdirSync(publicDir, { recursive: true });
 
+// Resolve wordmark from either "wordmark.png" or common typo "woodmark.png"
+const wordmarkCandidates = ["wordmark.png", "woodmark.png"]; 
+let wordmarkSrc = null;
+for (const name of wordmarkCandidates) {
+  const p = join(projectRoot, name);
+  if (existsSync(p)) { wordmarkSrc = p; break; }
+}
+
 const files = [
-  { src: join(projectRoot, "wordmark.png"), dest: join(publicDir, "wordmark.png") },
+  ...(wordmarkSrc ? [{ src: wordmarkSrc, dest: join(publicDir, "wordmark.png") }] : []),
   { src: join(projectRoot, "roleferry-med.gif"), dest: join(publicDir, "roleferry-med.gif") },
   { src: join(projectRoot, "ani-sm.gif"), dest: join(publicDir, "ani-sm.gif") },
 ];
