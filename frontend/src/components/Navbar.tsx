@@ -5,17 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import HealthIndicator from "./HealthIndicator";
 
 export default function Navbar() {
-  const [dark, setDark] = useState(false);
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    setDark(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setDark(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
       if (!open) return;
@@ -28,10 +20,10 @@ export default function Navbar() {
   }, [open]);
 
   return (
-    <header className="w-full flex items-center justify-between px-4 sm:px-6 py-3">
+    <header className="relative w-full flex items-center justify-between px-4 sm:px-6 py-3">
       <div className="flex items-center gap-4">
         <Image src="/role_ferry_black.png" alt="RoleFerry" width={140} height={38} />
-        <nav className="hidden sm:flex items-center gap-4 text-sm opacity-90">
+        <nav className="hidden sm:flex items-center gap-5 text-base opacity-90">
           <Link href="/foundry" className="hover:underline">Foundry</Link>
           <Link href="/analytics" className="hover:underline">Analytics</Link>
           <Link href="/CRM" className="hover:underline">CRM</Link>
@@ -56,6 +48,10 @@ export default function Navbar() {
           <Link href="/settings" className="hover:underline">Settings</Link>
           <Link href="/about" className="hover:underline">About</Link>
         </nav>
+      </div>
+      {/* Centered wordmark at top edge */}
+      <div className="absolute left-1/2 -translate-x-1/2 top-2 pointer-events-none select-none">
+        <Image src="/wordmark.png" alt="RoleFerry" width={160} height={32} priority />
       </div>
       <div className="flex items-center gap-4">
         <HealthIndicator />
