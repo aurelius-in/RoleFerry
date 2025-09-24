@@ -30,11 +30,11 @@ export default function Navbar() {
       <div className="flex items-center gap-4">
         <HealthIndicator />
         <ThemeToggle />
-        <button aria-label="Tools" className="w-9 h-9 rounded-md flex items-center justify-center border bg-white text-black border-black/20" onClick={() => setToolsOpen(true)}>
+        <button aria-label="Tools" className="w-9 h-9 rounded-md flex items-center justify-center border bg-black text-white border-white/20" onClick={() => setToolsOpen(true)}>
           {/* Wrench icon */}
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.7 19.3l-6.4-6.4a6.5 6.5 0 01-8.1-8.1l4.1 4.1 2.8-.7.7-2.8L11.7 1a6.5 6.5 0 008.1 8.1l6.4 6.4-3.5 3.5zM2 22l6-6 2 2-6 6H2v-2z"/></svg>
         </button>
-        <Link href="/settings" aria-label="Settings" className="w-9 h-9 rounded-md flex items-center justify-center border bg-white text-black border-black/20">
+        <Link href="/settings" aria-label="Settings" className="w-9 h-9 rounded-md flex items-center justify-center border bg-black text-white border-white/20">
           {/* Hamburger icon */}
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>
         </Link>

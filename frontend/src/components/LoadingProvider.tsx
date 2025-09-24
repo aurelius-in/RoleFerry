@@ -40,12 +40,25 @@ export function LoadingProvider({ children }: { children: ReactNode }) {
   };
   const value = useMemo(() => ({ begin, end }), []);
   const isLoading = counterRef.current > 0;
+  // Watchdog: ensure spinner never persists beyond ~1.2s after the most recent begin
+  useEffect(() => {
+    if (!isLoading || startTsRef.current == null) return;
+    const elapsed = Date.now() - startTsRef.current;
+    const remaining = Math.max(0, 1200 - elapsed);
+    const t = setTimeout(() => {
+      counterRef.current = 0;
+      startTsRef.current = null;
+      setTick((x) => x + 1);
+    }, remaining);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tick]);
   return (
     <LoadingCtx.Provider value={value}>
       {children}
       {isLoading ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
-          <img src="/ani-sm.gif" alt="Loading" className="opacity-70 w-24 h-24" />
+          <img src="/ani-sm.gif" alt="Loading" className="opacity-70 w-24 h-24 transition-opacity" />
         </div>
       ) : null}
       <RouteTransitionLoader onBegin={begin} onEnd={end} />
