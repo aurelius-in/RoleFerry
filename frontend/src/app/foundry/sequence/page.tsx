@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useFoundry } from "@/context/FoundryContext";
 import { useToast } from "@/components/ToastProvider";
+import { useLoading } from "@/components/LoadingProvider";
 import { downloadText } from "@/lib/download";
 
 export default function SequencePage() {
   const { state } = useFoundry();
   const { notify } = useToast();
+  const { begin, end } = useLoading();
   const [rows, setRows] = useState<any[]>([
     {
       email: "alex@example.com",
@@ -39,11 +41,14 @@ export default function SequencePage() {
 
   const exportCsv = async () => {
     try {
+      begin();
       const res = await api<{ filename: string; content: string }>("/sequence/export", "POST", { contacts: rows });
       downloadText(res.filename, res.content);
       notify("CSV downloaded");
     } catch (e: any) {
       notify(`Export failed: ${e?.message || e}`);
+    } finally {
+      end();
     }
   };
 
@@ -58,6 +63,7 @@ export default function SequencePage() {
 
   const pushToInstantly = async () => {
     try {
+      begin();
       const res = await api<any>("/sequence/push", "POST", { list_name: "RoleFerry Demo", contacts: rows });
       if (res?.status === "fallback_csv") {
         notify("CSV fallback used (no API key)");
@@ -69,10 +75,13 @@ export default function SequencePage() {
       if (el) el.style.display = "block";
     } catch (e: any) {
       notify(`Push failed: ${e?.message || e}`);
+    } finally {
+      end();
     }
   };
 
   const loadFromContacts = () => {
+    begin();
     const contacts = (state.contacts || []).filter(
       (c) => c.verification_status === "valid" || (c.verification_status === "accept_all" && (c.verification_score || 0) >= 0.8)
     );
@@ -92,6 +101,7 @@ export default function SequencePage() {
       variant: state.selectedVariantTag || "",
     }));
     setRows(mapped);
+    end();
   };
 
   const applySeqFields = () => {

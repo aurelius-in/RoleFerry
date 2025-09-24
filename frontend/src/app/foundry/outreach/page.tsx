@@ -2,9 +2,13 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { useFoundry } from "@/context/FoundryContext";
+import { useLoading } from "@/components/LoadingProvider";
+import { useToast } from "@/components/ToastProvider";
 
 export default function OutreachPage() {
   const { setState } = useFoundry();
+  const { begin, end } = useLoading();
+  const { notify } = useToast();
   const [mode, setMode] = useState("email");
   const [length, setLength] = useState("short");
   const [vars, setVars] = useState({ FirstName: "Alex", Company: "Acme", RoleTitle: "Director of Product", CalendlyURL: "https://calendly.com/you/15" });
@@ -13,8 +17,13 @@ export default function OutreachPage() {
   const [abHint, setAbHint] = useState<boolean>(true);
 
   const generate = async () => {
-    const res = await api<{ variants: any[] }>("/outreach/generate", "POST", { mode, length, variables: vars });
-    setVariants(res.variants);
+    begin();
+    try {
+      const res = await api<{ variants: any[] }>("/outreach/generate", "POST", { mode, length, variables: vars });
+      setVariants(res.variants);
+    } finally {
+      end();
+    }
   };
 
   return (
@@ -80,7 +89,7 @@ export default function OutreachPage() {
             if (selected === null) return;
             const v = variants[selected];
             setState({ seqSubject: v.subject || "", seqMessage: v.body || "", selectedVariantTag: v.variant || "" });
-            alert("Saved to Sequence fields");
+            notify("Saved to Sequence fields");
           }}
           className="px-4 py-2 rounded bg-white/10 border border-white/10 disabled:opacity-50"
         >

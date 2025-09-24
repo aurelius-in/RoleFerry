@@ -4,15 +4,24 @@ import { useFoundry } from "@/context/FoundryContext";
 import VerificationBadge from "@/components/VerificationBadge";
 import { useState } from "react";
 import { downloadText } from "@/lib/download";
+import { useLoading } from "@/components/LoadingProvider";
+import { useToast } from "@/components/ToastProvider";
 
 export default function ContactsPage() {
   const { state, setState } = useFoundry();
+  const { begin, end } = useLoading();
+  const { notify } = useToast();
   const [company, setCompany] = useState("");
   const [title, setTitle] = useState("Director of Product");
 
   const find = async () => {
-    const res = await api<{ contacts: any[] }>("/contacts/find", "POST", { company, titles: [title] });
-    setState({ contacts: res.contacts });
+    begin();
+    try {
+      const res = await api<{ contacts: any[] }>("/contacts/find", "POST", { company, titles: [title] });
+      setState({ contacts: res.contacts });
+    } finally {
+      end();
+    }
   };
 
   const toggleSendable = () => setState({ sendableOnly: !state.sendableOnly });
@@ -82,8 +91,13 @@ export default function ContactsPage() {
                     className="px-2 py-1 rounded bg-white/10 border border-white/10 text-xs"
                     onClick={async () => {
                       const id = c.email || c.id;
-                      await fetch("/api/crm/add", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, name: c.name }) });
-                      alert("Added to CRM → People");
+                      begin();
+                      try {
+                        await fetch("/api/crm/add", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, name: c.name }) });
+                        notify("Added to CRM → People");
+                      } finally {
+                        end();
+                      }
                     }}
                   >
                     Add to CRM
