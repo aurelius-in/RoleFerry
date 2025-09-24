@@ -2,12 +2,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import HealthIndicator from "./HealthIndicator";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const pathname = usePathname();
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
       if (!open) return;
@@ -20,15 +22,19 @@ export default function Navbar() {
   }, [open]);
 
   return (
-    <header className="relative w-full flex items-center justify-between px-4 sm:px-6 py-3">
-      <div className="flex items-center gap-4">
-        <Image src="/role_ferry_black.png" alt="RoleFerry" width={140} height={38} />
-        <nav className="hidden sm:flex items-center gap-5 text-base opacity-90">
-          <Link href="/foundry" className="hover:underline">Foundry</Link>
-          <Link href="/analytics" className="hover:underline">Analytics</Link>
-          <Link href="/CRM" className="hover:underline">CRM</Link>
-          <Link href="/ask" className="hover:underline">Ask</Link>
-          <div className="relative">
+    <header suppressHydrationWarning className="relative w-full flex items-center justify-between px-4 sm:px-6 py-3">
+      {/* Left: logo + wordmark */}
+      <div className="flex items-center gap-3">
+        <Image src="/role_ferry_black.png" alt="RoleFerry" width={140} height={38} priority />
+        <Image src="/wordmark.png" alt="RoleFerry" width={160} height={32} priority />
+      </div>
+      {/* Center: navigation */}
+      <nav className="hidden sm:flex flex-1 items-center justify-center gap-6 text-lg font-semibold">
+        <NavLink href="/foundry" pathname={pathname}>Foundry</NavLink>
+        <NavLink href="/analytics" pathname={pathname}>Analytics</NavLink>
+        <NavLink href="/CRM" pathname={pathname}>CRM</NavLink>
+        <NavLink href="/ask" pathname={pathname}>Ask</NavLink>
+        <div className="relative">
             <button ref={btnRef} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)} className="hover:underline">Data</button>
             {open ? (
               <div ref={menuRef} role="menu" className="absolute z-20 mt-2 w-56 rounded-md bg-white/5 border border-white/10 backdrop-blur p-2 space-y-1 shadow-lg">
@@ -44,20 +50,24 @@ export default function Navbar() {
               </div>
             ) : null}
           </div>
-          <Link href="/tools" className="hover:underline">Tools</Link>
-          <Link href="/settings" className="hover:underline">Settings</Link>
-          <Link href="/about" className="hover:underline">About</Link>
-        </nav>
-      </div>
-      {/* Centered wordmark at top edge */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-2 pointer-events-none select-none">
-        <Image src="/wordmark.png" alt="RoleFerry" width={160} height={32} priority />
-      </div>
+        <NavLink href="/tools" pathname={pathname}>Tools</NavLink>
+        <NavLink href="/settings" pathname={pathname}>Settings</NavLink>
+        <NavLink href="/about" pathname={pathname}>About</NavLink>
+      </nav>
       <div className="flex items-center gap-4">
         <HealthIndicator />
         <ThemeToggle />
       </div>
     </header>
+  );
+}
+
+function NavLink({ href, pathname, children }: { href: string; pathname: string | null; children: React.ReactNode }) {
+  const active = pathname === href || (href !== "/" && pathname?.startsWith(href));
+  return (
+    <Link href={href} className={`hover:underline ${active ? "text-orange-400" : "opacity-90"}`}>
+      {children}
+    </Link>
   );
 }
 
