@@ -335,6 +335,16 @@
     yMax.textContent = `${maxV}%`;
     svg.appendChild(yMax);
 
+    // gradient (declare BEFORE bars for widest browser support)
+    const defs = document.createElementNS(svg.namespaceURI, 'defs');
+    const lg = document.createElementNS(svg.namespaceURI, 'linearGradient');
+    lg.setAttribute('id', 'grad');
+    lg.setAttribute('x1', '0'); lg.setAttribute('y1', '0'); lg.setAttribute('x2', '0'); lg.setAttribute('y2', '1');
+    const stop1 = document.createElementNS(svg.namespaceURI, 'stop'); stop1.setAttribute('offset', '0%'); stop1.setAttribute('stop-color', '#ff7a18');
+    const stop2 = document.createElementNS(svg.namespaceURI, 'stop'); stop2.setAttribute('offset', '100%'); stop2.setAttribute('stop-color', '#ffd25a');
+    lg.appendChild(stop1); lg.appendChild(stop2);
+    defs.appendChild(lg); svg.appendChild(defs);
+
     values.forEach((v, i) => {
       const barH = (v / maxV) * innerH;
       const x = padding.l + i * barW + 4;
@@ -361,16 +371,15 @@
         svg.appendChild(t);
       }
     });
-
-    // gradient
-    const defs = document.createElementNS(svg.namespaceURI, 'defs');
-    const lg = document.createElementNS(svg.namespaceURI, 'linearGradient');
-    lg.setAttribute('id', 'grad');
-    lg.setAttribute('x1', '0'); lg.setAttribute('y1', '0'); lg.setAttribute('x2', '0'); lg.setAttribute('y2', '1');
-    const stop1 = document.createElementNS(svg.namespaceURI, 'stop'); stop1.setAttribute('offset', '0%'); stop1.setAttribute('stop-color', '#ff7a18');
-    const stop2 = document.createElementNS(svg.namespaceURI, 'stop'); stop2.setAttribute('offset', '100%'); stop2.setAttribute('stop-color', '#ffd25a');
-    lg.appendChild(stop1); lg.appendChild(stop2);
-    defs.appendChild(lg); svg.appendChild(defs);
+    // baseline
+    const base = document.createElementNS(svg.namespaceURI, 'line');
+    base.setAttribute('x1', String(padding.l));
+    base.setAttribute('y1', String(padding.t + innerH + 0.5));
+    base.setAttribute('x2', String(padding.l + innerW));
+    base.setAttribute('y2', String(padding.t + innerH + 0.5));
+    base.setAttribute('stroke', 'rgba(230,237,247,0.25)');
+    base.setAttribute('stroke-width', '1');
+    svg.appendChild(base);
 
     chart.appendChild(svg);
   }
