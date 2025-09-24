@@ -2,10 +2,12 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useFoundry } from "@/context/FoundryContext";
+import { useToast } from "@/components/ToastProvider";
 import { downloadText } from "@/lib/download";
 
 export default function SequencePage() {
   const { state } = useFoundry();
+  const { notify } = useToast();
   const [rows, setRows] = useState<any[]>([
     {
       email: "alex@example.com",
@@ -39,8 +41,9 @@ export default function SequencePage() {
     try {
       const res = await api<{ filename: string; content: string }>("/sequence/export", "POST", { contacts: rows });
       downloadText(res.filename, res.content);
+      notify("CSV downloaded");
     } catch (e: any) {
-      alert(`Export failed: ${e?.message || e}`);
+      notify(`Export failed: ${e?.message || e}`);
     }
   };
 
@@ -48,7 +51,7 @@ export default function SequencePage() {
     const header = Object.keys(rows[0] || {});
     const lines = [header.join(","), ...rows.map((r) => header.map((h) => String((r as any)[h] ?? "")).join(","))];
     navigator.clipboard.writeText(lines.join("\n"));
-    alert("CSV copied to clipboard");
+    notify("CSV copied to clipboard");
   };
 
   const clearRows = () => setRows([]);
@@ -57,15 +60,15 @@ export default function SequencePage() {
     try {
       const res = await api<any>("/sequence/push", "POST", { list_name: "RoleFerry Demo", contacts: rows });
       if (res?.status === "fallback_csv") {
-        alert("CSV fallback used (no API key)");
+        notify("CSV fallback used (no API key)");
       } else {
-        alert(`Pushed via API: ${res?.status || "ok"}${res?.count ? ` · ${res.count} contacts` : ""}`);
+        notify(`Pushed via API: ${res?.status || "ok"}${res?.count ? ` · ${res.count} contacts` : ""}`);
       }
       // Show post-push hint
       const el = document.getElementById("post-push-hint");
       if (el) el.style.display = "block";
     } catch (e: any) {
-      alert(`Push failed: ${e?.message || e}`);
+      notify(`Push failed: ${e?.message || e}`);
     }
   };
 
