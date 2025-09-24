@@ -49,3 +49,41 @@ def update_card(payload: CardUpdate):
     store.update_crm_card(payload.id, **updates)
     return {"ok": True}
 
+
+class AddCard(BaseModel):
+    id: str
+    name: str | None = None
+
+
+@router.post("/crm/add")
+def add_card(payload: AddCard):
+    board = store.crm_lanes
+    card = {"id": payload.id, "name": payload.name or payload.id, "note": "", "assignee": "", "due_date": None}
+    board.setdefault("People", [])
+    # Avoid duplicates
+    if not any(c.get("id") == card["id"] for c in board["People"]):
+        board["People"].append(card)
+    store.set_crm_board(board)
+    return {"ok": True}
+
+
+class DeleteCard(BaseModel):
+    id: str
+
+
+@router.post("/crm/delete")
+def delete_card(payload: DeleteCard):
+    store.delete_crm_card(payload.id)
+    return {"ok": True}
+
+
+class MoveCard(BaseModel):
+    id: str
+    lane: str
+
+
+@router.post("/crm/move")
+def move_card(payload: MoveCard):
+    store.move_crm_card(payload.id, payload.lane)
+    return {"ok": True}
+

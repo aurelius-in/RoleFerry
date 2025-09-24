@@ -19,11 +19,12 @@ export default function CRM() {
       for (const k of Object.keys(next)) {
         next[k] = next[k].filter((x) => x.id !== dragId);
       }
-      next[lane] = [...next[lane], { id: dragId, name: dragId, note: "" }];
+      next[lane] = [...next[lane], { id: dragId, name: dragId, note: "", assignee: "", due_date: null }];
+      // Persist updated board
+      api("/crm/board", "POST", { lanes: next });
       return next;
     });
     setDragId(null);
-    api("/crm/board", "POST", { lanes: items });
   }
   return (
     <main className="max-w-full mx-auto p-6 space-y-4">
@@ -36,7 +37,7 @@ export default function CRM() {
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => onDrop(lane)}
           >
-            <div className="p-3 font-medium border-b border-white/10">{lane}</div>
+            <div className="p-3 font-medium border-b border-white/10">{lane} <span className="opacity-60 text-xs">({items[lane].length})</span></div>
             <div className="p-3 space-y-2">
               {items[lane].map((card) => (
                 <Card key={card.id} card={card} onDragStart={onDragStart} />
@@ -61,6 +62,10 @@ function Card({ card, onDragStart }: { card: any; onDragStart: (id: string) => v
     await fetch("/api/crm/card", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: card.id, assignee, due_date: due }) });
     alert("Updated");
   }
+  async function deleteCard() {
+    await fetch("/api/crm/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: card.id }) });
+    location.reload();
+  }
   return (
     <div draggable onDragStart={() => onDragStart(card.id)} className="p-2 rounded bg-white/10 border border-white/10 cursor-move text-sm">
       <div className="font-medium">{card.name || card.id}</div>
@@ -72,6 +77,7 @@ function Card({ card, onDragStart }: { card: any; onDragStart: (id: string) => v
         <input className="flex-1 px-2 py-1 rounded bg-white/5 border border-white/10 text-xs" value={assignee} onChange={(e) => setAssignee(e.target.value)} placeholder="Assignee" />
         <input type="date" className="px-2 py-1 rounded bg-white/5 border border-white/10 text-xs" value={due || ""} onChange={(e) => setDue(e.target.value)} />
         <button onClick={saveMeta} className="px-2 py-1 rounded bg-white/10 border border-white/10 text-xs">Update</button>
+        <button onClick={deleteCard} className="px-2 py-1 rounded bg-red-500/20 border border-red-500/30 text-xs">Delete</button>
       </div>
     </div>
   );
