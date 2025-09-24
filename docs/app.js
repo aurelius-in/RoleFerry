@@ -16,6 +16,8 @@
     const elapsed = Date.now() - spinStart;
     const remaining = Math.max(0, 1000 - elapsed);
     spinTimer = setTimeout(()=>{ spinner.classList.add('hidden'); }, remaining);
+    // absolute watchdog to avoid stuck state
+    setTimeout(()=>{ spinner.classList.add('hidden'); }, Math.max(remaining, 1200));
   }
 
   // Theme toggle
