@@ -72,6 +72,24 @@ class InMemoryStore:
                     card.update(fields)
                     return
 
+    def delete_crm_card(self, contact_id: str) -> None:
+        for lane in self.crm_lanes.keys():
+            self.crm_lanes[lane] = [c for c in self.crm_lanes[lane] if c.get("id") != contact_id]
+
+    def move_crm_card(self, contact_id: str, target_lane: str) -> None:
+        card_to_move = None
+        for lane, cards in self.crm_lanes.items():
+            for c in cards:
+                if c.get("id") == contact_id:
+                    card_to_move = c
+                    break
+            if card_to_move:
+                self.crm_lanes[lane] = [c for c in cards if c.get("id") != contact_id]
+                break
+        if card_to_move:
+            self.crm_lanes.setdefault(target_lane, [])
+            self.crm_lanes[target_lane].append(card_to_move)
+
 
 store = InMemoryStore()
 

@@ -77,7 +77,7 @@ export default function ContactsPage() {
                 <td className="p-2">
                   {c.verification_status === "valid" || (c.verification_status === "accept_all" && (c.verification_score || 0) >= 0.8) ? "✅" : "⚠️"}
                 </td>
-                <td className="p-2">
+                <td className="p-2 space-x-2">
                   <button
                     className="px-2 py-1 rounded bg-white/10 border border-white/10 text-xs"
                     onClick={async () => {
@@ -88,6 +88,7 @@ export default function ContactsPage() {
                   >
                     Add to CRM
                   </button>
+                  <a className="px-2 py-1 rounded bg-white/10 border border-white/10 text-xs" href="/CRM" target="_blank">View CRM</a>
                 </td>
               </tr>
             ))}

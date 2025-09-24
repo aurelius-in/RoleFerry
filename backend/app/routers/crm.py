@@ -66,3 +66,24 @@ def add_card(payload: AddCard):
     store.set_crm_board(board)
     return {"ok": True}
 
+
+class DeleteCard(BaseModel):
+    id: str
+
+
+@router.post("/crm/delete")
+def delete_card(payload: DeleteCard):
+    store.delete_crm_card(payload.id)
+    return {"ok": True}
+
+
+class MoveCard(BaseModel):
+    id: str
+    lane: str
+
+
+@router.post("/crm/move")
+def move_card(payload: MoveCard):
+    store.move_crm_card(payload.id, payload.lane)
+    return {"ok": True}
+
