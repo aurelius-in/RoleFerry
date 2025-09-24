@@ -57,10 +57,22 @@
     </section>
   </main>
 
+  <section id="dataPage" class="data-page hidden">
+    <div class="data-head">
+      <button id="dataBack" class="icon-btn">←</button>
+      <h2 id="dataTitle" class="data-title"></h2>
+    </div>
+    <div id="dataTableWrap" class="table-wrap"></div>
+  </section>
+
   <div id="modalBackdrop" class="backdrop hidden"></div>
   <div id="dataModal" class="modal hidden"></div>
   <div id="toolsModal" class="modal hidden"></div>
   <div id="settingsModal" class="modal hidden"></div>
+
+  <div id="spinner" class="spinner hidden">
+    <img src="assets/ani-sm.gif" alt="loading" />
+  </div>
 
   <script src="app.js"></script>
 </body>
