@@ -34,14 +34,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
+        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 px-3 py-1 rounded bg-blue-600 text-white">Skip to content</a>
         <FoundryProvider>
           <LoadingProvider>
             <ToastProvider>
               <Navbar />
-              {children}
+              <div id="main" className="container mx-auto px-4 sm:px-6">
+                {children}
+              </div>
               <Footer />
             </ToastProvider>
           </LoadingProvider>

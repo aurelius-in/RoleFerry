@@ -22,12 +22,14 @@ export default function CampaignsPage() {
   useEffect(() => { load(); }, []);
 
   return (
-    <main className="max-w-5xl mx-auto p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Campaigns</h1>
-      <div className="flex gap-2 items-end">
+    <main className="max-w-6xl mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Campaigns</h1>
+      </div>
+      <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <div className="text-xs opacity-70">Status</div>
-          <select className="px-3 py-2 rounded bg-white/5 border border-white/10" value={status} onChange={(e) => setStatus(e.target.value)}>
+          <div className="text-xs opacity-70 mb-1">Status</div>
+          <select className="px-3 py-2 rounded bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500" value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">Any</option>
             <option>active</option>
             <option>paused</option>
@@ -35,23 +37,23 @@ export default function CampaignsPage() {
           </select>
         </div>
         <div>
-          <div className="text-xs opacity-70">Variant</div>
-          <input className="px-3 py-2 rounded bg-white/5 border border-white/10" placeholder="preset_..." value={variant} onChange={(e) => setVariant(e.target.value)} />
+          <div className="text-xs opacity-70 mb-1">Variant</div>
+          <input className="px-3 py-2 rounded bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="preset_..." value={variant} onChange={(e) => setVariant(e.target.value)} />
         </div>
         <div>
-          <div className="text-xs opacity-70">Min list size</div>
-          <input type="number" className="px-3 py-2 rounded bg-white/5 border border-white/10 w-32" value={minList} onChange={(e) => setMinList(parseInt(e.target.value || "0"))} />
+          <div className="text-xs opacity-70 mb-1">Min list size</div>
+          <input type="number" className="px-3 py-2 rounded bg-white/5 border border-white/10 w-32 focus:outline-none focus:ring-2 focus:ring-blue-500" value={minList} onChange={(e) => setMinList(parseInt(e.target.value || "0"))} />
         </div>
-        <button onClick={load} className="px-4 py-2 rounded brand-gradient text-black font-medium">Apply</button>
+        <button onClick={load} className="px-4 py-2 rounded brand-gradient text-black font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">Apply</button>
       </div>
-      <div className="rounded-lg border border-white/10 divide-y divide-white/10">
+      <div className="rounded-lg border border-white/10 divide-y divide-white/10 overflow-hidden">
         {items.map((c) => (
-          <div key={c.id} className="p-3 flex items-center justify-between">
-            <div className="space-y-1">
-              <div className="font-medium">{c.name}</div>
+          <div key={c.id} className="p-4 md:p-5 flex items-center justify-between gap-4 hover:bg-white/[.04]">
+            <div className="space-y-1 min-w-0">
+              <div className="font-medium truncate">{c.name}</div>
               <div className="text-xs opacity-70">Created {new Date(c.created_at).toLocaleString()}</div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Badge tone="info">{c.variant}</Badge>
               <Badge tone={c.status === "active" ? "success" : c.status === "paused" ? "warning" : "neutral"}>{c.status}</Badge>
               <Badge tone="neutral">{c.list_size} contacts</Badge>

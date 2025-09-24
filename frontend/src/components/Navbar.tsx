@@ -1,12 +1,14 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import HealthIndicator from "./HealthIndicator";
 
 export default function Navbar() {
   const [dark, setDark] = useState(false);
   const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     setDark(mq.matches);
@@ -14,6 +16,16 @@ export default function Navbar() {
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
   }, []);
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (!open) return;
+      if (menuRef.current && !menuRef.current.contains(e.target as Node) && btnRef.current && !btnRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
 
   return (
     <header className="w-full flex items-center justify-between px-4 sm:px-6 py-3">
@@ -23,23 +35,23 @@ export default function Navbar() {
         ) : (
           <Image src="/role_ferry_black.png" alt="RoleFerry" width={140} height={38} />
         )}
-        <nav className="hidden sm:flex items-center gap-3 text-sm opacity-90">
+        <nav className="hidden sm:flex items-center gap-4 text-sm opacity-90">
           <Link href="/foundry" className="hover:underline">Foundry</Link>
           <Link href="/analytics" className="hover:underline">Analytics</Link>
           <Link href="/crm" className="hover:underline">CRM</Link>
           <div className="relative">
-            <button onClick={() => setOpen(!open)} className="hover:underline">Data</button>
+            <button ref={btnRef} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)} className="hover:underline">Data</button>
             {open ? (
-              <div onMouseLeave={() => setOpen(false)} className="absolute z-20 mt-2 w-56 rounded-md bg-white/5 border border-white/10 backdrop-blur p-2 space-y-1">
-                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/messages">Messages</Link>
-                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/sequence">Sequence Rows</Link>
-                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/campaigns">Campaigns</Link>
-                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/onepager">One‑pagers</Link>
-                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/warm-angles">Warm Angles</Link>
-                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/audit">Audit Log</Link>
-                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/onboarding">Onboarding</Link>
-                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/deliverability">Deliverability</Link>
-                <Link className="block px-2 py-1 rounded hover:bg-white/10" href="/compliance">Compliance</Link>
+              <div ref={menuRef} role="menu" className="absolute z-20 mt-2 w-56 rounded-md bg-white/5 border border-white/10 backdrop-blur p-2 space-y-1 shadow-lg">
+                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/messages">Messages</Link>
+                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/sequence">Sequence Rows</Link>
+                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/campaigns">Campaigns</Link>
+                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/onepager">One‑pagers</Link>
+                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/warm-angles">Warm Angles</Link>
+                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/audit">Audit Log</Link>
+                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/onboarding">Onboarding</Link>
+                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/deliverability">Deliverability</Link>
+                <Link role="menuitem" className="block px-2 py-1 rounded hover:bg-white/10" href="/compliance">Compliance</Link>
               </div>
             ) : null}
           </div>
@@ -75,7 +87,7 @@ function ThemeToggle() {
     localStorage.setItem("rf_theme", root.classList.contains("dark") ? "dark" : "light");
   };
   return (
-    <button onClick={toggle} className="px-3 py-1 rounded-md brand-gradient text-black font-medium">
+    <button onClick={toggle} className="px-3 py-1 rounded-md brand-gradient text-black font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
       {isDark ? "Day" : "Night"}
     </button>
   );
