@@ -22,6 +22,7 @@ const files = [
   ...(wordmarkSrc ? [{ src: wordmarkSrc, dest: join(publicDir, "wordmark.png") }] : []),
   { src: join(projectRoot, "roleferry-med.gif"), dest: join(publicDir, "roleferry-med.gif") },
   { src: join(projectRoot, "ani-sm.gif"), dest: join(publicDir, "ani-sm.gif") },
+  { src: join(projectRoot, "about.png"), dest: join(publicDir, "about.png") },
 ];
 
 for (const f of files) {

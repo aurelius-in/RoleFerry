@@ -38,6 +38,26 @@ export default async function Analytics() {
             <Stat label="Positive" value={data.positive} suffix={`(${posRate}%)`} />
             <Stat label="Meetings" value={data.meetings} />
           </div>
+          {/* Simple bar-like viz */}
+          {data.variants && (
+            <div className="rounded-lg border border-white/10 p-4 space-y-2">
+              <div className="text-sm opacity-80">Variant Open Rates</div>
+              <div className="space-y-2">
+                {Object.entries(data.variants).map(([v, row]) => {
+                  const or = rate(row.open, row.delivered);
+                  return (
+                    <div key={v} className="flex items-center gap-2 text-xs">
+                      <div className="w-32 truncate">{v || "(none)"}</div>
+                      <div className="flex-1 h-2 bg-white/10 rounded">
+                        <div className="h-2 bg-blue-400 rounded" style={{ width: `${or}%` }} />
+                      </div>
+                      <div className="w-10 text-right">{or}%</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </>
       ) : null}
       {data?.variants && Object.keys(data.variants).length ? (

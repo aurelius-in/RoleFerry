@@ -6,6 +6,7 @@ type Health = { status: string; env?: string; version?: string; ts?: string };
 export default function HealthIndicator() {
   const [health, setHealth] = useState<Health | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [delay, setDelay] = useState<number>(5000);
 
   useEffect(() => {
     let mounted = true;
@@ -17,11 +18,14 @@ export default function HealthIndicator() {
         if (mounted) {
           setHealth(j);
           setError(null);
+          setDelay(5000);
         }
       } catch (e) {
         if (mounted) setError(String(e));
+        // Backoff if errors like 429
+        setDelay((d) => Math.min(d * 2, 60000));
       } finally {
-        timer = setTimeout(poll, 5000);
+        timer = setTimeout(poll, delay);
       }
     };
     poll();
@@ -29,7 +33,7 @@ export default function HealthIndicator() {
       mounted = false;
       if (timer) clearTimeout(timer);
     };
-  }, []);
+  }, [delay]);
 
   const up = health?.status === "ok";
   const secondsAgo = health?.ts ? Math.max(0, Math.round((Date.now() - new Date(health.ts).getTime()) / 1000)) : null;

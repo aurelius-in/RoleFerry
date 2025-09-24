@@ -1,3 +1,5 @@
+import AskBox from "@/components/AskBox";
+
 export default function Home() {
   return (
     <div className="min-h-screen flex items-center justify-center p-8 sm:p-16">
@@ -11,7 +13,9 @@ export default function Home() {
         <p className="text-base sm:text-lg opacity-90">
           When every wave pushes you back, RoleFerry pulls you forward.
         </p>
-        
+        <div className="pt-2">
+          <AskBox />
+        </div>
       </main>
     </div>
   );
