@@ -11,7 +11,7 @@ body { margin: 0; background: linear-gradient(#000, #0a2a66); color: var(--fg); 
 .nav-link { color: var(--fg); text-decoration: none; opacity: 0.9; }
 .btn-link { background: none; border: none; cursor: pointer; font: inherit; }
 .nav-right { display: flex; align-items: center; gap: 10px; }
-.icon-btn { width: 36px; height: 36px; display:flex; align-items:center; justify-content:center; border: 1px solid var(--border); border-radius: 6px; background: #fff; color:#000; }
+.icon-btn { width: 36px; height: 36px; display:flex; align-items:center; justify-content:center; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; background: #000; color:#fff; }
 
 .container { max-width: 1100px; margin: 0 auto; padding: 8px 16px 16px; }
 .view { display: none; }
