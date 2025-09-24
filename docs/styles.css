@@ -1,6 +1,15 @@
 * { box-sizing: border-box; }
 :root { --bg: #0a0f1a; --fg: #e6edf7; --muted: #9fb3c8; --card: rgba(255,255,255,0.06); --border: rgba(255,255,255,0.12); --accent: #ff7a18; }
 body { margin: 0; background: linear-gradient(#000, #0a2a66); color: var(--fg); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+/* Light mode overrides */
+body.light {
+  --fg: #0a0a0a;
+  --muted: #334155;
+  --card: rgba(0,0,0,0.04);
+  --border: rgba(0,0,0,0.12);
+  background: linear-gradient(#ffffff, #0a2a66);
+  color: var(--fg);
+}
 
 .nav { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; }
 .nav-left { display: flex; align-items: center; gap: 10px; }
@@ -12,6 +21,7 @@ body { margin: 0; background: linear-gradient(#000, #0a2a66); color: var(--fg); 
 .btn-link { background: none; border: none; cursor: pointer; font: inherit; }
 .nav-right { display: flex; align-items: center; gap: 10px; }
 .icon-btn { width: 36px; height: 36px; display:flex; align-items:center; justify-content:center; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; background: #000; color:#fff; }
+body.light .icon-btn { border-color: rgba(0,0,0,0.2); background: #fff; color:#000; }
 
 .container { max-width: 1100px; margin: 0 auto; padding: 8px 16px 16px; }
 .view { display: none; }
