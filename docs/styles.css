@@ -46,7 +46,7 @@ textarea { width: 100%; min-height: 96px; padding: 8px; border-radius: 6px; back
 .analytics { height: 180px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; display:flex; align-items:center; justify-content:center; color: var(--muted); }
 .crm-board { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
 .crm-board .lane { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow:hidden; }
-.lane .lane-head { padding: 8px 10px; border-bottom: 1px solid var(--border); font-weight: 700; }
+.lane .lane-head { padding: 8px 10px; border-bottom: 1px solid var(--border); font-weight: 700; color: var(--accent); }
 .lane .lane-body { padding: 8px; display:flex; flex-direction:column; gap:8px; }
 .card-sm { padding: 8px; border-radius: 6px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); }
 
