@@ -108,6 +108,16 @@
 
   const dataItems = Object.keys(MOCK).map(label => ({ label }));
 
+  // Mock CRM board data
+  const CRM = {
+    lanes: [
+      { key: 'people', title: 'People', items: Array.from({length: 6}).map((_,i)=>({ name:`Alex ${i}`, title:i%2?'Recruiter':'Director of Product', company:`Acme ${i%3}`, last:'2d', next:'Intro email' })) },
+      { key: 'conversation', title: 'Conversation', items: Array.from({length: 5}).map((_,i)=>({ name:`Jordan ${i}`, title:'VP Product', company:`Globex ${i%2}`, last:'1d', next:'Send recap' })) },
+      { key: 'meeting', title: 'Meeting', items: Array.from({length: 3}).map((_,i)=>({ name:`Taylor ${i}`, title:'Hiring Manager', company:`Initech`, last:'3h', next:'Book follow-up' })) },
+      { key: 'deal', title: 'Deal', items: Array.from({length: 2}).map((_,i)=>({ name:`Morgan ${i}`, title:'CTO', company:`Umbrella`, last:'5d', next:'Send offer bundle' })) },
+    ]
+  };
+
   // Render table helper
   function renderTable({columns, rows}){
     const table = document.createElement('table');
@@ -215,7 +225,16 @@
     const viewId = (h.replace('#','')+'View');
     const viewEl = document.getElementById(viewId);
     if (viewEl) {
-      showSpinner(); setTimeout(()=>{ viewEl.classList.add('active'); hideSpinner(); }, 150);
+      showSpinner(); setTimeout(()=>{
+        viewEl.classList.add('active');
+        // Render per-view extras
+        if (viewId === 'crmView') {
+          renderCRMBoard();
+        } else if (viewId === 'analyticsView') {
+          renderAnalytics();
+        }
+        hideSpinner();
+      }, 150);
     }
   }
   applyRoute();
@@ -274,4 +293,113 @@
       const node = $(sel); if (!node.classList.contains('hidden')) closeModal(node);
     });
   });
+
+  // Analytics render (bar chart + table)
+  function renderAnalytics(){
+    const wrap = $('#analyticsTableWrap');
+    wrap.innerHTML = '';
+    const data = MOCK['Campaigns'];
+    // Table (limit rows for readability)
+    wrap.appendChild(renderTable({ columns: data.columns, rows: data.rows.slice(0, 10) }));
+
+    // Bar chart in #analyticsChart
+    const chart = $('#analyticsChart');
+    chart.innerHTML = '';
+    const w = chart.clientWidth || 900;
+    const h = chart.clientHeight || 180;
+    const padding = { l: 40, r: 10, t: 10, b: 24 };
+    const innerW = Math.max(100, w - padding.l - padding.r);
+    const innerH = Math.max(60, h - padding.t - padding.b);
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
+
+    const values = data.rows.slice(0, 10).map(r => Number(r.open_rate) || 0);
+    const maxV = Math.max(10, Math.max(...values));
+    const barW = innerW / values.length;
+
+    // y axis ticks (0, max)
+    const y0 = document.createElementNS(svg.namespaceURI, 'text');
+    y0.setAttribute('x', String(4));
+    y0.setAttribute('y', String(h - padding.b));
+    y0.setAttribute('fill', 'rgba(230,237,247,0.7)');
+    y0.setAttribute('font-size', '10');
+    y0.textContent = '0%';
+    svg.appendChild(y0);
+    const yMax = document.createElementNS(svg.namespaceURI, 'text');
+    yMax.setAttribute('x', String(4));
+    yMax.setAttribute('y', String(padding.t + 10));
+    yMax.setAttribute('fill', 'rgba(230,237,247,0.7)');
+    yMax.setAttribute('font-size', '10');
+    yMax.textContent = `${maxV}%`;
+    svg.appendChild(yMax);
+
+    // gradient (declare BEFORE bars for widest browser support)
+    const defs = document.createElementNS(svg.namespaceURI, 'defs');
+    const lg = document.createElementNS(svg.namespaceURI, 'linearGradient');
+    lg.setAttribute('id', 'grad');
+    lg.setAttribute('x1', '0'); lg.setAttribute('y1', '0'); lg.setAttribute('x2', '0'); lg.setAttribute('y2', '1');
+    const stop1 = document.createElementNS(svg.namespaceURI, 'stop'); stop1.setAttribute('offset', '0%'); stop1.setAttribute('stop-color', '#ff7a18');
+    const stop2 = document.createElementNS(svg.namespaceURI, 'stop'); stop2.setAttribute('offset', '100%'); stop2.setAttribute('stop-color', '#ffd25a');
+    lg.appendChild(stop1); lg.appendChild(stop2);
+    defs.appendChild(lg); svg.appendChild(defs);
+
+    values.forEach((v, i) => {
+      const barH = (v / maxV) * innerH;
+      const x = padding.l + i * barW + 4;
+      const y = padding.t + (innerH - barH);
+      const rect = document.createElementNS(svg.namespaceURI, 'rect');
+      rect.setAttribute('x', String(x));
+      rect.setAttribute('y', String(y));
+      rect.setAttribute('width', String(Math.max(6, barW - 8)));
+      rect.setAttribute('height', String(Math.max(2, barH)));
+      rect.setAttribute('fill', 'url(#grad)');
+      rect.setAttribute('rx', '3');
+      rect.setAttribute('ry', '3');
+      svg.appendChild(rect);
+
+      // label every 2 bars
+      if (i % 2 === 0) {
+        const t = document.createElementNS(svg.namespaceURI, 'text');
+        t.setAttribute('x', String(x + Math.max(6, barW - 8) / 2));
+        t.setAttribute('y', String(h - 6));
+        t.setAttribute('fill', 'rgba(230,237,247,0.7)');
+        t.setAttribute('font-size', '10');
+        t.setAttribute('text-anchor', 'middle');
+        t.textContent = `${v}%`;
+        svg.appendChild(t);
+      }
+    });
+    // baseline
+    const base = document.createElementNS(svg.namespaceURI, 'line');
+    base.setAttribute('x1', String(padding.l));
+    base.setAttribute('y1', String(padding.t + innerH + 0.5));
+    base.setAttribute('x2', String(padding.l + innerW));
+    base.setAttribute('y2', String(padding.t + innerH + 0.5));
+    base.setAttribute('stroke', 'rgba(230,237,247,0.25)');
+    base.setAttribute('stroke-width', '1');
+    svg.appendChild(base);
+
+    chart.appendChild(svg);
+  }
+
+  // CRM board render
+  function renderCRMBoard(){
+    const board = $('#crmBoard');
+    board.innerHTML = '';
+    CRM.lanes.forEach(l => {
+      const lane = document.createElement('div');
+      lane.className = 'lane';
+      lane.innerHTML = `<div class="lane-head">${l.title}</div><div class="lane-body"></div>`;
+      const body = lane.querySelector('.lane-body');
+      l.items.forEach(it => {
+        const c = document.createElement('div');
+        c.className = 'card-sm';
+        c.innerHTML = `<div><strong>${it.name}</strong> — ${it.title}</div><div class="small">${it.company}</div><div class="small">Last: ${it.last} · Next: ${it.next}</div>`;
+        body.appendChild(c);
+      });
+      board.appendChild(lane);
+    });
+  }
 })();
