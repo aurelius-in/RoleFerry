@@ -218,6 +218,10 @@
       const id = tag.slice(1)+'View';
       const node = document.getElementById(id); if (node) node.classList.remove('active');
     });
+    if (h === '#about') {
+      renderAboutModal(); openModal($('#aboutModal'));
+      return;
+    }
     if (h.startsWith('#data/')) {
       const label = decodeURIComponent(h.slice(6));
       showDataPage(label);
@@ -302,7 +306,7 @@
   }
   $('#settingsBtn').addEventListener('click', ()=>{ renderSettingsModal(); openModal($('#settingsModal')); });
 
-  // About modal
+  // About modal (matches app About page)
   function renderAboutModal(){
     const el = $('#aboutModal');
     el.innerHTML = '';
@@ -315,22 +319,35 @@
       </div>
       <div class="body">
         <div class="about-content">
-          <img class="about-img" src="assets/about.png" alt="About" />
-          <div>
-            <div class="about-title"><strong style=\"color:#ff7a18\">Role</strong><strong style=\"color:#60a5fa\">Ferry</strong></div>
-            <div class="about-text">
-              About RoleFerry — two creative business owners, <strong>Dave March</strong> and <strong>Oliver Ellison</strong>. Dave’s mission is related to career coaching and end‑to‑end talent sourcing, and Oliver is all about innovating geni solutions for diverse business use cases.
+          <div class="about-cards">
+            <h1 class="about-h1">About <span class="brand-r">Role</span><span class="brand-f">Ferry</span></h1>
+            <p class="about-lead">
+              RoleFerry is the result of a creative partnership between two business owners—<strong>Dave March</strong> and <strong>Oliver Ellison</strong>—working together across their companies to bring a modern, relationship‑first outreach experience to life.
+            </p>
+            <div class="about-grid">
+              <div class="about-card">
+                <h2 class="about-h2">Dave March · Innovative Marketing Solutions</h2>
+                <p class="about-text">Dave focuses on career coaching and end‑to‑end talent sourcing—helping candidates and teams align on the work that matters. His perspective shapes the practical workflows, from sourcing through outreach and interviews.</p>
+              </div>
+              <div class="about-card">
+                <h2 class="about-h2">Oliver Ellison · Reliable AI Network, LLC</h2>
+                <p class="about-text">Oliver leads innovation in AI‑driven solutions for diverse business use cases. His product and engineering work powers RoleFerry’s generation, verification, and analytics capabilities.</p>
+              </div>
             </div>
           </div>
+          <div>
+            <img class="about-img" src="assets/about.png" alt="Dave and Oliver skydiving" />
+            <div class="small" style="margin-top:8px;"><a class="link" href="https://github.com/aurelius-in/RoleFerry/blob/develop/README.md" target="_blank" rel="noopener noreferrer">License & Notices</a></div>
+          </div>
         </div>
-        <div class="small" style="margin-top:8px;">© 2025 Reliable AI Network, LLC. All rights reserved.</div>
+        <div class="small" style="margin-top:8px;">© 2025 Reliable AI Network, LLC.</div>
       </div>
     `;
     el.appendChild(panel);
-    panel.querySelector('#aboutClose').addEventListener('click', ()=>closeModal(el));
+    panel.querySelector('#aboutClose').addEventListener('click', ()=>{ closeModal(el); if (location.hash === '#about') location.hash = '#'; });
   }
-  document.getElementById('aboutFooterBtn').addEventListener('click', ()=>{ renderAboutModal(); openModal(document.getElementById('aboutModal')); });
-  document.getElementById('aboutBtn').addEventListener('click', ()=>{ renderAboutModal(); openModal(document.getElementById('aboutModal')); });
+  document.getElementById('aboutFooterBtn').addEventListener('click', ()=>{ location.hash = '#about'; });
+  document.getElementById('aboutBtn').addEventListener('click', ()=>{ location.hash = '#about'; });
 
   // Close on backdrop click
   backdrop.addEventListener('click', ()=>{
