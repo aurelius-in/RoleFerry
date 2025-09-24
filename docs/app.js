@@ -20,9 +20,11 @@
     setTimeout(()=>{ if (spinner) spinner.classList.add('hidden'); }, Math.max(remaining, 1200));
   }
 
-  // Theme toggle
+  // Theme toggle (dark <-> light with icon swap)
   $('#themeBtn').addEventListener('click', () => {
-    document.body.classList.toggle('dark');
+    const isLight = document.body.classList.toggle('light');
+    // swap icon
+    $('#themeBtn').textContent = isLight ? '☀️' : '🌙';
   });
 
   // Ask
