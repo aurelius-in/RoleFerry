@@ -34,7 +34,7 @@ export default function Navbar() {
         <nav className="hidden sm:flex items-center gap-4 text-sm opacity-90">
           <Link href="/foundry" className="hover:underline">Foundry</Link>
           <Link href="/analytics" className="hover:underline">Analytics</Link>
-          <Link href="/crm" className="hover:underline">CRM</Link>
+          <Link href="/CRM" className="hover:underline">CRM</Link>
           <Link href="/ask" className="hover:underline">Ask</Link>
           <div className="relative">
             <button ref={btnRef} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)} className="hover:underline">Data</button>

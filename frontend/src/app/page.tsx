@@ -16,7 +16,6 @@ export default function Home() {
           <a href="/foundry" className="inline-flex rounded-full px-4 py-2 text-black font-medium brand-gradient">Go to Foundry</a>
           <a href="/analytics" className="inline-flex rounded-full px-4 py-2 text-black font-medium bg-white/10 border border-white/10">View Analytics</a>
           <a href="/tools" className="inline-flex rounded-full px-4 py-2 text-black font-medium bg-white/10 border border-white/10">Tools</a>
-          <a href="/crm" className="inline-flex rounded-full px-4 py-2 text-black font-medium bg-white/10 border border-white/10">CRM</a>
         </div>
       </main>
     </div>
