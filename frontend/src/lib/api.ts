@@ -1,7 +1,14 @@
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
-export async function api<T>(path: string, method: HttpMethod = "GET", body?: any): Promise<T> {
-  const url = path.startsWith("/") ? `/api${path}` : `/api/${path}`;
+export async function api<T>(path: string, method: HttpMethod = "GET", body?: unknown): Promise<T> {
+  const isServer = typeof window === "undefined";
+  let url: string;
+  if (isServer) {
+    const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+    url = path.startsWith("/") ? `${base}${path}` : `${base}/${path}`;
+  } else {
+    url = path.startsWith("/") ? `/api${path}` : `/api/${path}`;
+  }
   const res = await fetch(url, {
     method,
     headers: { "Content-Type": "application/json" },
