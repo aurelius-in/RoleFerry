@@ -15,7 +15,7 @@ export default function Navbar() {
     <header suppressHydrationWarning className="relative w-full flex items-center justify-between px-4 sm:px-6 py-3">
       {/* Left: logo + wordmark */}
       <div className="flex items-center gap-3">
-        <Image src="/role_ferry_black.png" alt="RoleFerry" width={140} height={38} priority />
+        <Image src="/roleferry_trans.png" alt="RoleFerry" width={140} height={38} priority />
         <Image src="/wordmark.png" alt="RoleFerry" width={160} height={32} priority />
       </div>
       {/* Center: navigation */}
