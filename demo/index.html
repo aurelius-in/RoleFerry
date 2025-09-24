@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RoleFerry Demo</title>
+<link rel="stylesheet" href="styles.css" />
+<link rel="icon" href="assets/roleferry_trans.png" />
+</head>
+<body class="dark">
+  <header class="nav">
+    <div class="nav-left">
+      <img src="assets/roleferry_trans.png" alt="RoleFerry" class="logo" />
+      <img src="assets/wordmark.png" alt="RoleFerry" class="wordmark" />
+    </div>
+    <nav class="nav-center">
+      <a href="#dashboard" class="nav-link">Dashboard</a>
+      <a href="#analytics" class="nav-link">Analytics</a>
+      <a href="#crm" class="nav-link">CRM</a>
+      <button id="dataBtn" class="nav-link btn-link">Data</button>
+    </nav>
+    <div class="nav-right">
+      <button id="themeBtn" class="icon-btn" title="Toggle theme">🌙</button>
+      <button id="toolsBtn" class="icon-btn" title="Tools">🛠️</button>
+      <button id="settingsBtn" class="icon-btn" title="Settings">☰</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <img src="assets/roleferry-med.gif" class="hero-gif" alt="RoleFerry" />
+      <h1>Smooth crossing in rough seas.</h1>
+      <p>When every wave pushes you back, RoleFerry pulls you forward.</p>
+    </section>
+
+    <section class="ask">
+      <div class="card">
+        <div class="small">All Aboard!</div>
+        <textarea id="askInput" placeholder="Ask about your data or tell RoleFerry what to do..."></textarea>
+        <div><button id="askBtn" class="cta">ASK</button></div>
+        <div id="askOut" class="ask-out"></div>
+      </div>
+    </section>
+
+    <section id="dashboard" class="dashboard">
+      <div class="grid">
+        <a class="tile" href="#"><span class="icon">📋</span><span class="label">Profile (IJP)</span></a>
+        <a class="tile" href="#"><span class="icon">🧭</span><span class="label">Jobs</span></a>
+        <a class="tile" href="#"><span class="icon">👤</span><span class="label">Candidate</span></a>
+        <a class="tile" href="#"><span class="icon">🔗</span><span class="label">Match</span></a>
+        <a class="tile" href="#"><span class="icon">📇</span><span class="label">Contacts</span></a>
+        <a class="tile" href="#"><span class="icon">✅</span><span class="label">Verify</span></a>
+        <a class="tile" href="#"><span class="icon">✉️</span><span class="label">Outreach</span></a>
+        <a class="tile" href="#"><span class="icon">📤</span><span class="label">Sequence</span></a>
+        <a class="tile" href="#"><span class="icon">📄</span><span class="label">Offers</span></a>
+      </div>
+    </section>
+  </main>
+
+  <div id="modalBackdrop" class="backdrop hidden"></div>
+  <div id="dataModal" class="modal hidden"></div>
+  <div id="toolsModal" class="modal hidden"></div>
+  <div id="settingsModal" class="modal hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

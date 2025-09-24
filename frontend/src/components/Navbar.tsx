@@ -5,9 +5,11 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import HealthIndicator from "./HealthIndicator";
 import DataModal from "./DataModal";
+import ToolsModal from "./ToolsModal";
 
 export default function Navbar() {
   const [dataOpen, setDataOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const pathname = usePathname();
   useEffect(() => {}, []);
 
@@ -15,7 +17,7 @@ export default function Navbar() {
     <header suppressHydrationWarning className="relative w-full flex items-center justify-between px-4 sm:px-6 py-3">
       {/* Left: logo + wordmark */}
       <div className="flex items-center gap-3">
-        <Image src="/role_ferry_black.png" alt="RoleFerry" width={140} height={38} priority />
+        <Image src="/roleferry_trans.png" alt="RoleFerry" width={140} height={38} priority />
         <Image src="/wordmark.png" alt="RoleFerry" width={160} height={32} priority />
       </div>
       {/* Center: navigation */}
@@ -24,17 +26,21 @@ export default function Navbar() {
         <NavLink href="/analytics" pathname={pathname}>Analytics</NavLink>
         <NavLink href="/CRM" pathname={pathname}>CRM</NavLink>
         <button onClick={() => setDataOpen(true)} className="hover:underline">Data</button>
-        <NavLink href="/tools" pathname={pathname}>Tools</NavLink>
       </nav>
       <div className="flex items-center gap-4">
         <HealthIndicator />
         <ThemeToggle />
+        <button aria-label="Tools" className="w-9 h-9 rounded-md flex items-center justify-center border bg-white text-black border-black/20" onClick={() => setToolsOpen(true)}>
+          {/* Wrench icon */}
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.7 19.3l-6.4-6.4a6.5 6.5 0 01-8.1-8.1l4.1 4.1 2.8-.7.7-2.8L11.7 1a6.5 6.5 0 008.1 8.1l6.4 6.4-3.5 3.5zM2 22l6-6 2 2-6 6H2v-2z"/></svg>
+        </button>
         <Link href="/settings" aria-label="Settings" className="w-9 h-9 rounded-md flex items-center justify-center border bg-white text-black border-black/20">
           {/* Hamburger icon */}
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>
         </Link>
       </div>
       <DataModal open={dataOpen} onClose={() => setDataOpen(false)} />
+      <ToolsModal open={toolsOpen} onClose={() => setToolsOpen(false)} />
     </header>
   );
 }

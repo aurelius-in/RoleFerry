@@ -3,7 +3,7 @@ export default function Footer() {
     <footer className="w-full py-6 px-4 sm:px-6 text-center text-sm opacity-80">
       <div className="space-x-4">
         <a className="underline" href="/about">About</a>
-        <a className="underline" href="/tools">Tools</a>
+        {/* Tools link removed per design; tools accessible via top-right wrench */}
       </div>
       <div>Forge your first conversation. © 2025 Reliable AI Network, LLC.</div>
     </footer>
