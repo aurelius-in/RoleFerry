@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="roleferry.gif" alt="Setting Sail" width="40%" />
+  <img src="roleferry_trans.gif" alt="Setting Sail" width="40%" />
 </p>
 
 
