@@ -296,6 +296,24 @@
     });
   });
 
+  // Dashboard tile clicks → navigate to target views (no accidental #)
+  document.addEventListener('click', (e)=>{
+    const t = e.target;
+    if (!(t instanceof Element)) return;
+    const tile = t.closest('.tile');
+    if (!tile) return;
+    const label = tile.querySelector('.label')?.textContent || '';
+    if (label.includes('Sequence')) location.hash = '#data/Sequence%20Rows';
+    else if (label.includes('Outreach')) location.hash = '#data/Messages';
+    else if (label.includes('Verify')) location.hash = '#data/Deliverability';
+    else if (label.includes('Contacts')) location.hash = '#data/Contacts';
+    else if (label.includes('Offers')) location.hash = '#data/Offers';
+    else if (label.includes('Jobs')) location.hash = '#data/Jobs';
+    else if (label.includes('Candidate')) location.hash = '#data/Candidates';
+    else if (label.includes('Match')) location.hash = '#data/Matches';
+    else location.hash = '#data/IJPs';
+  });
+
   // Analytics render (bar chart + table)
   function renderAnalytics(){
     const wrap = $('#analyticsTableWrap');
