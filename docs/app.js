@@ -105,25 +105,30 @@
     runBtn.addEventListener('click', ()=>{
       const domains = csv.value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).filter(l=>!l.toLowerCase().includes('domain'));
       const res = LEADS.run({ domains, role_query: role.value, temperature: Number(temp.value)});
-      showToast(`Imported ${Math.max(1, domains.length)} leads`);
+      showToast('Imported ' + Math.max(1, domains.length) + ' leads');
       avgCostCard.style.display='block';
-      avgCostCard.textContent = `Avg cost per qualified prospect (last run): $${Number(res.summary.avg_cost_per_qualified).toFixed(4)}`;
+      avgCostCard.textContent = 'Avg cost per qualified prospect (last run): $' + Number(res.summary.avg_cost_per_qualified).toFixed(4);
       tableWrap.innerHTML='';
-      tableWrap.appendChild(renderLeadsTable(res.results.map(r=>({
-        domain:r.domain,
-        name:r.name,
-        title:r.title,
-        decision:r.decision,
-        email:r.email,
-        verification_status:r.verification_status,
-        verification_score:r.verification_score,
-        cost_usd:r.cost_usd,
-      })));
+      const rows = [];
+      for (var i=0;i<res.results.length;i++){
+        var r = res.results[i];
+        rows.push({
+          domain:r.domain,
+          name:r.name,
+          title:r.title,
+          decision:r.decision,
+          email:r.email,
+          verification_status:r.verification_status,
+          verification_score:r.verification_score,
+          cost_usd:r.cost_usd,
+        });
+      }
+      tableWrap.appendChild(renderLeadsTable(rows));
     });
     compareBtn.addEventListener('click', ()=>{
       const c = LEADS.compare();
       compareCard.style.display='block';
-      compareCard.textContent = `Cost per qualified lead (est): RoleFerry $${c.per_lead.roleferry.toFixed(4)} vs Benchmark $${c.per_lead.clay.toFixed(2)}`;
+      compareCard.textContent = 'Cost per qualified lead (est): RoleFerry $' + c.per_lead.roleferry.toFixed(4) + ' vs Benchmark $' + c.per_lead.clay.toFixed(2);
     });
     // Exports
     $('#exportInstantly').addEventListener('click', ()=>{
@@ -407,7 +412,7 @@
   // Initial route
   function applyRoute(){
     const h = location.hash || '#home';
-    ['#home','#dashboard','#analytics','#crm','#leads','#enrichment','#qualification'].forEach(tag=>{
+    ['#home','#dashboard','#analytics','#crm','#leads','#enrichment','#qualification','#sequences','#runs','#pricing','#integrations','#settings'].forEach(function(tag){
       const id = tag.slice(1)+'View';
       const node = document.getElementById(id); if (node) node.classList.remove('active');
     });
@@ -440,6 +445,12 @@
           $('#enrichClose').onclick = ()=> closeModal($('#enrichDrawer'));
         } else if (viewId === 'qualificationView') {
           renderQualification();
+        } else if (viewId === 'sequencesView') {
+          renderSequences();
+        } else if (viewId === 'runsView') {
+          renderRuns();
+        } else if (viewId === 'pricingView') {
+          renderPricing();
         }
         hideSpinner();
       }, 150);
@@ -683,5 +694,59 @@
       });
       board.appendChild(lane);
     });
+  }
+
+  // Sequences demo
+  function renderSequences(){
+    const cards = $('#seqCards'); if (!cards) return; cards.innerHTML='';
+    const examples = [
+      { company:'Scramjet AI', subject:'Lower your outbound cost per lead', body:"Noticed you’re hiring AE and running HubSpot + PostHog. We help teams qualify and write first-touch at under $0.10/lead—without pricey credits. Happy to show how Scramjet can keep quality high while cutting cost.", linkedin:"Saw your AE hire and HubSpot stack. Quick note on lowering qual cost per lead—open to a 10-min overview?" },
+      { company:'LumenLytics', subject:'Boost reply rate without pricey credits', body:"Looks like LumenLytics runs HubSpot + Snowflake. We cut cost/lead while keeping quality—mock demo available.", linkedin:"Curious if we can reduce per-lead cost for your team—worth a quick look?" },
+    ];
+    examples.forEach(ex => {
+      const card = document.createElement('div'); card.className='card';
+      card.innerHTML = '<div class="small"><strong>'+ex.company+'</strong></div>'+
+        '<div class="small">Subject: '+ex.subject+'</div>'+
+        '<div class="small">Email v1: '+ex.body+'</div>'+
+        '<div class="small">LinkedIn: '+ex.linkedin+'</div>';
+      const btns = document.createElement('div'); btns.style.marginTop='8px';
+      ;['Regenerate','Shorten','Copy','Add to Sequence'].forEach(function(l){ const b=document.createElement('button'); b.className='btn'; b.style.marginRight='6px'; b.textContent=l; b.onclick=function(){ showToast(l+' done'); }; btns.appendChild(b); });
+      card.appendChild(btns); cards.appendChild(card);
+    });
+    const gen = document.getElementById('seqGen'); if (gen) gen.onclick=function(){ showToast('Generated 3 emails'); };
+  }
+
+  // Runs demo
+  function renderRuns(){
+    const wrap = $('#runsTableWrap'); if (!wrap) return; wrap.innerHTML='';
+    const table = document.createElement('table');
+    const thead = document.createElement('thead'); const trh = document.createElement('tr');
+    ['Run ID','Steps','Leads processed','Duration','Est. Cost','Status','View Log'].forEach(function(h){ const th=document.createElement('th'); th.textContent=h; trh.appendChild(th); }); thead.appendChild(trh); table.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    const rows = [
+      { id:'RF-20251003-001', steps:'Import→Enrich→Qualify→Generate', leads:12, dur:'78s', cost:'$0.96', status:'Succeeded' },
+      { id:'RF-20251003-002', steps:'Import→Enrich→Qualify', leads:8, dur:'52s', cost:'$0.61', status:'Succeeded' },
+    ];
+    rows.forEach(function(r){
+      const tr=document.createElement('tr'); tr.className='fade-in';
+      const cells=[r.id,r.steps,r.leads,r.dur,r.cost,r.status,'View'];
+      cells.forEach(function(c,idx){ const td=document.createElement('td');
+        if (idx===6){ const b=document.createElement('button'); b.className='btn'; b.textContent='View'; b.onclick=function(){ const d=$('#runDetail'); if (d) { d.innerHTML = '<div class="small"><strong>'+r.id+'</strong></div><div class="small">Serper: 18 queries</div><div class="small">Contacts verified: 7/10</div>'; } openModal($('#runDrawer')); }; td.appendChild(b); }
+        else { td.textContent=String(c); }
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    }); table.appendChild(tbody); wrap.appendChild(table);
+    const rn=document.getElementById('runNew'); if (rn) rn.onclick=function(){ showToast('Run started (mock)'); };
+    const rc=document.getElementById('runClose'); if (rc) rc.onclick=function(){ closeModal($('#runDrawer')); };
+  }
+
+  // Pricing demo
+  function renderPricing(){
+    const leads = $('#priceLeads'); const verify = $('#priceVerify'); const out = $('#priceOut'); const spark = $('#priceSpark');
+    if (!leads || !verify || !out || !spark) return;
+    function calc(){ const per = verify.checked ? 0.08 : 0.06; const bench = 0.25; out.textContent = 'Est. Cost / Lead: $'+per.toFixed(2)+' — Projected Savings: '+Math.round((1 - per/bench)*100)+'%'; spark.innerHTML = sparkline([0.12,0.11,0.10,0.09,per], 120, 28); }
+    function sparkline(values, w, h){ const max=Math.max.apply(null, values.concat([0.35])); const min=Math.min.apply(null, values.concat([0])); var svg='<svg viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'">'; var p=''; for (var i=0;i<values.length;i++){ var x = (i/(values.length-1))*(w-8)+4; var y = h-4-((values[i]-min)/(max-min))*(h-8); p += (i===0?'M'+x+','+y:' L'+x+','+y); } svg += '<path d="'+p+'" fill="none" stroke="#60a5fa" stroke-width="2" />'; svg += '</svg>'; return svg; }
+    leads.oninput = calc; verify.onchange = calc; calc();
   }
 })();
