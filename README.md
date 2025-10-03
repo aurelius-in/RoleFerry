@@ -256,7 +256,7 @@ This repo includes a lean lead‑qualification pipeline focused on low cost and 
 
 - Providers: Serper (search), OpenAI (qualifier), Findymail (enrich), NeverBounce or MillionVerifier (verify)
 - Mock mode: When `ROLEFERRY_MOCK_MODE=true` or keys are missing, deterministic fakes with realistic latencies are used
-- Cost meter: Each step records costs; the Leads page shows avg cost per qualified and a Clay vs RoleFerry comparison card
+- Cost meter: Each step records costs; the Leads page shows avg cost per qualified and a market benchmark comparison card
 - CSV & Sheets: Upload domains CSV or pull from Google Sheets and run the pipeline
 - Exports: Instantly‑ready CSV (`/exports/instantly.csv`) and full prospect dump
 - n8n hooks: `/hooks/n8n/ingest` and `/hooks/n8n/qualify`
@@ -265,7 +265,7 @@ Quick demo script
 
 1) Leads → paste 3–5 domains or click “Pull from Google Sheets”
 2) Enter role query (e.g., “CEO”), run the pipeline (mock mode OK)
-3) Review decisions, verification badges, and avg cost/qualified; click “Load Cost Compare”
+3) Review decisions, verification badges, and avg cost/qualified; click “Load Cost Compare” (compares to a generic market benchmark)
 4) If keys are configured, disable mock mode and re‑run one domain
 5) Export Instantly CSV
 

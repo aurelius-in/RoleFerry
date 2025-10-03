@@ -35,7 +35,7 @@ class Settings(BaseModel):
     gamma_api_key: str | None = Field(default=os.getenv("GAMMA_API_KEY"))
     gamma_webhook_url: str | None = Field(default=os.getenv("GAMMA_WEBHOOK_URL"))
     offer_deck_provider: str = Field(default=os.getenv("OFFER_DECK_PROVIDER", "gamma"))
-    clay_clone_enabled: bool = Field(default=os.getenv("CLAY_CLONE_ENABLED", "true").lower() == "true")
+    mesh_clone_enabled: bool = Field(default=os.getenv("MESH_CLONE_ENABLED", "true").lower() == "true")
 
     @property
     def instantly_enabled(self) -> bool:

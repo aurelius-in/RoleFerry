@@ -8,8 +8,8 @@ from ..db import get_engine
 router = APIRouter(prefix="/costs", tags=["costs"]) 
 
 
-CLAY_PER_LEAD = float(os.getenv("CLAY_PER_LEAD_USD", "0.25"))
-CLAY_MONTHLY_BASE = float(os.getenv("CLAY_MONTHLY_BASE_USD", "350"))
+MESH_PER_LEAD = float(os.getenv("MESH_PER_LEAD_USD", "0.25"))
+MESH_MONTHLY_BASE = float(os.getenv("MESH_MONTHLY_BASE_USD", "350"))
 
 
 @router.get("/compare")
@@ -34,7 +34,7 @@ async def compare(sample: int = Query(10)) -> Dict[str, Any]:
         costs = [0.06]
 
     rf_per_lead = sum(costs) / len(costs)
-    clay_per_lead = CLAY_PER_LEAD
+    clay_per_lead = MESH_PER_LEAD
     # Monthly estimates over the same sample count
     return {
         "per_lead": {
@@ -43,7 +43,7 @@ async def compare(sample: int = Query(10)) -> Dict[str, Any]:
         },
         "monthly": {
             "roleferry": round(sum(costs), 2),
-            "clay": round(CLAY_MONTHLY_BASE + clay_per_lead * len(costs), 2),
+            "clay": round(MESH_MONTHLY_BASE + clay_per_lead * len(costs), 2),
         },
         "sample": len(costs),
     }
