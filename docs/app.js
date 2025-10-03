@@ -105,6 +105,7 @@
     runBtn.addEventListener('click', ()=>{
       const domains = csv.value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).filter(l=>!l.toLowerCase().includes('domain'));
       const res = LEADS.run({ domains, role_query: role.value, temperature: Number(temp.value)});
+      showToast(`Imported ${Math.max(1, domains.length)} leads`);
       avgCostCard.style.display='block';
       avgCostCard.textContent = `Avg cost per qualified prospect (last run): $${Number(res.summary.avg_cost_per_qualified).toFixed(4)}`;
       tableWrap.innerHTML='';
@@ -142,6 +143,85 @@
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'prospects.csv'; a.click();
     });
   }
+  // Enrichment mock
+  const ENRICH = {
+    data: [
+      { domain: 'scramjet.ai', company:'Scramjet AI', tech: ['React','Node','Vercel','HubSpot','PostHog'], signals:['Hiring AE','Launched AI feature Aug 2025','Uses HubSpot'], contacts:[{name:'Maya Chen', title:'Head of Growth', email:'maya@scramjet.ai', verified:true},{name:'Tom Álvarez', title:'RevOps Manager', email:'tom@scramjet.ai', verified:false}], freshness:'2d ago', cost: 0.08 },
+      { domain: 'lumenlytics.io', company:'LumenLytics', tech: ['Next.js','Node','Snowflake','HubSpot'], signals:['Hiring Data AE','Outbound activity'], contacts:[{name:'Samir Patel', title:'Head of Sales', email:'samir@lumenlytics.io', verified:true}], freshness:'4d ago', cost: 0.07 },
+      { domain: 'northforge.co', company:'NorthForge', tech: ['.NET','Azure','Salesforce'], signals:['Manufacturing'], contacts:[{name:'Chris Nolan', title:'Plant Ops', email:'', verified:false}], freshness:'7d ago', cost: 0.05 }
+    ]
+  };
+
+  function renderEnrichment(){
+    const wrap = $('#enrichTableWrap'); wrap.innerHTML='';
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const trh = document.createElement('tr');
+    ['Domain','Company','Tech Stack','Signals','Contacts (F/V)','Freshness','Cost'].forEach(h=>{ const th=document.createElement('th'); th.textContent=h; trh.appendChild(th); });
+    thead.appendChild(trh); table.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    ENRICH.data.forEach(row => {
+      const tr = document.createElement('tr');
+      tr.className = 'fade-in';
+      const contactsFound = row.contacts.length;
+      const verified = row.contacts.filter(c=>c.verified).length;
+      const cells = [row.domain, row.company, '', '', `${contactsFound}/${verified}`, row.freshness, `$${row.cost.toFixed(2)}`];
+      cells.forEach((c, idx) => {
+        const td = document.createElement('td');
+        if (idx === 2) { row.tech.forEach(t=>{ const s=document.createElement('span'); s.className='chip'; s.textContent=t; td.appendChild(s); }); }
+        else if (idx === 3) { row.signals.forEach(sg=>{ const s=document.createElement('span'); s.className='chip'; s.textContent=sg; td.appendChild(s); }); }
+        else { td.textContent = String(c||''); }
+        tr.appendChild(td);
+      });
+      tr.style.cursor='pointer';
+      tr.addEventListener('click', ()=>{
+        const profile = $('#enrichProfile');
+        profile.innerHTML = `
+          <div class="small"><strong>${row.company}</strong> — ${row.domain}</div>
+          <div class="small">Tech: ${row.tech.join(', ')}</div>
+          <div class="small">Signals: ${row.signals.join(', ')}</div>
+          <div class="small">Contacts:</div>
+          ${row.contacts.map(c=>`<div class="small">• ${c.name} — ${c.title} — ${c.email||'no email'} ${c.verified?'(verified)':''}</div>`).join('')}
+          <div class="small">Enrichment Cost (mock): $${row.cost.toFixed(2)}</div>
+        `;
+        openModal($('#enrichDrawer'));
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+  }
+
+  // Qualification mock
+  const QUAL = {
+    rows: [
+      { company:'Scramjet AI', score:86, why:['SaaS','HubSpot present','Hiring AE','Recent AI launch'], priority:'High' },
+      { company:'LumenLytics', score:73, why:['Analytics','Outbound tooling','Recent growth postings'], priority:'Medium' },
+      { company:'NorthForge', score:41, why:['Manufacturing','Weak outbound signals'], priority:'Low' },
+    ]
+  };
+  function renderQualification(){
+    const wrap = $('#qualTableWrap'); wrap.innerHTML='';
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const trh = document.createElement('tr');
+    ['Company','Fit Score','Why It Fits','Priority','Action'].forEach(h=>{ const th=document.createElement('th'); th.textContent=h; trh.appendChild(th); });
+    thead.appendChild(trh); table.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    QUAL.rows.forEach(r=>{
+      const tr = document.createElement('tr'); tr.className='fade-in';
+      const tdCompany = document.createElement('td'); tdCompany.textContent = r.company; tr.appendChild(tdCompany);
+      const tdScore = document.createElement('td'); tdScore.innerHTML = `<div class="progress" title="${r.score}"><div style="width:${r.score}%"></div></div>`; tr.appendChild(tdScore);
+      const tdWhy = document.createElement('td'); tdWhy.textContent = r.why.join(', '); tr.appendChild(tdWhy);
+      const tdPri = document.createElement('td'); tdPri.textContent = r.priority; tr.appendChild(tdPri);
+      const tdAct = document.createElement('td'); const btn=document.createElement('button'); btn.className='btn'; btn.textContent='Generate Copy'; btn.onclick=()=>showToast('Generated 3 variants'); tdAct.appendChild(btn); tr.appendChild(tdAct);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody); wrap.appendChild(table);
+  }
+
+  // Toast
+  function showToast(msg){ const t=$('#toast'); t.textContent=msg; t.style.display='block'; setTimeout(()=>{ t.style.display='none'; }, 1500); }
 
   // Extensive mock datasets
   const MOCK = {
@@ -324,7 +404,7 @@
   // Initial route
   function applyRoute(){
     const h = location.hash || '#home';
-    ['#home','#dashboard','#analytics','#crm'].forEach(tag=>{
+    ['#home','#dashboard','#analytics','#crm','#leads','#enrichment','#qualification'].forEach(tag=>{
       const id = tag.slice(1)+'View';
       const node = document.getElementById(id); if (node) node.classList.remove('active');
     });
@@ -350,6 +430,13 @@
           renderAnalytics();
         } else if (viewId === 'leadsView') {
           setupLeads();
+        } else if (viewId === 'enrichmentView') {
+          renderEnrichment();
+          $('#enrichRun').onclick = ()=>{ showToast('Enrichment complete'); renderEnrichment(); };
+          $('#enrichRecipes').onclick = ()=>{ showToast('Recipes: Company Basics, Tech Stack, Signals, Contacts'); };
+          $('#enrichClose').onclick = ()=> closeModal($('#enrichDrawer'));
+        } else if (viewId === 'qualificationView') {
+          renderQualification();
         }
         hideSpinner();
       }, 150);

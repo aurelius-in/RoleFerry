@@ -19,6 +19,8 @@
       <a href="#analytics" class="nav-link">Analytics</a>
       <a href="#crm" class="nav-link">CRM</a>
       <a href="#leads" class="nav-link">Leads</a>
+      <a href="#enrichment" class="nav-link">Enrichment</a>
+      <a href="#qualification" class="nav-link">Qualification</a>
       <button id="dataBtn" class="nav-link btn-link">Data</button>
     </nav>
     <div class="nav-right">
@@ -109,6 +111,50 @@
       <pre id="offerOut" class="card small" style="margin-top:12px; min-height: 80px;"></pre>
     </section>
 
+    <section id="enrichmentView" class="view">
+      <h2 class="section-title">Enrichment</h2>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <button id="enrichRun" class="cta">Run Enrichment</button>
+        <button id="enrichRecipes" class="btn">Select Recipes</button>
+        <span class="pill">Connected: Google Sheets</span>
+      </div>
+      <div id="enrichTableWrap" class="table-wrap" style="margin-top:12px;"></div>
+      <div id="enrichDrawer" class="modal hidden">
+        <div class="panel">
+          <div class="head"><div class="title">Company Profile</div><button class="icon-btn" id="enrichClose">✕</button></div>
+          <div class="body" style="padding:12px;">
+            <div id="enrichProfile"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="qualificationView" class="view">
+      <h2 class="section-title">Qualification</h2>
+      <div class="grid" style="gap:12px; grid-template-columns: 260px 1fr;">
+        <div class="card">
+          <div class="small">Ideal Customer Profile</div>
+          <div class="small">Industry: SaaS, Analytics, B2B</div>
+          <div class="small">Size: 10–500</div>
+          <div class="small">Tech: CRM + outbound</div>
+          <div class="small">DQ: B2C-only</div>
+          <div class="small" style="margin-top:8px;">Weights</div>
+          <div class="small">Industry (30)</div>
+          <div class="progress"><div style="width:30%"></div></div>
+          <div class="small">Size (20)</div>
+          <div class="progress"><div style="width:20%"></div></div>
+          <div class="small">Signals (30)</div>
+          <div class="progress"><div style="width:30%"></div></div>
+          <div class="small">Tech (20)</div>
+          <div class="progress"><div style="width:20%"></div></div>
+          <div style="margin-top:8px;"><button class="btn">Save as Default</button></div>
+        </div>
+        <div>
+          <div id="qualTableWrap" class="table-wrap"></div>
+        </div>
+      </div>
+    </section>
+
     <section id="researchView" class="view">
       <h2 class="section-title">Research</h2>
       <div class="grid" style="gap:12px; grid-template-columns: 2fr 1fr;">
@@ -146,6 +192,7 @@
   </section>
 
   <div id="modalBackdrop" class="backdrop hidden"></div>
+  <div id="toast" class="toast"></div>
   <div id="dataModal" class="modal hidden"></div>
   <div id="toolsModal" class="modal hidden"></div>
   <div id="settingsModal" class="modal hidden"></div>
