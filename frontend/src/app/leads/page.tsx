@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import ProspectTable from "@/components/ProspectTable";
 
 type Prospect = {
   domain: string;
@@ -78,51 +79,7 @@ export default function LeadsPage() {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="text-left opacity-70">
-              <th className="p-2">Domain</th>
-              <th className="p-2">Top Prospect</th>
-              <th className="p-2">Decision</th>
-              <th className="p-2">Verification</th>
-              <th className="p-2">Cost $</th>
-            </tr>
-          </thead>
-          <tbody>
-            {results.map((r) => (
-              <tr key={r.domain} className="border-t border-white/10">
-                <td className="p-2">{r.domain}</td>
-                <td className="p-2">
-                  <div className="flex flex-col">
-                    <a className="underline" href={r.top_prospect.linkedin_url} target="_blank">
-                      {r.top_prospect.name}
-                    </a>
-                    <span className="opacity-70">{r.top_prospect.title}</span>
-                  </div>
-                </td>
-                <td className="p-2">
-                  {r.top_prospect.decision === "yes" ? "✅ yes" : r.top_prospect.decision === "no" ? "❌ no" : "❔ maybe"}
-                  <div className="opacity-70">{r.top_prospect.reason}</div>
-                </td>
-                <td className="p-2">
-                  {r.top_prospect.email ? (
-                    <div>
-                      <div>{r.top_prospect.email}</div>
-                      <div className="opacity-70">
-                        {r.top_prospect.verification_status} {r.top_prospect.verification_score ?? ""}
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="opacity-70">No email</span>
-                  )}
-                </td>
-                <td className="p-2">${r.top_prospect.cost_usd.toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <ProspectTable />
     </div>
   );
 }

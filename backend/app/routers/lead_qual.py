@@ -28,7 +28,7 @@ class PipelineRunRequest(BaseModel):
 
 
 @router.post("/lead-domains/import-csv")
-def import_csv(payload: DomainsCSVImportRequest) -> Dict[str, Any]:
+async def import_csv(payload: DomainsCSVImportRequest) -> Dict[str, Any]:
     # Stub: accept CSV and return count; actual DB insert will be added later
     if not payload.csv_text.strip():
         raise HTTPException(status_code=422, detail="CSV text is empty")
@@ -36,7 +36,7 @@ def import_csv(payload: DomainsCSVImportRequest) -> Dict[str, Any]:
     header = lines[0].lower().split(",") if lines else []
     if "domain" not in header:
         raise HTTPException(status_code=422, detail="CSV must include 'domain' column")
-    domains = []
+    domains: List[str] = []
     for row in lines[1:]:
         parts = [c.strip() for c in row.split(",")]
         try:
@@ -45,15 +45,24 @@ def import_csv(payload: DomainsCSVImportRequest) -> Dict[str, Any]:
             idx = 0
         if idx < len(parts):
             domains.append(parts[idx])
-    return {"inserted": len(domains), "source": "csv", "domains": domains[:10]}
+    # Persist
+    repo = LeadsRepo(get_engine())
+    inserted = 0
+    for d in domains:
+        await repo.upsert_domain(d, source="csv")
+        inserted += 1
+    return {"inserted": inserted, "source": "csv", "domains": domains[:10]}
 
 
 @router.post("/lead-domains/import-sheets")
-def import_sheets(payload: DomainsSheetsImportRequest) -> Dict[str, Any]:
+async def import_sheets(payload: DomainsSheetsImportRequest) -> Dict[str, Any]:
     # Stub: verify config presence in non-mock mode
     if not settings.mock_mode and not (settings.gsheet_service_json_path and (payload.sheet_id or settings.gsheet_sheet_id)):
         raise HTTPException(status_code=422, detail="Google Sheets not configured; enable mock mode or provide credentials")
     sample = ["acme.com", "globex.com", "initech.com"]
+    repo = LeadsRepo(get_engine())
+    for d in sample:
+        await repo.upsert_domain(d, source="sheets")
     return {"inserted": len(sample), "source": "sheets", "domains": sample}
 
 
@@ -124,21 +133,26 @@ async def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
 
 
 @router.get("/prospects")
-def list_prospects(decision: Optional[str] = None, verification_status: Optional[str] = None, domain: Optional[str] = None) -> Dict[str, Any]:
-    # Stub dataset for UI wiring
-    rows = [
-        {"domain": "acme.com", "name": "Alex Doe", "title": "CEO", "linkedin_url": "https://linkedin.com/in/alex-doe", "decision": "yes", "reason": "Founder/CEO", "email": "alex@acme.com", "verification_status": "valid", "verification_score": 95, "cost_usd": 0.07},
-        {"domain": "globex.com", "name": "Jamie Roe", "title": "Head of Talent", "linkedin_url": "https://linkedin.com/in/jamie-roe", "decision": "maybe", "reason": "Influencer", "email": None, "verification_status": "unknown", "verification_score": None, "cost_usd": 0.03},
-    ]
-    def ok(r: Dict[str, Any]) -> bool:
-        if decision and r.get("decision") != decision:
-            return False
-        if verification_status and r.get("verification_status") != verification_status:
-            return False
-        if domain and domain not in r.get("domain", ""):
-            return False
-        return True
-    filtered = [r for r in rows if ok(r)]
-    return {"prospects": filtered, "count": len(filtered)}
+async def list_prospects(decision: Optional[str] = None, verification_status: Optional[str] = None, domain: Optional[str] = None) -> Dict[str, Any]:
+    # Query view
+    from sqlalchemy import text
+    engine = get_engine()
+    clauses = []
+    params: Dict[str, Any] = {}
+    if decision:
+        clauses.append("decision = :decision")
+        params["decision"] = decision
+    if verification_status:
+        clauses.append("verification_status = :vs")
+        params["vs"] = verification_status
+    if domain:
+        clauses.append("domain ILIKE :domain")
+        params["domain"] = f"%{domain}%"
+    where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+    sql = text("SELECT domain, name, title, linkedin_url, decision, reason, email, verification_status, verification_score, total_cost_usd as cost_usd FROM v_prospect_summary" + where + " ORDER BY domain")
+    async with engine.connect() as conn:
+        res = await conn.execute(sql, params)
+        rows = [dict(r._mapping) for r in res]
+    return {"prospects": rows, "count": len(rows)}
 
 

@@ -70,10 +70,11 @@ def create_app() -> FastAPI:
     app.include_router(outreach.router, prefix="/outreach", tags=["outreach"]) 
     app.include_router(sequence.router, prefix="/sequence", tags=["sequence"]) 
     app.include_router(analytics.router, prefix="/analytics", tags=["analytics"]) 
-    from .routers import lead_qual as lead_qual_router, n8n_hooks as n8n_router, exports as exports_router
+    from .routers import lead_qual as lead_qual_router, n8n_hooks as n8n_router, exports as exports_router, prospects as prospects_router
     app.include_router(lead_qual_router.router)
     app.include_router(n8n_router.router)
     app.include_router(exports_router.router)
+    app.include_router(prospects_router.router)
     from .routers import settings as settings_router, replies
     app.include_router(settings_router.router)
     app.include_router(replies.router)
