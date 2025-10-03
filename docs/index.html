@@ -19,6 +19,13 @@
       <a href="#analytics" class="nav-link">Analytics</a>
       <a href="#crm" class="nav-link">CRM</a>
       <a href="#leads" class="nav-link">Leads</a>
+      <a href="#enrichment" class="nav-link">Enrichment</a>
+      <a href="#qualification" class="nav-link">Qualification</a>
+      <a href="#sequences" class="nav-link">Sequences</a>
+      <a href="#runs" class="nav-link">Runs</a>
+      <a href="#pricing" class="nav-link">Pricing</a>
+      <a href="#integrations" class="nav-link">Integrations</a>
+      <a href="#settings" class="nav-link">Settings</a>
       <button id="dataBtn" class="nav-link btn-link">Data</button>
     </nav>
     <div class="nav-right">
@@ -109,6 +116,126 @@
       <pre id="offerOut" class="card small" style="margin-top:12px; min-height: 80px;"></pre>
     </section>
 
+    <section id="enrichmentView" class="view">
+      <h2 class="section-title">Enrichment</h2>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <button id="enrichRun" class="cta">Run Enrichment</button>
+        <button id="enrichRecipes" class="btn">Select Recipes</button>
+        <span class="pill">Connected: Google Sheets</span>
+      </div>
+      <div id="enrichTableWrap" class="table-wrap" style="margin-top:12px;"></div>
+      <div id="enrichDrawer" class="modal hidden">
+        <div class="panel">
+          <div class="head"><div class="title">Company Profile</div><button class="icon-btn" id="enrichClose">✕</button></div>
+          <div class="body" style="padding:12px;">
+            <div id="enrichProfile"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="qualificationView" class="view">
+      <h2 class="section-title">Qualification</h2>
+      <div class="grid" style="gap:12px; grid-template-columns: 260px 1fr;">
+        <div class="card">
+          <div class="small">Ideal Customer Profile</div>
+          <div class="small">Industry: SaaS, Analytics, B2B</div>
+          <div class="small">Size: 10–500</div>
+          <div class="small">Tech: CRM + outbound</div>
+          <div class="small">DQ: B2C-only</div>
+          <div class="small" style="margin-top:8px;">Weights</div>
+          <div class="small">Industry (30)</div>
+          <div class="progress"><div style="width:30%"></div></div>
+          <div class="small">Size (20)</div>
+          <div class="progress"><div style="width:20%"></div></div>
+          <div class="small">Signals (30)</div>
+          <div class="progress"><div style="width:30%"></div></div>
+          <div class="small">Tech (20)</div>
+          <div class="progress"><div style="width:20%"></div></div>
+          <div style="margin-top:8px;"><button class="btn">Save as Default</button></div>
+        </div>
+        <div>
+          <div id="qualTableWrap" class="table-wrap"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sequencesView" class="view">
+      <h2 class="section-title">Sequences</h2>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button id="seqGen" class="cta">Generate for Selected (3)</button>
+        <select id="seqPersona" class="input" style="width:auto;">
+          <option>Founder-led outbound</option>
+          <option>AE</option>
+          <option>RevOps</option>
+        </select>
+        <select id="seqTone" class="input" style="width:auto;">
+          <option>Plain-spoken</option>
+          <option>Direct</option>
+          <option>Consultative</option>
+        </select>
+      </div>
+      <div id="seqCards" style="margin-top:12px; display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:10px;"></div>
+    </section>
+
+    <section id="runsView" class="view">
+      <h2 class="section-title">Runs</h2>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button id="runNew" class="cta">New Run</button>
+        <select id="runFilter" class="input" style="width:auto;"><option>All</option><option>Succeeded</option><option>Warning</option><option>Failed</option></select>
+      </div>
+      <div id="runsTableWrap" class="table-wrap" style="margin-top:12px;"></div>
+      <div id="runDrawer" class="modal hidden">
+        <div class="panel">
+          <div class="head"><div class="title">Run Detail</div><button class="icon-btn" id="runClose">✕</button></div>
+          <div class="body" style="padding:12px;"><div id="runDetail"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricingView" class="view">
+      <h2 class="section-title">Pricing</h2>
+      <div class="card">
+        <div class="small">Leads</div>
+        <input id="priceLeads" class="input" style="width:140px;" value="10000" />
+        <div class="small" style="margin-top:6px;">Verify Emails <input id="priceVerify" type="checkbox" checked /></div>
+        <div id="priceOut" class="small" style="margin-top:8px;"></div>
+        <div id="priceSpark" style="margin-top:8px;"></div>
+      </div>
+      <div class="table-wrap" style="margin-top:12px;">
+        <table>
+          <thead><tr><th>Feature</th><th>RoleFerry</th><th>Benchmark</th></tr></thead>
+          <tbody>
+            <tr><td>Import/Enrich/Qualify</td><td>✅</td><td>✅</td></tr>
+            <tr><td>Per-lead cost (mock)</td><td>$0.08</td><td>$0.16–$0.35</td></tr>
+            <tr><td>Sheets workflow</td><td>✅</td><td>💸 credits</td></tr>
+            <tr><td>Fine-grained recipes</td><td>✅</td><td>Partial</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="integrationsView" class="view">
+      <h2 class="section-title">Integrations</h2>
+      <div class="grid" style="gap:10px; grid-template-columns: repeat(3, minmax(0,1fr));">
+        <div class="card"><div>Google Sheets</div><div class="pill" style="margin-top:6px;">Connected</div></div>
+        <div class="card"><div>n8n</div><div class="pill" style="margin-top:6px;">Configured</div></div>
+        <div class="card"><div>Serper</div><div class="pill" style="margin-top:6px;">API key set</div></div>
+        <div class="card"><div>HubSpot</div><div class="pill" style="margin-top:6px; background:rgba(255,255,255,0.08);">Coming soon</div></div>
+        <div class="card"><div>Close</div><div class="pill" style="margin-top:6px; background:rgba(255,255,255,0.08);">Coming soon</div></div>
+        <div class="card"><div>CSV Export</div><div class="pill" style="margin-top:6px;">Available</div></div>
+      </div>
+    </section>
+
+    <section id="settingsView" class="view">
+      <h2 class="section-title">Settings</h2>
+      <div class="grid" style="gap:10px; grid-template-columns: repeat(2, minmax(0,1fr));">
+        <div class="card"><div class="small">API Keys</div><input class="input" placeholder="Serper API Key" /><input class="input" placeholder="OpenAI API Key" style="margin-top:6px;" /></div>
+        <div class="card"><div class="small">ICP Presets</div><button class="btn" style="margin-top:6px;">Save current as Default</button></div>
+        <div class="card"><div class="small">Compliance</div><label class="small"><input type="checkbox" checked /> Never send to catch-all by default</label></div>
+      </div>
+    </section>
+
     <section id="researchView" class="view">
       <h2 class="section-title">Research</h2>
       <div class="grid" style="gap:12px; grid-template-columns: 2fr 1fr;">
@@ -146,6 +273,7 @@
   </section>
 
   <div id="modalBackdrop" class="backdrop hidden"></div>
+  <div id="toast" class="toast"></div>
   <div id="dataModal" class="modal hidden"></div>
   <div id="toolsModal" class="modal hidden"></div>
   <div id="settingsModal" class="modal hidden"></div>
@@ -156,7 +284,7 @@
   <footer class="site-footer">
     <div class="footer-inner">
       <button id="aboutFooterBtn" class="about-link" type="button">About</button>
-      <div class="copyright">© 2025 Reliable AI Network, LLC. All rights reserved.</div>
+      <div class="copyright">© 2025 Reliable AI Network, Inc. All rights reserved.</div>
     </div>
   </footer>
 

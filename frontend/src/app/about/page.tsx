@@ -17,7 +17,7 @@ export default function About() {
           </p>
         </div>
         <div className="rounded-lg p-4 bg-white/5 border border-white/10 space-y-2">
-          <h2 className="text-xl font-semibold">Oliver Ellison · Reliable AI Network, LLC</h2>
+          <h2 className="text-xl font-semibold">Oliver Ellison · Reliable AI Network, Inc.</h2>
           <p className="opacity-90 text-base md:text-lg leading-relaxed">
             Oliver leads innovation in AI‑driven solutions for diverse business use cases. His product and engineering work powers
             <BrandName className="ml-1" />’s generation, verification, and analytics capabilities.
