@@ -88,8 +88,8 @@ export default function ProspectTable() {
                     <span className="opacity-70">{r.title}</span>
                   </div>
                 </td>
-                <td className="p-2">{r.decision === "yes" ? "✅ Yes" : r.decision === "no" ? "❌ No" : "❔ Maybe"}<div className="opacity-70">{r.reason}</div></td>
-                <td className="p-2">{r.email || "—"}<div className="opacity-70">{r.verification_status ?? ""} {r.verification_score ?? ""}</div></td>
+                <td className="p-2"><span title={r.reason}>{r.decision === "yes" ? "✅ Yes" : r.decision === "no" ? "❌ No" : "❔ Maybe"}</span><div className="opacity-70">{r.reason}</div></td>
+                <td className="p-2">{r.email || "—"}<div className="opacity-70"><span title={r.verification_status ? `Status: ${r.verification_status}${r.verification_score ? `, Score ${r.verification_score}` : ''}` : ''}>{r.verification_status ?? ""} {r.verification_score ?? ""}</span></div></td>
                 <td className="p-2">${(r.cost_usd ?? 0).toFixed(2)}</td>
               </tr>
             ))}

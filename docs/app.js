@@ -75,8 +75,12 @@
     const tbody = document.createElement('tbody');
     rows.forEach(r=>{
       const tr = document.createElement('tr');
-      const cells = [r.domain, r.name, r.title, r.decision === 'yes' ? '✅ yes' : (r.decision==='no'?'❌ no':'❔ maybe'), r.email || '—', r.verification_status || '', r.verification_score || '', `$${Number(r.cost_usd||0).toFixed(2)}`];
-      cells.forEach(c=>{ const td=document.createElement('td'); td.textContent=String(c); tr.appendChild(td); });
+      const cells = [r.domain, r.name, r.title, r.decision, r.email || '—', r.verification_status || '', r.verification_score || '', `$${Number(r.cost_usd||0).toFixed(2)}`];
+      cells.forEach((c,idx)=>{ const td=document.createElement('td');
+        if (idx===3){ const span=document.createElement('span'); span.textContent = (r.decision==='yes'?'✅ yes':(r.decision==='no'?'❌ no':'❔ maybe')); span.title = r.reason || ''; td.appendChild(span); }
+        else if (idx===5){ const span=document.createElement('span'); span.textContent = String(c||''); span.title = r.verification_status ? `Status: ${r.verification_status}${r.verification_score?`, Score ${r.verification_score}`:''}` : ''; td.appendChild(span); }
+        else { td.textContent = String(c||''); }
+        tr.appendChild(td); });
       tbody.appendChild(tr);
     });
     table.appendChild(tbody);

@@ -1,4 +1,5 @@
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+import { getMockResponse } from "./mocks";
 
 export async function api<T>(path: string, method: HttpMethod = "GET", body?: unknown): Promise<T> {
   const isServer = typeof window === "undefined";
@@ -8,6 +9,11 @@ export async function api<T>(path: string, method: HttpMethod = "GET", body?: un
     url = path.startsWith("/") ? `${base}${path}` : `${base}/${path}`;
   } else {
     url = path.startsWith("/") ? `/api${path}` : `/api/${path}`;
+  }
+  // Mock fallback
+  if (!isServer) {
+    const mock = getMockResponse(path.startsWith("/") ? path : "/" + path, method, body);
+    if (mock !== undefined) return mock as T;
   }
   const res = await fetch(url, {
     method,
