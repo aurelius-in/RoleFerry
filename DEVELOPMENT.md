@@ -35,3 +35,44 @@ Env Notes
 
 - INSTANTLY_API_KEY: set to enable API push; otherwise CSV fallback is used.
 
+Clay-Clone: Lead-Qual Engine
+----------------------------
+
+Architecture
+
+- Routers: `lead_qual`, `exports`, `n8n_hooks`, `prospects`, `costs`
+- Services: `serper_client`, `ai_qualifier`, `findymail_client`, `email_verifier`, `neverbounce_client`, `cost_meter`
+- DB: SQL migrations in `backend/app/migrations/*.sql` provision tables and `v_prospect_summary`
+
+Env keys
+
+```
+SERPER_API_KEY=
+OPENAI_API_KEY=
+FINDYMAIL_API_KEY=
+NEVERBOUNCE_API_KEY=
+GOOGLE_SHEETS_SERVICE_JSON_PATH=
+GOOGLE_SHEETS_SHEET_ID=
+ROLEFERRY_MOCK_MODE=true
+```
+
+Commands
+
+- Migrations run automatically on startup (idempotent). Reset by recreating DB.
+- Instantly CSV: GET `http://localhost:8000/exports/instantly.csv`
+
+Sample CSV
+
+```
+domain
+acme.com
+globex.com
+```
+
+Demo flow
+
+1) POST `/lead-qual/lead-domains/import-csv` with the CSV above (or use the UI)
+2) POST `/lead-qual/pipeline/run` with `{ "domains": ["acme.com"], "role_query": "CEO" }`
+3) GET `/lead-qual/prospects` to view the summary rows
+4) GET `/exports/instantly.csv` for Instantly‑ready export
+
