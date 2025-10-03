@@ -105,25 +105,30 @@
     runBtn.addEventListener('click', ()=>{
       const domains = csv.value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).filter(l=>!l.toLowerCase().includes('domain'));
       const res = LEADS.run({ domains, role_query: role.value, temperature: Number(temp.value)});
-      showToast(`Imported ${Math.max(1, domains.length)} leads`);
+      showToast('Imported ' + Math.max(1, domains.length) + ' leads');
       avgCostCard.style.display='block';
-      avgCostCard.textContent = `Avg cost per qualified prospect (last run): $${Number(res.summary.avg_cost_per_qualified).toFixed(4)}`;
+      avgCostCard.textContent = 'Avg cost per qualified prospect (last run): $' + Number(res.summary.avg_cost_per_qualified).toFixed(4);
       tableWrap.innerHTML='';
-      tableWrap.appendChild(renderLeadsTable(res.results.map(r=>({
-        domain:r.domain,
-        name:r.name,
-        title:r.title,
-        decision:r.decision,
-        email:r.email,
-        verification_status:r.verification_status,
-        verification_score:r.verification_score,
-        cost_usd:r.cost_usd,
-      })));
+      const rows = [];
+      for (var i=0;i<res.results.length;i++){
+        var r = res.results[i];
+        rows.push({
+          domain:r.domain,
+          name:r.name,
+          title:r.title,
+          decision:r.decision,
+          email:r.email,
+          verification_status:r.verification_status,
+          verification_score:r.verification_score,
+          cost_usd:r.cost_usd,
+        });
+      }
+      tableWrap.appendChild(renderLeadsTable(rows));
     });
     compareBtn.addEventListener('click', ()=>{
       const c = LEADS.compare();
       compareCard.style.display='block';
-      compareCard.textContent = `Cost per qualified lead (est): RoleFerry $${c.per_lead.roleferry.toFixed(4)} vs Benchmark $${c.per_lead.clay.toFixed(2)}`;
+      compareCard.textContent = 'Cost per qualified lead (est): RoleFerry $' + c.per_lead.roleferry.toFixed(4) + ' vs Benchmark $' + c.per_lead.clay.toFixed(2);
     });
     // Exports
     $('#exportInstantly').addEventListener('click', ()=>{
@@ -407,7 +412,7 @@
   // Initial route
   function applyRoute(){
     const h = location.hash || '#home';
-    ['#home','#dashboard','#analytics','#crm','#leads','#enrichment','#qualification','#sequences','#runs','#pricing','#integrations','#settings'].forEach(tag=>{
+    ['#home','#dashboard','#analytics','#crm','#leads','#enrichment','#qualification','#sequences','#runs','#pricing','#integrations','#settings'].forEach(function(tag){
       const id = tag.slice(1)+'View';
       const node = document.getElementById(id); if (node) node.classList.remove('active');
     });
