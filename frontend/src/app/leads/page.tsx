@@ -24,6 +24,7 @@ export default function LeadsPage() {
   const [results, setResults] = useState<Prospect[]>([]);
   const [avgCost, setAvgCost] = useState<number | null>(null);
   const [compare, setCompare] = useState<{ roleferry: number; clay: number } | null>(null);
+  const [temperature, setTemperature] = useState<number>(0.2);
   const [mockMode, setMockMode] = useState<boolean | null>(null);
   const [sheetPulled, setSheetPulled] = useState<boolean>(false);
 
@@ -35,7 +36,7 @@ export default function LeadsPage() {
     const resp = await api<{ ok: boolean; results: Prospect[]; summary: any }>(
       "/lead-qual/pipeline/run",
       "POST",
-      { domains, role_query: roleQuery }
+      { domains, role_query: roleQuery, temperature }
     );
     setResults(resp.results || []);
     setAvgCost(resp.summary?.avg_cost_per_qualified ?? null);
@@ -92,6 +93,10 @@ export default function LeadsPage() {
             value={roleQuery}
             onChange={(e) => setRoleQuery(e.target.value)}
           />
+          <div className="mt-2 text-xs">
+            <label className="block mb-1">Qualifier temperature: {temperature.toFixed(2)}</label>
+            <input type="range" min={0} max={1} step={0.05} value={temperature} onChange={(e)=>setTemperature(parseFloat(e.target.value))} />
+          </div>
           <button className="mt-3 px-3 py-2 rounded bg-blue-600" onClick={onRun}>
             Run Lead-Qual Pipeline
           </button>

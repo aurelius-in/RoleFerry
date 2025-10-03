@@ -25,6 +25,7 @@ class DomainsSheetsImportRequest(BaseModel):
 class PipelineRunRequest(BaseModel):
     domains: List[str]
     role_query: str
+    temperature: float = 0.2
 
 
 @router.post("/lead-domains/import-csv")
@@ -119,7 +120,7 @@ async def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
         pid = await repo.create_prospect(domain_id, preview)
 
         # Qualifier
-        qual = qualify_prospect(preview)
+        qual = qualify_prospect(preview, temperature=payload.temperature)
         await repo.add_qualification(pid, qual["decision"], qual["reason"], qual["model"], int(qual["latency_ms"]))
         gpt_cost = cost_record("gpt", pid, 1, "token", 0.003, {"model": qual["model"]})
         total_cost += gpt_cost["est_cost_usd"]
