@@ -25,6 +25,7 @@ class DomainsSheetsImportRequest(BaseModel):
 class PipelineRunRequest(BaseModel):
     domains: List[str]
     role_query: str
+    temperature: float = 0.2
 
 
 @router.post("/lead-domains/import-csv")
@@ -108,10 +109,14 @@ async def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
     for d in domains:
         domain_id = await repo.upsert_domain(d, source="api")
         # Serper step
-        hits = search_linkedin(d, payload.role_query)
+        try:
+            hits = search_linkedin(d, payload.role_query)
+        except Exception:
+            telemetry["failures"] += 1
+            hits = []
         cost = cost_record("serper", None, 1, "request", None, {"domain": d})
         total_cost += cost["est_cost_usd"]
-        await repo.add_cost(pid, "serper", cost["units"], cost["unit_type"], cost["est_cost_usd"], cost["meta"]) if 'pid' in locals() else None
+        await repo.add_cost(locals().get("pid"), "serper", cost["units"], cost["unit_type"], cost["est_cost_usd"], cost["meta"]) if locals().get("pid") else None
         telemetry["steps"]["serper"]["count"] += 1
 
         top = hits[0] if hits else {"title": payload.role_query, "url": f"https://www.linkedin.com/search/results/people/?keywords={d}", "snippet": ""}
@@ -119,7 +124,11 @@ async def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
         pid = await repo.create_prospect(domain_id, preview)
 
         # Qualifier
-        qual = qualify_prospect(preview)
+        try:
+            qual = qualify_prospect(preview, temperature=payload.temperature)
+        except Exception:
+            telemetry["failures"] += 1
+            qual = {"decision": "maybe", "reason": "Qualifier error", "model": "stub", "latency_ms": 0}
         await repo.add_qualification(pid, qual["decision"], qual["reason"], qual["model"], int(qual["latency_ms"]))
         gpt_cost = cost_record("gpt", pid, 1, "token", 0.003, {"model": qual["model"]})
         total_cost += gpt_cost["est_cost_usd"]
@@ -130,14 +139,22 @@ async def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
         contact_summary: Dict[str, Any] = {"email": None, "verification_status": None, "verification_score": None}
         if decision == "yes":
             # Enrich
-            contact = enrich_contact(preview.get("name") or "Contact", d)
+            try:
+                contact = enrich_contact(preview.get("name") or "Contact", d)
+            except Exception:
+                telemetry["failures"] += 1
+                contact = {"email": None, "phone": None}
             cid = await repo.add_contact(pid, contact.get("email"), contact.get("phone"), provider="findymail")
             fm_cost = cost_record("findymail", pid, 1, "lookup", None, {})
             total_cost += fm_cost["est_cost_usd"]
             await repo.add_cost(pid, "findymail", fm_cost["units"], fm_cost["unit_type"], fm_cost["est_cost_usd"], fm_cost["meta"])
             telemetry["steps"]["findymail"]["count"] += 1
             # Verify
-            v = verify_email(contact.get("email")) if contact.get("email") else {"status": "unknown", "score": None}
+            try:
+                v = verify_email(contact.get("email")) if contact.get("email") else {"status": "unknown", "score": None}
+            except Exception:
+                telemetry["failures"] += 1
+                v = {"status": "unknown", "score": None}
             await repo.update_contact_verification(cid, v.get("status", "unknown"), v.get("score"), "neverbounce")
             nb_cost = cost_record("neverbounce", pid, 1, "verify", None, {})
             total_cost += nb_cost["est_cost_usd"]

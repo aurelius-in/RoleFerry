@@ -23,7 +23,8 @@ export default function LeadsPage() {
   const [roleQuery, setRoleQuery] = useState<string>("CEO");
   const [results, setResults] = useState<Prospect[]>([]);
   const [avgCost, setAvgCost] = useState<number | null>(null);
-  const [mockMode, setMockMode] = useState<boolean | null>(null);
+  const [compare, setCompare] = useState<{ roleferry: number; clay: number } | null>(null);
+  const [temperature, setTemperature] = useState<number>(0.2);
   const [sheetPulled, setSheetPulled] = useState<boolean>(false);
 
   async function onRun() {
@@ -34,16 +35,13 @@ export default function LeadsPage() {
     const resp = await api<{ ok: boolean; results: Prospect[]; summary: any }>(
       "/lead-qual/pipeline/run",
       "POST",
-      { domains, role_query: roleQuery }
+      { domains, role_query: roleQuery, temperature }
     );
     setResults(resp.results || []);
     setAvgCost(resp.summary?.avg_cost_per_qualified ?? null);
   }
 
-  async function checkHealth() {
-    const h = await api<any>("/health", "GET");
-    setMockMode(Boolean(h.mock_mode));
-  }
+  // no visible mock-mode checks in demo UI
 
   async function pullFromSheets() {
     const r = await api<{ inserted: number; domains: string[] }>("/lead-qual/lead-domains/import-sheets", "POST", {});
@@ -51,18 +49,15 @@ export default function LeadsPage() {
     setSheetPulled(true);
   }
 
+  async function loadCompare() {
+    const c = await api<{ per_lead: { roleferry: number; clay: number } }>("/costs/compare?sample=10", "GET");
+    setCompare({ roleferry: c.per_lead.roleferry, clay: c.per_lead.clay });
+  }
+
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Lead Qualification</h1>
-        <button className="text-sm underline" onClick={checkHealth}>
-          Check Mock Mode
-        </button>
-        {mockMode !== null && (
-          <span className="text-xs px-2 py-1 rounded bg-yellow-500/20 border border-yellow-500/40">
-            Mock Mode {mockMode ? "ON" : "OFF"}
-          </span>
-        )}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -86,8 +81,15 @@ export default function LeadsPage() {
             value={roleQuery}
             onChange={(e) => setRoleQuery(e.target.value)}
           />
+          <div className="mt-2 text-xs">
+            <label className="block mb-1">Qualifier temperature: {temperature.toFixed(2)}</label>
+            <input type="range" min={0} max={1} step={0.05} value={temperature} onChange={(e)=>setTemperature(parseFloat(e.target.value))} />
+          </div>
           <button className="mt-3 px-3 py-2 rounded bg-blue-600" onClick={onRun}>
             Run Lead-Qual Pipeline
+          </button>
+          <button className="mt-3 ml-2 px-3 py-2 rounded bg-white/10 border border-white/15" onClick={loadCompare}>
+            Load Cost Compare
           </button>
         </div>
       </div>
@@ -95,6 +97,12 @@ export default function LeadsPage() {
       {avgCost !== null && (
         <div className="p-3 rounded border border-white/10 bg-white/5 text-sm">
           <strong>Avg cost per qualified prospect (last run):</strong> ${Number(avgCost).toFixed(4)}
+        </div>
+      )}
+
+      {compare && (
+        <div className="p-3 rounded border border-white/10 bg-white/5 text-sm">
+          <strong>Cost per qualified lead (est):</strong> RoleFerry ${compare.roleferry.toFixed(4)} vs Clay ${compare.clay.toFixed(2)}
         </div>
       )}
 
