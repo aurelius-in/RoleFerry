@@ -1,52 +1,54 @@
 from fastapi import APIRouter, Response, Query
 from typing import List
+from sqlalchemy import text
+from ..db import get_engine
 
 
 router = APIRouter(prefix="/exports", tags=["exports"]) 
 
 
 @router.get("/instantly.csv")
-def export_instantly(sendable_only: bool = Query(True)) -> Response:
-    """Stub Instantly export CSV. Excludes rows without email when sendable_only.
-    Columns per README: email,first_name,last_name,company,title,linkedin_url,domain,decision,reason,verification_status,verification_score
+async def export_instantly(sendable_only: bool = Query(True)) -> Response:
+    """DB-backed Instantly export from summary view.
+    Columns: email,first_name,last_name,company,title,linkedin_url,domain,decision,reason,verification_status,verification_score
     """
-    rows = [
-        {
-            "email": "alex@acme.com",
-            "first_name": "Alex",
-            "last_name": "Doe",
-            "company": "Acme",
-            "title": "CEO",
-            "linkedin_url": "https://linkedin.com/in/alex-doe",
-            "domain": "acme.com",
-            "decision": "yes",
-            "reason": "Founder/CEO",
-            "verification_status": "valid",
-            "verification_score": 95,
-        },
-        {
-            "email": "",
-            "first_name": "Jamie",
-            "last_name": "Roe",
-            "company": "Globex",
-            "title": "Head of Talent",
-            "linkedin_url": "https://linkedin.com/in/jamie-roe",
-            "domain": "globex.com",
-            "decision": "maybe",
-            "reason": "Influencer",
-            "verification_status": "unknown",
-            "verification_score": "",
-        },
-    ]
+    engine = get_engine()
+    sql = text("""
+        SELECT name, title, linkedin_url, domain, decision, reason, email, verification_status, verification_score
+        FROM v_prospect_summary
+        ORDER BY domain
+    """)
+    rows = []
+    async with engine.connect() as conn:
+        res = await conn.execute(sql)
+        rows = [dict(r._mapping) for r in res]
     headers = [
         "email","first_name","last_name","company","title","linkedin_url","domain","decision","reason","verification_status","verification_score"
     ]
     out: List[str] = [",".join(headers)]
     for r in rows:
-        if sendable_only and not r.get("email"):
+        email = r.get("email") or ""
+        if sendable_only and not email:
             continue
+        name = r.get("name") or ""
+        parts = name.split()
+        first_name = parts[0] if parts else ""
+        last_name = parts[-1] if len(parts) > 1 else ""
+        company = (r.get("domain") or "").split(".")[0].title()
         out.append(
-            ",".join([str(r.get(h, "")) for h in headers])
+            ",".join([
+                email,
+                first_name,
+                last_name,
+                company,
+                r.get("title") or "",
+                r.get("linkedin_url") or "",
+                r.get("domain") or "",
+                r.get("decision") or "",
+                r.get("reason") or "",
+                r.get("verification_status") or "",
+                str(r.get("verification_score") or ""),
+            ])
         )
     csv = "\n".join(out) + "\n"
     return Response(content=csv, media_type="text/csv")

@@ -24,6 +24,7 @@ export default function LeadsPage() {
   const [results, setResults] = useState<Prospect[]>([]);
   const [avgCost, setAvgCost] = useState<number | null>(null);
   const [mockMode, setMockMode] = useState<boolean | null>(null);
+  const [sheetPulled, setSheetPulled] = useState<boolean>(false);
 
   async function onRun() {
     const domains = csv
@@ -42,6 +43,12 @@ export default function LeadsPage() {
   async function checkHealth() {
     const h = await api<any>("/health", "GET");
     setMockMode(Boolean(h.mock_mode));
+  }
+
+  async function pullFromSheets() {
+    const r = await api<{ inserted: number; domains: string[] }>("/lead-qual/lead-domains/import-sheets", "POST", {});
+    setCsv(["domain", ...r.domains].join("\n"));
+    setSheetPulled(true);
   }
 
   return (
@@ -67,6 +74,10 @@ export default function LeadsPage() {
             value={csv}
             onChange={(e) => setCsv(e.target.value)}
           />
+          <div className="mt-2 flex items-center gap-2 text-xs">
+            <button className="px-2 py-1 rounded bg-white/10 border border-white/15" onClick={pullFromSheets}>Pull from Google Sheets</button>
+            {sheetPulled && <span className="opacity-70">Filled from Sheets</span>}
+          </div>
         </div>
         <div>
           <label className="block text-sm mb-1">Role Query</label>
