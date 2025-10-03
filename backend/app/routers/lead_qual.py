@@ -2,6 +2,13 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from ..config import settings
+from ..db import get_engine
+from ..repos.leads_repo import LeadsRepo
+from ..services.serper_client import search_linkedin
+from ..services.ai_qualifier import qualify_prospect
+from ..services.findymail_client import enrich_contact
+from ..services.email_verifier import verify as verify_email
+from ..services.cost_meter import record as cost_record
 
 
 router = APIRouter(prefix="/lead-qual", tags=["lead-qual"])
@@ -51,7 +58,7 @@ def import_sheets(payload: DomainsSheetsImportRequest) -> Dict[str, Any]:
 
 
 @router.post("/pipeline/run")
-def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
+async def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
     # Stub: enforce mock behavior when keys are missing
     required = {
         "serper": settings.serper_api_key,
@@ -63,26 +70,57 @@ def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
     if missing and not settings.mock_mode:
         raise HTTPException(status_code=422, detail=f"Missing provider keys: {', '.join(missing)}. Enable mock mode or provide keys.")
 
-    # Deterministic stubbed response
-    domains = list(dict.fromkeys([d.strip().lower() for d in payload.domains if d.strip()]))[:10]
-    prospects = []
+    # Normalize domains
+    domains = list(dict.fromkeys([d.strip().lower() for d in payload.domains if d.strip()]))[:25]
+    engine = get_engine()
+    repo = LeadsRepo(engine)
+    results: List[Dict[str, Any]] = []
+    total_cost = 0.0
+
     for d in domains:
-        prospects.append({
+        domain_id = await repo.upsert_domain(d, source="api")
+        # Serper step
+        hits = search_linkedin(d, payload.role_query)
+        cost = cost_record("serper", None, 1, "request", None, {"domain": d})
+        total_cost += cost["est_cost_usd"]
+
+        top = hits[0] if hits else {"title": payload.role_query, "url": f"https://www.linkedin.com/search/results/people/?keywords={d}", "snippet": ""}
+        preview = {"name": top.get("title", ""), "title": top.get("title", ""), "linkedin_url": top.get("url", ""), "company": d}
+        pid = await repo.create_prospect(domain_id, preview)
+
+        # Qualifier
+        qual = qualify_prospect(preview)
+        await repo.add_qualification(pid, qual["decision"], qual["reason"], qual["model"], int(qual["latency_ms"]))
+        total_cost += cost_record("gpt", pid, 1, "token", 0.003, {"model": qual["model"]})["est_cost_usd"]
+
+        decision = qual["decision"]
+        contact_summary: Dict[str, Any] = {"email": None, "verification_status": None, "verification_score": None}
+        if decision == "yes":
+            # Enrich
+            contact = enrich_contact(preview.get("name") or "Contact", d)
+            cid = await repo.add_contact(pid, contact.get("email"), contact.get("phone"), provider="findymail")
+            total_cost += cost_record("findymail", pid, 1, "lookup", None, {})["est_cost_usd"]
+            # Verify
+            v = verify_email(contact.get("email")) if contact.get("email") else {"status": "unknown", "score": None}
+            await repo.update_contact_verification(cid, v.get("status", "unknown"), v.get("score"), "neverbounce")
+            total_cost += cost_record("neverbounce", pid, 1, "verify", None, {})["est_cost_usd"]
+            contact_summary = {"email": contact.get("email"), "verification_status": v.get("status"), "verification_score": v.get("score")}
+
+        results.append({
             "domain": d,
             "top_prospect": {
-                "name": "Jordan Example",
-                "title": "CEO",
-                "linkedin_url": f"https://www.linkedin.com/in/{d.replace('.', '-')}-ceo",
-                "decision": "yes",
-                "reason": f"Likely decision maker for {payload.role_query}",
-                "email": f"jordan@example.{d.split('.')[-1]}",
-                "verification_status": "valid",
-                "verification_score": 90,
-                "cost_usd": 0.06,
+                "name": preview.get("name") or "—",
+                "title": preview.get("title") or payload.role_query,
+                "linkedin_url": preview.get("linkedin_url"),
+                "decision": decision,
+                "reason": qual["reason"],
+                **contact_summary,
+                "cost_usd": round(total_cost / max(1, len(results) + 1), 2),
             }
         })
-    telemetry = {"counts": {"domains": len(domains), "prospects": len(prospects)}, "avg_cost_per_qualified": 0.06}
-    return {"ok": True, "summary": telemetry, "results": prospects}
+
+    telemetry = {"counts": {"domains": len(domains), "prospects": len(results)}, "avg_cost_per_qualified": round(total_cost / max(1, len([r for r in results if r["top_prospect"]["decision"] == "yes"])), 4) if results else 0.0}
+    return {"ok": True, "summary": telemetry, "results": results}
 
 
 @router.get("/prospects")

@@ -1,3 +1,6 @@
+-- Required for gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- Lead qualification core tables
 CREATE TABLE IF NOT EXISTS lead_domain (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
