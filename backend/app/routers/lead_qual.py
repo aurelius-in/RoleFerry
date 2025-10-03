@@ -111,6 +111,7 @@ async def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
         hits = search_linkedin(d, payload.role_query)
         cost = cost_record("serper", None, 1, "request", None, {"domain": d})
         total_cost += cost["est_cost_usd"]
+        await repo.add_cost(pid, "serper", cost["units"], cost["unit_type"], cost["est_cost_usd"], cost["meta"]) if 'pid' in locals() else None
         telemetry["steps"]["serper"]["count"] += 1
 
         top = hits[0] if hits else {"title": payload.role_query, "url": f"https://www.linkedin.com/search/results/people/?keywords={d}", "snippet": ""}
@@ -120,7 +121,9 @@ async def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
         # Qualifier
         qual = qualify_prospect(preview)
         await repo.add_qualification(pid, qual["decision"], qual["reason"], qual["model"], int(qual["latency_ms"]))
-        total_cost += cost_record("gpt", pid, 1, "token", 0.003, {"model": qual["model"]})["est_cost_usd"]
+        gpt_cost = cost_record("gpt", pid, 1, "token", 0.003, {"model": qual["model"]})
+        total_cost += gpt_cost["est_cost_usd"]
+        await repo.add_cost(pid, "gpt", gpt_cost["units"], gpt_cost["unit_type"], gpt_cost["est_cost_usd"], gpt_cost["meta"])
         telemetry["steps"]["gpt"]["count"] += 1
 
         decision = qual["decision"]
@@ -129,12 +132,16 @@ async def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
             # Enrich
             contact = enrich_contact(preview.get("name") or "Contact", d)
             cid = await repo.add_contact(pid, contact.get("email"), contact.get("phone"), provider="findymail")
-            total_cost += cost_record("findymail", pid, 1, "lookup", None, {})["est_cost_usd"]
+            fm_cost = cost_record("findymail", pid, 1, "lookup", None, {})
+            total_cost += fm_cost["est_cost_usd"]
+            await repo.add_cost(pid, "findymail", fm_cost["units"], fm_cost["unit_type"], fm_cost["est_cost_usd"], fm_cost["meta"])
             telemetry["steps"]["findymail"]["count"] += 1
             # Verify
             v = verify_email(contact.get("email")) if contact.get("email") else {"status": "unknown", "score": None}
             await repo.update_contact_verification(cid, v.get("status", "unknown"), v.get("score"), "neverbounce")
-            total_cost += cost_record("neverbounce", pid, 1, "verify", None, {})["est_cost_usd"]
+            nb_cost = cost_record("neverbounce", pid, 1, "verify", None, {})
+            total_cost += nb_cost["est_cost_usd"]
+            await repo.add_cost(pid, "neverbounce", nb_cost["units"], nb_cost["unit_type"], nb_cost["est_cost_usd"], nb_cost["meta"])
             telemetry["steps"]["neverbounce"]["count"] += 1
             contact_summary = {"email": contact.get("email"), "verification_status": v.get("status"), "verification_score": v.get("score")}
 

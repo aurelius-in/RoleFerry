@@ -6,6 +6,7 @@ from ..db import get_engine
 from ..services.ai_qualifier import qualify_prospect
 from ..services.findymail_client import enrich_contact
 from ..services.email_verifier import verify as verify_email
+from ..config import settings
 
 
 router = APIRouter(prefix="/hooks/n8n", tags=["n8n"]) 
@@ -27,6 +28,15 @@ class QualifyHook(BaseModel):
 def ingest(payload: IngestHook) -> Dict[str, Any]:
     if not payload.domain:
         raise HTTPException(status_code=422, detail="domain required")
+    # Persist domain asynchronously if possible
+    repo = LeadsRepo(get_engine())
+    try:
+        import anyio
+        async def _persist():
+            await repo.upsert_domain(payload.domain, source="n8n")
+        anyio.from_thread.run(_persist)
+    except Exception:
+        pass
     return {"ack": True, "action": "append_domain", "domain": payload.domain}
 
 
@@ -34,6 +44,17 @@ def ingest(payload: IngestHook) -> Dict[str, Any]:
 async def qualify(payload: QualifyHook) -> Dict[str, Any]:
     if not payload.linkedin_url:
         raise HTTPException(status_code=422, detail="linkedin_url required")
+    # Enforce keys if mock is off
+    missing = []
+    if not settings.openai_api_key:
+        missing.append("openai")
+    if (not settings.findymail_api_key) and (not settings.mock_mode):
+        missing.append("findymail")
+    if (not settings.neverbounce_api_key and not settings.mv_api_key) and (not settings.mock_mode):
+        missing.append("verifier")
+    if missing and not settings.mock_mode:
+        raise HTTPException(status_code=422, detail=f"Missing provider keys: {', '.join(missing)}. Enable mock mode or provide keys.")
+
     repo = LeadsRepo(get_engine())
     domain_id = await repo.upsert_domain(payload.domain, source="n8n")
     preview = {"name": payload.name, "title": payload.title, "linkedin_url": payload.linkedin_url, "company": payload.company}
