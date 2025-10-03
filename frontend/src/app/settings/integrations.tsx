@@ -6,6 +6,7 @@ export default function IntegrationsPage() {
   const [providers, setProviders] = useState<any>({});
   const [mock, setMock] = useState<boolean>(false);
   const [preferred, setPreferred] = useState<string>("neverbounce");
+  const [meshEnabled, setMeshEnabled] = useState<boolean>(true);
 
   useEffect(() => {
     api<any>("/health", "GET").then((h) => {
@@ -14,6 +15,7 @@ export default function IntegrationsPage() {
     });
     api<any>("/settings", "GET").then((s) => {
       if (s.preferred_email_verifier) setPreferred(s.preferred_email_verifier);
+      if (typeof s.mesh_clone_enabled === 'boolean') setMeshEnabled(Boolean(s.mesh_clone_enabled));
     });
   }, []);
 
@@ -52,6 +54,7 @@ export default function IntegrationsPage() {
           </div>
         ))}
       </div>
+      <div className="text-xs opacity-80">Mesh features enabled: {meshEnabled ? 'Yes' : 'No'}</div>
     </div>
   );
 }

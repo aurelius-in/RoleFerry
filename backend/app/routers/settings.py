@@ -11,6 +11,7 @@ def get_settings():
   return {
       "environment": settings.environment,
       "mv_threshold": settings.mv_threshold,
+      "mesh_clone_enabled": getattr(settings, "mesh_clone_enabled", True),
       "preferred_email_verifier": settings.preferred_email_verifier,
       "cors_origins": settings.cors_origins,
       "instantly_enabled": settings.instantly_enabled,

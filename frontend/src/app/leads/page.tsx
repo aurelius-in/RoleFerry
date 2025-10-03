@@ -26,6 +26,7 @@ export default function LeadsPage() {
   const [compare, setCompare] = useState<{ roleferry: number; clay: number } | null>(null);
   const [temperature, setTemperature] = useState<number>(0.2);
   const [sheetPulled, setSheetPulled] = useState<boolean>(false);
+  const [meshEnabled, setMeshEnabled] = useState<boolean>(true);
 
   async function onRun() {
     const domains = csv
@@ -53,6 +54,14 @@ export default function LeadsPage() {
     const c = await api<{ per_lead: { roleferry: number; clay: number } }>("/costs/compare?sample=10", "GET");
     setCompare({ roleferry: c.per_lead.roleferry, clay: c.per_lead.clay });
   }
+
+  // Gating: hide feature if Mesh is disabled
+  (async () => {
+    try {
+      const s = await api<any>("/settings", "GET");
+      if (typeof s.mesh_clone_enabled === "boolean") setMeshEnabled(Boolean(s.mesh_clone_enabled));
+    } catch (_) {}
+  })();
 
   return (
     <div className="p-4 space-y-4">
@@ -102,11 +111,15 @@ export default function LeadsPage() {
 
       {compare && (
         <div className="p-3 rounded border border-white/10 bg-white/5 text-sm">
-          <strong>Cost per qualified lead (est):</strong> RoleFerry ${compare.roleferry.toFixed(4)} vs Clay ${compare.clay.toFixed(2)}
+          <strong>Cost per qualified lead (est):</strong> RoleFerry ${compare.roleferry.toFixed(4)} vs Benchmark ${compare.clay.toFixed(2)}
         </div>
       )}
 
-      <ProspectTable />
+      {meshEnabled ? (
+        <ProspectTable />
+      ) : (
+        <div className="p-3 rounded border border-white/10 bg-white/5 text-sm">This feature is not enabled on this deployment.</div>
+      )}
     </div>
   );
 }
