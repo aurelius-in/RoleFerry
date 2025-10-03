@@ -103,6 +103,7 @@ async def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
     repo = LeadsRepo(engine)
     results: List[Dict[str, Any]] = []
     total_cost = 0.0
+    telemetry = {"steps": {"serper": {"count": 0}, "gpt": {"count": 0}, "findymail": {"count": 0}, "neverbounce": {"count": 0}}, "failures": 0}
 
     for d in domains:
         domain_id = await repo.upsert_domain(d, source="api")
@@ -110,6 +111,7 @@ async def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
         hits = search_linkedin(d, payload.role_query)
         cost = cost_record("serper", None, 1, "request", None, {"domain": d})
         total_cost += cost["est_cost_usd"]
+        telemetry["steps"]["serper"]["count"] += 1
 
         top = hits[0] if hits else {"title": payload.role_query, "url": f"https://www.linkedin.com/search/results/people/?keywords={d}", "snippet": ""}
         preview = {"name": top.get("title", ""), "title": top.get("title", ""), "linkedin_url": top.get("url", ""), "company": d}
@@ -119,6 +121,7 @@ async def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
         qual = qualify_prospect(preview)
         await repo.add_qualification(pid, qual["decision"], qual["reason"], qual["model"], int(qual["latency_ms"]))
         total_cost += cost_record("gpt", pid, 1, "token", 0.003, {"model": qual["model"]})["est_cost_usd"]
+        telemetry["steps"]["gpt"]["count"] += 1
 
         decision = qual["decision"]
         contact_summary: Dict[str, Any] = {"email": None, "verification_status": None, "verification_score": None}
@@ -127,10 +130,12 @@ async def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
             contact = enrich_contact(preview.get("name") or "Contact", d)
             cid = await repo.add_contact(pid, contact.get("email"), contact.get("phone"), provider="findymail")
             total_cost += cost_record("findymail", pid, 1, "lookup", None, {})["est_cost_usd"]
+            telemetry["steps"]["findymail"]["count"] += 1
             # Verify
             v = verify_email(contact.get("email")) if contact.get("email") else {"status": "unknown", "score": None}
             await repo.update_contact_verification(cid, v.get("status", "unknown"), v.get("score"), "neverbounce")
             total_cost += cost_record("neverbounce", pid, 1, "verify", None, {})["est_cost_usd"]
+            telemetry["steps"]["neverbounce"]["count"] += 1
             contact_summary = {"email": contact.get("email"), "verification_status": v.get("status"), "verification_score": v.get("score")}
 
         results.append({
@@ -146,8 +151,13 @@ async def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
             }
         })
 
-    telemetry = {"counts": {"domains": len(domains), "prospects": len(results)}, "avg_cost_per_qualified": round(total_cost / max(1, len([r for r in results if r["top_prospect"]["decision"] == "yes"])), 4) if results else 0.0}
-    return {"ok": True, "summary": telemetry, "results": results}
+    summary = {
+        "counts": {"domains": len(domains), "prospects": len(results)},
+        "steps": telemetry["steps"],
+        "avg_cost_per_qualified": round(total_cost / max(1, len([r for r in results if r["top_prospect"]["decision"] == "yes"])), 4) if results else 0.0,
+        "total_cost": round(total_cost, 4),
+    }
+    return {"ok": True, "summary": summary, "results": results}
 
 
 @router.get("/prospects")

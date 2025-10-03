@@ -1,4 +1,5 @@
 from typing import Dict, Any
+from time import sleep
 from ..config import settings
 
 
@@ -7,6 +8,7 @@ def verify_email(email: str) -> Dict[str, Any]:
     Returns status and score.
     """
     if settings.mock_mode or not settings.neverbounce_api_key:
+        sleep(0.08)
         # simple deterministic mock based on hash
         status = "valid" if email and email[0].lower() < "n" else "accept_all"
         score = 90 if status == "valid" else 70

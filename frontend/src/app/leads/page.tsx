@@ -22,6 +22,7 @@ export default function LeadsPage() {
   const [csv, setCsv] = useState<string>("");
   const [roleQuery, setRoleQuery] = useState<string>("CEO");
   const [results, setResults] = useState<Prospect[]>([]);
+  const [avgCost, setAvgCost] = useState<number | null>(null);
   const [mockMode, setMockMode] = useState<boolean | null>(null);
 
   async function onRun() {
@@ -35,6 +36,7 @@ export default function LeadsPage() {
       { domains, role_query: roleQuery }
     );
     setResults(resp.results || []);
+    setAvgCost(resp.summary?.avg_cost_per_qualified ?? null);
   }
 
   async function checkHealth() {
@@ -78,6 +80,12 @@ export default function LeadsPage() {
           </button>
         </div>
       </div>
+
+      {avgCost !== null && (
+        <div className="p-3 rounded border border-white/10 bg-white/5 text-sm">
+          <strong>Avg cost per qualified prospect (last run):</strong> ${Number(avgCost).toFixed(4)}
+        </div>
+      )}
 
       <ProspectTable />
     </div>
