@@ -85,6 +85,10 @@ thead { position: sticky; top: 0; background: rgba(255,255,255,0.1); }
 th, td { padding: 8px 10px; text-align: left; white-space: nowrap; }
 tbody tr:nth-child(odd) { background: rgba(255,255,255,0.05); }
 
+/* Subtle row animation */
+.fade-in { animation: fadeIn .35s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
 /* Inputs and cards for Leads view */
 .input { width:100%; padding:8px; border-radius:6px; background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--fg); }
 .textarea { width:100%; height:140px; padding:8px; border-radius:6px; background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--fg); }
