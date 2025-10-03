@@ -273,7 +273,7 @@
       { label: 'Audit Log', target: '#data/Audit%20Log' },
       { label: 'Messages', target: '#data/Messages' },
       { label: 'Onboarding', target: '#data/Onboarding' },
-      { label: 'Health', target: '#analytics' },
+      { label: 'Lead‑Qual (Demo)', target: '#data/Contacts' },
     ];
     items.forEach(it => {
       const btn = document.createElement('button');
