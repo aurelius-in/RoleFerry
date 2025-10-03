@@ -33,6 +33,112 @@
     $('#askOut').textContent = val ? `Answer: (demo) “${val}” received. Try Data → Campaigns.` : 'Please type something to ask.';
   });
 
+  // Leads mock data and UI wiring
+  const LEADS = {
+    prospects: [],
+    run(payload){
+      const domains = payload.domains.slice(0, 10);
+      const results = domains.map((d,i)=>{
+        const yes = i % 2 === 0;
+        const decision = yes ? 'yes' : (i % 3 === 0 ? 'maybe' : 'no');
+        const score = yes ? 92 - (i%5) : (decision==='maybe'? 70: '')
+        return {
+          domain: d,
+          name: yes? 'Jordan Example' : 'Alex Example',
+          title: yes? 'CEO' : 'Head of Talent',
+          linkedin_url: `https://www.linkedin.com/in/${d.replace(/\./g, '-')}-${yes?'ceo':'talent'}`,
+          decision,
+          reason: yes? `Likely decision maker for ${payload.role_query}` : 'Needs review',
+          email: yes? `jordan@${d}` : '',
+          verification_status: yes? 'valid' : (decision==='maybe' ? 'unknown' : 'invalid'),
+          verification_score: score,
+          cost_usd: (0.05 + (i%3)*0.01).toFixed(2)
+        };
+      });
+      this.prospects = results;
+      return {
+        ok: true,
+        summary: { avg_cost_per_qualified: 0.06, steps: { serper:{count:domains.length}, gpt:{count:domains.length}, findymail:{count:Math.ceil(domains.length/2)}, neverbounce:{count:Math.ceil(domains.length/2)} } },
+        results
+      };
+    },
+    compare(){ return { per_lead: { roleferry: 0.0625, clay: 0.25 } } }
+  };
+
+  function renderLeadsTable(rows){
+    const columns = ['domain','name','title','decision','email','verification_status','verification_score','cost_usd'];
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const trh = document.createElement('tr');
+    ['Domain','Prospect','Title','Decision','Email','Verification','Score','Cost $'].forEach(h=>{ const th=document.createElement('th'); th.textContent=h; trh.appendChild(th); });
+    thead.appendChild(trh); table.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    rows.forEach(r=>{
+      const tr = document.createElement('tr');
+      const cells = [r.domain, r.name, r.title, r.decision === 'yes' ? '✅ yes' : (r.decision==='no'?'❌ no':'❔ maybe'), r.email || '—', r.verification_status || '', r.verification_score || '', `$${Number(r.cost_usd||0).toFixed(2)}`];
+      cells.forEach(c=>{ const td=document.createElement('td'); td.textContent=String(c); tr.appendChild(td); });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    return table;
+  }
+
+  function setupLeads(){
+    const csv = $('#csvInput');
+    const role = $('#roleInput');
+    const temp = $('#tempSlider');
+    const tempVal = $('#tempVal');
+    const runBtn = $('#runBtn');
+    const compareBtn = $('#compareBtn');
+    const sheetsBtn = $('#sheetsBtn');
+    const avgCostCard = $('#avgCostCard');
+    const compareCard = $('#compareCard');
+    const tableWrap = $('#leadsTableWrap');
+    temp.addEventListener('input', ()=>{ tempVal.textContent = Number(temp.value).toFixed(2); });
+    sheetsBtn.addEventListener('click', ()=>{
+      csv.value = ['domain','acme.com','globex.com','initech.com','umbrella.com','soylent.com'].join('\n');
+    });
+    runBtn.addEventListener('click', ()=>{
+      const domains = csv.value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).filter(l=>!l.toLowerCase().includes('domain'));
+      const res = LEADS.run({ domains, role_query: role.value, temperature: Number(temp.value)});
+      avgCostCard.style.display='block';
+      avgCostCard.textContent = `Avg cost per qualified prospect (last run): $${Number(res.summary.avg_cost_per_qualified).toFixed(4)}`;
+      tableWrap.innerHTML='';
+      tableWrap.appendChild(renderLeadsTable(res.results.map(r=>({
+        domain:r.domain,
+        name:r.name,
+        title:r.title,
+        decision:r.decision,
+        email:r.email,
+        verification_status:r.verification_status,
+        verification_score:r.verification_score,
+        cost_usd:r.cost_usd,
+      })));
+    });
+    compareBtn.addEventListener('click', ()=>{
+      const c = LEADS.compare();
+      compareCard.style.display='block';
+      compareCard.textContent = `Cost per qualified lead (est): RoleFerry $${c.per_lead.roleferry.toFixed(4)} vs Clay $${c.per_lead.clay.toFixed(2)}`;
+    });
+    // Exports
+    $('#exportInstantly').addEventListener('click', ()=>{
+      const headers = ['email','first_name','last_name','company','title','linkedin_url','domain','decision','reason','verification_status','verification_score'];
+      const rows = LEADS.prospects.filter(p=>p.email).map(p=>[
+        p.email, p.name.split(' ')[0]||'', p.name.split(' ').slice(-1)[0]||'', p.domain.split('.')[0], p.title, p.linkedin_url, p.domain, p.decision, p.reason||'', p.verification_status||'', p.verification_score||''
+      ]);
+      const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
+      const blob = new Blob([csv], {type:'text/csv'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'instantly.csv'; a.click();
+    });
+    $('#exportFull').addEventListener('click', ()=>{
+      const headers = ['domain','name','title','linkedin_url','decision','email','verification_status','verification_score','cost_usd'];
+      const rows = LEADS.prospects.map(p=>[p.domain,p.name,p.title,p.linkedin_url,p.decision,p.email||'',p.verification_status||'',p.verification_score||'',p.cost_usd||'']);
+      const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
+      const blob = new Blob([csv], {type:'text/csv'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'prospects.csv'; a.click();
+    });
+  }
+
   // Extensive mock datasets
   const MOCK = {
     Messages: {
@@ -238,6 +344,8 @@
           renderCRMBoard();
         } else if (viewId === 'analyticsView') {
           renderAnalytics();
+        } else if (viewId === 'leadsView') {
+          setupLeads();
         }
         hideSpinner();
       }, 150);

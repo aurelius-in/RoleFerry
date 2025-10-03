@@ -63,6 +63,35 @@
       </div>
     </section>
 
+    <section id="leadsView" class="view">
+      <h2 class="section-title">Leads</h2>
+      <div class="grid" style="gap:12px; grid-template-columns: 2fr 1fr;">
+        <div>
+          <label class="small">Domains CSV</label>
+          <textarea id="csvInput" class="textarea" placeholder="domain\nacme.com\nglobex.com"></textarea>
+        </div>
+        <div>
+          <label class="small">Role Query</label>
+          <input id="roleInput" class="input" value="CEO" />
+          <div class="small" style="margin-top:8px;">Qualifier temperature: <span id="tempVal">0.20</span></div>
+          <input id="tempSlider" type="range" min="0" max="1" step="0.05" value="0.2" />
+          <div style="margin-top:8px; display:flex; gap:8px;">
+            <button id="runBtn" class="cta">Run Lead-Qual Pipeline</button>
+            <button id="compareBtn" class="btn">Load Cost Compare</button>
+            <button id="sheetsBtn" class="btn">Pull from Google Sheets</button>
+          </div>
+        </div>
+      </div>
+      <div id="mockBanner" class="small" style="margin-top:8px; color:#fde68a;">Mock providers active — safe for demos.</div>
+      <div id="avgCostCard" class="card small" style="margin-top:12px; display:none;"></div>
+      <div id="compareCard" class="card small" style="margin-top:12px; display:none;"></div>
+      <div id="leadsTableWrap" class="table-wrap" style="margin-top:12px;"></div>
+      <div style="margin-top:12px; display:flex; gap:8px;">
+        <button id="exportInstantly" class="btn">Export CSV (Instantly)</button>
+        <button id="exportFull" class="btn">Export CSV (Full Dump)</button>
+      </div>
+    </section>
+
     <section id="analyticsView" class="view">
       <h2 class="section-title">Analytics</h2>
       <div id="analyticsChart" class="analytics"></div>
