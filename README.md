@@ -2,7 +2,6 @@
   <img src="wordmark.png" alt="RoleFerryWordmark" width="90%" />
 </p>
 
-# Recruiting Mode Workflow  
 <p align="center">
   
   <img src="roleferry_trans.png" alt="Setting Sail" width="40%" />
