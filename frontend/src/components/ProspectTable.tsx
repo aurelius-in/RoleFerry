@@ -63,8 +63,8 @@ export default function ProspectTable() {
         </div>
         <button className="px-3 py-2 rounded bg-blue-600" onClick={load}>Apply</button>
         <div className="flex-1" />
-        <button className="px-3 py-2 rounded bg-white/10 border border-white/15">Export CSV (Instantly)</button>
-        <button className="px-3 py-2 rounded bg-white/10 border border-white/15">Export CSV (Full Dump)</button>
+        <a className="px-3 py-2 rounded bg-white/10 border border-white/15" href="/api/exports/instantly.csv" target="_blank" rel="noopener noreferrer">Export CSV (Instantly)</a>
+        <a className="px-3 py-2 rounded bg-white/10 border border-white/15" href="/api/exports/prospects.csv" target="_blank" rel="noopener noreferrer">Export CSV (Full Dump)</a>
       </div>
 
       <div className="overflow-x-auto">
