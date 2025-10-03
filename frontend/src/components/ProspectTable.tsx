@@ -17,17 +17,20 @@ type Row = {
 
 export default function ProspectTable() {
   const [rows, setRows] = useState<Row[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const [decision, setDecision] = useState<string>("");
   const [verif, setVerif] = useState<string>("");
   const [domain, setDomain] = useState<string>("");
 
   async function load() {
+    setLoading(true);
     const qs = new URLSearchParams();
     if (decision) qs.set("decision", decision);
     if (verif) qs.set("verification_status", verif);
     if (domain) qs.set("domain", domain);
     const data = await api<{ prospects: Row[] }>(`/lead-qual/prospects${qs.toString() ? "?" + qs.toString() : ""}`, "GET");
     setRows(data.prospects || []);
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -79,7 +82,21 @@ export default function ProspectTable() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
+            {loading && Array.from({ length: 5 }).map((_, i) => (
+              <tr key={`sk_${i}`} className="border-t border-white/10 animate-pulse">
+                <td className="p-2"><div className="h-4 w-28 bg-white/10 rounded" /></td>
+                <td className="p-2"><div className="h-4 w-40 bg-white/10 rounded" /></td>
+                <td className="p-2"><div className="h-4 w-24 bg-white/10 rounded" /></td>
+                <td className="p-2"><div className="h-4 w-36 bg-white/10 rounded" /></td>
+                <td className="p-2"><div className="h-4 w-10 bg-white/10 rounded" /></td>
+              </tr>
+            ))}
+            {!loading && rows.length === 0 && (
+              <tr className="border-t border-white/10">
+                <td className="p-3 text-sm opacity-70" colSpan={5}>No prospects yet. Run the pipeline or adjust filters.</td>
+              </tr>
+            )}
+            {!loading && rows.map((r) => (
               <tr key={`${r.domain}-${r.linkedin_url}`} className="border-t border-white/10">
                 <td className="p-2">{r.domain}</td>
                 <td className="p-2">

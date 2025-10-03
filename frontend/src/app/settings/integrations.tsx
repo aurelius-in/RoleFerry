@@ -6,6 +6,7 @@ export default function IntegrationsPage() {
   const [providers, setProviders] = useState<any>({});
   const [mock, setMock] = useState<boolean>(false);
   const [preferred, setPreferred] = useState<string>("neverbounce");
+  const [meshEnabled, setMeshEnabled] = useState<boolean>(true);
 
   useEffect(() => {
     api<any>("/health", "GET").then((h) => {
@@ -14,6 +15,7 @@ export default function IntegrationsPage() {
     });
     api<any>("/settings", "GET").then((s) => {
       if (s.preferred_email_verifier) setPreferred(s.preferred_email_verifier);
+      if (typeof s.mesh_clone_enabled === 'boolean') setMeshEnabled(Boolean(s.mesh_clone_enabled));
     });
   }, []);
 
@@ -28,7 +30,7 @@ export default function IntegrationsPage() {
   return (
     <div className="p-4 space-y-4">
       <h1 className="text-2xl font-semibold">Integrations</h1>
-      <div className="text-sm">Mock providers active: {mock ? "Yes" : "No"}</div>
+      {/* Removed explicit mock indicator for stakeholder-facing demo */}
       <div className="p-3 rounded border border-white/10 bg-white/5 max-w-md">
         <div className="text-sm mb-2">Preferred Email Verifier</div>
         <div className="flex gap-2 items-center">
@@ -52,6 +54,7 @@ export default function IntegrationsPage() {
           </div>
         ))}
       </div>
+      <div className="text-xs opacity-80">Mesh features enabled: {meshEnabled ? 'Yes' : 'No'}</div>
     </div>
   );
 }

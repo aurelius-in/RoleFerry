@@ -18,6 +18,7 @@
       <a href="#dashboard" class="nav-link">Dashboard</a>
       <a href="#analytics" class="nav-link">Analytics</a>
       <a href="#crm" class="nav-link">CRM</a>
+      <a href="#leads" class="nav-link">Leads</a>
       <button id="dataBtn" class="nav-link btn-link">Data</button>
     </nav>
     <div class="nav-right">
@@ -27,7 +28,7 @@
       <button id="settingsBtn" class="icon-btn" title="Settings">☰</button>
     </div>
   </header>
-  <div style="background:rgba(234,179,8,0.15); border-bottom:1px solid rgba(234,179,8,0.35); color:#fde68a; padding:6px 12px; font-size:12px;">Mock providers active — safe for demos.</div>
+  
 
   <main class="container">
     <section id="homeView" class="view">
@@ -85,11 +86,43 @@
       
       <div id="avgCostCard" class="card small" style="margin-top:12px; display:none;"></div>
       <div id="compareCard" class="card small" style="margin-top:12px; display:none;"></div>
-      <div id="leadsTableWrap" class="table-wrap" style="margin-top:12px;"></div>
+      <div id="leadsTableWrap" class="table-wrap fade-in" style="margin-top:12px;"></div>
       <div style="margin-top:12px; display:flex; gap:8px;">
         <button id="exportInstantly" class="btn">Export CSV (Instantly)</button>
         <button id="exportFull" class="btn">Export CSV (Full Dump)</button>
       </div>
+    </section>
+
+    <section id="offerView" class="view">
+      <h2 class="section-title">Offer Decks</h2>
+      <div class="grid" style="gap:12px; grid-template-columns: 2fr 1fr;">
+        <div>
+          <label class="small">Company</label>
+          <input id="offerCompany" class="input" placeholder="Acme" />
+        </div>
+        <div>
+          <label class="small">Role</label>
+          <input id="offerRole" class="input" placeholder="Head of Product" />
+        </div>
+      </div>
+      <div style="margin-top:8px;"><button id="offerGen" class="cta">Generate Deck</button></div>
+      <pre id="offerOut" class="card small" style="margin-top:12px; min-height: 80px;"></pre>
+    </section>
+
+    <section id="researchView" class="view">
+      <h2 class="section-title">Research</h2>
+      <div class="grid" style="gap:12px; grid-template-columns: 2fr 1fr;">
+        <div>
+          <label class="small">Company</label>
+          <input id="resCompany" class="input" placeholder="Globex" />
+        </div>
+        <div>
+          <label class="small">JD URL (optional)</label>
+          <input id="resJd" class="input" placeholder="https://..." />
+        </div>
+      </div>
+      <div style="margin-top:8px;"><button id="resProbe" class="cta">Probe Company</button></div>
+      <div id="resOut" class="card small" style="margin-top:12px;"></div>
     </section>
 
     <section id="analyticsView" class="view">
