@@ -35,7 +35,7 @@ Env Notes
 
 - INSTANTLY_API_KEY: set to enable API push; otherwise CSV fallback is used.
 
-Clay-Clone: Lead-Qual Engine
+Mesh-Clone: Lead-Qual Engine
 ----------------------------
 
 Architecture
@@ -54,6 +54,7 @@ NEVERBOUNCE_API_KEY=
 GOOGLE_SHEETS_SERVICE_JSON_PATH=
 GOOGLE_SHEETS_SHEET_ID=
 ROLEFERRY_MOCK_MODE=true
+MESH_CLONE_ENABLED=true
 ```
 
 Commands
