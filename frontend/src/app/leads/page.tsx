@@ -23,6 +23,7 @@ export default function LeadsPage() {
   const [roleQuery, setRoleQuery] = useState<string>("CEO");
   const [results, setResults] = useState<Prospect[]>([]);
   const [avgCost, setAvgCost] = useState<number | null>(null);
+  const [compare, setCompare] = useState<{ roleferry: number; clay: number } | null>(null);
   const [mockMode, setMockMode] = useState<boolean | null>(null);
   const [sheetPulled, setSheetPulled] = useState<boolean>(false);
 
@@ -49,6 +50,11 @@ export default function LeadsPage() {
     const r = await api<{ inserted: number; domains: string[] }>("/lead-qual/lead-domains/import-sheets", "POST", {});
     setCsv(["domain", ...r.domains].join("\n"));
     setSheetPulled(true);
+  }
+
+  async function loadCompare() {
+    const c = await api<{ per_lead: { roleferry: number; clay: number } }>("/costs/compare?sample=10", "GET");
+    setCompare({ roleferry: c.per_lead.roleferry, clay: c.per_lead.clay });
   }
 
   return (
@@ -89,12 +95,21 @@ export default function LeadsPage() {
           <button className="mt-3 px-3 py-2 rounded bg-blue-600" onClick={onRun}>
             Run Lead-Qual Pipeline
           </button>
+          <button className="mt-3 ml-2 px-3 py-2 rounded bg-white/10 border border-white/15" onClick={loadCompare}>
+            Load Cost Compare
+          </button>
         </div>
       </div>
 
       {avgCost !== null && (
         <div className="p-3 rounded border border-white/10 bg-white/5 text-sm">
           <strong>Avg cost per qualified prospect (last run):</strong> ${Number(avgCost).toFixed(4)}
+        </div>
+      )}
+
+      {compare && (
+        <div className="p-3 rounded border border-white/10 bg-white/5 text-sm">
+          <strong>Cost per qualified lead (est):</strong> RoleFerry ${compare.roleferry.toFixed(4)} vs Clay ${compare.clay.toFixed(2)}
         </div>
       )}
 
