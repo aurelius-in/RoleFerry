@@ -50,6 +50,13 @@ def create_app() -> FastAPI:
     async def json_error_handler(request: Request, exc: Exception):
         return JSONResponse({"error": str(exc)}, status_code=500)
 
+    # Best-effort migrations on startup (idempotent SQL files)
+    try:
+        from .db import run_migrations_blocking
+        run_migrations_blocking()
+    except Exception:
+        pass
+
     # Core/health
     app.include_router(health.router)
 
