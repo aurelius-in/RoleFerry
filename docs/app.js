@@ -78,7 +78,7 @@
       const cells = [r.domain, r.name, r.title, r.decision, r.email || '—', r.verification_status || '', r.verification_score || '', `$${Number(r.cost_usd||0).toFixed(2)}`];
       cells.forEach((c,idx)=>{ const td=document.createElement('td');
         if (idx===3){ const span=document.createElement('span'); span.textContent = (r.decision==='yes'?'✅ yes':(r.decision==='no'?'❌ no':'❔ maybe')); span.title = r.reason || ''; td.appendChild(span); }
-        else if (idx===5){ const span=document.createElement('span'); span.textContent = String(c||''); span.title = r.verification_status ? `Status: ${r.verification_status}${r.verification_score?`, Score ${r.verification_score}`:''}` : ''; td.appendChild(span); }
+        else if (idx===5){ const span=document.createElement('span'); span.textContent = String(c||''); span.title = r.verification_status ? `Status: ${r.verification_status}${r.verification_score ? ', Score ' + r.verification_score : ''}` : ''; td.appendChild(span); }
         else { td.textContent = String(c||''); }
         tr.appendChild(td); });
       tbody.appendChild(tr);
@@ -122,7 +122,7 @@
     compareBtn.addEventListener('click', ()=>{
       const c = LEADS.compare();
       compareCard.style.display='block';
-      compareCard.textContent = `Cost per qualified lead (est): RoleFerry $${c.per_lead.roleferry.toFixed(4)} vs Clay $${c.per_lead.clay.toFixed(2)}`;
+      compareCard.textContent = `Cost per qualified lead (est): RoleFerry $${c.per_lead.roleferry.toFixed(4)} vs Benchmark $${c.per_lead.clay.toFixed(2)}`;
     });
     // Exports
     $('#exportInstantly').addEventListener('click', ()=>{

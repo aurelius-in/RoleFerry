@@ -30,7 +30,7 @@ export default function IntegrationsPage() {
   return (
     <div className="p-4 space-y-4">
       <h1 className="text-2xl font-semibold">Integrations</h1>
-      <div className="text-sm">Mock providers active: {mock ? "Yes" : "No"}</div>
+      {/* Removed explicit mock indicator for stakeholder-facing demo */}
       <div className="p-3 rounded border border-white/10 bg-white/5 max-w-md">
         <div className="text-sm mb-2">Preferred Email Verifier</div>
         <div className="flex gap-2 items-center">
