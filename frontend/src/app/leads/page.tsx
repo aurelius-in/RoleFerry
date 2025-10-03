@@ -25,7 +25,6 @@ export default function LeadsPage() {
   const [avgCost, setAvgCost] = useState<number | null>(null);
   const [compare, setCompare] = useState<{ roleferry: number; clay: number } | null>(null);
   const [temperature, setTemperature] = useState<number>(0.2);
-  const [mockMode, setMockMode] = useState<boolean | null>(null);
   const [sheetPulled, setSheetPulled] = useState<boolean>(false);
 
   async function onRun() {
@@ -42,10 +41,7 @@ export default function LeadsPage() {
     setAvgCost(resp.summary?.avg_cost_per_qualified ?? null);
   }
 
-  async function checkHealth() {
-    const h = await api<any>("/health", "GET");
-    setMockMode(Boolean(h.mock_mode));
-  }
+  // no visible mock-mode checks in demo UI
 
   async function pullFromSheets() {
     const r = await api<{ inserted: number; domains: string[] }>("/lead-qual/lead-domains/import-sheets", "POST", {});
@@ -62,14 +58,6 @@ export default function LeadsPage() {
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Lead Qualification</h1>
-        <button className="text-sm underline" onClick={checkHealth}>
-          Check Mock Mode
-        </button>
-        {mockMode !== null && (
-          <span className="text-xs px-2 py-1 rounded bg-yellow-500/20 border border-yellow-500/40">
-            Mock Mode {mockMode ? "ON" : "OFF"}
-          </span>
-        )}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
