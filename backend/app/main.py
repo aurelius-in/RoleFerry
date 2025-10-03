@@ -50,6 +50,13 @@ def create_app() -> FastAPI:
     async def json_error_handler(request: Request, exc: Exception):
         return JSONResponse({"error": str(exc)}, status_code=500)
 
+    # Best-effort migrations on startup (idempotent SQL files)
+    try:
+        from .db import run_migrations_blocking
+        run_migrations_blocking()
+    except Exception:
+        pass
+
     # Core/health
     app.include_router(health.router)
 
@@ -63,6 +70,11 @@ def create_app() -> FastAPI:
     app.include_router(outreach.router, prefix="/outreach", tags=["outreach"]) 
     app.include_router(sequence.router, prefix="/sequence", tags=["sequence"]) 
     app.include_router(analytics.router, prefix="/analytics", tags=["analytics"]) 
+    from .routers import lead_qual as lead_qual_router, n8n_hooks as n8n_router, exports as exports_router, prospects as prospects_router
+    app.include_router(lead_qual_router.router)
+    app.include_router(n8n_router.router)
+    app.include_router(exports_router.router)
+    app.include_router(prospects_router.router)
     from .routers import settings as settings_router, replies
     app.include_router(settings_router.router)
     app.include_router(replies.router)

@@ -9,4 +9,7 @@ psycopg[binary]==3.2.3
 redis==5.0.8
 pgvector==0.2.5
 prometheus-client==0.21.0
+alembic==1.13.2
+gspread==6.1.2
+google-auth==2.34.0
 

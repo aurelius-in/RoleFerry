@@ -37,6 +37,29 @@ Key endpoints (MVP)
 - POST /sequence/export
 - GET  /analytics/campaign
 
+Lead-Qual Engine (Scaffold)
+
+- POST /lead-qual/lead-domains/import-csv — accept CSV with `domain`
+- POST /lead-qual/lead-domains/import-sheets — pull from Google Sheets (mock if unconfigured)
+- POST /lead-qual/pipeline/run — runs Serper → GPT → Findymail → Verifier (mock-enabled)
+- GET  /lead-qual/prospects — returns stubbed prospect summary; will use `v_prospect_summary`
+
+Env keys
+
+```
+SERPER_API_KEY=
+OPENAI_API_KEY=
+FINDYMAIL_API_KEY=
+NEVERBOUNCE_API_KEY=
+GOOGLE_SHEETS_SERVICE_JSON_PATH=
+GOOGLE_SHEETS_SHEET_ID=
+ROLEFERRY_MOCK_MODE=true
+```
+
+Notes
+
+- On startup, the API applies idempotent SQL files in `app/migrations/*.sql` to provision lead-qual tables and a summary view.
+
 Notes
 
 - CORS is enabled for http://localhost:3000 by default.
