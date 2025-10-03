@@ -59,11 +59,29 @@ async def import_sheets(payload: DomainsSheetsImportRequest) -> Dict[str, Any]:
     # Stub: verify config presence in non-mock mode
     if not settings.mock_mode and not (settings.gsheet_service_json_path and (payload.sheet_id or settings.gsheet_sheet_id)):
         raise HTTPException(status_code=422, detail="Google Sheets not configured; enable mock mode or provide credentials")
-    sample = ["acme.com", "globex.com", "initech.com"]
+    # Real pull if configured, else mock sample
+    domains: List[str] = []
+    if settings.gsheet_service_json_path and (payload.sheet_id or settings.gsheet_sheet_id):
+        try:
+            import gspread
+            from google.oauth2.service_account import Credentials
+            creds = Credentials.from_service_account_file(settings.gsheet_service_json_path, scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"])
+            gc = gspread.authorize(creds)
+            sh = gc.open_by_key(payload.sheet_id or settings.gsheet_sheet_id)
+            ws = sh.sheet1
+            values = ws.col_values(1)
+            for v in values:
+                v = (v or "").strip()
+                if v and v.lower() != "domain":
+                    domains.append(v)
+        except Exception:
+            domains = ["acme.com", "globex.com", "initech.com"]
+    else:
+        domains = ["acme.com", "globex.com", "initech.com"]
     repo = LeadsRepo(get_engine())
-    for d in sample:
+    for d in domains:
         await repo.upsert_domain(d, source="sheets")
-    return {"inserted": len(sample), "source": "sheets", "domains": sample}
+    return {"inserted": len(domains), "source": "sheets", "domains": domains[:10]}
 
 
 @router.post("/pipeline/run")

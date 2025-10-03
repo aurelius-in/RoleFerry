@@ -1,6 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Any
+from ..repos.leads_repo import LeadsRepo
+from ..db import get_engine
+from ..services.ai_qualifier import qualify_prospect
+from ..services.findymail_client import enrich_contact
+from ..services.email_verifier import verify as verify_email
 
 
 router = APIRouter(prefix="/hooks/n8n", tags=["n8n"]) 
@@ -26,19 +31,31 @@ def ingest(payload: IngestHook) -> Dict[str, Any]:
 
 
 @router.post("/qualify")
-def qualify(payload: QualifyHook) -> Dict[str, Any]:
+async def qualify(payload: QualifyHook) -> Dict[str, Any]:
     if not payload.linkedin_url:
         raise HTTPException(status_code=422, detail="linkedin_url required")
-    # Stubbed qualifier result
-    result = {
-        "decision": "yes" if "head" in payload.title.lower() or "ceo" in payload.title.lower() else "maybe",
-        "reason": "Title indicates decision maker" if "yes" else "Needs review",
-        "contact": {
-            "email": f"{payload.name.split()[0].lower()}.{payload.name.split()[-1].lower()}@{payload.domain}",
-            "verification_status": "valid",
-            "verification_score": 90,
+    repo = LeadsRepo(get_engine())
+    domain_id = await repo.upsert_domain(payload.domain, source="n8n")
+    preview = {"name": payload.name, "title": payload.title, "linkedin_url": payload.linkedin_url, "company": payload.company}
+    pid = await repo.create_prospect(domain_id, preview)
+    qual = qualify_prospect(preview)
+    await repo.add_qualification(pid, qual["decision"], qual["reason"], qual["model"], int(qual["latency_ms"]))
+    contact = enrich_contact(payload.name, payload.domain) if qual["decision"] == "yes" else {"email": None, "phone": None}
+    cid = None
+    verification = {"status": "unknown", "score": None}
+    if contact.get("email"):
+        cid = await repo.add_contact(pid, contact.get("email"), contact.get("phone"), provider="findymail")
+        verification = verify_email(contact.get("email"))
+        await repo.update_contact_verification(cid, verification.get("status", "unknown"), verification.get("score"), "neverbounce")
+    return {
+        "ack": True,
+        "summary": {
+            "decision": qual["decision"],
+            "reason": qual["reason"],
+            "email": contact.get("email"),
+            "verification_status": verification.get("status"),
+            "verification_score": verification.get("score"),
         },
     }
-    return {"ack": True, "summary": result}
 
 
