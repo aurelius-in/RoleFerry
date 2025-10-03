@@ -176,14 +176,17 @@
       tr.style.cursor='pointer';
       tr.addEventListener('click', ()=>{
         const profile = $('#enrichProfile');
-        profile.innerHTML = `
-          <div class="small"><strong>${row.company}</strong> — ${row.domain}</div>
-          <div class="small">Tech: ${row.tech.join(', ')}</div>
-          <div class="small">Signals: ${row.signals.join(', ')}</div>
-          <div class="small">Contacts:</div>
-          ${row.contacts.map(c=>`<div class="small">• ${c.name} — ${c.title} — ${c.email||'no email'} ${c.verified?'(verified)':''}</div>`).join('')}
-          <div class="small">Enrichment Cost (mock): $${row.cost.toFixed(2)}</div>
-        `;
+        const contactsHtml = row.contacts.map(function(c){
+          return '<div class="small">• ' + c.name + ' — ' + c.title + ' — ' + (c.email || 'no email') + (c.verified ? ' (verified)' : '') + '</div>';
+        }).join('');
+        profile.innerHTML = (
+          '<div class="small"><strong>' + row.company + '</strong> — ' + row.domain + '</div>' +
+          '<div class="small">Tech: ' + row.tech.join(', ') + '</div>' +
+          '<div class="small">Signals: ' + row.signals.join(', ') + '</div>' +
+          '<div class="small">Contacts:</div>' +
+          contactsHtml +
+          '<div class="small">Enrichment Cost (mock): $' + row.cost.toFixed(2) + '</div>'
+        );
         openModal($('#enrichDrawer'));
       });
       tbody.appendChild(tr);
