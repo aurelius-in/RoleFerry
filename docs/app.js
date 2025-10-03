@@ -529,7 +529,7 @@
                 <p class="about-text">Dave focuses on career coaching and end‑to‑end talent sourcing—helping candidates and teams align on the work that matters. His perspective shapes the practical workflows, from sourcing through outreach and interviews.</p>
               </div>
               <div class="about-card">
-                <h2 class="about-h2">Oliver Ellison · Reliable AI Network, LLC</h2>
+                <h2 class="about-h2">Oliver Ellison · Reliable AI Network, Inc.</h2>
                 <p class="about-text">Oliver leads innovation in AI‑driven solutions for diverse business use cases. His product and engineering work powers RoleFerry’s generation, verification, and analytics capabilities.</p>
               </div>
             </div>

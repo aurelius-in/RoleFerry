@@ -5,7 +5,7 @@ export default function Footer() {
         <a className="underline" href="/about">About</a>
         {/* Tools link removed per design; tools accessible via top-right wrench */}
       </div>
-      <div>Forge your first conversation. © 2025 Reliable AI Network, LLC.</div>
+      <div>Forge your first conversation. © 2025 Reliable AI Network, Inc.</div>
     </footer>
   );
 }
