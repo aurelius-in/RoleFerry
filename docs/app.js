@@ -1,752 +1,855 @@
-(function(){
-  const $ = (s) => document.querySelector(s);
-  const backdrop = $('#modalBackdrop');
-  const spinner = $('#spinner');
-  const openModal = (node) => { backdrop.classList.remove('hidden'); node.classList.remove('hidden'); document.body.style.overflow='hidden'; };
-  const closeModal = (node) => { node.classList.add('hidden'); backdrop.classList.add('hidden'); document.body.style.overflow=''; };
+// RoleFerry Enterprise Demo Application
+// Complete functionality for all screens with realistic interactions
 
-  // Spinner with minimum 1s
-  let spinTimer = null; let spinStart = 0;
-  function showSpinner(){
-    if (spinTimer) clearTimeout(spinTimer);
-    spinStart = Date.now();
-    if (spinner) spinner.classList.remove('hidden');
-  }
-  function hideSpinner(){
-    const elapsed = Date.now() - spinStart;
-    const remaining = Math.max(0, 1000 - elapsed);
-    spinTimer = setTimeout(()=>{ if (spinner) spinner.classList.add('hidden'); }, remaining);
-    // absolute watchdog to avoid stuck state
-    setTimeout(()=>{ if (spinner) spinner.classList.add('hidden'); }, Math.max(remaining, 1200));
-  }
-
-  // Theme toggle (dark <-> light with icon swap)
-  $('#themeBtn').addEventListener('click', () => {
-    const isLight = document.body.classList.toggle('light');
-    // swap icon
-    $('#themeBtn').textContent = isLight ? '☀️' : '🌙';
-  });
-
-  // Ask
-  $('#askBtn').addEventListener('click', () => {
-    const val = $('#askInput').value.trim();
-    $('#askOut').textContent = val ? `Answer: (demo) “${val}” received. Try Data → Campaigns.` : 'Please type something to ask.';
-  });
-
-  // Leads mock data and UI wiring
-  const LEADS = {
-    prospects: [],
-    run(payload){
-      const domains = payload.domains.slice(0, 10);
-      const results = domains.map((d,i)=>{
-        const yes = i % 2 === 0;
-        const decision = yes ? 'yes' : (i % 3 === 0 ? 'maybe' : 'no');
-        const score = yes ? 92 - (i%5) : (decision==='maybe'? 70: '')
-        return {
-          domain: d,
-          name: yes? 'Jordan Example' : 'Alex Example',
-          title: yes? 'CEO' : 'Head of Talent',
-          linkedin_url: `https://www.linkedin.com/in/${d.replace(/\./g, '-')}-${yes?'ceo':'talent'}`,
-          decision,
-          reason: yes? `Likely decision maker for ${payload.role_query}` : 'Needs review',
-          email: yes? `jordan@${d}` : '',
-          verification_status: yes? 'valid' : (decision==='maybe' ? 'unknown' : 'invalid'),
-          verification_score: score,
-          cost_usd: (0.05 + (i%3)*0.01).toFixed(2)
-        };
-      });
-      this.prospects = results;
-      return {
-        ok: true,
-        summary: { avg_cost_per_qualified: 0.06, steps: { serper:{count:domains.length}, gpt:{count:domains.length}, findymail:{count:Math.ceil(domains.length/2)}, neverbounce:{count:Math.ceil(domains.length/2)} } },
-        results
-      };
+(function() {
+  'use strict';
+  
+  // Utility Functions
+  const $ = (selector) => document.querySelector(selector);
+  const $$ = (selector) => document.querySelectorAll(selector);
+  
+  // State Management
+  const state = {
+    currentView: 'jobs',
+    currentMode: 'jobseeker',
+    currentJob: null,
+    filters: {
+      role: [],
+      location: [],
+      salary: 150000,
+      companySize: [],
+      industry: []
     },
-    compare(){ return { per_lead: { roleferry: 0.0625, clay: 0.25 } } }
+    copilotMessages: [],
+    trackerView: 'board'
   };
-
-  function renderLeadsTable(rows){
-    const columns = ['domain','name','title','decision','email','verification_status','verification_score','cost_usd'];
-    const table = document.createElement('table');
-    const thead = document.createElement('thead');
-    const trh = document.createElement('tr');
-    ['Domain','Prospect','Title','Decision','Email','Verification','Score','Cost $'].forEach(h=>{ const th=document.createElement('th'); th.textContent=h; trh.appendChild(th); });
-    thead.appendChild(trh); table.appendChild(thead);
-    const tbody = document.createElement('tbody');
-    rows.forEach(r=>{
-      const tr = document.createElement('tr');
-      const cells = [r.domain, r.name, r.title, r.decision, r.email || '—', r.verification_status || '', r.verification_score || '', `$${Number(r.cost_usd||0).toFixed(2)}`];
-      cells.forEach((c,idx)=>{ const td=document.createElement('td');
-        if (idx===3){ const span=document.createElement('span'); span.textContent = (r.decision==='yes'?'✅ yes':(r.decision==='no'?'❌ no':'❔ maybe')); span.title = r.reason || ''; td.appendChild(span); }
-        else if (idx===5){ const span=document.createElement('span'); span.textContent = String(c||''); span.title = r.verification_status ? `Status: ${r.verification_status}${r.verification_score ? ', Score ' + r.verification_score : ''}` : ''; td.appendChild(span); }
-        else { td.textContent = String(c||''); }
-        tr.appendChild(td); });
-      tbody.appendChild(tr);
-    });
-    table.appendChild(tbody);
-    return table;
+  
+  // Initialize App
+  function init() {
+    setupNavigation();
+    setupTheme();
+    setupModeToggle();
+    setupCopilot();
+    setupJobsView();
+    setupTrackerView();
+    setupDeliverabilityView();
+    setupLivePagesView();
+    setupSequencesView();
+    setupEnrichmentView();
+    setupDashboard();
+    setupSettings();
+    
+    // Load initial view
+    navigateTo('jobs');
+    
+    showToast('Welcome to RoleFerry! 👋');
   }
-
-  function setupLeads(){
-    const csv = $('#csvInput');
-    const role = $('#roleInput');
-    const temp = $('#tempSlider');
-    const tempVal = $('#tempVal');
-    const runBtn = $('#runBtn');
-    const compareBtn = $('#compareBtn');
-    const sheetsBtn = $('#sheetsBtn');
-    const avgCostCard = $('#avgCostCard');
-    const compareCard = $('#compareCard');
-    const tableWrap = $('#leadsTableWrap');
-    temp.addEventListener('input', ()=>{ tempVal.textContent = Number(temp.value).toFixed(2); });
-    sheetsBtn.addEventListener('click', ()=>{
-      csv.value = ['domain','acme.com','globex.com','initech.com','umbrella.com','soylent.com'].join('\n');
-    });
-    runBtn.addEventListener('click', ()=>{
-      const domains = csv.value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).filter(l=>!l.toLowerCase().includes('domain'));
-      const res = LEADS.run({ domains, role_query: role.value, temperature: Number(temp.value)});
-      showToast('Imported ' + Math.max(1, domains.length) + ' leads');
-      avgCostCard.style.display='block';
-      avgCostCard.textContent = 'Avg cost per qualified prospect (last run): $' + Number(res.summary.avg_cost_per_qualified).toFixed(4);
-      tableWrap.innerHTML='';
-      const rows = [];
-      for (var i=0;i<res.results.length;i++){
-        var r = res.results[i];
-        rows.push({
-          domain:r.domain,
-          name:r.name,
-          title:r.title,
-          decision:r.decision,
-          email:r.email,
-          verification_status:r.verification_status,
-          verification_score:r.verification_score,
-          cost_usd:r.cost_usd,
-        });
-      }
-      tableWrap.appendChild(renderLeadsTable(rows));
-    });
-    compareBtn.addEventListener('click', ()=>{
-      const c = LEADS.compare();
-      compareCard.style.display='block';
-      compareCard.textContent = 'Cost per qualified lead (est): RoleFerry $' + c.per_lead.roleferry.toFixed(4) + ' vs Benchmark $' + c.per_lead.clay.toFixed(2);
-    });
-    // Exports
-    $('#exportInstantly').addEventListener('click', ()=>{
-      const headers = ['email','first_name','last_name','company','title','linkedin_url','domain','decision','reason','verification_status','verification_score'];
-      const rows = LEADS.prospects.filter(p=>p.email).map(p=>[
-        p.email, p.name.split(' ')[0]||'', p.name.split(' ').slice(-1)[0]||'', p.domain.split('.')[0], p.title, p.linkedin_url, p.domain, p.decision, p.reason||'', p.verification_status||'', p.verification_score||''
-      ]);
-      const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
-      const blob = new Blob([csv], {type:'text/csv'});
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'instantly.csv'; a.click();
-    });
-    $('#exportFull').addEventListener('click', ()=>{
-      const headers = ['domain','name','title','linkedin_url','decision','email','verification_status','verification_score','cost_usd'];
-      const rows = LEADS.prospects.map(p=>[p.domain,p.name,p.title,p.linkedin_url,p.decision,p.email||'',p.verification_status||'',p.verification_score||'',p.cost_usd||'']);
-      const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
-      const blob = new Blob([csv], {type:'text/csv'});
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'prospects.csv'; a.click();
-    });
-  }
-  // Enrichment mock
-  const ENRICH = {
-    data: [
-      { domain: 'scramjet.ai', company:'Scramjet AI', tech: ['React','Node','Vercel','HubSpot','PostHog'], signals:['Hiring AE','Launched AI feature Aug 2025','Uses HubSpot'], contacts:[{name:'Maya Chen', title:'Head of Growth', email:'maya@scramjet.ai', verified:true},{name:'Tom Álvarez', title:'RevOps Manager', email:'tom@scramjet.ai', verified:false}], freshness:'2d ago', cost: 0.08 },
-      { domain: 'lumenlytics.io', company:'LumenLytics', tech: ['Next.js','Node','Snowflake','HubSpot'], signals:['Hiring Data AE','Outbound activity'], contacts:[{name:'Samir Patel', title:'Head of Sales', email:'samir@lumenlytics.io', verified:true}], freshness:'4d ago', cost: 0.07 },
-      { domain: 'northforge.co', company:'NorthForge', tech: ['.NET','Azure','Salesforce'], signals:['Manufacturing'], contacts:[{name:'Chris Nolan', title:'Plant Ops', email:'', verified:false}], freshness:'7d ago', cost: 0.05 }
-    ]
-  };
-
-  function renderEnrichment(){
-    const wrap = $('#enrichTableWrap'); wrap.innerHTML='';
-    const table = document.createElement('table');
-    const thead = document.createElement('thead');
-    const trh = document.createElement('tr');
-    ['Domain','Company','Tech Stack','Signals','Contacts (F/V)','Freshness','Cost'].forEach(h=>{ const th=document.createElement('th'); th.textContent=h; trh.appendChild(th); });
-    thead.appendChild(trh); table.appendChild(thead);
-    const tbody = document.createElement('tbody');
-    ENRICH.data.forEach(row => {
-      const tr = document.createElement('tr');
-      tr.className = 'fade-in';
-      const contactsFound = row.contacts.length;
-      const verified = row.contacts.filter(c=>c.verified).length;
-      const cells = [row.domain, row.company, '', '', `${contactsFound}/${verified}`, row.freshness, `$${row.cost.toFixed(2)}`];
-      cells.forEach((c, idx) => {
-        const td = document.createElement('td');
-        if (idx === 2) { row.tech.forEach(t=>{ const s=document.createElement('span'); s.className='chip'; s.textContent=t; td.appendChild(s); }); }
-        else if (idx === 3) { row.signals.forEach(sg=>{ const s=document.createElement('span'); s.className='chip'; s.textContent=sg; td.appendChild(s); }); }
-        else { td.textContent = String(c||''); }
-        tr.appendChild(td);
-      });
-      tr.style.cursor='pointer';
-      tr.addEventListener('click', ()=>{
-        const profile = $('#enrichProfile');
-        const contactsHtml = row.contacts.map(function(c){
-          return '<div class="small">• ' + c.name + ' — ' + c.title + ' — ' + (c.email || 'no email') + (c.verified ? ' (verified)' : '') + '</div>';
-        }).join('');
-        profile.innerHTML = (
-          '<div class="small"><strong>' + row.company + '</strong> — ' + row.domain + '</div>' +
-          '<div class="small">Tech: ' + row.tech.join(', ') + '</div>' +
-          '<div class="small">Signals: ' + row.signals.join(', ') + '</div>' +
-          '<div class="small">Contacts:</div>' +
-          contactsHtml +
-          '<div class="small">Enrichment Cost (mock): $' + row.cost.toFixed(2) + '</div>'
-        );
-        openModal($('#enrichDrawer'));
-      });
-      tbody.appendChild(tr);
-    });
-    table.appendChild(tbody);
-    wrap.appendChild(table);
-  }
-
-  // Qualification mock
-  const QUAL = {
-    rows: [
-      { company:'Scramjet AI', score:86, why:['SaaS','HubSpot present','Hiring AE','Recent AI launch'], priority:'High' },
-      { company:'LumenLytics', score:73, why:['Analytics','Outbound tooling','Recent growth postings'], priority:'Medium' },
-      { company:'NorthForge', score:41, why:['Manufacturing','Weak outbound signals'], priority:'Low' },
-    ]
-  };
-  function renderQualification(){
-    const wrap = $('#qualTableWrap'); wrap.innerHTML='';
-    const table = document.createElement('table');
-    const thead = document.createElement('thead');
-    const trh = document.createElement('tr');
-    ['Company','Fit Score','Why It Fits','Priority','Action'].forEach(h=>{ const th=document.createElement('th'); th.textContent=h; trh.appendChild(th); });
-    thead.appendChild(trh); table.appendChild(thead);
-    const tbody = document.createElement('tbody');
-    QUAL.rows.forEach(r=>{
-      const tr = document.createElement('tr'); tr.className='fade-in';
-      const tdCompany = document.createElement('td'); tdCompany.textContent = r.company; tr.appendChild(tdCompany);
-      const tdScore = document.createElement('td'); tdScore.innerHTML = `<div class="progress" title="${r.score}"><div style="width:${r.score}%"></div></div>`; tr.appendChild(tdScore);
-      const tdWhy = document.createElement('td'); tdWhy.textContent = r.why.join(', '); tr.appendChild(tdWhy);
-      const tdPri = document.createElement('td'); tdPri.textContent = r.priority; tr.appendChild(tdPri);
-      const tdAct = document.createElement('td'); const btn=document.createElement('button'); btn.className='btn'; btn.textContent='Generate Copy'; btn.onclick=()=>showToast('Generated 3 variants'); tdAct.appendChild(btn); tr.appendChild(tdAct);
-      tbody.appendChild(tr);
-    });
-    table.appendChild(tbody); wrap.appendChild(table);
-  }
-
-  // Toast
-  function showToast(msg){ const t=$('#toast'); t.textContent=msg; t.style.display='block'; setTimeout(()=>{ t.style.display='none'; }, 1500); }
-
-  // Extensive mock datasets
-  const MOCK = {
-    Messages: {
-      columns: ['id','contact','variant','subject','opened','replied'],
-      rows: Array.from({length: 30}).map((_,i)=>({ id: `m_${100+i}`, contact: `user${i}@example.com`, variant: i%2?'B':'A', subject: `Subject ${i}`, opened: i%3===0, replied: i%5===0 }))
-    },
-    'Sequence Rows': {
-      columns: ['email','first_name','last_name','company','title','match_score','verification_status'],
-      rows: Array.from({length: 40}).map((_,i)=>({ email:`p${i}@corp.com`, first_name:`First${i}`, last_name:`Last${i}`, company:`Corp${i%7}`, title:i%2?"Recruiter":"Director of Product", match_score: 60+(i%41), verification_status: ['valid','accept_all','invalid'][i%3] }))
-    },
-    Campaigns: {
-      columns: ['name','delivered','open_rate','reply_rate','positive'],
-      rows: Array.from({length: 12}).map((_,i)=>({ name:`Campaign ${i+1}`, delivered: 500+i*50, open_rate: 35+(i%20), reply_rate: 5+(i%10), positive: (3+(i%7)).toFixed(1) }))
-    },
-    'One‑pagers': {
-      columns: ['id','owner','type','title','url'],
-      rows: Array.from({length: 10}).map((_,i)=>({ id:`op_${i+1}`, owner:`Candidate#${10+i}`, type: ['deck','pdf'][i%2], title:`Proof Sheet ${i+1}`, url:`https://example.com/op/${i+1}` }))
-    },
-    'Warm Angles': {
-      columns: ['contact','type','note'],
-      rows: Array.from({length: 20}).map((_,i)=>({ contact:`warm${i}@example.com`, type:['mutual','alma_mater','recent_post','podcast_mention','product_news'][i%5], note:`Angle note ${i}` }))
-    },
-    'Audit Log': {
-      columns: ['id','action','timestamp'],
-      rows: Array.from({length: 25}).map((_,i)=>({ id: i+1, action: ['verify_batch','export_csv','generate_copy'][i%3], timestamp: new Date(Date.now()-i*60000).toISOString() }))
-    },
-    Onboarding: {
-      columns: ['step','status'],
-      rows: [
-        { step:'Connect Instantly', status:'done' },
-        { step:'Add Calendly', status:'pending' },
-        { step:'Create First Profile (IJP)', status:'done' },
-        { step:'Verify Sample Contacts', status:'pending' },
-      ]
-    },
-    Deliverability: {
-      columns: ['mailbox','spf','dkim','dmarc'],
-      rows: [
-        { mailbox:'outreach@roleferry.com', spf:true, dkim:true, dmarc:'p=none' },
-        { mailbox:'hello@roleferry.com', spf:true, dkim:true, dmarc:'p=quarantine' },
-      ]
-    },
-    Compliance: {
-      columns: ['region','opt_outs','dnc'],
-      rows: [
-        { region:'US', opt_outs:3, dnc:1 },
-        { region:'EU', opt_outs:1, dnc:0 },
-      ]
-    },
-    'IJPs': {
-      columns: ['id','titles','levels','locations','skills_must'],
-      rows: Array.from({length: 15}).map((_,i)=>({ id:`ijp_${i+1}`, titles:'PM, Sr PM', levels:i%2?'Senior':'Mid', locations: i%3? 'Remote':'SF', skills_must: 'PLG, SQL'}))
-    },
-    Jobs: {
-      columns: ['id','title','company','location','jd_url'],
-      rows: Array.from({length: 25}).map((_,i)=>({ id:`job_${i+1}`, title: i%2?'Senior PM':'Growth PM', company:`Acme ${i%6}`, location: i%3?'Remote':'NYC', jd_url: `https://indeed.example.com/${i+1}` }))
-    },
-    Candidates: {
-      columns: ['id','name','email','seniority','domains'],
-      rows: Array.from({length: 20}).map((_,i)=>({ id:`cand_${i+1}`, name:`Alex ${i}`, email:`alex${i}@example.com`, seniority: i%2?'Senior':'Mid', domains: 'PLG, SaaS' }))
-    },
-    Contacts: {
-      columns: ['id','company','name','title','email','verification_status'],
-      rows: Array.from({length: 40}).map((_,i)=>({ id:`ct_${i+1}`, company:`Globex ${i%5}`, name:`Jordan ${i}`, title: i%2?'VP Product':'Recruiter', email:`j${i}@globex.com`, verification_status: ['valid','accept_all','invalid'][i%3] }))
-    },
-    Matches: {
-      columns: ['candidate','job','score','reasons'],
-      rows: Array.from({length: 18}).map((_,i)=>({ candidate:`Alex ${i}`, job:`PM @ Acme ${i%6}`, score: 70+(i%30), reasons:'PLG experience; rollout velocity' }))
-    },
-    Offers: {
-      columns: ['id','candidate','portfolio_url','deck_url'],
-      rows: Array.from({length: 10}).map((_,i)=>({ id:`off_${i+1}`, candidate:`Alex ${i}`, portfolio_url:`https://portfolio.example.com/${i+1}`, deck_url:`https://docs.example.com/deck/${i+1}` }))
-    }
-  };
-
-  const dataItems = Object.keys(MOCK).map(label => ({ label }));
-
-  // Mock CRM board data
-  const CRM = {
-    lanes: [
-      { key: 'people', title: 'People', items: Array.from({length: 6}).map((_,i)=>({ name:`Alex ${i}`, title:i%2?'Recruiter':'Director of Product', company:`Acme ${i%3}`, last:'2d', next:'Intro email' })) },
-      { key: 'conversation', title: 'Conversation', items: Array.from({length: 5}).map((_,i)=>({ name:`Jordan ${i}`, title:'VP Product', company:`Globex ${i%2}`, last:'1d', next:'Send recap' })) },
-      { key: 'meeting', title: 'Meeting', items: Array.from({length: 3}).map((_,i)=>({ name:`Taylor ${i}`, title:'Hiring Manager', company:`Initech`, last:'3h', next:'Book follow-up' })) },
-      { key: 'deal', title: 'Deal', items: Array.from({length: 2}).map((_,i)=>({ name:`Morgan ${i}`, title:'CTO', company:`Umbrella`, last:'5d', next:'Send offer bundle' })) },
-    ]
-  };
-
-  // Render table helper
-  function renderTable({columns, rows}){
-    const table = document.createElement('table');
-    const thead = document.createElement('thead');
-    const trh = document.createElement('tr');
-    columns.forEach(c=>{ const th=document.createElement('th'); th.textContent=c; trh.appendChild(th); });
-    thead.appendChild(trh); table.appendChild(thead);
-    const tbody = document.createElement('tbody');
-    rows.forEach(r=>{
-      const tr=document.createElement('tr');
-      columns.forEach(c=>{ const td=document.createElement('td'); td.textContent = String(r[c] ?? ''); tr.appendChild(td); });
-      tbody.appendChild(tr);
-    });
-    table.appendChild(tbody);
-    return table;
-  }
-
-  // Data modal with preview
-  function renderDataModal(){
-    const el = $('#dataModal');
-    el.innerHTML = '';
-    const panel = document.createElement('div');
-    panel.className = 'panel';
-    panel.innerHTML = `
-      <div class="head">
-        <div class="title">Data</div>
-        <div class="actions">
-          <a id="viewFull" class="link-btn" href="#" target="_self">View full page</a>
-          <button class="icon-btn" id="dataClose">✕</button>
-        </div>
-      </div>
-      <div class="body">
-        <div class="layout">
-          <aside class="menu" id="dataMenu"></aside>
-          <section class="content"><div id="previewWrap" class="table-wrap"></div></section>
-        </div>
-      </div>
-    `;
-    el.appendChild(panel);
-    const menu = panel.querySelector('#dataMenu');
-    const preview = panel.querySelector('#previewWrap');
-    const viewFull = panel.querySelector('#viewFull');
-
-    function select(label){
-      menu.querySelectorAll('.item').forEach(n=>n.classList.remove('active'));
-      const btn = menu.querySelector(`[data-label="${label}"]`);
-      if (btn) btn.classList.add('active');
-      preview.innerHTML='';
-      const ds = MOCK[label];
-      const subset = { columns: ds.columns, rows: ds.rows.slice(0, 8) };
-      preview.appendChild(renderTable(subset));
-      viewFull.setAttribute('href', `#data/${encodeURIComponent(label)}`);
-    }
-
-    dataItems.forEach(d => {
-      const b = document.createElement('button');
-      b.className = 'item';
-      b.textContent = d.label;
-      b.dataset.label = d.label;
-      b.addEventListener('click', ()=> select(d.label));
-      menu.appendChild(b);
-    });
-    // default select first
-    if (dataItems[0]) select(dataItems[0].label);
-    panel.querySelector('#dataClose').addEventListener('click', ()=>closeModal(el));
-  }
-  $('#dataBtn').addEventListener('click', ()=>{ renderDataModal(); openModal($('#dataModal')); });
-
-  // Full-page data view (hash routing)
-  function showDataPage(label){
-    const page = $('#dataPage');
-    const wrap = $('#dataTableWrap');
-    const title = $('#dataTitle');
-    title.textContent = label;
-    wrap.innerHTML='';
-    const dataset = MOCK[label];
-    if (!dataset) { wrap.textContent = 'No data'; return; }
-    showSpinner();
-    setTimeout(()=>{
-      wrap.appendChild(renderTable(dataset));
-      hideSpinner();
-    }, 200);
-    page.classList.remove('hidden');
-    window.scrollTo(0,0);
-  }
-  function hideDataPage(){ $('#dataPage').classList.add('hidden'); }
-  $('#dataBack').addEventListener('click', ()=>{ history.pushState({}, '', '#'); hideDataPage(); });
-
-  window.addEventListener('hashchange', ()=>{
-    applyRoute();
-  });
-  // Initial route
-  function applyRoute(){
-    const h = location.hash || '#home';
-    ['#home','#dashboard','#analytics','#crm','#leads','#enrichment','#qualification','#sequences','#runs','#pricing','#integrations','#settings'].forEach(function(tag){
-      const id = tag.slice(1)+'View';
-      const node = document.getElementById(id); if (node) node.classList.remove('active');
-    });
-    if (h === '#about') {
-      renderAboutModal(); openModal($('#aboutModal'));
-      return;
-    }
-    if (h.startsWith('#data/')) {
-      const label = decodeURIComponent(h.slice(6));
-      showDataPage(label);
-      return;
-    }
-    hideDataPage();
-    const viewId = (h.replace('#','')+'View');
-    const viewEl = document.getElementById(viewId);
-    if (viewEl) {
-      showSpinner(); setTimeout(()=>{
-        viewEl.classList.add('active');
-        // Render per-view extras
-        if (viewId === 'crmView') {
-          renderCRMBoard();
-        } else if (viewId === 'analyticsView') {
-          renderAnalytics();
-        } else if (viewId === 'leadsView') {
-          setupLeads();
-        } else if (viewId === 'enrichmentView') {
-          renderEnrichment();
-          $('#enrichRun').onclick = ()=>{ showToast('Enrichment complete'); renderEnrichment(); };
-          $('#enrichRecipes').onclick = ()=>{ showToast('Recipes: Company Basics, Tech Stack, Signals, Contacts'); };
-          $('#enrichClose').onclick = ()=> closeModal($('#enrichDrawer'));
-        } else if (viewId === 'qualificationView') {
-          renderQualification();
-        } else if (viewId === 'sequencesView') {
-          renderSequences();
-        } else if (viewId === 'runsView') {
-          renderRuns();
-        } else if (viewId === 'pricingView') {
-          renderPricing();
+  
+  // Navigation
+  function setupNavigation() {
+    $$('.nav-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const view = link.dataset.view;
+        if (view) {
+          navigateTo(view);
         }
-        hideSpinner();
-      }, 150);
-    }
-  }
-  applyRoute();
-
-  // Tools modal
-  function renderToolsModal(){
-    const el = $('#toolsModal');
-    el.innerHTML = '';
-    const panel = document.createElement('div');
-    panel.className = 'panel';
-    panel.innerHTML = `
-      <div class="head">
-        <div class="title">Tools</div>
-        <button class="icon-btn" id="toolsClose">✕</button>
-      </div>
-      <div class="body">
-        <div class="list" id="toolsList"></div>
-      </div>
-    `;
-    el.appendChild(panel);
-    panel.querySelector('#toolsClose').addEventListener('click', ()=>closeModal(el));
-
-    const list = panel.querySelector('#toolsList');
-    const items = [
-      { label: 'Reply Classifier', target: '#analytics' },
-      { label: 'Warm Angles', target: '#data/Warm%20Angles' },
-      { label: 'One‑pager Generator', target: '#data/One%E2%80%91pagers' },
-      { label: 'Deliverability', target: '#data/Deliverability' },
-      { label: 'Compliance', target: '#data/Compliance' },
-      { label: 'Audit Log', target: '#data/Audit%20Log' },
-      { label: 'Messages', target: '#data/Messages' },
-      { label: 'Onboarding', target: '#data/Onboarding' },
-      { label: 'Lead‑Qual (Demo)', target: '#data/Contacts' },
-    ];
-    items.forEach(it => {
-      const btn = document.createElement('button');
-      btn.className = 'px-3 py-2 rounded bg-white/10 hover:bg-white/15';
-      btn.textContent = it.label;
-      btn.addEventListener('click', () => {
-        closeModal(el);
-        location.hash = it.target;
       });
-      list.appendChild(btn);
+    });
+    
+    // Dashboard quick actions
+    $$('.action-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const action = card.dataset.action;
+        switch(action) {
+          case 'apply':
+            navigateTo('jobs');
+            break;
+          case 'tracker':
+            navigateTo('tracker');
+            break;
+          case 'sequences':
+            navigateTo('sequences');
+            break;
+          case 'ijp':
+            openIJPModal();
+            break;
+        }
+      });
     });
   }
-  $('#toolsBtn').addEventListener('click', ()=>{ renderToolsModal(); openModal($('#toolsModal')); });
-
-  // Settings modal (placeholder)
-  function renderSettingsModal(){
-    const el = $('#settingsModal');
-    el.innerHTML = '';
-    const panel = document.createElement('div');
-    panel.className = 'panel';
-    panel.innerHTML = `
-      <div class="head">
-        <div class="title">Settings</div>
-        <button class="icon-btn" id="settingsClose">✕</button>
-      </div>
-      <div class="body">Demo settings panel.</div>
-    `;
-    el.appendChild(panel);
-    panel.querySelector('#settingsClose').addEventListener('click', ()=>closeModal(el));
+  
+  function navigateTo(viewName) {
+    // Update active nav link
+    $$('.nav-link').forEach(link => {
+      link.classList.remove('active');
+      if (link.dataset.view === viewName) {
+        link.classList.add('active');
+      }
+    });
+    
+    // Hide all views
+    $$('.view').forEach(view => view.classList.remove('active'));
+    
+    // Show target view
+    const targetView = $(`#${viewName}View`);
+    if (targetView) {
+      targetView.classList.add('active');
+      state.currentView = viewName;
+    }
   }
-  $('#settingsBtn').addEventListener('click', ()=>{ renderSettingsModal(); openModal($('#settingsModal')); });
-
-  // About modal (matches app About page)
-  function renderAboutModal(){
-    const el = $('#aboutModal');
-    el.innerHTML = '';
-    const panel = document.createElement('div');
-    panel.className = 'panel';
-    panel.innerHTML = `
-      <div class="head">
-        <div class="title">About</div>
-        <button class="icon-btn" id="aboutClose">✕</button>
+  
+  // Theme Toggle
+  function setupTheme() {
+    const themeBtn = $('#themeBtn');
+    themeBtn.addEventListener('click', () => {
+      const isLight = document.body.classList.toggle('light');
+      themeBtn.textContent = isLight ? '☀️' : '🌙';
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    });
+    
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      document.body.classList.add('light');
+      themeBtn.textContent = '☀️';
+    }
+  }
+  
+  // Mode Toggle (Job Seeker / Recruiter)
+  function setupModeToggle() {
+    const seekerBtn = $('#modeSeekerBtn');
+    const recruiterBtn = $('#modeRecruiterBtn');
+    
+    seekerBtn.addEventListener('click', () => {
+      state.currentMode = 'jobseeker';
+      seekerBtn.classList.add('active');
+      recruiterBtn.classList.remove('active');
+      updateModeLabels();
+      showToast('Switched to Job Seeker mode');
+    });
+    
+    recruiterBtn.addEventListener('click', () => {
+      state.currentMode = 'recruiter';
+      recruiterBtn.classList.add('active');
+      seekerBtn.classList.remove('active');
+      updateModeLabels();
+      showToast('Switched to Recruiter mode');
+    });
+  }
+  
+  function updateModeLabels() {
+    // Update tracker columns, etc. based on mode
+    if (state.currentView === 'tracker') {
+      renderTrackerBoard();
+    }
+  }
+  
+  // Copilot Panel
+  function setupCopilot() {
+    const sendBtn = $('#copilotSend');
+    const input = $('#copilotInput');
+    const messagesContainer = $('#copilotMessages');
+    
+    sendBtn.addEventListener('click', () => {
+      const message = input.value.trim();
+      if (message) {
+        addCopilotMessage('user', message);
+        input.value = '';
+        
+        // Simulate AI response
+        setTimeout(() => {
+          const response = generateCopilotResponse(message);
+          addCopilotMessage('assistant', response);
+        }, 1000);
+      }
+    });
+    
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendBtn.click();
+      }
+    });
+    
+    // Suggestion buttons
+    $$('.copilot-suggestion').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const query = btn.dataset.query;
+        input.value = query;
+        sendBtn.click();
+      });
+    });
+  }
+  
+  function addCopilotMessage(role, content) {
+    const messagesContainer = $('#copilotMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `copilot-message ${role}`;
+    messageDiv.innerHTML = `<div class="message-content">${content}</div>`;
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    state.copilotMessages.push({ role, content });
+  }
+  
+  function generateCopilotResponse(message) {
+    const lower = message.toLowerCase();
+    
+    if (lower.includes('fit') || lower.includes('match')) {
+      return 'This job is a great fit for you! Your 6 years of PM experience aligns perfectly with the Senior PM role. Your track record of increasing engagement by 45% at TechCorp shows you can deliver results. The company is in SaaS (your target industry) and offers the remote flexibility you want.';
+    } else if (lower.includes('email') || lower.includes('write')) {
+      return 'Here\'s a draft email:\n\nSubject: Quick question about Senior PM role\n\nHi [First Name],\n\nI came across the Senior PM role at [Company] and wanted to reach out directly. I have 6 years of PM experience, most recently at TechCorp where I increased engagement 45% and led a team of 8.\n\nWould love to chat for 15 minutes if you\'re open.\n\nBest,\nAlex';
+    } else if (lower.includes('insider') || lower.includes('contact')) {
+      return 'I can help you find insider contacts! Click "Find Insiders" on the job detail page and I\'ll discover hiring managers and recruiters at the company. We\'ll verify their emails and help you reach out directly.';
+    } else if (lower.includes('improve') || lower.includes('better')) {
+      return 'To improve your job search:\n\n1. Apply to 5-10 jobs per week (consistency is key)\n2. Personalize each email (mention specific projects)\n3. Follow up after 3-5 days (persistence pays off)\n4. Keep your tracker organized (track every touchpoint)\n\nYour current reply rate is 17%, which is above the platform average of 15%!';
+    } else {
+      return 'I\'m here to help with your job search! I can:\n\n• Explain why jobs are good matches\n• Write personalized outreach emails\n• Find insider contacts at companies\n• Give job search strategy advice\n\nWhat would you like to know?';
+    }
+  }
+  
+  // Jobs View
+  function setupJobsView() {
+    renderJobsList();
+    setupJobsFilters();
+    
+    $('#refineBtn')?.addEventListener('click', openIJPModal);
+    $('#backToJobs')?.addEventListener('click', () => {
+      $('#jobsView').classList.add('active');
+      $('#jobDetailView').classList.remove('active');
+    });
+  }
+  
+  function renderJobsList() {
+    const jobsList = $('#jobsList');
+    if (!jobsList) return;
+    
+    jobsList.innerHTML = '';
+    
+    // Apply filters
+    const filteredJobs = MockData.jobs.filter(job => {
+      if (state.filters.salary && job.salary.min < state.filters.salary) return false;
+      // Add more filter logic as needed
+      return true;
+    });
+    
+    filteredJobs.slice(0, 20).forEach(job => {
+      const card = createJobCard(job);
+      jobsList.appendChild(card);
+    });
+  }
+  
+  function createJobCard(job) {
+    const card = document.createElement('div');
+    card.className = 'job-card';
+    
+    const matchClass = job.matchScore >= 90 ? 'excellent' :
+                       job.matchScore >= 75 ? 'strong' :
+                       job.matchScore >= 50 ? 'fair' : 'low';
+    
+    const matchLabel = job.matchScore >= 90 ? 'Excellent Match' :
+                       job.matchScore >= 75 ? 'Strong Match' :
+                       job.matchScore >= 50 ? 'Fair Match' : 'Low Match';
+    
+    card.innerHTML = `
+      <div class="job-card-header">
+        <img src="${job.company.logo}" alt="${job.company.name}" class="job-company-logo" onerror="this.src='assets/roleferry_trans.png'" />
+        <div class="job-card-info">
+          <div class="job-title">${job.title}</div>
+          <div class="job-company">${job.company.name}</div>
+          <div class="job-meta">
+            <span class="job-meta-item">📍 ${job.location}</span>
+            <span class="job-meta-item">💰 $${(job.salary.min/1000).toFixed(0)}K-$${(job.salary.max/1000).toFixed(0)}K</span>
+            <span class="job-meta-item">🕒 ${job.posted}</span>
+            ${job.h1b ? '<span class="job-meta-item">🛂 H1B</span>' : ''}
+          </div>
+        </div>
+        <div class="match-score ${matchClass}">
+          ${job.matchScore}% ${matchLabel}
+        </div>
       </div>
-      <div class="body">
-        <div class="about-content">
-          <div class="about-cards">
-            <h1 class="about-h1">About <span class="brand-r">Role</span><span class="brand-f">Ferry</span></h1>
-            <p class="about-lead">
-              RoleFerry is the result of a creative partnership between two business owners—<strong>Dave March</strong> and <strong>Oliver Ellison</strong>—working together across their companies to bring a modern, relationship‑first outreach experience to life.
-            </p>
-            <div class="about-grid">
-              <div class="about-card">
-                <h2 class="about-h2">Dave March · Innovative Marketing Solutions</h2>
-                <p class="about-text">Dave focuses on career coaching and end‑to‑end talent sourcing—helping candidates and teams align on the work that matters. His perspective shapes the practical workflows, from sourcing through outreach and interviews.</p>
+      <div class="job-card-footer">
+        <div class="job-actions">
+          <button class="job-action-btn primary" data-job-id="${job.id}" data-action="apply">Apply</button>
+          <button class="job-action-btn" data-job-id="${job.id}" data-action="insider">Find Insiders</button>
+          <button class="job-action-btn" data-job-id="${job.id}" data-action="copilot">Ask Copilot</button>
+        </div>
+        ${job.saved ? '<span style="color: var(--warning);">★ Saved</span>' : ''}
+        ${job.applied ? '<span style="color: var(--success);">✓ Applied</span>' : ''}
+      </div>
+    `;
+    
+    // Card click to view details
+    card.addEventListener('click', (e) => {
+      if (!e.target.closest('button')) {
+        showJobDetail(job);
+      }
+    });
+    
+    // Action buttons
+    card.querySelectorAll('.job-action-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const action = btn.dataset.action;
+        const jobId = parseInt(btn.dataset.jobId);
+        handleJobAction(action, jobId);
+      });
+    });
+    
+    return card;
+  }
+  
+  function showJobDetail(job) {
+    state.currentJob = job;
+    const detailView = $('#jobDetailView');
+    const content = $('#jobDetailContent');
+    
+    content.innerHTML = `
+      <div class="job-detail-main">
+        <div class="job-detail-header-info">
+          <img src="${job.company.logo}" alt="${job.company.name}" style="width: 64px; height: 64px; border-radius: var(--radius-md); background: white; padding: 8px;" onerror="this.src='assets/roleferry_trans.png'" />
+          <div>
+            <h1 style="font-size: 24px; margin-bottom: 8px;">${job.title}</h1>
+            <div style="font-size: 16px; color: var(--fg-secondary); margin-bottom: 8px;">${job.company.name}</div>
+            <div style="font-size: 14px; color: var(--fg-tertiary);">
+              📍 ${job.location} • 💰 $${(job.salary.min/1000).toFixed(0)}K-$${(job.salary.max/1000).toFixed(0)}K • 🕒 ${job.posted}
+            </div>
+          </div>
+        </div>
+        
+        <div class="job-detail-actions" style="margin: 24px 0; display: flex; gap: 12px;">
+          <button class="btn-primary" onclick="handleJobAction('apply', ${job.id})">Apply Now</button>
+          <button class="btn-secondary" onclick="handleJobAction('insider', ${job.id})">Find Insiders</button>
+          <button class="btn-secondary" onclick="handleJobAction('copilot', ${job.id})">Ask Copilot</button>
+        </div>
+        
+        <div class="job-detail-tabs" style="border-bottom: 1px solid var(--border); margin-bottom: 24px;">
+          <button class="tab-btn active" data-tab="overview" style="padding: 12px 16px; background: none; border: none; color: var(--fg-primary); font-weight: 600; border-bottom: 2px solid var(--brand-orange); cursor: pointer;">Overview</button>
+          <button class="tab-btn" data-tab="company" style="padding: 12px 16px; background: none; border: none; color: var(--fg-secondary); font-weight: 600; cursor: pointer;">Company</button>
+        </div>
+        
+        <div class="tab-content active" data-tab-content="overview">
+          <h2 style="font-size: 18px; margin-bottom: 16px;">Job Description</h2>
+          <p style="line-height: 1.6; margin-bottom: 16px;">${job.description}</p>
+          
+          <h3 style="font-size: 16px; margin-bottom: 12px;">Requirements</h3>
+          <ul style="list-style: disc; margin-left: 24px; line-height: 1.8;">
+            ${job.requirements.map(req => `<li>${req}</li>`).join('')}
+          </ul>
+          
+          <div style="margin-top: 24px; padding: 16px; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-md);">
+            <h3 style="font-size: 16px; margin-bottom: 12px;">Match Breakdown</h3>
+            <div style="margin-bottom: 8px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span>Experience</span>
+                <span style="font-weight: 700;">${job.matchBreakdown.experience}%</span>
               </div>
-              <div class="about-card">
-                <h2 class="about-h2">Oliver Ellison · Reliable AI Network, Inc.</h2>
-                <p class="about-text">Oliver leads innovation in AI‑driven solutions for diverse business use cases. His product and engineering work powers RoleFerry’s generation, verification, and analytics capabilities.</p>
+              <div style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden;">
+                <div style="height: 100%; width: ${job.matchBreakdown.experience}%; background: linear-gradient(90deg, #22c55e, #84cc16);"></div>
+              </div>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span>Skills</span>
+                <span style="font-weight: 700;">${job.matchBreakdown.skills}%</span>
+              </div>
+              <div style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden;">
+                <div style="height: 100%; width: ${job.matchBreakdown.skills}%; background: linear-gradient(90deg, #22c55e, #84cc16);"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span>Industry</span>
+                <span style="font-weight: 700;">${job.matchBreakdown.industry}%</span>
+              </div>
+              <div style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden;">
+                <div style="height: 100%; width: ${job.matchBreakdown.industry}%; background: linear-gradient(90deg, #22c55e, #84cc16);"></div>
               </div>
             </div>
           </div>
-          <div>
-            <img class="about-img" src="assets/about.png" alt="Dave and Oliver skydiving" />
-            <div class="small" style="margin-top:8px;"><a class="link" href="https://github.com/aurelius-in/RoleFerry/blob/develop/README.md" target="_blank" rel="noopener noreferrer">License & Notices</a></div>
-          </div>
         </div>
-
+        
+        <div class="tab-content" data-tab-content="company" style="display: none;">
+          <h2 style="font-size: 18px; margin-bottom: 16px;">About ${job.company.name}</h2>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px;">
+            <div>
+              <div style="font-size: 12px; color: var(--fg-tertiary); margin-bottom: 4px;">Company Size</div>
+              <div style="font-weight: 600;">${job.company.size} employees</div>
+            </div>
+            <div>
+              <div style="font-size: 12px; color: var(--fg-tertiary); margin-bottom: 4px;">Industry</div>
+              <div style="font-weight: 600;">${job.company.industry}</div>
+            </div>
+          </div>
+          <p style="color: var(--fg-secondary); line-height: 1.6;">
+            Detailed company information would be enriched via Clay/Clearbit integration. This would include tech stack, funding rounds, Glassdoor ratings, recent news, and social media profiles.
+          </p>
+        </div>
       </div>
     `;
-    el.appendChild(panel);
-    panel.querySelector('#aboutClose').addEventListener('click', ()=>{ closeModal(el); if (location.hash === '#about') location.hash = '#'; });
-  }
-  document.getElementById('aboutFooterBtn').addEventListener('click', ()=>{ location.hash = '#about'; });
-  document.getElementById('aboutBtn').addEventListener('click', ()=>{ location.hash = '#about'; });
-
-  // Close on backdrop click
-  backdrop.addEventListener('click', ()=>{
-    ['#dataModal','#toolsModal','#settingsModal'].forEach(sel=>{
-      const node = $(sel); if (!node.classList.contains('hidden')) closeModal(node);
+    
+    // Tab switching
+    content.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        content.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.remove('active');
+          b.style.borderBottom = 'none';
+          b.style.color = 'var(--fg-secondary)';
+        });
+        btn.classList.add('active');
+        btn.style.borderBottom = '2px solid var(--brand-orange)';
+        btn.style.color = 'var(--fg-primary)';
+        
+        content.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        content.querySelector(`[data-tab-content="${tab}"]`).style.display = 'block';
+      });
     });
-  });
-
-  // Dashboard tile clicks → navigate to target views (no accidental #)
-  document.addEventListener('click', (e)=>{
-    const t = e.target;
-    if (!(t instanceof Element)) return;
-    const tile = t.closest('.tile');
-    if (!tile) return;
-    const label = tile.querySelector('.label')?.textContent || '';
-    if (label.includes('Sequence')) location.hash = '#data/Sequence%20Rows';
-    else if (label.includes('Outreach')) location.hash = '#data/Messages';
-    else if (label.includes('Verify')) location.hash = '#data/Deliverability';
-    else if (label.includes('Contacts')) location.hash = '#data/Contacts';
-    else if (label.includes('Offers')) location.hash = '#data/Offers';
-    else if (label.includes('Jobs')) location.hash = '#data/Jobs';
-    else if (label.includes('Candidate')) location.hash = '#data/Candidates';
-    else if (label.includes('Match')) location.hash = '#data/Matches';
-    else location.hash = '#data/IJPs';
-  });
-
-  // Analytics render (bar chart + table)
-  function renderAnalytics(){
-    const wrap = $('#analyticsTableWrap');
-    wrap.innerHTML = '';
-    const data = MOCK['Campaigns'];
-    // Table (limit rows for readability)
-    wrap.appendChild(renderTable({ columns: data.columns, rows: data.rows.slice(0, 10) }));
-
-    // Bar chart in #analyticsChart
-    const chart = $('#analyticsChart');
-    chart.innerHTML = '';
-    const w = chart.clientWidth || 900;
-    const h = chart.clientHeight || 180;
-    const padding = { l: 40, r: 10, t: 10, b: 24 };
-    const innerW = Math.max(100, w - padding.l - padding.r);
-    const innerH = Math.max(60, h - padding.t - padding.b);
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-    svg.setAttribute('width', '100%');
-    svg.setAttribute('height', '100%');
-
-    const values = data.rows.slice(0, 10).map(r => Number(r.open_rate) || 0);
-    const maxV = Math.max(10, Math.max(...values));
-    const barW = innerW / values.length;
-
-    // y axis ticks (0, max)
-    const y0 = document.createElementNS(svg.namespaceURI, 'text');
-    y0.setAttribute('x', String(4));
-    y0.setAttribute('y', String(h - padding.b));
-    y0.setAttribute('fill', 'rgba(230,237,247,0.7)');
-    y0.setAttribute('font-size', '10');
-    y0.textContent = '0%';
-    svg.appendChild(y0);
-    const yMax = document.createElementNS(svg.namespaceURI, 'text');
-    yMax.setAttribute('x', String(4));
-    yMax.setAttribute('y', String(padding.t + 10));
-    yMax.setAttribute('fill', 'rgba(230,237,247,0.7)');
-    yMax.setAttribute('font-size', '10');
-    yMax.textContent = `${maxV}%`;
-    svg.appendChild(yMax);
-
-    // gradient (declare BEFORE bars for widest browser support)
-    const defs = document.createElementNS(svg.namespaceURI, 'defs');
-    const lg = document.createElementNS(svg.namespaceURI, 'linearGradient');
-    lg.setAttribute('id', 'grad');
-    lg.setAttribute('x1', '0'); lg.setAttribute('y1', '0'); lg.setAttribute('x2', '0'); lg.setAttribute('y2', '1');
-    const stop1 = document.createElementNS(svg.namespaceURI, 'stop'); stop1.setAttribute('offset', '0%'); stop1.setAttribute('stop-color', '#ff7a18');
-    const stop2 = document.createElementNS(svg.namespaceURI, 'stop'); stop2.setAttribute('offset', '100%'); stop2.setAttribute('stop-color', '#ffd25a');
-    lg.appendChild(stop1); lg.appendChild(stop2);
-    defs.appendChild(lg); svg.appendChild(defs);
-
-    values.forEach((v, i) => {
-      const barH = (v / maxV) * innerH;
-      const x = padding.l + i * barW + 4;
-      const y = padding.t + (innerH - barH);
-      const rect = document.createElementNS(svg.namespaceURI, 'rect');
-      rect.setAttribute('x', String(x));
-      rect.setAttribute('y', String(y));
-      rect.setAttribute('width', String(Math.max(6, barW - 8)));
-      rect.setAttribute('height', String(Math.max(2, barH)));
-      rect.setAttribute('fill', 'url(#grad)');
-      rect.setAttribute('rx', '3');
-      rect.setAttribute('ry', '3');
-      svg.appendChild(rect);
-
-      // label every 2 bars
-      if (i % 2 === 0) {
-        const t = document.createElementNS(svg.namespaceURI, 'text');
-        t.setAttribute('x', String(x + Math.max(6, barW - 8) / 2));
-        t.setAttribute('y', String(h - 6));
-        t.setAttribute('fill', 'rgba(230,237,247,0.7)');
-        t.setAttribute('font-size', '10');
-        t.setAttribute('text-anchor', 'middle');
-        t.textContent = `${v}%`;
-        svg.appendChild(t);
+    
+    $('#jobsView').classList.remove('active');
+    detailView.classList.add('active');
+  }
+  
+  function handleJobAction(action, jobId) {
+    const job = MockData.jobs.find(j => j.id === jobId);
+    if (!job) return;
+    
+    switch(action) {
+      case 'apply':
+        applyToJob(job);
+        break;
+      case 'insider':
+        showInsiderModal(job);
+        break;
+      case 'copilot':
+        $('#copilotInput').value = `Tell me about the ${job.title} role at ${job.company.name}`;
+        $('#copilotSend').click();
+        break;
+    }
+  }
+  
+  function applyToJob(job) {
+    // Simulate application process
+    showToast('Finding contacts at ' + job.company.name + '...');
+    
+    setTimeout(() => {
+      showToast('✓ Contact found! Drafting email...');
+      
+      setTimeout(() => {
+        showToast('✓ Email sent! Added to your Tracker.');
+        job.applied = true;
+        
+        // Add to applications
+        MockData.applications.push({
+          id: MockData.applications.length + 1,
+          jobId: job.id,
+          status: 'applied',
+          createdAt: new Date().toISOString(),
+          lastActionAt: new Date().toISOString(),
+          sequenceId: 1,
+          replyState: null,
+          contacts: [],
+          notes: [],
+          interviews: [],
+          offer: null
+        });
+        
+        renderJobsList();
+      }, 2000);
+    }, 2000);
+  }
+  
+  function showInsiderModal(job) {
+    // Simulate finding contacts
+    const modal = $('#insiderModal');
+    const results = $('#insiderResults');
+    
+    results.innerHTML = '<div style="text-align: center; padding: 24px;">Finding contacts at ' + job.company.name + '...</div>';
+    
+    openModal('insiderModal');
+    
+    setTimeout(() => {
+      // Get mock contacts
+      const contacts = MockData.contacts.filter((c, i) => i < 3);
+      
+      results.innerHTML = `
+        <h3 style="font-size: 16px; margin-bottom: 16px;">Found ${contacts.length} contacts:</h3>
+        ${contacts.map(contact => `
+          <div style="padding: 16px; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+              <img src="https://i.pravatar.cc/48?u=${contact.email}" style="width: 48px; height: 48px; border-radius: 50%;" />
+              <div>
+                <div style="font-weight: 700;">${contact.name}</div>
+                <div style="font-size: 14px; color: var(--fg-secondary);">${contact.title}</div>
+              </div>
+            </div>
+            <div style="font-size: 13px; color: var(--fg-tertiary); margin-bottom: 8px;">
+              ✓ ${contact.email} (verified)
+            </div>
+            <button class="btn-primary btn-full" style="margin-top: 8px;" onclick="connectViaEmail('${contact.name}', '${contact.email}', '${job.title}', '${job.company.name}')">
+              Contact ${contact.name.split(' ')[0]}
+            </button>
+          </div>
+        `).join('')}
+      `;
+    }, 2000);
+  }
+  
+  window.connectViaEmail = function(name, email, role, company) {
+    showToast(`Drafting email to ${name}...`);
+    setTimeout(() => {
+      showToast(`✓ Email sent to ${name}!`);
+      closeModal('insiderModal');
+    }, 1500);
+  };
+  
+  function setupJobsFilters() {
+    const salarySlider = $('#salarySlider');
+    const salaryValue = $('#salaryValue');
+    
+    if (salarySlider) {
+      salarySlider.addEventListener('input', () => {
+        const value = parseInt(salarySlider.value);
+        salaryValue.textContent = (value / 1000).toFixed(0);
+        state.filters.salary = value;
+      });
+    }
+  }
+  
+  // Tracker View
+  function setupTrackerView() {
+    renderTrackerBoard();
+    setupTrackerControls();
+  }
+  
+  function renderTrackerBoard() {
+    const board = $('#trackerBoard');
+    if (!board) return;
+    
+    const columns = state.currentMode === 'jobseeker'
+      ? ['Saved', 'Applied', 'Interviewing', 'Offer', 'Rejected']
+      : ['Leads', 'Contacted', 'Appointments', 'Offers', 'Won/Lost'];
+    
+    const statusMap = state.currentMode === 'jobseeker'
+      ? { saved: 'Saved', applied: 'Applied', interviewing: 'Interviewing', offer: 'Offer', rejected: 'Rejected' }
+      : { saved: 'Leads', applied: 'Contacted', interviewing: 'Appointments', offer: 'Offers', rejected: 'Won/Lost' };
+    
+    board.innerHTML = '';
+    
+    columns.forEach(columnName => {
+      const statusKey = Object.keys(statusMap).find(k => statusMap[k] === columnName);
+      const apps = MockData.applications.filter(app => app.status === statusKey);
+      
+      const column = document.createElement('div');
+      column.className = 'tracker-column';
+      column.innerHTML = `
+        <div class="column-header">
+          <div class="column-title">${columnName}</div>
+          <div class="column-count">${apps.length}</div>
+        </div>
+        <div class="tracker-cards">
+          ${apps.map(app => {
+            const job = MockData.jobs.find(j => j.id === app.jobId);
+            if (!job) return '';
+            
+            return `
+              <div class="tracker-card" data-app-id="${app.id}">
+                <div class="tracker-card-header">
+                  <img src="${job.company.logo}" class="tracker-card-logo" onerror="this.src='assets/roleferry_trans.png'" />
+                  <div class="tracker-card-info">
+                    <div class="tracker-card-title">${job.title}</div>
+                    <div class="tracker-card-company">${job.company.name}</div>
+                  </div>
+                </div>
+                <div class="tracker-card-meta">
+                  <div>Applied: ${new Date(app.createdAt).toLocaleDateString()}</div>
+                  ${app.replyState ? `<div><span class="status-badge replied">✓ Replied</span></div>` : ''}
+                  ${app.interviews.length > 0 ? `<div>📅 ${app.interviews.length} interview(s)</div>` : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+      
+      board.appendChild(column);
+    });
+  }
+  
+  function setupTrackerControls() {
+    $$('[data-tracker-view]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const view = btn.dataset.trackerView;
+        state.trackerView = view;
+        
+        $$('[data-tracker-view]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        if (view === 'board') {
+          $('#trackerBoard').classList.remove('hidden');
+          $('#trackerTable').classList.add('hidden');
+        } else {
+          $('#trackerBoard').classList.add('hidden');
+          $('#trackerTable').classList.remove('hidden');
+          renderTrackerTable();
+        }
+      });
+    });
+    
+    $('#exportCsvBtn')?.addEventListener('click', exportTrackerCSV);
+    $('#importCsvBtn')?.addEventListener('click', () => showToast('CSV import coming soon!'));
+  }
+  
+  function renderTrackerTable() {
+    const tbody = $('#trackerTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = MockData.applications.map(app => {
+      const job = MockData.jobs.find(j => j.id === app.jobId);
+      if (!job) return '';
+      
+      return `
+        <tr>
+          <td>${job.company.name}</td>
+          <td>${job.title}</td>
+          <td><span class="status-badge ${app.status}">${app.status}</span></td>
+          <td>${new Date(app.createdAt).toLocaleDateString()}</td>
+          <td>${new Date(app.lastActionAt).toLocaleDateString()}</td>
+          <td>${app.replyState ? '<span class="status-badge replied">Replied</span>' : '—'}</td>
+          <td><button class="btn-secondary" style="padding: 4px 8px; font-size: 12px;">View</button></td>
+        </tr>
+      `;
+    }).join('');
+  }
+  
+  function exportTrackerCSV() {
+    const headers = ['Company', 'Role', 'Status', 'Applied Date', 'Last Contact', 'Reply Status'];
+    const rows = MockData.applications.map(app => {
+      const job = MockData.jobs.find(j => j.id === app.jobId);
+      if (!job) return null;
+      return [
+        job.company.name,
+        job.title,
+        app.status,
+        new Date(app.createdAt).toLocaleDateString(),
+        new Date(app.lastActionAt).toLocaleDateString(),
+        app.replyState || 'No reply'
+      ];
+    }).filter(Boolean);
+    
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'roleferry-tracker-export.csv';
+    a.click();
+    
+    showToast('✓ CSV exported!');
+  }
+  
+  // Deliverability View
+  function setupDeliverabilityView() {
+    const grid = $('#mailboxesGrid');
+    if (!grid) {
+      return;
+    }
+    
+    grid.innerHTML = MockData.mailboxes.map(mb => `
+      <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-lg);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <div style="font-weight: 700; font-size: 14px;">${mb.mailbox}</div>
+          <div style="font-size: 24px; font-weight: 700; color: ${mb.healthScore >= 90 ? 'var(--success)' : mb.healthScore >= 75 ? 'var(--warning)' : 'var(--error)'};">
+            ${mb.healthScore}
+          </div>
+        </div>
+        <div style="font-size: 12px; color: var(--fg-tertiary); margin-bottom: 8px;">Domain: ${mb.domain}</div>
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+          <span>Status:</span>
+          <span style="font-weight: 600; color: ${mb.warmupStatus === 'active' ? 'var(--success)' : 'var(--warning)'};">${mb.warmupStatus}</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+          <span>Sent Today:</span>
+          <span style="font-weight: 600;">${mb.sentToday} / ${mb.dailyCap}</span>
+        </div>
+        <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 999px; margin: 8px 0; overflow: hidden;">
+          <div style="height: 100%; width: ${(mb.sentToday / mb.dailyCap) * 100}%; background: var(--brand-blue);"></div>
+        </div>
+        ${mb.lastBounce ? `<div style="font-size: 11px; color: var(--error); margin-top: 8px;">⚠️ Last bounce: ${mb.lastBounce}</div>` : ''}
+        ${mb.lastSpamFlag ? `<div style="font-size: 11px; color: var(--error); margin-top: 4px;">⚠️ Spam flag: ${mb.lastSpamFlag}</div>` : ''}
+      </div>
+    `).join('');
+  }
+  
+  // LivePages View
+  function setupLivePagesView() {
+    const grid = $('#livepagesGrid');
+    if (!grid) return;
+    
+    grid.innerHTML = MockData.livepages.map(lp => `
+      <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-lg);">
+        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">${lp.role} - ${lp.companyName}</h3>
+        <div style="font-size: 14px; color: var(--fg-secondary); margin-bottom: 12px;">For: ${lp.contactName}</div>
+        
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0;">
+          <div>
+            <div style="font-size: 12px; color: var(--fg-tertiary);">Views</div>
+            <div style="font-size: 20px; font-weight: 700;">${lp.views}</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: var(--fg-tertiary);">Clicks</div>
+            <div style="font-size: 20px; font-weight: 700;">${lp.ctaClicks}</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: var(--fg-tertiary);">Scroll</div>
+            <div style="font-size: 20px; font-weight: 700;">${lp.scrollDepth}%</div>
+          </div>
+        </div>
+        
+        <div style="font-size: 12px; color: var(--fg-tertiary); margin-top: 12px;">
+          Created: ${new Date(lp.createdAt).toLocaleDateString()}
+        </div>
+        
+        <button class="btn-secondary btn-full" style="margin-top: 12px;">View LivePage</button>
+      </div>
+    `).join('');
+  }
+  
+  // Sequences View
+  function setupSequencesView() {
+    const list = $('#sequencesList');
+    if (!list) return;
+    
+    list.innerHTML = MockData.sequences.map(seq => `
+      <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-lg); margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <h3 style="font-size: 18px; font-weight: 700;">${seq.name}</h3>
+          <span style="padding: 4px 12px; background: ${seq.active ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)'}; color: ${seq.active ? 'var(--success)' : 'var(--error)'}; border-radius: 999px; font-size: 12px; font-weight: 600;">
+            ${seq.active ? 'Active' : 'Inactive'}
+          </span>
+        </div>
+        
+        <div style="font-size: 14px; color: var(--fg-secondary); margin-bottom: 16px;">
+          ${seq.steps.length} steps • Created ${new Date(seq.createdAt).toLocaleDateString()}
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          ${seq.steps.map((step, idx) => `
+            <div style="padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius-md);">
+              <div style="font-weight: 700; font-size: 13px; margin-bottom: 4px;">Step ${step.stepNo} ${step.delay > 0 ? `(+${step.delay} days)` : '(Immediate)'}</div>
+              <div style="font-size: 13px; color: var(--fg-tertiary);">Subject: ${step.subject}</div>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div style="display: flex; gap: 8px; margin-top: 16px;">
+          <button class="btn-secondary">Edit</button>
+          <button class="btn-secondary">Duplicate</button>
+          <button class="btn-tertiary" style="color: var(--error);">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  // Enrichment View
+  function setupEnrichmentView() {
+    const results = $('#enrichmentResults');
+    if (!results) return;
+    
+    results.innerHTML = `
+      <div style="margin-top: 24px; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px;">
+        <h3 style="font-size: 16px; margin-bottom: 16px;">Recent Enrichments</h3>
+        ${MockData.companies.slice(0, 3).map(company => `
+          <div style="padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 12px;">
+            <div style="font-weight: 700; margin-bottom: 8px;">${company.name}</div>
+            <div style="font-size: 13px; color: var(--fg-secondary); margin-bottom: 8px;">
+              ${company.domain} • ${company.industry} • ${company.size} employees
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              ${company.techStack.slice(0, 5).map(tech => `
+                <span style="padding: 2px 8px; background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.4); border-radius: 4px; font-size: 11px;">${tech}</span>
+              `).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+  
+  // Dashboard
+  function setupDashboard() {
+    // Already rendered in HTML, stats are static for demo
+  }
+  
+  // Settings
+  function setupSettings() {
+    $('#editIjpBtn')?.addEventListener('click', openIJPModal);
+  }
+  
+  // IJP Modal
+  function openIJPModal() {
+    openModal('ijpModal');
+    // Would render wizard steps here
+    showToast('IJP Wizard coming soon!');
+  }
+  
+  // Modal Management
+  function openModal(modalId) {
+    const modal = $(`#${modalId}`);
+    const backdrop = $('#modalBackdrop');
+    if (modal && backdrop) {
+      backdrop.classList.remove('hidden');
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+  }
+  
+  function closeModal(modalId) {
+    const modal = $(`#${modalId}`);
+    const backdrop = $('#modalBackdrop');
+    if (modal && backdrop) {
+      modal.classList.add('hidden');
+      backdrop.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+  }
+  
+  // Modal close handlers
+  $$('.modal-close').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const modalId = btn.dataset.modal;
+      if (modalId) {
+        closeModal(modalId);
       }
     });
-    // baseline
-    const base = document.createElementNS(svg.namespaceURI, 'line');
-    base.setAttribute('x1', String(padding.l));
-    base.setAttribute('y1', String(padding.t + innerH + 0.5));
-    base.setAttribute('x2', String(padding.l + innerW));
-    base.setAttribute('y2', String(padding.t + innerH + 0.5));
-    base.setAttribute('stroke', 'rgba(230,237,247,0.25)');
-    base.setAttribute('stroke-width', '1');
-    svg.appendChild(base);
-
-    chart.appendChild(svg);
+  });
+  
+  $('#modalBackdrop').addEventListener('click', () => {
+    $$('.modal').forEach(modal => modal.classList.add('hidden'));
+    $('#modalBackdrop').classList.add('hidden');
+    document.body.style.overflow = '';
+  });
+  
+  // Toast
+  function showToast(message, duration = 3000) {
+    const toast = $('#toast');
+    if (!toast) return;
+    
+    toast.textContent = message;
+    toast.classList.remove('hidden');
+    
+    setTimeout(() => {
+      toast.classList.add('hidden');
+    }, duration);
   }
-
-  // CRM board render
-  function renderCRMBoard(){
-    const board = $('#crmBoard');
-    board.innerHTML = '';
-    CRM.lanes.forEach(l => {
-      const lane = document.createElement('div');
-      lane.className = 'lane';
-      lane.innerHTML = `<div class="lane-head">${l.title}</div><div class="lane-body"></div>`;
-      const body = lane.querySelector('.lane-body');
-      l.items.forEach(it => {
-        const c = document.createElement('div');
-        c.className = 'card-sm';
-        c.innerHTML = `<div><strong>${it.name}</strong> — ${it.title}</div><div class="small">${it.company}</div><div class="small">Last: ${it.last} · Next: ${it.next}</div>`;
-        body.appendChild(c);
-      });
-      board.appendChild(lane);
-    });
-  }
-
-  // Sequences demo
-  function renderSequences(){
-    const cards = $('#seqCards'); if (!cards) return; cards.innerHTML='';
-    const examples = [
-      { company:'Scramjet AI', subject:'Lower your outbound cost per lead', body:"Noticed you’re hiring AE and running HubSpot + PostHog. We help teams qualify and write first-touch at under $0.10/lead—without pricey credits. Happy to show how Scramjet can keep quality high while cutting cost.", linkedin:"Saw your AE hire and HubSpot stack. Quick note on lowering qual cost per lead—open to a 10-min overview?" },
-      { company:'LumenLytics', subject:'Boost reply rate without pricey credits', body:"Looks like LumenLytics runs HubSpot + Snowflake. We cut cost/lead while keeping quality—mock demo available.", linkedin:"Curious if we can reduce per-lead cost for your team—worth a quick look?" },
-    ];
-    examples.forEach(ex => {
-      const card = document.createElement('div'); card.className='card';
-      card.innerHTML = '<div class="small"><strong>'+ex.company+'</strong></div>'+
-        '<div class="small">Subject: '+ex.subject+'</div>'+
-        '<div class="small">Email v1: '+ex.body+'</div>'+
-        '<div class="small">LinkedIn: '+ex.linkedin+'</div>';
-      const btns = document.createElement('div'); btns.style.marginTop='8px';
-      ;['Regenerate','Shorten','Copy','Add to Sequence'].forEach(function(l){ const b=document.createElement('button'); b.className='btn'; b.style.marginRight='6px'; b.textContent=l; b.onclick=function(){ showToast(l+' done'); }; btns.appendChild(b); });
-      card.appendChild(btns); cards.appendChild(card);
-    });
-    const gen = document.getElementById('seqGen'); if (gen) gen.onclick=function(){ showToast('Generated 3 emails'); };
-  }
-
-  // Runs demo
-  function renderRuns(){
-    const wrap = $('#runsTableWrap'); if (!wrap) return; wrap.innerHTML='';
-    const table = document.createElement('table');
-    const thead = document.createElement('thead'); const trh = document.createElement('tr');
-    ['Run ID','Steps','Leads processed','Duration','Est. Cost','Status','View Log'].forEach(function(h){ const th=document.createElement('th'); th.textContent=h; trh.appendChild(th); }); thead.appendChild(trh); table.appendChild(thead);
-    const tbody = document.createElement('tbody');
-    const rows = [
-      { id:'RF-20251003-001', steps:'Import→Enrich→Qualify→Generate', leads:12, dur:'78s', cost:'$0.96', status:'Succeeded' },
-      { id:'RF-20251003-002', steps:'Import→Enrich→Qualify', leads:8, dur:'52s', cost:'$0.61', status:'Succeeded' },
-    ];
-    rows.forEach(function(r){
-      const tr=document.createElement('tr'); tr.className='fade-in';
-      const cells=[r.id,r.steps,r.leads,r.dur,r.cost,r.status,'View'];
-      cells.forEach(function(c,idx){ const td=document.createElement('td');
-        if (idx===6){ const b=document.createElement('button'); b.className='btn'; b.textContent='View'; b.onclick=function(){ const d=$('#runDetail'); if (d) { d.innerHTML = '<div class="small"><strong>'+r.id+'</strong></div><div class="small">Serper: 18 queries</div><div class="small">Contacts verified: 7/10</div>'; } openModal($('#runDrawer')); }; td.appendChild(b); }
-        else { td.textContent=String(c); }
-        tr.appendChild(td);
-      });
-      tbody.appendChild(tr);
-    }); table.appendChild(tbody); wrap.appendChild(table);
-    const rn=document.getElementById('runNew'); if (rn) rn.onclick=function(){ showToast('Run started (mock)'); };
-    const rc=document.getElementById('runClose'); if (rc) rc.onclick=function(){ closeModal($('#runDrawer')); };
-  }
-
-  // Pricing demo
-  function renderPricing(){
-    const leads = $('#priceLeads'); const verify = $('#priceVerify'); const out = $('#priceOut'); const spark = $('#priceSpark');
-    if (!leads || !verify || !out || !spark) return;
-    function calc(){ const per = verify.checked ? 0.08 : 0.06; const bench = 0.25; out.textContent = 'Est. Cost / Lead: $'+per.toFixed(2)+' — Projected Savings: '+Math.round((1 - per/bench)*100)+'%'; spark.innerHTML = sparkline([0.12,0.11,0.10,0.09,per], 120, 28); }
-    function sparkline(values, w, h){ const max=Math.max.apply(null, values.concat([0.35])); const min=Math.min.apply(null, values.concat([0])); var svg='<svg viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'">'; var p=''; for (var i=0;i<values.length;i++){ var x = (i/(values.length-1))*(w-8)+4; var y = h-4-((values[i]-min)/(max-min))*(h-8); p += (i===0?'M'+x+','+y:' L'+x+','+y); } svg += '<path d="'+p+'" fill="none" stroke="#60a5fa" stroke-width="2" />'; svg += '</svg>'; return svg; }
-    leads.oninput = calc; verify.onchange = calc; calc();
+  
+  window.handleJobAction = handleJobAction;
+  
+  // Initialize on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
   }
 })();
