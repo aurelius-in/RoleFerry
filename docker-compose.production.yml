@@ -1,0 +1,140 @@
+version: '3.8'
+
+services:
+  # Backend API
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: roleferry-api:latest
+    container_name: roleferry-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - APOLLO_API_KEY=${APOLLO_API_KEY}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+    depends_on:
+      - postgres
+      - redis
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - roleferry-network
+
+  # Celery Workers
+  workers:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: roleferry-api:latest
+    container_name: roleferry-workers
+    command: celery -A app.celery_app worker --loglevel=INFO --concurrency=4
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - APOLLO_API_KEY=${APOLLO_API_KEY}
+      - ENVIRONMENT=production
+    depends_on:
+      - postgres
+      - redis
+    restart: always
+    networks:
+      - roleferry-network
+
+  # Frontend (Next.js)
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: roleferry-web:latest
+    container_name: roleferry-web
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://api:8000
+      - NODE_ENV=production
+    depends_on:
+      - api
+    restart: always
+    networks:
+      - roleferry-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: roleferry-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=roleferry
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./backend/app/migrations:/docker-entrypoint-initdb.d
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d roleferry"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - roleferry-network
+
+  # Redis (Cache + Queue)
+  redis:
+    image: redis:7-alpine
+    container_name: roleferry-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - roleferry-network
+
+  # Nginx Reverse Proxy (Optional, for local SSL)
+  nginx:
+    image: nginx:alpine
+    container_name: roleferry-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+      - web
+    restart: always
+    networks:
+      - roleferry-network
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  roleferry-network:
+    driver: bridge
+
