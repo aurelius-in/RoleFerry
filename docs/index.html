@@ -3,292 +3,519 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>RoleFerry Demo</title>
+<title>RoleFerry - Smart Job Search Platform</title>
 <link rel="stylesheet" href="styles.css" />
 <link rel="icon" href="assets/roleferry_trans.png" />
 </head>
 <body class="dark">
-  <header class="nav">
+  <!-- Top Navigation -->
+  <header class="main-nav">
     <div class="nav-left">
       <img src="assets/roleferry_trans.png" alt="RoleFerry" class="logo" />
       <img src="assets/wordmark.png" alt="RoleFerry" class="wordmark" />
     </div>
-    <nav class="nav-center"></nav>
+    <nav class="nav-center">
+      <a href="#dashboard" class="nav-link" data-view="dashboard">Dashboard</a>
+      <a href="#jobs" class="nav-link active" data-view="jobs">Jobs</a>
+      <a href="#tracker" class="nav-link" data-view="tracker">Tracker</a>
+      <a href="#sequences" class="nav-link" data-view="sequences">Sequences</a>
+      <a href="#enrichment" class="nav-link" data-view="enrichment">Enrichment</a>
+      <a href="#deliverability" class="nav-link" data-view="deliverability">Deliverability</a>
+      <a href="#livepages" class="nav-link" data-view="livepages">LivePages</a>
+      <a href="#settings" class="nav-link" data-view="settings">Settings</a>
+    </nav>
     <div class="nav-right">
+      <div class="mode-toggle">
+        <button id="modeSeekerBtn" class="mode-btn active">Job Seeker</button>
+        <button id="modeRecruiterBtn" class="mode-btn">Recruiter</button>
+      </div>
       <button id="themeBtn" class="icon-btn" title="Toggle theme">🌙</button>
-      <button id="aboutBtn" class="icon-btn" title="About">ℹ️</button>
-      <button id="toolsBtn" class="icon-btn" title="Tools">🛠️</button>
-      <button id="settingsBtn" class="icon-btn" title="Settings">☰</button>
+      <div class="user-avatar">
+        <img src="https://i.pravatar.cc/150?u=alex" alt="User" class="avatar-img" />
+      </div>
     </div>
   </header>
-  <nav class="subnav">
-    <a href="#home" class="nav-link">Ask</a>
-    <a href="#dashboard" class="nav-link">Dashboard</a>
-    <a href="#analytics" class="nav-link">Analytics</a>
-    <a href="#crm" class="nav-link">CRM</a>
-    <a href="#leads" class="nav-link">Leads</a>
-    <a href="#enrichment" class="nav-link">Enrichment</a>
-    <a href="#qualification" class="nav-link">Qualification</a>
-    <a href="#sequences" class="nav-link">Sequences</a>
-    <a href="#runs" class="nav-link">Runs</a>
-    <a href="#pricing" class="nav-link">Pricing</a>
-    <a href="#integrations" class="nav-link">Integrations</a>
-    <a href="#settings" class="nav-link">Settings</a>
-    <button id="dataBtn" class="nav-link btn-link">Data</button>
-  </nav>
-  
 
-  <main class="container">
-    <section id="homeView" class="view">
-      <div class="hero">
-      <img src="assets/roleferry-med.gif" class="hero-gif" alt="RoleFerry" />
-        <h1>Smooth crossing in rough seas.</h1>
-        <p>When every wave pushes you back, <strong><span style="color:#ff7a18">Role</span><span style="color:#60a5fa">Ferry</span></strong> pulls you forward.</p>
-      </div>
-      <section class="ask">
-        <div class="card">
-          <div class="small">All Aboard!</div>
-          <textarea id="askInput" placeholder="Ask about your data or tell RoleFerry what to do..."></textarea>
-          <div><button id="askBtn" class="cta">ASK</button></div>
-          <div id="askOut" class="ask-out"></div>
+  <!-- Main Content with Copilot Rail -->
+  <div class="main-layout">
+    <!-- Left: Main Content Area -->
+    <main class="content-area">
+      
+      <!-- Dashboard View -->
+      <section id="dashboardView" class="view">
+        <div class="view-header">
+          <h1 class="view-title">Dashboard</h1>
+          <p class="view-subtitle">Your job search at a glance</p>
+        </div>
+        
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Applications</div>
+            <div class="stat-value">23</div>
+            <div class="stat-change positive">+5 this week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Reply Rate</div>
+            <div class="stat-value">17%</div>
+            <div class="stat-change positive">+2% vs avg</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Interviews</div>
+            <div class="stat-value">4</div>
+            <div class="stat-change positive">2 this week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Offers</div>
+            <div class="stat-value">1</div>
+            <div class="stat-change neutral">Pending decision</div>
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <button class="action-card" data-action="apply">
+            <span class="action-icon">🎯</span>
+            <span class="action-label">Apply to Jobs</span>
+          </button>
+          <button class="action-card" data-action="tracker">
+            <span class="action-icon">📊</span>
+            <span class="action-label">View Tracker</span>
+          </button>
+          <button class="action-card" data-action="sequences">
+            <span class="action-icon">✉️</span>
+            <span class="action-label">Create Sequence</span>
+          </button>
+          <button class="action-card" data-action="ijp">
+            <span class="action-icon">⚙️</span>
+            <span class="action-label">Update Preferences</span>
+          </button>
+        </div>
+
+        <div class="recent-activity">
+          <h2 class="section-title">Recent Activity</h2>
+          <div class="activity-list">
+            <div class="activity-item">
+              <div class="activity-icon">📧</div>
+              <div class="activity-content">
+                <div class="activity-text"><strong>Reply received</strong> from Michael Torres at GlobalTech</div>
+                <div class="activity-time">2 hours ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon">✅</div>
+              <div class="activity-content">
+                <div class="activity-text"><strong>Applied</strong> to Senior PM at DataFlow</div>
+                <div class="activity-time">1 day ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon">🎉</div>
+              <div class="activity-content">
+                <div class="activity-text"><strong>Offer received</strong> from Acme Corp - Director of Product</div>
+                <div class="activity-time">3 days ago</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
-    </section>
 
-    <section id="dashboardView" class="view">
-      <h2 class="section-title">Dashboard</h2>
-      <div class="dashboard">
-        <div class="grid">
-          <button class="tile" type="button"><span class="icon">📋</span><span class="label">Profile (IJP)</span></button>
-          <button class="tile" type="button"><span class="icon">🧭</span><span class="label">Jobs</span></button>
-          <button class="tile" type="button"><span class="icon">👤</span><span class="label">Candidate</span></button>
-          <button class="tile" type="button"><span class="icon">🔗</span><span class="label">Match</span></button>
-          <button class="tile" type="button"><span class="icon">📇</span><span class="label">Contacts</span></button>
-          <button class="tile" type="button"><span class="icon">✅</span><span class="label">Verify</span></button>
-          <button class="tile" type="button"><span class="icon">✉️</span><span class="label">Outreach</span></button>
-          <button class="tile" type="button"><span class="icon">📤</span><span class="label">Sequence</span></button>
-          <button class="tile" type="button"><span class="icon">📄</span><span class="label">Offers</span></button>
+      <!-- Jobs List View (Main Feature) -->
+      <section id="jobsView" class="view active">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Jobs</h1>
+            <p class="view-subtitle">Showing 20 jobs matched to your profile</p>
+          </div>
+          <button id="refineBtn" class="btn-secondary">Refine Preferences</button>
+        </div>
+
+        <div class="jobs-layout">
+          <!-- Filters Sidebar -->
+          <aside class="jobs-filters">
+            <div class="filter-section">
+              <div class="filter-header">Role</div>
+              <div class="filter-options">
+                <label class="filter-option">
+                  <input type="checkbox" checked />
+                  <span>Product Manager</span>
+                </label>
+                <label class="filter-option">
+                  <input type="checkbox" checked />
+                  <span>Senior PM</span>
+                </label>
+                <label class="filter-option">
+                  <input type="checkbox" />
+                  <span>Director of Product</span>
+                </label>
+              </div>
+            </div>
+            
+            <div class="filter-section">
+              <div class="filter-header">Location</div>
+              <div class="filter-options">
+                <label class="filter-option">
+                  <input type="checkbox" checked />
+                  <span>Remote</span>
+                </label>
+                <label class="filter-option">
+                  <input type="checkbox" />
+                  <span>San Francisco</span>
+                </label>
+                <label class="filter-option">
+                  <input type="checkbox" />
+                  <span>New York</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="filter-section">
+              <div class="filter-header">Salary Range</div>
+              <div class="filter-range">
+                <input type="range" min="80000" max="300000" step="10000" value="150000" class="range-slider" id="salarySlider" />
+                <div class="range-value">$<span id="salaryValue">150</span>K+</div>
+              </div>
+            </div>
+
+            <div class="filter-section">
+              <div class="filter-header">Company Size</div>
+              <div class="filter-options">
+                <label class="filter-option">
+                  <input type="checkbox" />
+                  <span>1-50</span>
+                </label>
+                <label class="filter-option">
+                  <input type="checkbox" checked />
+                  <span>51-200</span>
+                </label>
+                <label class="filter-option">
+                  <input type="checkbox" checked />
+                  <span>201-1000</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="filter-section">
+              <div class="filter-header">Industry</div>
+              <div class="filter-options">
+                <label class="filter-option">
+                  <input type="checkbox" checked />
+                  <span>SaaS</span>
+                </label>
+                <label class="filter-option">
+                  <input type="checkbox" checked />
+                  <span>Fintech</span>
+                </label>
+                <label class="filter-option">
+                  <input type="checkbox" />
+                  <span>HealthTech</span>
+                </label>
+              </div>
+            </div>
+
+            <button class="btn-secondary btn-full">Clear All Filters</button>
+          </aside>
+
+          <!-- Job Cards List -->
+          <div class="jobs-list" id="jobsList">
+            <!-- Job cards will be dynamically inserted here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Job Detail View -->
+      <section id="jobDetailView" class="view">
+        <div class="job-detail-header">
+          <button class="btn-back" id="backToJobs">← Back to Jobs</button>
+          <button class="btn-secondary" id="saveJobBtn">Save</button>
+        </div>
+        
+        <div class="job-detail-content" id="jobDetailContent">
+          <!-- Content will be dynamically inserted -->
+        </div>
+      </section>
+
+      <!-- Tracker View -->
+      <section id="trackerView" class="view">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Tracker</h1>
+            <p class="view-subtitle">Manage your applications</p>
+          </div>
+          <div class="tracker-controls">
+            <div class="view-toggle">
+              <button class="view-toggle-btn active" data-tracker-view="board">Board</button>
+              <button class="view-toggle-btn" data-tracker-view="table">Table</button>
+            </div>
+            <button class="btn-secondary" id="importCsvBtn">Import CSV</button>
+            <button class="btn-secondary" id="exportCsvBtn">Export CSV</button>
+            <button class="btn-primary" id="addApplicationBtn">Add Application</button>
+          </div>
+        </div>
+
+        <!-- Board View (Kanban) -->
+        <div class="tracker-board" id="trackerBoard">
+          <!-- Columns will be dynamically inserted -->
+        </div>
+
+        <!-- Table View -->
+        <div class="tracker-table hidden" id="trackerTable">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Applied</th>
+                <th>Last Contact</th>
+                <th>Reply</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="trackerTableBody">
+              <!-- Rows will be dynamically inserted -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Insights -->
+        <div class="tracker-insights">
+          <button class="btn-secondary" id="showInsightsBtn">Show Insights</button>
+        </div>
+      </section>
+
+      <!-- Sequences View -->
+      <section id="sequencesView" class="view">
+        <div class="view-header">
+          <h1 class="view-title">Sequences</h1>
+          <button class="btn-primary" id="createSequenceBtn">Create Sequence</button>
+        </div>
+
+        <div class="sequences-list" id="sequencesList">
+          <!-- Sequences will be dynamically inserted -->
+        </div>
+      </section>
+
+      <!-- Deliverability View -->
+      <section id="deliverabilityView" class="view">
+        <div class="view-header">
+          <h1 class="view-title">Deliverability</h1>
+          <p class="view-subtitle">Manage email accounts and domain health</p>
+        </div>
+
+        <div class="deliverability-stats">
+          <div class="delivery-stat-card">
+            <div class="stat-label">Average Health Score</div>
+            <div class="stat-value health-good">89.6</div>
+          </div>
+          <div class="delivery-stat-card">
+            <div class="stat-label">Active Domains</div>
+            <div class="stat-value">4</div>
+          </div>
+          <div class="delivery-stat-card">
+            <div class="stat-label">Emails Sent Today</div>
+            <div class="stat-value">78 / 180</div>
+          </div>
+          <div class="delivery-stat-card">
+            <div class="stat-label">Spam Rate</div>
+            <div class="stat-value health-good">0.02%</div>
+          </div>
+        </div>
+
+        <div class="deliverability-controls">
+          <div class="control-group">
+            <label class="control-label">
+              <input type="checkbox" checked />
+              <span>Enable domain rotation</span>
+            </label>
+            <label class="control-label">
+              <input type="checkbox" checked />
+              <span>Auto-warmup new domains</span>
+            </label>
+            <label class="control-label">
+              <input type="checkbox" checked />
+              <span>Disable open tracking (recommended)</span>
+            </label>
+          </div>
+          <button class="btn-secondary">Configure Custom Tracking Domain</button>
+        </div>
+
+        <div class="mailboxes-grid" id="mailboxesGrid">
+          <!-- Mailboxes will be dynamically inserted -->
+        </div>
+      </section>
+
+      <!-- LivePages View -->
+      <section id="livepagesView" class="view">
+        <div class="view-header">
+          <h1 class="view-title">LivePages</h1>
+          <p class="view-subtitle">Personalized landing pages for your outreach</p>
+          <button class="btn-primary" id="createLivePageBtn">Create LivePage</button>
+        </div>
+
+        <div class="livepages-grid" id="livepagesGrid">
+          <!-- LivePages will be dynamically inserted -->
+        </div>
+      </section>
+
+      <!-- Enrichment View -->
+      <section id="enrichmentView" class="view">
+        <div class="view-header">
+          <h1 class="view-title">Enrichment</h1>
+          <p class="view-subtitle">Contact discovery waterfall</p>
+        </div>
+
+        <div class="enrichment-pipeline">
+          <div class="pipeline-step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <div class="step-title">Find Company Domain</div>
+              <div class="step-provider">Clearbit + Google</div>
+            </div>
+          </div>
+          <div class="pipeline-arrow">→</div>
+          <div class="pipeline-step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <div class="step-title">Find People at Company</div>
+              <div class="step-provider">Apollo + Clay</div>
+            </div>
+          </div>
+          <div class="pipeline-arrow">→</div>
+          <div class="pipeline-step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <div class="step-title">Verify Work Email</div>
+              <div class="step-provider">NeverBounce + Findymail</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="enrichment-results" id="enrichmentResults">
+          <!-- Results will be dynamically inserted -->
+        </div>
+      </section>
+
+      <!-- Settings View -->
+      <section id="settingsView" class="view">
+        <div class="view-header">
+          <h1 class="view-title">Settings</h1>
+        </div>
+
+        <div class="settings-sections">
+          <div class="settings-section">
+            <h2 class="settings-section-title">Profile</h2>
+            <div class="form-group">
+              <label class="form-label">Name</label>
+              <input type="text" class="form-input" value="Alex Johnson" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-input" value="alex.johnson@gmail.com" />
+            </div>
+            <button class="btn-primary">Save Profile</button>
+          </div>
+
+          <div class="settings-section">
+            <h2 class="settings-section-title">Job Preferences</h2>
+            <button class="btn-secondary" id="editIjpBtn">Edit Preferences</button>
+          </div>
+
+          <div class="settings-section">
+            <h2 class="settings-section-title">Subscription</h2>
+            <div class="subscription-info">
+              <div class="subscription-tier">Pro Plan</div>
+              <div class="subscription-price">$49/month</div>
+              <div class="subscription-status">Active</div>
+            </div>
+            <button class="btn-secondary">Manage Subscription</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Right: Copilot Panel (Persistent) -->
+    <aside class="copilot-rail" id="copilotRail">
+      <div class="copilot-header">
+        <div class="copilot-title">
+          <span class="copilot-icon">🤖</span>
+          <span>Copilot</span>
+        </div>
+        <button class="copilot-minimize" id="copilotMinimize">−</button>
+      </div>
+      <div class="copilot-body">
+        <div class="copilot-messages" id="copilotMessages">
+          <div class="copilot-message assistant">
+            <div class="message-content">
+              Hi! I'm your RoleFerry Copilot. Ask me anything about jobs, applications, or your search strategy.
+            </div>
+          </div>
+        </div>
+        <div class="copilot-input-area">
+          <textarea class="copilot-textarea" id="copilotInput" placeholder="Ask anything..."></textarea>
+          <button class="copilot-send" id="copilotSend">Send</button>
+        </div>
+        <div class="copilot-suggestions">
+          <button class="copilot-suggestion" data-query="Tell me why this job is a good fit">Why is this a good fit?</button>
+          <button class="copilot-suggestion" data-query="Write an email to the hiring manager">Write an email</button>
+          <button class="copilot-suggestion" data-query="Show potential insider contacts">Show insiders</button>
         </div>
       </div>
-    </section>
+    </aside>
+  </div>
 
-    <section id="leadsView" class="view">
-      <h2 class="section-title">Leads</h2>
-      <div class="grid" style="gap:12px; grid-template-columns: 2fr 1fr;">
-        <div>
-          <label class="small">Domains CSV</label>
-          <textarea id="csvInput" class="textarea" placeholder="domain\nacme.com\nglobex.com"></textarea>
+  <!-- Modals -->
+  <div id="modalBackdrop" class="modal-backdrop hidden"></div>
+  
+  <!-- IJP Wizard Modal -->
+  <div id="ijpModal" class="modal hidden">
+    <div class="modal-panel modal-large">
+      <div class="modal-header">
+        <h2 class="modal-title">Job Preferences</h2>
+        <button class="modal-close" data-modal="ijpModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="wizard-progress">
+          <div class="wizard-step active">Values</div>
+          <div class="wizard-step">Role</div>
+          <div class="wizard-step">Location</div>
+          <div class="wizard-step">Salary</div>
         </div>
-        <div>
-          <label class="small">Role Query</label>
-          <input id="roleInput" class="input" value="CEO" />
-          <div class="small" style="margin-top:8px;">Qualifier temperature: <span id="tempVal">0.20</span></div>
-          <input id="tempSlider" type="range" min="0" max="1" step="0.05" value="0.2" />
-          <div style="margin-top:8px; display:flex; gap:8px;">
-            <button id="runBtn" class="cta">Run Lead-Qual Pipeline</button>
-            <button id="compareBtn" class="btn">Load Cost Compare</button>
-            <button id="sheetsBtn" class="btn">Pull from Google Sheets</button>
+        <div id="ijpWizardContent">
+          <!-- Content will be dynamically inserted -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="ijpPrevBtn">Previous</button>
+        <button class="btn-primary" id="ijpNextBtn">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Insider Connection Modal -->
+  <div id="insiderModal" class="modal hidden">
+    <div class="modal-panel modal-medium">
+      <div class="modal-header">
+        <h2 class="modal-title">Insider Connection</h2>
+        <button class="modal-close" data-modal="insiderModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="insiderContent">
+          <div class="insider-disclaimer">
+            ℹ️ Contacts obtained from publicly available sources. Accuracy not guaranteed.
+          </div>
+          <div class="insider-results" id="insiderResults">
+            <!-- Results will be dynamically inserted -->
           </div>
         </div>
       </div>
-      
-      <div id="avgCostCard" class="card small" style="margin-top:12px; display:none;"></div>
-      <div id="compareCard" class="card small" style="margin-top:12px; display:none;"></div>
-      <div id="leadsTableWrap" class="table-wrap fade-in" style="margin-top:12px;"></div>
-      <div style="margin-top:12px; display:flex; gap:8px;">
-        <button id="exportInstantly" class="btn">Export CSV (Instantly)</button>
-        <button id="exportFull" class="btn">Export CSV (Full Dump)</button>
-      </div>
-    </section>
-
-    <section id="offerView" class="view">
-      <h2 class="section-title">Offer Decks</h2>
-      <div class="grid" style="gap:12px; grid-template-columns: 2fr 1fr;">
-        <div>
-          <label class="small">Company</label>
-          <input id="offerCompany" class="input" placeholder="Acme" />
-        </div>
-        <div>
-          <label class="small">Role</label>
-          <input id="offerRole" class="input" placeholder="Head of Product" />
-        </div>
-      </div>
-      <div style="margin-top:8px;"><button id="offerGen" class="cta">Generate Deck</button></div>
-      <pre id="offerOut" class="card small" style="margin-top:12px; min-height: 80px;"></pre>
-    </section>
-
-    <section id="enrichmentView" class="view">
-      <h2 class="section-title">Enrichment</h2>
-      <div style="display:flex; gap:12px; align-items:center;">
-        <button id="enrichRun" class="cta">Run Enrichment</button>
-        <button id="enrichRecipes" class="btn">Select Recipes</button>
-        <span class="pill">Connected: Google Sheets</span>
-      </div>
-      <div id="enrichTableWrap" class="table-wrap" style="margin-top:12px;"></div>
-      <div id="enrichDrawer" class="modal hidden">
-        <div class="panel">
-          <div class="head"><div class="title">Company Profile</div><button class="icon-btn" id="enrichClose">✕</button></div>
-          <div class="body" style="padding:12px;">
-            <div id="enrichProfile"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="qualificationView" class="view">
-      <h2 class="section-title">Qualification</h2>
-      <div class="grid" style="gap:12px; grid-template-columns: 260px 1fr;">
-        <div class="card">
-          <div class="small">Ideal Customer Profile</div>
-          <div class="small">Industry: SaaS, Analytics, B2B</div>
-          <div class="small">Size: 10–500</div>
-          <div class="small">Tech: CRM + outbound</div>
-          <div class="small">DQ: B2C-only</div>
-          <div class="small" style="margin-top:8px;">Weights</div>
-          <div class="small">Industry (30)</div>
-          <div class="progress"><div style="width:30%"></div></div>
-          <div class="small">Size (20)</div>
-          <div class="progress"><div style="width:20%"></div></div>
-          <div class="small">Signals (30)</div>
-          <div class="progress"><div style="width:30%"></div></div>
-          <div class="small">Tech (20)</div>
-          <div class="progress"><div style="width:20%"></div></div>
-          <div style="margin-top:8px;"><button class="btn">Save as Default</button></div>
-        </div>
-        <div>
-          <div id="qualTableWrap" class="table-wrap"></div>
-        </div>
-      </div>
-    </section>
-
-    <section id="sequencesView" class="view">
-      <h2 class="section-title">Sequences</h2>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <button id="seqGen" class="cta">Generate for Selected (3)</button>
-        <select id="seqPersona" class="input" style="width:auto;">
-          <option>Founder-led outbound</option>
-          <option>AE</option>
-          <option>RevOps</option>
-        </select>
-        <select id="seqTone" class="input" style="width:auto;">
-          <option>Plain-spoken</option>
-          <option>Direct</option>
-          <option>Consultative</option>
-        </select>
-      </div>
-      <div id="seqCards" style="margin-top:12px; display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:10px;"></div>
-    </section>
-
-    <section id="runsView" class="view">
-      <h2 class="section-title">Runs</h2>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <button id="runNew" class="cta">New Run</button>
-        <select id="runFilter" class="input" style="width:auto;"><option>All</option><option>Succeeded</option><option>Warning</option><option>Failed</option></select>
-      </div>
-      <div id="runsTableWrap" class="table-wrap" style="margin-top:12px;"></div>
-      <div id="runDrawer" class="modal hidden">
-        <div class="panel">
-          <div class="head"><div class="title">Run Detail</div><button class="icon-btn" id="runClose">✕</button></div>
-          <div class="body" style="padding:12px;"><div id="runDetail"></div></div>
-        </div>
-      </div>
-    </section>
-
-    <section id="pricingView" class="view">
-      <h2 class="section-title">Pricing</h2>
-      <div class="card">
-        <div class="small">Leads</div>
-        <input id="priceLeads" class="input" style="width:140px;" value="10000" />
-        <div class="small" style="margin-top:6px;">Verify Emails <input id="priceVerify" type="checkbox" checked /></div>
-        <div id="priceOut" class="small" style="margin-top:8px;"></div>
-        <div id="priceSpark" style="margin-top:8px;"></div>
-      </div>
-      <div class="table-wrap" style="margin-top:12px;">
-        <table>
-          <thead><tr><th>Feature</th><th>RoleFerry</th><th>Benchmark</th></tr></thead>
-          <tbody>
-            <tr><td>Import/Enrich/Qualify</td><td>✅</td><td>✅</td></tr>
-            <tr><td>Per-lead cost (mock)</td><td>$0.08</td><td>$0.16–$0.35</td></tr>
-            <tr><td>Sheets workflow</td><td>✅</td><td>💸 credits</td></tr>
-            <tr><td>Fine-grained recipes</td><td>✅</td><td>Partial</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section id="integrationsView" class="view">
-      <h2 class="section-title">Integrations</h2>
-      <div class="grid" style="gap:10px; grid-template-columns: repeat(3, minmax(0,1fr));">
-        <div class="card"><div>Google Sheets</div><div class="pill" style="margin-top:6px;">Connected</div></div>
-        <div class="card"><div>n8n</div><div class="pill" style="margin-top:6px;">Configured</div></div>
-        <div class="card"><div>Serper</div><div class="pill" style="margin-top:6px;">API key set</div></div>
-        <div class="card"><div>HubSpot</div><div class="pill" style="margin-top:6px; background:rgba(255,255,255,0.08);">Coming soon</div></div>
-        <div class="card"><div>Close</div><div class="pill" style="margin-top:6px; background:rgba(255,255,255,0.08);">Coming soon</div></div>
-        <div class="card"><div>CSV Export</div><div class="pill" style="margin-top:6px;">Available</div></div>
-      </div>
-    </section>
-
-    <section id="settingsView" class="view">
-      <h2 class="section-title">Settings</h2>
-      <div class="grid" style="gap:10px; grid-template-columns: repeat(2, minmax(0,1fr));">
-        <div class="card"><div class="small">API Keys</div><input class="input" placeholder="Serper API Key" /><input class="input" placeholder="OpenAI API Key" style="margin-top:6px;" /></div>
-        <div class="card"><div class="small">ICP Presets</div><button class="btn" style="margin-top:6px;">Save current as Default</button></div>
-        <div class="card"><div class="small">Compliance</div><label class="small"><input type="checkbox" checked /> Never send to catch-all by default</label></div>
-      </div>
-    </section>
-
-    <section id="researchView" class="view">
-      <h2 class="section-title">Research</h2>
-      <div class="grid" style="gap:12px; grid-template-columns: 2fr 1fr;">
-        <div>
-          <label class="small">Company</label>
-          <input id="resCompany" class="input" placeholder="Globex" />
-        </div>
-        <div>
-          <label class="small">JD URL (optional)</label>
-          <input id="resJd" class="input" placeholder="https://..." />
-        </div>
-      </div>
-      <div style="margin-top:8px;"><button id="resProbe" class="cta">Probe Company</button></div>
-      <div id="resOut" class="card small" style="margin-top:12px;"></div>
-    </section>
-
-    <section id="analyticsView" class="view">
-      <h2 class="section-title">Analytics</h2>
-      <div id="analyticsChart" class="analytics"></div>
-      <div id="analyticsTableWrap" class="table-wrap" style="margin-top:10px;"></div>
-    </section>
-
-    <section id="crmView" class="view">
-      <h2 class="section-title">CRM</h2>
-      <div id="crmBoard" class="crm-board"></div>
-    </section>
-  </main>
-
-  <section id="dataPage" class="data-page hidden">
-    <div class="data-head">
-      <button id="dataBack" class="icon-btn">←</button>
-      <h2 id="dataTitle" class="data-title"></h2>
     </div>
-    <div id="dataTableWrap" class="table-wrap"></div>
-  </section>
+  </div>
 
-  <div id="modalBackdrop" class="backdrop hidden"></div>
-  <div id="toast" class="toast"></div>
-  <div id="dataModal" class="modal hidden"></div>
-  <div id="toolsModal" class="modal hidden"></div>
-  <div id="settingsModal" class="modal hidden"></div>
-  <div id="aboutModal" class="modal hidden"></div>
+  <!-- Toast Notifications -->
+  <div id="toast" class="toast hidden"></div>
 
-  <!-- Spinner disabled by request -->
-
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <button id="aboutFooterBtn" class="about-link" type="button">About</button>
-      <div class="copyright">© 2025 Reliable AI Network, Inc. All rights reserved.</div>
-    </div>
-  </footer>
-
+  <!-- Scripts -->
+  <script src="mockData.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
