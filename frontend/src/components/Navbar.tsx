@@ -22,10 +22,13 @@ export default function Navbar() {
       </div>
       {/* Center: navigation */}
       <nav className="hidden sm:flex flex-1 items-center justify-center gap-6 text-lg font-semibold">
-        <NavLink href="/foundry" pathname={pathname}>Dashboard</NavLink>
-        <NavLink href="/analytics" pathname={pathname}>Analytics</NavLink>
-        <NavLink href="/CRM" pathname={pathname}>CRM</NavLink>
-        <button onClick={() => setDataOpen(true)} className="hover:underline">Data</button>
+        <NavLink href="/dashboard" pathname={pathname}>Dashboard</NavLink>
+        <NavLink href="/jobs" pathname={pathname}>Jobs</NavLink>
+        <NavLink href="/tracker" pathname={pathname}>Tracker</NavLink>
+        <NavLink href="/sequence" pathname={pathname}>Sequences</NavLink>
+        <NavLink href="/enrichment" pathname={pathname}>Enrichment</NavLink>
+        <NavLink href="/deliverability" pathname={pathname}>Deliverability</NavLink>
+        <NavLink href="/livepages" pathname={pathname}>LivePages</NavLink>
       </nav>
       <div className="flex items-center gap-4">
         <HealthIndicator />
