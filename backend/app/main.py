@@ -13,6 +13,11 @@ from .routers import (
     outreach,
     sequence,
     analytics,
+    applications,
+    enrich,
+    tracker,
+    livepages,
+    personas,
 )
 
 
@@ -69,7 +74,14 @@ def create_app() -> FastAPI:
     app.include_router(verify.router, prefix="/contacts", tags=["verify"]) 
     app.include_router(outreach.router, prefix="/outreach", tags=["outreach"]) 
     app.include_router(sequence.router, prefix="/sequence", tags=["sequence"]) 
-    app.include_router(analytics.router, prefix="/analytics", tags=["analytics"]) 
+    app.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
+    
+    # New routers for enterprise features
+    app.include_router(applications.router, tags=["applications"])
+    app.include_router(enrich.router, tags=["enrichment"])
+    app.include_router(tracker.router, tags=["tracker"])
+    app.include_router(livepages.router, tags=["livepages"])
+    app.include_router(personas.router, tags=["personas"]) 
     from .routers import lead_qual as lead_qual_router, n8n_hooks as n8n_router, exports as exports_router, prospects as prospects_router, costs as costs_router, offer_decks as offer_router, research as research_router
     app.include_router(lead_qual_router.router)
     app.include_router(n8n_router.router)
