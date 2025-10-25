@@ -6,6 +6,10 @@
     <title>System Architecture - Conceptual - RoleFerry</title>
     <link rel="stylesheet" href="../../styles.css">
     <link rel="icon" href="../../assets/roleferry_trans.png">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true });
+    </script>
     <style>
         .document-container {
             max-width: 1200px;
@@ -157,6 +161,49 @@
                 <div class="layer">
                     <h4>External Integrations</h4>
                     <p>Third-party APIs for email verification, job boards, and CRM systems</p>
+                </div>
+            </div>
+            
+            <div class="mermaid-diagram">
+                <h3>🔄 Data Flow Architecture</h3>
+                <div class="mermaid">
+graph TB
+    subgraph "User Interface"
+        A[Job Seeker/Recruiter]
+        B[10-Tab Workflow]
+    end
+    
+    subgraph "AI Processing Engine"
+        C[Resume Analysis]
+        D[Job Description Parsing]
+        E[Pain Point Matching]
+        F[Email Generation]
+    end
+    
+    subgraph "Data Storage"
+        G[User Profiles]
+        H[Job Database]
+        I[Match Results]
+    end
+    
+    subgraph "External Services"
+        J[Email Verification]
+        K[Email Delivery]
+        L[CRM Integration]
+    end
+    
+    A --> B
+    B --> C
+    B --> D
+    C --> E
+    D --> E
+    E --> F
+    F --> J
+    F --> K
+    F --> L
+    C --> G
+    D --> H
+    E --> I
                 </div>
             </div>
         </div>
