@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Candidate Profile - RoleFerry</title>
+<link rel="stylesheet" href="../styles.css" />
+<link rel="stylesheet" href="responsive.css" />
+<link rel="icon" href="../assets/roleferry_trans.png" />
+<style>
+  .tab-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    padding: 2rem;
+  }
+
+  .tab-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .tab-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 1rem;
+  }
+
+  .tab-subtitle {
+    font-size: 1.1rem;
+    color: #9ca3af;
+    margin-bottom: 2rem;
+  }
+
+  .form-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: rgba(31, 41, 55, 0.8);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid #374151;
+  }
+
+  .upload-section {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .upload-area {
+    border: 3px dashed #374151;
+    border-radius: 12px;
+    padding: 3rem;
+    background: rgba(17, 24, 39, 0.5);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .upload-area:hover {
+    border-color: #2563eb;
+    background: rgba(37, 99, 235, 0.1);
+  }
+
+  .upload-area.dragover {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+  }
+
+  .upload-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  .upload-text {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+  }
+
+  .upload-hint {
+    color: #9ca3af;
+    font-size: 1rem;
+  }
+
+  .file-input {
+    display: none;
+  }
+
+  .btn-primary {
+    padding: 12px 32px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    margin-top: 1rem;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .results-section {
+    display: none;
+    margin-top: 2rem;
+  }
+
+  .results-section.show {
+    display: block;
+  }
+
+  .data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .data-card {
+    background: rgba(17, 24, 39, 0.8);
+    border: 1px solid #374151;
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .data-card h3 {
+    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #2563eb;
+    padding-bottom: 0.5rem;
+  }
+
+  .data-card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .data-card li {
+    color: #d1d5db;
+    margin-bottom: 0.5rem;
+    padding-left: 1rem;
+    position: relative;
+  }
+
+  .data-card li::before {
+    content: "•";
+    color: #2563eb;
+    position: absolute;
+    left: 0;
+  }
+
+  .data-card p {
+    color: #d1d5db;
+    line-height: 1.6;
+  }
+
+  .loading-spinner {
+    display: none;
+    text-align: center;
+    margin: 2rem 0;
+  }
+
+  .loading-spinner.show {
+    display: block;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #374151;
+    border-top: 4px solid #2563eb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .back-button {
+    position: fixed;
+    top: 2rem;
+    left: 2rem;
+    padding: 12px 24px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .back-button:hover {
+    background: rgba(0, 0, 0, 0.9);
+  }
+
+  .progress-indicator {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 1rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+  }
+
+  .progress-bar {
+    width: 200px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb, #10b981);
+    transition: width 0.3s ease;
+  }
+
+  .success-message {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid #10b981;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #10b981;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .success-message.show {
+    display: block;
+  }
+
+  .confidence-score {
+    display: inline-block;
+    background: rgba(37, 99, 235, 0.1);
+    border: 1px solid #2563eb;
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    color: #2563eb;
+    margin-left: 0.5rem;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .tab-container {
+      padding: 1rem;
+    }
+    
+    .tab-title {
+      font-size: 2rem;
+    }
+    
+    .form-container {
+      padding: 1.5rem;
+    }
+    
+    .data-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    
+    .back-button {
+      position: relative;
+      top: auto;
+      left: auto;
+      margin-bottom: 1rem;
+    }
+    
+    .progress-indicator {
+      position: relative;
+      top: auto;
+      right: auto;
+      margin-bottom: 1rem;
+    }
+    
+    .upload-area {
+      padding: 2rem;
+    }
+    
+    .upload-icon {
+      font-size: 3rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .tab-container {
+      padding: 0.5rem;
+    }
+    
+    .tab-title {
+      font-size: 1.5rem;
+    }
+    
+    .form-container {
+      padding: 1rem;
+    }
+    
+    .upload-area {
+      padding: 1.5rem;
+    }
+    
+    .upload-icon {
+      font-size: 2.5rem;
+    }
+    
+    .upload-text {
+      font-size: 1.2rem;
+    }
+    
+    .btn-primary {
+      width: 100%;
+      margin-top: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="tab-container">
+    <!-- Back Button -->
+    <button class="back-button" onclick="goBack()">← Back to Keypad</button>
+
+    <!-- Progress Indicator -->
+    <div class="progress-indicator">
+      <div>Step 2 of 10</div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 20%"></div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="tab-header">
+      <h1 class="tab-title">Candidate Profile</h1>
+      <p class="tab-subtitle">Upload and parse your resume with AI</p>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-message" id="successMessage">
+      ✅ Resume parsed successfully! AI has extracted key information from your profile.
+    </div>
+
+    <!-- Form Container -->
+    <div class="form-container">
+      <!-- Upload Section -->
+      <div class="upload-section">
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-icon">📄</div>
+          <div class="upload-text">Click to upload resume</div>
+          <div class="upload-hint">PDF, DOC, DOCX supported</div>
+        </div>
+        <input type="file" id="fileInput" class="file-input" accept=".pdf,.doc,.docx" onchange="handleFileSelect(event)">
+        <button class="btn-primary" id="parseBtn" onclick="parseResume()" disabled>Parse Resume with AI</button>
+      </div>
+
+      <!-- Loading Spinner -->
+      <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner"></div>
+        <p>AI is analyzing your resume...</p>
+      </div>
+
+      <!-- Results Section -->
+      <div class="results-section" id="resultsSection">
+        <h2 style="color: #ffffff; text-align: center; margin-bottom: 2rem;">AI Extracted Data</h2>
+        
+        <div class="data-grid">
+          <!-- Positions -->
+          <div class="data-card">
+            <h3>Positions Held</h3>
+            <ul id="positionsList">
+              <li>Senior Software Engineer at TechCorp (3 years)</li>
+              <li>Software Developer at InnovateX (2 years)</li>
+              <li>Junior Developer at StartupCo (1 year)</li>
+            </ul>
+          </div>
+
+          <!-- Key Metrics -->
+          <div class="data-card">
+            <h3>Key Metrics & Achievements</h3>
+            <ul id="metricsList">
+              <li>Increased system efficiency by 20%</li>
+              <li>Led team of 5 engineers</li>
+              <li>Reduced deployment time by 50%</li>
+              <li>Improved customer satisfaction by 30%</li>
+            </ul>
+          </div>
+
+          <!-- Skills -->
+          <div class="data-card">
+            <h3>Technical Skills</h3>
+            <p id="skillsText">Python, React, AWS, Machine Learning, Docker, Kubernetes, PostgreSQL, JavaScript, TypeScript, Node.js</p>
+          </div>
+
+          <!-- Business Problems Solved -->
+          <div class="data-card">
+            <h3>Business Problems Solved</h3>
+            <ul id="problemsList">
+              <li>Optimized database queries reducing response time by 40%</li>
+              <li>Reduced cloud infrastructure costs by 25%</li>
+              <li>Implemented CI/CD pipeline reducing deployment errors by 60%</li>
+              <li>Built scalable microservices architecture</li>
+            </ul>
+          </div>
+
+          <!-- Accomplishments -->
+          <div class="data-card">
+            <h3>Key Accomplishments</h3>
+            <ul id="accomplishmentsList">
+              <li>Developed new feature resulting in 15% revenue increase</li>
+              <li>Mentored 3 junior developers</li>
+              <li>Led migration to cloud infrastructure</li>
+              <li>Implemented automated testing reducing bugs by 70%</li>
+            </ul>
+          </div>
+
+          <!-- Confidence Scores -->
+          <div class="data-card">
+            <h3>AI Confidence Scores</h3>
+            <p>Position Extraction: <span class="confidence-score">95%</span></p>
+            <p>Skills Identification: <span class="confidence-score">88%</span></p>
+            <p>Metrics Extraction: <span class="confidence-score">92%</span></p>
+            <p>Overall Accuracy: <span class="confidence-score">91%</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let selectedFile = null;
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        selectedFile = file;
+        document.getElementById('parseBtn').disabled = false;
+        document.getElementById('uploadArea').style.borderColor = '#10b981';
+        document.getElementById('uploadArea').style.background = 'rgba(16, 185, 129, 0.1)';
+        document.querySelector('.upload-text').textContent = `Selected: ${file.name}`;
+        document.querySelector('.upload-hint').textContent = 'Click "Parse Resume with AI" to analyze';
+      }
+    }
+
+    function parseResume() {
+      if (!selectedFile) {
+        alert('Please select a file first');
+        return;
+      }
+
+      // Show loading spinner
+      document.getElementById('loadingSpinner').classList.add('show');
+      document.getElementById('parseBtn').disabled = true;
+
+      // Simulate AI parsing
+      setTimeout(() => {
+        // Hide loading spinner
+        document.getElementById('loadingSpinner').classList.remove('show');
+        
+        // Show results
+        document.getElementById('resultsSection').classList.add('show');
+        document.getElementById('successMessage').classList.add('show');
+        
+        // Save to localStorage
+        const resumeData = {
+          positions: [
+            { title: "Senior Software Engineer", company: "TechCorp", tenure: "3 years" },
+            { title: "Software Developer", company: "InnovateX", tenure: "2 years" },
+            { title: "Junior Developer", company: "StartupCo", tenure: "1 year" }
+          ],
+          metrics: [
+            "Increased system efficiency by 20%",
+            "Led team of 5 engineers",
+            "Reduced deployment time by 50%",
+            "Improved customer satisfaction by 30%"
+          ],
+          skills: ["Python", "React", "AWS", "Machine Learning", "Docker", "Kubernetes", "PostgreSQL", "JavaScript", "TypeScript", "Node.js"],
+          problemsSolved: [
+            "Optimized database queries reducing response time by 40%",
+            "Reduced cloud infrastructure costs by 25%",
+            "Implemented CI/CD pipeline reducing deployment errors by 60%",
+            "Built scalable microservices architecture"
+          ],
+          accomplishments: [
+            "Developed new feature resulting in 15% revenue increase",
+            "Mentored 3 junior developers",
+            "Led migration to cloud infrastructure",
+            "Implemented automated testing reducing bugs by 70%"
+          ],
+          confidenceScores: {
+            positions: 95,
+            skills: 88,
+            metrics: 92,
+            overall: 91
+          }
+        };
+        
+        localStorage.setItem('roleferry_resume_data', JSON.stringify(resumeData));
+        
+        // Show success animation
+        setTimeout(() => {
+          alert('Resume parsed successfully! AI has extracted key information from your profile.');
+        }, 500);
+      }, 3000);
+    }
+
+    function goBack() {
+      window.location.href = '../index.html';
+    }
+
+    // Drag and drop functionality
+    const uploadArea = document.getElementById('uploadArea');
+    
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        const file = files[0];
+        if (file.type === 'application/pdf' || 
+            file.type === 'application/msword' || 
+            file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+          selectedFile = file;
+          document.getElementById('parseBtn').disabled = false;
+          document.getElementById('uploadArea').style.borderColor = '#10b981';
+          document.getElementById('uploadArea').style.background = 'rgba(16, 185, 129, 0.1)';
+          document.querySelector('.upload-text').textContent = `Selected: ${file.name}`;
+          document.querySelector('.upload-hint').textContent = 'Click "Parse Resume with AI" to analyze';
+        } else {
+          alert('Please select a valid file (PDF, DOC, DOCX)');
+        }
+      }
+    });
+
+    // Load saved data if exists
+    const savedData = localStorage.getItem('roleferry_resume_data');
+    if (savedData) {
+      document.getElementById('resultsSection').classList.add('show');
+    }
+  </script>
+</body>
+</html>

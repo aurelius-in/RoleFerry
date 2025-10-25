@@ -15,6 +15,8 @@
 - **Stateless**: Each request contains all necessary context (JWT token)
 - **Paginated**: List endpoints return max 100 items; use `page` and `limit` params
 - **Rate Limited**: 60 requests/minute per user (429 if exceeded)
+- **10-Tab Workflow**: Complete API coverage for all workflow tabs
+- **Dual-Mode Support**: Job Seeker and Recruiter mode endpoints
 
 ### 1.2 Authentication
 All endpoints (except `/auth/*`) require JWT bearer token in header:
@@ -26,7 +28,274 @@ Tokens expire in 15 minutes; use `/auth/refresh` to obtain new token.
 
 ---
 
-## 2. Authentication Endpoints
+## 2. 10-Tab Workflow APIs
+
+### 2.1 Job Preferences/ICP APIs
+
+#### GET /job-preferences
+Retrieve user's job preferences or ICP.
+
+**Response**:
+```json
+{
+  "industries": ["Software", "AI & Machine Learning"],
+  "roles": ["Software Engineer", "ML Engineer"],
+  "salary_range": "$100,000 - $150,000",
+  "location": "Remote",
+  "work_type": ["Remote"],
+  "mode": "job-seeker"
+}
+```
+
+#### POST /job-preferences
+Create or update job preferences/ICP.
+
+**Request Body**:
+```json
+{
+  "industries": ["Software", "AI & Machine Learning"],
+  "roles": ["Software Engineer", "ML Engineer"],
+  "salary_range": "$100,000 - $150,000",
+  "location": "Remote",
+  "work_type": ["Remote"],
+  "mode": "job-seeker"
+}
+```
+
+### 2.2 Resume/Candidate Profile APIs
+
+#### POST /resume/upload-and-parse
+Upload and parse resume file.
+
+**Request**: Multipart form with file
+**Response**:
+```json
+{
+  "positions": [
+    {"title": "Senior Software Engineer", "company": "TechCorp", "tenure": "3 years"}
+  ],
+  "metrics": ["Increased system efficiency by 20%"],
+  "skills": ["Python", "React", "AWS", "Machine Learning"],
+  "accomplishments": ["Developed new feature X"],
+  "problems_solved": ["Optimized database queries"]
+}
+```
+
+### 2.3 Job Descriptions APIs
+
+#### POST /job-descriptions/parse
+Parse job description from URL or text.
+
+**Request Body**:
+```json
+{
+  "source_type": "url",
+  "content": "https://www.linkedin.com/jobs/view/..."
+}
+```
+
+**Response**:
+```json
+{
+  "pain_points": ["Scaling our backend infrastructure to handle 10x traffic"],
+  "required_skills": ["Python", "Distributed Systems", "Cloud Architecture"],
+  "success_metrics": ["Reduce latency by 30%"]
+}
+```
+
+### 2.4 Pinpoint Match APIs
+
+#### POST /pinpoint-match/calculate
+Calculate alignment score between resume and job description.
+
+**Response**:
+```json
+{
+  "alignment_score": 85,
+  "pinpoint_matches": [
+    {
+      "pinpoint": "Scaling our backend infrastructure to handle 10x traffic",
+      "solution": "My experience scaling microservices on AWS",
+      "metric": "Achieved 99.9% uptime and 20% cost reduction"
+    }
+  ]
+}
+```
+
+### 2.5 Find Contact APIs
+
+#### POST /find-contact
+Find contacts with email verification.
+
+**Request Body**:
+```json
+{
+  "query": "TechCorp hiring manager"
+}
+```
+
+**Response**:
+```json
+{
+  "contacts": [
+    {
+      "name": "Jane Doe",
+      "title": "Hiring Manager",
+      "email": "jane.doe@example.com",
+      "confidence": 0.95,
+      "verification_status": "valid",
+      "badge": {"label": "Valid", "color": "green", "icon": "✓"}
+    }
+  ]
+}
+```
+
+### 2.6 Context Research APIs
+
+#### GET /context-research
+Get company and contact summaries.
+
+**Response**:
+```json
+{
+  "company_summary": "ExampleCorp is a leading technology company...",
+  "recent_news": "ExampleCorp recently announced a strategic partnership...",
+  "contact_bio": "Jane Doe is the Hiring Manager for the AI Solutions division..."
+}
+```
+
+### 2.7 Offer Creation APIs
+
+#### POST /offer-creation/create
+Create personalized offer based on pinpoint matches.
+
+**Request Body**:
+```json
+{
+  "pinpoint_matches": [...],
+  "tone": "manager",
+  "format": "text",
+  "user_mode": "job-seeker"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "offer": {
+    "id": "offer_1",
+    "title": "How I Can Solve Your Engineering Challenges",
+    "content": "I understand you're facing...",
+    "tone": "manager",
+    "format": "text"
+  }
+}
+```
+
+### 2.8 Compose APIs
+
+#### POST /compose/generate
+Generate email with variable substitution and jargon detection.
+
+**Request Body**:
+```json
+{
+  "tone": "manager",
+  "user_mode": "job-seeker",
+  "variables": [...],
+  "pinpoint_matches": [...],
+  "context_data": {...}
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "email_template": {
+    "id": "email_1",
+    "subject": "Quick advice on Senior Software Engineer at TechCorp?",
+    "body": "Hi Jane,\n\nI spotted the Senior Software Engineer role...",
+    "tone": "manager",
+    "variables": [...],
+    "jargon_terms": [...],
+    "simplified_body": "..."
+  }
+}
+```
+
+### 2.9 Campaign APIs
+
+#### POST /campaign/create
+Create 3-email campaign sequence.
+
+**Request Body**:
+```json
+{
+  "campaign_name": "Job Application Campaign",
+  "emails": [
+    {
+      "step_number": 1,
+      "subject": "Quick advice on Senior Software Engineer at TechCorp?",
+      "body": "Hi Jane,\n\nI spotted the Senior Software Engineer role...",
+      "delay_days": 0,
+      "delay_hours": 0,
+      "stop_on_reply": true
+    }
+  ]
+}
+```
+
+### 2.10 Deliverability/Launch APIs
+
+#### POST /deliverability-launch/pre-flight-checks
+Run comprehensive pre-flight checks.
+
+**Request Body**:
+```json
+{
+  "campaign_id": "camp_12345",
+  "emails": [...],
+  "contacts": [...]
+}
+```
+
+**Response**:
+```json
+{
+  "checks": [
+    {
+      "name": "Email Verification",
+      "status": "pass",
+      "message": "All emails verified successfully"
+    },
+    {
+      "name": "Spam Score Check",
+      "status": "warning",
+      "message": "Spam score: 2.1 (acceptable)"
+    }
+  ]
+}
+```
+
+#### POST /deliverability-launch/launch
+Launch campaign after pre-flight checks pass.
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Campaign launched successfully!",
+  "campaign_id": "camp_12345",
+  "emails_sent": 1,
+  "scheduled_emails": 2
+}
+```
+
+---
+
+## 3. Authentication Endpoints
 
 ### POST /auth/signup
 Create new user account.

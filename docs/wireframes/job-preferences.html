@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Job Preferences - RoleFerry</title>
+<link rel="stylesheet" href="../styles.css" />
+<link rel="stylesheet" href="responsive.css" />
+<link rel="icon" href="../assets/roleferry_trans.png" />
+<style>
+  .tab-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    padding: 2rem;
+  }
+
+  .tab-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .tab-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 1rem;
+  }
+
+  .tab-subtitle {
+    font-size: 1.1rem;
+    color: #9ca3af;
+    margin-bottom: 2rem;
+  }
+
+  .mode-toggle {
+    display: flex;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 4px;
+    margin: 0 auto 2rem;
+    width: fit-content;
+  }
+
+  .mode-btn {
+    padding: 12px 24px;
+    border: none;
+    background: transparent;
+    color: #9ca3af;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+  }
+
+  .mode-btn.active {
+    background: #2563eb;
+    color: white;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  }
+
+  .form-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: rgba(31, 41, 55, 0.8);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid #374151;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-input, .form-select, .form-textarea {
+    padding: 12px 16px;
+    border: 2px solid #374151;
+    border-radius: 8px;
+    background: rgba(17, 24, 39, 0.8);
+    color: #ffffff;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  .form-select[multiple] {
+    min-height: 120px;
+  }
+
+  .form-textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+
+  .btn-primary {
+    padding: 12px 32px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+  }
+
+  .btn-secondary {
+    padding: 12px 32px;
+    background: transparent;
+    color: #9ca3af;
+    border: 2px solid #374151;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-secondary:hover {
+    border-color: #6b7280;
+    color: #ffffff;
+  }
+
+  .back-button {
+    position: fixed;
+    top: 2rem;
+    left: 2rem;
+    padding: 12px 24px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .back-button:hover {
+    background: rgba(0, 0, 0, 0.9);
+  }
+
+  .progress-indicator {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 1rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+  }
+
+  .progress-bar {
+    width: 200px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb, #10b981);
+    transition: width 0.3s ease;
+  }
+
+  .success-message {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid #10b981;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #10b981;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .success-message.show {
+    display: block;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .tab-container {
+      padding: 1rem;
+    }
+    
+    .tab-title {
+      font-size: 2rem;
+    }
+    
+    .form-container {
+      padding: 1.5rem;
+    }
+    
+    .form-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    
+    .back-button {
+      position: relative;
+      top: auto;
+      left: auto;
+      margin-bottom: 1rem;
+    }
+    
+    .progress-indicator {
+      position: relative;
+      top: auto;
+      right: auto;
+      margin-bottom: 1rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .tab-container {
+      padding: 0.5rem;
+    }
+    
+    .tab-title {
+      font-size: 1.5rem;
+    }
+    
+    .form-container {
+      padding: 1rem;
+    }
+    
+    .form-input, .form-select, .form-textarea {
+      font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    .btn-primary, .btn-secondary {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+    
+    .form-actions {
+      flex-direction: column;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="tab-container">
+    <!-- Back Button -->
+    <button class="back-button" onclick="goBack()">← Back to Keypad</button>
+
+    <!-- Progress Indicator -->
+    <div class="progress-indicator">
+      <div>Step 1 of 10</div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 10%"></div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="tab-header">
+      <h1 class="tab-title" id="tabTitle">Job Preferences</h1>
+      <p class="tab-subtitle">Tell us what you're looking for in your next role</p>
+      
+      <!-- Mode Toggle -->
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="jobSeekerMode">Job Seeker</button>
+        <button class="mode-btn" id="recruiterMode">Recruiter</button>
+      </div>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-message" id="successMessage">
+      ✅ Preferences saved successfully! You can now proceed to the next step.
+    </div>
+
+    <!-- Form Container -->
+    <div class="form-container">
+      <form id="preferencesForm">
+        <div class="form-grid">
+          <!-- Industries -->
+          <div class="form-group">
+            <label class="form-label" for="industries">Industries</label>
+            <select class="form-select" id="industries" multiple>
+              <option value="software">Software & Technology</option>
+              <option value="finance">Finance & Banking</option>
+              <option value="healthcare">Healthcare & Medical</option>
+              <option value="marketing">Marketing & Advertising</option>
+              <option value="consulting">Consulting</option>
+              <option value="education">Education</option>
+              <option value="retail">Retail & E-commerce</option>
+              <option value="manufacturing">Manufacturing</option>
+            </select>
+          </div>
+
+          <!-- Roles -->
+          <div class="form-group">
+            <label class="form-label" for="roles">Job Roles</label>
+            <select class="form-select" id="roles" multiple>
+              <option value="software-engineer">Software Engineer</option>
+              <option value="product-manager">Product Manager</option>
+              <option value="data-scientist">Data Scientist</option>
+              <option value="marketing-manager">Marketing Manager</option>
+              <option value="sales-manager">Sales Manager</option>
+              <option value="hr-manager">HR Manager</option>
+              <option value="operations-manager">Operations Manager</option>
+              <option value="designer">Designer</option>
+            </select>
+          </div>
+
+          <!-- Salary Range -->
+          <div class="form-group">
+            <label class="form-label" for="salaryRange">Salary Range</label>
+            <input type="text" class="form-input" id="salaryRange" placeholder="e.g., $80,000 - $120,000">
+          </div>
+
+          <!-- Location -->
+          <div class="form-group">
+            <label class="form-label" for="location">Location</label>
+            <input type="text" class="form-input" id="location" placeholder="e.g., Remote, New York, San Francisco">
+          </div>
+
+          <!-- Work Type -->
+          <div class="form-group">
+            <label class="form-label" for="workType">Work Type</label>
+            <select class="form-select" id="workType" multiple>
+              <option value="remote">Remote</option>
+              <option value="hybrid">Hybrid</option>
+              <option value="onsite">On-site</option>
+              <option value="contract">Contract</option>
+              <option value="part-time">Part-time</option>
+            </select>
+          </div>
+
+          <!-- Company Size -->
+          <div class="form-group">
+            <label class="form-label" for="companySize">Company Size</label>
+            <select class="form-select" id="companySize">
+              <option value="">Any Size</option>
+              <option value="startup">Startup (1-50 employees)</option>
+              <option value="small">Small (51-200 employees)</option>
+              <option value="medium">Medium (201-1000 employees)</option>
+              <option value="large">Large (1000+ employees)</option>
+            </select>
+          </div>
+
+          <!-- Experience Level -->
+          <div class="form-group">
+            <label class="form-label" for="experienceLevel">Experience Level</label>
+            <select class="form-select" id="experienceLevel">
+              <option value="entry">Entry Level (0-2 years)</option>
+              <option value="mid">Mid Level (3-5 years)</option>
+              <option value="senior">Senior Level (6-10 years)</option>
+              <option value="lead">Lead/Principal (10+ years)</option>
+            </select>
+          </div>
+
+          <!-- Skills -->
+          <div class="form-group">
+            <label class="form-label" for="skills">Key Skills</label>
+            <textarea class="form-textarea" id="skills" placeholder="List your key skills separated by commas"></textarea>
+          </div>
+
+          <!-- Additional Notes -->
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label" for="additionalNotes">Additional Notes</label>
+            <textarea class="form-textarea" id="additionalNotes" placeholder="Any other preferences or requirements..."></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="resetForm()">Reset</button>
+          <button type="submit" class="btn-primary">Save Preferences</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let currentMode = 'job-seeker';
+
+    // Mode Toggle Functionality
+    document.getElementById('jobSeekerMode').addEventListener('click', () => {
+      currentMode = 'job-seeker';
+      updateModeUI();
+    });
+
+    document.getElementById('recruiterMode').addEventListener('click', () => {
+      currentMode = 'recruiter';
+      updateModeUI();
+    });
+
+    function updateModeUI() {
+      const jobSeekerBtn = document.getElementById('jobSeekerMode');
+      const recruiterBtn = document.getElementById('recruiterMode');
+      const tabTitle = document.getElementById('tabTitle');
+      const tabSubtitle = document.querySelector('.tab-subtitle');
+      
+      if (currentMode === 'job-seeker') {
+        jobSeekerBtn.classList.add('active');
+        recruiterBtn.classList.remove('active');
+        tabTitle.textContent = 'Job Preferences';
+        tabSubtitle.textContent = 'Tell us what you\'re looking for in your next role';
+      } else {
+        recruiterBtn.classList.add('active');
+        jobSeekerBtn.classList.remove('active');
+        tabTitle.textContent = 'Ideal Client Profile (ICP)';
+        tabSubtitle.textContent = 'Define your target companies and ideal clients';
+      }
+    }
+
+    // Form Submission
+    document.getElementById('preferencesForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      // Collect form data
+      const formData = {
+        industries: Array.from(document.getElementById('industries').selectedOptions).map(option => option.value),
+        roles: Array.from(document.getElementById('roles').selectedOptions).map(option => option.value),
+        salaryRange: document.getElementById('salaryRange').value,
+        location: document.getElementById('location').value,
+        workType: Array.from(document.getElementById('workType').selectedOptions).map(option => option.value),
+        companySize: document.getElementById('companySize').value,
+        experienceLevel: document.getElementById('experienceLevel').value,
+        skills: document.getElementById('skills').value,
+        additionalNotes: document.getElementById('additionalNotes').value,
+        mode: currentMode
+      };
+
+      // Save to localStorage
+      localStorage.setItem('roleferry_preferences', JSON.stringify(formData));
+      
+      // Show success message
+      document.getElementById('successMessage').classList.add('show');
+      
+      // Update progress
+      setTimeout(() => {
+        alert('Preferences saved! You can now proceed to the next step.');
+      }, 1000);
+    });
+
+    function resetForm() {
+      document.getElementById('preferencesForm').reset();
+      document.getElementById('successMessage').classList.remove('show');
+    }
+
+    function goBack() {
+      window.location.href = '../index.html';
+    }
+
+    // Load saved data if exists
+    const savedData = localStorage.getItem('roleferry_preferences');
+    if (savedData) {
+      const data = JSON.parse(savedData);
+      // Populate form with saved data
+      Object.keys(data).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'select-multiple') {
+            Array.from(element.options).forEach(option => {
+              option.selected = data[key].includes(option.value);
+            });
+          } else {
+            element.value = data[key];
+          }
+        }
+      });
+    }
+
+    // Initialize
+    updateModeUI();
+  </script>
+</body>
+</html>

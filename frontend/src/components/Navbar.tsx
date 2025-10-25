@@ -22,15 +22,28 @@ export default function Navbar() {
       </div>
       {/* Center: navigation */}
       <nav className="hidden sm:flex flex-1 items-center justify-center gap-6 text-lg font-semibold">
-        <NavLink href="/dashboard" pathname={pathname}>Dashboard</NavLink>
-        <NavLink href="/jobs" pathname={pathname}>Jobs</NavLink>
-        <NavLink href="/tracker" pathname={pathname}>Tracker</NavLink>
-        <NavLink href="/sequence" pathname={pathname}>Sequences</NavLink>
-        <NavLink href="/enrichment" pathname={pathname}>Enrichment</NavLink>
-        <NavLink href="/deliverability" pathname={pathname}>Deliverability</NavLink>
-        <NavLink href="/livepages" pathname={pathname}>LivePages</NavLink>
+        {/* Primary Workflow Tabs */}
+        <NavLink href="/job-preferences" pathname={pathname}>Job Preferences</NavLink>
+        <NavLink href="/resume" pathname={pathname}>Resume</NavLink>
+        <NavLink href="/job-descriptions" pathname={pathname}>Jobs</NavLink>
+        <NavLink href="/pinpoint-match" pathname={pathname}>Match</NavLink>
+        <NavLink href="/find-contact" pathname={pathname}>Contact</NavLink>
+        <NavLink href="/context-research" pathname={pathname}>Research</NavLink>
+        <NavLink href="/offer-creation" pathname={pathname}>Offer</NavLink>
+        <NavLink href="/compose" pathname={pathname}>Compose</NavLink>
+        <NavLink href="/campaign" pathname={pathname}>Campaign</NavLink>
+        <NavLink href="/deliverability-launch" pathname={pathname}>Launch</NavLink>
+        
+        {/* Utility Tabs */}
+        <div className="ml-4 pl-4 border-l border-gray-300">
+          <NavLink href="/dashboard" pathname={pathname}>Dashboard</NavLink>
+          <NavLink href="/analytics" pathname={pathname}>Analytics</NavLink>
+          <NavLink href="/settings" pathname={pathname}>Settings</NavLink>
+          <NavLink href="/help" pathname={pathname}>Help</NavLink>
+        </div>
       </nav>
       <div className="flex items-center gap-4">
+        <ModeToggle />
         <HealthIndicator />
         <ThemeToggle />
         <button aria-label="Tools" className="w-9 h-9 rounded-md flex items-center justify-center border bg-black text-white border-white/20" onClick={() => setToolsOpen(true)}>
@@ -54,6 +67,50 @@ function NavLink({ href, pathname, children }: { href: string; pathname: string 
     <Link href={href} className={`hover:underline ${active ? "text-orange-400" : "opacity-90"}`}>
       {children}
     </Link>
+  );
+}
+
+function ModeToggle() {
+  const [mode, setMode] = useState<'job-seeker' | 'recruiter'>('job-seeker');
+  
+  useEffect(() => {
+    const stored = localStorage.getItem("rf_mode");
+    if (stored === 'recruiter') {
+      setMode('recruiter');
+    }
+  }, []);
+
+  const toggle = () => {
+    const newMode = mode === 'job-seeker' ? 'recruiter' : 'job-seeker';
+    setMode(newMode);
+    localStorage.setItem("rf_mode", newMode);
+    // Trigger re-render of components that depend on mode
+    window.dispatchEvent(new CustomEvent('modeChanged', { detail: newMode }));
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={toggle}
+        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+          mode === 'job-seeker' 
+            ? 'bg-blue-600 text-white' 
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+        }`}
+      >
+        Job Seeker
+      </button>
+      <button
+        onClick={toggle}
+        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+          mode === 'recruiter' 
+            ? 'bg-blue-600 text-white' 
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+        }`}
+      >
+        Recruiter
+      </button>
+    </div>
   );
 }
 

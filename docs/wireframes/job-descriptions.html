@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Job Descriptions - RoleFerry</title>
+<link rel="stylesheet" href="../styles.css" />
+<link rel="stylesheet" href="responsive.css" />
+<link rel="icon" href="../assets/roleferry_trans.png" />
+<style>
+  .tab-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    padding: 2rem;
+  }
+
+  .tab-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .tab-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 1rem;
+  }
+
+  .tab-subtitle {
+    font-size: 1.1rem;
+    color: #9ca3af;
+    margin-bottom: 2rem;
+  }
+
+  .form-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: rgba(31, 41, 55, 0.8);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid #374151;
+  }
+
+  .import-section {
+    margin-bottom: 3rem;
+  }
+
+  .tab-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    justify-content: center;
+  }
+
+  .tab-btn {
+    padding: 12px 24px;
+    background: rgba(55, 65, 81, 0.8);
+    color: #9ca3af;
+    border: 2px solid #374151;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+  }
+
+  .tab-btn.active {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+  }
+
+  .tab-content {
+    margin-bottom: 2rem;
+  }
+
+  .tab-pane {
+    display: none;
+  }
+
+  .tab-pane.active {
+    display: block;
+  }
+
+  .form-input, .form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #374151;
+    border-radius: 8px;
+    background: rgba(17, 24, 39, 0.8);
+    color: #ffffff;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .form-input:focus, .form-textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  .form-textarea {
+    min-height: 200px;
+    resize: vertical;
+  }
+
+  .btn-primary {
+    padding: 12px 32px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .results-section {
+    display: none;
+    margin-top: 2rem;
+  }
+
+  .results-section.show {
+    display: block;
+  }
+
+  .data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .data-card {
+    background: rgba(17, 24, 39, 0.8);
+    border: 1px solid #374151;
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .data-card h3 {
+    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #2563eb;
+    padding-bottom: 0.5rem;
+  }
+
+  .data-card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .data-card li {
+    color: #d1d5db;
+    margin-bottom: 0.5rem;
+    padding-left: 1rem;
+    position: relative;
+  }
+
+  .data-card li::before {
+    content: "•";
+    color: #2563eb;
+    position: absolute;
+    left: 0;
+  }
+
+  .data-card p {
+    color: #d1d5db;
+    line-height: 1.6;
+  }
+
+  .loading-spinner {
+    display: none;
+    text-align: center;
+    margin: 2rem 0;
+  }
+
+  .loading-spinner.show {
+    display: block;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #374151;
+    border-top: 4px solid #2563eb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .back-button {
+    position: fixed;
+    top: 2rem;
+    left: 2rem;
+    padding: 12px 24px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .back-button:hover {
+    background: rgba(0, 0, 0, 0.9);
+  }
+
+  .progress-indicator {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 1rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+  }
+
+  .progress-bar {
+    width: 200px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb, #10b981);
+    transition: width 0.3s ease;
+  }
+
+  .success-message {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid #10b981;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #10b981;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .success-message.show {
+    display: block;
+  }
+
+  .pain-point {
+    background: rgba(239, 68, 68, 0.1);
+    border-left: 4px solid #ef4444;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0 8px 8px 0;
+  }
+
+  .pain-point h4 {
+    color: #ef4444;
+    margin-bottom: 0.5rem;
+  }
+
+  .pain-point p {
+    color: #d1d5db;
+    margin: 0;
+  }
+</style>
+</head>
+<body>
+  <div class="tab-container">
+    <!-- Back Button -->
+    <button class="back-button" onclick="goBack()">← Back to Keypad</button>
+
+    <!-- Progress Indicator -->
+    <div class="progress-indicator">
+      <div>Step 3 of 10</div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 30%"></div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="tab-header">
+      <h1 class="tab-title">Job Descriptions</h1>
+      <p class="tab-subtitle">Import and analyze job postings to identify pain points</p>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-message" id="successMessage">
+      ✅ Job description analyzed successfully! AI has identified key pain points and requirements.
+    </div>
+
+    <!-- Form Container -->
+    <div class="form-container">
+      <!-- Import Section -->
+      <div class="import-section">
+        <div class="tab-buttons">
+          <button class="tab-btn active" onclick="switchTab('url')">From URL</button>
+          <button class="tab-btn" onclick="switchTab('text')">Paste Text</button>
+        </div>
+
+        <div class="tab-content">
+          <div id="urlTab" class="tab-pane active">
+            <input type="url" class="form-input" id="jobUrl" placeholder="https://www.linkedin.com/jobs/view/..." />
+          </div>
+          <div id="textTab" class="tab-pane">
+            <textarea class="form-textarea" id="jobText" placeholder="Paste the complete job description text here..."></textarea>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="parseBtn" onclick="parseJobDescription()">Analyze Job Description</button>
+      </div>
+
+      <!-- Loading Spinner -->
+      <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner"></div>
+        <p>AI is analyzing the job description...</p>
+      </div>
+
+      <!-- Results Section -->
+      <div class="results-section" id="resultsSection">
+        <h2 style="color: #ffffff; text-align: center; margin-bottom: 2rem;">AI Analysis Results</h2>
+        
+        <div class="data-grid">
+          <!-- Pain Points -->
+          <div class="data-card">
+            <h3>Business Pain Points</h3>
+            <div class="pain-point">
+              <h4>Scaling Infrastructure</h4>
+              <p>Need to scale backend infrastructure to handle 10x traffic growth</p>
+            </div>
+            <div class="pain-point">
+              <h4>Data Processing</h4>
+              <p>Improving data processing efficiency for real-time analytics</p>
+            </div>
+            <div class="pain-point">
+              <h4>API Development</h4>
+              <p>Building robust and secure APIs for external partners</p>
+            </div>
+          </div>
+
+          <!-- Required Skills -->
+          <div class="data-card">
+            <h3>Required Skills</h3>
+            <p>Python, Distributed Systems, Cloud Architecture (AWS), SQL/NoSQL, API Design, Microservices, Docker, Kubernetes, CI/CD</p>
+          </div>
+
+          <!-- Success Metrics -->
+          <div class="data-card">
+            <h3>Success Metrics</h3>
+            <ul>
+              <li>Reduce system latency by 30%</li>
+              <li>Increase system uptime to 99.99%</li>
+              <li>Deliver 3 new API endpoints per quarter</li>
+              <li>Improve data processing speed by 50%</li>
+            </ul>
+          </div>
+
+          <!-- Company Context -->
+          <div class="data-card">
+            <h3>Company Context</h3>
+            <p><strong>Size:</strong> Mid-market (500-1000 employees)</p>
+            <p><strong>Industry:</strong> Technology/SaaS</p>
+            <p><strong>Stage:</strong> Series B</p>
+            <p><strong>Tech Stack:</strong> Python, AWS, PostgreSQL, React</p>
+          </div>
+
+          <!-- Reporting Structure -->
+          <div class="data-card">
+            <h3>Reporting Structure</h3>
+            <p><strong>Reports to:</strong> VP of Engineering</p>
+            <p><strong>Team Size:</strong> 5-8 engineers</p>
+            <p><strong>Collaboration:</strong> Product, Design, DevOps</p>
+          </div>
+
+          <!-- AI Confidence -->
+          <div class="data-card">
+            <h3>AI Confidence Scores</h3>
+            <p>Pain Point Extraction: <span style="color: #10b981;">94%</span></p>
+            <p>Skills Identification: <span style="color: #10b981;">89%</span></p>
+            <p>Company Context: <span style="color: #10b981;">87%</span></p>
+            <p>Overall Accuracy: <span style="color: #10b981;">90%</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentTab = 'url';
+
+    function switchTab(tab) {
+      currentTab = tab;
+      
+      // Update tab buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      // Update tab content
+      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+      document.getElementById(tab + 'Tab').classList.add('active');
+    }
+
+    function parseJobDescription() {
+      const urlInput = document.getElementById('jobUrl');
+      const textInput = document.getElementById('jobText');
+      
+      if (currentTab === 'url' && !urlInput.value.trim()) {
+        alert('Please enter a job URL');
+        return;
+      }
+      
+      if (currentTab === 'text' && !textInput.value.trim()) {
+        alert('Please paste job description text');
+        return;
+      }
+
+      // Show loading spinner
+      document.getElementById('loadingSpinner').classList.add('show');
+      document.getElementById('parseBtn').disabled = true;
+
+      // Simulate AI parsing
+      setTimeout(() => {
+        // Hide loading spinner
+        document.getElementById('loadingSpinner').classList.remove('show');
+        
+        // Show results
+        document.getElementById('resultsSection').classList.add('show');
+        document.getElementById('successMessage').classList.add('show');
+        
+        // Save to localStorage
+        const jobData = {
+          source: currentTab,
+          content: currentTab === 'url' ? urlInput.value : textInput.value,
+          painPoints: [
+            "Scaling backend infrastructure to handle 10x traffic growth",
+            "Improving data processing efficiency for real-time analytics",
+            "Building robust and secure APIs for external partners"
+          ],
+          requiredSkills: ["Python", "Distributed Systems", "Cloud Architecture (AWS)", "SQL/NoSQL", "API Design", "Microservices", "Docker", "Kubernetes", "CI/CD"],
+          successMetrics: [
+            "Reduce system latency by 30%",
+            "Increase system uptime to 99.99%",
+            "Deliver 3 new API endpoints per quarter",
+            "Improve data processing speed by 50%"
+          ],
+          companyContext: {
+            size: "Mid-market (500-1000 employees)",
+            industry: "Technology/SaaS",
+            stage: "Series B",
+            techStack: "Python, AWS, PostgreSQL, React"
+          },
+          reportingStructure: {
+            reportsTo: "VP of Engineering",
+            teamSize: "5-8 engineers",
+            collaboration: "Product, Design, DevOps"
+          },
+          confidenceScores: {
+            painPoints: 94,
+            skills: 89,
+            companyContext: 87,
+            overall: 90
+          }
+        };
+        
+        localStorage.setItem('roleferry_job_data', JSON.stringify(jobData));
+        
+        // Show success animation
+        setTimeout(() => {
+          alert('Job description analyzed successfully! AI has identified key pain points and requirements.');
+        }, 500);
+      }, 3000);
+    }
+
+    function goBack() {
+      window.location.href = '../index.html';
+    }
+
+    // Load saved data if exists
+    const savedData = localStorage.getItem('roleferry_job_data');
+    if (savedData) {
+      document.getElementById('resultsSection').classList.add('show');
+    }
+  </script>
+</body>
+</html>

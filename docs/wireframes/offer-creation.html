@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Offer Creation - RoleFerry</title>
+<link rel="stylesheet" href="../styles.css" />
+<link rel="stylesheet" href="responsive.css" />
+<link rel="icon" href="../assets/roleferry_trans.png" />
+<style>
+  .tab-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    padding: 2rem;
+  }
+
+  .tab-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .tab-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 1rem;
+  }
+
+  .tab-subtitle {
+    font-size: 1.1rem;
+    color: #9ca3af;
+    margin-bottom: 2rem;
+  }
+
+  .form-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: rgba(31, 41, 55, 0.8);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid #374151;
+  }
+
+  .offer-section {
+    margin-bottom: 3rem;
+  }
+
+  .tone-selector {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    justify-content: center;
+  }
+
+  .tone-btn {
+    padding: 12px 24px;
+    background: rgba(55, 65, 81, 0.8);
+    color: #9ca3af;
+    border: 2px solid #374151;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+  }
+
+  .tone-btn.active {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+  }
+
+  .tone-btn:hover {
+    border-color: #6b7280;
+    color: #ffffff;
+  }
+
+  .offer-preview {
+    background: rgba(17, 24, 39, 0.8);
+    border: 1px solid #374151;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .offer-preview h3 {
+    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #2563eb;
+    padding-bottom: 0.5rem;
+  }
+
+  .offer-preview textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 12px 16px;
+    border: 2px solid #374151;
+    border-radius: 8px;
+    background: rgba(17, 24, 39, 0.8);
+    color: #ffffff;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    resize: vertical;
+  }
+
+  .offer-preview textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  .format-selector {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    justify-content: center;
+  }
+
+  .format-btn {
+    padding: 12px 24px;
+    background: rgba(55, 65, 81, 0.8);
+    color: #9ca3af;
+    border: 2px solid #374151;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+  }
+
+  .format-btn.active {
+    background: #10b981;
+    color: white;
+    border-color: #10b981;
+  }
+
+  .format-btn:hover {
+    border-color: #6b7280;
+    color: #ffffff;
+  }
+
+  .offer-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+
+  .btn-primary {
+    padding: 12px 32px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+  }
+
+  .btn-secondary {
+    padding: 12px 32px;
+    background: transparent;
+    color: #9ca3af;
+    border: 2px solid #374151;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-secondary:hover {
+    border-color: #6b7280;
+    color: #ffffff;
+  }
+
+  .loading-spinner {
+    display: none;
+    text-align: center;
+    margin: 2rem 0;
+  }
+
+  .loading-spinner.show {
+    display: block;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #374151;
+    border-top: 4px solid #2563eb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .back-button {
+    position: fixed;
+    top: 2rem;
+    left: 2rem;
+    padding: 12px 24px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .back-button:hover {
+    background: rgba(0, 0, 0, 0.9);
+  }
+
+  .progress-indicator {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 1rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+  }
+
+  .progress-bar {
+    width: 200px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb, #10b981);
+    transition: width 0.3s ease;
+  }
+
+  .success-message {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid #10b981;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #10b981;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .success-message.show {
+    display: block;
+  }
+
+  .tone-explanation {
+    background: rgba(37, 99, 235, 0.1);
+    border: 1px solid #2563eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .tone-explanation h3 {
+    color: #2563eb;
+    margin-bottom: 1rem;
+  }
+
+  .tone-explanation p {
+    color: #d1d5db;
+    line-height: 1.6;
+  }
+
+  .offer-examples {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .example-card {
+    background: rgba(17, 24, 39, 0.8);
+    border: 1px solid #374151;
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .example-card h4 {
+    color: #ffffff;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+
+  .example-card p {
+    color: #d1d5db;
+    line-height: 1.6;
+    font-size: 0.9rem;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .tab-container {
+      padding: 1rem;
+    }
+    .tab-title {
+      font-size: 2rem;
+    }
+    .form-container {
+      padding: 1.5rem;
+    }
+    .tone-selector {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .format-selector {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .back-button {
+      position: relative;
+      top: auto;
+      left: auto;
+      margin-bottom: 1rem;
+    }
+    .progress-indicator {
+      position: relative;
+      top: auto;
+      right: auto;
+      margin-bottom: 1rem;
+    }
+    .offer-examples {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .tab-container {
+      padding: 0.5rem;
+    }
+    .tab-title {
+      font-size: 1.5rem;
+    }
+    .form-container {
+      padding: 1rem;
+    }
+    .tone-btn, .format-btn {
+      padding: 1rem;
+      font-size: 1rem;
+    }
+    .btn-primary, .btn-secondary {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+    .offer-actions {
+      flex-direction: column;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="tab-container">
+    <!-- Back Button -->
+    <button class="back-button" onclick="goBack()">← Back to Keypad</button>
+
+    <!-- Progress Indicator -->
+    <div class="progress-indicator">
+      <div>Step 7 of 10</div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 70%"></div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="tab-header">
+      <h1 class="tab-title">Offer Creation</h1>
+      <p class="tab-subtitle">Create personalized offers that provide value before asking</p>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-message" id="successMessage">
+      ✅ Offer created successfully! Your personalized offer is ready for outreach.
+    </div>
+
+    <!-- Form Container -->
+    <div class="form-container">
+      <!-- Tone Explanation -->
+      <div class="tone-explanation">
+        <h3>Audience-Adaptive Tone</h3>
+        <p>Choose the tone that best matches your target audience. Each tone is designed to appeal to different decision-makers and their priorities.</p>
+      </div>
+
+      <!-- Offer Section -->
+      <div class="offer-section">
+        <!-- Tone Selector -->
+        <div class="tone-selector">
+          <button class="tone-btn active" onclick="selectTone('recruiter')">Recruiter (Efficiency)</button>
+          <button class="tone-btn" onclick="selectTone('manager')">Manager (Competence)</button>
+          <button class="tone-btn" onclick="selectTone('exec')">Executive (ROI/Strategy)</button>
+        </div>
+
+        <!-- Format Selector -->
+        <div class="format-selector">
+          <button class="format-btn active" onclick="selectFormat('text')">Text</button>
+          <button class="format-btn" onclick="selectFormat('link')">Link</button>
+          <button class="format-btn" onclick="selectFormat('video')">Video</button>
+        </div>
+
+        <!-- Offer Preview -->
+        <div class="offer-preview">
+          <h3>Your Personalized Offer</h3>
+          <textarea id="offerContent" placeholder="AI is generating your personalized offer...">I understand you're facing the challenge of scaling your backend infrastructure to handle 10x traffic growth. Based on my experience with similar scaling challenges at TechCorp, I can offer you a comprehensive analysis of your current architecture and a detailed roadmap for optimization.
+
+Here's what I can provide:
+• Infrastructure audit and bottleneck identification
+• Scalability recommendations with cost projections
+• Implementation timeline and resource requirements
+• Performance monitoring and optimization strategies
+
+I've successfully helped companies reduce infrastructure costs by 25% while improving performance by 40%. Would you be interested in a brief 15-minute call to discuss how these strategies could apply to your specific situation?</textarea>
+        </div>
+
+        <!-- Offer Examples -->
+        <div class="offer-examples">
+          <div class="example-card">
+            <h4>Recruiter Tone</h4>
+            <p>Focuses on efficiency and quick results. Emphasizes speed of implementation and immediate value.</p>
+          </div>
+          <div class="example-card">
+            <h4>Manager Tone</h4>
+            <p>Emphasizes competence and proven track record. Shows deep understanding of technical challenges.</p>
+          </div>
+          <div class="example-card">
+            <h4>Executive Tone</h4>
+            <p>Focuses on ROI, strategic impact, and business outcomes. Emphasizes long-term value and competitive advantage.</p>
+          </div>
+        </div>
+
+        <div class="offer-actions">
+          <button class="btn-secondary" onclick="regenerateOffer()">Regenerate Offer</button>
+          <button class="btn-primary" onclick="saveOffer()">Save Offer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentTone = 'recruiter';
+    let currentFormat = 'text';
+
+    function selectTone(tone) {
+      currentTone = tone;
+      
+      // Update button states
+      document.querySelectorAll('.tone-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      // Regenerate offer based on tone
+      generateOffer();
+    }
+
+    function selectFormat(format) {
+      currentFormat = format;
+      
+      // Update button states
+      document.querySelectorAll('.format-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      // Update offer format
+      updateOfferFormat();
+    }
+
+    function generateOffer() {
+      const offerContent = document.getElementById('offerContent');
+      
+      let offer = '';
+      
+      if (currentTone === 'recruiter') {
+        offer = `I understand you're facing the challenge of scaling your backend infrastructure to handle 10x traffic growth. Based on my experience with similar scaling challenges, I can offer you a quick analysis and actionable recommendations.
+
+Here's what I can provide:
+• Infrastructure audit and bottleneck identification
+• Scalability recommendations with cost projections
+• Implementation timeline and resource requirements
+• Performance monitoring and optimization strategies
+
+I've successfully helped companies reduce infrastructure costs by 25% while improving performance by 40%. Would you be interested in a brief 15-minute call to discuss how these strategies could apply to your specific situation?`;
+      } else if (currentTone === 'manager') {
+        offer = `I understand you're facing the challenge of scaling your backend infrastructure to handle 10x traffic growth. Based on my deep experience with microservices architecture and cloud scaling, I can offer you a comprehensive technical analysis and implementation strategy.
+
+Here's what I can provide:
+• Detailed infrastructure audit and bottleneck identification
+• Scalability recommendations with technical specifications
+• Implementation timeline with risk assessment
+• Performance monitoring and optimization strategies
+• Team training and knowledge transfer
+
+I've successfully led similar scaling projects that resulted in 25% cost reduction and 40% performance improvement. Would you be interested in a technical discussion about how these strategies could address your specific challenges?`;
+      } else { // exec tone
+        offer = `I understand you're facing the challenge of scaling your backend infrastructure to handle 10x traffic growth. Based on my experience leading similar transformations, I can offer you a strategic analysis and ROI-focused implementation plan.
+
+Here's what I can provide:
+• Strategic infrastructure audit with business impact analysis
+• Scalability recommendations with ROI projections
+• Implementation timeline with risk mitigation strategies
+• Performance monitoring and optimization strategies
+• Competitive advantage analysis and market positioning
+
+I've successfully led similar transformations that resulted in 25% cost reduction, 40% performance improvement, and 15% revenue increase. Would you be interested in a strategic discussion about how these initiatives could drive your business growth?`;
+      }
+      
+      offerContent.value = offer;
+    }
+
+    function updateOfferFormat() {
+      const offerContent = document.getElementById('offerContent');
+      let currentContent = offerContent.value;
+      
+      if (currentFormat === 'link') {
+        currentContent += '\n\n[View detailed analysis: https://roleferry.com/offer/analysis]';
+      } else if (currentFormat === 'video') {
+        currentContent += '\n\n[Watch 2-minute overview: https://roleferry.com/offer/video]';
+      }
+      
+      offerContent.value = currentContent;
+    }
+
+    function regenerateOffer() {
+      // Show loading spinner
+      const spinner = document.createElement('div');
+      spinner.className = 'loading-spinner show';
+      spinner.innerHTML = '<div class="spinner"></div><p>AI is regenerating your offer...</p>';
+      document.querySelector('.offer-section').appendChild(spinner);
+
+      // Simulate AI regeneration
+      setTimeout(() => {
+        spinner.remove();
+        generateOffer();
+        alert('Offer regenerated successfully!');
+      }, 2000);
+    }
+
+    function saveOffer() {
+      const offerData = {
+        tone: currentTone,
+        format: currentFormat,
+        content: document.getElementById('offerContent').value,
+        timestamp: new Date().toISOString()
+      };
+      
+      localStorage.setItem('roleferry_offer_data', JSON.stringify(offerData));
+      
+      document.getElementById('successMessage').classList.add('show');
+      
+      setTimeout(() => {
+        alert('Offer saved successfully! You can now proceed to the next step.');
+      }, 500);
+    }
+
+    function goBack() {
+      window.location.href = '../index.html';
+    }
+
+    // Load saved data if exists
+    const savedData = localStorage.getItem('roleferry_offer_data');
+    if (savedData) {
+      const data = JSON.parse(savedData);
+      if (data.content) {
+        document.getElementById('offerContent').value = data.content;
+        currentTone = data.tone || 'recruiter';
+        currentFormat = data.format || 'text';
+        
+        // Update button states
+        document.querySelectorAll('.tone-btn').forEach(btn => {
+          btn.classList.remove('active');
+          if (btn.textContent.toLowerCase().includes(currentTone)) {
+            btn.classList.add('active');
+          }
+        });
+        
+        document.querySelectorAll('.format-btn').forEach(btn => {
+          btn.classList.remove('active');
+          if (btn.textContent.toLowerCase().includes(currentFormat)) {
+            btn.classList.add('active');
+          }
+        });
+      }
+    }
+
+    // Initialize
+    generateOffer();
+  </script>
+</body>
+</html>
