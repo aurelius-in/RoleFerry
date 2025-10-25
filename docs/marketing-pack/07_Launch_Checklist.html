@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoleFerry Launch Checklist</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        .document-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 16px;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .document-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #f59e0b;
+        }
+
+        .document-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section h2 {
+            color: #f59e0b;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #f59e0b;
+            padding-left: 1rem;
+        }
+
+        .checklist {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .checklist h3 {
+            color: #10b981;
+            margin-bottom: 1rem;
+        }
+
+        .checklist ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .checklist li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+            display: flex;
+            align-items: center;
+        }
+
+        .checklist li:last-child {
+            border-bottom: none;
+        }
+
+        .checklist li::before {
+            content: "☐";
+            color: #10b981;
+            font-size: 1.2rem;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .highlight-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box h3 {
+            color: #f59e0b;
+            margin-bottom: 0.5rem;
+        }
+
+        .copy-block {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+        }
+
+        .copy-block h4 {
+            color: #f59e0b;
+            margin-bottom: 0.5rem;
+        }
+
+        .copy-block p {
+            color: #d1d5db;
+            font-style: italic;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #374151;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .nav-button.secondary {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid #374151;
+        }
+
+        @media print {
+            .document-container {
+                background: white;
+                color: black;
+                box-shadow: none;
+            }
+            
+            .section h2 {
+                color: #f59e0b;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>RoleFerry Launch Checklist</h1>
+            <p>Make handoff foolproof</p>
+        </div>
+
+        <div class="section">
+            <h2>Assets Included</h2>
+            <div class="checklist">
+                <h3>📁 Marketing Pack Files</h3>
+                <ul>
+                    <li>01_Positioning_OnePager.html</li>
+                    <li>02_Messaging_House.html</li>
+                    <li>03_Screenshot_Label_Pack.html</li>
+                    <li>04_60s_Read_Aloud_Script.html</li>
+                    <li>05_Brand_Voice_and_Tone.html</li>
+                    <li>06_Fast_FAQ_for_Agencies.html</li>
+                    <li>07_Launch_Checklist.html</li>
+                    <li>assets/product_flow_mermaid.md</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Copy Blocks</h2>
+            <div class="highlight-box">
+                <h3>Headlines (Link to Messaging House)</h3>
+                <div class="copy-block">
+                    <h4>Option 1</h4>
+                    <p>"Turn Job Descriptions Into Interviews"</p>
+                </div>
+                <div class="copy-block">
+                    <h4>Option 2</h4>
+                    <p>"From Job Posting to Interview in 5 Steps"</p>
+                </div>
+                <div class="copy-block">
+                    <h4>Option 3</h4>
+                    <p>"AI-Powered Job Applications That Get Responses"</p>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <h3>Subheads (Link to Messaging House)</h3>
+                <div class="copy-block">
+                    <h4>Option 1</h4>
+                    <p>"Stop sending generic applications. Start sending targeted outreach that gets responses."</p>
+                </div>
+                <div class="copy-block">
+                    <h4>Option 2</h4>
+                    <p>"AI extracts pain points, finds contacts, crafts messages. You get interviews."</p>
+                </div>
+                <div class="copy-block">
+                    <h4>Option 3</h4>
+                    <p>"The only platform that turns job descriptions into personalized job applications."</p>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <h3>CTAs (Link to Messaging House)</h3>
+                <div class="copy-block">
+                    <h4>Primary CTAs</h4>
+                    <p>"Start faster" • "Book more interviews" • "Show me a sample"</p>
+                </div>
+                <div class="copy-block">
+                    <h4>Secondary CTAs</h4>
+                    <p>"Get 3x more responses" • "Land your dream job"</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Screenshot Filenames + Alt Text</h2>
+            <div class="checklist">
+                <h3>📸 Screenshot Assets</h3>
+                <ul>
+                    <li>01_job_description_input.png - "RoleFerry job description input screen"</li>
+                    <li>02_company_extraction.png - "RoleFerry company extraction screen"</li>
+                    <li>03_pain_point_match.png - "RoleFerry pain point match screen"</li>
+                    <li>04_saved_jobs_sidebar.png - "RoleFerry saved jobs sidebar"</li>
+                    <li>05_find_contacts.png - "RoleFerry find contacts screen"</li>
+                    <li>06_offer_creation.png - "RoleFerry offer creation screen"</li>
+                    <li>07_preflight_check.png - "RoleFerry pre-flight check screen"</li>
+                    <li>08_job_tracker.png - "RoleFerry job tracker screen"</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Required Disclosures/Footers</h2>
+            <div class="highlight-box">
+                <h3>Legal Requirements</h3>
+                <ul>
+                    <li>GDPR compliance notice for EU users</li>
+                    <li>Terms of Service link</li>
+                    <li>Privacy Policy link</li>
+                    <li>Unsubscribe option for email campaigns</li>
+                    <li>Copyright notice: "© 2024 RoleFerry. All rights reserved."</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>UTM Naming Convention</h2>
+            <div class="highlight-box">
+                <h3>Campaign Tracking</h3>
+                <ul>
+                    <li><strong>Source:</strong> [agency_name] (e.g., "marketing_agency_1")</li>
+                    <li><strong>Medium:</strong> [channel] (e.g., "email", "social", "paid")</li>
+                    <li><strong>Campaign:</strong> [campaign_name] (e.g., "job_seeker_launch")</li>
+                    <li><strong>Content:</strong> [specific_ad] (e.g., "headline_variant_a")</li>
+                    <li><strong>Term:</strong> [keyword] (e.g., "job_application_automation")</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Final Review Checklist</h2>
+            <div class="checklist">
+                <h3>✅ Pre-Launch Review</h3>
+                <ul>
+                    <li>Tone matches brand voice guidelines</li>
+                    <li>All "pinpoint" changed to "pain point"</li>
+                    <li>Claims are substantiated and realistic</li>
+                    <li>All links work and point to correct pages</li>
+                    <li>Screenshots are high quality and consistent</li>
+                    <li>Alt text is descriptive and accessible</li>
+                    <li>UTM parameters are properly formatted</li>
+                    <li>Legal disclaimers are included</li>
+                    <li>Mobile responsiveness tested</li>
+                    <li>Cross-browser compatibility verified</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Handoff Notes</h2>
+            <div class="highlight-box">
+                <h3>For Agency Teams</h3>
+                <ul>
+                    <li>All files are ready for immediate use</li>
+                    <li>Copy blocks can be mixed and matched as needed</li>
+                    <li>Screenshots should be captured at 1920x1080 resolution</li>
+                    <li>UTM naming should be consistent across campaigns</li>
+                    <li>Final review should be completed before launch</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <a href="06_Fast_FAQ_for_Agencies.html" class="nav-button secondary">← Fast FAQ for Agencies</a>
+            <a href="../marketing.html" class="nav-button">Back to Marketing Hub →</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -285,7 +285,12 @@
     <div class="form-container">
       <!-- Research Summary -->
       <div class="research-summary">
-        <h3>Research Summary</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="margin: 0;">Research Summary</h3>
+          <button class="btn-secondary" onclick="exportResearchToCSV()" style="padding: 8px 16px; font-size: 0.9rem;">
+            📊 Export CSV
+          </button>
+        </div>
         <p>AI has automatically gathered company information, recent news, and contact details. You can edit the generated content below to customize your outreach approach.</p>
       </div>
 
@@ -402,6 +407,43 @@
       setTimeout(() => {
         alert('Research saved successfully! You can now proceed to the next step.');
       }, 500);
+    }
+
+    function exportResearchToCSV() {
+      // Get all the research data
+      const companySummary = document.getElementById('companySummary')?.value || 'Not available';
+      const recentNews = document.getElementById('recentNews')?.value || 'Not available';
+      const contactBio = document.getElementById('contactBio')?.value || 'Not available';
+      const companyCulture = document.getElementById('companyCulture')?.value || 'Not available';
+      const techStack = document.getElementById('techStack')?.value || 'Not available';
+      const marketPosition = document.getElementById('marketPosition')?.value || 'Not available';
+      
+      // Create CSV data
+      const csvData = [
+        ['Research Field', 'Content'],
+        ['Company Summary', companySummary],
+        ['Recent News', recentNews],
+        ['Contact Bio', contactBio],
+        ['Company Culture', companyCulture],
+        ['Technology Stack', techStack],
+        ['Market Position', marketPosition]
+      ];
+      
+      // Convert to CSV string
+      const csvString = csvData.map(row => row.map(field => `"${field.replace(/"/g, '""')}"`).join(',')).join('\n');
+      
+      // Create and download file
+      const blob = new Blob([csvString], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'context_research_export.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      alert('Research data exported to CSV successfully!');
     }
 
     function goBack() {

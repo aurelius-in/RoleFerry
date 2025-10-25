@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoleFerry Brand Voice and Tone</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        .document-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 16px;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .document-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #f59e0b;
+        }
+
+        .document-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section h2 {
+            color: #f59e0b;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #f59e0b;
+            padding-left: 1rem;
+        }
+
+        .voice-traits {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .voice-trait {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(16, 185, 129, 0.1));
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .voice-trait h3 {
+            color: #f59e0b;
+            margin-bottom: 0.5rem;
+        }
+
+        .tone-preset {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .tone-preset h3 {
+            color: #f59e0b;
+            margin-bottom: 1rem;
+        }
+
+        .tone-preset .guidance {
+            color: #10b981;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .tone-preset .example {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            font-style: italic;
+        }
+
+        .dos-donts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .dos {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            border-radius: 4px;
+            padding: 1rem;
+        }
+
+        .donts {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            border-radius: 4px;
+            padding: 1rem;
+        }
+
+        .dos h4 {
+            color: #10b981;
+            margin-bottom: 0.5rem;
+        }
+
+        .donts h4 {
+            color: #ef4444;
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box h3 {
+            color: #f59e0b;
+            margin-bottom: 0.5rem;
+        }
+
+        .use-case {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+        }
+
+        .use-case h4 {
+            color: #10b981;
+            margin-bottom: 0.5rem;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #374151;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .nav-button.secondary {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid #374151;
+        }
+
+        @media print {
+            .document-container {
+                background: white;
+                color: black;
+                box-shadow: none;
+            }
+            
+            .section h2 {
+                color: #f59e0b;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>RoleFerry Brand Voice and Tone</h1>
+            <p>Keep copy consistent across agencies</p>
+        </div>
+
+        <div class="section">
+            <h2>Voice Traits</h2>
+            <div class="voice-traits">
+                <div class="voice-trait">
+                    <h3>Clear</h3>
+                    <p>Plain English, no jargon unless defined</p>
+                </div>
+                <div class="voice-trait">
+                    <h3>Practical</h3>
+                    <p>Focus on outcomes, not features</p>
+                </div>
+                <div class="voice-trait">
+                    <h3>Human</h3>
+                    <p>Conversational, not corporate speak</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Tone Presets</h2>
+            
+            <div class="tone-preset">
+                <h3>Recruiter (Efficiency)</h3>
+                <div class="guidance">Direct, results-focused, time-conscious</div>
+                <div class="dos-donts">
+                    <div class="dos">
+                        <h4>Dos</h4>
+                        <ul>
+                            <li>Use metrics</li>
+                            <li>Emphasize speed</li>
+                            <li>Mention ROI</li>
+                        </ul>
+                    </div>
+                    <div class="donts">
+                        <h4>Don'ts</h4>
+                        <ul>
+                            <li>Get bogged down in process details</li>
+                            <li>Use vague language</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="example">"Fill positions 40% faster with AI-powered candidate matching that actually works."</div>
+            </div>
+
+            <div class="tone-preset">
+                <h3>Hiring Manager (Competence)</h3>
+                <div class="guidance">Professional, detail-oriented, quality-focused</div>
+                <div class="dos-donts">
+                    <div class="dos">
+                        <h4>Dos</h4>
+                        <ul>
+                            <li>Highlight expertise</li>
+                            <li>Mention qualifications</li>
+                            <li>Focus on fit</li>
+                        </ul>
+                    </div>
+                    <div class="donts">
+                        <h4>Don'ts</h4>
+                        <ul>
+                            <li>Oversell</li>
+                            <li>Make unrealistic promises</li>
+                            <li>Ignore requirements</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="example">"Get candidates who actually match your requirements, not just keywords."</div>
+            </div>
+
+            <div class="tone-preset">
+                <h3>Executive (ROI/Strategy)</h3>
+                <div class="guidance">Strategic, high-level, business impact focused</div>
+                <div class="dos-donts">
+                    <div class="dos">
+                        <h4>Dos</h4>
+                        <ul>
+                            <li>Use business metrics</li>
+                            <li>Mention competitive advantage</li>
+                            <li>Focus on outcomes</li>
+                        </ul>
+                    </div>
+                    <div class="donts">
+                        <h4>Don'ts</h4>
+                        <ul>
+                            <li>Get into technical details</li>
+                            <li>Ignore business context</li>
+                            <li>Use buzzwords</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="example">"Transform your hiring process from cost center to competitive advantage."</div>
+            </div>
+
+            <div class="tone-preset">
+                <h3>Sales (Results)</h3>
+                <div class="guidance">Achievement-oriented, success-focused, outcome-driven</div>
+                <div class="dos-donts">
+                    <div class="dos">
+                        <h4>Dos</h4>
+                        <ul>
+                            <li>Use success stories</li>
+                            <li>Mention wins</li>
+                            <li>Focus on results</li>
+                        </ul>
+                    </div>
+                    <div class="donts">
+                        <h4>Don'ts</h4>
+                        <ul>
+                            <li>Make unrealistic claims</li>
+                            <li>Ignore challenges</li>
+                            <li>Oversell</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="example">"Close more deals with better-qualified prospects who actually need your solution."</div>
+            </div>
+
+            <div class="tone-preset">
+                <h3>Engineer (Technical)</h3>
+                <div class="guidance">Precise, logical, solution-focused</div>
+                <div class="dos-donts">
+                    <div class="dos">
+                        <h4>Dos</h4>
+                        <ul>
+                            <li>Use specific terms</li>
+                            <li>Explain how things work</li>
+                            <li>Focus on efficiency</li>
+                        </ul>
+                    </div>
+                    <div class="donts">
+                        <h4>Don'ts</h4>
+                        <ul>
+                            <li>Oversimplify</li>
+                            <li>Ignore technical details</li>
+                            <li>Use marketing speak</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="example">"Automate the manual work so you can focus on building what matters."</div>
+            </div>
+
+            <div class="tone-preset">
+                <h3>Efficiency (Process)</h3>
+                <div class="guidance">Streamlined, systematic, optimization-focused</div>
+                <div class="dos-donts">
+                    <div class="dos">
+                        <h4>Dos</h4>
+                        <ul>
+                            <li>Emphasize workflow improvements</li>
+                            <li>Mention time savings</li>
+                            <li>Focus on process</li>
+                        </ul>
+                    </div>
+                    <div class="donts">
+                        <h4>Don'ts</h4>
+                        <ul>
+                            <li>Overcomplicate</li>
+                            <li>Ignore user experience</li>
+                            <li>Focus only on features</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="example">"Eliminate the guesswork and automate the repetitive parts of job applications."</div>
+            </div>
+
+            <div class="tone-preset">
+                <h3>Custom Tone</h3>
+                <div class="guidance">Specify the desired tone in 1-2 sentences</div>
+                <div class="dos-donts">
+                    <div class="dos">
+                        <h4>Dos</h4>
+                        <ul>
+                            <li>Be specific about personality</li>
+                            <li>Mention target audience</li>
+                            <li>Give examples</li>
+                        </ul>
+                    </div>
+                    <div class="donts">
+                        <h4>Don'ts</h4>
+                        <ul>
+                            <li>Be vague</li>
+                            <li>Ignore context</li>
+                            <li>Use conflicting traits</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="example">"Professional but approachable, like a trusted advisor who gets results."</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Style Rules</h2>
+            <div class="highlight-box">
+                <h3>Language Guidelines</h3>
+                <ul>
+                    <li>Use plain English. Short sentences. Define acronyms.</li>
+                    <li>Use "pain point," not "pinpoint."</li>
+                    <li>Use benefits before features.</li>
+                    <li>Avoid buzzword salad and corporate jargon.</li>
+                    <li>Write like you're talking to a colleague, not a boardroom.</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h3>Content Structure</h3>
+                <ul>
+                    <li>Lead with the problem, then the solution</li>
+                    <li>Use specific numbers and outcomes</li>
+                    <li>Include social proof when available</li>
+                    <li>End with clear next steps</li>
+                    <li>Keep paragraphs short and scannable</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Examples by Use Case</h2>
+            
+            <div class="use-case">
+                <h4>Landing Page Headlines</h4>
+                <ul>
+                    <li><strong>Recruiter:</strong> "Fill Positions 40% Faster"</li>
+                    <li><strong>Hiring Manager:</strong> "Get Candidates Who Actually Match"</li>
+                    <li><strong>Executive:</strong> "Transform Hiring from Cost to Advantage"</li>
+                    <li><strong>Sales:</strong> "Close More Deals with Better Prospects"</li>
+                    <li><strong>Engineer:</strong> "Automate the Manual Work"</li>
+                    <li><strong>Efficiency:</strong> "Eliminate the Guesswork"</li>
+                </ul>
+            </div>
+
+            <div class="use-case">
+                <h4>Email Subject Lines</h4>
+                <ul>
+                    <li><strong>Recruiter:</strong> "3x More Qualified Candidates in Half the Time"</li>
+                    <li><strong>Hiring Manager:</strong> "Stop Wasting Time on Unqualified Applications"</li>
+                    <li><strong>Executive:</strong> "ROI-Focused Hiring That Actually Works"</li>
+                    <li><strong>Sales:</strong> "Better Prospects, Higher Close Rates"</li>
+                    <li><strong>Engineer:</strong> "Build Better Teams with Better Data"</li>
+                    <li><strong>Efficiency:</strong> "Streamline Your Hiring Process"</li>
+                </ul>
+            </div>
+
+            <div class="use-case">
+                <h4>Call-to-Action Buttons</h4>
+                <ul>
+                    <li><strong>Recruiter:</strong> "Start Filling Positions Faster"</li>
+                    <li><strong>Hiring Manager:</strong> "Get Better Candidates"</li>
+                    <li><strong>Executive:</strong> "See the Business Impact"</li>
+                    <li><strong>Sales:</strong> "Close More Deals"</li>
+                    <li><strong>Engineer:</strong> "Automate Your Workflow"</li>
+                    <li><strong>Efficiency:</strong> "Streamline Your Process"</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <a href="04_60s_Read_Aloud_Script.html" class="nav-button secondary">← 60s Read Aloud Script</a>
+            <a href="06_Fast_FAQ_for_Agencies.html" class="nav-button">Fast FAQ for Agencies →</a>
+        </div>
+    </div>
+</body>
+</html>

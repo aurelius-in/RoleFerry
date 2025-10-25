@@ -63,7 +63,7 @@ const MockData = {
       }
     },
     
-    pinpointMatch: {
+    pain pointMatch: {
       alignmentScore: 85,
       matches: [
         {
@@ -132,7 +132,7 @@ const MockData = {
     email: {
       tone: "manager",
       subject: "Regarding Senior Software Engineer position - TechCorp",
-      body: "Hi {{first_name}},\n\nRegarding the {{job_title}} position, I understand the team is tackling {{pinpoint_1}}. My approach, leveraging {{solution_1}}, has previously achieved {{metric_1}}. I'm keen to explore how I can contribute to your team's objectives.\n\nI've also kept up with {{company_name}}'s recent news, specifically {{recent_news}}, and see a clear alignment with my career goals.\n\nBest,\n[Your Name]",
+      body: "Hi {{first_name}},\n\nRegarding the {{job_title}} position, I understand the team is tackling {{pain point_1}}. My approach, leveraging {{solution_1}}, has previously achieved {{metric_1}}. I'm keen to explore how I can contribute to your team's objectives.\n\nI've also kept up with {{company_name}}'s recent news, specifically {{recent_news}}, and see a clear alignment with my career goals.\n\nBest,\n[Your Name]",
       jargonEnabled: false
     },
     
@@ -218,7 +218,7 @@ const MockData = {
       ]
     },
     
-    pinpointMatch: {
+    pain pointMatch: {
       alignmentScore: 92,
       matches: [
         {
@@ -287,7 +287,7 @@ const MockData = {
     email: {
       tone: "exec",
       subject: "Strategic discussion: Senior Software Engineer at TechCorp",
-      body: "Hi {{first_name}},\n\nGiven {{company_name}}'s strategic focus on {{company_summary}} and recent developments like {{recent_news}}, I believe my expertise in addressing {{pinpoint_1}} with solutions like {{solution_1}} could be highly valuable. I've consistently delivered {{metric_1}} in similar contexts.\n\nI'd appreciate the opportunity for a brief discussion on how my strategic contributions can support your overarching goals.\n\nBest,\n[Your Name]",
+      body: "Hi {{first_name}},\n\nGiven {{company_name}}'s strategic focus on {{company_summary}} and recent developments like {{recent_news}}, I believe my expertise in addressing {{pain point_1}} with solutions like {{solution_1}} could be highly valuable. I've consistently delivered {{metric_1}} in similar contexts.\n\nI'd appreciate the opportunity for a brief discussion on how my strategic contributions can support your overarching goals.\n\nBest,\n[Your Name]",
       jargonEnabled: false
     },
     

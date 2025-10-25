@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Architecture - RoleFerry</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="icon" href="../../assets/roleferry_trans.png">
+    <style>
+        .document-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 16px;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .document-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #8b5cf6;
+        }
+
+        .document-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #8b5cf6, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            color: #8b5cf6;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #8b5cf6;
+            padding-left: 1rem;
+        }
+
+        .security-framework {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .security-framework h3 {
+            color: #8b5cf6;
+            margin-bottom: 1rem;
+        }
+
+        .security-layer {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(37, 99, 235, 0.1));
+            border: 1px solid #8b5cf6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .security-layer h4 {
+            color: #8b5cf6;
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight-box {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid #8b5cf6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box h4 {
+            color: #8b5cf6;
+            margin-bottom: 0.5rem;
+        }
+
+        .compliance-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #10b981, #2563eb);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0.25rem;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #374151;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #8b5cf6, #2563eb);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .nav-button.secondary {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>Security Architecture</h1>
+            <p>Enterprise-Grade Security Framework & Compliance</p>
+        </div>
+
+        <div class="section">
+            <h2>Security Framework Overview</h2>
+            <p>RoleFerry implements a comprehensive, defense-in-depth security architecture designed to protect sensitive recruitment data and ensure regulatory compliance.</p>
+            
+            <div class="security-framework">
+                <h3>🔒 Multi-Layer Security Architecture</h3>
+                <div class="security-layer">
+                    <h4>Network Security</h4>
+                    <p>Firewalls, DDoS protection, and network segmentation</p>
+                </div>
+                <div class="security-layer">
+                    <h4>Application Security</h4>
+                    <p>Input validation, authentication, and authorization controls</p>
+                </div>
+                <div class="security-layer">
+                    <h4>Data Security</h4>
+                    <p>Encryption at rest and in transit, data classification</p>
+                </div>
+                <div class="security-layer">
+                    <h4>Identity & Access Management</h4>
+                    <p>Multi-factor authentication, role-based access control</p>
+                </div>
+                <div class="security-layer">
+                    <h4>Monitoring & Compliance</h4>
+                    <p>Security monitoring, audit logging, compliance reporting</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Authentication & Authorization</h2>
+            
+            <div class="highlight-box">
+                <h4>Multi-Factor Authentication (MFA)</h4>
+                <ul>
+                    <li><strong>TOTP Support:</strong> Google Authenticator, Authy integration</li>
+                    <li><strong>SMS Backup:</strong> Secondary authentication via SMS</li>
+                    <li><strong>Hardware Keys:</strong> FIDO2/WebAuthn support</li>
+                    <li><strong>Biometric:</strong> Fingerprint and face recognition</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Single Sign-On (SSO)</h4>
+                <ul>
+                    <li><strong>SAML 2.0:</strong> Enterprise identity provider integration</li>
+                    <li><strong>OpenID Connect:</strong> OAuth 2.0 based authentication</li>
+                    <li><strong>Active Directory:</strong> Microsoft AD integration</li>
+                    <li><strong>LDAP:</strong> Directory service connectivity</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Role-Based Access Control (RBAC)</h4>
+                <ul>
+                    <li><strong>Granular Permissions:</strong> Fine-grained access control</li>
+                    <li><strong>Dynamic Roles:</strong> Context-aware permissions</li>
+                    <li><strong>Audit Trail:</strong> Complete access logging</li>
+                    <li><strong>Privilege Escalation:</strong> Controlled permission elevation</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Data Protection</h2>
+            
+            <div class="highlight-box">
+                <h4>Encryption Standards</h4>
+                <ul>
+                    <li><strong>Data at Rest:</strong> AES-256 encryption for all stored data</li>
+                    <li><strong>Data in Transit:</strong> TLS 1.3 for all communications</li>
+                    <li><strong>Key Management:</strong> AWS KMS for encryption key lifecycle</li>
+                    <li><strong>Database Encryption:</strong> Transparent data encryption (TDE)</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Data Classification</h4>
+                <ul>
+                    <li><strong>Public:</strong> Marketing materials, public job postings</li>
+                    <li><strong>Internal:</strong> Internal communications, system logs</li>
+                    <li><strong>Confidential:</strong> Candidate profiles, company data</li>
+                    <li><strong>Restricted:</strong> Personal identification, financial data</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Data Loss Prevention (DLP)</h4>
+                <ul>
+                    <li><strong>Content Scanning:</strong> Automated sensitive data detection</li>
+                    <li><strong>Access Controls:</strong> Prevent unauthorized data access</li>
+                    <li><strong>Audit Logging:</strong> Track all data access and modifications</li>
+                    <li><strong>Backup Security:</strong> Encrypted backups with access controls</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Compliance & Standards</h2>
+            
+            <div class="highlight-box">
+                <h4>Regulatory Compliance</h4>
+                <div style="margin: 1rem 0;">
+                    <span class="compliance-badge">GDPR</span>
+                    <span class="compliance-badge">SOC 2 Type II</span>
+                    <span class="compliance-badge">ISO 27001</span>
+                    <span class="compliance-badge">CCPA</span>
+                    <span class="compliance-badge">HIPAA</span>
+                </div>
+                <ul>
+                    <li><strong>Data Privacy:</strong> Right to deletion, data portability</li>
+                    <li><strong>Consent Management:</strong> Granular consent tracking</li>
+                    <li><strong>Data Minimization:</strong> Collect only necessary data</li>
+                    <li><strong>Breach Notification:</strong> 72-hour incident reporting</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Security Certifications</h4>
+                <ul>
+                    <li><strong>Penetration Testing:</strong> Quarterly security assessments</li>
+                    <li><strong>Vulnerability Scanning:</strong> Continuous security monitoring</li>
+                    <li><strong>Code Security:</strong> SAST/DAST integration in CI/CD</li>
+                    <li><strong>Third-party Audits:</strong> Independent security evaluations</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Security Monitoring</h2>
+            
+            <div class="highlight-box">
+                <h4>Real-time Monitoring</h4>
+                <ul>
+                    <li><strong>SIEM Integration:</strong> Security information and event management</li>
+                    <li><strong>Threat Detection:</strong> AI-powered anomaly detection</li>
+                    <li><strong>Incident Response:</strong> Automated threat response</li>
+                    <li><strong>Security Dashboards:</strong> Real-time security metrics</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Audit & Logging</h4>
+                <ul>
+                    <li><strong>Comprehensive Logging:</strong> All system activities logged</li>
+                    <li><strong>Immutable Logs:</strong> Tamper-proof audit trails</li>
+                    <li><strong>Retention Policies:</strong> Long-term log storage</li>
+                    <li><strong>Forensic Analysis:</strong> Security incident investigation</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Incident Response</h2>
+            
+            <ul>
+                <li><strong>Response Team:</strong> 24/7 security operations center</li>
+                <li><strong>Incident Classification:</strong> Severity-based response procedures</li>
+                <li><strong>Communication Plan:</strong> Stakeholder notification procedures</li>
+                <li><strong>Recovery Procedures:</strong> Business continuity planning</li>
+                <li><strong>Post-Incident Review:</strong> Continuous improvement process</li>
+            </ul>
+        </div>
+
+        <div class="navigation">
+            <a href="data-architecture.html" class="nav-button secondary">← Data Architecture</a>
+            <a href="integration-architecture.html" class="nav-button">Integration Architecture →</a>
+        </div>
+    </div>
+</body>
+</html>

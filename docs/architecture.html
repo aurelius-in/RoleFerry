@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture Documentation - RoleFerry</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="assets/roleferry_trans.png">
+    <style>
+        .architecture-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 16px;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .architecture-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #8b5cf6;
+        }
+
+        .architecture-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #8b5cf6, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .architecture-card {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .architecture-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #8b5cf6, #2563eb);
+        }
+
+        .architecture-card:hover {
+            transform: translateY(-5px);
+            border-color: #8b5cf6;
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);
+        }
+
+        .architecture-card h3 {
+            color: #8b5cf6;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .architecture-card p {
+            color: #d1d5db;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .architecture-card a {
+            display: inline-block;
+            background: linear-gradient(45deg, #8b5cf6, #2563eb);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .architecture-card a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .diagram-section {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .diagram-section h3 {
+            color: #8b5cf6;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .diagram-placeholder {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(37, 99, 235, 0.1));
+            border: 2px dashed #8b5cf6;
+            border-radius: 12px;
+            padding: 3rem;
+            margin: 1rem 0;
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #374151;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #8b5cf6, #2563eb);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .nav-button.secondary {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid #374151;
+        }
+
+        .nav-button.secondary:hover {
+            background: rgba(75, 85, 99, 0.8);
+            border-color: #8b5cf6;
+        }
+
+        @media (max-width: 768px) {
+            .architecture-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .architecture-container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="architecture-container">
+        <div class="architecture-header">
+            <h1>Architecture Documentation</h1>
+            <p>Enterprise-Grade System Architecture with RM-ODP Methodology</p>
+        </div>
+
+        <div class="architecture-grid">
+            <div class="architecture-card">
+                <h3>🏗️ System Architecture</h3>
+                <p>Comprehensive system architecture documentation covering conceptual, logical, and implementable layers with detailed component interactions.</p>
+                <a href="html/03-architecture/system-architecture_conceptual.html">View Documentation</a>
+            </div>
+
+            <div class="architecture-card">
+                <h3>📊 Data Architecture</h3>
+                <p>Data models, database schemas, and information flow architecture with security and compliance considerations.</p>
+                <a href="html/03-architecture/data-architecture.html">View Documentation</a>
+            </div>
+
+            <div class="architecture-card">
+                <h3>🔒 Security Architecture</h3>
+                <p>Comprehensive security framework including authentication, authorization, data protection, and compliance measures.</p>
+                <a href="html/03-architecture/security-architecture.html">View Documentation</a>
+            </div>
+
+            <div class="architecture-card">
+                <h3>🔗 Integration Architecture</h3>
+                <p>API design, third-party integrations, and system connectivity patterns with detailed interface specifications.</p>
+                <a href="html/03-architecture/integration-architecture.html">View Documentation</a>
+            </div>
+
+            <div class="architecture-card">
+                <h3>⚡ Performance Architecture</h3>
+                <p>Scalability patterns, performance optimization strategies, and infrastructure architecture for high-availability systems.</p>
+                <a href="html/03-architecture/performance-architecture.html">View Documentation</a>
+            </div>
+
+            <div class="architecture-card">
+                <h3>🌐 Deployment Architecture</h3>
+                <p>Cloud infrastructure, containerization, CI/CD pipelines, and deployment strategies for production environments.</p>
+                <a href="html/03-architecture/deployment-architecture.html">View Documentation</a>
+            </div>
+        </div>
+
+        <div class="diagram-section">
+            <h3>System Architecture Diagram</h3>
+            <div class="diagram-placeholder">
+                <h4>🏗️ RoleFerry System Architecture</h4>
+                <p>High-level system architecture diagram showing:</p>
+                <ul style="text-align: left; max-width: 600px; margin: 0 auto;">
+                    <li>Frontend Layer (React/Next.js)</li>
+                    <li>API Gateway & Authentication</li>
+                    <li>Microservices Architecture</li>
+                    <li>AI/ML Processing Layer</li>
+                    <li>Data Layer (PostgreSQL, Redis)</li>
+                    <li>External Integrations</li>
+                </ul>
+                <p><em>Detailed Mermaid diagrams available in individual architecture documents</em></p>
+            </div>
+        </div>
+
+        <div class="diagram-section">
+            <h3>Data Flow Architecture</h3>
+            <div class="diagram-placeholder">
+                <h4>📊 Data Flow & Processing Pipeline</h4>
+                <p>Comprehensive data flow showing:</p>
+                <ul style="text-align: left; max-width: 600px; margin: 0 auto;">
+                    <li>User Input Processing</li>
+                    <li>AI Model Inference</li>
+                    <li>Data Transformation & Storage</li>
+                    <li>Real-time Analytics</li>
+                    <li>External API Integrations</li>
+                </ul>
+                <p><em>Detailed flow diagrams and sequence diagrams available in documentation</em></p>
+            </div>
+        </div>
+
+        <div class="diagram-section">
+            <h3>Security & Compliance Architecture</h3>
+            <div class="diagram-placeholder">
+                <h4>🔒 Security Framework</h4>
+                <p>Enterprise-grade security architecture including:</p>
+                <ul style="text-align: left; max-width: 600px; margin: 0 auto;">
+                    <li>Multi-factor Authentication</li>
+                    <li>Role-based Access Control</li>
+                    <li>Data Encryption (At Rest & In Transit)</li>
+                    <li>GDPR & SOC 2 Compliance</li>
+                    <li>Audit Logging & Monitoring</li>
+                </ul>
+                <p><em>Detailed security diagrams and compliance documentation available</em></p>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <a href="home.html" class="nav-button secondary">← Back to Home</a>
+            <a href="strategic.html" class="nav-button">Strategic Documentation →</a>
+        </div>
+    </div>
+</body>
+</html>

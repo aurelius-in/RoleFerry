@@ -1,0 +1,1158 @@
+0:00 - Oliver Ellison
+OK, yes, yes.
+
+0:56 - David March
+How are you?
+
+1:01 - Oliver Ellison
+Pretty good.
+
+1:04 - David March
+Looks good.
+
+1:07 - Oliver Ellison
+that's right let it create and then I kind of see what it gets right and what it doesn't and I go back over it and it's real fast. I can't believe how much shit you're doing.
+
+1:46 - David March
+You're doing so many things. Yeah this is what my job is like man.
+
+1:50 - Oliver Ellison
+Except everybody knows you're doing AI so they kind of have the standard like get a lot done but it's still impressive. Yeah it's still impressive. Yeah so I'm gonna share I mean it's impressive even though I'm getting a lot of help So I'm going to share my, um, unless you want to share first to give something you want to share. Oh yeah.
+
+2:15 - David March
+I was going to share first because mine's probably just a quick one. Um, dude, I'm fucking, this is probably my best work I've ever done on the marketing side of It's crazy. It's really fucking crazy, dude. Let me see, what am I using, Google Chrome? Oh, I'm not using Google Chrome. Hold on, let me go to my playlist.
+
+2:52 - David March
+I'm connected to four marketing agencies right now, dude.
+
+2:59 - Oliver Ellison
+What are you doing with them?
+
+3:01 - David March
+It's like, just everyone's helping me to get this shit done. Oh yeah?
+
+3:10 - Oliver Ellison
+Are you thinking about Roll Theory?
+
+3:12 - David March
+No, no, I'm showing you, I'm about to show you what I'm doing with Kaizen, with Kyle. One of the marketing guys. I'm working with like four different marketing companies. It's crazy. I just wanted to show what I've been working on today. And I also have other things that I've been, um, working for RoleFerry, but this is what I made for, um...
+
+3:40 - David March
+Oh, why is this weird? It's not... It's being weird right now.
+
+3:48 - David March
+Let me see. I'll just copy this to... Oh, maybe I can do it. Check this out, dude. You see this?
+
+3:59 - Oliver Ellison
+Look at all this shit.
+
+4:06 - David March
+We're selling to restaurants.
+
+4:24 - David March
+Is this your jam in here?
+
+4:28 - David March
+Is this your jam? Yeah, this is uh... Yeah, this has been Kyle and I Is this your jam, as they say?
+
+4:39 - Oliver Ellison
+Marketing, yeah.
+
+4:41 - David March
+The music?
+
+4:43 - Oliver Ellison
+Oh, the music?
+
+4:45 - David March
+There's music in it. There's music in both the videos. Oh, the music in my... You're hearing the music in the background? In my house.
+
+4:54 - Oliver Ellison
+It's just real calm shit.
+
+4:55 - David March
+I can love it. That's cool.
+
+5:07 - Oliver Ellison
+Yeah, isn't it crazy, dude?
+
+5:10 - David March
+This is probably the best landing page I've made in my whole life. Looks good. So you're showing this to restaurants, you say?
+
+5:18 - Oliver Ellison
+Yeah, we're going to do this to restaurants, so they can get restaurant business.
+
+5:23 - David March
+Right on.
+
+5:24 - Oliver Ellison
+And that's Kyle.
+
+5:25 - David March
+But I'm just saying, like, the amount of marketing agencies that I have to help me, I have like, I have four marketing agencies, including myself.
+
+5:41 - David March
+It's crazy. Like, that's the type of like, marketing we have behind Roll Ferry, just to kind of give you an idea.
+
+5:51 - Oliver Ellison
+I want to You can help me with that. So, that would be pretty awesome. So, I'm going to share now. Are you going to share? Yeah, go ahead.
+
+6:01 - David March
+Thanks for sharing with us.
+
+6:02 - Oliver Ellison
+That's encouraging. Yeah, I'm hoping that we can get this thing rolling. So, I'm presenting now. So, it says to avoid infinite mirror. Don't share your entire screen. I'm going to go ahead and share.
+
+6:20 - David March
+Okay, so can you?
+
+6:23 - David March
+It's asking all these questions now. Allow every visit.
+
+6:28 - Oliver Ellison
+Allow this time. I mean, why not? That's what we're here for, right? If I close this, is it going to end our meeting? It's not, right? Are you still there? Yeah, I'm here, yeah.
+
+6:40 - David March
+Okay, cool.
+
+6:41 - Oliver Ellison
+All right. So, I don't use Google Meet a lot. So, you can see my screen? Oh, and one question I have. That the the new a bucket where you put all your code. And that way you can share it and launch it. I mean, they use it at every company I've worked for. To house all their code, it's easy to publish from there. So if you have an online app, you can do that. And we can actually connect it directly to our, you saw that I bought the domain name. So when we're ready, it's easy just to forward. Like right now, we could forward our domain to like, this thing, so.
+
+8:13 - David March
+So I just wanted to go over.
+
+8:18 - Oliver Ellison
+So this is these are the updates for this week. Just a summary. Yeah, so we added like 50 features, 15 services, created some wireframes which are like the like UI components that are just for show. I just rested open discussion and it's it's not really 100% mobile responsive. Because if you open it on your phone, it kind of doesn't work as good as when you but you can still navigate around and stuff. Definitely works better on a computer. If you want to go through the repo, this is like the files that were changed by the way we're building the whole app. We're not just building the front end, it's just that we're perfecting the front end before we perfect the back end. So all these AI service files are created now to support all the features that I'm showing you. So the whole app is being built, so when it comes time to to connect everything, it's, there's not very much work, much to do. It will just be like, get the API service, plug it in and everything should be working. So we're building the whole thing. This is, so I, we added this, you know, email verification integration, smart email position, campaign management, pre-flight checks, and this will all make more sense in a second. Some different design systems, these advanced features, and A lot of things we talked about company size. It probably easier than the documentation if you want to go through the documentation itself. There is. There's an executive summary, right? Yeah, you really get.
+
+9:50 - David March
+How did you? This is all AI generated.
+
+9:54 - Oliver Ellison
+Yeah, so like I kind of you tell it what you need and what you know you give it as much information as you have like our meeting documents that are transcribed. So it has everything we talked about, right? And if it's not sure, it asks you clarifying questions, right? So if it doesn't know some piece of data, it's trying to get better at not hallucinating, which means making some shit up. It's definitely making some shit up here, like CEO and founder, 10 plus years recruiting tech, right? Ex-fan. Yeah, I'm saying.
+
+1:10:25 - David March
+That's some native shit.
+
+1:10:27 - Oliver Ellison
+But like, it's still like a structure for us to start with.
+
+1:10:31 - David March
+There's investment asks.
+
+1:10:32 - Oliver Ellison
+These are kind of just formal documents that are commonly used by companies when they're launching things like this, so it's good for us to follow a commonly understood and respected model when we plug in our own stuff. So some of this is consistent with what we're doing, right? Like the 10 tab for workflow system is ours. The dual mode architecture, the AI power intelligence. So we've got all of these things. These are all real things that we have in our app.
+
+1:11:02 - Oliver Ellison
+And so we I'm not going to make you Read through this now, but when you're when you want to, it's there for you to kind of look at. And then also we can. We can tweak these and improve them. These are again mostly templates with some real with some of the stuff like actually like you know consistent with our stuff. I would say about 90% of it. So here's like,
+
+1:11:28 - Oliver Ellison
+Here's different scenarios. I like scenarios at what we call him in the industry term is use cases and user stories.
+
+1:11:36 - David March
+So user story is a scenario.
+
+1:11:38 - Oliver Ellison
+So for her you have the job seeker journey. So that's his actor. So Sarah is seven year product manager. She's searching for a senior product manager or project manager role. Applying to 30 plus companies a month. Intelligent workflow from references to campaign launch. There's some formatting errors up here, but that's easy to fix. And it has her job preferences, her resume, job descriptions, and then it just has all these different scenarios, right? So scenario two, this is Marcus. He's an agency recruiter. And then I'll let you look through this on your own, because it would be really tedious for me to go through all of these, but you get the idea. And there's success criteria. So the job list loads the operational system. Future considerations and so on. You can look through and kind of get an idea. There's navigation bottom on top and bottom so we can go between our different documents. The API specification, right? So some of this. It's all built in as far as the back end concern, but we will need to actually plug in real APIs. Of course later so. But these are these are the posts, which means what it sends to the API on each of the pages. If you understand like what works is to make a little bit more sense. But later on you probably will. Like as we begin to implement APIs, you'll you'll understand a little bit more about why we need these things.
+
+1:13:03 - Unidentified Speaker
+Specifications.
+
+1:13:04 - Oliver Ellison
+I'm just going over this real quick. You have a link you can go through on your own at your own pace or have somebody else you you know that you want to go through it more carefully with whatever you want. You can also if you want to show someone our progress, this would be something to show them.
+
+1:13:22 - Oliver Ellison
+So these are, again, these are just standardized documents so that we can be kind of consistent and serious as we develop something that we're going to.
+
+1:13:33 - David March
+What's that?
+
+1:13:34 - Oliver Ellison
+The investor frequently asked questions, right? So the freemium SAS model with three revenue streams. There's a subscription revenue, the usage-based revenue, Sorry about that. And then the enterprise contracts.
+
+1:+
+13:50 - David March
+Yeah, that was the other thing I wanted to talk to you about. I was speaking to a go-to-market guy, and he was saying to do more in-app purchases. Okay, yeah, I remember you. I saw that.
+
+14:05 - Oliver Ellison
+And yeah, that's definitely something to integrate. And again, this is Just to just to add to the transcript. We want to add to the how do you make money?
+
+14:18 - David March
+Documentation that we want in-app purchases Yeah, and that purchases and that could be like Resume resume reviews like because you know the saying garbage in garbage out We could build them a quality resume so that they get good output in the email message?
+
+14:51 - Oliver Ellison
+Maybe offer it, but then say, if you do our premium plan, it's included. I don't know. Personally, I find people trying to sell me resume writing all the time. It's real tedious. Oh, I mean, that's just one of the ideas. I had to block a lot of people because they were trying to write resumes for me or sell me their resume. That's why I'm kind of getting out of it. Anyway, I'm I don't like where the industry is going Personally, well, it's just a lot of people from all over the world And it's just kind of too much as I could kind of like an overwhelming like surge I've had my new job now for you know the few weeks And that since then I've probably got like a few hundred job offers like job, you know offers, but you know, I mean like job pitches Um, and like I get them in my email and they fill my email box and I write them like, no, thanks. But, um, you know, if your client needs, you know, a private, uh, project done, I can do that, but I'm not no more full-time jobs. Uh, I'm really busy with this job. Like they're giving me super busy.
+
+16:01 - David March
+The main thing would be more like, um, more probably like more like the brand working. Like probably like the brand work or like interview coaching or like, you know, different type of upsells. As I think that that would really be good, you know, especially with one of the modes you indicated above. I want to go a little slower on this page. I think there's a lot to be said about this page.
+
+16:35 - Oliver Ellison
+So who, why you will win versus the incumbents. So you need combination. So no competitor has tracking plus intelligence, plus outreach, plus deliverability. So we did doing a little market research. Nobody has all those things combined yet. A delivery mode. So we own the sending infrastructure. Users can't DIY this safely. We're speed to market. So incumbents like LinkedIn and Simplify And we have a better mousetrap, so email beats the LinkedIn email. Three times response rate, we automate the hard parts.
+
+17:11 - Oliver Ellison
+So versus Simplify or Hunter, they track, we act, we find contacts and send emails for you. Versus LinkedIn, 95% cheaper, right? Because theirs is like 2,000 a year. So yeah, so that we can check some of those numbers. But Apollo instantly, sales tools adapted for recruiting. The end of the that the you know where everything goes and you gotta like put all your stuff away but you wave your wand and things go where they're supposed to, you know what I mean? Yeah, that's kind of how this works. It's kind of like that.
+
+18:37 - David March
+It's like having a magic power.
+
+18:39 - Oliver Ellison
+Like you can now do everything that you want to do without actually having to do it, as long as you know what needs to be done and what you want done. You just have to- The growth strategy here is really interesting.
+
+18:49 - David March
+Let's look at this.
+
+18:53 - David March
+Is it big enough on your screen to Read?
+
+18:54 - Oliver Ellison
+Yeah, I can Read it. I don't need to Read to you.
+
+18:58 - David March
+Product growth is organic as primary channel. Oh, we'll see. It's a little slow. We can move faster.
+
+19:10 - Oliver Ellison
+Um, much faster. This is just more of like a standard growth strategy. I think, um, since we have some tools at our disposal, we can move like way, way faster, but that's marketing agencies.
+
+19:27 - David March
+And also we have AI.
+
+19:28 - Oliver Ellison
+It really makes a difference. We're in a different era. This was written three years ago. It was a different era, right? We're in a whole new era. So things move faster. We can expect more as long as we use all the tools we have.
+
+19:44 - Oliver Ellison
+So, you know, what's your customer acquisition cost? This is an example, right? $50 for paid ads at launch. $5 organic by year two, right? So hope that's maybe optimistic, but we can certainly shoot for that. Recruiters, 300 outbound sales, six-week cycle. Enterprise, 10,000 field sales, six-month cycle. Payback period, so, you know. And these numbers are really neat that we work on.
+
+20:18 - David March
+I mean, this is not like accurate perfection.
+
+20:21 - Oliver Ellison
+It kind of just tells us what numbers we need and puts it in a structure where we can.
+
+20:26 - David March
+Yeah, I think that this looks like it's all done, but it's really a fill in the blank. It is, yeah.
+
+20:33 - Oliver Ellison
+Some of the stuff might be OK, but at least it should all be reviewed carefully and considered and checked. Even the stuff that looks right. It's a template, like I said, it's there for us to work on. And it's food for thought. It's discussion worthy, right? Are these, you know, so we don't have to look at the exact, but we can look at the job seekers, the recruiters, the enterprise have a formation. I did work on a little bit on the gamification part too.
+
+21:08 - Oliver Ellison
+So what's your AI strategy?
+
+21:13 - Oliver Ellison
+It's a little bit technical. We can talk about this. Competition, so what if LinkedIn builds this? So unlikely for three reasons. It's a deliverability risk for them, so LinkedIn can't risk their core email reputation by adding bulk sending. Strategic focus, they monetize via ads plus recruiter seats, not automation. And speed, so we can iterate 10 times faster as a startup versus these big companies. And if they do, we have 18 to 24 months headstart on delivery infrastructure and brand. So what if, so this is just kind of like a, once we kind of perfect this, this is kind of a beginning of a, of a document we might show an investor if they want to try to like join with us and give us like a million bucks so we can build this thing and get it on the market real fast.
+
+22:06 - Oliver Ellison
+So what if Simplify adds outreach? You know, we have a moat they can't replace quickly. What if our competitors try to beat us? Basically they implement some of the stuff we've already come up with.
+
+22:19 - Oliver Ellison
+Financials, so what's our burn rate, right? So the pre MVP, some of the stuff you know a lot more about than I am because I don't have my head in the marketing game like you do, but so the MVP is like minimum viable product, right? So pre MVP is 150 month, right? So it would be, you know, two full-time engineers, one contractor, infra APIs, right? That would be, you know, we don't need all of that because we have AI, but this would be like your standard kind of like app team, right? In reality, it's kind of just me and some AI and you. So it just kind of helps us understand our competition, or at least from the past, what they were using. Like in my job, everybody's getting, you know, 200k to use AI to build stuff real fast. So what are you raising and why? So two million seed round use funds. This is just kind of like spitballing, but this is one kind of approach we could consider. So we could get the investors to invest in our engineering. That would be me. And whoever I want help with to kind of like, you know, do some quality assurance, you know, coding and stuff. To go to market. This is just some different different things to talk about.
+
+23:42 - David March
+We can talk about that later though.
+
+23:44 - Oliver Ellison
+I haven't given it a lot of thought. I just asked for. I just asked for the summary exit strategy, so we wanted to get an IPO. That would be a big, big lofty goal, but that could be cool. You know we could be acquired by like employee Inc.
+
+24:03 - Oliver Ellison
+We could be acquired by Attico. So this would be. Some different ways to go public or we could try to try to get our own IPO out there. Different ideas if we want to think big what keeps you up at night. So the top three risks. So there's deliverability failure. If domains are blacklisted like the core value fails so we need to mitigate that risk by you know multi domain pool. The health monitoring slow ramp, right? Like we've talked about, like you were talking about. The noncompliance for the regulatory equals fine. So if there's any things we need to comply with, we need to not fuck that up, get ourselves in trouble, get ourselves shut down before we get started. Mitigation, we might have to hire a lawyer or be really good at using AI to double check our legal issues before we do anything stupid.
+
+25:01 - Oliver Ellison
+We can have AI scrub us for like initial legal problems. And if things get too complicated, we can hire a lawyer at some point. It'd be nice to have some revenue first. What's your law firm? So three compound advantages, a data moat, infrastructure moat, and a network of banks. The founding team is just completely fabricated.
+
+25:23 - Oliver Ellison
+It's not us, although we can plug our info in there. It's completely fabricated. Some hallucinated bullshit. I don't know where it came up with that. I don't know where it pulled that from, but if AI hasn't asked.
+
+25:44 - David March
+A lot of this shit is just like fill in the blanks. I mean, to be honest with you, I mean, a lot of this shit is just like, where the fuck are you getting this shit from We're gonna need a document like this, so some of this stuff is gonna be... A lot of this is like, it seems like all the people are just engineers. It's like, who do you need to hire? All engineers. How about sales?
+
+26:07 - Oliver Ellison
+We can reevaluate that. But that is kind of your typical software team for this kind of a project.
+
+26:13 - David March
+We're in a different era now.
+
+26:15 - Oliver Ellison
+So that's why AI is replacing jobs, because it's literally replacing jobs. We're not going to need that team. It might be useful at some point for me to have personal person work with me on code. But who knows? Maybe not. So I'm just saying like, We're OK there. It's definitely a different world. Yeah, here's the resident database monetization concept that you were talking about. So yeah, I mean again, it's well, that's another monetization concept.
+
+26:42 - David March
+But yeah, I mean just to finish the last thought you had. It's like you know you know it's like you hire engineers. But what about sales and marketing?
+
+26:53 - Oliver Ellison
+that the and we can go through it and we can improve on it. So this this actually allows us to have this conversation so that we can figure out what parts are missing. And then this transcript will help us like literally just plugging this transcript by itself into the AI is going to add those missing sections. So feel free to bring up anything you think is missing. The fact that the you know the founders part is made up is kind of annoying. It would be nice if it mentioned who we are, there's an about page it could have like referenced, but it forgot to do that. So, you know, it's fucking up a little bit, but it's okay. Cause we're not, we're not really close to like watching this thing. No, not at all.
+
+28:00 - David March
+So these are our first draft documents that are mostly templates, but, but it's great that you have those documentation to be quite honest.
+
+28:09 - Oliver Ellison
+It's good to guide our conversation so we can figure out the transcribe anything we talk about, like anything. Of go over it and figure out where to fill in blanks and what to change. You can copy and paste this into like a Word document, make some changes and send it back to me and I can plug it into AI. Yeah, that could be another thing.
+
+28:29 - David March
+Yeah, I mean, I think that this section is good, is important. I mean, mostly, like, because, you know, the revenue, how it is, you know, 80-20, I think that my revenue is is going to be mostly from the upsells and such. And I've been telling, I don't know, but I get mixed opinions about the paid on the result kind of idea. I get mixed opinions on it because some people are like, that's going to be impossible to track. How are you going to know how much they got?
+
+29:15 - David March
+like, do you do they pay? What if they get the job and they lose a job the next month? And then what if they get the job losing the job in the next two months, or maybe it's just a contract for two months?
+
+29:30 - Oliver Ellison
+The problem we need to solve is like, what's the you know, next best action like the safest next step when determining that you want like a simple manageable formula for calculating that. And then if you want me to be involved longterm in a way that like guarantees the app success, right? You don't have to give me a lot, but just give me something so that I have some incentive. Cause if you cut me out completely from like down the road stuff, right. It just kind of, you've just removed the motivation from like wanting it to be successful longterm.
+
+30:07 - David March
+So, so yeah, I mean, I'm not, I'm not trying to be greedy.
+
+30:11 - Oliver Ellison
+I'm just trying to think strategically as far as you getting the most out of me because I would like to be invested long term in the project and I would like to be invested as you upsell and through that process.
+
+30:23 - Oliver Ellison
+I don't think I'm necessarily not going to sell anything myself. It definitely isn't my strength and it isn't an area where I'm expecting a lot of success but that doesn't exclude that entirely. They're not these aren't mutually exclusive things. So I think that think long-term keep me invested what might be because they say keep me out just keep me like Invested it doesn't I'm not I'm not asking for a lot, but don't give me zero from like Remove my incentive and that's gonna be problematic for the app success Nothing I was like That's not gonna happen Well, it just kind of sounded like what you pitched in the first place.
+
+31:10 - David March
+Yeah, that's and yeah, I mean, that's that's kind of what I understand. I understand where you're coming from
+
+31:16 - Oliver Ellison
+If you feel like the current division of the of this apps like you know development, if you feel like a 20 isn't reasonable, then we can definitely talk about it. I'm not. I'm not a greedy person at all. I'm just trying to think about what makes sense. So if you if you can, you know, want to make a case for. That the Or we're either going to have, it's never going to go off the ground at all because we're like flakes and we don't follow through with shit because we're like lazy bums and we're just like little dreamers that don't know what we're doing. Or we'll actually get a few sales, but it won't, you know, by the time like we may basically just break even because it's not enough to even matter. Um, or we'll be successful, which means we'll like be a name in the industry and make real money. So I mean, it's, it's basically, zero or a lot. And I don't really care what percentage I get of that a lot. I just, it needs to make sense. Cause otherwise I just kind of feel weird about it. Cause if you want a larger chunk of like the initial part, I want something from, from the marketing side just so that I can stay motivated to make it, make it successful longterm.
+
+32:52 - Unidentified Speaker
+That's all.
+
+32:53 - Oliver Ellison
+Um, so the recruiter access subscriptions, these are, um, Premium job.
+
+33:01 - David March
+It's like the basic one. So these are revenue streams.
+
+33:07 - Oliver Ellison
+But what's the revenue.
+
+33:08 - David March
+But I'm going to understand this premium job seeker subscription. The so that so there's so there's no so I mean how I see it is the resume database is valuable for the recruiters not for the job seekers.
+
+33:36 - Oliver Ellison
+Yeah, that makes sense. Yeah, it's not.
+
+33:40 - David March
+The resume data shouldn't be premium job seeker subscriptions.
+
+33:47 - Oliver Ellison
+Because it's not valuable to them.
+
+33:50 - David March
+OK, that's a good thing to know.
+
+33:56 - Oliver Ellison
+Hopefully that ends up on a list of fixes in the transcript later. I'm going to say it real clearly, so the transcript hears you and it gets fed into it.
+
+34:08 - David March
+Job premium job seeker subscriptions are not valuable for job seekers. They're valuable for recruiters.
+
+34:21 - David March
+All right.
+
+34:22 - Oliver Ellison
+So the recruiter access. It's going to matter a lot because at some point we're gonna have hundreds of documents. And for me to remember everything we talk about is. It's going to be hard since I'm just one guy, but the AI equals like 50 guys. So I'm like those 50 guys manager. And I kind of like leave those 50 guys to do all those different tasks. Uhm, you know, so that's kind of how that's working with AI. But just kind of you tell me in these meetings it's going to be transcribed. We fix it with AI and and then I can spot check things and just like a manager would do. It's basically the another metaphor. Did you want to look at that? Longer the recruiter. Yeah, this this looks good.
+
+35:07 - David March
+These need to be fleshed out. Like, it's really need to be fleshed out. Talent insights, I do need to be fleshed out a little bit more. Integration, that needs to be humongously figured out. I mean, that's a huge value add, but it's like, how much effort and time and energy are you going to put into a CRM integration that is like that's like it's really too far out I think okay it's like you know you're gonna you're gonna just do a CRM integration to like connects a bill or a bullhorn or different like ATS systems and CRM systems I mean it just sounds like that's like an enterprise feature that is really far down the road and like shouldn't even be talked about right now. All right.
+
+36:05 - Unidentified Speaker
+Well, that's a good thing to know.
+
+36:06 - Oliver Ellison
+So maybe move CRM to like future, um, considerations or whatever. Um, okay. So the pricing tiers to think about, we probably want to think about pricing tiers, maybe start comparing similar apps. I think the best pricing tier is one that's equal to another app, but ours is better because ours has more features. So there's a very similar app that like, what is cursor? Not cursor. Um, what's the one you use?
+
+36:32 - David March
+I'm using cursor right now. No, it's not called canvas.
+
+36:34 - Oliver Ellison
+It's called clay. How much does clay charge?
+
+36:38 - David March
+Oh, clay. Oh, wait. So, um, it's not, uh, relevant in this, uh, conversation. Um, uh, we're talking about recruiter access subscriptions and so, The analogy or the thing that would be most relevant to this conversation in this topic would be like ZipRecruiter resume database.
+
+37:13 - Unidentified Speaker
+Is $99 similar to what they charge in a month?
+
+37:15 - Oliver Ellison
+They probably charge more. I noticed a lot of these apps like charge something it's more comfortable for the average person, like 20 bucks a month.
+
+37:26 - David March
+Well, again, I think that this is a reason why I said before, um, the difference between, um, what job seekers want and what, uh, recruiters want. So this would definitely be more of a business expense.
+
+37:44 - Oliver Ellison
+I think you can charge more cause they, that's what I'm trying to say.
+
+37:49 - David March
+This would be, yeah. Recruiters, resume, I think it's about $400 or $500 a month. So I like how they just plugged in an expected revenue and then it was like, hey bro, you're going to be rich. 5 ARR because you're going to have $500,000 in revenue.
+
+38:19 - Oliver Ellison
+enterprise clients at $1,000 average.
+
+38:24 - Oliver Ellison
+That's expected. That's not like a high estimate. That's expected.
+
+38:34 - David March
+Um, so yeah, I mean, a lot of this stuff is like really far down the road. I feel like we can skip it.
+
+38:47 - Oliver Ellison
+Shall I move on to an that the One click employment concept that I was kind of talking about. I, you know, I remember I mentioned Bezos was all about when he created Amazon is like that one click, right? Lose your job, click once, have a new job.
+
+39:29 - Oliver Ellison
+The system automatically analyzes the user's profile skills and this is assuming they already have their data plugged in, right? It matches them with the best available opportunities, applies to multiple relevant positions, simultaneously schedules interviews and handles. So this is a great marketing pitch. If we can get it. To do all of this and make this realistic. I would want to hear this if I lost my job. I was like, fuck yeah, sign me up. So it analyzes, matches, applies, schedules, and facilitates the hiring process through automated workflows. So that would be a nice thing if it actually did all that and it did it well, because that whole one-click concept. So basically, I already have all my data plugged in. I've already filled my profile in. Every time I lose my job or I want Boom, click a button, it generates the new campaign, and I have it right.
+
+40:19 - Oliver Ellison
+So anyways, intelligent profile analysis. This is kind of more marketing things to talk about a little bit. So these are things, these are kind of buzzwords for people, the AI-powered assessment, marketing, positioning, career path optimization. Skill gap analysis. These are all buzzwords people like to hear, right?
+
+40:44 - Oliver Ellison
+Automated job matching, real-time matching, multi-criteria optimization, predictive and analytics. This is all kind of lining up with what we talked about, right? Automated job matching, the one-click application system, so the automated applications, prefilled personalized applications, dynamic resume generation, cover letter automation, automation application tracking that'd be nice if Bezos just bought us right yeah like here's a billion dollars going no you can't be part of me but I'll give you a billion dollars disappear like okay fine I feel like I feel like we're talking about like the an engine running on water here's here's a billion dollars forget that you exist well a lot of Have you ever watched Shark Tank? And they're like, give them their pitch. And then the sharks are like, all right, I will buy your concept. But I want you to go away.
+
+41:47 - David March
+You're going to ruin this.
+
+41:49 - Oliver Ellison
+I have much smarter than people than you to run this idea. Great idea. Here's a few million. Now disappear. I've heard that a bunch of times on Shark Tank. So that's why I said that. That's funny. They don't want amateurs running they want amateurs to not complicate things.
+
+42:04 - David March
+I mean, honestly, Oliver, this is a concept that is groundbreaking. The people that I show this are like, this is the best thing you've ever done. This is the best thing you've ever shown me. This is amazing. Yeah, let's make it real.
+
+42:19 - Oliver Ellison
+Then, yeah, I think we can. So there's this code you wouldn't know. I don't know. I don't know what to do with that, but feel free to. This is kind of cool. How code looks, it's just kind of like elegant in a way once you, anyways, we'll just skip that. I mean, I know that it's just kind of a headache once you're trying to wrap your head around what they all mean, but once you kind of know what some of these things mean, it's kind of a beautiful thing. There's a logic to it, it's just kind of, oh yeah, it's smart. Anyways, the AI machine learning components, so that would be the skill extraction, the experience analysis, It's the career prediction and the market position, right? Is that what I had originally, AI machine learning?
+
+43:04 - David March
+I think that the main thing about looking at these things is like comparing it to reality. Is this what I said?
+
+43:14 - Oliver Ellison
+Well, a lot of it is what you said, sure.
+
+43:17 - David March
+But I don't know if it's... A lot of it that you said and things that we talked about in meetings. I feel like the main thing is you just got to... You have to figure out what's the hallucination.
+
+43:29 - Oliver Ellison
+Well, so it's not going to recommend AI that doesn't exist. Like any AI that it talks about is real. So it's going to be able to create these things. I did instruct it to consider things that we may not have thought about. So this is largely based on our conversation, but also offering some, it's kind of a third person in the room, Here's some other stuff you can think about.
+
+43:56 - Oliver Ellison
+But yeah, it's not like strictly.
+
+44:01 - David March
+Yeah, because these things are really like career prediction, machine learning models for career trajectory forecasting.
+
+44:09 - Oliver Ellison
+Yeah, that could definitely be an interesting thing for people to look at. I wouldn't mind seeing that for myself in my little vain ego self, being like, hey, what's my future gonna look like, you know?
+
+44:20 - David March
+Well, I mean, if you do wanna think about that though, like these type of things would actually be best served with my personality background.
+
+44:32 - Oliver Ellison
+Sure, but I just push one button to do this, plug in some info and then like, boop, and then it's like, here you go, here's your profile, technology.
+
+44:45 - David March
+Something you might want to put in there for the transcript. It's like, if this is going to be something that's more substantial and not something that's just thrown in there haphazardly or fabricated, the truest way, the way that this has been going on for thousands of years really, is career prediction has been based off of personality types.
+
+45:22 - David March
+The idea of temperament has been around for 2,000 years. If you go back to the Galilean and Hippocrates, they would look at people's bile in their liver, and they would understand what type of temperament they would be. If it was phlegmatic, sanguine, colonic, I can see people finding that a really interesting thing.
+
+45:57 - Oliver Ellison
+I can see them wanting to fill that out. It could be like an optional thing, but like if you can keep it simple with just the basics and then there can be some options. Like fill-ins right so like you know how there's like basically an a grid of like nine mandatory tabs and then a little rock you want to talk about the app then we can come back to some documentation yeah yeah that's a little break from that yeah I don't know if you want to wrap it up or we can continue beyond that it's up to you well we want to go in the app just This is the main meat and bone to the whole thing here. Sure, sure. So let's see if we got it right. So we got job preferences, resume upload, job description. These are supposed to be arrows. So next time I can have little arrows, they should point this way and then down from job description to context research.
+
+46:53 - David March
+Yeah, we should have arrows.
+
+46:55 - Oliver Ellison
+And then pinpoint and then pinpoint match.
+
+47:00 - David March
+Wait, that's not pain point. That's pain point.
+
+47:07 - Oliver Ellison
+That's funny. Pain point. So yeah, that's the transcription issue. So then we're going to go to here. So we click the job preferences. We can pick our industry, just a lot like LinkedIn has. Salary range, $1 to year $2 is fine for me. I live in Ethiopia.
+
+47:28 - David March
+I'll take $1 a year, sir. Thank you so much.
+
+47:32 - Oliver Ellison
+I'm rich.
+
+47:34 - Oliver Ellison
+So you can pick your seniority level, type in your key skills like they do in LinkedIn, add some additional notes, save your preferences. It says preferences saved. You can now proceed to the next step.
+
+47:48 - Oliver Ellison
+And yeah.
+
+47:52 - David March
+Is this part of the gamification, step one of 10 kind of thing?
+
+47:56 - Oliver Ellison
+All right, so then you upload your your resume it goes opens your thing you can oh, okay Put your resume in there and then it should parse it to pull out the information put it where it's needed Right, and then you go to your job description It's a little it's going a little too fast, sorry, um We'll work on the gamification. So anyways, the job description. So here we have it. This is not what you were talking about exactly, but it's one way to do it. I guess you plug in an actual job description from the Internet or you can paste text. You can like copy and paste the description or plug it in here. Analyze the job description, right? It wants me to enter URL. Right, analyze job description. I didn't do that, so it's mad at me, right? Let's just say www.job.com. See with it. Analyze job description that says AI is analyzing the job description.
+
+49:08 - Oliver Ellison
+And then it has like,
+
+49:09 - David March
+And so is that pinpoints they actually got it right?
+
+49:14 - Oliver Ellison
+And then it says the business pain point. So it's got the scaling infrastructure, the data processing and the API development. All right, so it parsed all the information from the thing, right?
+
+49:25 - David March
+Okay, good. That it did right. How come it did this one right?
+
+49:30 - Oliver Ellison
+Yeah, so of course that wasn't a real job description. This is just a little toy. And then we can do the context search. So we got the company summary.
+
+49:44 - Oliver Ellison
+Right, so that's the email variable, so it's got- Dad, this is so cool.
+
+49:49 - David March
+I can't believe you did that.
+
+49:51 - Oliver Ellison
+So this is just a fake company. TechCorp is a leading technology. By the way, if somebody isn't already on TechCorp, we should buy that. It's a pretty good name. Anyways, TechCorp recently announced a strategic partnership with Global Data. So it's got some recent news. It's got a contact bio, right? Jane Doe is a hiring manager.
+
+50:09 - David March
+Dude, this is great. This is a great idea. And then the email variable. Who told you to do this?
+
+50:15 - Oliver Ellison
+you did.
+
+50:20 - Oliver Ellison
+So then the tech stack, the market position and competitors, right? Save the research done. So it says research.
+
+50:31 - David March
+Everybody's going to buy this shit.
+
+50:34 - Oliver Ellison
+We need to get it working, but yeah, I agree. Then the find the contact. So here you can type the company name, right? So let's type in like Honda. Because that was the first one that came to my weird brain. I don't own a Honda, I've never owned a Honda, but there it is. Contacts found and verified. Select your, are you able to see that?
+
+50:53 - David March
+Yeah, I'm able to see it, yeah.
+
+50:54 - Oliver Ellison
+Sometimes pop-ups are weird, they don't always show on certain things.
+
+50:58 - David March
+Slow down on this one, slow down, slow down. So you got company, valid. What does invalid mean? Does that mean that it's verified?
+
+51:09 - Oliver Ellison
+What does that mean? Well, it's valid. I don't know. I'm not really sure what other criteria for valid. That's a good question. I don't know what valid is based on. When you click it, it should tell you why it's valid, right? So when you click valid next to Jane Doe on the found contacts page, this is for you, AI. Fix this. When I roll over valid, I want to know why it's valid. I don't want to just trust you that it's valid, okay? All right. The fifth that the All right, so now we move from finding the contact to the pinpoint match. It should be pain point, AI pain. If you call it pin point again, I will cause you pain, AI. It should be how pain point matching works. So our AI analyzes your resume solutions against the company's pain points. It even knows that it's pain point.
+
+52:58 - Oliver Ellison
+Each match shows how... I even picked that list you emailed me. I still got it wrong. Anyways, moving on. Challenge one, scaling infrastructure. Yeah, this is a big part.
+
+53:11 - David March
+Yeah, this is the list I gave you, yeah.
+
+53:16 - Oliver Ellison
+Yeah, this is a huge part.
+
+53:18 - David March
+This is gonna be game-changing, bro. Yeah, yeah.
+
+53:22 - Oliver Ellison
+I mean, it certainly has a potential here if we get it... That's it should be pain point and then offer creation.
+
+53:54 - David March
+So now this part, this part, it can be huge upsells here.
+
+54:01 - Oliver Ellison
+So the, your, your personalized offer, it's got your executive ROI strategy. So this is that the three different ways to do your personalized offer. It could be a recruiter angle, a manager angle and executive angle.
+
+54:14 - David March
+And I have a link and a video.
+
+54:19 - Oliver Ellison
+They don't work right now, but we can get them working. And then they would have to have the recruiter tone, the manager tone. It kind of tells you. So the recruiter tone.
+
+54:31 - David March
+Why don't you put a, um, why don't you put a, like a, a box for that?
+
+54:37 - Oliver Ellison
+Like, um, so next to the executive tone, there's another tone.
+
+54:42 - David March
+Next to the executive, like custom tone. Oh, like a dropdown or.
+
+54:46 - Oliver Ellison
+or something where you pick a tone?
+
+54:47 - David March
+Yeah, you could pick a tone.
+
+54:50 - Oliver Ellison
+Well, it kind of has that, right? So you have your recruiter tone, your manager tone, or executive tone. There are three little tabs at the top.
+
+54:58 - David March
+And what is the manifestation of that? If you click on it, let's Read this. OK, let's look at the recruiter tone.
+
+55:04 - Oliver Ellison
+So it says, I understand you're facing the challenge of scaling your back end infrastructure to handle traffic growth, or 10 times, sorry. I don't have my glasses on. 10 times traffic growth. Based on my experience with similar scaling challenges, I can offer you a quick analysis and actionable recommendations. Here's what I can provide. Infrastructure, audit and bottleneck identification, scalability recommendations with cost projections, implementation timeline and resource requirements, performance monitoring and optimization strategies. I have successfully helped reduce infrastructure costs by 25% while improving performance by 40%. Would you be interested in a brief 15-minute call to discuss how these strategies could apply to your specific situation?
+
+55:59 - David March
+I thought I was back in my email box.
+
+56:01 - Oliver Ellison
+All right. So, I understand you're facing the challenge of scaling your backend infrastructure. So, is that different? No, it's... Pretty similar. Oh, I'm clicking on the wrong thing. So the first part is identical for all three. The first, the top line. The next part changes. So based on my deep experience with microservices, okay. So for the manager, it talks differently about their experience. So based on my deep experience with microservices architecture and cloud scaling, I can offer you a comprehensive technical analysis and implementation strategy. It was virtually the same email.
+
+56:38 - David March
+I like the idea of it.
+
+56:42 - Oliver Ellison
+The wording is just there. We can fix it however we like,
+
+56:45 - David March
+We can work all day on the wording. I think it should be more like sales, more like technical, and then more like efficiency would be good.
+
+57:09 - David March
+It seems like there should be a developer, like a software engineer tone, salesperson tone. There should be a lot of tones. There should be a lot of tones.
+
+57:23 - Oliver Ellison
+Like a different kind of message that's generated based on it. I mean, not for every job in the world, but definitely for the main Main job types and then you can like edit it. Cause this is editable like this is an actual like I can go and change my message right? It's just kind of giving me a template to start with. Right, it should maybe have in parentheses next to your personalized offer edit to customize or whatever customized to your own personalized voice or whatever right here next to your personalized offer heading and then they can just go in and be like I don't like the way this is working. Let me get rid of that. And let's see over here. And there's too many bullet points. Let's just use two bullet points. And I don't want to brag, so I'm going to say that I've badly led similar scaling projects.
+
+58:14 - David March
+Make them think. So anyways, moving on. Or what you could do is, what was I going to say? Intentionally make typos so that it looks like you're a human.
+
+58:30 - Oliver Ellison
+Yeah, that's what I do at work so that I don't sound like AI is making all my stuff because I don't know, like, always how to respond to people. So I just kind of, like, tell AI, like, make sure that the capitalization is not consistent and that there's at least one typo in every message.
+
+58:47 - Oliver Ellison
+I don't know if that's going to backfire. They're like, this guy's illiterate, man.
+
+58:53 - Oliver Ellison
+So then the compose is the next one, right? Again, it's only got it says email generated successfully, right? So I now you have the variables.
+
+59:02 - David March
+Yeah, now it's got the recruiter, right?
+
+59:05 - Oliver Ellison
+I've already. OK, thanks, thank you. Keep telling us so simplify that it's cause I clicked on all three jargon detected. API, I should spell it out. It's an application programming interface. Instead of KPI, I should say key performance indicator. Instead of ROI, I should say return on investment. So if you wanted to simplify, you can write your email. You can have a look for jargon and tell you to spell it out.
+
+59:35 - David March
+I love this section.
+
+59:36 - Oliver Ellison
+That's an idea. This is my favorite section.
+
+59:40 - David March
+So that over on the right, we have available variables.
+
+59:43 - Oliver Ellison
+There's a tongue twister. Can you say available variables?
+
+59:47 - David March
+Available variables, right?
+
+59:50 - Oliver Ellison
+And then so the contacts first name, company name. You can plug this in points again.
+
+59:56 - David March
+Another pinpoint.
+
+1:00:01 - Oliver Ellison
+Cursor or JPT or whomever. Go into here and find wherever it says pinpoint. Change it to pain point. I don't think there's any. Any need for the word pinpoint?
+
+1:00:16 - Oliver Ellison
+All right, so and then the email preview is after you've already typed it up. Here's your email. It's customized to your own style, how you want to send. I have a feeling everybody's going to want their email to be a little different. Everybody's got a different voice. They've got a different idea of what kind of email they should send. Some are going to want to send really short emails because they don't want to bother people. Other people want to over explain, right? And then I'm not sending that. It's too long or it's too short, right? Everybody's going to have their own. You want them to send something they're comfortable with. Same with a recruiter. Probably going to have their own. Kind of style, and they're going to be like, sure, that's the only way to do it. I know that feeling. That's why I say that. Because sometimes it just depends on what mood I'm in. I just should not send this email. It's too long. And other days, I'm like, this needs to be longer. So it's kind of what mood I'm in. So anyways, after the compose and the campaign. So these are all your ideas for the most part. So then the job application campaign, you can name it and save different campaigns, of course. Email one. Quick advice on senior software engineer at Tech Hygiene.
+
+1:00:13 - Oliver Ellison
+Okay, whatever. Anyways, let's move on. So I'm going to share. I don't know if Redeye is working the way it's supposed to. I think it is.
+
+1:02:02 - Oliver Ellison
+Very cool. So we were on the campaign tab. It's basically the last tab and then you hit the rocket button. So we can figure out exactly how we want that UI to work later. But here's the campaign concept. So you create a campaign name, right? And you have your initial follow up and final follow up. We might want some others. Remember, this is just how you send I mean, our first week working together, you showed me an Excel file that was like that, right?
+
+1:02:34 - David March
+Yeah, but we don't need to that in there though.
+
+1:02:38 - Oliver Ellison
+Well, I don't know, maybe not, but it's interesting. It gives it a spam score.
+
+1:02:43 - Unidentified Speaker
+That's kind of a fun thing.
+
+1:02:47 - Oliver Ellison
+So it's acceptable level of spam.
+
+1:02:51 - Oliver Ellison
+I think it's fun. Um, cause how many times have you seen a spam score or wanted one, right? So then launch campaign.
+
+1:03:01 - David March
+So it says campaign launched successfully.
+
+1:03:04 - Oliver Ellison
+Your emails will be sent according to schedule. So it schedules outgoing emails. The idea is this one quick thing, right? So you, you don't have to send these later. It's going to schedule them.
+
+1:03:16 - David March
+I think that has value.
+
+1:03:17 - Oliver Ellison
+I know you already have an app for that. Combining stuff. It was finally deliverability launch, right? It gives a campaign summary, right? You've got the email verification. Oh, your spam score of 2.1 is acceptable, but you may want to consider reducing the a bit. All right. You don't want too much of that. People don't like that. So email verification, your SPF record found invalid domain authorized to send emails.
+
+1:03:47 - David March
+So I feel like this should not be seen by the average consumer. I feel like none of these things they're really going to know. People are going to look at this and be like, what do I do with this green? I don't even know what I'm supposed to press on here. It's better not to underestimate people.
+
+1:04:06 - Oliver Ellison
+So there's different levels of intelligence. The thing is, it's easy for people to catch up. Because when they're comparing two different products and they want to figure out where They might be like, this one's more sophisticated and it doesn't make me feel like a dummy. Like, I think if you make people, yes, you want it easy, but if they dig into it, they don't have to interact with this page. There's literally just one button, right?
+
+1:04:32 - David March
+It's just a pre-flight check.
+
+1:04:33 - Oliver Ellison
+It explains that all these things are good.
+
+1:04:36 - David March
+And maybe, maybe it's like, maybe, maybe it's better to do as like checks, as like ticks, as like a tick on, um, on a list. So you think the new cards are too intimidating?
+
+1:04:54 - Oliver Ellison
+So green check boxes on the pre-flight checks. On the deliverability launch page.
+
+1:05:02 - David March
+I guess this feels a little bit less intimidating. That makes sense.
+
+1:05:07 - Oliver Ellison
+People are used to check marks when they like can And then campaign launched. It's already launched. I'm going to get a job now.
+
+1:05:16 - Oliver Ellison
+One quick one.
+
+1:05:17 - David March
+One quick one job. One quick one job. I mean, that is kind of the idea.
+
+1:05:23 - Oliver Ellison
+So I don't know. There's work to be done. As you noticed, we kind of like didn't pay any attention to the graphics this time. And what I wanted to do was have these arrows go like this. So there was like a little snake of arrows that was going to do it this time. Yeah, I like the arrows.
+
+1:05:39 - David March
+And I will do that.
+
+1:05:40 - Oliver Ellison
+But right now, it just looks like this. And for some reason, for pinpoint, it kept giving me this thing, even though I kept changing it to a different icon, and then it would change it back. So that's AI messing with me. I don't know. It just tries to keep me on edge a little bit. But yeah, so we can continue to look at more.
+
+1:05:59 - David March
+Let's go back to the app, Oliver. And let's look at that. Job section again.
+
+1:06:09 - David March
+The one that said like put in a job description, yeah.
+
+1:06:20 - David March
+I'm curious about this page. Or a text. So is this to say that they will go to the that they found on another page on Indeed or Simplify Jobs or LinkedIn Jobs, and then they just copy and paste it into here?
+
+1:06:45 - Oliver Ellison
+That would be what we're saying.
+
+1:06:49 - David March
+Because, I mean, this is more of an idea, something to think about. Last time it sounded like what we were doing is connecting thing to like API to the, um, to like, the LinkedIn jobs or Indeed. Um, that's what we were talking about before. This time, we're talking about, you know, at least the way it visually looks, they're talking about not doing that at all. And having them get their job description from wherever they find it put into here.
+
+1:07:34 - Oliver Ellison
+Well, instead of having them like have to go out and find the jobs, we could scrape for the jobs and then give them some jobs to put in here.
+
+1:07:46 - David March
+Yeah, I mean, yes, but this actually might be a more efficient way, though.
+
+1:07:53 - Oliver Ellison
+People are probably pretty good at finding jobs. Not great at it, but that's not the hard part, right? You could probably find jobs. Applying for the job and getting approved for the job is harder. Finding a job that's out there is, you know, you could probably Google like jobs, you know, and find some jobs.
+
+1:08:12 - David March
+Maybe we don't need to, maybe we don't need to have the jobs in here. I don't know.
+
+1:08:19 - Unidentified Speaker
+I think you could do both.
+
+1:08:20 - Oliver Ellison
+They're not mutually exclusive. I think it's kind of neat to have a page to like, look up the job. So let's say yay was my extremely detailed job that I pasted in there. And it's like telling me my match. So it's, if my goal is just to like match, whether this is a good fit for me, I can just throw a job in there and see, it was just, it's different than every it's, it's different than we originally talked about, but I think it's a good idea.
+
+1:08:52 - David March
+It's interesting. I would play with this.
+
+1:08:55 - Oliver Ellison
+If there was a job I wanted to look at that I found somewhere else, I'd be like, also, I think this would be easy for you to talk to other people. If you're like, hey, by the way, there's this feature that if there's a job you're considering, it'll tell you if it's a good fit.
+
+1:09:08 - Oliver Ellison
+This seems like an easy thing to talk about. It's easy thing to describe to a normal person who doesn't know anything else except that they need a job. Or to someone who does know a lot, who they're an expert in the field of recruiting or whatever, and they're like, tells you like are you a good fit for the job and it kind of gives you a fitness score. I think that could be a good thing. I think it's true. And it uses AI so people think AI is cool so it gives them like an AI analysis just using LLM to kind of find keywords and stuff but it's still kind of a useful little. Finds the pain points, sees if you film and then you know LinkedIn does this right it gives you like a score of like how well you compared to other candidates, right? Yeah, this is a huge page right here, dude.
+
+1:09:56 - David March
+It's definitely a feature.
+
+1:09:57 - Oliver Ellison
+I don't know if it fits really in like the chain of events, but it could.
+
+1:10:03 - Oliver Ellison
+Right, so you go from job preferences to resume upload, because all of these things are necessary so far, right? And then you have job description. The job description is probably the most important piece dude yeah but I'm not saying it's not important I'm saying that I don't know like okay so you go from job descriptions then from there so let's say you you plug some in and then you find the job so once you put your job description are you just applying to that one job after this like all the other stuff this one job hmm so hmm so that makes a good point so then we have to But like multiple then.
+
+1:10:45 - Oliver Ellison
+Let's say you did it. You kind of leave it like this. But then after it's like good match and then ask you like, do you want to save, save? And then on the left, there could be a column of like safe jobs. We're not really adding much.
+
+1:10:57 - David March
+You're just adding like adding a list of safe jobs.
+
+11:02 - Oliver Ellison
+And then, you know, this needs to be connected to a database, like a Postgres database so that it can actually like save stuff. Cause right now it's not, but Save it to a little database and then all the saved data. So we like the gay job, right? It told us our pain points, it says we're a good match, we'll save it. And then we'll put in another job description and it says, all right, I've got like 20 jobs. And then all these jobs that I have in this under saved jobs will then be carried over to this next step, which is the context search, right?
+
+11:35 - David March
+Yeah, but also, All of this should apply.
+
+11:40 - Oliver Ellison
+Assuming this should be a suitable thing, right?
+
+11:44 - David March
+Yeah, so that's the that I'm thinking about.
+
+11:51 - David March
+On the left, if I click the job number one, it should change all these fields.
+
+11:56 - Oliver Ellison
+Click job number two, all these fields should change. So now I've saved 10 jobs or however many jobs I think I'm a good fit for. If I only find myself fitting three jobs or maybe 30 jobs, whatever the case, I can click through each one. Each time I click a different job on the left and then it's going to show me, it's going to repopulate all these little fields and then I can save research and it should be good for all those. Yeah, but you know what you should also do?
+
+12:22 - David March
+And this is probably my favorite feature of Simplify Jobs. My favorite feature is if you go back to that page where you were just at.
+
+12:34 - David March
+Yeah, go down, go down. You know, you can do it here or you could do other places, but you do export, export, um, CSV. Or yeah, like CSV, like Excel. The context research page, we need to export to CSV button.
+
+12:53 - Oliver Ellison
+Excuse me.
+
+12:55 - David March
+And, um, and back and you go back to the original one too. Um, the one before that. On the job description, because first of all, the job description is going to have the company name. So you should probably have company name in this page, because the company name of this page with the job description on this page will be what the next one works off of So it's probably pretty important for that to be a field. Company name.
+
+13:32 - Oliver Ellison
+Well, it doesn't seem necessary because if I'm going to put a URL in here, it's going to know the company name. Or what if, okay, how about this? I put in the company or put in the link or I paste the text and it should populate all the stuff it needs to know if it needs, you know, and then if it's like, by the way, these fields are still missing, you know, like there can be nothing left blank. So it's going to populate as much as it you can based on the description. It uses AI to do that, just like it uses AI to find the pain points. But then it says, oh, I don't know the company name that wasn't in what you gave me, right? So that's what I'm trying to say.
+
+14:08 - David March
+You want to make sure that you want to make it foolproof. If they make a mistake, or if they just put a job description in, and that job description doesn't have the company name, you can't move forward or something, because the company is a very important variable for the next step of this.
+
+14:30 - Oliver Ellison
+So on the job descriptions tab, when you open this page, you're going to paste and whatever you paste in there, whether it's URL or text, it's going to scrape what it can. It's going to populate fields underneath it. It already has the pain points and the required skills, the success metrics, the company context, the reporting structure, and the AI confidence But what it's lacking is basic information, like demographic information about the job that will be needed on the next tab, which includes the company name and whatever else it might need to know when it gets to the next tab, which is context research. So by the time we get to context research, we need to know at least the company name and anything else that would be needed in order to do a good context search. And a little more than just the because we need to know enough about the company that we're looking up the right tech corp, right? You know, like Denali, for example, I work at Denali, but there's like four of them. Denali is owned by 3MD Inc, but there's also a 3M and there's other similar names. So we wanna make sure that the company name isn't the only variable that's being pulled because otherwise it's gonna give us the wrong company summary. When we get to the next tab, it's gotta be a little more little more information for the contact search to make sure that it's looking up the right stuff. That's right. Sorry for the long-winded thing. I just want to make sure that AI gets all this, assuming it's actually like recording. Better be. I'm going to get you, AI.
+
+16:03 - David March
+Fuck up my Meeting. All right.
+
+16:07 - David March
+All right.
+
+16:08 - Oliver Ellison
+Overlord is going to take over us, so I'm not really going to take it back. Don't hurt me. All right. So then finding the contact. And then did you get Did you get the point of the export to CSV?
+
+16:22 - David March
+Because that's going to be really good to have from other job descriptions that they put in there, because then you can, you have a tracker of all the job descriptions that you put in there. That's what I like about Simplified Jobs. It gives you the whole tracker. And then this could be the startings of the tracker for your job for your job search. It's a job search tracker.
+
+16:52 - Oliver Ellison
+The only thing I'm wondering is, so you want to export a CSV, but forgive me if I'm underestimating the average user, but are they going to know what to do with that CSV? And wouldn't it be better just to have that information saved somewhere so that they can just automatically have that data that would have that have been otherwise exported, just populate the next one. Yeah, maybe, yeah.
+
+17:18 - David March
+Okay, so you're saying that instead of exporting to CSV, you just have a separate section in this app that has the... Yeah, we're trying to make this like dummy proof.
+
+17:27 - Oliver Ellison
+Not that it's for dummies, it's just like, I don't want to mess around with CSVs, it's kind of a hassle.
+
+17:34 - Oliver Ellison
+Like, remember all that work you were doing on that one CSV to try to like align the columns? Like, I have a lot of experience doing that kind of stuff, I even found it somewhat tedious. So, and like, so like, yeah. Um, okay. I don't know if they really want to see us. I mean, maybe I wouldn't have a prominent button, maybe like a small export CSV button, but mainly it should save the data in the data. Cause they're going to have their own profile set up their own user account. It should save.
+
+18:05 - David March
+I want you to be like a job search tracker, which holds, which is really the database. The job search tracker is the database which holds all the companies that they put into that job description field. And then also on that tracker, they could then keep track of the jobs that they had interviews for and the jobs that they didn't have interviews for, the jobs that are in the first stage, second stage, whatever. It's like a pipeline.
+
+18:39 - Oliver Ellison
+As you were saying that, I was thinking what we need is like a like job completeness score for each job. So like you have, you've already done your, your contact research. So it gets a point of completion for that. So if you're on this screen and you already completed this one, and then the previous screen, which was like the company background, right. The company research, and if you. Like it's going to save the context research we can export it but it's better to save it probably do both if you want you can have a little export button but mainly I think what we want is it saves all the jobs they've saved data on into the Postgres database or whatever database we're using and then yeah that's probably what we want so all of these things will be saved in their personal database for that for let's say TechCorp right this is so then they've already been the research on TechCorp So tech corp, let's say, you know, after we already have their company research, now we can have the contact, we find all the contacts we want to talk to. And then that's saved under the company. Let's say we like all of these. We can select it or like maybe there should be a button like add. So like add contact, which means it's going to add to our email campaign. Do you normally email multiple contacts in the same company?
+
+20:03 - David March
+Um, you do, um, have three, I, I, I think that, you know, three is probably the max. So, cause they, they recently put in, uh, some, uh, some, um, criteria or not criteria, like, I don't know if they'll say something or like, you can't do too many because I, cause what's happening, What's been happening is that people have been just adding like 10 to 15 contacts of the same company. It's not very personal when like your co-worker says, oh, you got an email from that guy too.
+
+20:43 - Oliver Ellison
+But, um, yeah. I don't want I don't want to say it's not valuable. It is valuable to contact multiple people in the company, not just one.
+
+20:54 - David March
+Well, anyways, it's only letting us select one contact.
+
+21:00 - Oliver Ellison
+On the find contact screen, we're only allowed to select one contact. It should be able to select three contacts.
+
+21:06 - David March
+Three, because you would want to, it depends on the, well, really, and this goes for the recruiter and the job seeker one, right? Because, and especially more for the recruiter. I think probably more on the recruiter side than on the job seeker side, because on the recruiter side, when you're trying to make business, you don't know who holds the budget. It's possible the CFO, it's possible the COO, it's possible the CEO, maybe the CTO. We don't really know who holds the budget on the hiring at the company.
+
+21:51 - David March
+And then instead of, so finding is the first step you put in the company name.
+
+21:55 - Oliver Ellison
+But the thing is, if we're doing this in order, like the order of the nine tabs and their sequential order, like you said, a pipeline, it, it should already know the company name. But when you go to the next screen, find contact, I guess you can have the option to search for a company name, but really it should already have all the contacts for the companies you selected. Or you can have on the left or right column or, you know, on the side somewhere, you can have a list of companies that are on your company list and go through each one. It should list all the found contacts. And then, right, and then go through and you click each one. You can see my cursor, right? You go through each one of these little found contacts and, sorry, each one of these companies, you get the found contacts and then you can select up to three. And maybe a little disclaimer of like why we're only letting you pick three with a good explanation. So they don't think it's like some sort of a rate limited thing. It's we're doing it for their own good. Yeah, yeah, we got to do
+
+22:55 - David March
+They can reach out to them if they want, but we don't advise it.
+
+23:02 - Oliver Ellison
+Yeah, we'll put it what you can do is deliverability piece.
+
+23:07 - David March
+Do you make that as a reasoning?
+
+23:11 - David March
+But might you want to put more, you might want to have the ability to get more of the recruiter side. Like the job seeker only is allowed three, but like on the recruiter side, you can do like five or six or something.
+
+23:30 - David March
+So anyways, where were we?
+
+23:30 - Oliver Ellison
+So we find contact, pinpoint match, calculate match. I think this is going to be a big piece too. I like this piece. It's kind of redundant. The pain point match calculated successfully, your solutions align well with their challenges. Kind of redundant? Well, because we already did the whole job descriptions, and you type something here, you analyze the job description, and it tells you the business pain points, and it tells you the required... But doesn't it have a solution?
+
+24:08 - David March
+No, I'm not saying it's completely I'm just saying it's a little redundant.
+
+24:12 - Oliver Ellison
+Maybe we can consolidate some of it on one tab. And anyways, maybe it's fine. Just saying it might seem a little redundant anyway. So the, the pinpoint mashing work, it seems also kind of late in the stage. Cause let me see what the email says. You might be right.
+
+24:30 - Unidentified Speaker
+All of them.
+
+24:41 - David March
+What email are you looking at? Hold on.
+
+24:45 - Oliver Ellison
+Hold on a second. Hold on.
+
+24:49 - David March
+I sent you an email about this. Yeah, it is late. It is late. You're right. Pinpoint or pain point as it should be, is actually the fourth. It is the fourth. Oh, I see.
+
+25:06 - Oliver Ellison
+It is late. Oh, it's going like this. I didn't listen to my instructions.
+
+25:11 - David March
+All right.
+
+25:11 - Oliver Ellison
+So it should be one, two, three, four. No, no, no. One, two, three to the left four.
+
+25:17 - David March
+I'm saying it should be a snake, but it should be that that's easiest the way. What you're saying is it should go from left to right and then down visually as far as the So this should be four.
+
+25:33 - Oliver Ellison
+That makes more sense. It should be four, yeah.
+
+25:38 - David March
+But it's still redundant with the other thing.
+
+25:41 - Oliver Ellison
+No, but I think if you do it that way, it's not as redundant.
+
+25:47 - David March
+So let's see.
+
+25:48 - Oliver Ellison
+How pinpoint matching works. Our AI analyzes your resume solutions against the company's pinpoints to find the best alignment each. So the companies comes before the jobs. So you start with the company and then you move on to the job they're offering. So, yeah. So, so resume second, right.
+
+26:11 - David March
+Then job description and then pinpoint there.
+
+26:22 - Unidentified Speaker
+I mean, I'm not sure. And we can think about it some more.
+
+26:26 - Oliver Ellison
+We'll just go through what it's offered here. I'm not sure the order makes sense to me. I don't think it has to be perfect. Ultimately, as long as they have everything populated by the time they click this rocket button and their deliverability launch, and it does a full analysis of everything. It says their fitness score for sending off their campaign. It's checking everything for potential problems like the spam score and stuff, anything that rate, anything that could be an issue for them. Then they know when they launched their campaign, it should have some success. That would help them. Anyways, that's what I'm thinking. Like maybe the order does nothing perfect. We can just do our best. And then if, if there's some incongruity or some cognitive dissonance about what order it should go in, it's not a huge deal that I don't think anyone's going to be like, I will not use this app because four should come first and then five. You know what I mean? Nobody's going to care.
+
+27:20 - David March
+I mean, the pain point match, I think, is important, though.
+
+27:31 - Oliver Ellison
+All right, so is there anything else about this you want to look at?
+
+27:36 - David March
+Let's go back to the main.
+
+27:46 - Oliver Ellison
+By the way, I have a Every intention of improving this appearance is just kind of functionally where I was kind of at with it. I think we made some good progress, though.
+
+27:58 - Oliver Ellison
+Yeah, I kind of went backwards on the aesthetics just to go forwards on the functionality so I could focus on that. But we'll get back to that. See if there's any other stuff that's worth talking about real quick. I know I don't want to take your whole night. I know it's getting late. It's like 10.30 there.
+
+28:19 - David March
+So this is, there's comprehensive documentation. Oh, this is the list of things, sorry.
+
+28:28 - Oliver Ellison
+So the vision. So we talked about the vision, kind of went through this already. Go to the big picture view of this. The big picture view?
+
+28:42 - Oliver Ellison
+Go to week updates.
+
+28:46 - David March
+Oh, well, actually, probably the better place to go would be to the index.
+
+28:51 - Oliver Ellison
+Yeah, the index, yeah. You can kind of see, like, all the things.
+
+28:58 - David March
+Yeah, live pages concept would have to be the author first design and the live pages concept, those two.
+
+29:09 - David March
+Yeah, office first design, office offer first design, two way value exchange. I don't know what this is.
+
+29:24 - Oliver Ellison
+I was thinking about how like we're able to, we're able to sell on both ends of the spectrum. So kind of like you represent both the buyer and a seller of a real estate deal, right? Here we have the recruiters and the seekers. They give us resumes, which are then a value to the job, the recruiters and back and forth. So it's kind of a nice incentivized kind of, it helps us, we gain customers.
+
+29:59 - Oliver Ellison
+Is that what this means? That's part of what it means. It means a lot of things.
+
+30:04 - David March
+documentation for you to go through and look at.
+
+30:08 - Oliver Ellison
+So every interaction provides value to both parties. So like every time we get a resume, it has value to both the person seeking the job and the people that might use the resume, basically, to its basic common denominator.
+
+30:24 - Oliver Ellison
+Clear benefits, mutual respect, it's kind of win-win outcomes. So if we have customers, types of customers, that would be the optimal thing for us. So I think that what this is saying is the whole idea of a recruiter and job seeker.
+
+30:39 - David March
+Having both customers from both ends.
+
+30:43 - David March
+So this is just some, some, uh, system architecture code, which means nothing.
+
+30:49 - Oliver Ellison
+Probably we don't need it in the documentation. Um, value exchange framework. So salary This is something else that we haven't talked about yet.
+
+31:02 - David March
+There's a company value preposition.
+
+31:19 - Oliver Ellison
+We are probably getting ahead of ourselves there.
+
+31:24 - Oliver Ellison
+I'll get rid of all this code here. I don't know. Why is all this code here?
+
+31:27 - David March
+I'm not sure. Just kind of plugged in some code where it's not needed.
+
+31:31 - Oliver Ellison
+Hey, please remove the code from the documents. It's not, not wanted. And business people don't want to look at that. Um, where do I pay the revenue models, the value based pricing success fee. So 10 to 15% of the total value created. That's what we're talking about.
+
+31:52 - David March
+That's the, that's the Yeah, I mean, like I said, I think a success fee is, I don't know. I mean, that was a main source of the opposite of income, like the, you know what I mean? Because it was like 80, 20, 90, 10, like we talked about. So I was thinking that, but I'm having second thoughts on that. Like I said, I might want to do, Maybe more upsells instead of the success fee, but, you know, remains to be seen. That's kind of what I was thinking about. It's definitely, we'll figure out something that makes sense. Yeah, we'll have to test it.
+
+32:42 - Oliver Ellison
+Value creation. So 10 million guaranteed day one.
+
+32:47 - Unidentified Speaker
+No, all guaranteed.
+
+32:49 - Oliver Ellison
+And created annually. That's what it's like, So I don't know.
+
+32:52 - David March
+It's basing that on something. It knows more than we do.
+
+32:55 - Oliver Ellison
+We're going to be millionaires, bro. Does it? $10 million day one. All right.
+
+33:02 - David March
+No, I didn't say day one. I made that part up, but it said value creation, $10 million plus in total value created annually based on some kind of metric.
+
+33:12 - Oliver Ellison
+I don't know. I don't, I think it's all fabricated.
+
+33:14 - David March
+I think all this stuff is bullshit.
+
+33:17 - Oliver Ellison
+You know, apps make money.
+
+33:19 - David March
+That's what we know. Let's much money this one can make.
+
+33:24 - Oliver Ellison
+I don't know. I think the idea is genius. I think what we're doing is groundbreaking. Is it going to make $10 million tomorrow?
+
+33:32 - David March
+No, not tomorrow. But annually? Shoot, I'll take it.
+
+33:37 - Oliver Ellison
+Shoot, I'll take $1 million a year. I mean, come on. Hell yeah.
+
+33:41 - David March
+I'm making I'm making $200,000 right now.
+
+33:44 - Oliver Ellison
+I'll take a million.
+
+33:45 - David March
+That's like five times more than I'm making.
+
+33:47 - Oliver Ellison
+I quit my job. I wish I was close to that.
+
+33:55 - David March
+I'm not that right now. Let's see, phases.
+
+34:06 - Oliver Ellison
+The live pages thing, that's going to have to be That's going to be a huge upsell.
+
+34:12 - David March
+What did you say? The live pages, if you want to go back to the index.
+
+34:26 - David March
+Live pages concept, that's going to be a huge upsell.
+
+34:38 - David March
+That's going to be a huge upgrade. I cannot come. It takes a lot of work.
+
+34:43 - Oliver Ellison
+It represents a revolutionary approach to email marketing and candidate engagement by creating dynamic personalized landing pages that adapt in real time based on recipients profile preferences and behavior. This concept transform static email links into intelligent interactive experiences that maximize engagement and You have to Read it like a movie theater voice. There you go.
+
+35:10 - David March
+The problem.
+
+35:24 - Unidentified Speaker
+Yeah, this is like a like more than premium. This is like an elite. This is like an elite upgrade.
+
+35:37 - Unidentified Speaker
+And again, all of this.
+
+35:39 - Oliver Ellison
+What we want is just a nice looking stupid diagram, not a bunch of code. So hey AI, if you didn't hear me the first time, all these code blocks with this Python script. Nobody can Read that shit. Just replace it with a nice mermaid diagram. That means. Converted to the MMD file. In the HTML so that we can look at it and be like, oh, boxes and arrows, not a bunch of code we can't Read. Thank you. Hopefully it's recording and it actually does that.
+
+36:13 - Oliver Ellison
+I mean, I think, I think we're, um, you know, tapping out on, on time here.
+
+36:22 - David March
+And mental energy. So I feel like it's a fair to say that some progress was made?
+
+36:28 - Oliver Ellison
+I think it's definitely fair to say progress is made and we're doing a lot.
+
+36:36 - David March
+We're definitely making a lot of work happen. Do you feel like there's enough notes from things we talked about today that are going to help us make progress for next week?
+
+36:48 - Oliver Ellison
+Do you think it would be valuable to send me some maybe to look Um, and send me some updates and some other ideas so that we can make week five as productive as week four. Yeah, week four is really productive.
+
+37:04 - David March
+Well, yeah, well, yeah, I mean, we have, we have a lot of good things to talk about today and then I'll, um, kind of, uh, send, send you an email of some other ideas that, um, that we talked about today and that, you know, we can implement for next week. I have two transcripts. Need to turn into one transcript from the two meetings.
+
+37:24 - Oliver Ellison
+Hopefully this one actually, it looks like I see it on the right there, don't you? I do. I do. It's something. So hopefully it's going to be something I can grab and use. I'm just a little nervous about it because I haven't used this before this way. I had download something new. The other one wouldn't join us the way it's supposed to. Anyway, it's cool.
+
+37:45 - David March
+All right, David, it was nice talking with you.
+
+37:46 - Oliver Ellison
+I enjoyed Working on this with you today. I feel like we're headed in the right direction. I feel like we could probably get more out of today's session if you go over the documentation and in the app and just give it a little bit more thought on your own. You're the one who's going to be you and people like you are the ones who are going to be using it, so your insight onto the workflow is much more valuable than mine. So I. Can kind of get a sense for what doesn't make any sense at all. But I don't really get a sense for like what's really, really needed, because I'm not in the industry, right? I just have a general idea of like a job seeker. I've never been a recruiter. And I haven't even been on the job market that long, longer than I wanted to be. But it doesn't make me an expert on job seeking. I have some intuitive ideas, but they're just kind of newbie ideas. You definitely have the context, and you work with lots of people. You need to kind of give me as much feedback what you're doing these meetings are super helpful But we don't need to wait for the Meeting send me an email. I'll look over the stuff That's why I made it available for you to HTML to kind of give me some feedback what you're doing I'm not I'm not saying you're not you're lots of good feedback. I feel like as much There's a lot to look at and what to think about So to get the most out of that progress Give me some notes on what's working and what's not and what you want Maybe there doesn't need to be nine grid whatever buttons. Maybe we like that. Maybe some of them need to change. Maybe you need to consolidate some of those features. Maybe there's some stuff I forgot that you mentioned last time that didn't get included.
+
+39:25 - Oliver Ellison
+Yeah maybe like I told him to put this in there. Why isn't that in there? You know I mean that kind of thing. So yeah just kind of do that for me and if you could send me an email notes that would be helpful and I'll feed it in then try to try to make week five I feel like I'm not sure how much more progress is gonna be on week five based on this conversation there's gonna be a few little tweaks but I don't I don't know I feel like we need to win a little bit more a little bit more conversation or a little bit more information from you to kind of say what needs to needs to be improved so that I can do that okay yeah otherwise I just don't know what am I gonna change
+
+40:05 - David March
+you know I'm I'm going to make a couple of changes, you know, but yeah.
+
+40:08 - Oliver Ellison
+I mean, yeah, I'll send you, I'll send you the, the, the main changes. I think that, uh, I have a couple of things in mind.
+
+40:18 - David March
+And I'm tired. So, and I'm only remembering like 12% of the conversation right now. That's why the transcripts there.
+
+40:22 - Oliver Ellison
+So there's probably a lot of stuff that we talked about that, that I'm not even thinking about right now that I'm going to be implementing. But again, like, yeah. Any more thoughts you have, look over the documentation. Don't be shy about that either. It's just, you know, I didn't spend a ton of time on it. I defined the kind of documents I wanted and the kind of language I wanted, but, you know, it did most of the work. So, you know, we've looked at it for almost the same amount of time. So anything at all that you want to say about the documentation, the app?
+
+40:55 - David March
+I'm going to work on the architecture so that it looks more professional.
+
+40:58 - Oliver Ellison
+At some point, we're going to be showing this to potential investors that might want to help us get this thing actually like deployed and on the market. So I want everything to look really, really sharp and really, really professional. So all the architecture documents and everything wanted to look like really good for investors and for, you know, big, big people that might want to buy us out and set us free with some Yeah, I mean, God knows I need it, man. We'll take it. Well, I sent you 400, so I hope that helps a little bit.
+
+41:31 - David March
+Yeah, yeah, no, that's good.
+
+41:33 - Oliver Ellison
+You know, just, you know, working on it, man.
+
+41:38 - David March
+I'm just working on it, man. So yeah, I think I think this is going to be big and I'll send you some information so that we can make it even bigger. All right. All right, David, have a great night. Thanks for hanging. Thanks for me and my buddy on this, man.
+
+41:52 - Oliver Ellison
+I'm telling you, like, it's really, really a neat opportunity to have a partner willing to work with me on this. I don't, I don't take it for granted at all. It's a, it's a special thing. And I do appreciate you. You have enough trust and faith in, uh, in our teamwork to actually like spend the time. Thank you. No problem, man. I appreciate you as well. All right. You have a good night.

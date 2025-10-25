@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integration Architecture - RoleFerry</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="icon" href="../../assets/roleferry_trans.png">
+    <style>
+        .document-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 16px;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .document-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #8b5cf6;
+        }
+
+        .document-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #8b5cf6, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            color: #8b5cf6;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #8b5cf6;
+            padding-left: 1rem;
+        }
+
+        .integration-diagram {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .integration-diagram h3 {
+            color: #8b5cf6;
+            margin-bottom: 1rem;
+        }
+
+        .integration-point {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(37, 99, 235, 0.1));
+            border: 1px solid #8b5cf6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .integration-point h4 {
+            color: #8b5cf6;
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight-box {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid #8b5cf6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box h4 {
+            color: #8b5cf6;
+            margin-bottom: 0.5rem;
+        }
+
+        .api-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #10b981, #2563eb);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 0.25rem;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #374151;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #8b5cf6, #2563eb);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .nav-button.secondary {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>Integration Architecture</h1>
+            <p>Seamless Third-Party Integrations & API Design</p>
+        </div>
+
+        <div class="section">
+            <h2>Integration Overview</h2>
+            <p>RoleFerry's integration architecture enables seamless connectivity with existing enterprise systems, job boards, and recruitment tools through standardized APIs and modern integration patterns.</p>
+            
+            <div class="integration-diagram">
+                <h3>🔗 Integration Ecosystem</h3>
+                <div class="integration-point">
+                    <h4>Job Board Integrations</h4>
+                    <p>Indeed, LinkedIn, Glassdoor, ZipRecruiter, and custom job boards</p>
+                </div>
+                <div class="integration-point">
+                    <h4>CRM Systems</h4>
+                    <p>Salesforce, HubSpot, Pipedrive, and custom CRM solutions</p>
+                </div>
+                <div class="integration-point">
+                    <h4>ATS Platforms</h4>
+                    <p>Workday, BambooHR, Greenhouse, and enterprise ATS systems</p>
+                </div>
+                <div class="integration-point">
+                    <h4>Email Services</h4>
+                    <p>Gmail, Outlook, SendGrid, and enterprise email platforms</p>
+                </div>
+                <div class="integration-point">
+                    <h4>AI Services</h4>
+                    <p>OpenAI, Anthropic, custom ML models, and data enrichment APIs</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>API Architecture</h2>
+            
+            <div class="highlight-box">
+                <h4>REST API Design</h4>
+                <ul>
+                    <li><strong>RESTful Principles:</strong> Resource-based URLs and HTTP methods</li>
+                    <li><strong>Versioning:</strong> API versioning strategy for backward compatibility</li>
+                    <li><strong>Rate Limiting:</strong> Throttling and quota management</li>
+                    <li><strong>Documentation:</strong> OpenAPI/Swagger specifications</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>GraphQL Support</h4>
+                <ul>
+                    <li><strong>Flexible Queries:</strong> Client-specific data requirements</li>
+                    <li><strong>Real-time Subscriptions:</strong> WebSocket-based live updates</li>
+                    <li><strong>Schema Introspection:</strong> Self-documenting API</li>
+                    <li><strong>Query Optimization:</strong> Efficient data fetching</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Authentication & Security</h4>
+                <ul>
+                    <li><strong>OAuth 2.0:</strong> Industry-standard authentication</li>
+                    <li><strong>JWT Tokens:</strong> Stateless authentication</li>
+                    <li><strong>API Keys:</strong> Service-to-service authentication</li>
+                    <li><strong>Webhook Security:</strong> Signed payload verification</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Third-Party Integrations</h2>
+            
+            <div class="highlight-box">
+                <h4>Job Board APIs</h4>
+                <div style="margin: 1rem 0;">
+                    <span class="api-badge">Indeed API</span>
+                    <span class="api-badge">LinkedIn API</span>
+                    <span class="api-badge">Glassdoor API</span>
+                    <span class="api-badge">ZipRecruiter API</span>
+                </div>
+                <ul>
+                    <li><strong>Job Posting:</strong> Automated job distribution</li>
+                    <li><strong>Candidate Sourcing:</strong> Profile search and matching</li>
+                    <li><strong>Analytics:</strong> Performance tracking and reporting</li>
+                    <li><strong>Webhooks:</strong> Real-time event notifications</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>CRM Integrations</h4>
+                <div style="margin: 1rem 0;">
+                    <span class="api-badge">Salesforce</span>
+                    <span class="api-badge">HubSpot</span>
+                    <span class="api-badge">Pipedrive</span>
+                    <span class="api-badge">Custom CRM</span>
+                </div>
+                <ul>
+                    <li><strong>Contact Sync:</strong> Bidirectional contact management</li>
+                    <li><strong>Lead Tracking:</strong> Recruitment pipeline integration</li>
+                    <li><strong>Custom Fields:</strong> Flexible data mapping</li>
+                    <li><strong>Automation:</strong> Workflow triggers and actions</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Email & Communication</h4>
+                <div style="margin: 1rem 0;">
+                    <span class="api-badge">SendGrid</span>
+                    <span class="api-badge">Mailgun</span>
+                    <span class="api-badge">AWS SES</span>
+                    <span class="api-badge">Gmail API</span>
+                </div>
+                <ul>
+                    <li><strong>Email Delivery:</strong> High-deliverability email sending</li>
+                    <li><strong>Template Management:</strong> Dynamic email templates</li>
+                    <li><strong>Analytics:</strong> Open rates, click tracking</li>
+                    <li><strong>Compliance:</strong> CAN-SPAM and GDPR compliance</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Data Integration Patterns</h2>
+            
+            <div class="highlight-box">
+                <h4>Real-time Integration</h4>
+                <ul>
+                    <li><strong>Webhooks:</strong> Event-driven data synchronization</li>
+                    <li><strong>Message Queues:</strong> Asynchronous data processing</li>
+                    <li><strong>Stream Processing:</strong> Real-time data transformation</li>
+                    <li><strong>Change Data Capture:</strong> Database change notifications</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Batch Integration</h4>
+                <ul>
+                    <li><strong>ETL Pipelines:</strong> Extract, transform, load processes</li>
+                    <li><strong>Scheduled Sync:</strong> Periodic data synchronization</li>
+                    <li><strong>Data Warehousing:</strong> Historical data aggregation</li>
+                    <li><strong>Reporting:</strong> Business intelligence integration</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>API Gateway</h4>
+                <ul>
+                    <li><strong>Request Routing:</strong> Intelligent request distribution</li>
+                    <li><strong>Load Balancing:</strong> High availability and performance</li>
+                    <li><strong>Rate Limiting:</strong> API usage control</li>
+                    <li><strong>Monitoring:</strong> API performance analytics</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Integration Security</h2>
+            
+            <ul>
+                <li><strong>API Authentication:</strong> Secure credential management</li>
+                <li><strong>Data Encryption:</strong> End-to-end data protection</li>
+                <li><strong>Access Control:</strong> Role-based integration permissions</li>
+                <li><strong>Audit Logging:</strong> Complete integration activity tracking</li>
+                <li><strong>Error Handling:</strong> Graceful failure and recovery</li>
+                <li><strong>Compliance:</strong> Data privacy and regulatory compliance</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Custom Integration Support</h2>
+            
+            <div class="highlight-box">
+                <h4>Integration Builder</h4>
+                <ul>
+                    <li><strong>Visual Workflow:</strong> Drag-and-drop integration design</li>
+                    <li><strong>Data Mapping:</strong> Field mapping and transformation</li>
+                    <li><strong>Testing Tools:</strong> Integration testing and validation</li>
+                    <li><strong>Monitoring:</strong> Real-time integration health</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Developer Tools</h4>
+                <ul>
+                    <li><strong>SDKs:</strong> Language-specific integration libraries</li>
+                    <li><strong>Documentation:</strong> Comprehensive API documentation</li>
+                    <li><strong>Sandbox:</strong> Testing environment for integrations</li>
+                    <li><strong>Support:</strong> Developer support and resources</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <a href="security-architecture.html" class="nav-button secondary">← Security Architecture</a>
+            <a href="performance-architecture.html" class="nav-button">Performance Architecture →</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Hub - RoleFerry</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="assets/roleferry_trans.png">
+    <style>
+        .marketing-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 16px;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .marketing-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #f59e0b;
+        }
+
+        .marketing-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .marketing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .marketing-card {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .marketing-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #f59e0b, #10b981);
+        }
+
+        .marketing-card:hover {
+            transform: translateY(-5px);
+            border-color: #f59e0b;
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.2);
+        }
+
+        .marketing-card h3 {
+            color: #f59e0b;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .marketing-card p {
+            color: #d1d5db;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .marketing-card a {
+            display: inline-block;
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .marketing-card a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .section-highlight {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid #f59e0b;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .section-highlight h3 {
+            color: #f59e0b;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-highlight p {
+            color: #d1d5db;
+            line-height: 1.6;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #374151;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .nav-button.secondary {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid #374151;
+        }
+
+        @media (max-width: 768px) {
+            .marketing-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .marketing-container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="marketing-container">
+        <div class="marketing-header">
+            <h1>Marketing Hub</h1>
+            <p>Complete Marketing Pack for Agencies</p>
+        </div>
+
+        <div class="marketing-grid">
+            <div class="marketing-card">
+                <h3>📋 Positioning One-Pager</h3>
+                <p>Hand to any agency AE so they can brief copy, ads, or landing pages without another meeting. Includes product description, ICP, outcomes, and proof points.</p>
+                <a href="marketing-pack/01_Positioning_OnePager.html">View Document</a>
+            </div>
+
+            <div class="marketing-card">
+                <h3>🏠 Messaging House</h3>
+                <p>Keep all agencies aligned on core message. Includes brand promise, value pillars, RTBs, elevator pitch, headlines, subheads, and CTA options.</p>
+                <a href="marketing-pack/02_Messaging_House.html">View Document</a>
+            </div>
+
+            <div class="marketing-card">
+                <h3>📸 Screenshot Label Pack</h3>
+                <p>Give designers exact labels and captions for product visuals. Includes capture guidelines, 8 screenshots with labels, alt-text, and export specifications.</p>
+                <a href="marketing-pack/03_Screenshot_Label_Pack.html">View Document</a>
+            </div>
+
+            <div class="marketing-card">
+                <h3>🎤 60s Read Aloud Script</h3>
+                <p>A script an AE or founder can read verbatim in ~60 seconds. Includes hook, product description, 5-step flow, value hits, and CTA.</p>
+                <a href="marketing-pack/04_60s_Read_Aloud_Script.html">View Document</a>
+            </div>
+
+            <div class="marketing-card">
+                <h3>🎨 Brand Voice and Tone</h3>
+                <p>Keep copy consistent across agencies. Includes voice traits, tone presets for different audiences, style rules, and examples by use case.</p>
+                <a href="marketing-pack/05_Brand_Voice_and_Tone.html">View Document</a>
+            </div>
+
+            <div class="marketing-card">
+                <h3>❓ Fast FAQ for Agencies</h3>
+                <p>Answer the top 12 questions agencies ask. Covers what RoleFerry does/doesn't do, modes, contact limits, fit scoring, and roadmap.</p>
+                <a href="marketing-pack/06_Fast_FAQ_for_Agencies.html">View Document</a>
+            </div>
+
+            <div class="marketing-card">
+                <h3>✅ Launch Checklist</h3>
+                <p>Make handoff foolproof. Includes assets list, copy blocks, screenshot filenames, disclosures, UTM naming, and final review checklist.</p>
+                <a href="marketing-pack/07_Launch_Checklist.html">View Document</a>
+            </div>
+
+            <div class="marketing-card">
+                <h3>📊 Product Flow Diagram</h3>
+                <p>Visual representation of the 5-step process. Mermaid diagram showing the complete workflow from job description to interview tracking.</p>
+                <a href="marketing-pack/assets/product_flow_mermaid.md">View Diagram</a>
+            </div>
+        </div>
+
+        <div class="section-highlight">
+            <h3>🎯 Marketing Pack Overview</h3>
+            <p>This comprehensive marketing pack provides everything agencies need to create compelling campaigns for RoleFerry. From positioning and messaging to visual assets and launch checklists, every document is designed for immediate use by marketing professionals.</p>
+        </div>
+
+        <div class="section-highlight">
+            <h3>📈 Key Marketing Pillars</h3>
+            <p><strong>Clear Positioning:</strong> RoleFerry turns job descriptions into personalized outreach • <strong>Dual-Mode Platform:</strong> Serves both job seekers and recruiters • <strong>AI-Powered Automation:</strong> 5-step workflow from job posting to interview • <strong>Deliverability-First:</strong> Built-in checks ensure emails reach the inbox</p>
+        </div>
+
+        <div class="navigation">
+            <a href="home.html" class="nav-button secondary">← Back to Home</a>
+            <a href="invest.html" class="nav-button">Investment Hub →</a>
+        </div>
+    </div>
+</body>
+</html>

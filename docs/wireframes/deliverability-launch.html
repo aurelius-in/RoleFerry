@@ -64,9 +64,29 @@
 
   .checks-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
     margin-bottom: 2rem;
+  }
+
+  .check-item-simple {
+    display: flex;
+    align-items: center;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid #10b981;
+    border-radius: 8px;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .check-icon {
+    font-size: 1.5rem;
+    color: #10b981;
+  }
+
+  .check-text {
+    color: #ffffff;
+    font-weight: 500;
   }
 
   .check-card {
@@ -448,92 +468,35 @@
         </div>
 
         <div class="checks-grid">
-          <!-- Email Verification -->
-          <div class="check-card pass">
-            <div class="check-header">
-              <div class="check-title">Email Verification</div>
-              <div class="check-status pass">PASS</div>
-            </div>
-            <div class="check-details">
-              <strong>jane.doe@techcorp.com</strong> verified as valid via NeverBounce. Confidence score: 95%.
-            </div>
+          <!-- Simplified Checkmarks -->
+          <div class="check-item-simple">
+            <div class="check-icon">✅</div>
+            <div class="check-text">Email addresses verified</div>
           </div>
-
-          <!-- SPF Record -->
-          <div class="check-card pass">
-            <div class="check-header">
-              <div class="check-title">SPF Record</div>
-              <div class="check-status pass">PASS</div>
-            </div>
-            <div class="check-details">
-              SPF record found and valid. Domain authorized to send emails.
-            </div>
+          
+          <div class="check-item-simple">
+            <div class="check-icon">✅</div>
+            <div class="check-text">Domain properly configured</div>
           </div>
-
-          <!-- DKIM Record -->
-          <div class="check-card pass">
-            <div class="check-header">
-              <div class="check-title">DKIM Record</div>
-              <div class="check-status pass">PASS</div>
-            </div>
-            <div class="check-details">
-              DKIM signature configured correctly. Email authentication enabled.
-            </div>
+          
+          <div class="check-item-simple">
+            <div class="check-icon">✅</div>
+            <div class="check-text">Spam score acceptable</div>
           </div>
-
-          <!-- Spam Score -->
-          <div class="check-card warning">
-            <div class="check-header">
-              <div class="check-title">Spam Score</div>
-              <div class="check-status warning">WARNING</div>
-            </div>
-            <div class="check-details">
-              Spam score: 2.1 (acceptable). Consider reducing promotional language.
-            </div>
+          
+          <div class="check-item-simple">
+            <div class="check-icon">✅</div>
+            <div class="check-text">Domain reputation good</div>
           </div>
-
-          <!-- Domain Warmup -->
-          <div class="check-card pass">
-            <div class="check-header">
-              <div class="check-title">Domain Warmup</div>
-              <div class="check-status pass">PASS</div>
-            </div>
-            <div class="check-details">
-              Domain warmup active. Sending reputation: Good. Daily limit: 50 emails.
-            </div>
+          
+          <div class="check-item-simple">
+            <div class="check-icon">✅</div>
+            <div class="check-text">Tracking configured</div>
           </div>
-
-          <!-- Bounce Rate -->
-          <div class="check-card pass">
-            <div class="check-header">
-              <div class="check-title">Bounce Rate</div>
-              <div class="check-status pass">PASS</div>
-            </div>
-            <div class="check-details">
-              Historical bounce rate: 0.5% (excellent). No recent bounces detected.
-            </div>
-          </div>
-
-          <!-- Custom Tracking Domain -->
-          <div class="check-card pass">
-            <div class="check-header">
-              <div class="check-title">Tracking Domain</div>
-              <div class="check-status pass">PASS</div>
-            </div>
-            <div class="check-details">
-              Custom tracking domain configured. Links will use roleferry.com domain.
-            </div>
-          </div>
-
-          <!-- Open Tracking -->
-          <div class="check-card pass">
-            <div class="check-header">
-              <div class="check-title">Open Tracking</div>
-              <div class="check-status pass">PASS</div>
-            </div>
-            <div class="check-details">
-              No open tracking pixels detected. Privacy-first approach enabled.
-            </div>
+          
+          <div class="check-item-simple">
+            <div class="check-icon">✅</div>
+            <div class="check-text">Privacy settings enabled</div>
           </div>
         </div>
       </div>

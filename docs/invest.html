@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoleFerry - Investment Opportunity</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="assets/roleferry_trans.png">
+    <style>
+        .invest-hero {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            padding: 4rem 2rem;
+            text-align: center;
+            color: white;
+        }
+
+        .invest-hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #10b981, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .invest-hero p {
+            font-size: 1.3rem;
+            color: #9ca3af;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+        }
+
+        .invest-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .invest-card {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .invest-card:hover {
+            transform: translateY(-5px);
+            border-color: #10b981;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
+        }
+
+        .invest-card h3 {
+            color: #ffffff;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .invest-card p {
+            color: #9ca3af;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .invest-card a {
+            display: inline-block;
+            background: linear-gradient(45deg, #10b981, #2563eb);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .invest-card a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .brand-showcase {
+            background: rgba(17, 24, 39, 0.8);
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .brand-showcase h2 {
+            color: #ffffff;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .brand-assets {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .brand-asset {
+            text-align: center;
+        }
+
+        .brand-asset img {
+            max-width: 200px;
+            height: auto;
+            margin-bottom: 1rem;
+        }
+
+        .brand-asset p {
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            color: #ffffff;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            color: #9ca3af;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #10b981, #2563eb);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .cta-button.secondary {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid #374151;
+        }
+
+        .cta-button.secondary:hover {
+            background: rgba(75, 85, 99, 0.8);
+            border-color: #10b981;
+        }
+
+        @media (max-width: 768px) {
+            .invest-hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .invest-grid {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+            
+            .brand-assets {
+                flex-direction: column;
+                gap: 2rem;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="invest-hero">
+        <img src="wordmark.png" alt="RoleFerry" style="max-width: 300px; margin-bottom: 2rem;">
+        <h1>Investment Opportunity</h1>
+        <p>Join us in revolutionizing the future of recruitment with AI-powered precision matching and intelligent outreach automation.</p>
+    </div>
+
+    <!-- Investment Documents Grid -->
+    <div class="invest-grid">
+        <div class="invest-card">
+            <h3>📊 Executive Summary</h3>
+            <p>Comprehensive overview of RoleFerry's vision, market opportunity, and investment thesis.</p>
+            <a href="invest/executive-summary.html">View Document</a>
+        </div>
+
+        <div class="invest-card">
+            <h3>💰 Financial Projections</h3>
+            <p>Detailed financial models, revenue projections, and growth trajectory analysis.</p>
+            <a href="invest/financial-projections.html">View Document</a>
+        </div>
+
+        <div class="invest-card">
+            <h3>🎯 Market Analysis</h3>
+            <p>Deep dive into the recruitment market, competitive landscape, and opportunity size.</p>
+            <a href="invest/market-analysis.html">View Document</a>
+        </div>
+
+        <div class="invest-card">
+            <h3>🚀 Product Roadmap</h3>
+            <p>Technology roadmap, feature development timeline, and innovation pipeline.</p>
+            <a href="invest/product-roadmap.html">View Document</a>
+        </div>
+
+        <div class="invest-card">
+            <h3>👥 Team & Advisors</h3>
+            <p>Meet our founding team, key advisors, and strategic partners.</p>
+            <a href="invest/team-advisors.html">View Document</a>
+        </div>
+
+        <div class="invest-card">
+            <h3>🏆 Competitive Advantage</h3>
+            <p>Our unique positioning, technology differentiators, and market moats.</p>
+            <a href="invest/competitive-advantage.html">View Document</a>
+        </div>
+
+        <div class="invest-card">
+            <h3>📈 Growth Strategy</h3>
+            <p>Go-to-market strategy, customer acquisition, and scaling plans.</p>
+            <a href="invest/growth-strategy.html">View Document</a>
+        </div>
+
+        <div class="invest-card">
+            <h3>💼 Investment Terms</h3>
+            <p>Funding requirements, use of funds, and investment structure.</p>
+            <a href="invest/investment-terms.html">View Document</a>
+        </div>
+    </div>
+
+    <!-- Brand Showcase -->
+    <div class="brand-showcase">
+        <h2>Brand Assets & Visual Identity</h2>
+        <div class="brand-assets">
+            <div class="brand-asset">
+                <img src="wordmark.png" alt="RoleFerry Wordmark">
+                <p>Primary Logo with Wordmark</p>
+            </div>
+            <div class="brand-asset">
+                <img src="roleferry.gif" alt="RoleFerry Animated Logo">
+                <p>Animated Logo</p>
+            </div>
+            <div class="brand-asset">
+                <img src="role_ferry_white.png" alt="RoleFerry White Logo">
+                <p>White Logo Variant</p>
+            </div>
+            <div class="brand-asset">
+                <img src="role_ferry_slow.gif" alt="RoleFerry Slow Animation">
+                <p>Slow Animation Variant</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="cta-section">
+        <h2>Ready to Invest in the Future of Recruitment?</h2>
+        <p>Join us in building the next generation of AI-powered recruitment technology.</p>
+        <div class="cta-buttons">
+            <a href="mailto:hello@roleferry.com" class="cta-button">Contact Us</a>
+            <a href="invest/executive-summary.html" class="cta-button secondary">View Executive Summary</a>
+        </div>
+    </div>
+</body>
+</html>

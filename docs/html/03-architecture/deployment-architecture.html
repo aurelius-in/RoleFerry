@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Architecture - RoleFerry</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="icon" href="../../assets/roleferry_trans.png">
+    <style>
+        .document-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 16px;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .document-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #8b5cf6;
+        }
+
+        .document-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #8b5cf6, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            color: #8b5cf6;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #8b5cf6;
+            padding-left: 1rem;
+        }
+
+        .deployment-diagram {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .deployment-diagram h3 {
+            color: #8b5cf6;
+            margin-bottom: 1rem;
+        }
+
+        .deployment-stage {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(37, 99, 235, 0.1));
+            border: 1px solid #8b5cf6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .deployment-stage h4 {
+            color: #8b5cf6;
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight-box {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid #8b5cf6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box h4 {
+            color: #8b5cf6;
+            margin-bottom: 0.5rem;
+        }
+
+        .tech-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #10b981, #2563eb);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 0.25rem;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #374151;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #8b5cf6, #2563eb);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .nav-button.secondary {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>Deployment Architecture</h1>
+            <p>Cloud-Native Infrastructure & CI/CD Pipeline</p>
+        </div>
+
+        <div class="section">
+            <h2>Deployment Overview</h2>
+            <p>RoleFerry's deployment architecture leverages modern cloud-native technologies to ensure reliable, scalable, and maintainable infrastructure.</p>
+            
+            <div class="deployment-diagram">
+                <h3>🚀 Deployment Pipeline</h3>
+                <div class="deployment-stage">
+                    <h4>Development Environment</h4>
+                    <p>Local development with Docker containers and hot reloading</p>
+                </div>
+                <div class="deployment-stage">
+                    <h4>Staging Environment</h4>
+                    <p>Production-like environment for testing and validation</p>
+                </div>
+                <div class="deployment-stage">
+                    <h4>Production Environment</h4>
+                    <p>High-availability production deployment with auto-scaling</p>
+                </div>
+                <div class="deployment-stage">
+                    <h4>Disaster Recovery</h4>
+                    <p>Multi-region backup and failover capabilities</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Cloud Infrastructure</h2>
+            
+            <div class="highlight-box">
+                <h4>AWS Cloud Services</h4>
+                <div style="margin: 1rem 0;">
+                    <span class="tech-badge">ECS</span>
+                    <span class="tech-badge">RDS</span>
+                    <span class="tech-badge">ElastiCache</span>
+                    <span class="tech-badge">S3</span>
+                    <span class="tech-badge">CloudFront</span>
+                    <span class="tech-badge">Route 53</span>
+                </div>
+                <ul>
+                    <li><strong>ECS (Elastic Container Service):</strong> Container orchestration</li>
+                    <li><strong>RDS (Relational Database Service):</strong> Managed PostgreSQL</li>
+                    <li><strong>ElastiCache:</strong> Managed Redis for caching</li>
+                    <li><strong>S3:</strong> Object storage for files and backups</li>
+                    <li><strong>CloudFront:</strong> Global CDN for content delivery</li>
+                    <li><strong>Route 53:</strong> DNS management and health checks</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Container Orchestration</h4>
+                <ul>
+                    <li><strong>Docker:</strong> Containerization platform</li>
+                    <li><strong>Kubernetes:</strong> Container orchestration (optional)</li>
+                    <li><strong>ECS Fargate:</strong> Serverless container platform</li>
+                    <li><strong>Auto Scaling:</strong> Dynamic resource allocation</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Load Balancing & Networking</h4>
+                <ul>
+                    <li><strong>Application Load Balancer:</strong> Layer 7 load balancing</li>
+                    <li><strong>Network Load Balancer:</strong> Layer 4 load balancing</li>
+                    <li><strong>VPC:</strong> Virtual private cloud networking</li>
+                    <li><strong>Security Groups:</strong> Firewall rules and access control</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>CI/CD Pipeline</h2>
+            
+            <div class="highlight-box">
+                <h4>GitHub Actions Workflow</h4>
+                <ul>
+                    <li><strong>Code Push:</strong> Automatic trigger on git push</li>
+                    <li><strong>Testing:</strong> Automated unit and integration tests</li>
+                    <li><strong>Security Scanning:</strong> Vulnerability and dependency checks</li>
+                    <li><strong>Build:</strong> Docker image creation and registry push</li>
+                    <li><strong>Deploy:</strong> Automated deployment to staging/production</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Deployment Strategies</h4>
+                <ul>
+                    <li><strong>Blue-Green Deployment:</strong> Zero-downtime deployments</li>
+                    <li><strong>Canary Deployment:</strong> Gradual rollout with monitoring</li>
+                    <li><strong>Rolling Deployment:</strong> Incremental service updates</li>
+                    <li><strong>Feature Flags:</strong> Dynamic feature toggling</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Quality Gates</h4>
+                <ul>
+                    <li><strong>Code Quality:</strong> Linting, formatting, and complexity checks</li>
+                    <li><strong>Test Coverage:</strong> Minimum test coverage requirements</li>
+                    <li><strong>Security:</strong> SAST/DAST security scanning</li>
+                    <li><strong>Performance:</strong> Load testing and performance validation</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Infrastructure as Code</h2>
+            
+            <div class="highlight-box">
+                <h4>Terraform Configuration</h4>
+                <ul>
+                    <li><strong>Resource Management:</strong> Declarative infrastructure management</li>
+                    <li><strong>State Management:</strong> Terraform state file management</li>
+                    <li><strong>Modules:</strong> Reusable infrastructure components</li>
+                    <li><strong>Variables:</strong> Environment-specific configuration</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Environment Management</h4>
+                <ul>
+                    <li><strong>Development:</strong> Local development environment</li>
+                    <li><strong>Staging:</strong> Pre-production testing environment</li>
+                    <li><strong>Production:</strong> Live production environment</li>
+                    <li><strong>DR (Disaster Recovery):</strong> Backup and recovery environment</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Configuration Management</h4>
+                <ul>
+                    <li><strong>Environment Variables:</strong> Secure configuration management</li>
+                    <li><strong>Secrets Management:</strong> AWS Secrets Manager integration</li>
+                    <li><strong>Configuration Validation:</strong> Automated config validation</li>
+                    <li><strong>Rollback Capability:</strong> Quick rollback to previous versions</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Monitoring & Observability</h2>
+            
+            <div class="highlight-box">
+                <h4>Application Monitoring</h4>
+                <ul>
+                    <li><strong>CloudWatch:</strong> AWS native monitoring and logging</li>
+                    <li><strong>APM Tools:</strong> Application performance monitoring</li>
+                    <li><strong>Custom Metrics:</strong> Business-specific monitoring</li>
+                    <li><strong>Alerting:</strong> Proactive issue detection and notification</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Log Management</h4>
+                <ul>
+                    <li><strong>Centralized Logging:</strong> Aggregated log collection</li>
+                    <li><strong>Log Analysis:</strong> Real-time log analysis and search</li>
+                    <li><strong>Retention Policies:</strong> Automated log retention management</li>
+                    <li><strong>Compliance:</strong> Audit trail and compliance reporting</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Health Checks</h4>
+                <ul>
+                    <li><strong>Application Health:</strong> Service health monitoring</li>
+                    <li><strong>Database Health:</strong> Database connection and performance</li>
+                    <li><strong>External Dependencies:</strong> Third-party service monitoring</li>
+                    <li><strong>Automated Recovery:</strong> Self-healing infrastructure</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Disaster Recovery & Backup</h2>
+            
+            <div class="highlight-box">
+                <h4>Backup Strategy</h4>
+                <ul>
+                    <li><strong>Database Backups:</strong> Automated daily backups with point-in-time recovery</li>
+                    <li><strong>File Backups:</strong> S3 cross-region replication</li>
+                    <li><strong>Configuration Backups:</strong> Infrastructure state backup</li>
+                    <li><strong>Backup Testing:</strong> Regular backup restoration testing</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Disaster Recovery</h4>
+                <ul>
+                    <li><strong>Multi-Region:</strong> Cross-region deployment for high availability</li>
+                    <li><strong>RTO/RPO:</strong> Recovery Time Objective < 1 hour, Recovery Point Objective < 15 minutes</li>
+                    <li><strong>Failover Automation:</strong> Automated failover procedures</li>
+                    <li><strong>Data Replication:</strong> Real-time data synchronization</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Business Continuity</h4>
+                <ul>
+                    <li><strong>Service Availability:</strong> 99.9% uptime SLA</li>
+                    <li><strong>Incident Response:</strong> 24/7 on-call support</li>
+                    <li><strong>Communication Plan:</strong> Stakeholder notification procedures</li>
+                    <li><strong>Recovery Procedures:</strong> Documented recovery processes</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Security & Compliance</h2>
+            
+            <ul>
+                <li><strong>Infrastructure Security:</strong> VPC, security groups, and network isolation</li>
+                <li><strong>Access Control:</strong> IAM roles and policies for resource access</li>
+                <li><strong>Encryption:</strong> Data encryption at rest and in transit</li>
+                <li><strong>Compliance:</strong> SOC 2, GDPR, and industry compliance</li>
+                <li><strong>Audit Logging:</strong> Comprehensive audit trail</li>
+                <li><strong>Vulnerability Management:</strong> Regular security assessments</li>
+            </ul>
+        </div>
+
+        <div class="navigation">
+            <a href="performance-architecture.html" class="nav-button secondary">← Performance Architecture</a>
+            <a href="../../architecture.html" class="nav-button">Back to Architecture Hub →</a>
+        </div>
+    </div>
+</body>
+</html>
