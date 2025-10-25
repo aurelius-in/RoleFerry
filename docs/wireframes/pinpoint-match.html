@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pinpoint Match - RoleFerry</title>
+<link rel="stylesheet" href="../styles.css" />
+<link rel="stylesheet" href="responsive.css" />
+<link rel="icon" href="../assets/roleferry_trans.png" />
+<style>
+  .tab-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    padding: 2rem;
+  }
+
+  .tab-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .tab-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 1rem;
+  }
+
+  .tab-subtitle {
+    font-size: 1.1rem;
+    color: #9ca3af;
+    margin-bottom: 2rem;
+  }
+
+  .form-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: rgba(31, 41, 55, 0.8);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid #374151;
+  }
+
+  .match-section {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .score-circle {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    position: relative;
+    box-shadow: 0 8px 32px rgba(37, 99, 235, 0.3);
+  }
+
+  .score-circle.high {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+  }
+
+  .score-circle.medium {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 8px 32px rgba(245, 158, 11, 0.3);
+  }
+
+  .score-circle.low {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 8px 32px rgba(239, 68, 68, 0.3);
+  }
+
+  .score-number {
+    font-size: 3rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 0.5rem;
+  }
+
+  .score-label {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+  }
+
+  .btn-primary {
+    padding: 12px 32px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .match-breakdown {
+    margin-top: 3rem;
+  }
+
+  .match-items {
+    display: grid;
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .match-item {
+    background: rgba(17, 24, 39, 0.8);
+    border: 1px solid #374151;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: left;
+  }
+
+  .match-item h4 {
+    color: #ef4444;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #ef4444;
+    padding-bottom: 0.5rem;
+  }
+
+  .match-item p {
+    color: #d1d5db;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+
+  .match-item strong {
+    color: #ffffff;
+  }
+
+  .solution-highlight {
+    background: rgba(16, 185, 129, 0.1);
+    border-left: 4px solid #10b981;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+  }
+
+  .solution-highlight h5 {
+    color: #10b981;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+
+  .metric-highlight {
+    background: rgba(37, 99, 235, 0.1);
+    border-left: 4px solid #2563eb;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+  }
+
+  .metric-highlight h5 {
+    color: #2563eb;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+
+  .loading-spinner {
+    display: none;
+    text-align: center;
+    margin: 2rem 0;
+  }
+
+  .loading-spinner.show {
+    display: block;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #374151;
+    border-top: 4px solid #2563eb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .back-button {
+    position: fixed;
+    top: 2rem;
+    left: 2rem;
+    padding: 12px 24px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .back-button:hover {
+    background: rgba(0, 0, 0, 0.9);
+  }
+
+  .progress-indicator {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 1rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+  }
+
+  .progress-bar {
+    width: 200px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb, #10b981);
+    transition: width 0.3s ease;
+  }
+
+  .success-message {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid #10b981;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #10b981;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .success-message.show {
+    display: block;
+  }
+
+  .match-explanation {
+    background: rgba(37, 99, 235, 0.1);
+    border: 1px solid #2563eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .match-explanation h3 {
+    color: #2563eb;
+    margin-bottom: 1rem;
+  }
+
+  .match-explanation p {
+    color: #d1d5db;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+  <div class="tab-container">
+    <!-- Back Button -->
+    <button class="back-button" onclick="goBack()">← Back to Keypad</button>
+
+    <!-- Progress Indicator -->
+    <div class="progress-indicator">
+      <div>Step 4 of 10</div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 40%"></div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="tab-header">
+      <h1 class="tab-title">Pinpoint Match</h1>
+      <p class="tab-subtitle">AI-powered alignment between your solutions and their challenges</p>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-message" id="successMessage">
+      ✅ Pinpoint match calculated successfully! Your solutions align well with their challenges.
+    </div>
+
+    <!-- Form Container -->
+    <div class="form-container">
+      <!-- Match Section -->
+      <div class="match-section">
+        <div class="score-circle" id="scoreCircle">
+          <div class="score-number" id="scoreNumber">85%</div>
+          <div class="score-label">Alignment Score</div>
+        </div>
+        
+        <button class="btn-primary" id="calculateBtn" onclick="calculateMatch()">Calculate Match</button>
+      </div>
+
+      <!-- Loading Spinner -->
+      <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner"></div>
+        <p>AI is analyzing the match between your profile and job requirements...</p>
+      </div>
+
+      <!-- Match Explanation -->
+      <div class="match-explanation" id="matchExplanation" style="display: none;">
+        <h3>How Pinpoint Matching Works</h3>
+        <p>Our AI analyzes your resume solutions against the company's pain points to find the best alignment. Each match shows how your experience directly addresses their specific challenges, with supporting metrics to prove your impact.</p>
+      </div>
+
+      <!-- Match Breakdown -->
+      <div class="match-breakdown" id="matchBreakdown" style="display: none;">
+        <h2 style="color: #ffffff; text-align: center; margin-bottom: 2rem;">Match Breakdown</h2>
+        
+        <div class="match-items">
+          <!-- Match 1 -->
+          <div class="match-item">
+            <h4>Challenge 1: Scaling Infrastructure</h4>
+            <p><strong>Company Pain Point:</strong> Need to scale backend infrastructure to handle 10x traffic growth</p>
+            
+            <div class="solution-highlight">
+              <h5>Your Solution</h5>
+              <p>My experience scaling microservices on AWS, handling peak loads with auto-scaling groups and load balancers</p>
+            </div>
+            
+            <div class="metric-highlight">
+              <h5>Key Metric</h5>
+              <p>Achieved 99.9% uptime and 20% cost reduction through optimized infrastructure</p>
+            </div>
+          </div>
+
+          <!-- Match 2 -->
+          <div class="match-item">
+            <h4>Challenge 2: Data Processing</h4>
+            <p><strong>Company Pain Point:</strong> Improving data processing efficiency for real-time analytics</p>
+            
+            <div class="solution-highlight">
+              <h5>Your Solution</h5>
+              <p>Implemented Kafka streams and Spark for real-time data ingestion and processing</p>
+            </div>
+            
+            <div class="metric-highlight">
+              <h5>Key Metric</h5>
+              <p>Reduced data processing latency by 50% and enabled instant dashboards</p>
+            </div>
+          </div>
+
+          <!-- Match 3 -->
+          <div class="match-item">
+            <h4>Challenge 3: API Development</h4>
+            <p><strong>Company Pain Point:</strong> Building robust and secure APIs for external partners</p>
+            
+            <div class="solution-highlight">
+              <h5>Your Solution</h5>
+              <p>Designed and developed RESTful APIs with OAuth2 authentication and comprehensive input validation</p>
+            </div>
+            
+            <div class="metric-highlight">
+              <h5>Key Metric</h5>
+              <p>Successfully launched 3 partner integrations in Q3 with zero security incidents</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function calculateMatch() {
+      // Show loading spinner
+      document.getElementById('loadingSpinner').classList.add('show');
+      document.getElementById('calculateBtn').disabled = true;
+
+      // Simulate AI calculation
+      setTimeout(() => {
+        // Hide loading spinner
+        document.getElementById('loadingSpinner').classList.remove('show');
+        
+        // Show results
+        document.getElementById('matchExplanation').style.display = 'block';
+        document.getElementById('matchBreakdown').style.display = 'block';
+        document.getElementById('successMessage').classList.add('show');
+        
+        // Update score circle
+        const scoreCircle = document.getElementById('scoreCircle');
+        const scoreNumber = document.getElementById('scoreNumber');
+        
+        // Animate score
+        let currentScore = 0;
+        const targetScore = 85;
+        const interval = setInterval(() => {
+          currentScore += 2;
+          scoreNumber.textContent = currentScore + '%';
+          
+          if (currentScore >= targetScore) {
+            clearInterval(interval);
+            scoreNumber.textContent = targetScore + '%';
+            
+            // Update circle color based on score
+            if (targetScore >= 90) {
+              scoreCircle.classList.add('high');
+            } else if (targetScore >= 75) {
+              scoreCircle.classList.add('medium');
+            } else {
+              scoreCircle.classList.add('low');
+            }
+          }
+        }, 50);
+        
+        // Save to localStorage
+        const matchData = {
+          alignmentScore: 85,
+          matches: [
+            {
+              challenge: "Scaling Infrastructure",
+              painPoint: "Need to scale backend infrastructure to handle 10x traffic growth",
+              solution: "My experience scaling microservices on AWS, handling peak loads with auto-scaling groups and load balancers",
+              metric: "Achieved 99.9% uptime and 20% cost reduction through optimized infrastructure"
+            },
+            {
+              challenge: "Data Processing",
+              painPoint: "Improving data processing efficiency for real-time analytics",
+              solution: "Implemented Kafka streams and Spark for real-time data ingestion and processing",
+              metric: "Reduced data processing latency by 50% and enabled instant dashboards"
+            },
+            {
+              challenge: "API Development",
+              painPoint: "Building robust and secure APIs for external partners",
+              solution: "Designed and developed RESTful APIs with OAuth2 authentication and comprehensive input validation",
+              metric: "Successfully launched 3 partner integrations in Q3 with zero security incidents"
+            }
+          ],
+          confidenceScore: 92
+        };
+        
+        localStorage.setItem('roleferry_match_data', JSON.stringify(matchData));
+        
+        // Show success animation
+        setTimeout(() => {
+          alert('Pinpoint match calculated successfully! Your solutions align well with their challenges.');
+        }, 1000);
+      }, 3000);
+    }
+
+    function goBack() {
+      window.location.href = '../index.html';
+    }
+
+    // Load saved data if exists
+    const savedData = localStorage.getItem('roleferry_match_data');
+    if (savedData) {
+      const data = JSON.parse(savedData);
+      document.getElementById('matchExplanation').style.display = 'block';
+      document.getElementById('matchBreakdown').style.display = 'block';
+      document.getElementById('scoreNumber').textContent = data.alignmentScore + '%';
+      
+      // Update circle color based on score
+      const scoreCircle = document.getElementById('scoreCircle');
+      if (data.alignmentScore >= 90) {
+        scoreCircle.classList.add('high');
+      } else if (data.alignmentScore >= 75) {
+        scoreCircle.classList.add('medium');
+      } else {
+        scoreCircle.classList.add('low');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,368 @@
+/* Responsive Design for RoleFerry Wireframes */
+
+/* Mobile First Approach */
+/* Base styles for mobile devices (320px and up) */
+
+/* Tablet Styles (768px and up) */
+@media (min-width: 768px) {
+  .tab-container {
+    padding: 2rem;
+  }
+  
+  .tab-title {
+    font-size: 2.5rem;
+  }
+  
+  .form-container {
+    padding: 2rem;
+  }
+  
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+  
+  .data-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+  
+  .back-button {
+    position: fixed;
+    top: 2rem;
+    left: 2rem;
+  }
+  
+  .progress-indicator {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+  }
+}
+
+/* Desktop Styles (1024px and up) */
+@media (min-width: 1024px) {
+  .tab-container {
+    padding: 3rem;
+  }
+  
+  .tab-title {
+    font-size: 3rem;
+  }
+  
+  .form-container {
+    padding: 3rem;
+  }
+  
+  .form-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem;
+  }
+  
+  .data-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem;
+  }
+}
+
+/* Mobile Styles (768px and down) */
+@media (max-width: 768px) {
+  .tab-container {
+    padding: 1rem;
+  }
+  
+  .tab-title {
+    font-size: 2rem;
+  }
+  
+  .tab-subtitle {
+    font-size: 1rem;
+  }
+  
+  .form-container {
+    padding: 1.5rem;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .data-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .back-button {
+    position: relative;
+    top: auto;
+    left: auto;
+    margin-bottom: 1rem;
+  }
+  
+  .progress-indicator {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin-bottom: 1rem;
+  }
+  
+  .mode-toggle {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .mode-btn {
+    width: 100%;
+  }
+  
+  .upload-area {
+    padding: 2rem;
+  }
+  
+  .upload-icon {
+    font-size: 3rem;
+  }
+  
+  .btn-primary, .btn-secondary {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+}
+
+/* Small Mobile Styles (480px and down) */
+@media (max-width: 480px) {
+  .tab-container {
+    padding: 0.5rem;
+  }
+  
+  .tab-title {
+    font-size: 1.5rem;
+  }
+  
+  .tab-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .form-container {
+    padding: 1rem;
+  }
+  
+  .form-input, .form-select, .form-textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  .upload-area {
+    padding: 1.5rem;
+  }
+  
+  .upload-icon {
+    font-size: 2.5rem;
+  }
+  
+  .upload-text {
+    font-size: 1.2rem;
+  }
+  
+  .keypad-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .keypad-button {
+    width: 100%;
+    height: 120px;
+  }
+  
+  .keypad-icon {
+    font-size: 2rem;
+  }
+  
+  .launch-button {
+    width: 60px;
+    height: 60px;
+    bottom: 1rem;
+    right: 1rem;
+  }
+  
+  .progress-indicator {
+    font-size: 0.8rem;
+  }
+  
+  .progress-bar {
+    width: 150px;
+  }
+}
+
+/* Extra Small Mobile Styles (320px and down) */
+@media (max-width: 320px) {
+  .tab-container {
+    padding: 0.25rem;
+  }
+  
+  .form-container {
+    padding: 0.5rem;
+  }
+  
+  .tab-title {
+    font-size: 1.2rem;
+  }
+  
+  .tab-subtitle {
+    font-size: 0.8rem;
+  }
+  
+  .upload-area {
+    padding: 1rem;
+  }
+  
+  .upload-icon {
+    font-size: 2rem;
+  }
+  
+  .upload-text {
+    font-size: 1rem;
+  }
+  
+  .keypad-button {
+    height: 100px;
+  }
+  
+  .keypad-icon {
+    font-size: 1.5rem;
+  }
+}
+
+/* Landscape Orientation */
+@media (orientation: landscape) and (max-height: 500px) {
+  .tab-container {
+    padding: 0.5rem;
+  }
+  
+  .tab-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .tab-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  
+  .form-container {
+    padding: 1rem;
+  }
+  
+  .upload-area {
+    padding: 1rem;
+  }
+  
+  .upload-icon {
+    font-size: 2rem;
+  }
+  
+  .keypad-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .keypad-button {
+    height: 80px;
+  }
+  
+  .keypad-icon {
+    font-size: 1.5rem;
+  }
+}
+
+/* High DPI Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .keypad-icon {
+    font-size: 2.5rem;
+  }
+  
+  .upload-icon {
+    font-size: 3.5rem;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .tab-container {
+    background: white;
+    color: black;
+  }
+  
+  .back-button,
+  .progress-indicator,
+  .launch-button {
+    display: none;
+  }
+  
+  .form-container {
+    border: 1px solid #ccc;
+    box-shadow: none;
+  }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .form-container {
+    background: rgba(17, 24, 39, 0.9);
+    border-color: #374151;
+  }
+  
+  .form-input, .form-select, .form-textarea {
+    background: rgba(17, 24, 39, 0.8);
+    border-color: #374151;
+    color: #ffffff;
+  }
+}
+
+/* Focus Styles for Accessibility */
+@media (prefers-reduced-motion: no-preference) {
+  .keypad-button:focus,
+  .btn-primary:focus,
+  .btn-secondary:focus,
+  .form-input:focus,
+  .form-select:focus,
+  .form-textarea:focus {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .keypad-button {
+    min-height: 44px; /* Minimum touch target size */
+  }
+  
+  .btn-primary, .btn-secondary {
+    min-height: 44px;
+    padding: 12px 24px;
+  }
+  
+  .form-input, .form-select, .form-textarea {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+  
+  .mode-btn {
+    min-height: 44px;
+    padding: 12px 24px;
+  }
+}

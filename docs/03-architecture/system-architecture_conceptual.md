@@ -30,7 +30,47 @@ RoleFerry automates job application outreach by intelligently connecting candida
 
 ### 1.3 Business Scenarios
 
-#### Scenario 1: Active Job Seeker Applies to Target Company
+#### Scenario 1: 10-Tab Workflow - Job Seeker Journey
+**Actor**: Sarah, 7-year Product Manager  
+**Context**: Searching for senior PM role, applying to 30+ companies/month  
+**Goals**: Complete intelligent workflow from preferences to campaign launch
+
+**10-Tab Flow**:
+1. **Job Preferences**: Sarah sets industries (SaaS, FinTech), roles (Senior PM), salary ($120-150k), location (Remote)
+2. **Resume**: Uploads resume, AI extracts B2B SaaS experience, metrics, accomplishments
+3. **Job Descriptions**: Imports JD from LinkedIn, AI identifies pain points (scaling, user acquisition)
+4. **Pinpoint Match**: System scores 87% alignment - Sarah's growth experience matches their scaling challenges
+5. **Find Contact**: Discovers VP Product (hiring manager) with 95% confidence, email verified as valid
+6. **Context Research**: Auto-pulls company summary, recent funding news, contact bio
+7. **Offer Creation**: AI generates personalized pitch with Manager tone (proof of competence)
+8. **Compose**: Email generated with variables, jargon detected and explained
+9. **Campaign**: 3-email sequence auto-created with optimal timing
+10. **Deliverability/Launch**: Pre-flight checks pass, campaign launched successfully
+
+**Value**: Complete automation from preferences to outreach in 10 structured steps
+
+---
+
+#### Scenario 2: 10-Tab Workflow - Recruiter Journey
+**Actor**: Marcus, Agency Recruiter  
+**Context**: Placing senior engineers, needs to scale candidate outreach  
+**Goals**: Complete intelligent workflow from ICP to candidate campaign launch
+
+**10-Tab Flow (Recruiter Mode)**:
+1. **Ideal Client Profile (ICP)**: Marcus defines target companies (Series B SaaS), roles (Senior Engineers), budget ($150-200k)
+2. **Candidate Profile**: Uploads candidate resume, AI extracts technical experience, achievements, metrics
+3. **Job Descriptions**: Imports client JD, AI identifies technical challenges (microservices, scaling)
+4. **Pinpoint Match**: System scores 92% alignment - candidate's AWS experience matches their cloud challenges
+5. **Find Contact**: Discovers Engineering Manager with 88% confidence, email verified as valid
+6. **Context Research**: Auto-pulls company tech stack, recent engineering hires, manager background
+7. **Offer Creation**: AI generates candidate pitch with Exec tone (ROI/strategy focus)
+8. **Compose**: Email generated with candidate variables, technical jargon explained
+9. **Campaign**: 3-email sequence auto-created for candidate placement
+10. **Deliverability/Launch**: Pre-flight checks pass, candidate campaign launched
+
+**Value**: Complete automation from ICP to candidate outreach in 10 structured steps
+
+#### Scenario 3: Traditional Job Seeker Applies to Target Company
 **Actor**: Sarah, 7-year Product Manager  
 **Context**: Searching for senior PM role, applying to 30+ companies/month  
 **Goals**: Reach hiring manager directly, stand out from ATS pile
@@ -44,12 +84,7 @@ RoleFerry automates job application outreach by intelligently connecting candida
 6. VP Product replies in 36 hours → Sarah invited to screen
 7. Sarah logs interview in Tracker, moves to "Interviewing" stage
 
-**Value**: 3x faster response vs. blind application; no manual LinkedIn stalking
-
----
-
-#### Scenario 2: Recruiter Launches Candidate Outreach Campaign
-**Actor**: Marcus, Agency Recruiter  
+**Value**: 3x faster response vs. blind application; no manual LinkedIn stalking  
 **Context**: Filling 5 engineering roles, needs passive candidates  
 **Goals**: Contact 200 qualified engineers, get 20 replies, schedule 10 calls
 

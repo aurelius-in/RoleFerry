@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Context Research - RoleFerry</title>
+<link rel="stylesheet" href="../styles.css" />
+<link rel="stylesheet" href="responsive.css" />
+<link rel="icon" href="../assets/roleferry_trans.png" />
+<style>
+  .tab-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    padding: 2rem;
+  }
+
+  .tab-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .tab-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 1rem;
+  }
+
+  .tab-subtitle {
+    font-size: 1.1rem;
+    color: #9ca3af;
+    margin-bottom: 2rem;
+  }
+
+  .form-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: rgba(31, 41, 55, 0.8);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid #374151;
+  }
+
+  .research-section {
+    margin-bottom: 3rem;
+  }
+
+  .research-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .research-card {
+    background: rgba(17, 24, 39, 0.8);
+    border: 1px solid #374151;
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .research-card h3 {
+    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #2563eb;
+    padding-bottom: 0.5rem;
+  }
+
+  .research-card textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 12px 16px;
+    border: 2px solid #374151;
+    border-radius: 8px;
+    background: rgba(17, 24, 39, 0.8);
+    color: #ffffff;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    resize: vertical;
+  }
+
+  .research-card textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  .variable-display {
+    background: rgba(37, 99, 235, 0.1);
+    border: 1px solid #2563eb;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+
+  .variable-display h4 {
+    color: #2563eb;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .variable-display code {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #10b981;
+    font-family: 'Courier New', monospace;
+  }
+
+  .btn-primary {
+    padding: 12px 32px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .loading-spinner {
+    display: none;
+    text-align: center;
+    margin: 2rem 0;
+  }
+
+  .loading-spinner.show {
+    display: block;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #374151;
+    border-top: 4px solid #2563eb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .back-button {
+    position: fixed;
+    top: 2rem;
+    left: 2rem;
+    padding: 12px 24px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .back-button:hover {
+    background: rgba(0, 0, 0, 0.9);
+  }
+
+  .progress-indicator {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 1rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+  }
+
+  .progress-bar {
+    width: 200px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb, #10b981);
+    transition: width 0.3s ease;
+  }
+
+  .success-message {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid #10b981;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #10b981;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .success-message.show {
+    display: block;
+  }
+
+  .research-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+
+  .btn-secondary {
+    padding: 12px 32px;
+    background: transparent;
+    color: #9ca3af;
+    border: 2px solid #374151;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-secondary:hover {
+    border-color: #6b7280;
+    color: #ffffff;
+  }
+
+  .research-summary {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid #10b981;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .research-summary h3 {
+    color: #10b981;
+    margin-bottom: 1rem;
+  }
+
+  .research-summary p {
+    color: #d1d5db;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+  <div class="tab-container">
+    <!-- Back Button -->
+    <button class="back-button" onclick="goBack()">← Back to Keypad</button>
+
+    <!-- Progress Indicator -->
+    <div class="progress-indicator">
+      <div>Step 6 of 10</div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 60%"></div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="tab-header">
+      <h1 class="tab-title">Context Research</h1>
+      <p class="tab-subtitle">AI-powered company and contact research for personalized outreach</p>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-message" id="successMessage">
+      ✅ Context research completed! AI has gathered comprehensive company and contact information.
+    </div>
+
+    <!-- Form Container -->
+    <div class="form-container">
+      <!-- Research Summary -->
+      <div class="research-summary">
+        <h3>Research Summary</h3>
+        <p>AI has automatically gathered company information, recent news, and contact details. You can edit the generated content below to customize your outreach approach.</p>
+      </div>
+
+      <!-- Research Section -->
+      <div class="research-section">
+        <div class="research-grid">
+          <!-- Company Summary -->
+          <div class="research-card">
+            <h3>Company Summary</h3>
+            <textarea id="companySummary" placeholder="AI is gathering company information...">TechCorp is a leading technology company specializing in AI-driven solutions for enterprise clients. Founded in 2010, they have grown rapidly to become a key player in the SaaS market, known for their innovative approach to data analytics and cloud computing. Their mission is to empower businesses with intelligent insights through cutting-edge technology.</textarea>
+            <div class="variable-display">
+              <h4>Email Variable:</h4>
+              <code>{{company_summary}}</code>
+            </div>
+          </div>
+
+          <!-- Recent News -->
+          <div class="research-card">
+            <h3>Recent News & Developments</h3>
+            <textarea id="recentNews" placeholder="AI is gathering recent news...">TechCorp recently announced a strategic partnership with GlobalData Inc. to expand their market reach in Asia. They also reported a 25% increase in Q3 revenue, driven by strong demand for their new predictive analytics platform. The company is planning to hire 50+ engineers in the next quarter to support their expansion.</textarea>
+            <div class="variable-display">
+              <h4>Email Variable:</h4>
+              <code>{{recent_news}}</code>
+            </div>
+          </div>
+
+          <!-- Contact Bio -->
+          <div class="research-card">
+            <h3>Contact Bio</h3>
+            <textarea id="contactBio" placeholder="AI is gathering contact information...">Jane Doe is the Hiring Manager for the AI Solutions division at TechCorp. With over 10 years of experience in talent acquisition for tech companies, she focuses on recruiting top-tier engineering and data science professionals. She is passionate about building diverse and innovative teams that drive technological advancement.</textarea>
+            <div class="variable-display">
+              <h4>Email Variable:</h4>
+              <code>{{contact_bio}}</code>
+            </div>
+          </div>
+
+          <!-- Company Culture -->
+          <div class="research-card">
+            <h3>Company Culture & Values</h3>
+            <textarea id="companyCulture" placeholder="AI is gathering culture information...">TechCorp values innovation, collaboration, and continuous learning. They have a flat organizational structure that encourages open communication and idea sharing. The company is known for its flexible work policies, strong emphasis on work-life balance, and commitment to employee development through regular training and mentorship programs.</textarea>
+            <div class="variable-display">
+              <h4>Email Variable:</h4>
+              <code>{{company_culture}}</code>
+            </div>
+          </div>
+
+          <!-- Tech Stack -->
+          <div class="research-card">
+            <h3>Technology Stack</h3>
+            <textarea id="techStack" placeholder="AI is gathering technology information...">TechCorp's technology stack includes Python, AWS, PostgreSQL, React, Docker, Kubernetes, and various AI/ML frameworks. They are migrating to microservices architecture and implementing CI/CD pipelines. The company is also investing heavily in machine learning and data science capabilities.</textarea>
+            <div class="variable-display">
+              <h4>Email Variable:</h4>
+              <code>{{tech_stack}}</code>
+            </div>
+          </div>
+
+          <!-- Market Position -->
+          <div class="research-card">
+            <h3>Market Position & Competitors</h3>
+            <textarea id="marketPosition" placeholder="AI is gathering market information...">TechCorp competes with companies like DataCorp, AnalyticsPro, and CloudTech in the enterprise AI solutions market. They differentiate themselves through their proprietary algorithms and customer-centric approach. The company has a strong market position in the mid-market segment and is expanding into enterprise clients.</textarea>
+            <div class="variable-display">
+              <h4>Email Variable:</h4>
+              <code>{{market_position}}</code>
+            </div>
+          </div>
+        </div>
+
+        <div class="research-actions">
+          <button class="btn-secondary" onclick="regenerateResearch()">Regenerate Research</button>
+          <button class="btn-primary" onclick="saveResearch()">Save Research</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function regenerateResearch() {
+      // Show loading spinner
+      const spinner = document.createElement('div');
+      spinner.className = 'loading-spinner show';
+      spinner.innerHTML = '<div class="spinner"></div><p>AI is regenerating research...</p>';
+      document.querySelector('.research-section').appendChild(spinner);
+
+      // Simulate AI regeneration
+      setTimeout(() => {
+        spinner.remove();
+        
+        // Update content with new AI-generated text
+        document.getElementById('companySummary').value = "TechCorp is a rapidly growing technology company that specializes in AI-driven solutions for enterprise clients. Since their founding in 2010, they have established themselves as a key player in the SaaS market, known for their innovative approach to data analytics and cloud computing.";
+        
+        document.getElementById('recentNews').value = "TechCorp recently secured $50M in Series B funding and announced plans to expand their engineering team by 100+ people. They also launched a new AI-powered analytics platform that has seen 300% growth in user adoption since its release.";
+        
+        document.getElementById('contactBio').value = "Jane Doe is the Senior Hiring Manager for the AI Solutions division at TechCorp. With over 12 years of experience in tech recruitment, she specializes in identifying and attracting top-tier engineering talent. She is known for her data-driven approach to hiring and her commitment to building diverse, high-performing teams.";
+        
+        alert('Research regenerated successfully!');
+      }, 2000);
+    }
+
+    function saveResearch() {
+      const researchData = {
+        companySummary: document.getElementById('companySummary').value,
+        recentNews: document.getElementById('recentNews').value,
+        contactBio: document.getElementById('contactBio').value,
+        companyCulture: document.getElementById('companyCulture').value,
+        techStack: document.getElementById('techStack').value,
+        marketPosition: document.getElementById('marketPosition').value,
+        timestamp: new Date().toISOString()
+      };
+      
+      localStorage.setItem('roleferry_research_data', JSON.stringify(researchData));
+      
+      document.getElementById('successMessage').classList.add('show');
+      
+      setTimeout(() => {
+        alert('Research saved successfully! You can now proceed to the next step.');
+      }, 500);
+    }
+
+    function goBack() {
+      window.location.href = '../index.html';
+    }
+
+    // Load saved data if exists
+    const savedData = localStorage.getItem('roleferry_research_data');
+    if (savedData) {
+      const data = JSON.parse(savedData);
+      if (data.companySummary) {
+        document.getElementById('companySummary').value = data.companySummary;
+        document.getElementById('recentNews').value = data.recentNews;
+        document.getElementById('contactBio').value = data.contactBio;
+        document.getElementById('companyCulture').value = data.companyCulture;
+        document.getElementById('techStack').value = data.techStack;
+        document.getElementById('marketPosition').value = data.marketPosition;
+      }
+    }
+  </script>
+</body>
+</html>

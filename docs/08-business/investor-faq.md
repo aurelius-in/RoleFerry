@@ -307,7 +307,7 @@ Our SAM ($12B) is conservative; assumes 10% penetration of white-collar job sear
 
 ---
 
-**Contact**: founders@roleferry.com  
+**Contact**: hello@roleferry.com  
 **Deck**: [Link to pitch deck]  
 **Demo**: [Link to product demo video]
 

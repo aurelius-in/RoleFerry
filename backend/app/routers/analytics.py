@@ -10,16 +10,29 @@ router = APIRouter()
 def analytics_campaign():
     store.add_audit(None, "analytics_campaign", {})
     msgs = store.messages or [
-        {"opened": True, "replied": False, "label": None, "variant": "preset_short_email_pm"},
-        {"opened": True, "replied": True, "label": "positive", "variant": "preset_email_long_ai_ops"},
-        {"opened": True, "replied": True, "label": "reply", "variant": "preset_email_long_billing"},
-        {"opened": False, "replied": False, "label": None, "variant": "preset_email_medium_security"},
+        {"opened": True, "replied": False, "label": None, "variant": "preset_short_email_pm", "alignment_score": 85},
+        {"opened": True, "replied": True, "label": "positive", "variant": "preset_email_long_ai_ops", "alignment_score": 92},
+        {"opened": True, "replied": True, "label": "reply", "variant": "preset_email_long_billing", "alignment_score": 78},
+        {"opened": False, "replied": False, "label": None, "variant": "preset_email_medium_security", "alignment_score": 65},
     ]
     delivered = len(msgs) if msgs else 100
     open_count = sum(1 for m in msgs if m.get("opened")) if msgs else 62
     reply_count = sum(1 for m in msgs if m.get("replied")) if msgs else 14
     positive = sum(1 for m in msgs if m.get("label") == "positive") if msgs else 8
     meetings = sum(1 for m in msgs if m.get("label") == "meeting") if msgs else 3
+    
+    # New metrics calculations
+    alignment_scores = [m.get("alignment_score", 0) for m in msgs if m.get("alignment_score")]
+    average_alignment_score = sum(alignment_scores) / len(alignment_scores) if alignment_scores else 80
+    
+    # Calculate alignment correlation (mock calculation)
+    alignment_correlation = 0.75  # Mock correlation between alignment score and reply rate
+    
+    # Calculate cost per qualified lead (mock calculation)
+    total_cost = 1500  # Mock total campaign cost
+    qualified_leads = positive + meetings
+    cost_per_qualified_lead = total_cost / qualified_leads if qualified_leads > 0 else 0
+    
     # breakdown by variant
     breakdown = {}
     for m in msgs:
@@ -33,6 +46,7 @@ def analytics_campaign():
             breakdown[v]["reply"] += 1
         if m.get("label") == "positive":
             breakdown[v]["positive"] += 1
+    
     return {
         "delivered": delivered,
         "open": open_count,
@@ -40,6 +54,11 @@ def analytics_campaign():
         "positive": positive,
         "meetings": meetings,
         "variants": breakdown,
+        "alignment_correlation": alignment_correlation,
+        "cost_per_qualified_lead": round(cost_per_qualified_lead, 2),
+        "total_campaigns": 12,  # Mock total campaigns
+        "average_alignment_score": round(average_alignment_score, 1),
+        "conversion_rate": round((positive + meetings) / delivered * 100, 1) if delivered > 0 else 0,
     }
 
 

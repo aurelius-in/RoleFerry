@@ -1,6 +1,18 @@
 import { api } from "@/lib/api";
 
-type CampaignResp = { delivered: number; open: number; reply: number; positive: number; meetings: number; variants?: Record<string, { delivered: number; open: number; reply: number; positive: number }> };
+type CampaignResp = { 
+  delivered: number; 
+  open: number; 
+  reply: number; 
+  positive: number; 
+  meetings: number; 
+  variants?: Record<string, { delivered: number; open: number; reply: number; positive: number }>;
+  alignment_correlation?: number;
+  cost_per_qualified_lead?: number;
+  total_campaigns?: number;
+  average_alignment_score?: number;
+  conversion_rate?: number;
+};
 
 export default async function Analytics() {
   let data: CampaignResp | null = null;
@@ -37,6 +49,60 @@ export default async function Analytics() {
             <Stat label="Reply" value={data.reply} suffix={`(${replyRate}%)`} />
             <Stat label="Positive" value={data.positive} suffix={`(${posRate}%)`} />
             <Stat label="Meetings" value={data.meetings} />
+          </div>
+          
+          {/* New Analytics Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="rounded-lg p-4 bg-white/5 border border-white/10">
+              <div className="text-sm opacity-80">Alignment Score Correlation</div>
+              <div className="text-2xl font-semibold">
+                {data.alignment_correlation ? `${Math.round(data.alignment_correlation * 100)}%` : 'N/A'}
+              </div>
+              <div className="text-xs opacity-60 mt-1">Correlation between match score and reply rate</div>
+            </div>
+            
+            <div className="rounded-lg p-4 bg-white/5 border border-white/10">
+              <div className="text-sm opacity-80">Cost per Qualified Lead</div>
+              <div className="text-2xl font-semibold">
+                {data.cost_per_qualified_lead ? `$${data.cost_per_qualified_lead}` : 'N/A'}
+              </div>
+              <div className="text-xs opacity-60 mt-1">Average cost to generate one qualified lead</div>
+            </div>
+            
+            <div className="rounded-lg p-4 bg-white/5 border border-white/10">
+              <div className="text-sm opacity-80">Average Alignment Score</div>
+              <div className="text-2xl font-semibold">
+                {data.average_alignment_score ? `${Math.round(data.average_alignment_score)}%` : 'N/A'}
+              </div>
+              <div className="text-xs opacity-60 mt-1">Across {data.total_campaigns || 0} campaigns</div>
+            </div>
+          </div>
+          
+          {/* Conversion Funnel */}
+          <div className="rounded-lg border border-white/10 p-4">
+            <h3 className="text-lg font-semibold mb-4">Conversion Funnel</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Delivered</span>
+                <span className="font-medium">{data.delivered}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Opened ({openRate}%)</span>
+                <span className="font-medium">{data.open}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Replied ({replyRate}%)</span>
+                <span className="font-medium">{data.reply}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Positive Responses ({posRate}%)</span>
+                <span className="font-medium">{data.positive}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Meetings Scheduled</span>
+                <span className="font-medium">{data.meetings}</span>
+              </div>
+            </div>
           </div>
           {/* Simple bar-like viz */}
           {data.variants && (

@@ -14,30 +14,50 @@ Modern job seekers face a broken process:
 Traditional applicant tracking tools (spreadsheets, basic boards) provide organization but no **intelligence** or **action**.
 
 ## The RoleFerry Solution
-**One-click Apply → Intelligent Contact Discovery → Personalized Outreach → Pipeline to Hire**
+**10-Tab Intelligent Workflow → One-click Apply → Contact Discovery → Personalized Outreach → Pipeline to Hire**
 
 ### Core Differentiators
-1. **Click-to-Contact Intelligence**
+1. **10-Tab Workflow System**
+   - **Job Preferences/ICP**: Dynamic labeling (Job Seeker vs Recruiter modes)
+   - **Resume/Candidate Profile**: AI-powered parsing and data extraction
+   - **Job Descriptions**: URL import and pain point analysis
+   - **Pinpoint Match**: Solution-to-challenge alignment scoring
+   - **Find Contact**: Contact discovery with email verification
+   - **Context Research**: Auto-pulled company and contact summaries
+   - **Offer Creation**: Audience-adaptive tone (Recruiter/Manager/Exec)
+   - **Compose**: Variable substitution with jargon clarity detection
+   - **Campaign**: 3-email auto-generation with deliverability checks
+   - **Deliverability/Launch**: Pre-flight checks and send execution
+
+2. **Click-to-Contact Intelligence**
    - Instant discovery of hiring managers, department heads, and HR partners
    - Automated enrichment waterfall: Company → People → Verified Email
    - Apollo-grade persona filtering for decision-maker targeting
+   - Email verification with NeverBounce/MillionVerifier integration
 
-2. **Author + Sequencer**
+3. **Author + Sequencer**
    - AI-powered message crafting from resume extract + JD analysis
    - Multi-step nurture sequences with stop-on-reply logic
    - Personalized LivePages with video/GIF + metrics + calendaring
+   - Jargon detection and plain-English explanations
 
-3. **Deliverability-First Infrastructure**
+4. **Deliverability-First Infrastructure**
    - Pre-warmed RoleFerry sending domains (not candidate's personal email)
    - Custom tracking domains for link safety
    - Zero open-tracking pixels (avoid "images hidden" warnings)
    - Health scoring, rotation, and throttling per mailbox
+   - Pre-flight checks (spam score, DNS validation, bounce tracking)
 
-4. **Unified Tracker**
-   - Kanban + Table views with pipeline analytics
-   - Real-time reply detection and status updates
-   - Import/export CSV for Clay/spreadsheet interoperability
-   - Insights: reply rates, time-to-interview, sequence effectiveness
+5. **Advanced Analytics**
+   - Alignment score correlation with reply rates
+   - Cost per qualified lead tracking
+   - Conversion funnel analysis
+   - Campaign performance metrics
+
+6. **Dual-Mode Architecture**
+   - **Job Seeker Mode**: Find jobs, apply, track interviews
+   - **Recruiter Mode**: Source candidates, manage outreach, track placements
+   - Dynamic UI labels and workflow adaptation
 
 ## Market Opportunity
 
@@ -127,7 +147,7 @@ Traditional applicant tracking tools (spreadsheets, basic boards) provide organi
 RoleFerry eliminates the "apply and pray" model by **automating the insider connection** that historically required manual networking, personal referrals, or recruiter relationships. We combine the intelligence of sales automation with the compliance and UX of consumer job search—a $200M+ ARR opportunity within 5 years.
 
 ---
-**Contact**: founders@roleferry.com  
+**Contact**: hello@roleferry.com  
 **Version**: 1.0  
 **Date**: October 2025
 

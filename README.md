@@ -21,28 +21,30 @@
 
 ## ✨ Key Features
 
-### 🤖 **AI-Powered Job Matching**
+### 🎯 **10-Tab Workflow System**
+- **Job Preferences/ICP**: Dynamic labeling (Job Seeker vs Recruiter modes)
+- **Resume/Candidate Profile**: AI-powered parsing and data extraction
+- **Job Descriptions**: URL import and pain point analysis
+- **Pinpoint Match**: Solution-to-challenge alignment scoring
+- **Find Contact**: Contact discovery with email verification
+- **Context Research**: Auto-pulled company and contact summaries
+- **Offer Creation**: Audience-adaptive tone (Recruiter/Manager/Exec)
+- **Compose**: Variable substitution with jargon clarity detection
+- **Campaign**: 3-email auto-generation with deliverability checks
+- **Deliverability/Launch**: Pre-flight checks and send execution
+
+### 🤖 **AI-Powered Intelligence**
 - Match scores (0-100) with detailed breakdown (experience, skills, industry)
 - Personalized job recommendations based on Intent & Job Preferences (IJP)
-- Real-time filtering by role, location, salary, company size, industry
+- AI-powered email drafting with variable substitution
+- Resume extraction for personalized content generation
+- Jargon detection and plain-English explanations
 
 ### 🔍 **Insider Connection Intelligence**
 - Auto-discover hiring managers and recruiters at target companies
 - Multi-provider enrichment waterfall (Apollo → Clay → Clearbit)
-- Email verification (NeverBounce + Findymail)
-- LinkedIn profile discovery
-
-### ✍️ **Author + Sequencer**
-- AI-powered email drafting (Anthropic Claude Sonnet + GPT-4 fallback)
-- Resume extraction for personalized content generation
-- Multi-step sequences with variables (`{{first_name}}`, `{{company}}`, etc.)
-- Stop-on-reply automation
-
-### 📊 **Job Tracker**
-- Kanban board view (Saved → Applied → Interviewing → Offer → Rejected)
-- Table view with advanced filtering
-- CSV import/export for interoperability
-- Insights & analytics (reply rate, time-to-interview, sequence effectiveness)
+- Email verification (NeverBounce + MillionVerifier)
+- LinkedIn profile discovery with confidence scoring
 
 ### 📧 **Managed Deliverability**
 - 100+ pre-warmed sending domains (RoleFerry infrastructure)
@@ -50,12 +52,14 @@
 - Automatic domain rotation and throttling
 - Custom tracking domains (CTD) for link safety
 - No open-tracker pixels by default (privacy-first)
+- Pre-flight checks (spam score, DNS validation, bounce tracking)
 
-### 🎨 **LivePages**
-- Personalized landing pages for email click targets
-- Animated GIF previews in emails
-- Telemetry (page views, CTA clicks, scroll depth)
-- Calendaring integration
+### 📊 **Advanced Analytics**
+- Alignment score correlation with reply rates
+- Cost per qualified lead tracking
+- Conversion funnel analysis
+- Campaign performance metrics
+- A/B testing and variant analysis
 
 ### 🤝 **Copilot (Orion-Style)**
 - Context-aware AI assistant (persistent right rail)
@@ -64,9 +68,10 @@
 - Surfaces insider connections
 - Job search strategy coaching
 
-### 👥 **Dual Mode**
+### 👥 **Dual Mode Architecture**
 - **Job Seeker Mode**: Find jobs, apply, track interviews
 - **Recruiter Mode**: Source candidates, manage outreach, track placements
+- Dynamic UI labels and workflow adaptation
 
 ---
 
@@ -74,13 +79,16 @@
 
 ### Frontend (Next.js 15 + React 19 + Tailwind CSS 4)
 - **Modern Stack**: TypeScript, React Server Components, App Router
-- **Pages**: Dashboard, Jobs, Tracker, Sequences, Enrichment, Deliverability, LivePages, Settings
-- **Components**: Copilot Panel, Job Cards, Kanban Board, Persona Builder, IJP Wizard
+- **10-Tab Workflow**: Job Preferences, Resume, Job Descriptions, Pinpoint Match, Find Contact, Context Research, Offer Creation, Compose, Campaign, Deliverability/Launch
+- **Utility Tabs**: Dashboard, Analytics, Settings, Help
+- **Components**: Copilot Panel, Job Cards, Kanban Board, Persona Builder, IJP Wizard, Mode Toggle
 - **Responsive**: Mobile-first design, dark + light themes
 
 ### Backend (FastAPI + Python 3.11+)
-- **APIs**: 75+ endpoints across 30 routers
-- **Integrations**: Apollo, Clay, SendGrid, Stripe, Anthropic, Apify, NeverBounce
+- **APIs**: 100+ endpoints across 35+ routers
+- **10-Tab Workflow APIs**: Complete backend support for all workflow tabs
+- **Integrations**: Apollo, Clay, SendGrid, Stripe, Anthropic, Apify, NeverBounce, MillionVerifier
+- **AI Services**: Jargon detection, email verification, content generation
 - **Database**: PostgreSQL (with migrations)
 - **Queue**: Celery + Redis (background jobs)
 - **Caching**: Redis (match scores, enrichment data)
@@ -238,7 +246,7 @@ Comprehensive enterprise-grade documentation (100+ documents, 40,000+ lines):
 **Integrations:**
 - Apollo + Clay (contact enrichment)
 - SendGrid + AWS SES (email delivery)
-- NeverBounce + Findymail (email verification)
+- NeverBounce + MillionVerifier (email verification)
 - Stripe (payments)
 - Clearbit (company data)
 
@@ -304,8 +312,8 @@ RoleFerry is inspired by best practices from leading platforms in job search, re
 ## 📞 Contact
 
 - **Website**: https://roleferry.com
-- **Support**: support@roleferry.com
-- **Sales**: sales@roleferry.com
+- **Support**: hello@roleferry.com
+- **Sales**: hello@roleferry.com
 - **GitHub**: https://github.com/aurelius-in/RoleFerry
 
 ---

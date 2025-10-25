@@ -21,10 +21,86 @@
 - **Linear**: Fast keyboard shortcuts, command palette, sleek table views
 - **Apollo.io**: Dense data tables, inline editing, bulk actions
 - **Instantly**: Health score visualizations, traffic light colors
+- **Jobright**: Job card layouts, match scoring, filter systems
+- **Welcome to the Jungle**: Preference wizards, user onboarding flows
 
 ---
 
-## 2. Typography
+## 2. 10-Tab Workflow UI Specifications
+
+### 2.1 Navigation Structure
+**Primary Workflow Tabs** (10 tabs):
+- Job Preferences / Ideal Client Profile (ICP)
+- Resume / Candidate Profile  
+- Job Descriptions
+- Pinpoint Match
+- Find Contact
+- Context (Research)
+- Offer Creation
+- Compose
+- Campaign
+- Deliverability / Launch
+
+**Utility Tabs** (4 tabs):
+- Dashboard
+- Analytics / Insights
+- Settings / Account
+- Help / Support
+
+### 2.2 Mode Toggle Component
+**Location**: Top-right of navigation
+**Functionality**: 
+- Toggle between "Job Seeker" and "Recruiter" modes
+- Dynamic label updates across all tabs
+- Persistent state (localStorage)
+- Visual feedback with active/inactive states
+
+### 2.3 Tab-Specific UI Patterns
+
+#### Job Preferences/ICP Tab
+- **Form Layout**: Multi-column grid for efficient data entry
+- **Dynamic Labels**: "Job Preferences" (Job Seeker) vs "Ideal Client Profile (ICP)" (Recruiter)
+- **Field Types**: Multi-select dropdowns, text inputs, range sliders
+- **Validation**: Real-time feedback on required fields
+
+#### Resume/Candidate Profile Tab
+- **File Upload**: Drag-and-drop zone with progress indicator
+- **AI Parsing**: Loading states with estimated time remaining
+- **Data Display**: Structured cards showing extracted information
+- **Edit Capability**: Inline editing of parsed data
+
+#### Pinpoint Match Tab
+- **Score Display**: Large circular progress indicator (0-100%)
+- **Match Breakdown**: Expandable cards showing challenge → solution → metric
+- **Color Coding**: Green (90%+), Blue (75-89%), Yellow (50-74%), Red (<50%)
+- **Recalculation**: Prominent button for score updates
+
+#### Find Contact Tab
+- **Search Interface**: Auto-complete with company/title suggestions
+- **Contact Cards**: Name, title, email with verification badges
+- **Verification Badges**: Color-coded (Green=Valid, Yellow=Risky, Red=Invalid)
+- **Confidence Scores**: Percentage display with visual indicators
+
+#### Compose Tab
+- **Variable Panel**: Sidebar showing available variables with live preview
+- **Tone Selector**: Radio buttons for Recruiter/Manager/Exec
+- **Jargon Detection**: Highlighted terms with tooltip explanations
+- **Live Preview**: Real-time email rendering with variable substitution
+
+#### Campaign Tab
+- **Email Steps**: Expandable cards for each email in sequence
+- **Timing Controls**: Day/hour selectors for delays
+- **Deliverability Panel**: Health checks with pass/warning/fail indicators
+- **Launch Controls**: Prominent launch button with pre-flight status
+
+### 2.4 Responsive Design
+- **Mobile**: Stacked layout with collapsible sections
+- **Tablet**: Two-column layout with sidebar navigation
+- **Desktop**: Full 10-tab horizontal navigation with persistent sidebar
+
+---
+
+## 3. Typography
 
 ### 2.1 Font Families
 - **Primary**: Inter (headings, body text)

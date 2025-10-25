@@ -1,0 +1,30 @@
+Also in terms of selling this tool, it would be a great idea for this to be sold to business owners that already have a budget for outreach tools. 
+
+B2B  is better than B2C 
+
+Oliver Ellison <oliveraellison@gmail.com>
+Fri, Oct 3, 4:01 PM
+to David
+
+Dave,
+
+Totally aligned. Let’s sell RoleFerry to teams that already budget for outreach tools. I’m positioning it as a drop-in that cuts cost per qualified lead without forcing a stack change.
+
+Here is what I’m building in first:
+
+- Workspaces and seats with roles, plus Google/Microsoft SSO
+
+- Clay and Apollo CSV import, plus a Google Sheets connector
+
+- Salesforce and HubSpot sync: push Qualified or Rejected, reason codes, and cost
+
+- Instantly and Lemlist webhooks to tag outcomes back in the sequencer
+
+- Caching and per-workspace budget caps to keep checks under control
+
+- Campaign reporting with total checks, qualified rate, and cost per qualified lead
+
+
+ROI angle to test: I think, like from wjat I read, many teams pay 16 to 35 cents per lead check; I'm pretty sure our target can be easily under 10 cents with better acceptance rates.
+
+I’ll keep our scheduled call in an hour and try to have a short walk-through ready. 

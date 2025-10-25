@@ -11,12 +11,13 @@
 
 ### 1.1 Scope
 This document specifies the functional behavior of RoleFerry platform features across Job Seeker and Recruiter modes, covering:
-- User authentication and onboarding
-- Job discovery and matching
-- Application tracking
-- Contact enrichment and outreach
-- Deliverability management
-- Analytics and reporting
+- **10-Tab Workflow System**: Complete job application automation
+- **Dual-Mode Architecture**: Job Seeker vs Recruiter functionality
+- **AI-Powered Intelligence**: Resume parsing, job analysis, pinpoint matching
+- **Contact Discovery**: Automated enrichment with email verification
+- **Campaign Management**: 3-email sequences with deliverability checks
+- **Advanced Analytics**: Alignment correlation and cost tracking
+- **Deliverability Infrastructure**: Pre-warmed domains and health monitoring
 
 ### 1.2 Requirements Format
 Each requirement follows the format:
@@ -27,7 +28,109 @@ Each requirement follows the format:
 
 ---
 
-## 2. Authentication & User Management (REQ-AUTH)
+## 2. 10-Tab Workflow System (REQ-WORKFLOW)
+
+### REQ-WORKFLOW-001: Job Preferences/ICP Tab (P0)
+**Description**: System shall provide dynamic labeling and data collection for job preferences (Job Seeker) or Ideal Client Profile (Recruiter).
+
+**Acceptance Criteria**:
+- [ ] Tab title changes based on mode: "Job Preferences" (Job Seeker) vs "Ideal Client Profile (ICP)" (Recruiter)
+- [ ] Form fields: industries, roles, salary range, location, work type
+- [ ] Data persists across sessions
+- [ ] Mode toggle updates all labels dynamically
+
+### REQ-WORKFLOW-002: Resume/Candidate Profile Tab (P0)
+**Description**: System shall handle file upload and AI parsing of resumes with data extraction.
+
+**Acceptance Criteria**:
+- [ ] File upload accepts PDF, DOC, DOCX formats
+- [ ] AI parsing extracts: positions, metrics, skills, accomplishments, tenure
+- [ ] Extracted data stored as normalized JSON
+- [ ] Progress indicator during parsing
+- [ ] Error handling for unsupported formats
+
+### REQ-WORKFLOW-003: Job Descriptions Tab (P0)
+**Description**: System shall import job descriptions via URL or text and perform AI analysis.
+
+**Acceptance Criteria**:
+- [ ] URL import from LinkedIn, Indeed, company sites
+- [ ] Text paste functionality with validation
+- [ ] AI parsing extracts: pain points, required skills, success metrics
+- [ ] Parsed data available for next workflow step
+
+### REQ-WORKFLOW-004: Pinpoint Match Tab (P0)
+**Description**: System shall compare resume solutions to job description pain points with alignment scoring.
+
+**Acceptance Criteria**:
+- [ ] Alignment score calculation (0-100%)
+- [ ] Match breakdown showing challenge → solution → metric
+- [ ] Visual score display with color coding
+- [ ] Recalculation capability
+- [ ] Score persistence for campaign use
+
+### REQ-WORKFLOW-005: Find Contact Tab (P0)
+**Description**: System shall discover contacts with email verification and confidence scoring.
+
+**Acceptance Criteria**:
+- [ ] Contact search by company, title, or LinkedIn URL
+- [ ] Email verification with NeverBounce/MillionVerifier
+- [ ] Verification badges (Valid/Risky/Invalid)
+- [ ] Confidence scoring for each contact
+- [ ] Contact selection for campaign
+
+### REQ-WORKFLOW-006: Context Research Tab (P0)
+**Description**: System shall auto-pull company and contact summaries with variable exposure.
+
+**Acceptance Criteria**:
+- [ ] Company summary generation with {{company_summary}} variable
+- [ ] Recent news extraction with {{recent_news}} variable
+- [ ] Contact bio with {{contact_bio}} variable
+- [ ] Editable fields for customization
+- [ ] Variable exposure for email composition
+
+### REQ-WORKFLOW-007: Offer Creation Tab (P0)
+**Description**: System shall build personalized pitch assets with audience-adaptive tone.
+
+**Acceptance Criteria**:
+- [ ] Tone selection: Recruiter (efficiency), Manager (competence), Exec (ROI)
+- [ ] Format options: Text, Link, Video
+- [ ] AI-generated offers based on pinpoint matches
+- [ ] Custom offer creation capability
+- [ ] Offer storage and retrieval
+
+### REQ-WORKFLOW-008: Compose Tab (P0)
+**Description**: System shall generate emails with variable substitution and jargon clarity.
+
+**Acceptance Criteria**:
+- [ ] Variable substitution for all collected data
+- [ ] Tone toggle for different audiences
+- [ ] Jargon detection with plain-English explanations
+- [ ] Live preview with variable replacement
+- [ ] Email template storage
+
+### REQ-WORKFLOW-009: Campaign Tab (P0)
+**Description**: System shall auto-generate 3-email sequences with deliverability checks.
+
+**Acceptance Criteria**:
+- [ ] Auto-creation of 3 emails with optimal timing
+- [ ] Editable subject lines and body content
+- [ ] Delay configuration (days/hours)
+- [ ] Stop-on-reply controls
+- [ ] Deliverability sub-panel with health checks
+
+### REQ-WORKFLOW-010: Deliverability/Launch Tab (P0)
+**Description**: System shall perform pre-flight checks and execute campaign launch.
+
+**Acceptance Criteria**:
+- [ ] Pre-flight checks: email verification, spam score, DNS validation
+- [ ] Bounce history and domain warmup verification
+- [ ] Launch button enabled only after all checks pass
+- [ ] Campaign execution with immediate and scheduled sends
+- [ ] Launch confirmation with campaign ID
+
+---
+
+## 3. Authentication & User Management (REQ-AUTH)
 
 ### REQ-AUTH-001: User Registration (P0)
 **Description**: System shall allow new users to create accounts via email/password or OAuth (Google, Microsoft).
