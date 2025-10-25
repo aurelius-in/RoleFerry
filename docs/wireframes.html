@@ -76,69 +76,13 @@
   .keypad-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+    gap: 0.5rem;
     max-width: 800px;
     width: 100%;
     margin-bottom: 1rem;
     position: relative;
   }
 
-  /* Workflow arrows */
-  .workflow-arrow {
-    position: absolute;
-    color: #10b981;
-    font-size: 1.5rem;
-    z-index: 10;
-    pointer-events: none;
-  }
-
-  .arrow-right-1 {
-    top: 50%;
-    left: 33.33%;
-    transform: translateY(-50%);
-  }
-
-  .arrow-right-2 {
-    top: 50%;
-    left: 66.66%;
-    transform: translateY(-50%);
-  }
-
-  .arrow-down-3 {
-    top: 100%;
-    left: 16.66%;
-    transform: translateX(-50%);
-  }
-
-  .arrow-left-4 {
-    top: 50%;
-    left: 16.66%;
-    transform: translateY(-50%);
-  }
-
-  .arrow-left-5 {
-    top: 50%;
-    left: 50%;
-    transform: translateY(-50%);
-  }
-
-  .arrow-down-6 {
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  .arrow-right-7 {
-    top: 50%;
-    left: 66.66%;
-    transform: translateY(-50%);
-  }
-
-  .arrow-right-8 {
-    top: 50%;
-    left: 83.33%;
-    transform: translateY(-50%);
-  }
 
   .keypad-button {
     position: relative;
@@ -366,15 +310,6 @@
 
     <!-- 3x3 Keypad Grid -->
     <div class="keypad-grid">
-      <!-- Workflow Arrows -->
-      <div class="workflow-arrow arrow-right-1"><img src="assets/arrow_right_blue.png" alt="→" style="width: 24px; height: 24px;"></div>
-      <div class="workflow-arrow arrow-right-2"><img src="assets/arrow_right_blue.png" alt="→" style="width: 24px; height: 24px;"></div>
-      <div class="workflow-arrow arrow-down-3"><img src="assets/arrow_down_blue.png" alt="↓" style="width: 24px; height: 24px;"></div>
-      <div class="workflow-arrow arrow-left-4"><img src="assets/arrow_left_blue.png" alt="←" style="width: 24px; height: 24px;"></div>
-      <div class="workflow-arrow arrow-left-5"><img src="assets/arrow_left_blue.png" alt="←" style="width: 24px; height: 24px;"></div>
-      <div class="workflow-arrow arrow-down-6"><img src="assets/arrow_down_blue.png" alt="↓" style="width: 24px; height: 24px;"></div>
-      <div class="workflow-arrow arrow-right-7"><img src="assets/arrow_right_blue.png" alt="→" style="width: 24px; height: 24px;"></div>
-      <div class="workflow-arrow arrow-right-8"><img src="assets/arrow_right_blue.png" alt="→" style="width: 24px; height: 24px;"></div>
       <!-- Tab 1: Job Preferences -->
       <button class="keypad-button" data-tab="job-preferences" data-step="1" title="Job preferences">
         <div class="keypad-icon">🎯</div>
