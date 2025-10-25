@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Specification - RoleFerry Documentation</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f8fafc;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .content h1, .content h2, .content h3, .content h4 {
+            color: #2563eb;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .content h1 {
+            font-size: 2rem;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 0.5rem;
+        }
+        .content h2 {
+            font-size: 1.5rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.25rem;
+        }
+        .content h3 {
+            font-size: 1.25rem;
+        }
+        .content p {
+            margin-bottom: 1rem;
+        }
+        .content ul, .content ol {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+        .content li {
+            margin-bottom: 0.5rem;
+        }
+        .content code {
+            background: #f1f5f9;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .content pre {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        .content pre code {
+            background: none;
+            padding: 0;
+        }
+        .content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .content th, .content td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        .content th {
+            background: #f8fafc;
+            font-weight: 600;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .nav-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .nav-button:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+        .nav-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .nav-button:disabled:hover {
+            background: #9ca3af;
+            transform: none;
+        }
+        .nav-center {
+            text-align: center;
+            flex: 1;
+        }
+        .nav-center h3 {
+            margin: 0;
+            color: #374151;
+        }
+        .nav-center p {
+            margin: 0.25rem 0 0 0;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem;
+            background: #374151;
+            color: white;
+            border-radius: 12px;
+        }
+        .breadcrumb {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+        .breadcrumb a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            .header h1 {
+                font-size: 2rem;
+            }
+            .navigation {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .nav-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RoleFerry Documentation</h1>
+        <p>API Specification</p>
+    </div>
+
+    <div class="breadcrumb">
+        <a href="../index.html">Home</a> &gt; 
+        <a href="../WEEK_4_UPDATES.html">Week 4 Updates</a> &gt; 
+        API Specification
+    </div>
+
+    <div class="navigation">
+        <a href='html/03-architecture/system-architecture_conceptual.html' class='nav-button'>← Previous</a>
+        
+        <div class="nav-center">
+            <h3>API Specification</h3>
+            <p>Documentation Navigation</p>
+        </div>
+        
+        <a href='html/05-ux-design/ui-specifications.html' class='nav-button'>Next →</a>
+    </div>
+
+    <div class="content">
+        <h1>API Specification</h1>
+<h2>RoleFerry Platform</h2>
+
+<strong>API Version</strong>: v1  
+<strong>Base URL</strong>: <code>https://api.roleferry.com/v1</code>  
+<strong>Authentication</strong>: Bearer Token (JWT)  
+<strong>Format</strong>: JSON
+
+<p>---</p>
+
+<h2>1. Overview</h2>
+
+<h3>1.1 API Principles</h3>
+<ul><li><strong>RESTful</strong>: Resources accessed via HTTP methods (GET, POST, PUT, DELETE)</li></ul>
+<ul><li><strong>Stateless</strong>: Each request contains all necessary context (JWT token)</li></ul>
+<ul><li><strong>Paginated</strong>: List endpoints return max 100 items; use <code>page</code> and <code>limit</code> params</li></ul>
+<ul><li><strong>Rate Limited</strong>: 60 requests/minute per user (429 if exceeded)</li></ul>
+<ul><li><strong>10-Tab Workflow</strong>: Complete API coverage for all workflow tabs</li></ul>
+<ul><li><strong>Dual-Mode Support</strong>: Job Seeker and Recruiter mode endpoints</li></ul>
+
+<h3>1.2 Authentication</h3>
+All endpoints (except <code>/auth/*</code>) require JWT bearer token in header:
+<pre><code>
+Authorization: Bearer <access_token>
+</code></pre>
+
+<p>Tokens expire in 15 minutes; use <code>/auth/refresh</code> to obtain new token.</p>
+
+<p>---</p>
+
+<h2>2. 10-Tab Workflow APIs</h2>
+
+<h3>2.1 Job Preferences/ICP APIs</h3>
+
+<h4>GET /job-preferences</h4>
+Retrieve user's job preferences or ICP.
+
+<strong>Response</strong>:
+<pre><code>json
+{
+  "industries": ["Software", "AI & Machine Learning"],
+  "roles": ["Software Engineer", "ML Engineer"],
+  "salary_range": "$100,000 - $150,000",
+  "location": "Remote",
+  "work_type": ["Remote"],
+  "mode": "job-seeker"
+}
+</code></pre>
+
+<h4>POST /job-preferences</h4>
+Create or update job preferences/ICP.
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "industries": ["Software", "AI & Machine Learning"],
+  "roles": ["Software Engineer", "ML Engineer"],
+  "salary_range": "$100,000 - $150,000",
+  "location": "Remote",
+  "work_type": ["Remote"],
+  "mode": "job-seeker"
+}
+</code></pre>
+
+<h3>2.2 Resume/Candidate Profile APIs</h3>
+
+<h4>POST /resume/upload-and-parse</h4>
+Upload and parse resume file.
+
+<strong>Request</strong>: Multipart form with file
+<strong>Response</strong>:
+<pre><code>json
+{
+  "positions": [
+    {"title": "Senior Software Engineer", "company": "TechCorp", "tenure": "3 years"}
+  ],
+  "metrics": ["Increased system efficiency by 20%"],
+  "skills": ["Python", "React", "AWS", "Machine Learning"],
+  "accomplishments": ["Developed new feature X"],
+  "problems_solved": ["Optimized database queries"]
+}
+</code></pre>
+
+<h3>2.3 Job Descriptions APIs</h3>
+
+<h4>POST /job-descriptions/parse</h4>
+Parse job description from URL or text.
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "source_type": "url",
+  "content": "https://www.linkedin.com/jobs/view/..."
+}
+</code></pre>
+
+<strong>Response</strong>:
+<pre><code>json
+{
+  "pain_points": ["Scaling our backend infrastructure to handle 10x traffic"],
+  "required_skills": ["Python", "Distributed Systems", "Cloud Architecture"],
+  "success_metrics": ["Reduce latency by 30%"]
+}
+</code></pre>
+
+<h3>2.4 Pinpoint Match APIs</h3>
+
+<h4>POST /pinpoint-match/calculate</h4>
+Calculate alignment score between resume and job description.
+
+<strong>Response</strong>:
+<pre><code>json
+{
+  "alignment_score": 85,
+  "pinpoint_matches": [
+    {
+      "pinpoint": "Scaling our backend infrastructure to handle 10x traffic",
+      "solution": "My experience scaling microservices on AWS",
+      "metric": "Achieved 99.9% uptime and 20% cost reduction"
+    }
+  ]
+}
+</code></pre>
+
+<h3>2.5 Find Contact APIs</h3>
+
+<h4>POST /find-contact</h4>
+Find contacts with email verification.
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "query": "TechCorp hiring manager"
+}
+</code></pre>
+
+<strong>Response</strong>:
+<pre><code>json
+{
+  "contacts": [
+    {
+      "name": "Jane Doe",
+      "title": "Hiring Manager",
+      "email": "jane.doe@example.com",
+      "confidence": 0.95,
+      "verification_status": "valid",
+      "badge": {"label": "Valid", "color": "green", "icon": "✓"}
+    }
+  ]
+}
+</code></pre>
+
+<h3>2.6 Context Research APIs</h3>
+
+<h4>GET /context-research</h4>
+Get company and contact summaries.
+
+<strong>Response</strong>:
+<pre><code>json
+{
+  "company_summary": "ExampleCorp is a leading technology company...",
+  "recent_news": "ExampleCorp recently announced a strategic partnership...",
+  "contact_bio": "Jane Doe is the Hiring Manager for the AI Solutions division..."
+}
+</code></pre>
+
+<h3>2.7 Offer Creation APIs</h3>
+
+<h4>POST /offer-creation/create</h4>
+Create personalized offer based on pinpoint matches.
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "pinpoint_matches": [...],
+  "tone": "manager",
+  "format": "text",
+  "user_mode": "job-seeker"
+}
+</code></pre>
+
+<strong>Response</strong>:
+<pre><code>json
+{
+  "success": true,
+  "offer": {
+    "id": "offer_1",
+    "title": "How I Can Solve Your Engineering Challenges",
+    "content": "I understand you're facing...",
+    "tone": "manager",
+    "format": "text"
+  }
+}
+</code></pre>
+
+<h3>2.8 Compose APIs</h3>
+
+<h4>POST /compose/generate</h4>
+Generate email with variable substitution and jargon detection.
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "tone": "manager",
+  "user_mode": "job-seeker",
+  "variables": [...],
+  "pinpoint_matches": [...],
+  "context_data": {...}
+}
+</code></pre>
+
+<strong>Response</strong>:
+<pre><code>json
+{
+  "success": true,
+  "email_template": {
+    "id": "email_1",
+    "subject": "Quick advice on Senior Software Engineer at TechCorp?",
+    "body": "Hi Jane,\n\nI spotted the Senior Software Engineer role...",
+    "tone": "manager",
+    "variables": [...],
+    "jargon_terms": [...],
+    "simplified_body": "..."
+  }
+}
+</code></pre>
+
+<h3>2.9 Campaign APIs</h3>
+
+<h4>POST /campaign/create</h4>
+Create 3-email campaign sequence.
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "campaign_name": "Job Application Campaign",
+  "emails": [
+    {
+      "step_number": 1,
+      "subject": "Quick advice on Senior Software Engineer at TechCorp?",
+      "body": "Hi Jane,\n\nI spotted the Senior Software Engineer role...",
+      "delay_days": 0,
+      "delay_hours": 0,
+      "stop_on_reply": true
+    }
+  ]
+}
+</code></pre>
+
+<h3>2.10 Deliverability/Launch APIs</h3>
+
+<h4>POST /deliverability-launch/pre-flight-checks</h4>
+Run comprehensive pre-flight checks.
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "campaign_id": "camp_12345",
+  "emails": [...],
+  "contacts": [...]
+}
+</code></pre>
+
+<strong>Response</strong>:
+<pre><code>json
+{
+  "checks": [
+    {
+      "name": "Email Verification",
+      "status": "pass",
+      "message": "All emails verified successfully"
+    },
+    {
+      "name": "Spam Score Check",
+      "status": "warning",
+      "message": "Spam score: 2.1 (acceptable)"
+    }
+  ]
+}
+</code></pre>
+
+<h4>POST /deliverability-launch/launch</h4>
+Launch campaign after pre-flight checks pass.
+
+<strong>Response</strong>:
+<pre><code>json
+{
+  "success": true,
+  "message": "Campaign launched successfully!",
+  "campaign_id": "camp_12345",
+  "emails_sent": 1,
+  "scheduled_emails": 2
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>3. Authentication Endpoints</h2>
+
+<h3>POST /auth/signup</h3>
+Create new user account.
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "email": "jane@example.com",
+  "password": "SecureP@ss123",
+  "full_name": "Jane Doe",
+  "mode": "job_seeker"  // or "recruiter"
+}
+</code></pre>
+
+<strong>Response</strong> (201 Created):
+<pre><code>json
+{
+  "user_id": 1234,
+  "email": "jane@example.com",
+  "full_name": "Jane Doe",
+  "mode": "job_seeker",
+  "access_token": "eyJhbGc...",
+  "refresh_token": "dGhpcyBp...",
+  "expires_in": 900
+}
+</code></pre>
+
+<strong>Errors</strong>:
+<ul><li><code>400</code>: Email already registered</li></ul>
+<ul><li><code>422</code>: Password too weak</li></ul>
+
+<p>---</p>
+
+<h3>POST /auth/login</h3>
+Authenticate existing user.
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "email": "jane@example.com",
+  "password": "SecureP@ss123"
+}
+</code></pre>
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "user_id": 1234,
+  "access_token": "eyJhbGc...",
+  "refresh_token": "dGhpcyBp...",
+  "expires_in": 900
+}
+</code></pre>
+
+<strong>Errors</strong>:
+<ul><li><code>401</code>: Invalid credentials</li></ul>
+
+<p>---</p>
+
+<h3>POST /auth/refresh</h3>
+Refresh expired access token.
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "refresh_token": "dGhpcyBp..."
+}
+</code></pre>
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "access_token": "newToken...",
+  "expires_in": 900
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>GET /auth/me</h3>
+Get current authenticated user info.
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "user_id": 1234,
+  "email": "jane@example.com",
+  "full_name": "Jane Doe",
+  "mode": "job_seeker",
+  "subscription_tier": "pro",
+  "created_at": "2025-10-01T12:00:00Z"
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>3. Jobs Endpoints</h2>
+
+<h3>GET /jobs</h3>
+List jobs matched to user's preferences.
+
+<strong>Query Parameters</strong>:
+<ul><li><code>page</code> (int, default: 1)</li></ul>
+<ul><li><code>limit</code> (int, default: 20, max: 100)</li></ul>
+<ul><li><code>role</code> (string): Filter by role keyword</li></ul>
+<ul><li><code>location</code> (string): Filter by location</li></ul>
+<ul><li><code>remote</code> (boolean): Remote jobs only</li></ul>
+<ul><li><code>min_match_score</code> (int, 0-100): Min match score</li></ul>
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "jobs": [
+    {
+      "id": 5678,
+      "title": "Senior Product Manager",
+      "company": {
+        "id": 101,
+        "name": "Acme Corp",
+        "domain": "acme.com",
+        "logo_url": "https://cdn.roleferry.com/logos/acme.png"
+      },
+      "location": "San Francisco, CA",
+      "remote": true,
+      "comp_min": 150000,
+      "comp_max": 200000,
+      "match_score": 85,
+      "match_breakdown": {
+        "experience": 90,
+        "skills": 80,
+        "industry": 85
+      },
+      "posted_date": "2025-10-10",
+      "requires_visa": false
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 120,
+    "total_pages": 6
+  }
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>GET /jobs/{id}</h3>
+Get job details.
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "id": 5678,
+  "title": "Senior Product Manager",
+  "company": {
+    "id": 101,
+    "name": "Acme Corp",
+    "domain": "acme.com",
+    "logo_url": "https://cdn.roleferry.com/logos/acme.png",
+    "size": "50-200",
+    "industry": "SaaS",
+    "glassdoor_rating": 4.2
+  },
+  "location": "San Francisco, CA",
+  "description": "We're seeking a Senior PM to lead...",
+  "description_summary": "Lead product strategy for B2B SaaS platform.",
+  "match_score": 85,
+  "posted_date": "2025-10-10"
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>4. Applications Endpoints</h2>
+
+<h3>POST /applications</h3>
+Create new application (Apply to job).
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "job_id": 5678
+}
+</code></pre>
+
+<strong>Response</strong> (201 Created):
+<pre><code>json
+{
+  "application_id": 9012,
+  "job_id": 5678,
+  "status": "applied",
+  "created_at": "2025-10-13T14:30:00Z",
+  "enrichment_job_id": "abc123"  // Background job ID
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>GET /applications</h3>
+List user's applications (Tracker).
+
+<strong>Query Parameters</strong>:
+<ul><li><code>mode</code> (string): "job_seeker" or "recruiter" (defaults to user's mode)</li></ul>
+<ul><li><code>status</code> (string): Filter by status</li></ul>
+<ul><li><code>page</code>, <code>limit</code></li></ul>
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "applications": [
+    {
+      "id": 9012,
+      "job": {
+        "id": 5678,
+        "title": "Senior Product Manager",
+        "company": {"name": "Acme Corp", "logo_url": "..."}
+      },
+      "status": "applied",
+      "match_score": 85,
+      "applied_at": "2025-10-13T14:30:00Z",
+      "last_action_at": "2025-10-13T15:00:00Z",
+      "reply_status": "pending",
+      "outreach_summary": {
+        "sent": 2,
+        "delivered": 2,
+        "replied": 0
+      }
+    }
+  ],
+  "pagination": {...}
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>GET /applications/{id}</h3>
+Get application details.
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "id": 9012,
+  "job": {...},
+  "status": "applied",
+  "notes": "Great culture fit based on Glassdoor reviews.",
+  "interview_dates": [
+    {"date": "2025-10-20", "stage": "phone", "interviewer": "John Doe"}
+  ],
+  "contacts": [
+    {
+      "id": 301,
+      "name": "Sarah Smith",
+      "title": "VP Product",
+      "email": "sarah@acme.com",
+      "verified": true,
+      "linkedin_url": "https://linkedin.com/in/sarahsmith"
+    }
+  ],
+  "outreach": [
+    {
+      "id": 401,
+      "contact_id": 301,
+      "step_no": 1,
+      "subject": "Quick advice on PM role at Acme?",
+      "status": "delivered",
+      "sent_at": "2025-10-13T15:00:00Z",
+      "delivered_at": "2025-10-13T15:02:00Z",
+      "link_clicks": 1
+    }
+  ]
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>PUT /applications/{id}</h3>
+Update application (status, notes, etc.).
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "status": "interviewing",
+  "notes": "Phone screen scheduled for Oct 20"
+}
+</code></pre>
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "id": 9012,
+  "status": "interviewing",
+  "notes": "Phone screen scheduled for Oct 20",
+  "updated_at": "2025-10-14T10:00:00Z"
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>POST /applications/import</h3>
+Bulk import applications from CSV.
+
+<strong>Request</strong> (multipart/form-data):
+<pre><code>
+file: applications.csv
+</code></pre>
+
+<strong>CSV Format</strong>:
+<pre><code>
+Company,Title,Status,Date Applied,Notes
+Acme Corp,Senior PM,applied,2025-10-01,Great fit
+Beta Inc,PM Lead,saved,2025-10-05,
+</code></pre>
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "imported": 25,
+  "skipped": 3,
+  "errors": [
+    {"row": 12, "error": "Missing required field: Company"}
+  ]
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>5. Enrichment Endpoints</h2>
+
+<h3>POST /enrichment/start</h3>
+Manually trigger enrichment for application.
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "application_id": 9012,
+  "persona_id": 5  // Optional: Override default persona
+}
+</code></pre>
+
+<strong>Response</strong> (202 Accepted):
+<pre><code>json
+{
+  "job_id": "xyz789",
+  "status": "queued",
+  "estimated_completion": "2025-10-13T15:05:00Z"
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>GET /enrichment/status/{job_id}</h3>
+Check enrichment job status.
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "job_id": "xyz789",
+  "status": "completed",  // queued, processing, completed, failed
+  "contacts_found": 2,
+  "completed_at": "2025-10-13T15:03:00Z",
+  "errors": []
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>6. Sequences Endpoints</h2>
+
+<h3>POST /sequences/start</h3>
+Launch outreach sequence.
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "application_id": 9012,
+  "contact_ids": [301, 302],
+  "sequence_template_id": 1,  // Default job seeker sequence
+  "custom_variables": {
+    "my_metric": "Reduced churn by 25%"
+  }
+}
+</code></pre>
+
+<strong>Response</strong> (201 Created):
+<pre><code>json
+{
+  "sequence_instance_id": "seq_123",
+  "contacts": 2,
+  "steps": 3,
+  "first_send_at": "2025-10-13T15:10:00Z"
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>POST /sequences/{instance_id}/stop</h3>
+Stop active sequence.
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "reason": "manual"  // manual, reply, bounce
+}
+</code></pre>
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "stopped_steps": 4,
+  "stopped_at": "2025-10-14T12:00:00Z"
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>GET /sequences/templates</h3>
+List available sequence templates.
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "templates": [
+    {
+      "id": 1,
+      "name": "Job Seeker Default",
+      "description": "3-step mentor ask",
+      "is_platform": true,
+      "steps": [
+        {"step_no": 1, "delay_hours": 0},
+        {"step_no": 2, "delay_hours": 48},
+        {"step_no": 3, "delay_hours": 72}
+      ]
+    }
+  ]
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>7. Analytics Endpoints</h2>
+
+<h3>GET /analytics/dashboard</h3>
+Get dashboard KPIs.
+
+<strong>Query Parameters</strong>:
+<ul><li><code>period</code> (string): "7d", "30d", "90d", "all"</li></ul>
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "period": "30d",
+  "metrics": {
+    "total_applications": 45,
+    "reply_rate": 0.12,
+    "interviews_scheduled": 5,
+    "offers_received": 1,
+    "avg_match_score": 78
+  },
+  "comparison": {
+    "total_applications": "+8 from previous period",
+    "reply_rate": "+0.03"
+  }
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>GET /analytics/sequences</h3>
+Sequence performance report.
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "sequences": [
+    {
+      "template_id": 1,
+      "name": "Job Seeker Default",
+      "sent": 120,
+      "delivered": 118,
+      "opened": 45,
+      "clicked": 12,
+      "replied": 15,
+      "reply_rate": 0.127
+    }
+  ]
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>8. Deliverability Endpoints</h2>
+
+<h3>GET /deliverability/mailboxes</h3>
+List sending mailboxes (admin/ops only).
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "mailboxes": [
+    {
+      "id": 1,
+      "email": "auto1@rf-send-01.com",
+      "domain": "rf-send-01.com",
+      "health_score": 87,
+      "status": "active",
+      "daily_cap": 50,
+      "sent_today": 23,
+      "bounce_count_7d": 1,
+      "spam_reports_7d": 0
+    }
+  ]
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>POST /deliverability/custom-domain</h3>
+Set up custom tracking domain.
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "domain": "click.mycompany.com"
+}
+</code></pre>
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "domain": "click.mycompany.com",
+  "status": "pending_verification",
+  "dns_records": [
+    {"type": "CNAME", "name": "click", "value": "cname.roleferry.com"}
+  ],
+  "instructions": "Add the CNAME record to your DNS provider and click Verify."
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>9. Copilot Endpoints</h2>
+
+<h3>POST /copilot/ask</h3>
+Ask AI Copilot a question.
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "context": {
+    "job_id": 5678,  // Optional
+    "application_id": 9012  // Optional
+  },
+  "question": "Why is this a fit for me?"
+}
+</code></pre>
+
+<strong>Response</strong> (200 OK, streaming):
+<pre><code>json
+{
+  "answer": "This Senior PM role at Acme Corp matches your background because...",
+  "citations": [
+    {"source": "resume", "text": "Your 5 years as PM at SaaS companies"},
+    {"source": "job_description", "text": "Acme is Series B SaaS"}
+  ],
+  "tokens": 250
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>POST /copilot/generate-draft</h3>
+Generate email draft.
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "job_id": 5678,
+  "contact_id": 301,
+  "tone": "casual"  // casual, formal
+}
+</code></pre>
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{
+  "subject": "Quick advice on PM role at Acme?",
+  "body": "Hi Sarah,\n\nI spotted the Senior PM opening at Acme...",
+  "tokens": 180
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>10. Webhooks (Inbound)</h2>
+
+<h3>POST /webhooks/sendgrid</h3>
+SendGrid event webhook (delivered, bounced, spam, opened, clicked).
+
+<strong>Request Body</strong> (from SendGrid):
+<pre><code>json
+[
+  {
+    "event": "delivered",
+    "email": "recipient@example.com",
+    "smtp-id": "<outreach_401@roleferry.com>",
+    "timestamp": 1697200000
+  }
+]
+</code></pre>
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{"status": "ok"}
+</code></pre>
+
+<p>---</p>
+
+<h3>POST /webhooks/email-reply</h3>
+Inbound reply detection (from Mailgun/Postmark).
+
+<strong>Request Body</strong>:
+<pre><code>json
+{
+  "from": "sarah@acme.com",
+  "to": "auto1@rf-send-01.com",
+  "subject": "Re: Quick advice on PM role at Acme?",
+  "body": "Hi Jane, Happy to chat! Let's set up a call..."
+}
+</code></pre>
+
+<strong>Response</strong> (200 OK):
+<pre><code>json
+{"status": "ok", "sequence_stopped": true}
+</code></pre>
+
+<p>---</p>
+
+<h2>11. Error Responses</h2>
+
+<h3>Standard Error Format</h3>
+<pre><code>json
+{
+  "error": {
+    "code": "INVALID_REQUEST",
+    "message": "Missing required field: email",
+    "details": {"field": "email"}
+  }
+}
+</code></pre>
+
+<h3>Common Status Codes</h3>
+<ul><li><code>400 Bad Request</code>: Invalid input</li></ul>
+<ul><li><code>401 Unauthorized</code>: Missing/invalid token</li></ul>
+<ul><li><code>403 Forbidden</code>: Insufficient permissions</li></ul>
+<ul><li><code>404 Not Found</code>: Resource doesn't exist</li></ul>
+<ul><li><code>422 Unprocessable Entity</code>: Validation error</li></ul>
+<ul><li><code>429 Too Many Requests</code>: Rate limit exceeded</li></ul>
+<ul><li><code>500 Internal Server Error</code>: Server-side issue</li></ul>
+
+<p>---</p>
+
+<h2>12. Rate Limiting</h2>
+
+<strong>Limits</strong>:
+<ul><li>Authenticated requests: 60/minute per user</li></ul>
+<ul><li>Webhook endpoints: 1,000/minute (no auth required)</li></ul>
+
+<strong>Headers</strong>:
+<pre><code>
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 42
+X-RateLimit-Reset: 1697200060  (Unix timestamp)
+</code></pre>
+
+<strong>429 Response</strong>:
+<pre><code>json
+{
+  "error": {
+    "code": "RATE_LIMIT_EXCEEDED",
+    "message": "Too many requests. Retry after 30 seconds.",
+    "retry_after": 30
+  }
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>13. Pagination</h2>
+
+<p>List endpoints return paginated results.</p>
+
+<strong>Request</strong>:
+<pre><code>
+GET /jobs?page=2&limit=50
+</code></pre>
+
+<strong>Response</strong>:
+<pre><code>json
+{
+  "jobs": [...],
+  "pagination": {
+    "page": 2,
+    "limit": 50,
+    "total": 250,
+    "total_pages": 5,
+    "has_next": true,
+    "has_prev": true
+  }
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>14. OpenAPI Specification</h2>
+
+<p>Full OpenAPI 3.0 spec available at:  
+<strong><code>https://api.roleferry.com/v1/openapi.json</code></strong></p>
+
+<p>Interactive docs:  
+<strong><code>https://api.roleferry.com/v1/docs</code></strong> (Swagger UI)  
+<strong><code>https://api.roleferry.com/v1/redoc</code></strong> (ReDoc)</p>
+
+<p>---</p>
+
+<strong>Document Owner</strong>: API Team  
+<strong>Version</strong>: 1.0  
+<strong>Last Updated</strong>: October 2025  
+<strong>Support</strong>: api-support@roleferry.com
+
+
+    </div>
+
+    <div class="navigation">
+        <a href='html/03-architecture/system-architecture_conceptual.html' class='nav-button'>← Previous</a>
+        
+        <div class="nav-center">
+            <h3>API Specification</h3>
+            <p>Documentation Navigation</p>
+        </div>
+        
+        <a href='html/05-ux-design/ui-specifications.html' class='nav-button'>Next →</a>
+    </div>
+
+    <div class="footer">
+        <h3>RoleFerry Documentation</h3>
+        <p>Complete platform documentation with navigation</p>
+        <p><strong>Generated:</strong> 2025-10-24 19:28:53</p>
+    </div>
+</body>
+</html>

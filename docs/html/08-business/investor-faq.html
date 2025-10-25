@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investor FAQ - RoleFerry Documentation</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f8fafc;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .content h1, .content h2, .content h3, .content h4 {
+            color: #2563eb;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .content h1 {
+            font-size: 2rem;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 0.5rem;
+        }
+        .content h2 {
+            font-size: 1.5rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.25rem;
+        }
+        .content h3 {
+            font-size: 1.25rem;
+        }
+        .content p {
+            margin-bottom: 1rem;
+        }
+        .content ul, .content ol {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+        .content li {
+            margin-bottom: 0.5rem;
+        }
+        .content code {
+            background: #f1f5f9;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .content pre {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        .content pre code {
+            background: none;
+            padding: 0;
+        }
+        .content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .content th, .content td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        .content th {
+            background: #f8fafc;
+            font-weight: 600;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .nav-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .nav-button:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+        .nav-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .nav-button:disabled:hover {
+            background: #9ca3af;
+            transform: none;
+        }
+        .nav-center {
+            text-align: center;
+            flex: 1;
+        }
+        .nav-center h3 {
+            margin: 0;
+            color: #374151;
+        }
+        .nav-center p {
+            margin: 0.25rem 0 0 0;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem;
+            background: #374151;
+            color: white;
+            border-radius: 12px;
+        }
+        .breadcrumb {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+        .breadcrumb a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            .header h1 {
+                font-size: 2rem;
+            }
+            .navigation {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .nav-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RoleFerry Documentation</h1>
+        <p>Investor FAQ</p>
+    </div>
+
+    <div class="breadcrumb">
+        <a href="../index.html">Home</a> &gt; 
+        <a href="../WEEK_4_UPDATES.html">Week 4 Updates</a> &gt; 
+        Investor FAQ
+    </div>
+
+    <div class="navigation">
+        <a href='html/05-ux-design/ui-specifications.html' class='nav-button'>← Previous</a>
+        
+        <div class="nav-center">
+            <h3>Investor FAQ</h3>
+            <p>Documentation Navigation</p>
+        </div>
+        
+        <a href='html/09-monetization/resume-database-concept.html' class='nav-button'>Next →</a>
+    </div>
+
+    <div class="content">
+        <h1>Investor FAQ</h1>
+<h2>RoleFerry Platform</h2>
+
+<strong>Version</strong>: 1.0  
+<strong>Audience</strong>: Investors, Board Members  
+<strong>Purpose</strong>: Common questions and answers for due diligence
+
+<p>---</p>
+
+<h2>1. Business Model</h2>
+
+<h3>Q: How do you make money?</h3>
+<strong>A</strong>: Freemium SaaS model with three revenue streams:
+
+<ul><li><strong>Subscription Revenue</strong> (70% of revenue):</li></ul>
+   - Job Seekers: $0 (free) → $49/mo (Pro) → $149/mo (Teams for coaches)
+   - Recruiters: $149/mo (Pro) → $99/mo (Teams, volume discount) → Custom (Enterprise)
+
+<ul><li><strong>Usage-Based Revenue</strong> (20%):</li></ul>
+   - Enrichment credits: $0.10/contact beyond included allowance
+   - Email sends: $0.02/email beyond 1K/month
+
+<ul><li><strong>Enterprise Contracts</strong> (10%):</li></ul>
+   - White-label for outplacement firms: $25K-$100K/year
+   - API access for ATS vendors: $10K+/year
+
+<strong>Unit Economics (Job Seeker Pro)</strong>:
+<ul><li>ARPU: $49/mo ($588/year)</li></ul>
+<ul><li>CAC: $50 (paid) → $0 (organic)</li></ul>
+<ul><li>LTV: $600 (12-month retention)</li></ul>
+<ul><li>LTV:CAC: 12:1 (organic), 3:1 (paid)</li></ul>
+<ul><li>Gross Margin: 85%</li></ul>
+
+<p>---</p>
+
+<h3>Q: What's your TAM/SAM/SOM?</h3>
+<strong>A</strong>: 
+<ul><li><strong>TAM</strong>: $45B (job search tools $8B + recruiting software $15B + sales engagement $22B)</li></ul>
+<ul><li><strong>SAM</strong>: $12B (English-speaking markets, white-collar jobs)</li></ul>
+<ul><li><strong>SOM</strong> (Year 5): $500M (1% market share)</li></ul>
+  - 500K job seeker seats × $600/year = $300M
+  - 20K recruiter seats × $2K/year = $40M
+  - 200 enterprise contracts × $50K/year = $10M
+  - Usage revenue = $150M
+
+<p>---</p>
+
+<h3>Q: Why will you win vs. incumbents?</h3>
+<strong>A</strong>: 
+<ul><li><strong>Unique combination</strong>: No competitor has tracking + intelligence + outreach + deliverability</li></ul>
+<ul><li><strong>Deliverability moat</strong>: We own sending infrastructure; users can't DIY this safely</li></ul>
+<ul><li><strong>Speed to market</strong>: Incumbents (LinkedIn, Simplify) move slowly; we're nimble</li></ul>
+<ul><li><strong>Better mousestrap</strong>: Email beats LinkedIn InMail (3x response rate), we automate the hard parts</li></ul>
+
+<strong>vs. Simplify/Huntr</strong>: They track; we act. We find contacts and send emails for you.  
+<strong>vs. LinkedIn</strong>: 95% cheaper ($1,788/year vs. $8K), email-first (not InMail-only).  
+<strong>vs. Apollo/Instantly</strong>: Sales tools adapted for recruiting; we're recruiting-native from day 1.
+
+<p>---</p>
+
+<h2>2. Market & Growth</h2>
+
+<h3>Q: How big is the market really?</h3>
+<strong>A</strong>: 
+<ul><li><strong>11M</strong> job openings monthly (US, BLS data)</li></ul>
+<ul><li><strong>40%</strong> white-collar (addressable) = 4.4M jobs/month</li></ul>
+<ul><li><strong>27M</strong> applications/month (4.5 applicants per hire)</li></ul>
+<ul><li><strong>30%</strong> would use automation = 8M potential job seeker users</li></ul>
+<ul><li><strong>200K</strong> companies with dedicated recruiting teams → 600K recruiter seats</li></ul>
+
+<p>Our SAM ($12B) is conservative; assumes 10% penetration of white-collar job search/recruiting.</p>
+
+<p>---</p>
+
+<h3>Q: What's your growth strategy?</h3>
+<strong>A</strong>: <strong>Product-led growth</strong> (PLG) with organic as primary channel:
+
+<strong>Phase 1 (Months 1-6)</strong>: Job Seekers via SEO + Community
+<ul><li>Target: 5,000 users, 500 paid</li></ul>
+<ul><li>Channels: Content marketing ("how to reach hiring managers"), Reddit/Blind, career coach partnerships</li></ul>
+<ul><li>CAC: $50 (paid ads) → $0 (organic, long-term)</li></ul>
+
+<strong>Phase 2 (Months 7-12)</strong>: Recruiters via Outbound Sales
+<ul><li>Target: 500 recruiter seats, 10 enterprise pilots</li></ul>
+<ul><li>Channels: Outbound (SDRs), ATS partnerships, HR Tech events</li></ul>
+<ul><li>CAC: $300 (outbound)</li></ul>
+
+<strong>Phase 3 (Year 2+)</strong>: Viral Loops
+<ul><li>Referral program ("Invite 3 friends, get 1 month free")</li></ul>
+<ul><li>Success sharing (LinkedIn/Twitter integrations)</li></ul>
+<ul><li>White-label (career coaches drive user acquisition)</li></ul>
+
+<p>---</p>
+
+<h3>Q: What's your customer acquisition cost?</h3>
+<strong>A</strong>:
+<ul><li><strong>Job Seekers</strong>: $50 (paid ads) at launch → $5 (organic) by Year 2</li></ul>
+<ul><li><strong>Recruiters</strong>: $300 (outbound sales, 6-week cycle)</li></ul>
+<ul><li><strong>Enterprise</strong>: $10,000 (field sales, 6-month cycle)</li></ul>
+
+<strong>Payback Period</strong>:
+<ul><li>Job Seekers: 1 month (paid), instant (organic)</li></ul>
+<ul><li>Recruiters: 2 months</li></ul>
+<ul><li>Enterprise: 2 months</li></ul>
+
+<p>---</p>
+
+<h3>Q: How do you retain users?</h3>
+<strong>A</strong>:
+<ul><li><strong>Job Seekers</strong>: Average 6-month active search → 12-month retention (passive use + 2 search cycles)</li></ul>
+<ul><li><strong>Recruiters</strong>: 85% annual retention (switching cost = re-training + integration)</li></ul>
+<ul><li><strong>Enterprise</strong>: 90% retention (multi-year contracts, deep integration)</li></ul>
+
+<strong>Retention Drivers</strong>:
+<ul><li><strong>Habit formation</strong>: Daily/weekly Tracker usage</li></ul>
+<ul><li><strong>Data lock-in</strong>: Historical applications, contacts, sequences</li></ul>
+<ul><li><strong>Results</strong>: 15%+ reply rate keeps users coming back</li></ul>
+<ul><li><strong>Network effects</strong>: More users → better benchmarks → stickier product</li></ul>
+
+<p>---</p>
+
+<h2>3. Product & Technology</h2>
+
+<h3>Q: What's your tech stack?</h3>
+<strong>A</strong>:
+<ul><li><strong>Frontend</strong>: Next.js 14, React 18, TypeScript, Tailwind</li></ul>
+<ul><li><strong>Backend</strong>: FastAPI (Python 3.11), PostgreSQL 15, Redis 7</li></ul>
+<ul><li><strong>Infrastructure</strong>: AWS (ECS Fargate, RDS, ElastiCache, S3)</li></ul>
+<ul><li><strong>External APIs</strong>: Apollo/Clay (enrichment), SendGrid/Mailgun (email), Anthropic/OpenAI (AI)</li></ul>
+
+<strong>Why this stack?</strong>:
+<ul><li>Fast development (MVP in 3-4 months)</li></ul>
+<ul><li>Scalable (10K → 500K users without major rewrites)</li></ul>
+<ul><li>Cost-efficient ($50K/month at 10K users)</li></ul>
+
+<p>---</p>
+
+<h3>Q: How do you ensure deliverability?</h3>
+<strong>A</strong>: <strong>Multi-pronged approach</strong>:
+
+<ul><li><strong>Infrastructure</strong>: Pre-warmed RoleFerry domains (not user email)</li></ul>
+<ul><li><strong>Health Monitoring</strong>: Bounce rate, spam reports tracked real-time</li></ul>
+<ul><li><strong>Throttling</strong>: 50 emails/day per mailbox (ISP best practice)</li></ul>
+<ul><li><strong>Warmup Protocol</strong>: New domains start at 5/day, increase 5%/day for 30 days</li></ul>
+<ul><li><strong>Content Moderation</strong>: AI flags spam patterns, profanity</li></ul>
+<ul><li><strong>Rotation</strong>: 100+ domains at scale (distribute risk)</li></ul>
+
+<strong>Result</strong>: >95% inbox placement, <0.05% spam complaint rate.
+
+<p>---</p>
+
+<h3>Q: What's your AI strategy?</h3>
+<strong>A</strong>: <strong>AI as feature, not product</strong> (we're not an AI company):
+
+<ul><li><strong>Match Scoring</strong>: ML model (XGBoost) trained on user feedback (thumbs up/down)</li></ul>
+<ul><li><strong>Draft Generation</strong>: LLM (Anthropic Claude) personalizes emails from resume + JD</li></ul>
+<ul><li><strong>Copilot</strong>: Q&A assistant ("Why is this a fit?", "Write an email")</li></ul>
+
+<strong>Why this works</strong>:
+<ul><li>AI improves core value prop (better matches, faster drafts)</li></ul>
+<ul><li>Human-in-the-loop (user reviews before sending)</li></ul>
+<ul><li>Cost-manageable ($0.02/draft, $0.005/match score)</li></ul>
+
+<strong>Moat</strong>: Data compounds over time (match accuracy improves with usage).
+
+<p>---</p>
+
+<h2>4. Competition</h2>
+
+<h3>Q: What if LinkedIn builds this?</h3>
+<strong>A</strong>: <strong>Unlikely for 3 reasons</strong>:
+
+<ul><li><strong>Deliverability risk</strong>: LinkedIn can't risk their core email reputation by adding bulk sending</li></ul>
+<ul><li><strong>Strategic focus</strong>: They monetize via ads + Recruiter seats, not automation</li></ul>
+<ul><li><strong>Speed</strong>: We can iterate 10x faster (startup vs. MSFT bureaucracy)</li></ul>
+
+<strong>If they do</strong>: We have 18-24 month head start on deliverability infrastructure + brand.
+
+<p>---</p>
+
+<h3>Q: What if Simplify adds outreach?</h3>
+<strong>A</strong>: <strong>We have moat they can't replicate quickly</strong>:
+
+<ul><li><strong>Deliverability</strong>: Requires 100+ warmed domains, 6+ months setup, $500K+ investment</li></ul>
+<ul><li><strong>Enrichment</strong>: Multi-provider integrations (Apollo, Clay, Hunter) take 6+ months</li></ul>
+<ul><li><strong>AI</strong>: Draft generation, match scoring require ML expertise</li></ul>
+
+<strong>Timeline</strong>: 12-18 months to reach feature parity. By then, we're at scale (50K users, data advantage).
+
+<p>---</p>
+
+<h2>5. Financials</h2>
+
+<h3>Q: What's your burn rate?</h3>
+<strong>A</strong>:
+<ul><li><strong>Pre-MVP</strong>: $150K/month (2 FT engineers, 1 contractor, infra, APIs)</li></ul>
+<ul><li><strong>Post-MVP</strong>: $250K/month (5 engineers, marketing, infra)</li></ul>
+<ul><li><strong>Runway</strong>: 18 months on $2M seed round</li></ul>
+
+<strong>Path to Profitability</strong>:
+<ul><li>Break-even: $300K MRR (Month 18-24)</li></ul>
+<ul><li>Profitable: Month 24+ (assume 70% gross margin)</li></ul>
+
+<p>---</p>
+
+<h3>Q: What are you raising and why?</h3>
+<strong>A</strong>: <strong>$2M seed round</strong>
+
+<strong>Use of Funds</strong>:
+<ul><li>40% Engineering ($800K): Hire 3 engineers (2 full-stack, 1 ML)</li></ul>
+<ul><li>30% GTM ($600K): Growth marketing, content, partnerships</li></ul>
+<ul><li>20% Infrastructure ($400K): Deliverability domains, APIs, hosting</li></ul>
+<ul><li>10% Operations ($200K): Legal, compliance, admin</li></ul>
+
+<strong>Target Metrics (18 months)</strong>:
+<ul><li>50K registered users</li></ul>
+<ul><li>5K paying subscribers</li></ul>
+<ul><li>$1.5M ARR</li></ul>
+<ul><li>85% gross retention</li></ul>
+
+<p>---</p>
+
+<h3>Q: What's your exit strategy?</h3>
+<strong>A</strong>: <strong>M&A or IPO (long-term)</strong>
+
+<strong>Comparable Exits</strong>:
+<ul><li><strong>Lever</strong>: Acquired by Employ Inc. (2022, $100M+ valuation)</li></ul>
+<ul><li><strong>Hired</strong>: Acquired by Adecco (2021, $100M)</li></ul>
+<ul><li><strong>Jobvite</strong>: Acquired by Employ Inc. (2021, ~$200M)</li></ul>
+
+<strong>IPO Path</strong>: $100M+ ARR, grow-into-multiple markets (recruiting → sales → partnerships).
+
+<strong>Ideal Acquirers</strong>:
+<ul><li><strong>LinkedIn</strong> (MSFT): Bolt-on to Recruiter offering</li></ul>
+<ul><li><strong>Indeed</strong>: Expand beyond job board</li></ul>
+<ul><li><strong>Workday/ADP</strong>: Add to HCM suite</li></ul>
+<ul><li><strong>Apollo/ZoomInfo</strong>: Expand into recruiting vertical</li></ul>
+
+<p>---</p>
+
+<h2>6. Risks</h2>
+
+<h3>Q: What keeps you up at night?</h3>
+<strong>A</strong>: <strong>Top 3 risks</strong>:
+
+<ul><li><strong>Deliverability failure</strong>: If domains blacklisted, core value prop fails</li></ul>
+   - <em>Mitigation</em>: Multi-domain pool, health monitoring, slow ramp
+
+<ul><li><strong>Regulatory (CAN-SPAM, GDPR)</strong>: Non-compliance = fines, injunctions</li></ul>
+   - <em>Mitigation</em>: Legal review, privacy-by-design, lawyer-approved templates
+
+<ul><li><strong>Competition from incumbents</strong>: LinkedIn/Simplify add similar features</li></ul>
+   - <em>Mitigation</em>: Speed, deliverability moat, niche depth
+
+<p>---</p>
+
+<h3>Q: What's your moat long-term?</h3>
+<strong>A</strong>: <strong>3 compounding advantages</strong>:
+
+<ul><li><strong>Data Moat</strong>: Match accuracy improves with usage (feedback loop)</li></ul>
+<ul><li><strong>Infrastructure Moat</strong>: 100+ warmed domains = 18+ months, $1M+ to replicate</li></ul>
+<ul><li><strong>Network Effects</strong>: More users → better benchmarks (reply rates, time-to-interview) → stickier product</li></ul>
+
+<p>---</p>
+
+<h2>7. Team</h2>
+
+<h3>Q: Who's on the founding team?</h3>
+<strong>A</strong>: (This would be customized with actual team details)
+
+<strong>CEO/Founder</strong>: 10+ years recruiting tech, scaled SaaS to $50M ARR  
+<strong>CTO</strong>: Ex-FAANG, led email infra at scale (1B+ sends/month)  
+<strong>Head of Product</strong>: Built job matching ML at major job board
+
+<strong>Why we'll win</strong>: Domain expertise (recruiting) + technical depth (email infra) + product sense (ML).
+
+<p>---</p>
+
+<h3>Q: What are you hiring for?</h3>
+<strong>A</strong>: <strong>Next 6 months</strong>:
+<ul><li>2 Full-Stack Engineers (Next.js + FastAPI)</li></ul>
+<ul><li>1 ML Engineer (match scoring, LLM integration)</li></ul>
+<ul><li>1 Growth Marketer (SEO, content, community)</li></ul>
+
+<strong>Next 12 months</strong>:
+<ul><li>1 Sales Lead (recruiter segment)</li></ul>
+<ul><li>1 Designer (UX/UI)</li></ul>
+<ul><li>1 DevOps Engineer (scale infrastructure)</li></ul>
+
+<p>---</p>
+
+<h2>8. Next Steps</h2>
+
+<h3>Q: What do you need from investors?</h3>
+<strong>A</strong>:
+<ul><li><strong>Capital</strong>: $2M seed round</li></ul>
+<ul><li><strong>Intros</strong>: HR Tech buyers, ATS partnerships, career coach networks</li></ul>
+<ul><li><strong>Expertise</strong>: Scaling SaaS, recruiting industry insights</li></ul>
+
+<h3>Q: What's your timeline?</h3>
+<strong>A</strong>:
+<ul><li><strong>Now</strong>: Fundraising ($2M seed)</li></ul>
+<ul><li><strong>Q4 2025</strong>: MVP launch (100 users)</li></ul>
+<ul><li><strong>Q2 2026</strong>: 1K users, $10K MRR</li></ul>
+<ul><li><strong>Q4 2026</strong>: 10K users, $100K MRR</li></ul>
+<ul><li><strong>2027</strong>: 50K users, $500K+ MRR, Series A ($10M)</li></ul>
+
+<p>---</p>
+
+<strong>Contact</strong>: hello@roleferry.com  
+<strong>Deck</strong>: [Link to pitch deck]  
+<strong>Demo</strong>: [Link to product demo video]
+
+<p>---</p>
+
+<strong>Document Owner</strong>: CEO, CFO  
+<strong>Version</strong>: 1.0  
+<strong>Date</strong>: October 2025  
+<strong>Next Review</strong>: Monthly (update with traction)
+
+
+    </div>
+
+    <div class="navigation">
+        <a href='html/05-ux-design/ui-specifications.html' class='nav-button'>← Previous</a>
+        
+        <div class="nav-center">
+            <h3>Investor FAQ</h3>
+            <p>Documentation Navigation</p>
+        </div>
+        
+        <a href='html/09-monetization/resume-database-concept.html' class='nav-button'>Next →</a>
+    </div>
+
+    <div class="footer">
+        <h3>RoleFerry Documentation</h3>
+        <p>Complete platform documentation with navigation</p>
+        <p><strong>Generated:</strong> 2025-10-24 19:28:53</p>
+    </div>
+</body>
+</html>
