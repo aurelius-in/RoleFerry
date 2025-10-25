@@ -122,7 +122,7 @@ const MockData = {
       sequenceId: 1,
       replyState: null,
       contacts: [
-        { id: 1, name: "Sarah Chen", title: "VP Product", email: "sarah@dataflow.ai", verified: true, linkedin: "https://linkedin.com/in/sarachen" }
+        { id: 1, name: "Alex Johnson", title: "VP Product", email: "alex@dataflow.ai", verified: true, linkedin: "https://linkedin.com/in/alexjohnson" }
       ],
       notes: [],
       interviews: [],
@@ -169,7 +169,7 @@ const MockData = {
 
   // Contacts Database
   contacts: [
-    { id: 1, companyId: 1, name: "Sarah Chen", title: "VP Product", level: "VP", email: "sarah@dataflow.ai", verifiedAt: "2025-01-10", source: "Apollo", linkedin: "https://linkedin.com/in/sarachen" },
+    { id: 1, companyId: 1, name: "Alex Johnson", title: "VP Product", level: "VP", email: "alex@dataflow.ai", verifiedAt: "2025-01-10", source: "Apollo", linkedin: "https://linkedin.com/in/alexjohnson" },
     { id: 2, companyId: 2, name: "Michael Torres", title: "Head of Product", level: "Head", email: "michael@globaltech.io", verifiedAt: "2025-01-08", source: "Clay", linkedin: "https://linkedin.com/in/michaelt" },
     { id: 3, companyId: 3, name: "Emma Rodriguez", title: "Director of Product", level: "Director", email: "emma@acme.com", verifiedAt: "2025-01-05", source: "Apollo", linkedin: "https://linkedin.com/in/emmarodriguez" },
     { id: 4, companyId: 1, name: "Tom Wilson", title: "Recruiter", level: "IC", email: "tom@dataflow.ai", verifiedAt: "2025-01-10", source: "Clay", linkedin: "https://linkedin.com/in/tomwilson" },
