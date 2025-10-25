@@ -6,6 +6,10 @@
     <title>Data Architecture - RoleFerry</title>
     <link rel="stylesheet" href="../../styles.css">
     <link rel="icon" href="../../assets/roleferry_trans.png">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true });
+    </script>
     <style>
         .document-container {
             max-width: 1200px;
@@ -126,6 +130,56 @@
         <div class="section">
             <h2>Data Architecture Overview</h2>
             <p>RoleFerry's data architecture is designed to handle complex recruitment data with high performance, scalability, and data integrity.</p>
+            
+            <div class="mermaid-diagram">
+                <h3>📊 Data Flow Architecture</h3>
+                <div class="mermaid">
+graph TB
+    subgraph "Data Sources"
+        A[Resume Uploads]
+        B[Job Descriptions]
+        C[User Profiles]
+        D[External APIs]
+    end
+    
+    subgraph "Processing Layer"
+        E[AI Analysis]
+        F[Data Validation]
+        G[Match Scoring]
+        H[Content Generation]
+    end
+    
+    subgraph "Storage Layer"
+        I[PostgreSQL]
+        J[Redis Cache]
+        K[File Storage]
+        L[Search Index]
+    end
+    
+    subgraph "Output Layer"
+        M[Email Campaigns]
+        N[Analytics Dashboard]
+        O[API Responses]
+        P[Reports]
+    end
+    
+    A --> E
+    B --> E
+    C --> F
+    D --> F
+    E --> G
+    F --> G
+    G --> H
+    H --> I
+    I --> J
+    I --> K
+    I --> L
+    J --> M
+    K --> N
+    L --> O
+    I --> P
+                </div>
+            </div>
             
             <div class="data-flow-diagram">
                 <h3>📊 Data Flow Architecture</h3>
