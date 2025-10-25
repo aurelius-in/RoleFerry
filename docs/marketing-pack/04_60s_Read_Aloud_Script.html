@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoleFerry 60-Second Read Aloud Script</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        .document-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 16px;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .document-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #f59e0b;
+        }
+
+        .document-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .script-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .script-section h2 {
+            color: #f59e0b;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #f59e0b;
+            padding-left: 1rem;
+        }
+
+        .script-content {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(16, 185, 129, 0.1));
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .script-content.quote {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            font-style: italic;
+            position: relative;
+        }
+
+        .script-content.quote::before {
+            content: '"';
+            font-size: 3rem;
+            color: #10b981;
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            font-family: serif;
+        }
+
+        .script-content.quote::after {
+            content: '"';
+            font-size: 3rem;
+            color: #10b981;
+            position: absolute;
+            bottom: -20px;
+            right: 10px;
+            font-family: serif;
+        }
+
+        .highlight-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box h3 {
+            color: #f59e0b;
+            margin-bottom: 0.5rem;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .metric-card {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .metric-card h4 {
+            color: #10b981;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-card p {
+            color: #d1d5db;
+            font-size: 0.9rem;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #374151;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .nav-button.secondary {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid #374151;
+        }
+
+        @media print {
+            .document-container {
+                background: white;
+                color: black;
+                box-shadow: none;
+            }
+            
+            .script-section h2 {
+                color: #f59e0b;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>RoleFerry 60-Second Read Aloud Script</h1>
+            <p>A script for AEs and founders to read verbatim in ~60 seconds</p>
+        </div>
+
+        <div class="script-section">
+            <h2>Hook - Problem in 2 Lines</h2>
+            <div class="script-content quote">
+                "Job applications are broken. You send generic applications, get no responses, and waste hours on each one."
+            </div>
+            <div class="script-content quote">
+                "Recruiters are drowning in unqualified applications while missing the perfect candidates."
+            </div>
+        </div>
+
+        <div class="script-section">
+            <h2>RoleFerry in One Line</h2>
+            <div class="script-content">
+                "RoleFerry turns job descriptions into personalized outreach that actually gets responses."
+            </div>
+        </div>
+
+        <div class="script-section">
+            <h2>The 5-Step Flow in 20–25 Seconds</h2>
+            <div class="script-content">
+                "Here's how it works. You paste a job description or URL. We extract the company details and key requirements. Then we match your skills to their pain points and give you a fit score with clear rationale. You select up to 3 contacts per company. We help you craft targeted messages with tone presets. Built-in checks ensure deliverability. Then you launch and track everything in one place."
+            </div>
+        </div>
+
+        <div class="script-section">
+            <h2>3 Value Hits in 15 Seconds</h2>
+            <div class="script-content">
+                "Job seekers get 3x more responses. Recruiters fill positions 40% faster. Everything is plain English - no technical jargon. It's like having a personal recruiter for every application, but automated."
+            </div>
+        </div>
+
+        <div class="script-section">
+            <h2>Close with CTA</h2>
+            <div class="script-content">
+                "Ready to see how it works? Book a 15-minute walkthrough or start with a sample job description. The link is in the chat."
+            </div>
+        </div>
+
+        <div class="highlight-box">
+            <h3>Script Metrics</h3>
+            <div class="metrics">
+                <div class="metric-card">
+                    <h4>Total Word Count</h4>
+                    <p>178 words</p>
+                </div>
+                <div class="metric-card">
+                    <h4>Speaking Time</h4>
+                    <p>58-62 seconds</p>
+                </div>
+                <div class="metric-card">
+                    <h4>Tone</h4>
+                    <p>Conversational, confident, benefit-focused</p>
+                </div>
+                <div class="metric-card">
+                    <h4>Key Message</h4>
+                    <p>Personalized outreach that gets responses</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="highlight-box">
+            <h3>Usage Notes</h3>
+            <ul>
+                <li>This script can be read verbatim by any team member</li>
+                <li>Practice timing to stay within 60 seconds</li>
+                <li>Emphasize benefits over features</li>
+                <li>Use natural pauses between sections</li>
+                <li>End with clear next steps</li>
+            </ul>
+        </div>
+
+        <div class="navigation">
+            <a href="03_Screenshot_Label_Pack.html" class="nav-button secondary">← Screenshot Label Pack</a>
+            <a href="05_Brand_Voice_and_Tone.html" class="nav-button">Brand Voice and Tone →</a>
+        </div>
+    </div>
+</body>
+</html>

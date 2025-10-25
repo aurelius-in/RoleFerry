@@ -46,10 +46,14 @@
   }
 
   .tone-selector {
-    display: flex;
-    gap: 1rem;
     margin-bottom: 2rem;
-    justify-content: center;
+  }
+
+  .tone-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
   }
 
   .tone-btn {
@@ -402,9 +406,24 @@
       <div class="offer-section">
         <!-- Tone Selector -->
         <div class="tone-selector">
-          <button class="tone-btn active" onclick="selectTone('recruiter')">Recruiter (Efficiency)</button>
-          <button class="tone-btn" onclick="selectTone('manager')">Manager (Competence)</button>
-          <button class="tone-btn" onclick="selectTone('exec')">Executive (ROI/Strategy)</button>
+          <h4 style="color: #ffffff; margin-bottom: 1rem;">Select Tone & Audience</h4>
+          <div class="tone-grid">
+            <button class="tone-btn active" onclick="selectTone('recruiter')">Recruiter (Efficiency)</button>
+            <button class="tone-btn" onclick="selectTone('manager')">Manager (Competence)</button>
+            <button class="tone-btn" onclick="selectTone('exec')">Executive (ROI/Strategy)</button>
+            <button class="tone-btn" onclick="selectTone('developer')">Developer (Technical)</button>
+            <button class="tone-btn" onclick="selectTone('sales')">Sales (Results)</button>
+            <button class="tone-btn" onclick="selectTone('startup')">Startup (Innovation)</button>
+            <button class="tone-btn" onclick="selectTone('enterprise')">Enterprise (Process)</button>
+            <button class="tone-btn" onclick="selectTone('custom')">Custom Tone</button>
+          </div>
+          
+          <!-- Custom Tone Input -->
+          <div id="customToneInput" style="display: none; margin-top: 1rem;">
+            <label for="customTone" class="form-label">Describe your desired tone:</label>
+            <input type="text" id="customTone" class="form-input" placeholder="e.g., Professional but friendly, Data-driven, Creative and innovative" />
+            <small class="form-help">Be specific about the tone you want (e.g., "formal and technical", "casual and approachable")</small>
+          </div>
         </div>
 
         <!-- Format Selector -->
@@ -463,6 +482,14 @@ I've successfully helped companies reduce infrastructure costs by 25% while impr
       document.querySelectorAll('.tone-btn').forEach(btn => btn.classList.remove('active'));
       event.target.classList.add('active');
       
+      // Show/hide custom tone input
+      const customInput = document.getElementById('customToneInput');
+      if (tone === 'custom') {
+        customInput.style.display = 'block';
+      } else {
+        customInput.style.display = 'none';
+      }
+      
       // Regenerate offer based on tone
       generateOffer();
     }
@@ -504,6 +531,62 @@ Here's what I can provide:
 • Team training and knowledge transfer
 
 I've successfully led similar scaling projects that resulted in 25% cost reduction and 40% performance improvement. Would you be interested in a technical discussion about how these strategies could address your specific challenges?`;
+      } else if (currentTone === 'developer') {
+        offer = `I understand you're facing the challenge of scaling your backend infrastructure to handle 10x traffic growth. As a fellow engineer, I can offer you a technical deep-dive and hands-on implementation approach.
+
+Here's what I can provide:
+• Code-level infrastructure audit and performance analysis
+• Technical scalability recommendations with implementation details
+• Architecture patterns and best practices for your specific stack
+• Performance optimization techniques and monitoring strategies
+• Code examples and proof-of-concept implementations
+
+I've successfully implemented similar scaling solutions using Python, AWS, and microservices. The technical challenges you're facing are exactly the kind of problems I love solving. Would you be interested in a technical discussion about the implementation details?`;
+      } else if (currentTone === 'sales') {
+        offer = `I understand you're facing the challenge of scaling your backend infrastructure to handle 10x traffic growth. Based on my track record of delivering measurable business results, I can offer you a results-driven analysis and implementation plan.
+
+Here's what I can provide:
+• Business impact analysis with revenue projections
+• Cost-benefit analysis of scaling solutions
+• Implementation timeline with ROI milestones
+• Performance metrics and success tracking
+• Competitive advantage and market positioning
+
+I've successfully delivered similar projects that resulted in 25% cost reduction, 40% performance improvement, and 15% revenue increase. The business impact of solving your scaling challenges could be significant. Would you be interested in a results-focused discussion about the business value?`;
+      } else if (currentTone === 'startup') {
+        offer = `I understand you're facing the challenge of scaling your backend infrastructure to handle 10x traffic growth. As someone who's been through similar startup scaling challenges, I can offer you an innovative and agile approach.
+
+Here's what I can provide:
+• Lean infrastructure audit with startup-friendly solutions
+• Scalability recommendations optimized for rapid growth
+• Implementation approach that balances speed and quality
+• Performance monitoring with startup-appropriate tools
+• Team scaling strategies for your engineering growth
+
+I've successfully helped startups scale from 0 to millions of users while maintaining agility and innovation. The challenges you're facing are exactly what I've solved before. Would you be interested in a discussion about how to scale efficiently while staying lean?`;
+      } else if (currentTone === 'enterprise') {
+        offer = `I understand you're facing the challenge of scaling your backend infrastructure to handle 10x traffic growth. Based on my experience with enterprise-scale systems, I can offer you a comprehensive and systematic approach.
+
+Here's what I can provide:
+• Enterprise-grade infrastructure audit and compliance analysis
+• Scalability recommendations with security and governance considerations
+• Implementation timeline with risk management and change control
+• Performance monitoring with enterprise reporting and alerting
+• Team training and knowledge transfer for sustainable growth
+
+I've successfully led similar enterprise transformations that resulted in 25% cost reduction, 40% performance improvement, and improved compliance scores. The systematic approach to scaling is crucial for enterprise success. Would you be interested in a discussion about enterprise-grade scaling strategies?`;
+      } else if (currentTone === 'custom') {
+        const customTone = document.getElementById('customTone').value;
+        offer = `I understand you're facing the challenge of scaling your backend infrastructure to handle 10x traffic growth. ${customTone ? `I'm approaching this with a ${customTone} approach as you requested. ` : ''}Based on my experience with similar challenges, I can offer you a tailored analysis and implementation plan.
+
+Here's what I can provide:
+• Customized infrastructure audit based on your specific needs
+• Scalability recommendations tailored to your approach
+• Implementation timeline that aligns with your preferences
+• Performance monitoring and optimization strategies
+• Ongoing support and collaboration
+
+I've successfully helped companies achieve 25% cost reduction and 40% performance improvement through customized approaches. Would you be interested in a discussion about how this tailored approach could work for your specific situation?`;
       } else { // exec tone
         offer = `I understand you're facing the challenge of scaling your backend infrastructure to handle 10x traffic growth. Based on my experience leading similar transformations, I can offer you a strategic analysis and ROI-focused implementation plan.
 

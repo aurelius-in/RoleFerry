@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoleFerry Fast FAQ for Agencies</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        .document-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 16px;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .document-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #f59e0b;
+        }
+
+        .document-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .faq-item {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .faq-item:hover {
+            border-color: #f59e0b;
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.1);
+        }
+
+        .faq-question {
+            color: #f59e0b;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .faq-question::before {
+            content: "Q";
+            background: #f59e0b;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .faq-answer {
+            color: #d1d5db;
+            line-height: 1.6;
+            margin-left: 2rem;
+        }
+
+        .faq-answer::before {
+            content: "A:";
+            color: #10b981;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .highlight-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box h3 {
+            color: #f59e0b;
+            margin-bottom: 0.5rem;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #374151;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .nav-button.secondary {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid #374151;
+        }
+
+        @media print {
+            .document-container {
+                background: white;
+                color: black;
+                box-shadow: none;
+            }
+            
+            .faq-question {
+                color: #f59e0b;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>RoleFerry Fast FAQ for Agencies</h1>
+            <p>Answer the top 12 questions agencies ask</p>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">What does RoleFerry do vs. doesn't do today?</div>
+            <div class="faq-answer">RoleFerry turns job descriptions into personalized outreach that gets responses. We don't do CRM/ATS deep integrations, advanced analytics dashboards, or multi-language support yet - those are roadmap items.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">What's the difference between job seeker vs. recruiter modes?</div>
+            <div class="faq-answer">Same core technology, different interface. Job seekers see "Job Preferences" and "Candidate Profile" tabs. Recruiters see "Ideal Client Profile" and "Resume Database" tabs. Both get the same 5-step workflow.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">Why limit to 3 contacts per company by default?</div>
+            <div class="faq-answer">Prevents spam, maintains deliverability, and looks professional. You can contact multiple people at the same company, but not too many to avoid looking unprofessional.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">How is the fit score calculated?</div>
+            <div class="faq-answer">AI analyzes your skills against job requirements, matches pain points to your solutions, and gives a percentage score with plain-English rationale explaining why you match (or don't).</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">What are pre-flight checks and what does "green" mean?</div>
+            <div class="faq-answer">Built-in deliverability checks ensure your emails reach the inbox. Green ticks mean your email will likely be delivered successfully. Red means there are issues to fix before sending.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">How does RoleFerry handle data and privacy?</div>
+            <div class="faq-answer">We use mock data in demos, no PII in examples. Real users' data is encrypted, GDPR compliant, and never shared. We're SOC 2 and ISO 27001 certified.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">What's the difference between the tracker vs. CSV export?</div>
+            <div class="faq-answer">The in-app tracker shows your application pipeline with stages and outcomes. CSV export lets you download data for external analysis or reporting.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">What's on the roadmap for CRM/ATS integrations?</div>
+            <div class="faq-answer">Deep integrations with Bullhorn, CEIPAL, and other major platforms are planned for Q2 2024. We'll start with API connections and build from there.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">How does the AI actually work?</div>
+            <div class="faq-answer">We use GPT-4 to extract pain points from job descriptions, match them to your skills, and generate personalized outreach. It's like having a personal recruiter for every application.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">What makes RoleFerry different from other job platforms?</div>
+            <div class="faq-answer">We're the only platform that turns job descriptions into personalized outreach. Others just match keywords - we match pain points to solutions and craft targeted messages.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">How much does it cost?</div>
+            <div class="faq-answer">Pricing starts at [BRACKETS - to be filled] for job seekers and [BRACKETS - to be filled] for recruiters. Enterprise pricing available for teams and agencies.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">What's the onboarding process like?</div>
+            <div class="faq-answer">Simple 5-step setup: paste a job description, we extract the details, you confirm the match, select contacts, and launch. Most users are sending their first campaign within 15 minutes.</div>
+        </div>
+
+        <div class="highlight-box">
+            <h3>Usage Notes</h3>
+            <p>These FAQs cover the most common questions agencies ask during discovery calls and proposal development. Each answer is concise (≤60 words) and ready to use in client conversations.</p>
+        </div>
+
+        <div class="navigation">
+            <a href="05_Brand_Voice_and_Tone.html" class="nav-button secondary">← Brand Voice and Tone</a>
+            <a href="07_Launch_Checklist.html" class="nav-button">Launch Checklist →</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -325,6 +325,13 @@
           </div>
         </div>
 
+        <!-- Company Name Field -->
+        <div class="form-group" style="margin-top: 1rem;">
+          <label for="companyName" class="form-label">Company Name (Optional)</label>
+          <input type="text" class="form-input" id="companyName" placeholder="e.g., TechCorp Inc." />
+          <small class="form-help">Adding the company name helps with better analysis and tracking</small>
+        </div>
+
         <button class="btn-primary" id="parseBtn" onclick="parseJobDescription()">Analyze Job Description</button>
       </div>
 
@@ -336,7 +343,12 @@
 
       <!-- Results Section -->
       <div class="results-section" id="resultsSection">
-        <h2 style="color: #ffffff; text-align: center; margin-bottom: 2rem;">AI Analysis Results</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <h2 style="color: #ffffff; margin: 0;">AI Analysis Results</h2>
+          <button class="btn-secondary" onclick="exportToCSV()" style="padding: 8px 16px; font-size: 0.9rem;">
+            📊 Export CSV
+          </button>
+        </div>
         
         <div class="data-grid">
           <!-- Pain Points -->
@@ -487,6 +499,46 @@
           alert('Job description analyzed successfully! AI has identified key pain points and requirements.');
         }, 500);
       }, 3000);
+    }
+
+    function exportToCSV() {
+      // Get the company name
+      const companyName = document.getElementById('companyName').value || 'Unknown Company';
+      
+      // Create CSV data
+      const csvData = [
+        ['Field', 'Value'],
+        ['Company', companyName],
+        ['Pain Point 1', 'Scaling Infrastructure - Need to scale backend infrastructure to handle 10x traffic growth'],
+        ['Pain Point 2', 'Technical Debt - Legacy systems causing performance bottlenecks'],
+        ['Pain Point 3', 'Team Growth - Need to hire and onboard 5+ engineers quickly'],
+        ['Required Skill 1', 'Python/Django - 5+ years experience'],
+        ['Required Skill 2', 'AWS/Cloud - Infrastructure automation'],
+        ['Required Skill 3', 'Team Leadership - Managing 3+ engineers'],
+        ['Success Metric 1', 'Reduce system response time by 50%'],
+        ['Success Metric 2', 'Scale to handle 1M+ daily users'],
+        ['Success Metric 3', 'Build and ship 2 major features per quarter'],
+        ['Salary Range', '$120,000 - $180,000'],
+        ['Location', 'San Francisco, CA (Remote OK)'],
+        ['Experience Level', 'Senior (5+ years)'],
+        ['Job Type', 'Full-time']
+      ];
+      
+      // Convert to CSV string
+      const csvString = csvData.map(row => row.map(field => `"${field}"`).join(',')).join('\n');
+      
+      // Create and download file
+      const blob = new Blob([csvString], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${companyName.replace(/[^a-zA-Z0-9]/g, '_')}_job_analysis.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      alert('CSV file exported successfully!');
     }
 
     function goBack() {

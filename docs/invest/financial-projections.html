@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Projections - RoleFerry Investment</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        .document-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 16px;
+            color: white;
+        }
+
+        .document-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #10b981;
+        }
+
+        .document-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #10b981, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .financial-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            background: rgba(31, 41, 55, 0.8);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .financial-table th {
+            background: #10b981;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .financial-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #374151;
+        }
+
+        .financial-table tr:hover {
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            color: #10b981;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #10b981;
+            padding-left: 1rem;
+        }
+
+        .highlight-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #374151;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #10b981, #2563eb);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .nav-button.secondary {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid #374151;
+        }
+
+        .nav-button.secondary:hover {
+            background: rgba(75, 85, 99, 0.8);
+            border-color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>Financial Projections</h1>
+            <p>5-Year Revenue and Growth Projections</p>
+        </div>
+
+        <div class="section">
+            <h2>Revenue Projections</h2>
+            <table class="financial-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Year 1</th>
+                        <th>Year 2</th>
+                        <th>Year 3</th>
+                        <th>Year 4</th>
+                        <th>Year 5</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Total Revenue</strong></td>
+                        <td>$2.0M</td>
+                        <td>$8.5M</td>
+                        <td>$25.0M</td>
+                        <td>$55.0M</td>
+                        <td>$95.0M</td>
+                    </tr>
+                    <tr>
+                        <td>Recruiter Subscriptions</td>
+                        <td>$1.2M</td>
+                        <td>$5.1M</td>
+                        <td>$15.0M</td>
+                        <td>$33.0M</td>
+                        <td>$57.0M</td>
+                    </tr>
+                    <tr>
+                        <td>Success Fees</td>
+                        <td>$0.6M</td>
+                        <td>$2.5M</td>
+                        <td>$7.5M</td>
+                        <td>$16.5M</td>
+                        <td>$28.5M</td>
+                    </tr>
+                    <tr>
+                        <td>Premium Features</td>
+                        <td>$0.2M</td>
+                        <td>$0.9M</td>
+                        <td>$2.5M</td>
+                        <td>$5.5M</td>
+                        <td>$9.5M</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gross Margin</strong></td>
+                        <td>25%</td>
+                        <td>35%</td>
+                        <td>45%</td>
+                        <td>55%</td>
+                        <td>65%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Customer Metrics</h2>
+            <table class="financial-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Year 1</th>
+                        <th>Year 2</th>
+                        <th>Year 3</th>
+                        <th>Year 4</th>
+                        <th>Year 5</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Total Customers</strong></td>
+                        <td>500</td>
+                        <td>2,100</td>
+                        <td>6,200</td>
+                        <td>13,600</td>
+                        <td>23,500</td>
+                    </tr>
+                    <tr>
+                        <td>Recruiter Customers</td>
+                        <td>400</td>
+                        <td>1,700</td>
+                        <td>5,000</td>
+                        <td>11,000</td>
+                        <td>19,000</td>
+                    </tr>
+                    <tr>
+                        <td>Job Seeker Customers</td>
+                        <td>100</td>
+                        <td>400</td>
+                        <td>1,200</td>
+                        <td>2,600</td>
+                        <td>4,500</td>
+                    </tr>
+                    <tr>
+                        <td>Average Revenue Per User</td>
+                        <td>$4,000</td>
+                        <td>$4,050</td>
+                        <td>$4,032</td>
+                        <td>$4,044</td>
+                        <td>$4,043</td>
+                    </tr>
+                    <tr>
+                        <td>Customer Acquisition Cost</td>
+                        <td>$2,000</td>
+                        <td>$1,500</td>
+                        <td>$1,200</td>
+                        <td>$1,000</td>
+                        <td>$800</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Key Assumptions</h2>
+            <div class="highlight-box">
+                <h4>Growth Drivers</h4>
+                <ul>
+                    <li><strong>Year 1:</strong> Product-market fit validation, early customer acquisition</li>
+                    <li><strong>Year 2:</strong> Sales team expansion, marketing automation</li>
+                    <li><strong>Year 3:</strong> Enterprise sales, API monetization</li>
+                    <li><strong>Year 4:</strong> International expansion, advanced AI features</li>
+                    <li><strong>Year 5:</strong> Market leadership, platform ecosystem</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Use of Funds</h2>
+            <table class="financial-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Percentage</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Product Development</strong></td>
+                        <td>$800K</td>
+                        <td>40%</td>
+                        <td>AI model training, feature development, platform scaling</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sales & Marketing</strong></td>
+                        <td>$600K</td>
+                        <td>30%</td>
+                        <td>Sales team, marketing campaigns, customer acquisition</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Team Expansion</strong></td>
+                        <td>$400K</td>
+                        <td>20%</td>
+                        <td>Engineering, sales, and operations hires</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Operations</strong></td>
+                        <td>$200K</td>
+                        <td>10%</td>
+                        <td>Infrastructure, legal, administrative costs</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Exit Strategy</h2>
+            <div class="highlight-box">
+                <h4>Potential Exit Scenarios</h4>
+                <ul>
+                    <li><strong>Strategic Acquisition (Years 3-5):</strong> $200M - $500M</li>
+                    <li><strong>IPO (Year 5+):</strong> $1B+ valuation</li>
+                    <li><strong>Private Equity (Years 4-6):</strong> $300M - $800M</li>
+                </ul>
+                <p><strong>Target Acquirers:</strong> LinkedIn (Microsoft), Workday, Salesforce, Oracle, SAP</p>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <a href="executive-summary.html" class="nav-button secondary">← Executive Summary</a>
+            <a href="market-analysis.html" class="nav-button">Market Analysis →</a>
+        </div>
+    </div>
+</body>
+</html>

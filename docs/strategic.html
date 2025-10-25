@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategic Documentation - RoleFerry</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="assets/roleferry_trans.png">
+    <style>
+        .strategic-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 16px;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .strategic-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #f59e0b;
+        }
+
+        .strategic-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .strategic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .strategic-card {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .strategic-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #f59e0b, #10b981);
+        }
+
+        .strategic-card:hover {
+            transform: translateY(-5px);
+            border-color: #f59e0b;
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.2);
+        }
+
+        .strategic-card h3 {
+            color: #f59e0b;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .strategic-card p {
+            color: #d1d5db;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .strategic-card a {
+            display: inline-block;
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .strategic-card a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .section-highlight {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid #f59e0b;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .section-highlight h3 {
+            color: #f59e0b;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-highlight p {
+            color: #d1d5db;
+            line-height: 1.6;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #374151;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .nav-button.secondary {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid #374151;
+        }
+
+        .nav-button.secondary:hover {
+            background: rgba(75, 85, 99, 0.8);
+            border-color: #f59e0b;
+        }
+
+        @media (max-width: 768px) {
+            .strategic-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .strategic-container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="strategic-container">
+        <div class="strategic-header">
+            <h1>Strategic Documentation</h1>
+            <p>Comprehensive Business Strategy & Implementation Roadmap</p>
+        </div>
+
+        <div class="strategic-grid">
+            <div class="strategic-card">
+                <h3>📋 Executive Summary</h3>
+                <p>High-level overview of RoleFerry's vision, market opportunity, business model, and strategic positioning in the recruitment technology landscape.</p>
+                <a href="html/01-strategic/executive-summary.html">View Documentation</a>
+            </div>
+
+            <div class="strategic-card">
+                <h3>🎯 Functional Requirements</h3>
+                <p>Detailed functional specifications for all features including the 10-tab workflow system, dual-mode architecture, and AI-powered automation.</p>
+                <a href="html/02-requirements/functional-requirements.html">View Documentation</a>
+            </div>
+
+            <div class="strategic-card">
+                <h3>🔧 API Specification</h3>
+                <p>Comprehensive API documentation covering all endpoints, request/response schemas, authentication, and integration patterns.</p>
+                <a href="html/04-technical/api-specification.html">View Documentation</a>
+            </div>
+
+            <div class="strategic-card">
+                <h3>🎨 UI Specifications</h3>
+                <p>Detailed UI component specifications, interaction patterns, responsive design guidelines, and accessibility standards.</p>
+                <a href="html/05-ux-design/ui-specifications.html">View Documentation</a>
+            </div>
+
+            <div class="strategic-card">
+                <h3>💼 Business Strategy</h3>
+                <p>Market analysis, competitive positioning, go-to-market strategy, and business model documentation.</p>
+                <a href="html/08-business/business-strategy.html">View Documentation</a>
+            </div>
+
+            <div class="strategic-card">
+                <h3>❓ Investor FAQ</h3>
+                <p>Frequently asked questions for investors covering key business metrics, growth strategy, and investment terms.</p>
+                <a href="html/08-business/investor-faq.html">View Documentation</a>
+            </div>
+
+            <div class="strategic-card">
+                <h3>💰 Monetization Strategy</h3>
+                <p>Revenue models, pricing strategies, and monetization opportunities including resume database concepts.</p>
+                <a href="html/09-monetization/monetization-strategy.html">View Documentation</a>
+            </div>
+
+            <div class="strategic-card">
+                <h3>🚀 Innovation Concepts</h3>
+                <p>Cutting-edge concepts including one-click employment, offer-first design, and LivePages technology.</p>
+                <a href="html/10-innovation/innovation-concepts.html">View Documentation</a>
+            </div>
+
+            <div class="strategic-card">
+                <h3>🏗️ Design Philosophy</h3>
+                <p>Design principles, user experience philosophy, and frontend-first development approach.</p>
+                <a href="html/11-design/design-philosophy.html">View Documentation</a>
+            </div>
+
+            <div class="strategic-card">
+                <h3>📱 Feature Concepts</h3>
+                <p>Advanced feature concepts including LivePages, personalized landing pages, and dynamic content generation.</p>
+                <a href="html/12-features/feature-concepts.html">View Documentation</a>
+            </div>
+
+            <div class="strategic-card">
+                <h3>⚙️ Development Philosophy</h3>
+                <p>Frontend-first development approach, mock data strategy, and iterative development methodology.</p>
+                <a href="html/13-development/development-philosophy.html">View Documentation</a>
+            </div>
+
+            <div class="strategic-card">
+                <h3>📊 Week 5 Updates</h3>
+                <p>Comprehensive summary of Week 5 improvements including terminology fixes, UI enhancements, and investment materials.</p>
+                <a href="WEEK_5_UPDATES.html">View Updates</a>
+            </div>
+        </div>
+
+        <div class="section-highlight">
+            <h3>📈 Strategic Overview</h3>
+            <p>RoleFerry represents a paradigm shift in recruitment technology, combining advanced AI with intuitive user experience to create the most comprehensive recruitment platform ever built. Our strategic documentation covers every aspect of the business from technical architecture to market positioning, ensuring complete transparency and professional execution.</p>
+        </div>
+
+        <div class="section-highlight">
+            <h3>🎯 Key Strategic Pillars</h3>
+            <p><strong>AI-First Architecture:</strong> Built from the ground up with AI at its core • <strong>Dual-Mode Platform:</strong> Serves both job seekers and recruiters • <strong>End-to-End Automation:</strong> Complete workflow automation • <strong>Enterprise-Grade Security:</strong> SOC 2 and GDPR compliant • <strong>Scalable Infrastructure:</strong> Cloud-native architecture designed for growth</p>
+        </div>
+
+        <div class="navigation">
+            <a href="architecture.html" class="nav-button secondary">← Architecture Documentation</a>
+            <a href="home.html" class="nav-button">Back to Home →</a>
+        </div>
+    </div>
+</body>
+</html>

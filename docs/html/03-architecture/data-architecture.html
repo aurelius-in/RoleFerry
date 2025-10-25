@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Architecture - RoleFerry</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="icon" href="../../assets/roleferry_trans.png">
+    <style>
+        .document-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 16px;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .document-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #8b5cf6;
+        }
+
+        .document-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #8b5cf6, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            color: #8b5cf6;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #8b5cf6;
+            padding-left: 1rem;
+        }
+
+        .data-flow-diagram {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .data-flow-diagram h3 {
+            color: #8b5cf6;
+            margin-bottom: 1rem;
+        }
+
+        .flow-step {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(37, 99, 235, 0.1));
+            border: 1px solid #8b5cf6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .flow-step h4 {
+            color: #8b5cf6;
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight-box {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid #8b5cf6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box h4 {
+            color: #8b5cf6;
+            margin-bottom: 0.5rem;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #374151;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #8b5cf6, #2563eb);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .nav-button.secondary {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>Data Architecture</h1>
+            <p>Comprehensive Data Models, Processing, and Management</p>
+        </div>
+
+        <div class="section">
+            <h2>Data Architecture Overview</h2>
+            <p>RoleFerry's data architecture is designed to handle complex recruitment data with high performance, scalability, and data integrity.</p>
+            
+            <div class="data-flow-diagram">
+                <h3>📊 Data Flow Architecture</h3>
+                <div class="flow-step">
+                    <h4>Data Ingestion</h4>
+                    <p>Real-time data collection from resumes, job postings, and user interactions</p>
+                </div>
+                <div class="flow-step">
+                    <h4>Data Processing</h4>
+                    <p>AI-powered parsing, analysis, and enrichment of recruitment data</p>
+                </div>
+                <div class="flow-step">
+                    <h4>Data Storage</h4>
+                    <p>Multi-tier storage with PostgreSQL, Redis, and S3 for different data types</p>
+                </div>
+                <div class="flow-step">
+                    <h4>Data Analytics</h4>
+                    <p>Real-time analytics and reporting for recruitment insights</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Database Schema</h2>
+            
+            <div class="highlight-box">
+                <h4>Core Entities</h4>
+                <ul>
+                    <li><strong>Users:</strong> Job seekers, recruiters, and administrators</li>
+                    <li><strong>Profiles:</strong> Candidate profiles with skills, experience, and preferences</li>
+                    <li><strong>Jobs:</strong> Job postings with requirements and company information</li>
+                    <li><strong>Matches:</strong> AI-generated matches between candidates and jobs</li>
+                    <li><strong>Campaigns:</strong> Email outreach campaigns and sequences</li>
+                    <li><strong>Analytics:</strong> Performance metrics and tracking data</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Data Relationships</h4>
+                <ul>
+                    <li><strong>One-to-Many:</strong> User → Profiles, User → Campaigns</li>
+                    <li><strong>Many-to-Many:</strong> Profiles ↔ Jobs (through matches)</li>
+                    <li><strong>Hierarchical:</strong> Company → Jobs → Applications</li>
+                    <li><strong>Temporal:</strong> Campaign history and analytics over time</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Data Storage Strategy</h2>
+            
+            <div class="highlight-box">
+                <h4>PostgreSQL (Primary Database)</h4>
+                <ul>
+                    <li><strong>Structured Data:</strong> User profiles, job postings, matches</li>
+                    <li><strong>ACID Compliance:</strong> Transactional integrity</li>
+                    <li><strong>Indexing:</strong> Optimized for recruitment queries</li>
+                    <li><strong>Backup:</strong> Automated daily backups with point-in-time recovery</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Redis (Caching Layer)</h4>
+                <ul>
+                    <li><strong>Session Storage:</strong> User sessions and authentication</li>
+                    <li><strong>Query Caching:</strong> Frequently accessed data</li>
+                    <li><strong>Real-time Data:</strong> Live updates and notifications</li>
+                    <li><strong>Rate Limiting:</strong> API throttling and protection</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>AWS S3 (File Storage)</h4>
+                <ul>
+                    <li><strong>Resume Files:</strong> PDF, DOC, and other document formats</li>
+                    <li><strong>Generated Assets:</strong> AI-created pitch materials</li>
+                    <li><strong>Backup Storage:</strong> Long-term data archival</li>
+                    <li><strong>CDN Integration:</strong> Fast global content delivery</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Data Processing Pipeline</h2>
+            
+            <div class="highlight-box">
+                <h4>Real-time Processing</h4>
+                <ul>
+                    <li><strong>Stream Processing:</strong> Apache Kafka for event streaming</li>
+                    <li><strong>Message Queues:</strong> Celery for asynchronous tasks</li>
+                    <li><strong>WebSockets:</strong> Real-time updates to frontend</li>
+                    <li><strong>Event Sourcing:</strong> Audit trail and data lineage</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>Batch Processing</h4>
+                <ul>
+                    <li><strong>ETL Pipelines:</strong> Data extraction and transformation</li>
+                    <li><strong>Scheduled Jobs:</strong> Daily analytics and reporting</li>
+                    <li><strong>Data Warehousing:</strong> Historical data analysis</li>
+                    <li><strong>ML Training:</strong> Model retraining and updates</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Data Security & Compliance</h2>
+            
+            <ul>
+                <li><strong>Encryption:</strong> AES-256 encryption for data at rest</li>
+                <li><strong>Transit Security:</strong> TLS 1.3 for all data transmission</li>
+                <li><strong>Access Control:</strong> Role-based permissions and audit logging</li>
+                <li><strong>GDPR Compliance:</strong> Data anonymization and right to deletion</li>
+                <li><strong>Data Retention:</strong> Automated data lifecycle management</li>
+                <li><strong>Backup Security:</strong> Encrypted backups with geographic distribution</li>
+            </ul>
+        </div>
+
+        <div class="navigation">
+            <a href="system-architecture_conceptual.html" class="nav-button secondary">← System Architecture</a>
+            <a href="security-architecture.html" class="nav-button">Security Architecture →</a>
+        </div>
+    </div>
+</body>
+</html>

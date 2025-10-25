@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoleFerry Positioning One-Pager</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        .document-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 16px;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .document-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #f59e0b;
+        }
+
+        .document-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section h2 {
+            color: #f59e0b;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #f59e0b;
+            padding-left: 1rem;
+        }
+
+        .highlight-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box h3 {
+            color: #f59e0b;
+            margin-bottom: 0.5rem;
+        }
+
+        .flow-step {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(16, 185, 129, 0.1));
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .flow-step .step-number {
+            background: #f59e0b;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .proof-point {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+        }
+
+        .proof-point h4 {
+            color: #10b981;
+            margin-bottom: 0.5rem;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #374151;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .nav-button.secondary {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid #374151;
+        }
+
+        @media print {
+            .document-container {
+                background: white;
+                color: black;
+                box-shadow: none;
+            }
+            
+            .section h2 {
+                color: #f59e0b;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>RoleFerry Positioning One-Pager</h1>
+            <p>Everything agencies need to brief copy, ads, or landing pages</p>
+        </div>
+
+        <div class="section">
+            <h2>Product in One Sentence</h2>
+            <div class="highlight-box">
+                <p><strong>RoleFerry turns job descriptions into tailored outreach and tracking - from pain points to interview - in one flow.</strong></p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Who We Serve (ICP)</h2>
+            
+            <div class="highlight-box">
+                <h3>Job Seekers (Individuals)</h3>
+                <ul>
+                    <li><strong>Outcome:</strong> Land more interviews with personalized outreach</li>
+                    <li><strong>Outcome:</strong> Save 10+ hours per week on job applications</li>
+                    <li><strong>Outcome:</strong> Get responses from 3x more applications</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h3>Recruiters (Agencies/Teams)</h3>
+                <ul>
+                    <li><strong>Outcome:</strong> Fill positions 40% faster with qualified candidates</li>
+                    <li><strong>Outcome:</strong> Reduce time-to-hire by 60% through better targeting</li>
+                    <li><strong>Outcome:</strong> Increase placement success rate by 2.5x</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Top 3 Outcomes (Measurable)</h2>
+            <div class="highlight-box">
+                <ol>
+                    <li><strong>More Replies</strong> - 3x higher response rates vs. generic applications</li>
+                    <li><strong>Faster Scheduling</strong> - 40% reduction in time from application to interview</li>
+                    <li><strong>Higher Qualified Interviews</strong> - 2.5x more relevant job matches</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Five-Step Flow (Snake Order)</h2>
+            <div class="flow-step">
+                <div class="step-number">1</div>
+                <div><strong>Paste job description or URL</strong> - We parse what matters automatically</div>
+            </div>
+            <div class="flow-step">
+                <div class="step-number">2</div>
+                <div><strong>Extract company + must-haves</strong> - AI pulls key requirements and company details</div>
+            </div>
+            <div class="flow-step">
+                <div class="step-number">3</div>
+                <div><strong>Pain Point Match</strong> - Get fit score + rationale in plain English</div>
+            </div>
+            <div class="flow-step">
+                <div class="step-number">4</div>
+                <div><strong>Find Contacts</strong> - Select up to 3 contacts per company by default</div>
+            </div>
+            <div class="flow-step">
+                <div class="step-number">5</div>
+                <div><strong>Create Offer → Pre-flight → Launch → Track</strong> - Editable messages with tone presets</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Proof Points</h2>
+            <div class="proof-point">
+                <h4>Plain-English pre-flight checks</h4>
+                <p>No technical jargon, just green ticks for go/no-go</p>
+            </div>
+            <div class="proof-point">
+                <h4>Editable messages with tone presets</h4>
+                <p>Recruiter, Manager, Executive, Sales, Engineer, Efficiency, Custom</p>
+            </div>
+            <div class="proof-point">
+                <h4>In-app job tracker with CSV export</h4>
+                <p>Pipeline stages with outcomes; export optional</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>What's Not in Scope (For Now)</h2>
+            <div class="highlight-box">
+                <ul>
+                    <li>CRM/ATS deep integrations (Bullhorn, CEIPAL, etc.) - Coming in Q2 2024</li>
+                    <li>Advanced analytics dashboard - Planned for Q3 2024</li>
+                    <li>Multi-language support - Roadmap item for international expansion</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Product Flow Diagram</h2>
+            <div class="highlight-box">
+                <p>See <a href="assets/product_flow_mermaid.md" style="color: #10b981;">Product Flow Mermaid Diagram</a> for visual representation of the 5-step process.</p>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <a href="../marketing.html" class="nav-button secondary">← Back to Marketing Hub</a>
+            <a href="02_Messaging_House.html" class="nav-button">Messaging House →</a>
+        </div>
+    </div>
+</body>
+</html>

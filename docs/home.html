@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoleFerry - AI-Powered Recruitment Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="assets/roleferry_trans.png">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f172a 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .home-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* Animated background elements */
+        .bg-element {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #10b981, #2563eb);
+            opacity: 0.1;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .bg-element:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .bg-element:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            top: 60%;
+            right: 15%;
+            animation-delay: 7s;
+        }
+
+        .bg-element:nth-child(3) {
+            width: 150px;
+            height: 150px;
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 14s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-30px) rotate(120deg); }
+            66% { transform: translateY(30px) rotate(240deg); }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 4rem;
+            z-index: 10;
+            position: relative;
+        }
+
+        .logo {
+            max-width: 400px;
+            height: auto;
+            margin-bottom: 2rem;
+            filter: drop-shadow(0 10px 30px rgba(16, 185, 129, 0.3));
+            animation: logoGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes logoGlow {
+            from { filter: drop-shadow(0 10px 30px rgba(16, 185, 129, 0.3)); }
+            to { filter: drop-shadow(0 15px 40px rgba(16, 185, 129, 0.5)); }
+        }
+
+        .tagline {
+            font-size: 1.5rem;
+            color: #9ca3af;
+            margin-bottom: 0.5rem;
+            font-weight: 300;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #6b7280;
+            font-weight: 300;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            max-width: 800px;
+            width: 100%;
+            z-index: 10;
+            position: relative;
+        }
+
+        .grid-button {
+            position: relative;
+            background: rgba(17, 24, 39, 0.8);
+            border: 1px solid rgba(55, 65, 81, 0.5);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            text-decoration: none;
+            color: white;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .grid-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(37, 99, 235, 0.1));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            border-radius: 20px;
+        }
+
+        .grid-button:hover::before {
+            opacity: 1;
+        }
+
+        .grid-button:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: #10b981;
+            box-shadow: 
+                0 20px 40px rgba(16, 185, 129, 0.2),
+                0 0 0 1px rgba(16, 185, 129, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .button-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .grid-button:hover .button-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .button-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #ffffff, #e5e7eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .button-description {
+            font-size: 0.9rem;
+            color: #9ca3af;
+            line-height: 1.4;
+            max-width: 250px;
+        }
+
+        .ui-button {
+            border-left: 4px solid #10b981;
+        }
+
+        .ui-button:hover {
+            box-shadow: 
+                0 20px 40px rgba(16, 185, 129, 0.3),
+                0 0 0 1px rgba(16, 185, 129, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .invest-button {
+            border-left: 4px solid #2563eb;
+        }
+
+        .invest-button:hover {
+            box-shadow: 
+                0 20px 40px rgba(37, 99, 235, 0.3),
+                0 0 0 1px rgba(37, 99, 235, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .architecture-button {
+            border-left: 4px solid #8b5cf6;
+        }
+
+        .architecture-button:hover {
+            box-shadow: 
+                0 20px 40px rgba(139, 92, 246, 0.3),
+                0 0 0 1px rgba(139, 92, 246, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .documentation-button {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .documentation-button:hover {
+            box-shadow: 
+                0 20px 40px rgba(245, 158, 11, 0.3),
+                0 0 0 1px rgba(245, 158, 11, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                max-width: 400px;
+            }
+
+            .grid-button {
+                padding: 2rem 1.5rem;
+                min-height: 150px;
+            }
+
+            .button-icon {
+                font-size: 2.5rem;
+            }
+
+            .button-title {
+                font-size: 1.3rem;
+            }
+
+            .logo {
+                max-width: 300px;
+            }
+
+            .tagline {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .home-container {
+                padding: 1rem;
+            }
+
+            .logo {
+                max-width: 250px;
+            }
+
+            .tagline {
+                font-size: 1rem;
+            }
+
+            .subtitle {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Loading animation */
+        .fade-in {
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="home-container">
+        <!-- Animated background elements -->
+        <div class="bg-element"></div>
+        <div class="bg-element"></div>
+        <div class="bg-element"></div>
+
+        <!-- Logo Section -->
+        <div class="logo-section fade-in">
+            <img src="wordmark.png" alt="RoleFerry" class="logo">
+            <div class="tagline">AI-Powered Recruitment Platform</div>
+            <div class="subtitle">Intelligent matching • Automated outreach • Precision results</div>
+        </div>
+
+        <!-- 2x2 Grid -->
+        <div class="grid-container fade-in">
+            <!-- UI/UX Wireframes -->
+            <a href="wireframes.html" class="grid-button ui-button">
+                <span class="button-icon">🎨</span>
+                <div class="button-title">UI/UX Wireframes</div>
+                <div class="button-description">Interactive prototypes showcasing the complete 10-tab workflow with dual-mode architecture</div>
+            </a>
+
+            <!-- Investment Hub -->
+            <a href="invest.html" class="grid-button invest-button">
+                <span class="button-icon">💰</span>
+                <div class="button-title">Investment Hub</div>
+                <div class="button-description">Comprehensive investment materials including financial projections, market analysis, and growth strategy</div>
+            </a>
+
+            <!-- Architecture Documentation -->
+            <a href="architecture.html" class="grid-button architecture-button">
+                <span class="button-icon">🏗️</span>
+                <div class="button-title">Architecture (RM-ODP)</div>
+                <div class="button-description">Enterprise-grade system architecture with RM-ODP methodology and technical specifications</div>
+            </a>
+
+            <!-- Marketing Hub -->
+            <a href="marketing.html" class="grid-button documentation-button">
+                <span class="button-icon">📈</span>
+                <div class="button-title">Marketing Hub</div>
+                <div class="button-description">Complete marketing pack for agencies with positioning, messaging, and launch materials</div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Add smooth loading animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const elements = document.querySelectorAll('.fade-in');
+            elements.forEach((el, index) => {
+                el.style.animationDelay = `${index * 0.2}s`;
+            });
+        });
+
+        // Add interactive hover effects
+        document.querySelectorAll('.grid-button').forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.02)';
+            });
+            
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoleFerry Messaging House</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        .document-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 16px;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .document-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #f59e0b;
+        }
+
+        .document-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section h2 {
+            color: #f59e0b;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #f59e0b;
+            padding-left: 1rem;
+        }
+
+        .highlight-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box h3 {
+            color: #f59e0b;
+            margin-bottom: 0.5rem;
+        }
+
+        .pillar {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(16, 185, 129, 0.1));
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .pillar h3 {
+            color: #f59e0b;
+            margin-bottom: 1rem;
+        }
+
+        .headline-option {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            font-weight: 600;
+        }
+
+        .cta-option {
+            display: inline-block;
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0.25rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .cta-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #374151;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #f59e0b, #10b981);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .nav-button.secondary {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid #374151;
+        }
+
+        @media print {
+            .document-container {
+                background: white;
+                color: black;
+                box-shadow: none;
+            }
+            
+            .section h2 {
+                color: #f59e0b;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>RoleFerry Messaging House</h1>
+            <p>Keep all agencies aligned on core message</p>
+        </div>
+
+        <div class="section">
+            <h2>Brand Promise (1 Sentence)</h2>
+            <div class="highlight-box">
+                <p><strong>RoleFerry eliminates the guesswork in job applications by turning job descriptions into personalized outreach that gets responses.</strong></p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Value Pillars (3)</h2>
+            
+            <div class="pillar">
+                <h3>1. Clear</h3>
+                <ul>
+                    <li><strong>Plain-English checks and explanations</strong> - No technical jargon, just actionable insights</li>
+                    <li><strong>Transparent fit scoring</strong> - Know exactly why you match (or don't) before applying</li>
+                    <li><strong>Editable everything</strong> - Customize messages, tone, and approach to your style</li>
+                </ul>
+            </div>
+
+            <div class="pillar">
+                <h3>2. Fast</h3>
+                <ul>
+                    <li><strong>Fewer clicks from JD to launch</strong> - 5 steps vs. hours of manual research</li>
+                    <li><strong>Auto-populated outreach</strong> - AI writes your first draft, you refine and send</li>
+                    <li><strong>Batch processing</strong> - Handle multiple applications in one workflow</li>
+                </ul>
+            </div>
+
+            <div class="pillar">
+                <h3>3. Focused</h3>
+                <ul>
+                    <li><strong>Outreach tuned to job's real pain points</strong> - Not generic templates, but targeted solutions</li>
+                    <li><strong>Contact limits that work</strong> - 3 contacts per company prevents spam, maintains deliverability</li>
+                    <li><strong>Job-specific tracking</strong> - See which approaches work for which types of roles</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>RTBs (Reasons to Believe) - 3 Crisp Bullets</h2>
+            <div class="highlight-box">
+                <ul>
+                    <li><strong>AI-powered pain point extraction</strong> - We read job descriptions like a human recruiter would</li>
+                    <li><strong>Deliverability-first design</strong> - Built-in checks prevent your emails from landing in spam</li>
+                    <li><strong>Dual-mode platform</strong> - Works for both job seekers and recruiters with the same core technology</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Elevator Pitch (75 Words)</h2>
+            <div class="highlight-box">
+                <p>RoleFerry turns job descriptions into personalized outreach that actually gets responses. Instead of sending generic applications, you paste a job description, we extract the real pain points, find the right contacts, and help you craft targeted messages. Job seekers land more interviews, recruiters fill positions faster. It's like having a personal recruiter for every application, but automated and scalable. Built for both sides of the hiring equation.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>3 Headline Options (≤8 Words Each)</h2>
+            <div class="headline-option">1. Turn Job Descriptions Into Interviews</div>
+            <div class="headline-option">2. From Job Posting to Interview in 5 Steps</div>
+            <div class="headline-option">3. AI-Powered Job Applications That Get Responses</div>
+        </div>
+
+        <div class="section">
+            <h2>3 Subhead Options (≤14 Words Each)</h2>
+            <div class="highlight-box">
+                <p>1. <strong>Stop sending generic applications. Start sending targeted outreach that gets responses.</strong></p>
+                <p>2. <strong>AI extracts pain points, finds contacts, crafts messages. You get interviews.</strong></p>
+                <p>3. <strong>The only platform that turns job descriptions into personalized job applications.</strong></p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>CTA Options</h2>
+            <div style="margin: 1rem 0;">
+                <a href="#" class="cta-option">Start faster</a>
+                <a href="#" class="cta-option">Book more interviews</a>
+                <a href="#" class="cta-option">Show me a sample</a>
+                <a href="#" class="cta-option">Get 3x more responses</a>
+                <a href="#" class="cta-option">Land your dream job</a>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <a href="01_Positioning_OnePager.html" class="nav-button secondary">← Positioning One-Pager</a>
+            <a href="03_Screenshot_Label_Pack.html" class="nav-button">Screenshot Label Pack →</a>
+        </div>
+    </div>
+</body>
+</html>

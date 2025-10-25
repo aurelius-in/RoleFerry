@@ -347,7 +347,12 @@
 
       <!-- Contacts Section -->
       <div class="contacts-section" id="contactsSection">
-        <h2 style="color: #ffffff; text-align: center; margin-bottom: 2rem;">Found Contacts</h2>
+        <h2 style="color: #ffffff; text-align: center; margin-bottom: 1rem;">Found Contacts</h2>
+        <p style="color: #9ca3af; text-align: center; margin-bottom: 1rem;">Select up to 3 contacts for your outreach</p>
+        <div id="selectionCounter" style="color: #10b981; font-weight: 600; margin-bottom: 1rem; text-align: center;">0/3 contacts selected</div>
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 8px; padding: 1rem; margin-bottom: 2rem; font-size: 0.9rem; color: #d1d5db; max-width: 600px; margin-left: auto; margin-right: auto;">
+          <strong>Why limit to 3 contacts?</strong> This helps maintain deliverability and prevents your emails from being flagged as spam. We recommend contacting multiple people at the same company, but not too many to avoid looking unprofessional.
+        </div>
         
         <div class="contacts-grid" id="contactsGrid">
           <!-- Contact 1 -->
@@ -443,7 +448,7 @@
   </div>
 
   <script>
-    let selectedContactId = null;
+    let selectedContacts = [];
 
     function searchContacts() {
       const searchInput = document.getElementById('searchInput');
@@ -530,34 +535,57 @@
     }
 
     function selectContact(contactId) {
-      // Remove previous selection
-      document.querySelectorAll('.contact-card').forEach(card => {
-        card.classList.remove('selected-contact');
-      });
+      // No need to remove previous selections - we allow multiple
       
-      // Add selection to clicked contact
-      document.querySelector(`[data-contact="${contactId}"]`).classList.add('selected-contact');
+      // Toggle selection for clicked contact
+      const contactElement = document.querySelector(`[data-contact="${contactId}"]`);
+      const isSelected = contactElement.classList.contains('selected-contact');
       
-      // Update button states
-      document.querySelectorAll('.btn-select').forEach(btn => {
-        btn.textContent = 'Select';
-        btn.classList.remove('selected');
-      });
-      
-      document.querySelector(`[data-contact="${contactId}"] .btn-select`).textContent = 'Selected';
-      document.querySelector(`[data-contact="${contactId}"] .btn-select`).classList.add('selected');
-      
-      selectedContactId = contactId;
+      if (isSelected) {
+        // Deselect contact
+        contactElement.classList.remove('selected-contact');
+        contactElement.querySelector('.btn-select').textContent = 'Select';
+        contactElement.querySelector('.btn-select').classList.remove('selected');
+        
+        // Remove from selected contacts
+        selectedContacts = selectedContacts.filter(id => id !== contactId);
+      } else {
+        // Check if we can select more contacts (max 3)
+        if (selectedContacts.length >= 3) {
+          alert('You can select up to 3 contacts. Please deselect a contact first.');
+          return;
+        }
+        
+        // Select contact
+        contactElement.classList.add('selected-contact');
+        contactElement.querySelector('.btn-select').textContent = 'Selected';
+        contactElement.querySelector('.btn-select').classList.add('selected');
+        
+        // Add to selected contacts
+        selectedContacts.push(contactId);
+      }
       
       // Save selection
       const contactData = JSON.parse(localStorage.getItem('roleferry_contacts_data') || '{}');
-      contactData.selectedContact = contactId;
+      contactData.selectedContacts = selectedContacts;
       localStorage.setItem('roleferry_contacts_data', JSON.stringify(contactData));
+      
+      // Update selection counter
+      updateSelectionCounter();
       
       // Show success message
       setTimeout(() => {
-        alert(`Contact ${contactId} selected! You can now proceed to the next step.`);
+        if (!isSelected) {
+          alert(`Contact ${contactId} selected! (${selectedContacts.length}/3 selected)`);
+        }
       }, 500);
+    }
+
+    function updateSelectionCounter() {
+      const counter = document.getElementById('selectionCounter');
+      if (counter) {
+        counter.textContent = `${selectedContacts.length}/3 contacts selected`;
+      }
     }
 
     function goBack() {

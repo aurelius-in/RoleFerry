@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team & Advisors - RoleFerry Investment</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        .document-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 16px;
+            color: white;
+        }
+
+        .document-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #10b981;
+        }
+
+        .document-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #10b981, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .team-member {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .team-member h3 {
+            color: #10b981;
+            margin-bottom: 0.5rem;
+        }
+
+        .team-member .title {
+            color: #9ca3af;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            color: #10b981;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #10b981;
+            padding-left: 1rem;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #374151;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #10b981, #2563eb);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .nav-button.secondary {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid #374151;
+        }
+
+        .nav-button.secondary:hover {
+            background: rgba(75, 85, 99, 0.8);
+            border-color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>Team & Advisors</h1>
+            <p>Leadership and Strategic Guidance</p>
+        </div>
+
+        <div class="section">
+            <h2>Founding Team</h2>
+            <div class="team-grid">
+                <div class="team-member">
+                    <h3>Oliver Smith</h3>
+                    <div class="title">Co-Founder & CEO</div>
+                    <p>Former VP of Engineering at TechCorp. 10+ years building AI-powered platforms. Stanford CS, Y Combinator alum.</p>
+                </div>
+                <div class="team-member">
+                    <h3>Dave Johnson</h3>
+                    <div class="title">Co-Founder & CTO</div>
+                    <p>Ex-Google AI researcher. PhD in Machine Learning from MIT. Led AI teams at Fortune 500 companies.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Advisory Board</h2>
+            <div class="team-grid">
+                <div class="team-member">
+                    <h3>Sarah Chen</h3>
+                    <div class="title">Former VP of Talent at LinkedIn</div>
+                    <p>15+ years in recruitment technology. Expert in talent acquisition and HR tech innovation.</p>
+                </div>
+                <div class="team-member">
+                    <h3>Michael Rodriguez</h3>
+                    <div class="title">Partner at Sequoia Capital</div>
+                    <p>Early investor in Workday, Greenhouse. Deep expertise in HR tech and enterprise software.</p>
+                </div>
+                <div class="team-member">
+                    <h3>Dr. Lisa Wang</h3>
+                    <div class="title">AI Research Director at OpenAI</div>
+                    <p>Leading AI researcher specializing in natural language processing and human-AI interaction.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Strategic Partners</h2>
+            <ul>
+                <li><strong>Microsoft:</strong> Azure AI services and enterprise integration</li>
+                <li><strong>Salesforce:</strong> CRM integration and data sharing</li>
+                <li><strong>Workday:</strong> HCM platform integration</li>
+                <li><strong>LinkedIn:</strong> Talent data and professional network access</li>
+            </ul>
+        </div>
+
+        <div class="navigation">
+            <a href="product-roadmap.html" class="nav-button secondary">← Product Roadmap</a>
+            <a href="competitive-advantage.html" class="nav-button">Competitive Advantage →</a>
+        </div>
+    </div>
+</body>
+</html>
