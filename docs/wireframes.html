@@ -26,7 +26,10 @@
   .keypad-title {
     font-size: 2.5rem;
     font-weight: 700;
-    color: #ffffff;
+    background: linear-gradient(45deg, #10b981, #2563eb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 0.5rem;
     text-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
   }
@@ -139,8 +142,8 @@
 
   .keypad-button {
     position: relative;
-    width: 150px;
-    height: 120px;
+    width: 100px;
+    height: 80px;
     background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     border: 2px solid #d97706;
     border-radius: 0;
@@ -153,6 +156,7 @@
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     clip-path: polygon(0 0, 70% 0, 100% 50%, 70% 100%, 0 100%);
+    padding: 5px;
   }
 
   .keypad-button:hover {
@@ -166,26 +170,27 @@
   }
 
   .keypad-icon {
-    font-size: 4rem;
-    margin-bottom: 0.25rem;
+    font-size: 5rem;
+    margin-bottom: 0;
     opacity: 0.9;
   }
 
   .keypad-label {
-    font-size: 0.9rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: #ffffff;
     text-align: center;
     opacity: 0;
     transition: opacity 0.3s ease;
     position: absolute;
-    bottom: 1rem;
+    bottom: 0.3rem;
     left: 50%;
     transform: translateX(-50%);
     background: rgba(0, 0, 0, 0.8);
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
     white-space: nowrap;
+    line-height: 1;
   }
 
   .keypad-button:hover .keypad-label {
@@ -389,10 +394,10 @@
         <div class="keypad-label">Job Descriptions</div>
       </button>
 
-      <!-- Tab 4: Pain Point Match -->
-      <button class="keypad-button rotate-90" data-tab="pain-point-match" data-step="4" title="Pain Point Match">
-        <div class="keypad-icon">🔗</div>
-        <div class="keypad-label">Pain Point Match</div>
+      <!-- Tab 4: Context Research -->
+      <button class="keypad-button rotate-90" data-tab="context-research" data-step="4" title="Context search or research of contact or company">
+        <div class="keypad-icon">🔍</div>
+        <div class="keypad-label">Context Research</div>
       </button>
 
       <!-- Tab 5: Find Contact -->
@@ -401,10 +406,10 @@
         <div class="keypad-label">Find Contact</div>
       </button>
 
-      <!-- Tab 6: Context Research -->
-      <button class="keypad-button flip-horizontal" data-tab="context-research" data-step="6" title="Context search or research of contact or company">
-        <div class="keypad-icon">🔍</div>
-        <div class="keypad-label">Context Research</div>
+      <!-- Tab 6: Pain Point Match -->
+      <button class="keypad-button flip-horizontal" data-tab="pain-point-match" data-step="6" title="Pain point matching between your solutions and their challenges">
+        <div class="keypad-icon">🔗</div>
+        <div class="keypad-label">Pain Point Match</div>
       </button>
 
       <!-- Tab 7: Offer Creation -->
@@ -479,6 +484,12 @@
         const tab = button.getAttribute('data-tab');
         const step = parseInt(button.getAttribute('data-step'));
         
+        // Special handling for launch button - activate all buttons sequentially
+        if (step === 10) {
+          activateButtonsSequentially();
+          return;
+        }
+        
         // Add rotation animation
         button.style.transition = 'transform 0.6s ease-in-out';
         button.style.transform = 'rotate(360deg)';
@@ -506,9 +517,9 @@
           'job-preferences': 'wireframes/job-preferences.html',
           'candidate-profile': 'wireframes/candidate-profile.html',
           'job-descriptions': 'wireframes/job-descriptions.html',
-          'pain-point-match': 'wireframes/pain-point-match.html',
-          'find-contact': 'wireframes/find-contact.html',
           'context-research': 'wireframes/context-research.html',
+          'find-contact': 'wireframes/find-contact.html',
+          'pain-point-match': 'wireframes/pain-point-match.html',
           'offer-creation': 'wireframes/offer-creation.html',
           'compose': 'wireframes/compose.html',
           'campaign': 'wireframes/campaign.html',
@@ -522,6 +533,38 @@
         }
       });
     });
+
+    function activateButtonsSequentially() {
+      const buttons = [
+        { selector: '[data-step="1"]', delay: 0 },
+        { selector: '[data-step="2"]', delay: 500 },
+        { selector: '[data-step="3"]', delay: 1000 },
+        { selector: '[data-step="4"]', delay: 1500 },
+        { selector: '[data-step="5"]', delay: 2000 },
+        { selector: '[data-step="6"]', delay: 2500 },
+        { selector: '[data-step="7"]', delay: 3000 },
+        { selector: '[data-step="8"]', delay: 3500 },
+        { selector: '[data-step="9"]', delay: 4000 },
+        { selector: '.launch-button', delay: 4500 }
+      ];
+
+      buttons.forEach(({ selector, delay }) => {
+        setTimeout(() => {
+          const button = document.querySelector(selector);
+          if (button) {
+            button.classList.add('completed');
+            button.style.transform = 'rotate(360deg)';
+            button.style.transition = 'transform 0.6s ease-in-out';
+          }
+        }, delay);
+      });
+
+      // Show confetti and message after all buttons are activated
+      setTimeout(() => {
+        showConfetti();
+        alert('Your campaign is launched!');
+      }, 5000);
+    }
 
     function updateProgress() {
       const progress = completedSteps.size;

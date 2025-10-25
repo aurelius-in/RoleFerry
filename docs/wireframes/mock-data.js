@@ -245,7 +245,7 @@ const MockData = {
     contacts: [
       {
         id: 1,
-        name: "Sarah Chen",
+        name: "Alex Johnson",
         title: "VP of Engineering",
         email: "sarah.chen@techcorp.com",
         company: "TechCorp",
@@ -272,7 +272,7 @@ const MockData = {
     research: {
       companySummary: "TechCorp is a rapidly growing technology company that specializes in AI-driven solutions for enterprise clients. Since their founding in 2010, they have established themselves as a key player in the SaaS market, known for their innovative approach to data analytics and cloud computing.",
       recentNews: "TechCorp recently secured $50M in Series B funding and announced plans to expand their engineering team by 100+ people. They also launched a new AI-powered analytics platform that has seen 300% growth in user adoption since its release.",
-      contactBio: "Sarah Chen is the VP of Engineering at TechCorp, leading a team of 50+ engineers across multiple product lines. With over 15 years of experience in scaling engineering organizations, she is known for her strategic approach to technology leadership and her commitment to building high-performing teams.",
+      contactBio: "Alex Johnson is the VP of Engineering at TechCorp, leading a team of 50+ engineers across multiple product lines. With over 15 years of experience in scaling engineering organizations, they are known for their strategic approach to technology leadership and their commitment to building high-performing teams.",
       companyCulture: "TechCorp values innovation, collaboration, and continuous learning. They have a flat organizational structure that encourages open communication and idea sharing. The company is known for its flexible work policies, strong emphasis on work-life balance, and commitment to employee development through regular training and mentorship programs.",
       techStack: "TechCorp's technology stack includes Python, AWS, PostgreSQL, React, Docker, Kubernetes, and various AI/ML frameworks. They are migrating to microservices architecture and implementing CI/CD pipelines. The company is also investing heavily in machine learning and data science capabilities.",
       marketPosition: "TechCorp competes with companies like DataCorp, AnalyticsPro, and CloudTech in the enterprise AI solutions market. They differentiate themselves through their proprietary algorithms and customer-centric approach. The company has a strong market position in the mid-market segment and is expanding into enterprise clients."

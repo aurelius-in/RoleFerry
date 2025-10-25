@@ -22,7 +22,10 @@
   .tab-title {
     font-size: 2.5rem;
     font-weight: 700;
-    color: #ffffff;
+    background: linear-gradient(45deg, #10b981, #2563eb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 1rem;
   }
 
@@ -143,19 +146,11 @@
     display: block;
   }
 
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #374151;
-    border-top: 4px solid #2563eb;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+  .loading-gif {
+    width: 80px;
+    height: 80px;
     margin: 0 auto 1rem;
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    display: block;
   }
 
   .back-button {
@@ -259,6 +254,12 @@
 </head>
 <body>
   <div class="tab-container">
+    <!-- Navigation -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <a href="../home.html" class="roleferry-link" style="color: #10b981; text-decoration: none; font-weight: 600;">🏠 RoleFerry.com</a>
+      <a href="find-contact.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; position: relative; z-index: 10;">Find Contact →</a>
+    </div>
+    
     <!-- Back Button -->
     <button class="back-button" onclick="goBack()">← Back to Keypad</button>
 
