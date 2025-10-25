@@ -326,9 +326,23 @@ def main():
         md_path = Path(md_file)
         html_path = Path(html_file)
         
-        # Determine previous and next files
-        prev_file = docs_to_convert[i-1][1] if i > 0 else None
-        next_file = docs_to_convert[i+1][1] if i < len(docs_to_convert) - 1 else None
+        # Determine previous and next files with proper relative paths
+        prev_file = None
+        next_file = None
+        
+        if i > 0:
+            prev_file = docs_to_convert[i-1][1]
+            # Calculate relative path from current file to previous file
+            current_dir = Path(html_file).parent
+            prev_path = Path(prev_file)
+            prev_file = os.path.relpath(prev_path, current_dir)
+        
+        if i < len(docs_to_convert) - 1:
+            next_file = docs_to_convert[i+1][1]
+            # Calculate relative path from current file to next file
+            current_dir = Path(html_file).parent
+            next_path = Path(next_file)
+            next_file = os.path.relpath(next_path, current_dir)
         
         if create_html_doc(md_path, html_path, title, prev_file, next_file):
             converted_count += 1
