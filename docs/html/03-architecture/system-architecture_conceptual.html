@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Architecture - Conceptual - RoleFerry Documentation</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f8fafc;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .content h1, .content h2, .content h3, .content h4 {
+            color: #2563eb;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .content h1 {
+            font-size: 2rem;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 0.5rem;
+        }
+        .content h2 {
+            font-size: 1.5rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.25rem;
+        }
+        .content h3 {
+            font-size: 1.25rem;
+        }
+        .content p {
+            margin-bottom: 1rem;
+        }
+        .content ul, .content ol {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+        .content li {
+            margin-bottom: 0.5rem;
+        }
+        .content code {
+            background: #f1f5f9;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .content pre {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        .content pre code {
+            background: none;
+            padding: 0;
+        }
+        .content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .content th, .content td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        .content th {
+            background: #f8fafc;
+            font-weight: 600;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .nav-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .nav-button:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+        .nav-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .nav-button:disabled:hover {
+            background: #9ca3af;
+            transform: none;
+        }
+        .nav-center {
+            text-align: center;
+            flex: 1;
+        }
+        .nav-center h3 {
+            margin: 0;
+            color: #374151;
+        }
+        .nav-center p {
+            margin: 0.25rem 0 0 0;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem;
+            background: #374151;
+            color: white;
+            border-radius: 12px;
+        }
+        .breadcrumb {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+        .breadcrumb a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            .header h1 {
+                font-size: 2rem;
+            }
+            .navigation {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .nav-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RoleFerry Documentation</h1>
+        <p>System Architecture - Conceptual</p>
+    </div>
+
+    <div class="breadcrumb">
+        <a href="../index.html">Home</a> &gt; 
+        <a href="../WEEK_4_UPDATES.html">Week 4 Updates</a> &gt; 
+        System Architecture - Conceptual
+    </div>
+
+    <div class="navigation">
+        <a href='html/02-requirements/functional-requirements.html' class='nav-button'>← Previous</a>
+        
+        <div class="nav-center">
+            <h3>System Architecture - Conceptual</h3>
+            <p>Documentation Navigation</p>
+        </div>
+        
+        <a href='html/04-technical/api-specification.html' class='nav-button'>Next →</a>
+    </div>
+
+    <div class="content">
+        <h1>System Architecture: Conceptual Level</h1>
+<h2>RoleFerry Platform</h2>
+
+<strong>RM-ODP Viewpoints</strong>: Enterprise, Information, Computational (Conceptual)  
+<strong>Audience</strong>: Stakeholders, Business Analysts, Product Managers  
+<strong>Purpose</strong>: Business concepts and high-level system understanding
+
+<p>---</p>
+
+<h2>1. Enterprise Viewpoint</h2>
+
+<h3>1.1 Business Mission</h3>
+RoleFerry automates job application outreach by intelligently connecting candidates with decision-makers through personalized, deliverable email sequences—eliminating the "apply and pray" model.
+
+<h3>1.2 Stakeholder Landscape</h3>
+
+<h4>Primary Stakeholders</h4>
+| Stakeholder | Goals | Concerns |
+|------------|-------|----------|
+| <strong>Job Seekers</strong> | Get interviews faster, reduce manual work | Email deliverability, contact accuracy, cost |
+| <strong>Recruiters</strong> | Scale outbound sourcing, improve reply rates | Compliance, integration with ATS, team collaboration |
+| <strong>Platform Admins</strong> | System reliability, cost efficiency | Deliverability reputation, API costs, scale |
+| <strong>Investors</strong> | Growth, retention, unit economics | Product-market fit, competitive moat, TAM capture |
+
+<h4>Secondary Stakeholders</h4>
+<ul><li><strong>Email Service Providers</strong> (SendGrid, Mailgun): Infrastructure dependencies</li></ul>
+<ul><li><strong>Data Providers</strong> (Apollo, Clay): Contact enrichment partnerships</li></ul>
+<ul><li><strong>Regulators</strong> (FTC, EU DPA): CAN-SPAM, GDPR compliance</li></ul>
+<ul><li><strong>Career Coaches</strong>: White-label partners</li></ul>
+
+<h3>1.3 Business Scenarios</h3>
+
+<h4>Scenario 1: 10-Tab Workflow - Job Seeker Journey</h4>
+<strong>Actor</strong>: Sarah, 7-year Product Manager  
+<strong>Context</strong>: Searching for senior PM role, applying to 30+ companies/month  
+<strong>Goals</strong>: Complete intelligent workflow from preferences to campaign launch
+
+<strong>10-Tab Flow</strong>:
+<ul><li><strong>Job Preferences</strong>: Sarah sets industries (SaaS, FinTech), roles (Senior PM), salary ($120-150k), location (Remote)</li></ul>
+<ul><li><strong>Resume</strong>: Uploads resume, AI extracts B2B SaaS experience, metrics, accomplishments</li></ul>
+<ul><li><strong>Job Descriptions</strong>: Imports JD from LinkedIn, AI identifies pain points (scaling, user acquisition)</li></ul>
+<ul><li><strong>Pinpoint Match</strong>: System scores 87% alignment - Sarah's growth experience matches their scaling challenges</li></ul>
+<ul><li><strong>Find Contact</strong>: Discovers VP Product (hiring manager) with 95% confidence, email verified as valid</li></ul>
+<ul><li><strong>Context Research</strong>: Auto-pulls company summary, recent funding news, contact bio</li></ul>
+<ul><li><strong>Offer Creation</strong>: AI generates personalized pitch with Manager tone (proof of competence)</li></ul>
+<ul><li><strong>Compose</strong>: Email generated with variables, jargon detected and explained</li></ul>
+<ul><li><strong>Campaign</strong>: 3-email sequence auto-created with optimal timing</li></ul>
+<ul><li><strong>Deliverability/Launch</strong>: Pre-flight checks pass, campaign launched successfully</li></ul>
+
+<strong>Value</strong>: Complete automation from preferences to outreach in 10 structured steps
+
+<p>---</p>
+
+<h4>Scenario 2: 10-Tab Workflow - Recruiter Journey</h4>
+<strong>Actor</strong>: Marcus, Agency Recruiter  
+<strong>Context</strong>: Placing senior engineers, needs to scale candidate outreach  
+<strong>Goals</strong>: Complete intelligent workflow from ICP to candidate campaign launch
+
+<strong>10-Tab Flow (Recruiter Mode)</strong>:
+<ul><li><strong>Ideal Client Profile (ICP)</strong>: Marcus defines target companies (Series B SaaS), roles (Senior Engineers), budget ($150-200k)</li></ul>
+<ul><li><strong>Candidate Profile</strong>: Uploads candidate resume, AI extracts technical experience, achievements, metrics</li></ul>
+<ul><li><strong>Job Descriptions</strong>: Imports client JD, AI identifies technical challenges (microservices, scaling)</li></ul>
+<ul><li><strong>Pinpoint Match</strong>: System scores 92% alignment - candidate's AWS experience matches their cloud challenges</li></ul>
+<ul><li><strong>Find Contact</strong>: Discovers Engineering Manager with 88% confidence, email verified as valid</li></ul>
+<ul><li><strong>Context Research</strong>: Auto-pulls company tech stack, recent engineering hires, manager background</li></ul>
+<ul><li><strong>Offer Creation</strong>: AI generates candidate pitch with Exec tone (ROI/strategy focus)</li></ul>
+<ul><li><strong>Compose</strong>: Email generated with candidate variables, technical jargon explained</li></ul>
+<ul><li><strong>Campaign</strong>: 3-email sequence auto-created for candidate placement</li></ul>
+<ul><li><strong>Deliverability/Launch</strong>: Pre-flight checks pass, candidate campaign launched</li></ul>
+
+<strong>Value</strong>: Complete automation from ICP to candidate outreach in 10 structured steps
+
+<h4>Scenario 3: Traditional Job Seeker Applies to Target Company</h4>
+<strong>Actor</strong>: Sarah, 7-year Product Manager  
+<strong>Context</strong>: Searching for senior PM role, applying to 30+ companies/month  
+<strong>Goals</strong>: Reach hiring manager directly, stand out from ATS pile
+
+<strong>Flow</strong>:
+<ul><li>Sarah browses matched jobs (75%+ fit)</li></ul>
+<ul><li>Clicks "Apply" on Series B SaaS company</li></ul>
+<ul><li>RoleFerry finds VP Product (hiring manager) + HR contact</li></ul>
+<ul><li>AI drafts email referencing Sarah's B2B SaaS experience + metrics</li></ul>
+<ul><li>Email sent from RoleFerry domain (preserves Sarah's Gmail reputation)</li></ul>
+<ul><li>VP Product replies in 36 hours → Sarah invited to screen</li></ul>
+<ul><li>Sarah logs interview in Tracker, moves to "Interviewing" stage</li></ul>
+
+<strong>Value</strong>: 3x faster response vs. blind application; no manual LinkedIn stalking  
+<strong>Context</strong>: Filling 5 engineering roles, needs passive candidates  
+<strong>Goals</strong>: Contact 200 qualified engineers, get 20 replies, schedule 10 calls
+
+<strong>Flow</strong>:
+<ul><li>Marcus imports CSV of 200 LinkedIn profiles (scraped via third-party tool)</li></ul>
+<ul><li>RoleFerry enriches: company domain → work email → verification</li></ul>
+<ul><li>Marcus selects "Senior Engineer" persona (titles, seniority, location filters)</li></ul>
+<ul><li>Applies 3-step sequence: intro → value prop → breakup email</li></ul>
+<ul><li>Sequence launches, emails spread across 4 domains (50/day per domain)</li></ul>
+<ul><li>22 replies in 2 weeks (11% reply rate)</li></ul>
+<ul><li>Marcus schedules calls, syncs to Greenhouse ATS</li></ul>
+
+<strong>Value</strong>: 5x cheaper than LinkedIn Recruiter; email beats InMail response rates
+
+<p>---</p>
+
+<h4>Scenario 3: Deliverability Crisis Averted</h4>
+<strong>Actor</strong>: Platform Operations Team  
+<strong>Context</strong>: One sending domain experiences elevated bounce rate  
+<strong>Goals</strong>: Prevent blacklisting, maintain 95%+ inbox placement
+
+<strong>Flow</strong>:
+<ul><li>Health monitoring detects Domain A: 8% bounce rate (threshold: 5%)</li></ul>
+<ul><li>System auto-pauses new sends from Domain A</li></ul>
+<ul><li>Alert sent to ops team: "Domain A health degraded to 62/100"</li></ul>
+<ul><li>Ops reviews: bulk of bounces from stale enrichment data (90-day-old emails)</li></ul>
+<ul><li>Ops enables aggressive verification (re-verify emails <95% confidence)</li></ul>
+<ul><li>Domain A enters 7-day warmup re-ramp (20 emails/day increasing 10%/day)</li></ul>
+<ul><li>Health recovers to 85/100; production traffic resumed</li></ul>
+
+<strong>Value</strong>: $50K sending infrastructure protected; zero user-facing impact
+
+<p>---</p>
+
+<h3>1.4 Value Propositions</h3>
+
+<h4>For Job Seekers</h4>
+<ul><li><strong>Speed</strong>: Apply → Contact found → Email sent in <60 seconds</li></ul>
+<ul><li><strong>Effectiveness</strong>: 3x higher reply rate vs. blind applications</li></ul>
+<ul><li><strong>Safety</strong>: RoleFerry domains absorb deliverability risk, not personal email</li></ul>
+<ul><li><strong>Intelligence</strong>: AI match scoring + draft generation (10x time savings)</li></ul>
+
+<h4>For Recruiters</h4>
+<ul><li><strong>Scale</strong>: Contact 1,000+ candidates/month with 1 recruiter</li></ul>
+<ul><li><strong>Cost</strong>: $1,800/year vs. $8,000 for LinkedIn Recruiter</li></ul>
+<ul><li><strong>Multichannel</strong>: Email + LinkedIn (vs. InMail-only)</li></ul>
+<ul><li><strong>Compliance</strong>: CAN-SPAM/GDPR built-in (vs. DIY risk)</li></ul>
+
+<h3>1.5 Business Policies</h3>
+
+<h4>Outreach Constraints</h4>
+<ul><li><strong>Throttling</strong>: Max 50 emails/day per mailbox (prevent spam flags)</li></ul>
+<ul><li><strong>Suppression</strong>: Honor opt-outs within 1 hour (CAN-SPAM)</li></ul>
+<ul><li><strong>Verification</strong>: Min 80% email confidence before sending</li></ul>
+<ul><li><strong>Stop-on-Reply</strong>: Sequences auto-cancel on recipient response</li></ul>
+
+<h4>Data Governance</h4>
+<ul><li><strong>PAI Sourcing</strong>: Contacts from publicly available sources (Apollo, LinkedIn, company sites)</li></ul>
+<ul><li><strong>Retention</strong>: Contact data deleted 90 days after last interaction (GDPR "right to be forgotten")</li></ul>
+<ul><li><strong>Transparency</strong>: Source attribution shown to users ("Found via Apollo")</li></ul>
+
+<h4>Economic Model</h4>
+<ul><li><strong>Free Tier</strong>: 10 applications/month (drives acquisition)</li></ul>
+<ul><li><strong>Paid Conversion</strong>: 10% free → Pro within 30 days</li></ul>
+<ul><li><strong>Usage Caps</strong>: Enrichment credits & sending limits (prevent abuse)</li></ul>
+
+<p>---</p>
+
+<h2>2. Information Viewpoint</h2>
+
+<h3>2.1 Business Entities</h3>
+
+<pre><code>mermaid
+erDiagram
+    USER ||--o{ APPLICATION : creates
+    USER ||--o{ RESUME : uploads
+    APPLICATION }o--|| JOB : concerns
+    JOB }o--|| COMPANY : posted_by
+    COMPANY ||--o{ CONTACT : employs
+    APPLICATION ||--o{ OUTREACH : triggers
+    OUTREACH }o--|| CONTACT : targets
+    OUTREACH }o--|| SEQUENCE : follows
+    SEQUENCE ||--o{ SEQUENCE_STEP : contains
+    USER ||--o{ PERSONA : defines
+    DOMAIN ||--o{ MAILBOX : hosts
+    OUTREACH }o--|| MAILBOX : sent_from
+</code></pre>
+
+<h3>2.2 Core Information Objects</h3>
+
+<h4>User</h4>
+Represents job seeker or recruiter account.
+<ul><li><strong>Identity</strong>: Email, name, mode (seeker/recruiter)</li></ul>
+<ul><li><strong>Profile</strong>: Resume data, IJP preferences, subscription tier</li></ul>
+<ul><li><strong>Lifecycle</strong>: Active, paused (not searching), churned</li></ul>
+
+<h4>Application (Job Seeker) / Lead (Recruiter)</h4>
+Central pipeline record.
+<ul><li><strong>Linkages</strong>: User → Job → Company → Contacts</li></ul>
+<ul><li><strong>Status</strong>: Saved, Applied, Interviewing, Offer, Rejected (or Recruiter equivalents)</li></ul>
+<ul><li><strong>Timeline</strong>: Created, last action, status changes</li></ul>
+<ul><li><strong>Metadata</strong>: Notes, interview dates, reply state</li></ul>
+
+<h4>Job</h4>
+Represents open position.
+<ul><li><strong>Source</strong>: Scraped from job boards, ATS, user-submitted</li></ul>
+<ul><li><strong>Details</strong>: Title, JD text, comp range, location, visa requirements</li></ul>
+<ul><li><strong>Enrichment</strong>: Company domain, size, industry, Glassdoor rating</li></ul>
+
+<h4>Company</h4>
+Organization entity (employer or target company).
+<ul><li><strong>Identity</strong>: Name, domain (unique key)</li></ul>
+<ul><li><strong>Enrichment</strong>: Size, industry, funding, tech stack, social profiles</li></ul>
+<ul><li><strong>Contacts</strong>: Aggregated from enrichment (not stored long-term without consent)</li></ul>
+
+<h4>Contact</h4>
+Individual person at company.
+<ul><li><strong>Identity</strong>: Name, title, work email, LinkedIn URL</li></ul>
+<ul><li><strong>Verification</strong>: Confidence score, verification date, source</li></ul>
+<ul><li><strong>Suppression</strong>: Opt-out status, bounce history</li></ul>
+
+<h4>Sequence</h4>
+Multi-step email campaign template.
+<ul><li><strong>Steps</strong>: Subject, body, delay (hours/days), conditions (stop-on-reply)</li></ul>
+<ul><li><strong>Variables</strong>: Placeholders ({{first_name}}, {{company}}, {{role}})</li></ul>
+<ul><li><strong>Ownership</strong>: User-created or platform templates</li></ul>
+
+<h4>Outreach</h4>
+Individual email send event.
+<ul><li><strong>Linkages</strong>: Application → Contact → Sequence Step</li></ul>
+<ul><li><strong>Status</strong>: Queued, sent, delivered, bounced, opened, clicked, replied</li></ul>
+<ul><li><strong>Telemetry</strong>: Timestamps, link clicks, LivePage views</li></ul>
+
+<h4>Domain & Mailbox</h4>
+Sending infrastructure.
+<ul><li><strong>Domain</strong>: Owned by RoleFerry (e.g., rf-send-01.com)</li></ul>
+<ul><li><strong>Mailbox</strong>: Individual sender (e.g., auto1@rf-send-01.com)</li></ul>
+<ul><li><strong>Health</strong>: Score (0-100), bounce rate, spam reports, warmup status</li></ul>
+
+<h3>2.3 Information Flows</h3>
+
+<h4>Flow 1: Apply → Enrich → Send</h4>
+<ul><li><strong>Input</strong>: User clicks Apply on Job</li></ul>
+<ul><li><strong>Process</strong>: </li></ul>
+   - Create Application record
+   - Trigger enrichment job (Company → Contacts)
+   - Generate email draft (LLM)
+   - Queue sequence
+<ul><li><strong>Output</strong>: Emails scheduled, Tracker updated</li></ul>
+
+<h4>Flow 2: Reply → Status Update</h4>
+<ul><li><strong>Input</strong>: Inbound email webhook (recipient replied)</li></ul>
+<ul><li><strong>Process</strong>:</li></ul>
+   - Match reply to Outreach record
+   - Stop remaining sequence steps
+   - Parse sentiment (LLM)
+   - Update Application status
+<ul><li><strong>Output</strong>: Notification to user, Tracker reflects reply</li></ul>
+
+<h4>Flow 3: Health Degradation → Throttle</h4>
+<ul><li><strong>Input</strong>: Daily health check (bounce rate > 5%)</li></ul>
+<ul><li><strong>Process</strong>:</li></ul>
+   - Calculate health score per domain
+   - If score < 70, pause new sends
+   - Alert ops team
+<ul><li><strong>Output</strong>: Traffic shifted to healthy domains</li></ul>
+
+<p>---</p>
+
+<h2>3. Computational Viewpoint (Conceptual)</h2>
+
+<h3>3.1 Functional Decomposition</h3>
+
+<pre><code>
+RoleFerry Platform
+├── Presentation Layer
+│   ├── Web Application (Next.js)
+│   └── API Gateway (FastAPI)
+├── Application Services
+│   ├── Job Matching Service
+│   ├── Enrichment Orchestrator
+│   ├── Outreach Sequencer
+│   └── Analytics Engine
+├── Domain Services
+│   ├── User Management
+│   ├── Application/Lead Tracker
+│   ├── Contact Discovery
+│   └── Deliverability Manager
+├── Integration Layer
+│   ├── Apollo Client
+│   ├── Clay Client
+│   ├── Email Service (SendGrid/Mailgun)
+│   └── LLM Providers (Anthropic, OpenAI)
+└── Data Layer
+    ├── Primary Database (PostgreSQL)
+    ├── Cache (Redis)
+    └── Object Storage (S3)
+</code></pre>
+
+<h3>3.2 Component Responsibilities</h3>
+
+<h4>Job Matching Service</h4>
+<ul><li><strong>Purpose</strong>: Score jobs against user IJP</li></ul>
+<ul><li><strong>Inputs</strong>: User profile, job postings</li></ul>
+<ul><li><strong>Outputs</strong>: Match score (0-100), breakdown (experience/skills/industry %)</li></ul>
+<ul><li><strong>Intelligence</strong>: ML model trained on user feedback (thumbs up/down)</li></ul>
+
+<h4>Enrichment Orchestrator</h4>
+<ul><li><strong>Purpose</strong>: Coordinate multi-provider contact discovery</li></ul>
+<ul><li><strong>Inputs</strong>: Company name/domain, persona filters</li></ul>
+<ul><li><strong>Outputs</strong>: 1-3 verified contacts (name, title, email)</li></ul>
+<ul><li><strong>Logic</strong>: Waterfall (Apollo → Clay → fallback), verification step, deduplication</li></ul>
+
+<h4>Outreach Sequencer</h4>
+<ul><li><strong>Purpose</strong>: Schedule and send multi-step email campaigns</li></ul>
+<ul><li><strong>Inputs</strong>: Contact list, sequence template, variables</li></ul>
+<ul><li><strong>Outputs</strong>: Queued emails, delivery status tracking</li></ul>
+<ul><li><strong>Rules</strong>: Throttling, stop-on-reply, domain rotation</li></ul>
+
+<h4>Deliverability Manager</h4>
+<ul><li><strong>Purpose</strong>: Monitor and maintain sending infrastructure health</li></ul>
+<ul><li><strong>Inputs</strong>: Bounce/spam reports, send volume</li></ul>
+<ul><li><strong>Outputs</strong>: Health scores, throttling decisions, alerts</li></ul>
+<ul><li><strong>Actions</strong>: Auto-pause degraded domains, warmup protocols</li></ul>
+
+<h3>3.3 User Interaction Patterns</h3>
+
+<h4>Pattern 1: Synchronous Actions (Web Request)</h4>
+<ul><li><strong>Examples</strong>: Load Jobs List, view Tracker, edit preferences</li></ul>
+<ul><li><strong>Flow</strong>: Browser → API Gateway → Service → Database → Response</li></ul>
+<ul><li><strong>Latency</strong>: <500ms target</li></ul>
+
+<h4>Pattern 2: Asynchronous Jobs (Background Processing)</h4>
+<ul><li><strong>Examples</strong>: Enrichment, email sending, match re-scoring</li></ul>
+<ul><li><strong>Flow</strong>: API enqueues job → Worker picks up → Processes → Updates DB → Notifies user</li></ul>
+<ul><li><strong>Latency</strong>: <5 minutes for enrichment, <1 hour for sends</li></ul>
+
+<h4>Pattern 3: Event-Driven Updates (Webhooks)</h4>
+<ul><li><strong>Examples</strong>: Email reply, link click, LivePage view</li></ul>
+<ul><li><strong>Flow</strong>: External service → Webhook → Event processor → Update DB → Push notification</li></ul>
+<ul><li><strong>Latency</strong>: <1 minute</li></ul>
+
+<p>---</p>
+
+<h2>4. Key Architectural Principles</h2>
+
+<h3>4.1 Separation of Concerns</h3>
+<ul><li><strong>Presentation</strong> (UI/UX) decoupled from <strong>Business Logic</strong> (services)</li></ul>
+<ul><li><strong>Domain Services</strong> own business rules; <strong>Integration Layer</strong> handles external APIs</li></ul>
+<ul><li><strong>Data Layer</strong> abstracted behind repository pattern (swap DB without changing services)</li></ul>
+
+<h3>4.2 Asynchronous by Default</h3>
+<ul><li>Long-running tasks (enrichment, sending) processed in background queues</li></ul>
+<ul><li>User sees instant feedback ("Enrichment started..."), not loading spinners</li></ul>
+<ul><li>Enables horizontal scaling (add workers without touching API servers)</li></ul>
+
+<h3>4.3 Fail-Safe Mechanisms</h3>
+<ul><li><strong>Enrichment</strong>: Waterfall to fallback providers if primary fails</li></ul>
+<ul><li><strong>Sending</strong>: Queue retry logic (3 attempts with exponential backoff)</li></ul>
+<ul><li><strong>Health</strong>: Auto-pause domains before blacklisting occurs</li></ul>
+
+<h3>4.4 Data Minimization</h3>
+<ul><li>Contacts not stored long-term (90-day TTL)</li></ul>
+<ul><li>PII encrypted at rest and in transit</li></ul>
+<ul><li>Logs sanitized (no email content in application logs)</li></ul>
+
+<h3>4.5 Observable Operations</h3>
+<ul><li>All services emit metrics (latency, error rate, throughput)</li></ul>
+<ul><li>Centralized logging (ELK stack)</li></ul>
+<ul><li>Real-time alerting (PagerDuty) for critical failures</li></ul>
+
+<p>---</p>
+
+<h2>5. Non-Functional Characteristics</h2>
+
+<h3>5.1 Scalability</h3>
+<ul><li><strong>Target</strong>: 100K users, 1M emails/day</li></ul>
+<ul><li><strong>Approach</strong>: Horizontal scaling (add servers/workers), partitioned queues</li></ul>
+
+<h3>5.2 Availability</h3>
+<ul><li><strong>Target</strong>: 99.5% uptime (SLA for paid users)</li></ul>
+<ul><li><strong>Approach</strong>: Multi-AZ deployment, automated failover, health checks</li></ul>
+
+<h3>5.3 Performance</h3>
+<ul><li><strong>Latency</strong>: API P95 <500ms, enrichment <30s, email queue <5min</li></ul>
+<ul><li><strong>Throughput</strong>: 10K concurrent users, 500 enrichments/min</li></ul>
+
+<h3>5.4 Security</h3>
+<ul><li><strong>Authentication</strong>: OAuth2 (Google, Microsoft) + email/password</li></ul>
+<ul><li><strong>Authorization</strong>: RBAC (job seeker, recruiter, admin roles)</li></ul>
+<ul><li><strong>Data Protection</strong>: Encryption at rest (AES-256), in transit (TLS 1.3)</li></ul>
+
+<h3>5.5 Compliance</h3>
+<ul><li><strong>CAN-SPAM</strong>: Opt-out within 1 hour, physical address in footer</li></ul>
+<ul><li><strong>GDPR</strong>: Right to access, delete, export (self-service in Settings)</li></ul>
+<ul><li><strong>SOC 2 Type II</strong>: Target certification by Year 2</li></ul>
+
+<p>---</p>
+
+<h2>6. Risks & Constraints</h2>
+
+<h3>6.1 Business Risks</h3>
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Deliverability failure | Existential (core value prop fails) | Multi-domain pool, health monitoring, gradual warmup |
+| Contact data accuracy | Churn (low reply rates) | Multi-provider waterfall, verification, user feedback loop |
+| Regulatory action | Legal liability, fines | Legal review, conservative policies, audit trail |
+
+<h3>6.2 Technical Constraints</h3>
+<ul><li><strong>API Rate Limits</strong>: Apollo (1,000 req/day), Clay (10K credits/mo) → Requires caching, batching</li></ul>
+<ul><li><strong>Email Sending Caps</strong>: 50/day per mailbox (ISP limits) → Need 100+ mailboxes for scale</li></ul>
+<ul><li><strong>LLM Costs</strong>: $0.01/draft (Anthropic Sonnet) → Optimize prompts, cache common patterns</li></ul>
+
+<h3>6.3 Organizational Constraints</h3>
+<ul><li><strong>Team Size</strong>: 4 engineers (2 full-stack, 1 backend, 1 ML) → Prioritize ruthlessly, use managed services</li></ul>
+<ul><li><strong>Budget</strong>: $50K/mo infrastructure → Optimize API usage, negotiate volume discounts</li></ul>
+
+<p>---</p>
+
+<h2>7. Success Criteria (Architecture)</h2>
+
+<h3>7.1 Functional</h3>
+<ul><li>[ ] Job list loads <2s with 1,000 jobs</li></ul>
+<ul><li>[ ] Enrichment finds 80%+ verified contacts</li></ul>
+<ul><li>[ ] Sequences send within 5 minutes of schedule</li></ul>
+<ul><li>[ ] Reply detection latency <1 minute</li></ul>
+
+<h3>7.2 Operational</h3>
+<ul><li>[ ] System handles 10K concurrent users without degradation</li></ul>
+<ul><li>[ ] 99.5% API uptime (measured monthly)</li></ul>
+<ul><li>[ ] Zero critical security vulnerabilities (penetration test)</li></ul>
+<ul><li>[ ] <5% error rate on enrichment jobs</li></ul>
+
+<h3>7.3 Business</h3>
+<ul><li>[ ] 15%+ email reply rate (platform average)</li></ul>
+<ul><li>[ ] 95%+ inbox placement (deliverability)</li></ul>
+<ul><li>[ ] <$10 CAC (infrastructure cost per new user)</li></ul>
+
+<p>---</p>
+
+<h2>8. Future Considerations</h2>
+
+<h3>Phase 2 (Months 7-12)</h3>
+<ul><li>Mobile app (React Native) for Tracker + reply management</li></ul>
+<ul><li>LinkedIn integration (auto-connection requests)</li></ul>
+<ul><li>Advanced ML (predictive reply scoring, send-time optimization)</li></ul>
+
+<h3>Phase 3 (Year 2+)</h3>
+<ul><li>White-label platform (career coaches rebrand RoleFerry)</li></ul>
+<ul><li>API for third-party integrations (ATS vendors, recruiting platforms)</li></ul>
+<ul><li>International expansion (EU, APAC data residency)</li></ul>
+
+<p>---</p>
+
+<strong>Document Owner</strong>: Chief Architect  
+<strong>Stakeholder Sign-Off</strong>: CEO, CTO, Head of Product  
+<strong>Version</strong>: 1.0  
+<strong>Date</strong>: October 2025  
+<strong>Next Review</strong>: Q1 2026 (post-MVP launch)
+
+
+    </div>
+
+    <div class="navigation">
+        <a href='html/02-requirements/functional-requirements.html' class='nav-button'>← Previous</a>
+        
+        <div class="nav-center">
+            <h3>System Architecture - Conceptual</h3>
+            <p>Documentation Navigation</p>
+        </div>
+        
+        <a href='html/04-technical/api-specification.html' class='nav-button'>Next →</a>
+    </div>
+
+    <div class="footer">
+        <h3>RoleFerry Documentation</h3>
+        <p>Complete platform documentation with navigation</p>
+        <p><strong>Generated:</strong> 2025-10-24 19:28:53</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Functional Requirements - RoleFerry Documentation</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f8fafc;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .content h1, .content h2, .content h3, .content h4 {
+            color: #2563eb;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .content h1 {
+            font-size: 2rem;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 0.5rem;
+        }
+        .content h2 {
+            font-size: 1.5rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.25rem;
+        }
+        .content h3 {
+            font-size: 1.25rem;
+        }
+        .content p {
+            margin-bottom: 1rem;
+        }
+        .content ul, .content ol {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+        .content li {
+            margin-bottom: 0.5rem;
+        }
+        .content code {
+            background: #f1f5f9;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .content pre {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        .content pre code {
+            background: none;
+            padding: 0;
+        }
+        .content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .content th, .content td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        .content th {
+            background: #f8fafc;
+            font-weight: 600;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .nav-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .nav-button:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+        .nav-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .nav-button:disabled:hover {
+            background: #9ca3af;
+            transform: none;
+        }
+        .nav-center {
+            text-align: center;
+            flex: 1;
+        }
+        .nav-center h3 {
+            margin: 0;
+            color: #374151;
+        }
+        .nav-center p {
+            margin: 0.25rem 0 0 0;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem;
+            background: #374151;
+            color: white;
+            border-radius: 12px;
+        }
+        .breadcrumb {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+        .breadcrumb a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            .header h1 {
+                font-size: 2rem;
+            }
+            .navigation {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .nav-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RoleFerry Documentation</h1>
+        <p>Functional Requirements</p>
+    </div>
+
+    <div class="breadcrumb">
+        <a href="../index.html">Home</a> &gt; 
+        <a href="../WEEK_4_UPDATES.html">Week 4 Updates</a> &gt; 
+        Functional Requirements
+    </div>
+
+    <div class="navigation">
+        <a href='html/01-strategic/executive-summary.html' class='nav-button'>← Previous</a>
+        
+        <div class="nav-center">
+            <h3>Functional Requirements</h3>
+            <p>Documentation Navigation</p>
+        </div>
+        
+        <a href='html/03-architecture/system-architecture_conceptual.html' class='nav-button'>Next →</a>
+    </div>
+
+    <div class="content">
+        <h1>Functional Requirements Specification</h1>
+<h2>RoleFerry Platform</h2>
+
+<strong>Document Type</strong>: Requirements  
+<strong>Audience</strong>: Product Managers, Engineers, QA  
+<strong>Purpose</strong>: Detailed functional specifications for all features
+
+<p>---</p>
+
+<h2>1. Document Overview</h2>
+
+<h3>1.1 Scope</h3>
+This document specifies the functional behavior of RoleFerry platform features across Job Seeker and Recruiter modes, covering:
+<ul><li><strong>10-Tab Workflow System</strong>: Complete job application automation</li></ul>
+<ul><li><strong>Dual-Mode Architecture</strong>: Job Seeker vs Recruiter functionality</li></ul>
+<ul><li><strong>AI-Powered Intelligence</strong>: Resume parsing, job analysis, pinpoint matching</li></ul>
+<ul><li><strong>Contact Discovery</strong>: Automated enrichment with email verification</li></ul>
+<ul><li><strong>Campaign Management</strong>: 3-email sequences with deliverability checks</li></ul>
+<ul><li><strong>Advanced Analytics</strong>: Alignment correlation and cost tracking</li></ul>
+<ul><li><strong>Deliverability Infrastructure</strong>: Pre-warmed domains and health monitoring</li></ul>
+
+<h3>1.2 Requirements Format</h3>
+Each requirement follows the format:
+<ul><li><strong>ID</strong>: Unique identifier (REQ-XXX-###)</li></ul>
+<ul><li><strong>Priority</strong>: P0 (MVP), P1 (Post-MVP), P2 (Future)</li></ul>
+<ul><li><strong>Description</strong>: What the system shall do</li></ul>
+<ul><li><strong>Acceptance Criteria</strong>: How to verify</li></ul>
+
+<p>---</p>
+
+<h2>2. 10-Tab Workflow System (REQ-WORKFLOW)</h2>
+
+<h3>REQ-WORKFLOW-001: Job Preferences/ICP Tab (P0)</h3>
+<strong>Description</strong>: System shall provide dynamic labeling and data collection for job preferences (Job Seeker) or Ideal Client Profile (Recruiter).
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Tab title changes based on mode: "Job Preferences" (Job Seeker) vs "Ideal Client Profile (ICP)" (Recruiter)</li></ul>
+<ul><li>[ ] Form fields: industries, roles, salary range, location, work type</li></ul>
+<ul><li>[ ] Data persists across sessions</li></ul>
+<ul><li>[ ] Mode toggle updates all labels dynamically</li></ul>
+
+<h3>REQ-WORKFLOW-002: Resume/Candidate Profile Tab (P0)</h3>
+<strong>Description</strong>: System shall handle file upload and AI parsing of resumes with data extraction.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] File upload accepts PDF, DOC, DOCX formats</li></ul>
+<ul><li>[ ] AI parsing extracts: positions, metrics, skills, accomplishments, tenure</li></ul>
+<ul><li>[ ] Extracted data stored as normalized JSON</li></ul>
+<ul><li>[ ] Progress indicator during parsing</li></ul>
+<ul><li>[ ] Error handling for unsupported formats</li></ul>
+
+<h3>REQ-WORKFLOW-003: Job Descriptions Tab (P0)</h3>
+<strong>Description</strong>: System shall import job descriptions via URL or text and perform AI analysis.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] URL import from LinkedIn, Indeed, company sites</li></ul>
+<ul><li>[ ] Text paste functionality with validation</li></ul>
+<ul><li>[ ] AI parsing extracts: pain points, required skills, success metrics</li></ul>
+<ul><li>[ ] Parsed data available for next workflow step</li></ul>
+
+<h3>REQ-WORKFLOW-004: Pinpoint Match Tab (P0)</h3>
+<strong>Description</strong>: System shall compare resume solutions to job description pain points with alignment scoring.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Alignment score calculation (0-100%)</li></ul>
+<ul><li>[ ] Match breakdown showing challenge → solution → metric</li></ul>
+<ul><li>[ ] Visual score display with color coding</li></ul>
+<ul><li>[ ] Recalculation capability</li></ul>
+<ul><li>[ ] Score persistence for campaign use</li></ul>
+
+<h3>REQ-WORKFLOW-005: Find Contact Tab (P0)</h3>
+<strong>Description</strong>: System shall discover contacts with email verification and confidence scoring.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Contact search by company, title, or LinkedIn URL</li></ul>
+<ul><li>[ ] Email verification with NeverBounce/MillionVerifier</li></ul>
+<ul><li>[ ] Verification badges (Valid/Risky/Invalid)</li></ul>
+<ul><li>[ ] Confidence scoring for each contact</li></ul>
+<ul><li>[ ] Contact selection for campaign</li></ul>
+
+<h3>REQ-WORKFLOW-006: Context Research Tab (P0)</h3>
+<strong>Description</strong>: System shall auto-pull company and contact summaries with variable exposure.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Company summary generation with {{company_summary}} variable</li></ul>
+<ul><li>[ ] Recent news extraction with {{recent_news}} variable</li></ul>
+<ul><li>[ ] Contact bio with {{contact_bio}} variable</li></ul>
+<ul><li>[ ] Editable fields for customization</li></ul>
+<ul><li>[ ] Variable exposure for email composition</li></ul>
+
+<h3>REQ-WORKFLOW-007: Offer Creation Tab (P0)</h3>
+<strong>Description</strong>: System shall build personalized pitch assets with audience-adaptive tone.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Tone selection: Recruiter (efficiency), Manager (competence), Exec (ROI)</li></ul>
+<ul><li>[ ] Format options: Text, Link, Video</li></ul>
+<ul><li>[ ] AI-generated offers based on pinpoint matches</li></ul>
+<ul><li>[ ] Custom offer creation capability</li></ul>
+<ul><li>[ ] Offer storage and retrieval</li></ul>
+
+<h3>REQ-WORKFLOW-008: Compose Tab (P0)</h3>
+<strong>Description</strong>: System shall generate emails with variable substitution and jargon clarity.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Variable substitution for all collected data</li></ul>
+<ul><li>[ ] Tone toggle for different audiences</li></ul>
+<ul><li>[ ] Jargon detection with plain-English explanations</li></ul>
+<ul><li>[ ] Live preview with variable replacement</li></ul>
+<ul><li>[ ] Email template storage</li></ul>
+
+<h3>REQ-WORKFLOW-009: Campaign Tab (P0)</h3>
+<strong>Description</strong>: System shall auto-generate 3-email sequences with deliverability checks.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Auto-creation of 3 emails with optimal timing</li></ul>
+<ul><li>[ ] Editable subject lines and body content</li></ul>
+<ul><li>[ ] Delay configuration (days/hours)</li></ul>
+<ul><li>[ ] Stop-on-reply controls</li></ul>
+<ul><li>[ ] Deliverability sub-panel with health checks</li></ul>
+
+<h3>REQ-WORKFLOW-010: Deliverability/Launch Tab (P0)</h3>
+<strong>Description</strong>: System shall perform pre-flight checks and execute campaign launch.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Pre-flight checks: email verification, spam score, DNS validation</li></ul>
+<ul><li>[ ] Bounce history and domain warmup verification</li></ul>
+<ul><li>[ ] Launch button enabled only after all checks pass</li></ul>
+<ul><li>[ ] Campaign execution with immediate and scheduled sends</li></ul>
+<ul><li>[ ] Launch confirmation with campaign ID</li></ul>
+
+<p>---</p>
+
+<h2>3. Authentication & User Management (REQ-AUTH)</h2>
+
+<h3>REQ-AUTH-001: User Registration (P0)</h3>
+<strong>Description</strong>: System shall allow new users to create accounts via email/password or OAuth (Google, Microsoft).
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Registration form collects: email, password, full name</li></ul>
+<ul><li>[ ] Password requirements: min 8 characters, 1 uppercase, 1 number, 1 special char</li></ul>
+<ul><li>[ ] Email verification sent upon signup (verify within 48 hours)</li></ul>
+<ul><li>[ ] OAuth flow redirects to provider, returns to RoleFerry with token</li></ul>
+<ul><li>[ ] Duplicate email returns error: "Email already registered"</li></ul>
+<ul><li>[ ] Successful signup redirects to onboarding (mode selection)</li></ul>
+
+<p>---</p>
+
+<h3>REQ-AUTH-002: Login (P0)</h3>
+<strong>Description</strong>: System shall authenticate users via email/password or OAuth.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Login form accepts email + password</li></ul>
+<ul><li>[ ] Invalid credentials return error: "Invalid email or password" (no hints)</li></ul>
+<ul><li>[ ] Successful login generates JWT token (15-min expiry) + refresh token (30-day)</li></ul>
+<ul><li>[ ] OAuth login checks if user exists; if not, redirects to signup completion</li></ul>
+<ul><li>[ ] "Remember me" checkbox extends refresh token to 90 days</li></ul>
+<ul><li>[ ] Failed login attempts >5 in 10 minutes triggers CAPTCHA</li></ul>
+
+<p>---</p>
+
+<h3>REQ-AUTH-003: Password Reset (P1)</h3>
+<strong>Description</strong>: System shall allow users to reset forgotten passwords.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] "Forgot password" link on login page</li></ul>
+<ul><li>[ ] User enters email → receives reset link (expires in 1 hour)</li></ul>
+<ul><li>[ ] Reset link redirects to password change form</li></ul>
+<ul><li>[ ] New password must meet complexity requirements</li></ul>
+<ul><li>[ ] Successful reset invalidates old password + all active sessions</li></ul>
+
+<p>---</p>
+
+<h3>REQ-AUTH-004: Mode Selection (P0)</h3>
+<strong>Description</strong>: System shall allow users to choose Job Seeker or Recruiter mode during onboarding.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Mode selection screen after signup</li></ul>
+<ul><li>[ ] Radio buttons: "I'm looking for a job" / "I'm hiring talent"</li></ul>
+<ul><li>[ ] Selection saved to User.mode (job_seeker | recruiter)</li></ul>
+<ul><li>[ ] Mode determines UI labels, features (e.g., "Applications" vs "Leads")</li></ul>
+<ul><li>[ ] Users can switch modes later in Settings (data preserved)</li></ul>
+
+<p>---</p>
+
+<h2>3. Onboarding & Profile Setup (REQ-ONBOARD)</h2>
+
+<h3>REQ-ONBOARD-001: Resume Upload (P0 - Job Seeker)</h3>
+<strong>Description</strong>: System shall allow job seekers to upload resume for AI parsing.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Upload accepts PDF, DOCX (max 5MB)</li></ul>
+<ul><li>[ ] AI extraction populates: roles, tenure, skills, accomplishments, metrics</li></ul>
+<ul><li>[ ] Extracted data displayed for user review/edit</li></ul>
+<ul><li>[ ] Resume PDF stored in S3 (private, signed URL for download)</li></ul>
+<ul><li>[ ] User can re-upload to replace resume</li></ul>
+
+<p>---</p>
+
+<h3>REQ-ONBOARD-002: IJP Wizard (P0 - Job Seeker)</h3>
+<strong>Description</strong>: System shall guide job seekers through Intent & Job Preferences setup.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Wizard steps: Values → Role Type → Location → Level → Company Size → Industries → Skills → Salary</li></ul>
+<ul><li>[ ] Progress bar shows completion %</li></ul>
+<ul><li>[ ] Each step saves automatically (no "Submit" at end)</li></ul>
+<ul><li>[ ] User can skip optional fields (Skills, Salary)</li></ul>
+<ul><li>[ ] "Save & Continue" navigates to next step</li></ul>
+<ul><li>[ ] Completion redirects to Jobs List</li></ul>
+
+<strong>Field Validations</strong>:
+<ul><li><strong>Values</strong>: Pick 3 from preset list</li></ul>
+<ul><li><strong>Location</strong>: Multi-select + "Remote OK" checkbox</li></ul>
+<ul><li><strong>Salary</strong>: Numeric, optional</li></ul>
+<ul><li><strong>Industries</strong>: Multi-select from taxonomy</li></ul>
+
+<p>---</p>
+
+<h3>REQ-ONBOARD-003: LinkedIn Import (P1 - Recruiter)</h3>
+<strong>Description</strong>: System shall allow recruiters to import candidate leads from LinkedIn.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] "Import from LinkedIn" button (OAuth connect)</li></ul>
+<ul><li>[ ] User authorizes LinkedIn access</li></ul>
+<ul><li>[ ] System fetches connections, saved candidates (LinkedIn API limits apply)</li></ul>
+<ul><li>[ ] Displayed in preview table (name, title, company)</li></ul>
+<ul><li>[ ] User selects candidates to import → creates Lead records</li></ul>
+
+<p>---</p>
+
+<h2>4. Job Discovery & Matching (REQ-JOBS)</h2>
+
+<h3>REQ-JOBS-001: Job List Display (P0)</h3>
+<strong>Description</strong>: System shall display jobs matched to user's IJP preferences.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Jobs list shows after IJP completion</li></ul>
+<ul><li>[ ] Each card displays: logo, title, company, location, comp range (if available), match score</li></ul>
+<ul><li>[ ] Match score: 0-100, color-coded (red <50, yellow 50-74, green 75+)</li></ul>
+<ul><li>[ ] Jobs sorted by match score descending (default)</li></ul>
+<ul><li>[ ] Pagination: 20 jobs per page</li></ul>
+<ul><li>[ ] Loading state (skeleton cards) during fetch</li></ul>
+
+<p>---</p>
+
+<h3>REQ-JOBS-002: Job Filters (P0)</h3>
+<strong>Description</strong>: System shall allow users to filter jobs by criteria.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Filters: Role (text search), Location (multi-select), Remote (checkbox), Visa (checkbox), Company Size, Industry, Salary Range</li></ul>
+<ul><li>[ ] Filters applied via API query params (real-time update, no page reload)</li></ul>
+<ul><li>[ ] Active filters displayed as removable chips</li></ul>
+<ul><li>[ ] "Clear all filters" button resets to IJP defaults</li></ul>
+<ul><li>[ ] Filter state persists in URL (shareable link)</li></ul>
+
+<p>---</p>
+
+<h3>REQ-JOBS-003: Job Detail View (P0)</h3>
+<strong>Description</strong>: System shall display full job details on click.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Clicking job card navigates to /jobs/{id}</li></ul>
+<ul><li>[ ] Tabs: Overview, Company</li></ul>
+<ul><li>[ ] <strong>Overview tab</strong>: Full JD, extracted keywords (tags), posted date, "Apply" button</li></ul>
+<ul><li>[ ] <strong>Company tab</strong>: Logo, industry, size, funding, Glassdoor rating (if available), social links</li></ul>
+<ul><li>[ ] "Back to Jobs" navigation</li></ul>
+<ul><li>[ ] "Save" and "Apply" buttons fixed at bottom</li></ul>
+
+<p>---</p>
+
+<h3>REQ-JOBS-004: Match Score Breakdown (P0)</h3>
+<strong>Description</strong>: System shall explain match score calculation.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Clicking match score shows modal</li></ul>
+<ul><li>[ ] Breakdown: Experience X%, Skills Y%, Industry Z%</li></ul>
+<ul><li>[ ] Each category shows matched criteria (e.g., "Your 5 years PM experience matches 'Senior PM' role")</li></ul>
+<ul><li>[ ] Copilot can expand explanation (natural language)</li></ul>
+
+<p>---</p>
+
+<h2>5. Application Tracking (REQ-TRACKER)</h2>
+
+<h3>REQ-TRACKER-001: Create Application (P0)</h3>
+<strong>Description</strong>: System shall create application record when user clicks "Apply".
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] "Apply" button on job detail/card</li></ul>
+<ul><li>[ ] Clicking creates Application record (user_id, job_id, status="applied", timestamp)</li></ul>
+<ul><li>[ ] Application appears in Tracker immediately</li></ul>
+<ul><li>[ ] Duplicate apply (same user + job) shows warning: "You already applied to this job"</li></ul>
+<ul><li>[ ] Enrichment job queued automatically</li></ul>
+
+<p>---</p>
+
+<h3>REQ-TRACKER-002: Board View (P0)</h3>
+<strong>Description</strong>: System shall display applications in Kanban board.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Columns (Job Seeker): Saved, Applied, Interviewing, Offer, Rejected</li></ul>
+<ul><li>[ ] Columns (Recruiter): Leads, Contacted, Appointments, Offers, Won/Lost</li></ul>
+<ul><li>[ ] Cards show: logo, title, company, last contact date, sequence status badge</li></ul>
+<ul><li>[ ] Drag & drop updates status (optimistic UI, API call on drop)</li></ul>
+<ul><li>[ ] Cards sortable within column (manual reorder)</li></ul>
+<ul><li>[ ] Empty columns show "No applications" placeholder</li></ul>
+
+<p>---</p>
+
+<h3>REQ-TRACKER-003: Table View (P1)</h3>
+<strong>Description</strong>: System shall provide table view of applications.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Toggle button: Board ↔ Table</li></ul>
+<ul><li>[ ] Columns: Company, Title, Status, Date Applied, Last Contact, Reply Status, Match Score</li></ul>
+<ul><li>[ ] Sortable by any column (click header)</li></ul>
+<ul><li>[ ] Filterable: text search (company/title), status dropdown, date range picker</li></ul>
+<ul><li>[ ] Pagination: 50 rows per page</li></ul>
+<ul><li>[ ] Row click opens application detail</li></ul>
+
+<p>---</p>
+
+<h3>REQ-TRACKER-004: Application Detail (P1)</h3>
+<strong>Description</strong>: System shall display detailed application information.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Modal or sidebar (clicking card/row)</li></ul>
+<ul><li>[ ] Sections: Job Info, Contacts, Outreach History, Notes, Interviews</li></ul>
+<ul><li>[ ] <strong>Job Info</strong>: Title, company, link to job detail</li></ul>
+<ul><li>[ ] <strong>Contacts</strong>: List of enriched contacts (name, title, email, LinkedIn, "Contact" button)</li></ul>
+<ul><li>[ ] <strong>Outreach History</strong>: Timeline (sent, delivered, opened, clicked, replied)</li></ul>
+<ul><li>[ ] <strong>Notes</strong>: Rich text editor (bold, bullets, links), save button</li></ul>
+<ul><li>[ ] <strong>Interviews</strong>: Add interview (date, time, stage, interviewer), calendar sync</li></ul>
+
+<p>---</p>
+
+<h3>REQ-TRACKER-005: CSV Import (P1)</h3>
+<strong>Description</strong>: System shall allow bulk import of applications via CSV.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] "Import CSV" button on Tracker</li></ul>
+<ul><li>[ ] Upload modal with template download link</li></ul>
+<ul><li>[ ] Required columns: Company, Title; Optional: Status, Date Applied, Notes</li></ul>
+<ul><li>[ ] Preview table shows parsed data (first 10 rows)</li></ul>
+<ul><li>[ ] Validation: missing required fields → error highlights</li></ul>
+<ul><li>[ ] Duplicate detection (same company + title) → skip or update (user choice)</li></ul>
+<ul><li>[ ] Import creates Application records + enrichment jobs</li></ul>
+<ul><li>[ ] Summary: "25 imported, 3 duplicates skipped, 2 errors"</li></ul>
+
+<p>---</p>
+
+<h3>REQ-TRACKER-006: CSV Export (P1)</h3>
+<strong>Description</strong>: System shall allow export of applications to CSV.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] "Export CSV" button on Tracker</li></ul>
+<ul><li>[ ] Exports current view (respects filters)</li></ul>
+<ul><li>[ ] Columns: Company, Title, Status, Date Applied, Last Contact, Reply Status, Notes</li></ul>
+<ul><li>[ ] UTF-8 encoding (handles international characters)</li></ul>
+<ul><li>[ ] File name: roleferry_applications_YYYY-MM-DD.csv</li></ul>
+<ul><li>[ ] Download triggers instantly (<5s for 500 rows)</li></ul>
+
+<p>---</p>
+
+<h2>6. Enrichment & Contact Discovery (REQ-ENRICH)</h2>
+
+<h3>REQ-ENRICH-001: Auto-Enrichment on Apply (P0)</h3>
+<strong>Description</strong>: System shall automatically find contacts when user applies to job.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Applying to job triggers enrichment job (Celery queue)</li></ul>
+<ul><li>[ ] Enrichment steps: Company domain → Find people → Email discovery → Verification</li></ul>
+<ul><li>[ ] Completion <30 seconds (P95)</li></ul>
+<ul><li>[ ] Results: 1-3 verified contacts saved</li></ul>
+<ul><li>[ ] User notification: "2 contacts found for Acme Corp"</li></ul>
+<ul><li>[ ] If no contacts found: "No contacts found. Add manually or try later."</li></ul>
+
+<p>---</p>
+
+<h3>REQ-ENRICH-002: Manual Contact Addition (P1)</h3>
+<strong>Description</strong>: System shall allow users to manually add contacts (e.g., from LinkedIn stalking).
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] "Add Contact" button on application detail</li></ul>
+<ul><li>[ ] Form: Name, Title, Email, LinkedIn URL</li></ul>
+<ul><li>[ ] Email validation: format check, optional verification</li></ul>
+<ul><li>[ ] LinkedIn URL triggers enrichment (fetch title, company)</li></ul>
+<ul><li>[ ] Contact added to application's contact list</li></ul>
+
+<p>---</p>
+
+<h3>REQ-ENRICH-003: Persona Filters (P1)</h3>
+<strong>Description</strong>: System shall apply persona filters to contact discovery.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Default persona (job seeker): Hiring Manager, Head of Dept, HR</li></ul>
+<ul><li>[ ] Default persona (recruiter): User-defined (via Persona Builder)</li></ul>
+<ul><li>[ ] Filters: Job titles, seniority (VP, Director, Manager), location, department</li></ul>
+<ul><li>[ ] Persona selection in enrichment settings (per application or global)</li></ul>
+<ul><li>[ ] Contact results ranked by persona match (VP > Director > Manager)</li></ul>
+
+<p>---</p>
+
+<h3>REQ-ENRICH-004: Email Verification (P0)</h3>
+<strong>Description</strong>: System shall verify email deliverability before sending.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Verification via NeverBounce or ZeroBounce</li></ul>
+<ul><li>[ ] Statuses: Valid (0.95 confidence), Risky (0.70-0.94), Invalid (<0.70), Unknown</li></ul>
+<ul><li>[ ] Invalid emails excluded from sequences</li></ul>
+<ul><li>[ ] Risky emails included with warning badge</li></ul>
+<ul><li>[ ] Re-verification available (manual trigger, or auto after 30 days)</li></ul>
+
+<p>---</p>
+
+<h2>7. Outreach Sequences (REQ-SEQ)</h2>
+
+<h3>REQ-SEQ-001: Start Sequence (P0)</h3>
+<strong>Description</strong>: System shall launch email sequence after enrichment.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Sequence auto-starts after contacts found (default behavior)</li></ul>
+<ul><li>[ ] User can review draft before sending (modal: subject, body, contacts)</li></ul>
+<ul><li>[ ] "Use Author" button regenerates draft (AI)</li></ul>
+<ul><li>[ ] "Send" button queues sequence (confirmation: "Sequence started")</li></ul>
+<ul><li>[ ] Sequence appears in Tracker with status badge ("Step 1 sent")</li></ul>
+
+<p>---</p>
+
+<h3>REQ-SEQ-002: Multi-Step Sequences (P0)</h3>
+<strong>Description</strong>: System shall support sequences with delays between steps.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Sequence template defines steps: Step 1 (delay: 0), Step 2 (delay: 2 days), Step 3 (delay: 3 days)</li></ul>
+<ul><li>[ ] Delays calculated from previous step's delivery (not send time)</li></ul>
+<ul><li>[ ] Queued steps visible in application detail ("Step 2 scheduled for Oct 15")</li></ul>
+<ul><li>[ ] Stop-on-reply: If contact replies, cancel future steps</li></ul>
+<ul><li>[ ] Manual stop: User can pause/cancel sequence</li></ul>
+
+<p>---</p>
+
+<h3>REQ-SEQ-003: Variable Substitution (P0)</h3>
+<strong>Description</strong>: System shall substitute variables in email templates.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Supported variables: <code>{{first_name}}</code>, <code>{{last_name}}</code>, <code>{{company}}</code>, <code>{{role}}</code>, <code>{{my_name}}</code>, custom (from resume)</li></ul>
+<ul><li>[ ] Substitution happens at send time (not template edit)</li></ul>
+<ul><li>[ ] Missing variables replaced with fallback (e.g., {{first_name}} → "there")</li></ul>
+<ul><li>[ ] Preview shows substituted version</li></ul>
+<ul><li>[ ] Custom variables: User can define (e.g., {{my_metric}} → "30% faster time-to-hire")</li></ul>
+
+<p>---</p>
+
+<h3>REQ-SEQ-004: Sequence Templates (P1)</h3>
+<strong>Description</strong>: System shall provide and allow creation of sequence templates.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Platform templates: "Job Seeker Default", "Recruiter Cold Intro", "Agency Outreach"</li></ul>
+<ul><li>[ ] User can create custom templates (saved to library)</li></ul>
+<ul><li>[ ] Template editor: Add/remove steps, edit subject/body, set delays</li></ul>
+<ul><li>[ ] Templates support variables</li></ul>
+<ul><li>[ ] Templates shareable (Team plan: team library)</li></ul>
+
+<p>---</p>
+
+<h3>REQ-SEQ-005: A/B Testing (P2)</h3>
+<strong>Description</strong>: System shall allow A/B testing of subject lines.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Enable A/B on sequence step</li></ul>
+<ul><li>[ ] Define Variant A and B (subject lines)</li></ul>
+<ul><li>[ ] Split: 50/50 default, adjustable (e.g., 70/30)</li></ul>
+<ul><li>[ ] Results report: Open rate (if CTD enabled), reply rate per variant</li></ul>
+<ul><li>[ ] Winner: Variant with higher reply rate after 100 sends</li></ul>
+
+<p>---</p>
+
+<h2>8. Deliverability (REQ-DELIVER)</h2>
+
+<h3>REQ-DELIVER-001: Managed Sending Domains (P0)</h3>
+<strong>Description</strong>: System shall send emails from RoleFerry-owned domains, not user's personal email.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Outreach sends from mailboxes like auto1@rf-send-01.com</li></ul>
+<ul><li>[ ] Reply-to header set to user's email</li></ul>
+<ul><li>[ ] User never sees mailbox details (abstracted)</li></ul>
+<ul><li>[ ] Domain rotation: System selects healthy mailbox per send</li></ul>
+
+<p>---</p>
+
+<h3>REQ-DELIVER-002: Health Monitoring (P0)</h3>
+<strong>Description</strong>: System shall monitor deliverability health per mailbox.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Health score: 0-100 (calculated every 6 hours)</li></ul>
+<ul><li>[ ] Factors: Bounce rate, spam reports, send volume, warmup age</li></ul>
+<ul><li>[ ] Thresholds: >90 (Excellent), 70-89 (Good), 50-69 (Fair), <50 (Poor)</li></ul>
+<ul><li>[ ] Poor health (<50) auto-pauses mailbox</li></ul>
+<ul><li>[ ] Alert sent to ops team when health drops >10 points in 24 hours</li></ul>
+
+<p>---</p>
+
+<h3>REQ-DELIVER-003: Throttling (P0)</h3>
+<strong>Description</strong>: System shall enforce daily send caps per mailbox.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Default cap: 50 emails/day per mailbox</li></ul>
+<ul><li>[ ] Cap enforced: Sends beyond cap queued for next day</li></ul>
+<ul><li>[ ] Counter resets at midnight UTC</li></ul>
+<ul><li>[ ] Mailbox rotation: If Mailbox A hits cap, use Mailbox B</li></ul>
+<ul><li>[ ] User notification if all mailboxes capped: "Sending paused; will resume tomorrow"</li></ul>
+
+<p>---</p>
+
+<h3>REQ-DELIVER-004: Warmup Protocol (P0)</h3>
+<strong>Description</strong>: System shall gradually warm up new sending domains.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] New mailbox: Status="warmup", daily cap=5</li></ul>
+<ul><li>[ ] Schedule: Day 1-3 (5/day), Day 4-7 (10/day), Day 8-14 (20/day), Day 15-30 (increase 10%/day to 50)</li></ul>
+<ul><li>[ ] Warmup sends to seed accounts (internal RoleFerry emails, auto-reply enabled)</li></ul>
+<ul><li>[ ] After 30 days: Status="active", joins production pool</li></ul>
+<ul><li>[ ] Ops dashboard shows warmup progress per domain</li></ul>
+
+<p>---</p>
+
+<h3>REQ-DELIVER-005: Custom Tracking Domain (P1)</h3>
+<strong>Description</strong>: System shall allow users to set up custom tracking domains for link safety.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Settings → Deliverability → "Custom Tracking Domain"</li></ul>
+<ul><li>[ ] Setup wizard: Enter domain (e.g., click.mycompany.com), add DNS records (CNAME), verify</li></ul>
+<ul><li>[ ] Verification: System checks DNS propagation (retry every 5 min, 24-hour timeout)</li></ul>
+<ul><li>[ ] Enabled: All links in sequences rewritten to CTD (e.g., linkedin.com/in/X → click.mycompany.com/abc → redirects)</li></ul>
+<ul><li>[ ] Analytics: Click tracking logged, visible in application detail</li></ul>
+
+<p>---</p>
+
+<h2>9. AI Features (REQ-AI)</h2>
+
+<h3>REQ-AI-001: Match Scoring (P0)</h3>
+<strong>Description</strong>: System shall calculate job-to-user match score using ML.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Score: 0-100 (0-49 Low, 50-74 Fair, 75-89 Strong, 90+ Excellent)</li></ul>
+<ul><li>[ ] Breakdown: Experience %, Skills %, Industry %</li></ul>
+<ul><li>[ ] Model inputs: User IJP, resume extract, job title/JD, company metadata</li></ul>
+<ul><li>[ ] Scores cached (24-hour TTL)</li></ul>
+<ul><li>[ ] Re-scoring triggered on IJP change</li></ul>
+
+<p>---</p>
+
+<h3>REQ-AI-002: Draft Generation (P0)</h3>
+<strong>Description</strong>: System shall generate personalized email drafts using LLM.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Inputs: User resume (roles, metrics), job title/company, contact name/title</li></ul>
+<ul><li>[ ] Output: Subject (1 line) + Body (3-5 sentences) + LivePage link (optional)</li></ul>
+<ul><li>[ ] Tone: Professional but conversational (avoid overly formal)</li></ul>
+<ul><li>[ ] Variables pre-filled: {{first_name}}, {{company}}, {{role}}</li></ul>
+<ul><li>[ ] Regenerate button: New draft if user dislikes first version</li></ul>
+<ul><li>[ ] Generation time: <5 seconds (P95)</li></ul>
+
+<p>---</p>
+
+<h3>REQ-AI-003: Copilot Q&A (P1)</h3>
+<strong>Description</strong>: System shall provide context-aware AI assistant (Copilot).
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Copilot panel (right rail, persistent)</li></ul>
+<ul><li>[ ] Context: Current page (job detail, application detail, tracker)</li></ul>
+<ul><li>[ ] Preset questions: "Why is this a fit?", "Write an email", "Show insiders"</li></ul>
+<ul><li>[ ] Custom questions: Free text input</li></ul>
+<ul><li>[ ] Responses: Streaming (real-time), <5s first token</li></ul>
+<ul><li>[ ] Citations: Copilot references user resume, job JD (e.g., "Based on your 5 years as PM...")</li></ul>
+
+<p>---</p>
+
+<h3>REQ-AI-004: Resume Parsing (P0)</h3>
+<strong>Description</strong>: System shall extract structured data from resume PDFs.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Upload PDF/DOCX → AI extraction</li></ul>
+<ul><li>[ ] Extracted fields: roles[], tenure[], key_metrics[], accomplishments[], skills[]</li></ul>
+<ul><li>[ ] Display extracted data for user review/edit</li></ul>
+<ul><li>[ ] Editable inline (click to edit)</li></ul>
+<ul><li>[ ] Re-parse button if extraction poor</li></ul>
+<ul><li>[ ] Parsing time: <10 seconds</li></ul>
+
+<p>---</p>
+
+<h2>10. Analytics & Reporting (REQ-ANALYTICS)</h2>
+
+<h3>REQ-ANALYTICS-001: Dashboard KPIs (P1)</h3>
+<strong>Description</strong>: System shall display key metrics on dashboard.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Metrics: Total applications, Reply rate, Interviews scheduled, Offers received, Avg match score</li></ul>
+<ul><li>[ ] Time filters: Last 7 days, 30 days, 90 days, All time</li></ul>
+<ul><li>[ ] Comparison: vs. previous period (e.g., "+12% from last month")</li></ul>
+<ul><li>[ ] Visualizations: Line charts (trend), bar charts (status breakdown)</li></ul>
+
+<p>---</p>
+
+<h3>REQ-ANALYTICS-002: Sequence Performance (P1)</h3>
+<strong>Description</strong>: System shall report on sequence effectiveness.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Report: Sequence name, Sent, Delivered, Opened (if CTD), Clicked, Replied</li></ul>
+<ul><li>[ ] Reply rate % (Replied / Delivered)</li></ul>
+<ul><li>[ ] Sortable by reply rate</li></ul>
+<ul><li>[ ] Filter by date range</li></ul>
+<ul><li>[ ] Export to CSV</li></ul>
+
+<p>---</p>
+
+<h3>REQ-ANALYTICS-003: Time-to-Interview (P2)</h3>
+<strong>Description</strong>: System shall calculate average days from Apply to first interview.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Metric: Median days (Applied status → Interviewing status)</li></ul>
+<ul><li>[ ] Segmentation: By company size, industry, role level</li></ul>
+<ul><li>[ ] Benchmark: Platform average (anonymized)</li></ul>
+<ul><li>[ ] Display on dashboard ("Your avg: 12 days; Platform avg: 18 days")</li></ul>
+
+<p>---</p>
+
+<h2>11. Settings & Preferences (REQ-SETTINGS)</h2>
+
+<h3>REQ-SETTINGS-001: Edit Profile (P1)</h3>
+<strong>Description</strong>: System shall allow users to update profile information.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Settings → Profile</li></ul>
+<ul><li>[ ] Editable: Name, email, password, resume</li></ul>
+<ul><li>[ ] Email change requires verification (send code to new email)</li></ul>
+<ul><li>[ ] Password change requires current password</li></ul>
+<ul><li>[ ] Avatar upload (optional, 5MB max, JPG/PNG)</li></ul>
+
+<p>---</p>
+
+<h3>REQ-SETTINGS-002: Notification Preferences (P1)</h3>
+<strong>Description</strong>: System shall allow users to control notifications.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Settings → Notifications</li></ul>
+<ul><li>[ ] Checkboxes: Reply received, Interview reminder, Health alert, Weekly digest</li></ul>
+<ul><li>[ ] Toggle: Email vs. Push (if mobile app)</li></ul>
+<ul><li>[ ] Unsubscribe link in emails honors preferences</li></ul>
+
+<p>---</p>
+
+<h3>REQ-SETTINGS-003: Switch Mode (P1)</h3>
+<strong>Description</strong>: System shall allow users to switch between Job Seeker and Recruiter modes.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Settings → Mode</li></ul>
+<ul><li>[ ] Radio buttons: Job Seeker / Recruiter</li></ul>
+<ul><li>[ ] Confirmation modal: "Switching will change UI labels and features. Continue?"</li></ul>
+<ul><li>[ ] Data preserved (applications, contacts, sequences)</li></ul>
+<ul><li>[ ] UI updates immediately (column names, terminology)</li></ul>
+
+<p>---</p>
+
+<h3>REQ-SETTINGS-004: Delete Account (P1)</h3>
+<strong>Description</strong>: System shall allow users to permanently delete accounts (GDPR).
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Settings → Account → "Delete Account"</li></ul>
+<ul><li>[ ] Confirmation: "This is permanent. All data will be deleted within 30 days."</li></ul>
+<ul><li>[ ] Password re-entry required</li></ul>
+<ul><li>[ ] Deletion process: Stop sequences, anonymize data, delete PII</li></ul>
+<ul><li>[ ] Email confirmation: "Your account has been deleted"</li></ul>
+
+<p>---</p>
+
+<h2>12. Team Features (REQ-TEAM) - Recruiter Mode</h2>
+
+<h3>REQ-TEAM-001: Team Workspaces (P1)</h3>
+<strong>Description</strong>: System shall support multiple users in shared workspace (Teams plan).
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] Workspace creation: Admin invites users (email)</li></ul>
+<ul><li>[ ] Roles: Admin (full access), Member (read/write), Viewer (read-only)</li></ul>
+<ul><li>[ ] Shared resources: Leads, sequences, personas, templates</li></ul>
+<ul><li>[ ] Activity log: Who did what (audit trail)</li></ul>
+
+<p>---</p>
+
+<h3>REQ-TEAM-002: Lead Assignment (P1)</h3>
+<strong>Description</strong>: System shall allow assigning leads to team members.
+
+<strong>Acceptance Criteria</strong>:
+<ul><li>[ ] "Assign to" dropdown on lead card/detail</li></ul>
+<ul><li>[ ] Assignee receives notification</li></ul>
+<ul><li>[ ] Filter tracker by assignee</li></ul>
+<ul><li>[ ] Reassignment updates assignee, logs activity</li></ul>
+
+<p>---</p>
+
+<h2>13. Acceptance Testing</h2>
+
+<h3>13.1 Test Coverage</h3>
+<ul><li>[ ] Unit tests: 80% code coverage (backend services)</li></ul>
+<ul><li>[ ] Integration tests: All API endpoints</li></ul>
+<ul><li>[ ] E2E tests: Critical flows (signup → apply → track)</li></ul>
+<ul><li>[ ] Performance tests: API P95 <500ms, enrichment <30s</li></ul>
+
+<h3>13.2 User Acceptance Testing (UAT)</h3>
+<ul><li>[ ] Beta users test all P0 features</li></ul>
+<ul><li>[ ] Feedback collected via in-app surveys</li></ul>
+<ul><li>[ ] Bug reports triaged (P0 = blocker, P1 = fix pre-launch, P2 = backlog)</li></ul>
+
+<p>---</p>
+
+<h2>14. Non-Functional Requirements</h2>
+
+<h3>14.1 Performance</h3>
+<ul><li><strong>REQ-NFR-001</strong>: API response time P95 <500ms</li></ul>
+<ul><li><strong>REQ-NFR-002</strong>: Enrichment completion P95 <30s</li></ul>
+<ul><li><strong>REQ-NFR-003</strong>: Email send queuing <5 minutes</li></ul>
+
+<h3>14.2 Scalability</h3>
+<ul><li><strong>REQ-NFR-004</strong>: Support 10K concurrent users</li></ul>
+<ul><li><strong>REQ-NFR-005</strong>: Handle 10K enrichments/day</li></ul>
+<ul><li><strong>REQ-NFR-006</strong>: Send 100K emails/day</li></ul>
+
+<h3>14.3 Security</h3>
+<ul><li><strong>REQ-NFR-007</strong>: All traffic HTTPS (TLS 1.3)</li></ul>
+<ul><li><strong>REQ-NFR-008</strong>: Passwords hashed (bcrypt)</li></ul>
+<ul><li><strong>REQ-NFR-009</strong>: PII encrypted at rest (AES-256)</li></ul>
+
+<h3>14.4 Availability</h3>
+<ul><li><strong>REQ-NFR-010</strong>: 99.5% uptime SLA (paid users)</li></ul>
+<ul><li><strong>REQ-NFR-011</strong>: <15-minute recovery time (database failover)</li></ul>
+
+<p>---</p>
+
+<strong>Document Owner</strong>: Product Management  
+<strong>Reviewed By</strong>: Engineering, QA, Design  
+<strong>Version</strong>: 1.0  
+<strong>Date</strong>: October 2025  
+<strong>Status</strong>: Approved for Development
+
+
+    </div>
+
+    <div class="navigation">
+        <a href='html/01-strategic/executive-summary.html' class='nav-button'>← Previous</a>
+        
+        <div class="nav-center">
+            <h3>Functional Requirements</h3>
+            <p>Documentation Navigation</p>
+        </div>
+        
+        <a href='html/03-architecture/system-architecture_conceptual.html' class='nav-button'>Next →</a>
+    </div>
+
+    <div class="footer">
+        <h3>RoleFerry Documentation</h3>
+        <p>Complete platform documentation with navigation</p>
+        <p><strong>Generated:</strong> 2025-10-24 19:28:53</p>
+    </div>
+</body>
+</html>

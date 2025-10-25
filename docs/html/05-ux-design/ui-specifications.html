@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Specifications - RoleFerry Documentation</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f8fafc;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .content h1, .content h2, .content h3, .content h4 {
+            color: #2563eb;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .content h1 {
+            font-size: 2rem;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 0.5rem;
+        }
+        .content h2 {
+            font-size: 1.5rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.25rem;
+        }
+        .content h3 {
+            font-size: 1.25rem;
+        }
+        .content p {
+            margin-bottom: 1rem;
+        }
+        .content ul, .content ol {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+        .content li {
+            margin-bottom: 0.5rem;
+        }
+        .content code {
+            background: #f1f5f9;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .content pre {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        .content pre code {
+            background: none;
+            padding: 0;
+        }
+        .content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .content th, .content td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        .content th {
+            background: #f8fafc;
+            font-weight: 600;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .nav-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .nav-button:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+        .nav-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .nav-button:disabled:hover {
+            background: #9ca3af;
+            transform: none;
+        }
+        .nav-center {
+            text-align: center;
+            flex: 1;
+        }
+        .nav-center h3 {
+            margin: 0;
+            color: #374151;
+        }
+        .nav-center p {
+            margin: 0.25rem 0 0 0;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem;
+            background: #374151;
+            color: white;
+            border-radius: 12px;
+        }
+        .breadcrumb {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+        .breadcrumb a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            .header h1 {
+                font-size: 2rem;
+            }
+            .navigation {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .nav-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RoleFerry Documentation</h1>
+        <p>UI Specifications</p>
+    </div>
+
+    <div class="breadcrumb">
+        <a href="../index.html">Home</a> &gt; 
+        <a href="../WEEK_4_UPDATES.html">Week 4 Updates</a> &gt; 
+        UI Specifications
+    </div>
+
+    <div class="navigation">
+        <a href='html/04-technical/api-specification.html' class='nav-button'>← Previous</a>
+        
+        <div class="nav-center">
+            <h3>UI Specifications</h3>
+            <p>Documentation Navigation</p>
+        </div>
+        
+        <a href='html/08-business/investor-faq.html' class='nav-button'>Next →</a>
+    </div>
+
+    <div class="content">
+        <h1>UI Specifications</h1>
+<h2>RoleFerry Platform</h2>
+
+<strong>Document Type</strong>: Design Specifications  
+<strong>Audience</strong>: Frontend Engineers, Designers, Product  
+<strong>Purpose</strong>: Detailed UI component specs and interaction patterns
+
+<p>---</p>
+
+<h2>1. Design System Overview</h2>
+
+<h3>1.1 Design Principles</h3>
+<ul><li><strong>Clarity</strong>: Information hierarchy obvious at a glance</li></ul>
+<ul><li><strong>Efficiency</strong>: Minimize clicks to complete tasks (Apply in 1 click, not 5)</li></ul>
+<ul><li><strong>Feedback</strong>: Immediate visual confirmation of actions</li></ul>
+<ul><li><strong>Accessibility</strong>: WCAG 2.1 AA compliance (contrast ratios, keyboard nav)</li></ul>
+<ul><li><strong>Consistency</strong>: Reusable patterns across Job Seeker / Recruiter modes</li></ul>
+
+<h3>1.2 Inspiration References</h3>
+<ul><li><strong>Simplify</strong>: Clean kanban boards, card-based job lists</li></ul>
+<ul><li><strong>Linear</strong>: Fast keyboard shortcuts, command palette, sleek table views</li></ul>
+<ul><li><strong>Apollo.io</strong>: Dense data tables, inline editing, bulk actions</li></ul>
+<ul><li><strong>Instantly</strong>: Health score visualizations, traffic light colors</li></ul>
+<ul><li><strong>Jobright</strong>: Job card layouts, match scoring, filter systems</li></ul>
+<ul><li><strong>Welcome to the Jungle</strong>: Preference wizards, user onboarding flows</li></ul>
+
+<p>---</p>
+
+<h2>2. 10-Tab Workflow UI Specifications</h2>
+
+<h3>2.1 Navigation Structure</h3>
+<strong>Primary Workflow Tabs</strong> (10 tabs):
+<ul><li>Job Preferences / Ideal Client Profile (ICP)</li></ul>
+<ul><li>Resume / Candidate Profile  </li></ul>
+<ul><li>Job Descriptions</li></ul>
+<ul><li>Pinpoint Match</li></ul>
+<ul><li>Find Contact</li></ul>
+<ul><li>Context (Research)</li></ul>
+<ul><li>Offer Creation</li></ul>
+<ul><li>Compose</li></ul>
+<ul><li>Campaign</li></ul>
+<ul><li>Deliverability / Launch</li></ul>
+
+<strong>Utility Tabs</strong> (4 tabs):
+<ul><li>Dashboard</li></ul>
+<ul><li>Analytics / Insights</li></ul>
+<ul><li>Settings / Account</li></ul>
+<ul><li>Help / Support</li></ul>
+
+<h3>2.2 Mode Toggle Component</h3>
+<strong>Location</strong>: Top-right of navigation
+<strong>Functionality</strong>: 
+<ul><li>Toggle between "Job Seeker" and "Recruiter" modes</li></ul>
+<ul><li>Dynamic label updates across all tabs</li></ul>
+<ul><li>Persistent state (localStorage)</li></ul>
+<ul><li>Visual feedback with active/inactive states</li></ul>
+
+<h3>2.3 Tab-Specific UI Patterns</h3>
+
+<h4>Job Preferences/ICP Tab</h4>
+<ul><li><strong>Form Layout</strong>: Multi-column grid for efficient data entry</li></ul>
+<ul><li><strong>Dynamic Labels</strong>: "Job Preferences" (Job Seeker) vs "Ideal Client Profile (ICP)" (Recruiter)</li></ul>
+<ul><li><strong>Field Types</strong>: Multi-select dropdowns, text inputs, range sliders</li></ul>
+<ul><li><strong>Validation</strong>: Real-time feedback on required fields</li></ul>
+
+<h4>Resume/Candidate Profile Tab</h4>
+<ul><li><strong>File Upload</strong>: Drag-and-drop zone with progress indicator</li></ul>
+<ul><li><strong>AI Parsing</strong>: Loading states with estimated time remaining</li></ul>
+<ul><li><strong>Data Display</strong>: Structured cards showing extracted information</li></ul>
+<ul><li><strong>Edit Capability</strong>: Inline editing of parsed data</li></ul>
+
+<h4>Pinpoint Match Tab</h4>
+<ul><li><strong>Score Display</strong>: Large circular progress indicator (0-100%)</li></ul>
+<ul><li><strong>Match Breakdown</strong>: Expandable cards showing challenge → solution → metric</li></ul>
+<ul><li><strong>Color Coding</strong>: Green (90%+), Blue (75-89%), Yellow (50-74%), Red (<50%)</li></ul>
+<ul><li><strong>Recalculation</strong>: Prominent button for score updates</li></ul>
+
+<h4>Find Contact Tab</h4>
+<ul><li><strong>Search Interface</strong>: Auto-complete with company/title suggestions</li></ul>
+<ul><li><strong>Contact Cards</strong>: Name, title, email with verification badges</li></ul>
+<ul><li><strong>Verification Badges</strong>: Color-coded (Green=Valid, Yellow=Risky, Red=Invalid)</li></ul>
+<ul><li><strong>Confidence Scores</strong>: Percentage display with visual indicators</li></ul>
+
+<h4>Compose Tab</h4>
+<ul><li><strong>Variable Panel</strong>: Sidebar showing available variables with live preview</li></ul>
+<ul><li><strong>Tone Selector</strong>: Radio buttons for Recruiter/Manager/Exec</li></ul>
+<ul><li><strong>Jargon Detection</strong>: Highlighted terms with tooltip explanations</li></ul>
+<ul><li><strong>Live Preview</strong>: Real-time email rendering with variable substitution</li></ul>
+
+<h4>Campaign Tab</h4>
+<ul><li><strong>Email Steps</strong>: Expandable cards for each email in sequence</li></ul>
+<ul><li><strong>Timing Controls</strong>: Day/hour selectors for delays</li></ul>
+<ul><li><strong>Deliverability Panel</strong>: Health checks with pass/warning/fail indicators</li></ul>
+<ul><li><strong>Launch Controls</strong>: Prominent launch button with pre-flight status</li></ul>
+
+<h3>2.4 Responsive Design</h3>
+<ul><li><strong>Mobile</strong>: Stacked layout with collapsible sections</li></ul>
+<ul><li><strong>Tablet</strong>: Two-column layout with sidebar navigation</li></ul>
+<ul><li><strong>Desktop</strong>: Full 10-tab horizontal navigation with persistent sidebar</li></ul>
+
+<p>---</p>
+
+<h2>3. Typography</h2>
+
+<h3>2.1 Font Families</h3>
+<ul><li><strong>Primary</strong>: Inter (headings, body text)</li></ul>
+<ul><li><strong>Monospace</strong>: JetBrains Mono (code, API keys, email addresses)</li></ul>
+
+<h3>2.2 Scale</h3>
+| Element | Size | Weight | Line Height | Usage |
+|---------|------|--------|-------------|-------|
+| <strong>H1</strong> | 32px | 700 | 40px | Page titles ("Jobs", "Tracker") |
+| <strong>H2</strong> | 24px | 600 | 32px | Section headings ("Your Applications") |
+| <strong>H3</strong> | 18px | 600 | 28px | Card titles (Job title, Company name) |
+| <strong>Body</strong> | 16px | 400 | 24px | Paragraphs, descriptions |
+| <strong>Small</strong> | 14px | 400 | 20px | Meta info (dates, counts) |
+| <strong>Caption</strong> | 12px | 400 | 16px | Hints, helper text |
+
+<p>---</p>
+
+<h2>3. Color Palette</h2>
+
+<h3>3.1 Brand Colors</h3>
+<pre><code>css
+--primary: #2563EB; /<em> Blue 600 - CTAs, links </em>/
+--primary-hover: #1D4ED8; /<em> Blue 700 </em>/
+--primary-light: #DBEAFE; /<em> Blue 100 - backgrounds </em>/
+</code></pre>
+
+<h3>3.2 Semantic Colors</h3>
+<pre><code>css
+/<em> Success (green) </em>/
+--success: #10B981; /<em> Green 500 - Verified, Delivered </em>/
+--success-bg: #D1FAE5; /<em> Green 100 </em>/
+
+<p>/<em> Warning (yellow) </em>/
+--warning: #F59E0B; /<em> Amber 500 - Fair match, Risky email </em>/
+--warning-bg: #FEF3C7; /<em> Amber 100 </em>/</p>
+
+<p>/<em> Error (red) </em>/
+--error: #EF4444; /<em> Red 500 - Invalid, Bounced </em>/
+--error-bg: #FEE2E2; /<em> Red 100 </em>/</p>
+
+<p>/<em> Info (blue) </em>/
+--info: #3B82F6; /<em> Blue 500 - Notifications </em>/
+--info-bg: #DBEAFE; /<em> Blue 100 </em>/
+</code></pre></p>
+
+<h3>3.3 Neutrals</h3>
+<pre><code>css
+--gray-50: #F9FAFB;
+--gray-100: #F3F4F6;
+--gray-200: #E5E7EB;
+--gray-300: #D1D5DB;
+--gray-500: #6B7280; /<em> Text secondary </em>/
+--gray-700: #374151; /<em> Text primary </em>/
+--gray-900: #111827; /<em> Headings </em>/
+</code></pre>
+
+<h3>3.4 Match Score Colors</h3>
+<pre><code>css
+--match-low: #EF4444; /<em> Red - 0-49 </em>/
+--match-fair: #F59E0B; /<em> Amber - 50-74 </em>/
+--match-strong: #10B981; /<em> Green - 75-89 </em>/
+--match-excellent: #8B5CF6; /<em> Purple - 90+ </em>/
+</code></pre>
+
+<p>---</p>
+
+<h2>4. Spacing System</h2>
+
+<strong>Base unit</strong>: 4px (Tailwind-style 4-pt grid)
+
+<pre><code>css
+--space-1: 4px;
+--space-2: 8px;
+--space-3: 12px;
+--space-4: 16px;
+--space-5: 20px;
+--space-6: 24px;
+--space-8: 32px;
+--space-10: 40px;
+--space-12: 48px;
+--space-16: 64px;
+</code></pre>
+
+<strong>Usage</strong>:
+<ul><li>Card padding: <code>space-6</code> (24px)</li></ul>
+<ul><li>Button padding: <code>space-3</code> horizontal, <code>space-2</code> vertical</li></ul>
+<ul><li>Section gaps: <code>space-8</code> (32px)</li></ul>
+
+<p>---</p>
+
+<h2>5. Component Specifications</h2>
+
+<h3>5.1 Job Card</h3>
+
+<strong>Layout</strong>:
+<pre><code>
+┌─────────────────────────────────────────────┐
+│ [Logo]  Senior Product Manager              │
+│         Acme Corp · San Francisco · Remote  │
+│         $150K-$200K · Posted 2 days ago     │
+│                                             │
+│         [85] Strong Match ▼                 │
+│         Experience: 90% Skills: 80%         │
+│                                             │
+│         [Apply] [Save] [Ask Copilot]       │
+└─────────────────────────────────────────────┘
+</code></pre>
+
+<strong>Specs</strong>:
+<ul><li><strong>Width</strong>: 100% (responsive grid: 1 col mobile, 2 col tablet, 3 col desktop)</li></ul>
+<ul><li><strong>Height</strong>: Auto (min 180px)</li></ul>
+<ul><li><strong>Padding</strong>: 24px</li></ul>
+<ul><li><strong>Border</strong>: 1px solid gray-200</li></ul>
+<ul><li><strong>Border-radius</strong>: 8px</li></ul>
+<ul><li><strong>Hover</strong>: Shadow elevation (0 → 4px blur), border → primary</li></ul>
+
+<strong>Match Score Badge</strong>:
+<ul><li><strong>Shape</strong>: Rounded pill (40px height)</li></ul>
+<ul><li><strong>Position</strong>: Top-right or below title</li></ul>
+<ul><li><strong>Colors</strong>: See 3.4 (red/amber/green/purple)</li></ul>
+<ul><li><strong>Format</strong>: "[Score] Label" (e.g., "85 Strong Match")</li></ul>
+
+<strong>Buttons</strong>:
+<ul><li><strong>Apply</strong>: Primary button (blue, full-width on mobile)</li></ul>
+<ul><li><strong>Save</strong>: Secondary button (outline, gray)</li></ul>
+<ul><li><strong>Ask Copilot</strong>: Ghost button (no border, gray text)</li></ul>
+
+<p>---</p>
+
+<h3>5.2 Application Card (Tracker Board)</h3>
+
+<strong>Layout</strong>:
+<pre><code>
+┌─────────────────────────────┐
+│ [Logo] Acme Corp            │
+│ Senior PM                   │
+│                             │
+│ Last contact: 2 days ago    │
+│ [Step 1 sent]  [1 reply]   │
+│                             │
+│ ... (notes icon)            │
+└─────────────────────────────┘
+</code></pre>
+
+<strong>Specs</strong>:
+<ul><li><strong>Width</strong>: 280px (fixed for kanban columns)</li></ul>
+<ul><li><strong>Height</strong>: Auto (min 140px)</li></ul>
+<ul><li><strong>Draggable</strong>: Yes (drag handle = entire card)</li></ul>
+<ul><li><strong>Badges</strong>: Sequence status ("Step 1 sent"), reply state ("1 reply")</li></ul>
+
+<strong>Status Colors</strong>:
+<ul><li><strong>Saved</strong>: Gray</li></ul>
+<ul><li><strong>Applied</strong>: Blue</li></ul>
+<ul><li><strong>Interviewing</strong>: Green</li></ul>
+<ul><li><strong>Offer</strong>: Purple</li></ul>
+<ul><li><strong>Rejected</strong>: Red</li></ul>
+
+<p>---</p>
+
+<h3>5.3 Kanban Board (Tracker)</h3>
+
+<strong>Layout</strong>:
+<pre><code>
+┌─────────────────────────────────────────────────────────────────────────┐
+│ [Board] [Table]                          [Import CSV] [Export CSV]      │
+├────────────┬────────────┬──────────────┬───────────┬───────────────────┤
+│  Saved (5) │ Applied(12)│ Interviewing │  Offer(1) │  Rejected (3)     │
+│            │            │      (3)     │           │                   │
+│  [Card 1]  │  [Card A]  │  [Card X]    │  [Card Z] │  [Card R1]        │
+│  [Card 2]  │  [Card B]  │  [Card Y]    │           │  [Card R2]        │
+│  ...       │  ...       │              │           │  ...              │
+│            │            │              │           │                   │
+│  + Add     │  + Add     │  + Add       │  + Add    │  + Add            │
+└────────────┴────────────┴──────────────┴───────────┴───────────────────┘
+</code></pre>
+
+<strong>Specs</strong>:
+<ul><li><strong>Column width</strong>: 300px (fixed)</li></ul>
+<ul><li><strong>Horizontal scroll</strong>: On mobile/tablet (columns don't wrap)</li></ul>
+<ul><li><strong>Column header</strong>: Title + count badge</li></ul>
+<ul><li><strong>Drag & drop</strong>: Smooth animation (200ms ease-out)</li></ul>
+<ul><li><strong>Empty state</strong>: "No applications" placeholder + "Add" button</li></ul>
+
+<p>---</p>
+
+<h3>5.4 Table View (Tracker)</h3>
+
+<strong>Columns</strong>:
+| Column | Width | Sortable | Filterable |
+|--------|-------|----------|------------|
+| Company (logo + name) | 200px | Yes | Text search |
+| Title | 250px | Yes | Text search |
+| Status | 120px | Yes | Dropdown |
+| Date Applied | 120px | Yes | Date range |
+| Last Contact | 120px | Yes | Date range |
+| Reply Status | 100px | Yes | Dropdown |
+| Match Score | 100px | Yes | Range slider |
+
+<strong>Specs</strong>:
+<ul><li><strong>Row height</strong>: 56px</li></ul>
+<ul><li><strong>Hover</strong>: Background → gray-50</li></ul>
+<ul><li><strong>Selection</strong>: Checkbox (multi-select for bulk actions)</li></ul>
+<ul><li><strong>Actions</strong>: Row click → Opens detail modal</li></ul>
+<ul><li><strong>Pagination</strong>: 50 rows/page, "Load more" button</li></ul>
+
+<p>---</p>
+
+<h3>5.5 Buttons</h3>
+
+<h4>Primary Button</h4>
+<pre><code>css
+background: var(--primary);
+color: white;
+padding: 10px 20px;
+border-radius: 6px;
+font-weight: 600;
+</code></pre>
+<strong>States</strong>:
+<ul><li>Hover: background → primary-hover</li></ul>
+<ul><li>Active: Scale 0.98</li></ul>
+<ul><li>Disabled: opacity 0.5, cursor not-allowed</li></ul>
+
+<h4>Secondary Button (Outline)</h4>
+<pre><code>css
+background: transparent;
+border: 1px solid var(--gray-300);
+color: var(--gray-700);
+</code></pre>
+
+<h4>Ghost Button</h4>
+<pre><code>css
+background: transparent;
+border: none;
+color: var(--gray-600);
+</code></pre>
+
+<strong>Sizes</strong>:
+<ul><li><strong>Small</strong>: 32px height, 14px text</li></ul>
+<ul><li><strong>Medium</strong>: 40px height, 16px text (default)</li></ul>
+<ul><li><strong>Large</strong>: 48px height, 18px text</li></ul>
+
+<p>---</p>
+
+<h3>5.6 Form Inputs</h3>
+
+<h4>Text Input</h4>
+<pre><code>css
+border: 1px solid var(--gray-300);
+border-radius: 6px;
+padding: 10px 12px;
+font-size: 16px;
+</code></pre>
+<strong>States</strong>:
+<ul><li>Focus: border → primary, box-shadow (0 0 0 3px primary-light)</li></ul>
+<ul><li>Error: border → error, helper text in red</li></ul>
+<ul><li>Disabled: background → gray-100</li></ul>
+
+<h4>Dropdown (Select)</h4>
+<ul><li><strong>Style</strong>: Native <code><select></code> with custom arrow icon</li></ul>
+<ul><li><strong>Multi-select</strong>: Checkboxes with search (shadcn Combobox)</li></ul>
+
+<h4>Checkbox / Radio</h4>
+<ul><li><strong>Custom styled</strong>: Tailwind @apply (checkmark icon on check)</li></ul>
+<ul><li><strong>Label</strong>: Click entire label to toggle</li></ul>
+
+<p>---</p>
+
+<h3>5.7 Modals</h3>
+
+<strong>Layout</strong>:
+<pre><code>
+┌────────────────────────────────────────┐
+│  [X] Close                             │
+│  Modal Title                           │
+│  ────────────────────────────────────  │
+│  Content area                          │
+│  (form, text, etc.)                    │
+│                                        │
+│                                        │
+│  ────────────────────────────────────  │
+│  [Cancel]              [Confirm CTA]   │
+└────────────────────────────────────────┘
+</code></pre>
+
+<strong>Specs</strong>:
+<ul><li><strong>Max width</strong>: 600px (small modal), 800px (large)</li></ul>
+<ul><li><strong>Padding</strong>: 32px</li></ul>
+<ul><li><strong>Backdrop</strong>: rgba(0,0,0,0.5), blur 4px</li></ul>
+<ul><li><strong>Animation</strong>: Fade + scale in (200ms)</li></ul>
+<ul><li><strong>Close</strong>: X button, ESC key, click backdrop</li></ul>
+
+<strong>Types</strong>:
+<ul><li><strong>Confirmation</strong>: "Delete account?" → Cancel + Delete buttons</li></ul>
+<ul><li><strong>Form</strong>: "Add Contact" → Input fields + Save button</li></ul>
+<ul><li><strong>Info</strong>: "Match Score Breakdown" → Read-only, close only</li></ul>
+
+<p>---</p>
+
+<h3>5.8 Copilot Panel (Right Rail)</h3>
+
+<strong>Layout</strong>:
+<pre><code>
+┌────────────────────────┐
+│  🤖 Copilot            │
+│  ────────────────────  │
+│  Quick actions:        │
+│  • Why is this a fit? │
+│  • Write an email     │
+│  • Show insiders      │
+│  ────────────────────  │
+│  Ask anything...       │
+│  [Text input]          │
+│  [Send]                │
+│  ────────────────────  │
+│  Response area         │
+│  (streaming text)      │
+└────────────────────────┘
+</code></pre>
+
+<strong>Specs</strong>:
+<ul><li><strong>Width</strong>: 320px (desktop), full-width (mobile drawer)</li></ul>
+<ul><li><strong>Position</strong>: Fixed right rail (scrolls independently)</li></ul>
+<ul><li><strong>Background</strong>: White with subtle border-left</li></ul>
+<ul><li><strong>Streaming</strong>: Text appears word-by-word (typewriter effect)</li></ul>
+
+<p>---</p>
+
+<h3>5.9 Badges & Pills</h3>
+
+<strong>Match Score Pill</strong>:
+<pre><code>css
+display: inline-flex;
+align-items: center;
+padding: 4px 12px;
+border-radius: 16px;
+font-size: 14px;
+font-weight: 600;
+</code></pre>
+<strong>Colors</strong>: See 3.4 (match score colors)
+
+<strong>Status Badge</strong>:
+<pre><code>css
+padding: 2px 8px;
+border-radius: 4px;
+font-size: 12px;
+text-transform: uppercase;
+</code></pre>
+<strong>Examples</strong>:
+<ul><li>"Verified" → Green background, dark green text</li></ul>
+<ul><li>"Queued" → Gray background</li></ul>
+<ul><li>"Sent" → Blue background</li></ul>
+
+<p>---</p>
+
+<h3>5.10 Empty States</h3>
+
+<strong>Layout</strong>:
+<pre><code>
+┌─────────────────────────────┐
+│                             │
+│     [Icon/Illustration]     │
+│                             │
+│     No jobs found           │
+│     Try adjusting filters   │
+│                             │
+│     [Primary CTA]           │
+│                             │
+└─────────────────────────────┘
+</code></pre>
+
+<strong>Specs</strong>:
+<ul><li><strong>Center-aligned</strong> (both horizontal and vertical)</li></ul>
+<ul><li><strong>Icon</strong>: 64px, gray-300 color</li></ul>
+<ul><li><strong>Text</strong>: Friendly, actionable (not "Error" or "Nothing here")</li></ul>
+<ul><li><strong>CTA</strong>: Optional (e.g., "Refine Preferences", "Import CSV")</li></ul>
+
+<p>---</p>
+
+<h2>6. Interaction Patterns</h2>
+
+<h3>6.1 Loading States</h3>
+
+<strong>Skeleton Loaders</strong>:
+<ul><li>Use for job cards, application cards (shimmer effect)</li></ul>
+<ul><li><strong>Never</strong> show blank screens or spinners alone</li></ul>
+
+<strong>Spinner</strong>:
+<ul><li>Only for button actions (e.g., "Applying..." with spinner in button)</li></ul>
+
+<strong>Progress Bars</strong>:
+<ul><li>For file uploads, CSV imports (show % completion)</li></ul>
+
+<p>---</p>
+
+<h3>6.2 Toasts (Notifications)</h3>
+
+<strong>Position</strong>: Top-right (desktop), bottom (mobile)  
+<strong>Auto-dismiss</strong>: 4 seconds (success), 6 seconds (error), no auto-dismiss (critical)
+
+<strong>Types</strong>:
+<pre><code>
+[✓] Success:  "Application created!"
+[i] Info:     "Enrichment started..."
+[⚠] Warning:  "Some emails unverified"
+[✗] Error:    "Failed to send email"
+</code></pre>
+
+<strong>Dismissible</strong>: X button always visible
+
+<p>---</p>
+
+<h3>6.3 Keyboard Shortcuts</h3>
+
+<p>| Shortcut | Action |
+|----------|--------|
+| <code>Cmd/Ctrl + K</code> | Open command palette |
+| <code>Cmd/Ctrl + /</code> | Toggle Copilot |
+| <code>Cmd/Ctrl + B</code> | Switch to Board view |
+| <code>Cmd/Ctrl + T</code> | Switch to Table view |
+| <code>ESC</code> | Close modal / Clear search |
+| <code>→</code> / <code>←</code> | Navigate cards (in detail view) |</p>
+
+<p>---</p>
+
+<h2>7. Responsive Breakpoints</h2>
+
+<pre><code>css
+/<em> Mobile </em>/
+@media (max-width: 640px) { ... }
+
+<p>/<em> Tablet </em>/
+@media (min-width: 641px) and (max-width: 1024px) { ... }</p>
+
+<p>/<em> Desktop </em>/
+@media (min-width: 1025px) { ... }
+</code></pre></p>
+
+<strong>Layout changes</strong>:
+<ul><li><strong>Mobile</strong>: Single column, bottom nav, drawer-based Copilot</li></ul>
+<ul><li><strong>Tablet</strong>: 2-column job grid, collapsible sidebar</li></ul>
+<ul><li><strong>Desktop</strong>: 3-column job grid, persistent right rail Copilot</li></ul>
+
+<p>---</p>
+
+<h2>8. Accessibility</h2>
+
+<h3>8.1 WCAG 2.1 AA Compliance</h3>
+
+<strong>Color Contrast</strong>:
+<ul><li>Text on white: Minimum 4.5:1 ratio (body text)</li></ul>
+<ul><li>Large text (18px+): Minimum 3:1</li></ul>
+<ul><li>UI controls: 3:1 (buttons, inputs)</li></ul>
+
+<strong>Keyboard Navigation</strong>:
+<ul><li>All interactive elements focusable (tab order logical)</li></ul>
+<ul><li>Focus indicator visible (blue outline, 3px)</li></ul>
+<ul><li>Skip links for screen readers ("Skip to main content")</li></ul>
+
+<strong>ARIA Labels</strong>:
+<pre><code>html
+<button aria-label="Apply to Senior PM at Acme Corp">Apply</button>
+<div role="alert" aria-live="polite">Application created!</div>
+</code></pre>
+
+<h3>8.2 Screen Reader Support</h3>
+<ul><li>Image alt text (company logos, user avatars)</li></ul>
+<ul><li>Form labels (explicit <code><label for="..."></code>)</li></ul>
+<ul><li>Status announcements (toast notifications use <code>aria-live</code>)</li></ul>
+
+<p>---</p>
+
+<h2>9. Animation & Motion</h2>
+
+<strong>Durations</strong>:
+<ul><li><strong>Fast</strong>: 150ms (hover effects, button presses)</li></ul>
+<ul><li><strong>Medium</strong>: 300ms (modal open/close, page transitions)</li></ul>
+<ul><li><strong>Slow</strong>: 500ms (skeleton → content fade-in)</li></ul>
+
+<strong>Easing</strong>:
+<pre><code>css
+--ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+</code></pre>
+
+<strong>Reduced Motion</strong>:
+<pre><code>css
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>10. Dark Mode (Optional - Phase 2)</h2>
+
+<strong>Colors</strong>:
+<pre><code>css
+/<em> Dark mode overrides </em>/
+--bg-primary: #1F2937; /<em> Gray 800 </em>/
+--bg-secondary: #111827; /<em> Gray 900 </em>/
+--text-primary: #F9FAFB; /<em> Gray 50 </em>/
+--text-secondary: #D1D5DB; /<em> Gray 300 </em>/
+</code></pre>
+
+<strong>Toggle</strong>: Settings → Appearance → "System" / "Light" / "Dark"
+
+<p>---</p>
+
+<h2>11. Acceptance Criteria</h2>
+
+<ul><li>[ ] All components specified with dimensions, colors, states</li></ul>
+<ul><li>[ ] Responsive breakpoints defined</li></ul>
+<ul><li>[ ] Accessibility requirements met (WCAG 2.1 AA)</li></ul>
+<ul><li>[ ] Keyboard shortcuts documented</li></ul>
+<ul><li>[ ] Animation durations and easings defined</li></ul>
+<ul><li>[ ] Design system implemented in Storybook (optional)</li></ul>
+
+<p>---</p>
+
+<strong>Document Owner</strong>: UX/UI Designer, Frontend Lead  
+<strong>Version</strong>: 1.0  
+<strong>Date</strong>: October 2025  
+<strong>Next Review</strong>: Bi-weekly during design/dev phase
+
+
+    </div>
+
+    <div class="navigation">
+        <a href='html/04-technical/api-specification.html' class='nav-button'>← Previous</a>
+        
+        <div class="nav-center">
+            <h3>UI Specifications</h3>
+            <p>Documentation Navigation</p>
+        </div>
+        
+        <a href='html/08-business/investor-faq.html' class='nav-button'>Next →</a>
+    </div>
+
+    <div class="footer">
+        <h3>RoleFerry Documentation</h3>
+        <p>Complete platform documentation with navigation</p>
+        <p><strong>Generated:</strong> 2025-10-24 19:28:53</p>
+    </div>
+</body>
+</html>
