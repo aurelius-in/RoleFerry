@@ -39,27 +39,35 @@
 
   .mode-toggle {
     display: flex;
-    background: rgba(255, 255, 255, 0.1);
+    width: 100%;
+    background: rgba(31, 41, 55, 0.8);
     border-radius: 12px;
-    padding: 4px;
     margin-bottom: 2rem;
+    border: 2px solid #4b5563;
+    overflow: hidden;
   }
 
   .mode-btn {
-    padding: 12px 24px;
+    flex: 1;
+    padding: 1.5rem 2rem;
     border: none;
     background: transparent;
     color: #9ca3af;
-    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 1.2rem;
+    text-align: center;
   }
 
   .mode-btn.active {
-    background: #2563eb;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  }
+
+  .mode-btn:hover:not(.active) {
+    background: rgba(75, 85, 99, 0.3);
+    color: white;
   }
 
   .keypad-grid {
@@ -132,7 +140,7 @@
   .keypad-button {
     position: relative;
     width: 200px;
-    height: 200px;
+    height: 170px;
     background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
     border: 2px solid #374151;
     border-radius: 0;
@@ -204,14 +212,12 @@
   }
 
   .launch-button {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    width: 80px;
-    height: 80px;
+    position: relative;
+    width: 600px;
+    height: 170px;
     background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-    border: none;
-    border-radius: 50%;
+    border: 2px solid #dc2626;
+    border-radius: 20px;
     color: white;
     font-size: 1.5rem;
     cursor: pointer;
@@ -220,6 +226,45 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    margin: 2rem auto 0;
+  }
+  
+  /* Button Transformations */
+  .rotate-90 {
+    transform: rotate(90deg);
+  }
+  
+  .flip-horizontal {
+    transform: scaleX(-1);
+  }
+  
+  .flip-horizontal-180 {
+    transform: scaleX(-1) rotate(180deg);
+  }
+  
+  /* Branding Section */
+  .branding-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .wordmark-logo {
+    height: 60px;
+    width: auto;
+  }
+  
+  .animated-logo {
+    height: 60px;
+    width: auto;
+  }
+  
+  .title-wordmark {
+    height: 80px;
+    width: auto;
+    margin-bottom: 1rem;
   }
 
   .launch-button:hover {
@@ -292,7 +337,12 @@
   <div class="keypad-container">
     <!-- Header -->
     <div class="keypad-header">
-      <h1 class="keypad-title">RoleFerry</h1>
+      <div class="branding-section">
+        <img src="wordmark.png" alt="RoleFerry" class="wordmark-logo">
+        <img src="roleferry.gif" alt="RoleFerry Animation" class="animated-logo">
+      </div>
+      <img src="wordmark.png" alt="RoleFerry" class="title-wordmark">
+      <h1 class="keypad-title">Workflow</h1>
       <p class="keypad-subtitle">Transform your job search with intelligent automation</p>
       
       <!-- Mode Toggle -->
@@ -334,19 +384,19 @@
       </button>
 
       <!-- Tab 3: Job Descriptions -->
-      <button class="keypad-button" data-tab="job-descriptions" data-step="3" title="Pick the Job titles - title selection - job description">
+      <button class="keypad-button rotate-90" data-tab="job-descriptions" data-step="3" title="Pick the Job titles - title selection - job description">
         <div class="keypad-icon">📋</div>
         <div class="keypad-label">Job Descriptions</div>
       </button>
 
       <!-- Tab 4: Pain Point Match -->
-      <button class="keypad-button" data-tab="pain-point-match" data-step="4" title="Pain Point Match">
+      <button class="keypad-button rotate-90" data-tab="pain-point-match" data-step="4" title="Pain Point Match">
         <div class="keypad-icon">🔗</div>
         <div class="keypad-label">Pain Point Match</div>
       </button>
 
       <!-- Tab 5: Find Contact -->
-      <button class="keypad-button" data-tab="find-contact" data-step="5" title="Find the contact">
+      <button class="keypad-button flip-horizontal" data-tab="find-contact" data-step="5" title="Find the contact">
         <div class="keypad-icon">👤</div>
         <div class="keypad-label">Find Contact</div>
       </button>
