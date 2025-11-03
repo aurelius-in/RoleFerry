@@ -13,12 +13,10 @@
     background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
     padding: 2rem;
   }
-
   .tab-header {
     text-align: center;
     margin-bottom: 3rem;
   }
-
   .tab-title {
     font-size: 2.5rem;
     font-weight: 700;
@@ -28,174 +26,117 @@
     background-clip: text;
     margin-bottom: 1rem;
   }
-
   .tab-subtitle {
     font-size: 1.1rem;
     color: #9ca3af;
-    margin-bottom: 2rem;
   }
-
   .form-container {
     max-width: 1000px;
     margin: 0 auto;
+  }
+  .pain-point-summary {
     background: rgba(31, 41, 55, 0.8);
     border-radius: 20px;
     padding: 2rem;
     border: 1px solid #374151;
+    margin-bottom: 2rem;
   }
-
-  .match-section {
-    text-align: center;
-    margin-bottom: 3rem;
+  .pain-point-summary h3 {
+      color: #ffffff;
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
   }
-
-  .score-circle {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 2rem;
-    position: relative;
-    box-shadow: 0 8px 32px rgba(37, 99, 235, 0.3);
+  .pain-point {
+    background: rgba(239, 68, 68, 0.1);
+    border-left: 4px solid #ef4444;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0 8px 8px 0;
   }
-
-  .score-circle.high {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+  .pain-point h4 {
+    color: #ef4444;
+    margin: 0 0 0.5rem 0;
   }
-
-  .score-circle.medium {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    box-shadow: 0 8px 32px rgba(245, 158, 11, 0.3);
+  .pain-point p {
+    color: #d1d5db;
+    margin: 0;
   }
-
-  .score-circle.low {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    box-shadow: 0 8px 32px rgba(239, 68, 68, 0.3);
-  }
-
-  .score-number {
-    font-size: 3rem;
-    font-weight: 700;
-    color: white;
-    margin-bottom: 0.5rem;
-  }
-
-  .score-label {
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 600;
-  }
-
-  .btn-primary {
-    padding: 12px 32px;
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-  }
-
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
-  }
-
-  .btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  .match-breakdown {
-    margin-top: 3rem;
-  }
-
-  .match-items {
-    display: grid;
-    gap: 2rem;
-    margin-top: 2rem;
-  }
-
-  .match-item {
+  .research-card {
     background: rgba(17, 24, 39, 0.8);
     border: 1px solid #374151;
     border-radius: 12px;
-    padding: 2rem;
-    text-align: left;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
   }
-
-  .match-item h4 {
-    color: #ef4444;
+  .research-card h3 {
+    color: #ffffff;
     font-size: 1.2rem;
     font-weight: 600;
     margin-bottom: 1rem;
-    border-bottom: 2px solid #ef4444;
+    border-bottom: 2px solid #2563eb;
     padding-bottom: 0.5rem;
   }
-
-  .match-item p {
-    color: #d1d5db;
-    margin-bottom: 1rem;
-    line-height: 1.6;
-  }
-
-  .match-item strong {
+  .research-card textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px 16px;
+    border: 2px solid #374151;
+    border-radius: 8px;
+    background: rgba(17, 24, 39, 0.8);
     color: #ffffff;
+    font-size: 1rem;
+    resize: vertical;
   }
-
-  .solution-highlight {
-    background: rgba(16, 185, 129, 0.1);
-    border-left: 4px solid #10b981;
-    padding: 1rem;
-    margin: 1rem 0;
-    border-radius: 0 8px 8px 0;
-  }
-
-  .solution-highlight h5 {
-    color: #10b981;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-  }
-
-  .metric-highlight {
+  .variable-display {
     background: rgba(37, 99, 235, 0.1);
-    border-left: 4px solid #2563eb;
+    border: 1px solid #2563eb;
+    border-radius: 8px;
     padding: 1rem;
-    margin: 1rem 0;
-    border-radius: 0 8px 8px 0;
+    margin-top: 1rem;
   }
-
-  .metric-highlight h5 {
+  .variable-display h4 {
     color: #2563eb;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+    font-size: 0.9rem;
   }
-
-  .loading-spinner {
-    display: none;
-    text-align: center;
-    margin: 2rem 0;
+  .variable-display code {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #10b981;
   }
-
-  .loading-spinner.show {
-    display: block;
+  .match-card {
+      background: rgba(17, 24, 39, 0.9);
+      border: 1px solid #4b5563;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
   }
-
-  .loading-gif {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 1rem;
-    display: block;
+  .match-card h4 {
+      color: #ef4444;
+      font-size: 1.1rem;
+      margin: 0 0 1rem 0;
   }
-
+  .match-card .solution-group {
+      margin-top: 1rem;
+  }
+  .match-card label {
+      display: block;
+      color: #10b981;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+  }
+  .match-card textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 12px 16px;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      background: rgba(10, 10, 10, 0.8);
+      color: #ffffff;
+      font-size: 0.95rem;
+  }
   .back-button {
     position: fixed;
     top: 2rem;
@@ -206,69 +147,6 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .back-button:hover {
-    background: rgba(0, 0, 0, 0.9);
-  }
-
-  .progress-indicator {
-    position: fixed;
-    top: 2rem;
-    right: 2rem;
-    background: rgba(0, 0, 0, 0.8);
-    padding: 1rem;
-    border-radius: 12px;
-    color: white;
-    font-weight: 600;
-  }
-
-  .progress-bar {
-    width: 200px;
-    height: 8px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 0.5rem;
-  }
-
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #2563eb, #10b981);
-    transition: width 0.3s ease;
-  }
-
-  .success-message {
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid #10b981;
-    border-radius: 8px;
-    padding: 1rem;
-    color: #10b981;
-    margin-bottom: 1rem;
-    display: none;
-  }
-
-  .success-message.show {
-    display: block;
-  }
-
-  .match-explanation {
-    background: rgba(37, 99, 235, 0.1);
-    border: 1px solid #2563eb;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-  }
-
-  .match-explanation h3 {
-    color: #2563eb;
-    margin-bottom: 1rem;
-  }
-
-  .match-explanation p {
-    color: #d1d5db;
-    line-height: 1.6;
   }
 </style>
 </head>
@@ -277,211 +155,91 @@
     <!-- Navigation -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
       <a href="../home.html" class="roleferry-link" style="color: #10b981; text-decoration: none; font-weight: 600;">🏠 RoleFerry.com</a>
-      <a href="offer-creation.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; position: relative; z-index: 10;">Offer Creation →</a>
+      <a href="offer-creation.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600;">Offer Creation →</a>
     </div>
-    
-    <!-- Back Button -->
-    <button class="back-button" onclick="goBack()">← Back to Keypad</button>
-
-    <!-- Progress Indicator -->
-    <div class="progress-indicator">
-      <div>Step 4 of 10</div>
-      <div class="progress-bar">
-        <div class="progress-fill" style="width: 40%"></div>
-      </div>
-    </div>
+    <button class="back-button" onclick="window.location.href='../index.html'">← Back to Keypad</button>
+    <div class="progress-indicator"><div>Step 6 of 10</div><div class="progress-bar"><div class="progress-fill" style="width: 60%"></div></div></div>
 
     <!-- Header -->
     <div class="tab-header">
       <h1 class="tab-title">Pain Point Match</h1>
-      <p class="tab-subtitle">AI-powered alignment between your solutions and their pain points</p>
+      <p class="tab-subtitle">Align your skills and experience directly with the company's needs.</p>
     </div>
 
-    <!-- Success Message -->
-    <div class="success-message" id="successMessage">
-      ✅ Pain point match calculated successfully! Your solutions align well with their challenges.
-    </div>
-
-    <!-- Form Container -->
     <div class="form-container">
-      <!-- Match Section -->
-      <div class="match-section">
-        <div class="score-circle" id="scoreCircle">
-          <div class="score-number" id="scoreNumber">85%</div>
-          <div class="score-label">Alignment Score</div>
+      <!-- AI Analysis of Pain Points -->
+      <div class="pain-point-summary">
+        <h3>AI Analysis of Job Description</h3>
+        <div class="pain-point">
+          <h4>Scaling Infrastructure</h4>
+          <p>Need to scale backend infrastructure to handle 10x traffic growth.</p>
         </div>
-        
-        <button class="btn-primary" id="calculateBtn" onclick="calculateMatch()">Calculate Match</button>
-      </div>
-
-      <!-- Loading Spinner -->
-      <div class="loading-spinner" id="loadingSpinner">
-        <img src="../ani-sm.gif" alt="Loading animation" class="loading-gif">
-        <p>AI is analyzing the match between your profile and job requirements...</p>
-      </div>
-
-      <!-- Match Explanation -->
-      <div class="match-explanation" id="matchExplanation" style="display: none;">
-        <h3>How Pinpoint Matching Works</h3>
-        <p>Our AI analyzes your resume solutions against the company's pain points to find the best alignment. Each match shows how your experience directly addresses their specific challenges, with supporting metrics to prove your impact.</p>
-      </div>
-
-      <!-- Match Breakdown -->
-      <div class="match-breakdown" id="matchBreakdown" style="display: none;">
-        <h2 style="color: #ffffff; text-align: center; margin-bottom: 2rem;">Match Breakdown</h2>
-        
-        <div class="match-items">
-          <!-- Match 1 -->
-          <div class="match-item">
-            <h4>Challenge 1: Scaling Infrastructure</h4>
-            <p><strong>Company Pain Point:</strong> Need to scale backend infrastructure to handle 10x traffic growth</p>
-            
-            <div class="solution-highlight">
-              <h5>Your Solution</h5>
-              <p>My experience scaling microservices on AWS, handling peak loads with auto-scaling groups and load balancers</p>
-            </div>
-            
-            <div class="metric-highlight">
-              <h5>Key Metric</h5>
-              <p>Achieved 99.9% uptime and 20% cost reduction through optimized infrastructure</p>
-            </div>
-          </div>
-
-          <!-- Match 2 -->
-          <div class="match-item">
-            <h4>Challenge 2: Data Processing</h4>
-            <p><strong>Company Pain Point:</strong> Improving data processing efficiency for real-time analytics</p>
-            
-            <div class="solution-highlight">
-              <h5>Your Solution</h5>
-              <p>Implemented Kafka streams and Spark for real-time data ingestion and processing</p>
-            </div>
-            
-            <div class="metric-highlight">
-              <h5>Key Metric</h5>
-              <p>Reduced data processing latency by 50% and enabled instant dashboards</p>
-            </div>
-          </div>
-
-          <!-- Match 3 -->
-          <div class="match-item">
-            <h4>Challenge 3: API Development</h4>
-            <p><strong>Company Pain Point:</strong> Building robust and secure APIs for external partners</p>
-            
-            <div class="solution-highlight">
-              <h5>Your Solution</h5>
-              <p>Designed and developed RESTful APIs with OAuth2 authentication and comprehensive input validation</p>
-            </div>
-            
-            <div class="metric-highlight">
-              <h5>Key Metric</h5>
-              <p>Successfully launched 3 partner integrations in Q3 with zero security incidents</p>
-            </div>
-          </div>
+        <div class="pain-point">
+          <h4>Data Processing</h4>
+          <p>Improving data processing efficiency for real-time analytics.</p>
+        </div>
+        <div class="pain-point">
+          <h4>API Development</h4>
+          <p>Building robust and secure APIs for external partners.</p>
         </div>
       </div>
+
+      <!-- Fit Score v1.1 -->
+      <div class="research-card" style="border-color: #10b981;">
+        <h3 style="color: #10b981; font-size: 1.5rem; text-align: center; border: none; padding: 0;">Fit Score: 88%</h3>
+        <p style="text-align: center; color: #d1d5db; margin-top: 1rem;"><strong>Why:</strong> Strong match based on your extensive experience with microservices and AWS, directly addressing their primary challenge of scaling infrastructure. Minor gap in direct experience with their specific data processing tools, but your core skills are highly transferable.</p>
+        <div class="variable-display" style="margin-top: 1.5rem; border-color: #10b981;">
+          <h4 style="color: #10b981;">Top 3 Contributing Variables:</h4>
+          <code>{{solution_1}}</code>, <code>{{metric_1}}</code>, <code>{{resume_keyword_match}}</code>
+        </div>
+      </div>
+
+      <!-- Company Summary (from Context Research) -->
+      <div class="research-card">
+        <h3>Company Summary</h3>
+        <textarea id="companySummary">TechCorp is a leading technology company specializing in AI-driven solutions for enterprise clients. Founded in 2026, they have grown rapidly to become a key player in the SaaS market, known for their innovative approach to data analytics and cloud computing.</textarea>
+        <div class="variable-display">
+          <h4>Email Variable:</h4>
+          <code>{{company_summary}}</code>
+        </div>
+      </div>
+
+      <!-- Match Cards -->
+      <div class="match-card">
+        <h4>Challenge 1: Scaling Infrastructure</h4>
+        <p><strong>Company Pain Point:</strong> Need to scale backend infrastructure to handle 10x traffic growth.</p>
+        <div class="solution-group">
+          <label for="solution1">Your Solution</label>
+          <textarea id="solution1" placeholder="How have you solved this before?">My experience scaling microservices on AWS, handling peak loads with auto-scaling groups and load balancers.</textarea>
+        </div>
+        <div class="solution-group" style="margin-top: 1rem;">
+          <label for="metric1">Key Metric</label>
+          <textarea id="metric1" placeholder="What was the measurable result?">Achieved 99.9% uptime and 20% cost reduction through optimized infrastructure.</textarea>
+        </div>
+        <div class="variable-display" style="margin-top: 1rem;">
+          <h4 style="font-size: 0.9rem;">Available Variables:</h4>
+          <code>{{challenge_1}}</code>, <code>{{solution_1}}</code>, <code>{{metric_1}}</code>
+        </div>
+      </div>
+
+      <div class="match-card">
+        <h4>Challenge 2: Data Processing</h4>
+        <p><strong>Company Pain Point:</strong> Improving data processing efficiency for real-time analytics.</p>
+        <div class="solution-group">
+          <label for="solution2">Your Solution</label>
+          <textarea id="solution2" placeholder="How have you solved this before?"></textarea>
+        </div>
+        <div class="solution-group" style="margin-top: 1rem;">
+          <label for="metric2">Key Metric</label>
+          <textarea id="metric2" placeholder="What was the measurable result?"></textarea>
+        </div>
+        <div class="variable-display" style="margin-top: 1rem;">
+          <h4 style="font-size: 0.9rem;">Available Variables:</h4>
+          <code>{{challenge_2}}</code>, <code>{{solution_2}}</code>, <code>{{metric_2}}</code>
+        </div>
+      </div>
+
     </div>
   </div>
-
-  <script>
-    function calculateMatch() {
-      // Show loading spinner
-      document.getElementById('loadingSpinner').classList.add('show');
-      document.getElementById('calculateBtn').disabled = true;
-
-      // Simulate AI calculation
-      setTimeout(() => {
-        // Hide loading spinner
-        document.getElementById('loadingSpinner').classList.remove('show');
-        
-        // Show results
-        document.getElementById('matchExplanation').style.display = 'block';
-        document.getElementById('matchBreakdown').style.display = 'block';
-        document.getElementById('successMessage').classList.add('show');
-        
-        // Update score circle
-        const scoreCircle = document.getElementById('scoreCircle');
-        const scoreNumber = document.getElementById('scoreNumber');
-        
-        // Animate score
-        let currentScore = 0;
-        const targetScore = 85;
-        const interval = setInterval(() => {
-          currentScore += 2;
-          scoreNumber.textContent = currentScore + '%';
-          
-          if (currentScore >= targetScore) {
-            clearInterval(interval);
-            scoreNumber.textContent = targetScore + '%';
-            
-            // Update circle color based on score
-            if (targetScore >= 90) {
-              scoreCircle.classList.add('high');
-            } else if (targetScore >= 75) {
-              scoreCircle.classList.add('medium');
-            } else {
-              scoreCircle.classList.add('low');
-            }
-          }
-        }, 50);
-        
-        // Save to localStorage
-        const matchData = {
-          alignmentScore: 85,
-          matches: [
-            {
-              challenge: "Scaling Infrastructure",
-              painPoint: "Need to scale backend infrastructure to handle 10x traffic growth",
-              solution: "My experience scaling microservices on AWS, handling peak loads with auto-scaling groups and load balancers",
-              metric: "Achieved 99.9% uptime and 20% cost reduction through optimized infrastructure"
-            },
-            {
-              challenge: "Data Processing",
-              painPoint: "Improving data processing efficiency for real-time analytics",
-              solution: "Implemented Kafka streams and Spark for real-time data ingestion and processing",
-              metric: "Reduced data processing latency by 50% and enabled instant dashboards"
-            },
-            {
-              challenge: "API Development",
-              painPoint: "Building robust and secure APIs for external partners",
-              solution: "Designed and developed RESTful APIs with OAuth2 authentication and comprehensive input validation",
-              metric: "Successfully launched 3 partner integrations in Q3 with zero security incidents"
-            }
-          ],
-          confidenceScore: 92
-        };
-        
-        localStorage.setItem('roleferry_match_data', JSON.stringify(matchData));
-        
-        // Show success animation
-        setTimeout(() => {
-          alert('Pinpoint match calculated successfully! Your solutions align well with their challenges.');
-        }, 1000);
-      }, 3000);
-    }
-
-    function goBack() {
-      window.location.href = '../index.html';
-    }
-
-    // Load saved data if exists
-    const savedData = localStorage.getItem('roleferry_match_data');
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      document.getElementById('matchExplanation').style.display = 'block';
-      document.getElementById('matchBreakdown').style.display = 'block';
-      document.getElementById('scoreNumber').textContent = data.alignmentScore + '%';
-      
-      // Update circle color based on score
-      const scoreCircle = document.getElementById('scoreCircle');
-      if (data.alignmentScore >= 90) {
-        scoreCircle.classList.add('high');
-      } else if (data.alignmentScore >= 75) {
-        scoreCircle.classList.add('medium');
-      } else {
-        scoreCircle.classList.add('low');
-      }
-    }
-  </script>
 </body>
 </html>

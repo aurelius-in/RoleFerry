@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sequence Dry Run - RoleFerry</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        .document-container { max-width: 900px; }
+        .thread-container {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 2rem;
+            color: #1f2937;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        }
+        .email-message {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 2rem;
+        }
+        .email-message:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .email-header {
+            margin-bottom: 1rem;
+        }
+        .email-header .author { font-weight: bold; }
+        .email-header .date { color: #6b7280; font-size: 0.9rem; }
+        .email-body p { line-height: 1.6; }
+        .sequence-step {
+            color: #ef4444;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>Sequence QA Dry Run</h1>
+            <p>This is how your full email sequence will appear in the recipient's inbox.</p>
+        </div>
+
+        <div class="thread-container">
+            <div class="email-message">
+                <div class="sequence-step">Step 1: Initial Outreach</div>
+                <div class="email-header">
+                    <span class="author">Oliver</span> to <span class="author">Jane Doe</span>
+                    <div class="date">Monday, Nov 3, 2025, 9:05 AM</div>
+                </div>
+                <div class="email-body">
+                    <p>Hi Jane,</p>
+                    <p>I was excited to see the Senior Software Engineer role at TechCorp, as my experience in scaling microservices on AWS has led to a 99.9% uptime and 20% cost reduction in previous roles. I noticed your team is focused on improving data processing efficiency, and I believe my background is a strong match for this challenge.</p>
+                    <p>Would you be open to a brief chat next week?</p>
+                    <p>Best,<br>Oliver</p>
+                </div>
+            </div>
+
+            <div class="email-message">
+                <div class="sequence-step">Step 2: Polite Nudge (3 days later)</div>
+                <div class="email-header">
+                    <span class="author">Oliver</span> to <span class="author">Jane Doe</span>
+                    <div class="date">Thursday, Nov 6, 2025, 10:15 AM</div>
+                </div>
+                <div class="email-body">
+                    <p>Hi Jane,</p>
+                    <p>Just wanted to quickly follow up on my previous email. My experience in cloud cost optimization could be a valuable asset to your team as you scale.</p>
+                    <p>Let me know if you have a few minutes to connect this week.</p>
+                    <p>Best,<br>Oliver</p>
+                </div>
+            </div>
+
+            <div class="email-message">
+                <div class="sequence-step">Step 3: Value Add (7 days later)</div>
+                <div class="email-header">
+                    <span class="author">Oliver</span> to <span class="author">Jane Doe</span>
+                    <div class="date">Monday, Nov 10, 2025, 9:30 AM</div>
+                </div>
+                <div class="email-body">
+                    <p>Hi Jane,</p>
+                    <p>In case you're interested, here is a brief case study on how I helped a previous company reduce their AWS costs by 20% while improving performance: [link to case study]</p>
+                    <p>I'm confident I can bring similar results to TechCorp.</p>
+                    <p>Best,<br>Oliver</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation" style="margin-top: 2rem;">
+            <a href="campaign.html" class="nav-button secondary">← Back to Composer</a>
+        </div>
+    </div>
+</body>
+</html>

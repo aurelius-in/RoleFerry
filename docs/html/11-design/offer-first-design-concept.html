@@ -247,432 +247,80 @@
 <ul><li><strong>Continuous Improvement</strong>: Ongoing optimization of value exchange</li></ul>
 <ul><li><strong>Long-term Relationships</strong>: Focus on sustainable partnerships</li></ul>
 
-<h2>System Architecture</h2>
+<h2>Acceptance Criteria</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Metric</th>
+            <th>Target</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Time to First Reply</td>
+            <td>&lt; 24 hours</td>
+            <td>The average time for a candidate to receive a reply after expressing interest in an offer.</td>
+        </tr>
+        <tr>
+            <td>Offer Open Rate</td>
+            <td>&gt; 50%</td>
+            <td>The percentage of personalized offers that are opened by candidates.</td>
+        </tr>
+        <tr>
+            <td>Conversion to Intro</td>
+            <td>&gt; 10%</td>
+            <td>The percentage of opened offers that result in a scheduled introductory call.</td>
+        </tr>
+    </tbody>
+</table>
 
-<h3>Core Components</h3>
-
-<h4>1. Value Proposition Engine</h4>
-<pre><code>python
-class ValuePropositionEngine:
-    def __init__(self):
-        self.job_analyzer = JobAnalyzer()
-        self.candidate_analyzer = CandidateAnalyzer()
-        self.value_calculator = ValueCalculator()
-        self.offer_generator = OfferGenerator()
-    
-    async def generate_offers(self, job_posting: JobPosting, 
-                            candidate_profile: CandidateProfile) -> List[Offer]:
-        # Analyze job requirements and value
-        job_value = await self.job_analyzer.analyze_value(job_posting)
-        
-        # Analyze candidate capabilities and value
-        candidate_value = await self.candidate_analyzer.analyze_value(candidate_profile)
-        
-        # Calculate mutual value potential
-        mutual_value = await self.value_calculator.calculate_mutual_value(
-            job_value, candidate_value
-        )
-        
-        # Generate offers for both parties
-        offers = await self.offer_generator.generate_offers(
-            job_value, candidate_value, mutual_value
-        )
-        
-        return offers
-</code></pre>
-
-<h4>2. Two-Way Value Calculator</h4>
-<pre><code>python
-class TwoWayValueCalculator:
-    def __init__(self):
-        self.salary_analyzer = SalaryAnalyzer()
-        self.benefits_calculator = BenefitsCalculator()
-        self.career_value_assessor = CareerValueAssessor()
-        self.company_value_assessor = CompanyValueAssessor()
-    
-    async def calculate_candidate_value(self, profile: CandidateProfile) -> CandidateValue:
-        # Calculate salary value
-        salary_value = await self.salary_analyzer.analyze_salary_value(profile)
-        
-        # Calculate benefits value
-        benefits_value = await self.benefits_calculator.calculate_benefits_value(profile)
-        
-        # Calculate career value
-        career_value = await self.career_value_assessor.assess_career_value(profile)
-        
-        return CandidateValue(
-            salary_value=salary_value,
-            benefits_value=benefits_value,
-            career_value=career_value,
-            total_value=salary_value + benefits_value + career_value
-        )
-    
-    async def calculate_company_value(self, job: JobPosting) -> CompanyValue:
-        # Calculate candidate value to company
-        candidate_value = await self.company_value_assessor.assess_candidate_value(job)
-        
-        # Calculate market value
-        market_value = await self.salary_analyzer.analyze_market_value(job)
-        
-        # Calculate strategic value
-        strategic_value = await self.career_value_assessor.assess_strategic_value(job)
-        
-        return CompanyValue(
-            candidate_value=candidate_value,
-            market_value=market_value,
-            strategic_value=strategic_value,
-            total_value=candidate_value + market_value + strategic_value
-        )
-</code></pre>
-
-<h4>3. Offer Generator</h4>
-<pre><code>python
-class OfferGenerator:
-    def __init__(self):
-        self.template_engine = TemplateEngine()
-        self.personalization_engine = PersonalizationEngine()
-        self.negotiation_engine = NegotiationEngine()
-        self.presentation_engine = PresentationEngine()
-    
-    async def generate_offers(self, job_value: JobValue, 
-                            candidate_value: CandidateValue,
-                            mutual_value: MutualValue) -> List[Offer]:
-        offers = []
-        
-        # Generate candidate offer
-        candidate_offer = await self._generate_candidate_offer(
-            job_value, candidate_value, mutual_value
-        )
-        offers.append(candidate_offer)
-        
-        # Generate company offer
-        company_offer = await self._generate_company_offer(
-            job_value, candidate_value, mutual_value
-        )
-        offers.append(company_offer)
-        
-        # Generate mutual offer
-        mutual_offer = await self._generate_mutual_offer(
-            job_value, candidate_value, mutual_value
-        )
-        offers.append(mutual_offer)
-        
-        return offers
-    
-    async def _generate_candidate_offer(self, job_value: JobValue,
-                                      candidate_value: CandidateValue,
-                                      mutual_value: MutualValue) -> Offer:
-        # Create personalized offer for candidate
-        offer_content = await self.template_engine.generate_candidate_offer(
-            job_value, candidate_value, mutual_value
-        )
-        
-        # Personalize based on candidate preferences
-        personalized_offer = await self.personalization_engine.personalize_offer(
-            offer_content, candidate_value.preferences
-        )
-        
-        # Add negotiation terms
-        negotiation_terms = await self.negotiation_engine.generate_negotiation_terms(
-            candidate_value, job_value
-        )
-        
-        return Offer(
-            type="candidate",
-            content=personalized_offer,
-            negotiation_terms=negotiation_terms,
-            value_proposition=mutual_value.candidate_benefits
-        )
-</code></pre>
-
-<h3>Value Exchange Framework</h3>
-
-<h4>1. Candidate Value Proposition</h4>
-<strong>What the candidate receives:</strong>
-<ul><li><strong>Salary Package</strong>: Competitive compensation based on market analysis</li></ul>
-<ul><li><strong>Benefits</strong>: Comprehensive benefits package including health, retirement, etc.</li></ul>
-<ul><li><strong>Career Growth</strong>: Clear path for advancement and skill development</li></ul>
-<ul><li><strong>Work Environment</strong>: Culture, flexibility, and work-life balance</li></ul>
-<ul><li><strong>Learning Opportunities</strong>: Professional development and training programs</li></ul>
-<ul><li><strong>Recognition</strong>: Performance recognition and advancement opportunities</li></ul>
-
-<h4>2. Company Value Proposition</h4>
-<strong>What the company receives:</strong>
-<ul><li><strong>Talent Acquisition</strong>: Access to qualified and motivated candidates</li></ul>
-<ul><li><strong>Reduced Hiring Costs</strong>: Lower recruitment and onboarding expenses</li></ul>
-<ul><li><strong>Faster Time-to-Hire</strong>: Streamlined process with pre-qualified candidates</li></ul>
-<ul><li><strong>Better Cultural Fit</strong>: AI-powered matching for cultural alignment</li></ul>
-<ul><li><strong>Retention</strong>: Higher retention rates through better matching</li></ul>
-<ul><li><strong>Performance</strong>: Improved performance through better role alignment</li></ul>
-
-<h4>3. Mutual Value Exchange</h4>
-<strong>What both parties gain:</strong>
-<ul><li><strong>Transparency</strong>: Clear expectations and requirements from the start</li></ul>
-<ul><li><strong>Efficiency</strong>: Streamlined process with minimal wasted effort</li></ul>
-<ul><li><strong>Quality</strong>: Higher quality matches and outcomes</li></ul>
-<ul><li><strong>Satisfaction</strong>: Better satisfaction for both parties</li></ul>
-<ul><li><strong>Long-term Success</strong>: Sustainable relationships and outcomes</li></ul>
-
-<h2>User Experience Design</h2>
-
-<h3>1. Candidate Experience</h3>
-
-<h4>Initial Value Assessment</h4>
-<pre><code>
-Candidate Journey:
-<ul><li>Upload resume and complete profile</li></ul>
-<ul><li>AI analyzes profile and calculates value</li></ul>
-<ul><li>System presents value proposition</li></ul>
-<ul><li>Candidate reviews and confirms preferences</li></ul>
-<ul><li>System generates personalized offers</li></ul>
-</code></pre>
-
-<h4>Offer Presentation</h4>
-<pre><code>
-Offer Display:
-<ul><li>Clear value proposition with specific benefits</li></ul>
-<ul><li>Transparent salary and benefits information</li></ul>
-<ul><li>Career growth opportunities and timeline</li></ul>
-<ul><li>Work environment and culture details</li></ul>
-<ul><li>Learning and development opportunities</li></ul>
-<ul><li>Recognition and advancement potential</li></ul>
-</code></pre>
-
-<h4>Negotiation and Acceptance</h4>
-<pre><code>
-Negotiation Process:
-<ul><li>Candidate reviews offer details</li></ul>
-<ul><li>System presents negotiation options</li></ul>
-<ul><li>AI-assisted negotiation support</li></ul>
-<ul><li>Real-time offer updates and modifications</li></ul>
-<ul><li>Final offer acceptance and confirmation</li></ul>
-</code></pre>
-
-<h3>2. Company Experience</h3>
-
-<h4>Value Assessment</h4>
-<pre><code>
-Company Journey:
-<ul><li>Post job requirements and preferences</li></ul>
-<ul><li>AI analyzes requirements and calculates value</li></ul>
-<ul><li>System presents candidate value proposition</li></ul>
-<ul><li>Company reviews and confirms preferences</li></ul>
-<ul><li>System generates candidate offers</li></ul>
-</code></pre>
-
-<h4>Candidate Presentation</h4>
-<pre><code>
-Candidate Display:
-<ul><li>Clear value proposition with specific benefits</li></ul>
-<ul><li>Transparent candidate capabilities and experience</li></ul>
-<ul><li>Performance potential and growth trajectory</li></ul>
-<ul><li>Cultural fit and team alignment</li></ul>
-<ul><li>Learning and development opportunities</li></ul>
-<ul><li>Retention and loyalty indicators</li></ul>
-</code></pre>
-
-<h4>Negotiation and Hiring</h4>
-<pre><code>
-Hiring Process:
-<ul><li>Company reviews candidate offers</li></ul>
-<ul><li>System presents negotiation options</li></ul>
-<ul><li>AI-assisted negotiation support</li></ul>
-<ul><li>Real-time offer updates and modifications</li></ul>
-<ul><li>Final offer acceptance and hiring confirmation</li></ul>
-</code></pre>
-
-<h3>3. Mutual Value Exchange</h3>
-
-<h4>Collaborative Matching</h4>
-<pre><code>
-Matching Process:
-<ul><li>System analyzes both parties' requirements</li></ul>
-<ul><li>AI calculates mutual value potential</li></ul>
-<ul><li>System presents balanced offers</li></ul>
-<ul><li>Both parties review and negotiate</li></ul>
-<ul><li>Final agreement and confirmation</li></ul>
-</code></pre>
-
-<h4>Ongoing Relationship</h4>
-<pre><code>
-Relationship Management:
-<ul><li>Continuous value assessment and optimization</li></ul>
-<ul><li>Performance tracking and improvement</li></ul>
-<ul><li>Regular feedback and adjustment</li></ul>
-<ul><li>Long-term relationship development</li></ul>
-<ul><li>Success measurement and celebration</li></ul>
-</code></pre>
-
-<h2>Technical Implementation</h2>
-
-<h3>1. Value Calculation Engine</h3>
-<pre><code>python
-class ValueCalculationEngine:
-    def __init__(self):
-        self.market_analyzer = MarketAnalyzer()
-        self.skill_assessor = SkillAssessor()
-        self.experience_evaluator = ExperienceEvaluator()
-        self.performance_predictor = PerformancePredictor()
-    
-    async def calculate_candidate_value(self, profile: CandidateProfile) -> float:
-        # Market value analysis
-        market_value = await self.market_analyzer.analyze_market_value(profile)
-        
-        # Skill assessment
-        skill_value = await self.skill_assessor.assess_skill_value(profile)
-        
-        # Experience evaluation
-        experience_value = await self.experience_evaluator.evaluate_experience(profile)
-        
-        # Performance prediction
-        performance_value = await self.performance_predictor.predict_performance(profile)
-        
-        # Calculate total value
-        total_value = (market_value * 0.4 + 
-                      skill_value * 0.3 + 
-                      experience_value * 0.2 + 
-                      performance_value * 0.1)
-        
-        return total_value
-</code></pre>
-
-<h3>2. Offer Generation System</h3>
-<pre><code>python
-class OfferGenerationSystem:
-    def __init__(self):
-        self.template_engine = TemplateEngine()
-        self.personalization_engine = PersonalizationEngine()
-        self.negotiation_engine = NegotiationEngine()
-        self.presentation_engine = PresentationEngine()
-    
-    async def generate_offers(self, job: JobPosting, 
-                            candidate: CandidateProfile) -> List[Offer]:
-        # Calculate mutual value
-        mutual_value = await self.calculate_mutual_value(job, candidate)
-        
-        # Generate candidate offer
-        candidate_offer = await self.generate_candidate_offer(job, candidate, mutual_value)
-        
-        # Generate company offer
-        company_offer = await self.generate_company_offer(job, candidate, mutual_value)
-        
-        # Generate mutual offer
-        mutual_offer = await self.generate_mutual_offer(job, candidate, mutual_value)
-        
-        return [candidate_offer, company_offer, mutual_offer]
-</code></pre>
-
-<h3>3. Negotiation Engine</h3>
-<pre><code>python
-class NegotiationEngine:
-    def __init__(self):
-        self.value_analyzer = ValueAnalyzer()
-        self.negotiation_strategist = NegotiationStrategist()
-        self.agreement_facilitator = AgreementFacilitator()
-        self.relationship_manager = RelationshipManager()
-    
-    async def facilitate_negotiation(self, offer: Offer, 
-                                   counter_offer: Offer) -> NegotiationResult:
-        # Analyze value differences
-        value_differences = await self.value_analyzer.analyze_differences(offer, counter_offer)
-        
-        # Develop negotiation strategy
-        strategy = await self.negotiation_strategist.develop_strategy(value_differences)
-        
-        # Facilitate agreement
-        agreement = await self.agreement_facilitator.facilitate_agreement(
-            offer, counter_offer, strategy
-        )
-        
-        # Manage relationship
-        relationship = await self.relationship_manager.manage_relationship(agreement)
-        
-        return NegotiationResult(
-            agreement=agreement,
-            relationship=relationship,
-            success=agreement.is_successful
-        )
-</code></pre>
-
-<h2>Revenue Model</h2>
-
-<h3>1. Value-Based Pricing</h3>
-<ul><li><strong>Success Fee</strong>: 10-15% of total value created</li></ul>
-<ul><li><strong>Value Sharing</strong>: 5-10% of ongoing value generated</li></ul>
-<ul><li><strong>Premium Features</strong>: $199/month for advanced value analysis</li></ul>
-
-<h3>2. Subscription Model</h3>
-<ul><li><strong>Candidate Subscriptions</strong>: $99/month for enhanced value propositions</li></ul>
-<ul><li><strong>Company Subscriptions</strong>: $299/month for advanced candidate matching</li></ul>
-<ul><li><strong>Enterprise Access</strong>: $999/month for full platform access</li></ul>
-
-<h3>3. Transaction Fees</h3>
-<ul><li><strong>Placement Fees</strong>: 20-25% of first year salary</li></ul>
-<ul><li><strong>Negotiation Fees</strong>: 5-10% of negotiated value</li></ul>
-<ul><li><strong>Relationship Management</strong>: $99/month for ongoing support</li></ul>
-
-<h2>Success Metrics</h2>
-
-<h3>User Engagement</h3>
-<ul><li><strong>Offer Acceptance Rate</strong>: 80%+ of offers accepted</li></ul>
-<ul><li><strong>Negotiation Success Rate</strong>: 70%+ of negotiations successful</li></ul>
-<ul><li><strong>Relationship Satisfaction</strong>: 90%+ satisfaction with value exchange</li></ul>
-<ul><li><strong>Long-term Retention</strong>: 85%+ of relationships maintained</li></ul>
-
-<h3>Business Metrics</h3>
-<ul><li><strong>Value Creation</strong>: $10M+ in total value created annually</li></ul>
-<ul><li><strong>Revenue per User</strong>: $2,000+ average revenue per successful placement</li></ul>
-<ul><li><strong>Cost per Acquisition</strong>: <$100 for new users</li></ul>
-<ul><li><strong>Lifetime Value</strong>: $5,000+ per user</li></ul>
-
-<h3>Technical Metrics</h3>
-<ul><li><strong>Value Calculation Accuracy</strong>: 95%+ accuracy in value assessment</li></ul>
-<ul><li><strong>Offer Generation Speed</strong>: <5 seconds for offer generation</li></ul>
-<ul><li><strong>Negotiation Success Rate</strong>: 70%+ of negotiations successful</li></ul>
-<ul><li><strong>System Uptime</strong>: 99.9%+ availability</li></ul>
-
-<h2>Implementation Roadmap</h2>
-
-<h3>Phase 1: Foundation (Months 1-6)</h3>
-<ul><li>Build core value calculation engine</li></ul>
-<ul><li>Implement basic offer generation</li></ul>
-<ul><li>Develop user interface for value exchange</li></ul>
-<ul><li>Launch MVP with limited features</li></ul>
-
-<h3>Phase 2: Automation (Months 7-12)</h3>
-<ul><li>Implement AI-powered value assessment</li></ul>
-<ul><li>Add automated offer generation</li></ul>
-<ul><li>Develop negotiation support features</li></ul>
-<ul><li>Launch public beta</li></ul>
-
-<h3>Phase 3: Optimization (Months 13-18)</h3>
-<ul><li>Enhance AI capabilities and accuracy</li></ul>
-<ul><li>Implement advanced personalization</li></ul>
-<ul><li>Add relationship management features</li></ul>
-<ul><li>Launch full offer-first platform</li></ul>
-
-<h3>Phase 4: Scale (Months 19-24)</h3>
-<ul><li>Expand to multiple industries and regions</li></ul>
-<ul><li>Implement advanced analytics and insights</li></ul>
-<ul><li>Develop partner ecosystem</li></ul>
-<ul><li>Achieve market leadership</li></ul>
+<h2>UX Artifacts</h2>
+<h3>Annotated Screen: Personalized Offer</h3>
+<div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+    <div style="display: flex;">
+        <div style="width: 25%; border-right: 1px solid #e5e7eb; padding-right: 1rem;">
+            <h4>Offer Library</h4>
+            <div style="background: #f1f5f9; padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem;">
+                <strong>Software Engineer</strong><br>
+                <span style="font-size: 0.9rem; color: #6b7280;">Google</span>
+            </div>
+            <div style="background: #f1f5f9; padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem;">
+                <strong>Product Manager</strong><br>
+                <span style="font-size: 0.9rem; color: #6b7280;">Facebook</span>
+            </div>
+        </div>
+        <div style="width: 75%; padding-left: 1rem;">
+            <h3>Personalized Offer: Software Engineer at Google</h3>
+            <p>Hi [Candidate Name],</p>
+            <p>Based on your experience with Python and distributed systems, we think you'd be a great fit for our Software Engineer role at Google. We were particularly impressed with your work on [Project Name].</p>
+            <p><strong>Key Responsibilities:</strong></p>
+            <ul>
+                <li>Design and develop highly scalable, reliable and fault tolerant systems.</li>
+                <li>Work with a team of talented engineers to build new features.</li>
+            </ul>
+            <p><a href="#">View Full Job Description</a></p>
+            <hr>
+            <h4>Upload a short video introduction (optional)</h4>
+            <p>To help us get to know you better, you can upload a short (1-2 minute) video telling us about yourself and why you're interested in this role.</p>
+            <input type="file" accept="video/*">
+            <button style="margin-top: 1rem;" class="nav-button">Submit Application</button>
+        </div>
+    </div>
+</div>
 
 <h2>Risk Mitigation</h2>
 
 <h3>Technical Risks</h3>
-<ul><li><strong>Value Calculation Accuracy</strong>: Implement robust testing and validation</li></ul>
-<ul><li><strong>System Reliability</strong>: Design for high availability and fault tolerance</li></ul>
-<ul><li><strong>Data Security</strong>: Implement comprehensive security measures</li></ul>
+<ul><li><strong>Value Calculation Accuracy</strong>: Implement robust testing and validation. Mitigation: Continuously train and evaluate models on new data. Provide transparency into how value is calculated.</li></ul>
+<ul><li><strong>System Reliability</strong>: Design for high availability and fault tolerance. Mitigation: Use a microservices architecture with redundancy and automated failover.</li></ul>
+<ul><li><strong>Data Security</strong>: Implement comprehensive security measures. Mitigation: Encrypt all PII, both in transit and at rest. Regularly conduct security audits.</li></ul>
 
 <h3>Business Risks</h3>
-<ul><li><strong>Market Adoption</strong>: Invest in user education and value demonstration</li></ul>
-<ul><li><strong>Competition</strong>: Focus on unique value proposition and network effects</li></ul>
-<ul><li><strong>Regulation</strong>: Maintain compliance with employment and privacy laws</li></ul>
-
-<h3>Operational Risks</h3>
-<ul><li><strong>Talent Acquisition</strong>: Build strong AI and engineering teams</li></ul>
-<ul><li><strong>Partnerships</strong>: Establish strategic relationships with key employers</li></ul>
-<ul><li><strong>Funding</strong>: Secure adequate capital for development and growth</li></ul>
+<ul><li><strong>Market Adoption</strong>: Invest in user education and value demonstration. Mitigation: Create clear onboarding materials and case studies. Offer a free trial period.</li></ul>
+<ul><li><strong>Competition</strong>: Focus on unique value proposition and network effects. Mitigation: Build a strong brand around trust and transparency. Deepen integrations with other platforms.</li></ul>
+<ul><li><strong>Abuse/Spam</strong>: Implement controls to prevent abuse of the platform. Mitigation: Use rate limiting and verification checks. Monitor for suspicious activity.</li></ul>
+<ul><li><strong>Bias in Offers</strong>: Ensure fairness in offer generation. Mitigation: Regularly audit algorithms for bias. Provide users with controls to adjust their preferences.</li></ul>
 
 <h2>Conclusion</h2>
 

@@ -6,8 +6,8 @@
 <title>RoleFerry - Smart Job Search Platform</title>
 <link rel="stylesheet" href="styles.css" />
 <link rel="icon" href="assets/roleferry_trans.png" />
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 <style>
-  /* Keypad Navigation Styles */
   .keypad-container {
     display: flex;
     flex-direction: column;
@@ -15,218 +15,63 @@
     justify-content: center;
     min-height: 100vh;
     background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-    padding: 0.5rem;
+    padding: 1rem;
   }
-
   .keypad-header {
     text-align: center;
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
   }
+  .path-container {
+      position: relative;
+      width: 600px;
+      height: 600px;
+  }
+  .stone {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      background: #374151;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 3px solid #4b5563;
+  }
+  .stone:hover {
+      transform: scale(1.1);
+      border-color: #2563eb;
+  }
+  .stone.completed {
+      background: #10b981;
+      border-color: #10b981;
+  }
+  .stone .icon { font-size: 2rem; }
+  .stone .label { font-size: 0.8rem; font-weight: 600; margin-top: 0.5rem; }
 
-  .keypad-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    background: linear-gradient(45deg, #10b981, #2563eb);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 0.5rem;
-    text-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
+  /* S-Path Positions */
+  .stone[data-step="1"] { top: 0; left: 50px; }
+  .stone[data-step="2"] { top: 0; left: 240px; }
+  .stone[data-step="3"] { top: 0; left: 430px; }
+  .stone[data-step="4"] { top: 150px; left: 430px; }
+  .stone[data-step="5"] { top: 150px; left: 240px; }
+  .stone[data-step="6"] { top: 150px; left: 50px; }
+  .stone[data-step="7"] { top: 300px; left: 50px; }
+  .stone[data-step="8"] { top: 300px; left: 240px; }
+  .stone[data-step="9"] { top: 300px; left: 430px; }
+  .stone[data-step="10"] { top: 450px; left: 430px; }
+  .launch-button[data-step="11"] {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 60px;
   }
-
-  .keypad-subtitle {
-    font-size: 1.2rem;
-    color: #9ca3af;
-    margin-bottom: 0.5rem;
-  }
-
-  .mode-toggle {
-    display: flex;
-    width: 100%;
-    background: rgba(31, 41, 55, 0.8);
-    border-radius: 12px;
-    margin-bottom: 0.5rem;
-    border: 2px solid #4b5563;
-    overflow: hidden;
-  }
-
-  .mode-btn {
-    flex: 1;
-    padding: 1.5rem 2rem;
-    border: none;
-    background: transparent;
-    color: #9ca3af;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 700;
-    font-size: 1.2rem;
-    text-align: center;
-  }
-
-  .mode-btn.active {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white;
-  }
-
-  .mode-btn:hover:not(.active) {
-    background: rgba(75, 85, 99, 0.3);
-    color: white;
-  }
-
-  .keypad-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    max-width: 400px;
-    width: 100%;
-    margin-bottom: 1rem;
-    position: relative;
-  }
-
-
-  .keypad-button {
-    position: relative;
-    width: 100px;
-    height: 80px;
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.7) 0%, rgba(217, 119, 6, 0.7) 100%);
-    border: 2px solid rgba(217, 119, 6, 0.8);
-    border-radius: 0;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    clip-path: polygon(0 0, 70% 0, 100% 50%, 70% 100%, 0 100%);
-    padding: 5px;
-  }
-
-  .keypad-button:hover {
-    transform: translateY(-4px);
-    border-color: #2563eb;
-    box-shadow: 0 12px 48px rgba(37, 99, 235, 0.2);
-  }
-
-  .keypad-button:active {
-    transform: translateY(-2px);
-  }
-
-  .keypad-icon {
-    font-size: 5rem;
-    margin-bottom: 0;
-    opacity: 0.9;
-  }
-
-  .keypad-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: #ffffff;
-    text-align: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    position: absolute;
-    bottom: 0.3rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    white-space: nowrap;
-    line-height: 1;
-  }
-
-  .keypad-button:hover .keypad-label {
-    opacity: 1;
-  }
-
-  .keypad-button.completed {
-    background: linear-gradient(135deg, rgba(5, 150, 105, 0.8) 0%, rgba(16, 185, 129, 0.8) 100%);
-    border-color: rgba(16, 185, 129, 0.9);
-  }
-
-  .keypad-button.completed .keypad-icon {
-    color: #ffffff;
-  }
-
-  .keypad-button.completed::after {
-    content: "✓";
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    color: #ffffff;
-    font-size: 1.2rem;
-    font-weight: bold;
-  }
-
-  .launch-button {
-    position: relative;
-    width: 600px;
-    height: 120px;
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    border: 2px solid #d97706;
-    border-radius: 20px;
-    color: white;
-    font-size: 1.5rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 32px rgba(245, 158, 11, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0.5rem auto 0;
-  }
-  
-  /* Button Transformations */
-  .rotate-90 {
-    transform: rotate(90deg);
-  }
-  
-  .flip-horizontal {
-    transform: scaleX(-1);
-  }
-  
-  .flip-horizontal-180 {
-    transform: scaleX(-1) rotate(180deg);
-  }
-  
-  /* Branding Section */
-  .branding-section {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .wordmark-logo {
-    height: 60px;
-    width: auto;
-  }
-  
-  .animated-logo {
-    height: 60px;
-    width: auto;
-  }
-  
-  .title-wordmark {
-    height: 60px;
-    width: auto;
-    margin-bottom: 0.5rem;
-  }
-
-  .launch-button:hover {
-    transform: scale(1.1);
-    box-shadow: 0 12px 48px rgba(220, 38, 38, 0.4);
-  }
-
-  .launch-button::after {
-    content: "🚀";
-    font-size: 2rem;
-  }
-
   .progress-indicator {
     position: fixed;
     top: 2rem;
@@ -235,212 +80,119 @@
     padding: 1rem;
     border-radius: 12px;
     color: white;
-    font-weight: 600;
   }
-
-  .progress-bar {
-    width: 200px;
-    height: 8px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 0.5rem;
+  .settings-link {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 1rem;
+    border-radius: 50%;
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #2563eb, #10b981);
-    transition: width 0.3s ease;
+  .feedback-banner {
+    background: #2563eb;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+    position: relative;
   }
-
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .keypad-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-    }
-    
-    .keypad-button {
-      width: 150px;
-      height: 150px;
-    }
-    
-    .keypad-icon {
-      font-size: 2rem;
-    }
+  .feedback-banner a {
+    color: white;
+    font-weight: bold;
+    text-decoration: underline;
   }
-
-  @media (max-width: 480px) {
-    .keypad-grid {
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
-    
-    .keypad-button {
-      width: 200px;
-      height: 120px;
-    }
+  .feedback-banner .close-btn {
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
   }
 </style>
 </head>
 <body>
+  <div class="feedback-banner" id="feedbackBanner">
+    <span>It's Friday! Time for your weekly feedback.</span>
+    <a href="wireframes/feedback.html">Give Feedback</a>
+    <button class="close-btn" onclick="document.getElementById('feedbackBanner').style.display='none'">&times;</button>
+  </div>
+  <a href="wireframes/settings.html" class="settings-link">⚙️</a>
   <div class="keypad-container">
-    <!-- Header -->
     <div class="keypad-header">
-      <div class="branding-section">
-        <img src="wordmark.png" alt="RoleFerry" class="wordmark-logo">
-        <img src="ani-sm.gif" alt="RoleFerry Animation" class="animated-logo">
-      </div>
-      <p class="keypad-subtitle" style="font-weight: bold; font-style: italic;">Transform your job search with intelligent automation</p>
-      
-      <!-- Mode Toggle -->
-      <div class="mode-toggle">
-        <button class="mode-btn active" id="jobSeekerMode">Job Seeker</button>
-        <button class="mode-btn" id="recruiterMode">Recruiter</button>
-      </div>
+      <h1 class="keypad-title">The 11-Step Path to Your Next Role</h1>
     </div>
-
-    <!-- Progress Indicator -->
     <div class="progress-indicator">
-      <div>Progress: <span id="progressText">0/9</span></div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-      </div>
+      <div>Progress: <span id="progressText">0/11</span></div>
     </div>
 
-    <!-- 3x3 Keypad Grid -->
-    <div class="keypad-grid">
-      <!-- Tab 1: Job Preferences -->
-      <button class="keypad-button" data-tab="job-preferences" data-step="1" title="Job preferences">
-        <div class="keypad-icon">🎯</div>
-        <div class="keypad-label">Job Preferences</div>
-      </button>
-
-      <!-- Tab 2: Candidate Profile -->
-      <button class="keypad-button" data-tab="candidate-profile" data-step="2" title="Candidate profile / upload resume">
-        <div class="keypad-icon">📄</div>
-        <div class="keypad-label">Candidate Profile</div>
-      </button>
-
-      <!-- Tab 3: Job Descriptions -->
-      <button class="keypad-button rotate-90" data-tab="job-descriptions" data-step="3" title="Pick the Job titles - title selection - job description">
-        <div class="keypad-icon">📋</div>
-        <div class="keypad-label">Job Descriptions</div>
-      </button>
-
-      <!-- Tab 4: Context Research -->
-      <button class="keypad-button rotate-90" data-tab="context-research" data-step="4" title="Context search or research of contact or company">
-        <div class="keypad-icon">🔍</div>
-        <div class="keypad-label">Context Research</div>
-      </button>
-
-      <!-- Tab 5: Find Contact -->
-      <button class="keypad-button flip-horizontal" data-tab="find-contact" data-step="5" title="Find the contact">
-        <div class="keypad-icon">👤</div>
-        <div class="keypad-label">Find Contact</div>
-      </button>
-
-      <!-- Tab 6: Pain Point Match -->
-      <button class="keypad-button flip-horizontal" data-tab="pain-point-match" data-step="6" title="Pain point matching between your solutions and their challenges">
-        <div class="keypad-icon">🔗</div>
-        <div class="keypad-label">Pain Point Match</div>
-      </button>
-
-      <!-- Tab 7: Offer Creation -->
-      <button class="keypad-button" data-tab="offer-creation" data-step="7" title="Offer or Pitch">
-        <div class="keypad-icon">💼</div>
-        <div class="keypad-label">Offer Creation</div>
-      </button>
-
-      <!-- Tab 8: Compose -->
-      <button class="keypad-button" data-tab="compose" data-step="8" title="Compose the message">
-        <div class="keypad-icon">✍️</div>
-        <div class="keypad-label">Compose</div>
-      </button>
-
-      <!-- Tab 9: Campaign -->
-      <button class="keypad-button rotate-90" data-tab="campaign" data-step="9" title="Launch the Campaign">
-        <div class="keypad-icon">📧</div>
-        <div class="keypad-label">Campaign</div>
-      </button>
+    <div class="path-container">
+        <div class="stone" data-tab="signals-engine" data-step="1">
+            <div class="icon">📡</div>
+            <div class="label">Signals Engine</div>
+        </div>
+        <div class="stone" data-tab="job-preferences" data-step="2">
+            <div class="icon">🎯</div>
+            <div class="label">Job Preferences</div>
+        </div>
+        <div class="stone" data-tab="candidate-profile" data-step="3">
+            <div class="icon">📄</div>
+            <div class="label">Your Profile</div>
+        </div>
+        <div class="stone" data-tab="job-descriptions" data-step="4">
+            <div class="icon">📋</div>
+            <div class="label">Job Descriptions</div>
+        </div>
+        <div class="stone" data-tab="context-research" data-step="5">
+            <div class="icon">🔍</div>
+            <div class="label">Context Research</div>
+        </div>
+        <div class="stone" data-tab="find-contact" data-step="6">
+            <div class="icon">👤</div>
+            <div class="label">Find Contact</div>
+        </div>
+        <div class="stone" data-tab="pain-point-match" data-step="7">
+            <div class="icon">🔗</div>
+            <div class="label">Pain Point Match</div>
+        </div>
+        <div class="stone" data-tab="offer-creation" data-step="8">
+            <div class="icon">💼</div>
+            <div class="label">Offer Creation</div>
+        </div>
+        <div class="stone" data-tab="compose" data-step="9">
+            <div class="icon">✍️</div>
+            <div class="label">Compose</div>
+        </div>
+        <div class="stone" data-tab="campaign" data-step="10">
+            <div class="icon">📧</div>
+            <div class="label">Campaign</div>
+        </div>
+        <button class="launch-button stone" data-tab="deliverability-launch" data-step="11">
+            <div class="icon">🚀</div>
+            <div class="label">Launch</div>
+        </button>
     </div>
 
-    <!-- Tab 10: Launch Button (Outside Grid) -->
-    <button class="launch-button" data-tab="deliverability-launch" data-step="10" title="Launch Campaign">
-      Launch Campaign
-    </button>
   </div>
 
-  <script>
-    // Mode Toggle Functionality
-    let currentMode = 'job-seeker';
-    let completedSteps = new Set();
-
-    document.getElementById('jobSeekerMode').addEventListener('click', () => {
-      currentMode = 'job-seeker';
-      updateModeUI();
-      updateTabLabels();
-    });
-
-    document.getElementById('recruiterMode').addEventListener('click', () => {
-      currentMode = 'recruiter';
-      updateModeUI();
-      updateTabLabels();
-    });
-
-    function updateModeUI() {
-      const jobSeekerBtn = document.getElementById('jobSeekerMode');
-      const recruiterBtn = document.getElementById('recruiterMode');
-      
-      if (currentMode === 'job-seeker') {
-        jobSeekerBtn.classList.add('active');
-        recruiterBtn.classList.remove('active');
-      } else {
-        recruiterBtn.classList.add('active');
-        jobSeekerBtn.classList.remove('active');
-      }
-    }
-
-    function updateTabLabels() {
-      const labels = document.querySelectorAll('.keypad-label');
-      if (currentMode === 'recruiter') {
-        labels[0].textContent = 'Ideal Client Profile';
-        labels[1].textContent = 'Candidate Profile';
-      } else {
-        labels[0].textContent = 'Job Preferences';
-        labels[1].textContent = 'Resume Upload';
-      }
-    }
-
-    // Keypad Button Functionality
-    document.querySelectorAll('.keypad-button, .launch-button').forEach(button => {
+<script>
+    // Simplified script for navigation
+    document.querySelectorAll('.stone').forEach(button => {
       button.addEventListener('click', (e) => {
         const tab = button.getAttribute('data-tab');
-        const step = parseInt(button.getAttribute('data-step'));
-        
-        // Special handling for launch button - activate all buttons sequentially
-        if (step === 10) {
-          activateButtonsSequentially();
-          return;
-        }
-        
-        // Mark as completed immediately
-        completedSteps.add(step);
-        button.classList.add('completed');
-        
-        // Update progress
-        updateProgress();
-        
-        // Show confetti for completion
-        if (step <= 9) {
-          showConfetti();
-        }
-        
-        // Navigate to tab
-        console.log(`Navigating to ${tab} (Step ${step})`);
-        
-        // Map tab names to wireframe pages
         const tabMap = {
+          'signals-engine': 'wireframes/signals-engine.html',
           'job-preferences': 'wireframes/job-preferences.html',
           'candidate-profile': 'wireframes/candidate-profile.html',
           'job-descriptions': 'wireframes/job-descriptions.html',
@@ -448,90 +200,15 @@
           'find-contact': 'wireframes/find-contact.html',
           'pain-point-match': 'wireframes/pain-point-match.html',
           'offer-creation': 'wireframes/offer-creation.html',
-          'compose': 'wireframes/compose.html',
+          'compose': 'wireframes/campaign.html', // Assuming compose is campaign now
           'campaign': 'wireframes/campaign.html',
           'deliverability-launch': 'wireframes/deliverability-launch.html'
         };
-        
         if (tabMap[tab]) {
           window.location.href = tabMap[tab];
-        } else {
-          alert(`Opening ${tab} - Step ${step} of 10`);
         }
       });
     });
-
-    function activateButtonsSequentially() {
-      const buttons = [
-        { selector: '[data-step="1"]', delay: 0 },
-        { selector: '[data-step="2"]', delay: 500 },
-        { selector: '[data-step="3"]', delay: 1000 },
-        { selector: '[data-step="4"]', delay: 1500 },
-        { selector: '[data-step="5"]', delay: 2000 },
-        { selector: '[data-step="6"]', delay: 2500 },
-        { selector: '[data-step="7"]', delay: 3000 },
-        { selector: '[data-step="8"]', delay: 3500 },
-        { selector: '[data-step="9"]', delay: 4000 },
-        { selector: '.launch-button', delay: 4500 }
-      ];
-
-      buttons.forEach(({ selector, delay }) => {
-        setTimeout(() => {
-          const button = document.querySelector(selector);
-          if (button) {
-            button.classList.add('completed');
-          }
-        }, delay);
-      });
-
-      // Show confetti and message after all buttons are activated
-      setTimeout(() => {
-        showConfetti();
-        alert('Your campaign is launched!');
-      }, 5000);
-    }
-
-    function updateProgress() {
-      const progress = completedSteps.size;
-      const progressText = document.getElementById('progressText');
-      const progressFill = document.getElementById('progressFill');
-      
-      progressText.textContent = `${progress}/9`;
-      progressFill.style.width = `${(progress / 9) * 100}%`;
-    }
-
-    function showConfetti() {
-      // Simple confetti effect
-      const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-      for (let i = 0; i < 50; i++) {
-        setTimeout(() => {
-          const confetti = document.createElement('div');
-          confetti.style.position = 'fixed';
-          confetti.style.left = Math.random() * window.innerWidth + 'px';
-          confetti.style.top = '-10px';
-          confetti.style.width = '10px';
-          confetti.style.height = '10px';
-          confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-          confetti.style.borderRadius = '50%';
-          confetti.style.pointerEvents = 'none';
-          confetti.style.zIndex = '1000';
-          document.body.appendChild(confetti);
-          
-          // Animate confetti
-          confetti.animate([
-            { transform: 'translateY(0px) rotate(0deg)', opacity: 1 },
-            { transform: `translateY(${window.innerHeight + 100}px) rotate(720deg)`, opacity: 0 }
-          ], {
-            duration: 3000,
-            easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-          }).onfinish = () => confetti.remove();
-        }, i * 20);
-      }
-    }
-
-    // Initialize
-    updateModeUI();
-    updateTabLabels();
-  </script>
+</script>
 </body>
 </html>

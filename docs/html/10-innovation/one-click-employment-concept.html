@@ -211,19 +211,17 @@
 
 <h2>Executive Summary</h2>
 
-<p>The One-Click Employment concept revolutionizes the job search process by creating an automated, intelligent system that can match job seekers with opportunities and facilitate employment in a single action. This concept transforms RoleFerry from a job matching platform into an employment automation engine that can literally get someone employed with one click.</p>
+<p>The One-Click Employment concept aims to revolutionize the job search process by creating an automated, intelligent system that can match job seekers with opportunities and facilitate the initial stages of employment in a single action. This concept transforms RoleFerry from a job matching platform into an employment automation engine.</p>
 
 <h2>Core Concept</h2>
 
-<h3>The Vision</h3>
-<strong>"Lose your job → Click once → Have a new job"</strong>
-
-<p>The system automatically:
-<ul><li><strong>Analyzes</strong> the user's profile, skills, and preferences</li></ul>
-<ul><li><strong>Matches</strong> them with the best available opportunities</li></ul>
-<ul><li><strong>Applies</strong> to multiple relevant positions simultaneously</li></ul>
-<ul><li><strong>Schedules</strong> interviews and handles initial communications</li></ul>
-<ul><li><strong>Facilitates</strong> the hiring process through automated workflows</li></ul></p>
+<h3>The Vision: From Job Search to Interview in One Click</h3>
+<p>The system will automate the most time-consuming parts of the job application process, with a phased approach to realization:</p>
+<ul>
+    <li><strong>Phase 1: One-Click Apply:</strong> Automatically apply to relevant jobs based on user profile and preferences.</li>
+    <li><strong>Phase 2: One-Click Schedule Intro:</strong> For interested employers, automatically schedule an initial conversation.</li>
+    <li><strong>Future Vision:</strong> A highly automated system that moves a candidate from application to offer with minimal manual intervention.</li>
+</ul>
 
 <h3>Key Components</h3>
 
@@ -246,16 +244,75 @@
 <ul><li><strong>Application Tracking</strong>: Real-time monitoring of application status</li></ul>
 
 <h4>4. Interview Orchestration</h4>
-<ul><li><strong>Automated Scheduling</strong>: AI-powered calendar coordination and meeting setup</li></ul>
+<ul><li><strong>Automated Scheduling</strong>: AI-powered calendar coordination and meeting setup for initial interviews.</li></ul>
 <ul><li><strong>Interview Preparation</strong>: Personalized coaching and preparation materials</li></ul>
-<ul><li><strong>Virtual Interview Assistance</strong>: Real-time support during video interviews</li></ul>
 <ul><li><strong>Follow-up Automation</strong>: Automated thank you notes and status updates</li></ul>
 
-<h4>5. Employment Facilitation</h4>
-<ul><li><strong>Offer Negotiation</strong>: AI-assisted salary and benefits negotiation</li></ul>
-<ul><li><strong>Contract Review</strong>: Automated analysis of employment terms and conditions</li></ul>
-<ul><li><strong>Onboarding Coordination</strong>: Seamless transition to new employment</li></ul>
-<ul><li><strong>Success Tracking</strong>: Monitoring and optimization of employment outcomes</li></ul>
+<h2>Feasibility & Dependency Table</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Feature</th>
+            <th>Feasibility</th>
+            <th>Dependencies</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>One-Click Apply</td>
+            <td>High</td>
+            <td>- Integration with job boards/ATS APIs<br>- Robust parsing of job descriptions</td>
+        </tr>
+        <tr>
+            <td>Automated Interview Scheduling</td>
+            <td>Medium</td>
+            <td>- Hiring manager calendar integration (e.g., Calendly, Google Calendar)<br>- Clear consent from both parties</td>
+        </tr>
+        <tr>
+            <td>Offer Negotiation</td>
+            <td>Low</td>
+            <td>- Legal and ethical considerations<br>- High variability and personal factors</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Sequence Diagram</h2>
+<pre>
+User           RoleFerry Platform         Employer/ATS
+ |------------------|----------------------|
+ | 1. Click "Apply" |
+ |                  | 2. Analyze Profile   |
+ |                  |--------------------->|
+ |                  |
+ |                  | 3. Match to Jobs     |
+ |                  |--------------------->|
+ |                  |
+ |                  | 4. Apply to Jobs     |
+ |                  |--------------------->| 5. Receive Application
+ |                  |
+ |                  | 6. Track Application |
+ |                  |<---------------------| 7. Application Status Update
+ |                  |
+ |                  | 8. Schedule Interview|
+ |                  |--------------------->| 9. Confirm Interview Time
+ |                  |
+ |<-----------------| 10. Notify User of Interview
+ |------------------|----------------------|
+</pre>
+
+<h2>Non-Goals</h2>
+<ul>
+    <li>We will not auto-apply to jobs where the Terms of Service of the job board or company career site prohibit it.</li>
+    <li>We will not engage in offer negotiation on behalf of the user in the initial versions.</li>
+    <li>We will not create fake profiles or misrepresent user information.</li>
+</ul>
+
+<h2>Compliance</h2>
+<ul>
+    <li><strong>Consent:</strong> Users must provide explicit consent for each batch of applications sent on their behalf.</li>
+    <li><strong>Rate-Limits:</strong> We will respect the rate limits of job boards and company career sites to prevent being blocked.</li>
+    <li><strong>Data Retention:</strong> User data will be handled in accordance with our privacy policy, with clear options for data deletion.</li>
+</ul>
 
 <h2>Technical Implementation</h2>
 
@@ -269,7 +326,6 @@ class OneClickEmploymentEngine:
         self.job_matcher = JobMatcher()
         self.application_automator = ApplicationAutomator()
         self.interview_orchestrator = InterviewOrchestrator()
-        self.employment_facilitator = EmploymentFacilitator()
     
     async def process_one_click_employment(self, user_id: str):
         # Step 1: Analyze user profile
@@ -283,293 +339,15 @@ class OneClickEmploymentEngine:
             profile, opportunities
         )
         
-        # Step 4: Orchestrate interviews
+        # Step 4: Orchestrate interviews for interested employers
         interviews = await self.interview_orchestrator.schedule_interviews(
             applications
         )
         
-        # Step 5: Facilitate employment
-        employment = await self.employment_facilitator.facilitate_employment(
-            interviews
-        )
-        
-        return employment
+        return interviews
 </code></pre>
 
-<h4>Profile Analyzer</h4>
-<pre><code>python
-class ProfileAnalyzer:
-    def __init__(self):
-        self.skill_extractor = SkillExtractor()
-        self.experience_analyzer = ExperienceAnalyzer()
-        self.career_predictor = CareerPredictor()
-        self.market_analyzer = MarketAnalyzer()
-    
-    async def analyze_profile(self, user_id: str) -> UserProfile:
-        # Extract skills and competencies
-        skills = await self.skill_extractor.extract_skills(user_id)
-        
-        # Analyze career progression
-        experience = await self.experience_analyzer.analyze_experience(user_id)
-        
-        # Predict career trajectory
-        career_path = await self.career_predictor.predict_career_path(
-            skills, experience
-        )
-        
-        # Analyze market positioning
-        market_position = await self.market_analyzer.analyze_position(
-            skills, experience
-        )
-        
-        return UserProfile(
-            skills=skills,
-            experience=experience,
-            career_path=career_path,
-            market_position=market_position
-        )
-</code></pre>
 
-<h4>Job Matcher</h4>
-<pre><code>python
-class JobMatcher:
-    def __init__(self):
-        self.job_scraper = JobScraper()
-        self.matching_engine = MatchingEngine()
-        self.quality_scorer = QualityScorer()
-        self.opportunity_ranker = OpportunityRanker()
-    
-    async def find_opportunities(self, profile: UserProfile) -> List[Opportunity]:
-        # Scrape available jobs
-        jobs = await self.job_scraper.scrape_jobs()
-        
-        # Match jobs to profile
-        matches = await self.matching_engine.match_jobs(profile, jobs)
-        
-        # Score match quality
-        scored_matches = await self.quality_scorer.score_matches(matches)
-        
-        # Rank opportunities
-        ranked_opportunities = await self.opportunity_ranker.rank_opportunities(
-            scored_matches
-        )
-        
-        return ranked_opportunities
-</code></pre>
-
-<h4>Application Automator</h4>
-<pre><code>python
-class ApplicationAutomator:
-    def __init__(self):
-        self.resume_generator = ResumeGenerator()
-        self.cover_letter_generator = CoverLetterGenerator()
-        self.application_submitter = ApplicationSubmitter()
-        self.tracker = ApplicationTracker()
-    
-    async def submit_applications(self, profile: UserProfile, 
-                                opportunities: List[Opportunity]) -> List[Application]:
-        applications = []
-        
-        for opportunity in opportunities:
-            # Generate tailored resume
-            resume = await self.resume_generator.generate_resume(
-                profile, opportunity
-            )
-            
-            # Generate cover letter
-            cover_letter = await self.cover_letter_generator.generate_cover_letter(
-                profile, opportunity
-            )
-            
-            # Submit application
-            application = await self.application_submitter.submit_application(
-                profile, opportunity, resume, cover_letter
-            )
-            
-            # Track application
-            await self.tracker.track_application(application)
-            
-            applications.append(application)
-        
-        return applications
-</code></pre>
-
-<h3>AI and Machine Learning Components</h3>
-
-<h4>1. Profile Analysis AI</h4>
-<ul><li><strong>Skill Extraction</strong>: Advanced NLP for identifying and categorizing skills</li></ul>
-<ul><li><strong>Experience Analysis</strong>: AI-powered analysis of career progression and achievements</li></ul>
-<ul><li><strong>Career Prediction</strong>: Machine learning models for career trajectory forecasting</li></ul>
-<ul><li><strong>Market Positioning</strong>: AI-driven analysis of market value and opportunities</li></ul>
-
-<h4>2. Job Matching AI</h4>
-<ul><li><strong>Semantic Matching</strong>: Deep learning for understanding job requirements and candidate fit</li></ul>
-<ul><li><strong>Quality Scoring</strong>: AI models for evaluating job quality and success probability</li></ul>
-<ul><li><strong>Trend Analysis</strong>: Predictive analytics for job market trends and opportunities</li></ul>
-<ul><li><strong>Personalization</strong>: Machine learning for personalized job recommendations</li></ul>
-
-<h4>3. Application Automation AI</h4>
-<ul><li><strong>Resume Generation</strong>: AI-powered creation of tailored resumes for specific roles</li></ul>
-<ul><li><strong>Cover Letter Writing</strong>: Natural language generation for personalized cover letters</li></ul>
-<ul><li><strong>Application Optimization</strong>: AI-driven optimization of application content and timing</li></ul>
-<ul><li><strong>A/B Testing</strong>: Automated testing of different application approaches</li></ul>
-
-<h4>4. Interview Orchestration AI</h4>
-<ul><li><strong>Scheduling Optimization</strong>: AI-powered calendar coordination and meeting optimization</li></ul>
-<ul><li><strong>Interview Preparation</strong>: Personalized coaching and preparation recommendations</li></ul>
-<ul><li><strong>Real-time Assistance</strong>: AI-powered support during virtual interviews</li></ul>
-<ul><li><strong>Follow-up Automation</strong>: Intelligent follow-up and communication management</li></ul>
-
-<h2>User Experience Flow</h2>
-
-<h3>1. Initial Setup</h3>
-<pre><code>
-User Journey:
-<ul><li>Upload resume and complete profile</li></ul>
-<ul><li>AI analyzes profile and provides insights</li></ul>
-<ul><li>User reviews and confirms preferences</li></ul>
-<ul><li>System is ready for one-click employment</li></ul>
-</code></pre>
-
-<h3>2. One-Click Employment Process</h3>
-<pre><code>
-Automated Process:
-<ul><li>User clicks "Find Me a Job" button</li></ul>
-<ul><li>System analyzes current profile and preferences</li></ul>
-<ul><li>AI searches for matching opportunities</li></ul>
-<ul><li>System automatically applies to top matches</li></ul>
-<ul><li>AI schedules and coordinates interviews</li></ul>
-<ul><li>System facilitates offer negotiation and acceptance</li></ul>
-<ul><li>User receives employment offer</li></ul>
-</code></pre>
-
-<h3>3. Continuous Optimization</h3>
-<pre><code>
-Ongoing Process:
-<ul><li>System continuously monitors job market</li></ul>
-<ul><li>AI updates user profile and preferences</li></ul>
-<ul><li>System identifies new opportunities</li></ul>
-<ul><li>Automated applications to new matches</li></ul>
-<ul><li>Continuous interview coordination</li></ul>
-<ul><li>Ongoing employment facilitation</li></ul>
-</code></pre>
-
-<h2>Revenue Model</h2>
-
-<h3>1. One-Click Employment Fee</h3>
-<ul><li><strong>Success Fee</strong>: 10-15% of first year salary</li></ul>
-<ul><li><strong>Subscription Model</strong>: $99/month for unlimited one-click employment</li></ul>
-<ul><li><strong>Premium Features</strong>: $199/month for advanced AI and priority matching</li></ul>
-
-<h3>2. Employer Partnerships</h3>
-<ul><li><strong>Recruitment Fees</strong>: 20-25% of first year salary for successful placements</li></ul>
-<ul><li><strong>Subscription Access</strong>: $299/month for employer access to candidate database</li></ul>
-<ul><li><strong>API Licensing</strong>: $10,000+ annually for enterprise integrations</li></ul>
-
-<h3>3. Value-Added Services</h3>
-<ul><li><strong>Career Coaching</strong>: $199/month for personalized career guidance</li></ul>
-<ul><li><strong>Skill Development</strong>: $99/month for AI-powered learning recommendations</li></ul>
-<ul><li><strong>Market Intelligence</strong>: $299/month for job market insights and trends</li></ul>
-
-<h2>Success Metrics</h2>
-
-<h3>User Engagement</h3>
-<ul><li><strong>One-Click Success Rate</strong>: 80%+ of users get interviews within 30 days</li></ul>
-<ul><li><strong>Employment Rate</strong>: 60%+ of users get job offers within 90 days</li></ul>
-<ul><li><strong>User Satisfaction</strong>: 90%+ satisfaction with one-click employment process</li></ul>
-<ul><li><strong>Retention Rate</strong>: 85%+ of users continue using the platform</li></ul>
-
-<h3>Business Metrics</h3>
-<ul><li><strong>Revenue per User</strong>: $2,000+ average revenue per successful placement</li></ul>
-<ul><li><strong>Cost per Acquisition</strong>: <$100 for new users</li></ul>
-<ul><li><strong>Lifetime Value</strong>: $5,000+ per user</li></ul>
-<ul><li><strong>Market Share</strong>: 10%+ of job search market within 3 years</li></ul>
-
-<h3>Technical Metrics</h3>
-<ul><li><strong>Application Success Rate</strong>: 70%+ of applications result in interviews</li></ul>
-<ul><li><strong>Interview Success Rate</strong>: 50%+ of interviews result in job offers</li></ul>
-<ul><li><strong>Time to Employment</strong>: <30 days average from click to employment</li></ul>
-<ul><li><strong>System Uptime</strong>: 99.9%+ availability</li></ul>
-
-<h2>Implementation Roadmap</h2>
-
-<h3>Phase 1: Foundation (Months 1-6)</h3>
-<ul><li>Build core AI infrastructure</li></ul>
-<ul><li>Implement profile analysis and job matching</li></ul>
-<ul><li>Develop basic application automation</li></ul>
-<ul><li>Launch MVP with limited features</li></ul>
-
-<h3>Phase 2: Automation (Months 7-12)</h3>
-<ul><li>Implement full application automation</li></ul>
-<ul><li>Add interview orchestration capabilities</li></ul>
-<ul><li>Develop employment facilitation features</li></ul>
-<ul><li>Launch public beta</li></ul>
-
-<h3>Phase 3: Optimization (Months 13-18)</h3>
-<ul><li>Enhance AI capabilities and accuracy</li></ul>
-<ul><li>Implement advanced personalization</li></ul>
-<ul><li>Add employer partnership features</li></ul>
-<ul><li>Launch full one-click employment</li></ul>
-
-<h3>Phase 4: Scale (Months 19-24)</h3>
-<ul><li>Expand to multiple industries and regions</li></ul>
-<ul><li>Implement advanced analytics and insights</li></ul>
-<ul><li>Develop partner ecosystem</li></ul>
-<ul><li>Achieve market leadership</li></ul>
-
-<h2>Risk Mitigation</h2>
-
-<h3>Technical Risks</h3>
-<ul><li><strong>AI Accuracy</strong>: Implement robust testing and validation processes</li></ul>
-<ul><li><strong>System Reliability</strong>: Design for high availability and fault tolerance</li></ul>
-<ul><li><strong>Data Security</strong>: Implement comprehensive security measures</li></ul>
-
-<h3>Business Risks</h3>
-<ul><li><strong>Market Adoption</strong>: Invest in user education and value demonstration</li></ul>
-<ul><li><strong>Competition</strong>: Focus on unique value proposition and network effects</li></ul>
-<ul><li><strong>Regulation</strong>: Maintain compliance with employment and privacy laws</li></ul>
-
-<h3>Operational Risks</h3>
-<ul><li><strong>Talent Acquisition</strong>: Build strong AI and engineering teams</li></ul>
-<ul><li><strong>Partnerships</strong>: Establish strategic relationships with key employers</li></ul>
-<ul><li><strong>Funding</strong>: Secure adequate capital for development and growth</li></ul>
-
-<h2>Competitive Advantages</h2>
-
-<h3>1. Automation</h3>
-<ul><li><strong>Full Automation</strong>: Complete end-to-end employment automation</li></ul>
-<ul><li><strong>AI-Powered</strong>: Advanced AI for matching, applications, and facilitation</li></ul>
-<ul><li><strong>Personalization</strong>: Highly personalized experience for each user</li></ul>
-
-<h3>2. Speed</h3>
-<ul><li><strong>One-Click</strong>: Literally one click to start employment process</li></ul>
-<ul><li><strong>Real-Time</strong>: Continuous monitoring and optimization</li></ul>
-<ul><li><strong>Fast Results</strong>: Employment within 30 days of activation</li></ul>
-
-<h3>3. Quality</h3>
-<ul><li><strong>High Success Rate</strong>: 80%+ success rate for interviews</li></ul>
-<ul><li><strong>Quality Matches</strong>: AI-powered matching for optimal fit</li></ul>
-<ul><li><strong>Continuous Optimization</strong>: Ongoing improvement of results</li></ul>
-
-<h3>4. Network Effects</h3>
-<ul><li><strong>Two-Sided Market</strong>: Value for both job seekers and employers</li></ul>
-<ul><li><strong>Data Flywheel</strong>: More users → better AI → better results → more users</li></ul>
-<ul><li><strong>Ecosystem Integration</strong>: Seamless integration with existing HR systems</li></ul>
-
-<h2>Conclusion</h2>
-
-<p>The One-Click Employment concept represents a paradigm shift in how people find and secure employment. By leveraging advanced AI and automation, RoleFerry can create a system that literally gets people employed with a single click.</p>
-
-<p>The key to success lies in:
-<ul><li><strong>AI Excellence</strong>: Building the most accurate and intelligent employment automation system</li></ul>
-<ul><li><strong>User Experience</strong>: Creating a seamless, intuitive, and valuable experience</li></ul>
-<ul><li><strong>Network Effects</strong>: Leveraging the two-sided market to create sustainable advantages</li></ul>
-<ul><li><strong>Quality Results</strong>: Delivering consistent, high-quality employment outcomes</li></ul>
-<ul><li><strong>Continuous Innovation</strong>: Staying ahead of the competition through constant improvement</li></ul></p>
-
-<p>With proper execution, this concept can transform RoleFerry into the dominant platform for employment automation, creating unprecedented value for job seekers while generating significant revenue through successful placements and employer partnerships.</p>
-
-<p>The vision is clear: <strong>"Lose your job → Click once → Have a new job"</strong> - and with the right technology and execution, this vision can become reality.</p>
     </div>
 
     <div class="navigation">
