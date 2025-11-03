@@ -290,21 +290,21 @@
     <div class="tab-header">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <a href="../home.html" class="roleferry-link" style="color: #10b981; text-decoration: none; font-weight: 600;">🏠 RoleFerry.com</a>
-        <a href="candidate-profile.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; position: relative; z-index: 10;">Resume →</a>
+        <a href="candidate-profile.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; position: relative; z-index: 10;">My Profile →</a>
       </div>
-      <h1 class="tab-title" id="tabTitle">Job Preferences</h1>
-      <p class="tab-subtitle">Tell us what you're looking for in your next role</p>
+      <h1 class="tab-title" id="tabTitle">Ideal Client Profile (ICP)</h1>
+      <p class="tab-subtitle">Define your target companies and ideal clients for business development</p>
       
       <!-- Mode Toggle -->
       <div class="mode-toggle">
-        <button class="mode-btn active" id="jobSeekerMode">Job Seeker</button>
-        <button class="mode-btn" id="recruiterMode">Recruiter</button>
+        <button class="mode-btn" id="jobSeekerMode">Job Seeker</button>
+        <button class="mode-btn active" id="recruiterMode">Recruiter</button>
       </div>
     </div>
 
     <!-- Success Message -->
     <div class="success-message" id="successMessage">
-      ✅ Preferences saved successfully! You can now proceed to the next step.
+      ✅ ICP saved successfully! You can now proceed to the next step.
     </div>
 
     <!-- Form Container -->
@@ -313,195 +313,21 @@
         <div class="form-grid">
           <!-- Industries -->
           <div class="form-group">
-            <label class="form-label" for="industries">Industries (Select up to 5)</label>
+            <label class="form-label" for="industries">Target Industries (Select up to 5)</label>
             <select class="form-select" id="industries" multiple>
                 <option value="">- Select an Industry -</option>
-                <option value="accounting">Accounting</option>
-                <option value="airlines-aviation">Airlines/Aviation</option>
-                <option value="alternative-medicine">Alternative Medicine</option>
-                <option value="animation">Animation</option>
-                <option value="apparel-fashion">Apparel & Fashion</option>
-                <option value="architecture-planning">Architecture & Planning</option>
-                <option value="arts-crafts">Arts and Crafts</option>
-                <option value="automotive">Automotive</option>
-                <option value="aviation-aerospace">Aviation & Aerospace</option>
-                <option value="banking">Banking</option>
-                <option value="biotechnology">Biotechnology</option>
-                <option value="broadcast-media">Broadcast Media</option>
-                <option value="building-materials">Building Materials</option>
-                <option value="business-supplies-equipment">Business Supplies and Equipment</option>
-                <option value="capital-markets">Capital Markets</option>
-                <option value="chemicals">Chemicals</option>
-                <option value="civic-social-organization">Civic & Social Organization</option>
-                <option value="civil-engineering">Civil Engineering</option>
-                <option value="commercial-real-estate">Commercial Real Estate</option>
-                <option value="computer-games">Computer Games</option>
-                <option value="computer-hardware">Computer Hardware</option>
-                <option value="computer-networking">Computer Networking</option>
-                <option value="computer-software">Computer Software</option>
-                <option value="construction">Construction</option>
-                <option value="consumer-electronics">Consumer Electronics</option>
-                <option value="consumer-goods">Consumer Goods</option>
-                <option value="consumer-services">Consumer Services</option>
-                <option value="cosmetics">Cosmetics</option>
-                <option value="dairy">Dairy</option>
-                <option value="defense-space">Defense & Space</option>
-                <option value="design">Design</option>
-                <option value="education-management">Education Management</option>
-                <option value="e-learning">E-Learning</option>
-                <option value="electrical-electronic-manufacturing">Electrical/Electronic Manufacturing</option>
-                <option value="entertainment">Entertainment</option>
-                <option value="environmental-services">Environmental Services</option>
-                <option value="events-services">Events Services</option>
-                <option value="executive-office">Executive Office</option>
-                <option value="facilities-services">Facilities Services</option>
-                <option value="farming">Farming</option>
-                <option value="financial-services">Financial Services</option>
-                <option value="fine-art">Fine Art</option>
-                <option value="fishery">Fishery</option>
-                <option value="food-beverages">Food & Beverages</option>
-                <option value="food-production">Food Production</option>
-                <option value="fund-raising">Fund-Raising</option>
-                <option value="furniture">Furniture</option>
-                <option value="gambling-casinos">Gambling & Casinos</option>
-                <option value="glass-ceramics-concrete">Glass, Ceramics & Concrete</option>
-                <option value="government-administration">Government Administration</option>
-                <option value="government-relations">Government Relations</option>
-                <option value="graphic-design">Graphic Design</option>
-                <option value="health-wellness-fitness">Health, Wellness and Fitness</option>
-                <option value="higher-education">Higher Education</option>
-                <option value="hospital-health-care">Hospital & Health Care</option>
-                <option value="hospitality">Hospitality</option>
-                <option value="human-resources">Human Resources</option>
-                <option value="import-export">Import and Export</option>
-                <option value="individual-family-services">Individual & Family Services</option>
-                <option value="industrial-automation">Industrial Automation</option>
-                <option value="information-services">Information Services</option>
-                <option value="information-technology-services">Information Technology and Services</option>
-                <option value="insurance">Insurance</option>
-                <option value="international-affairs">International Affairs</option>
-                <option value="international-trade-development">International Trade and Development</option>
-                <option value="internet">Internet</option>
-                <option value="investment-banking">Investment Banking</option>
-                <option value="investment-management">Investment Management</option>
-                <option value="judiciary">Judiciary</option>
-                <option value="law-enforcement">Law Enforcement</option>
-                <option value="law-practice">Law Practice</option>
-                <option value="legal-services">Legal Services</option>
-                <option value="legislative-office">Legislative Office</option>
-                <option value="leisure-travel-tourism">Leisure, Travel & Tourism</option>
-                <option value="libraries">Libraries</option>
-                <option value="logistics-supply-chain">Logistics and Supply Chain</option>
-                <option value="luxury-goods-jewelry">Luxury Goods & Jewelry</option>
-                <option value="machinery">Machinery</option>
-                <option value="management-consulting">Management Consulting</option>
-                <option value="maritime">Maritime</option>
-                <option value="market-research">Market Research</option>
-                <option value="marketing-advertising">Marketing and Advertising</option>
-                <option value="mechanical-industrial-engineering">Mechanical or Industrial Engineering</option>
-                <option value="media-production">Media Production</option>
-                <option value="medical-devices">Medical Devices</option>
-                <option value="medical-practice">Medical Practice</option>
-                <option value="mental-health-care">Mental Health Care</option>
-                <option value="military">Military</option>
-                <option value="mining-metals">Mining & Metals</option>
-                <option value="motion-pictures-film">Motion Pictures and Film</option>
-                <option value="museums-institutions">Museums and Institutions</option>
-                <option value="music">Music</option>
-                <option value="nanotechnology">Nanotechnology</option>
-                <option value="newspapers">Newspapers</option>
-                <option value="non-profit-organization-management">Non-Profit Organization Management</option>
-                <option value="oil-energy">Oil & Energy</option>
-                <option value="online-media">Online Media</option>
-                <option value="outsourcing-offshoring">Outsourcing/Offshoring</option>
-                <option value="package-freight-delivery">Package/Freight Delivery</option>
-                <option value="packaging-containers">Packaging and Containers</option>
-                <option value="paper-forest-products">Paper & Forest Products</option>
-                <option value="performing-arts">Performing Arts</option>
-                <option value="pharmaceuticals">Pharmaceuticals</option>
-                <option value="philanthropy">Philanthropy</option>
-                <option value="photography">Photography</option>
-                <option value="plastics">Plastics</option>
-                <option value="political-organization">Political Organization</option>
-                <option value="primary-secondary-education">Primary/Secondary Education</option>
-                <option value="printing">Printing</option>
-                <option value="professional-training-coaching">Professional Training & Coaching</option>
-                <option value="program-development">Program Development</option>
-                <option value="public-policy">Public Policy</option>
-                <option value="public-relations-communications">Public Relations and Communications</option>
-                <option value="public-safety">Public Safety</option>
-                <option value="publishing">Publishing</option>
-                <option value="railroad-manufacture">Railroad Manufacture</option>
-                <option value="ranching">Ranching</option>
-                <option value="real-estate">Real Estate</option>
-                <option value="recreational-facilities-services">Recreational Facilities and Services</option>
-                <option value="religious-institutions">Religious Institutions</option>
-                <option value="renewables-environment">Renewables & Environment</option>
-                <option value="research">Research</option>
-                <option value="restaurants">Restaurants</option>
-                <option value="retail">Retail</option>
-                <option value="security-investigations">Security and Investigations</option>
-                <option value="semiconductors">Semiconductors</option>
-                <option value="shipbuilding">Shipbuilding</option>
-                <option value="sporting-goods">Sporting Goods</option>
-                <option value="sports">Sports</option>
                 <option value="staffing-recruiting">Staffing and Recruiting</option>
-                <option value="supermarkets">Supermarkets</option>
-                <option value="telecommunications">Telecommunications</option>
-                <option value="textiles">Textiles</option>
-                <option value="think-tanks">Think Tanks</option>
-                <option value="tobacco">Tobacco</option>
-                <option value="translation-localization">Translation and Localization</option>
-                <option value="transportation-trucking-railroad">Transportation/Trucking/Railroad</option>
-                <option value="utilities">Utilities</option>
-                <option value="venture-capital-private-equity">Venture Capital & Private Equity</option>
-                <option value="veterinary">Veterinary</option>
-                <option value="warehousing">Warehousing</option>
-                <option value="wholesale">Wholesale</option>
-                <option value="wine-spirits">Wine and Spirits</option>
-                <option value="wireless">Wireless</option>
-                <option value="writing-editing">Writing and Editing</option>
+                <option value="information-technology-services">Information Technology and Services</option>
+                <option value="management-consulting">Management Consulting</option>
+                <option value="marketing-advertising">Marketing and Advertising</option>
+                <option value="computer-software">Computer Software</option>
             </select>
           </div>
 
           <!-- Roles -->
           <div class="form-group">
-            <label class="form-label" for="roles">Target Job Roles</label>
-            <textarea class="form-textarea" id="roles" placeholder="e.g., Senior Product Manager, Full-Stack Developer, Director of Marketing"></textarea>
-          </div>
-
-          <!-- Salary Range -->
-          <div class="form-group">
-            <label class="form-label" for="salaryRange">Target Salary Range (Annual)</label>
-            <select class="form-select" id="salaryRange">
-                <option value="">- Select a Range -</option>
-                <option value="60000-80000">$60,000 - $80,000</option>
-                <option value="80000-100000">$80,000 - $100,000</option>
-                <option value="100000-120000">$100,000 - $120,000</option>
-                <option value="120000-150000">$120,000 - $150,000</option>
-                <option value="150000-180000">$150,000 - $180,000</option>
-                <option value="180000-220000">$180,000 - $220,000</option>
-                <option value="220000-260000">$220,000 - $260,000</option>
-                <option value="260000+">$260,000+</option>
-            </select>
-          </div>
-
-          <!-- Location -->
-          <div class="form-group">
-            <label class="form-label" for="location">Location</label>
-            <input type="text" class="form-input" id="location" placeholder="e.g., Remote, New York, San Francisco">
-          </div>
-
-          <!-- Work Type -->
-          <div class="form-group">
-            <label class="form-label" for="workType">Work Type</label>
-            <select class="form-select" id="workType" multiple>
-              <option value="remote">Remote</option>
-              <option value="hybrid">Hybrid</option>
-              <option value="onsite">On-site</option>
-              <option value="contract">Contract</option>
-              <option value="part-time">Part-time</option>
-            </select>
+            <label class="form-label" for="roles">Target Client Roles</label>
+            <textarea class="form-textarea" id="roles" placeholder="e.g., VP of Talent Acquisition, Director of Engineering, Head of Marketing"></textarea>
           </div>
 
           <!-- Company Size -->
@@ -515,41 +341,30 @@
             </select>
           </div>
 
-          <!-- Experience Level -->
+          <!-- Location -->
           <div class="form-group">
-            <label class="form-label" for="experienceLevel">Experience Level</label>
-            <select class="form-select" id="experienceLevel">
-              <option value="entry">Entry Level (0-2 years)</option>
-              <option value="mid">Mid Level (3-5 years)</option>
-              <option value="senior">Senior Level (6-10 years)</option>
-              <option value="lead">Lead/Principal (10+ years)</option>
-            </select>
-          </div>
-
-          <!-- Skills -->
-          <div class="form-group">
-            <label class="form-label" for="skills">Key Skills</label>
-            <textarea class="form-textarea" id="skills" placeholder="List your key skills separated by commas"></textarea>
+            <label class="form-label" for="location">Location</label>
+            <input type="text" class="form-input" id="location" placeholder="e.g., Remote, New York, San Francisco">
           </div>
 
           <!-- Additional Notes -->
           <div class="form-group" style="grid-column: 1 / -1;">
             <label class="form-label" for="additionalNotes">Additional Notes</label>
-            <textarea class="form-textarea" id="additionalNotes" placeholder="Any other preferences or requirements..."></textarea>
+            <textarea class="form-textarea" id="additionalNotes" placeholder="Any other preferences or requirements for your ideal client..."></textarea>
           </div>
         </div>
 
         <div class="variable-display" style="margin-top: 2rem; background: rgba(17, 24, 39, 0.8); padding: 1.5rem; border-radius: 12px;">
           <h4 style="color: #2563eb; margin-bottom: 1rem; font-size: 1rem;">Available Variables from this Step</h4>
           <p style="color: #d1d5db; font-size: 0.9rem;">These variables can be used in your email templates:</p>
-          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{target_roles}}</code>, 
-          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{target_industries}}</code>, 
-          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{target_salary}}</code>
+          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{client_roles}}</code>, 
+          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{client_industries}}</code>, 
+          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{client_company_size}}</code>
         </div>
 
         <div class="form-actions">
           <button type="button" class="btn-secondary" onclick="resetForm()">Reset</button>
-          <button type="submit" class="btn-primary">Save Preferences</button>
+          <button type="submit" class="btn-primary">Save ICP</button>
         </div>
       </form>
     </div>

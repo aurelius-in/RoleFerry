@@ -64,6 +64,8 @@
   .stone[data-step="8"] { top: 300px; left: 240px; }
   .stone[data-step="9"] { top: 300px; left: 430px; }
   .stone[data-step="10"] { top: 450px; left: 430px; }
+  .stone[data-step="12"] { top: 450px; left: 50px; }
+  .stone[data-step="13"] { top: 450px; left: 240px; }
   .launch-button[data-step="11"] {
       position: absolute;
       bottom: 0;
@@ -131,10 +133,10 @@
   <a href="wireframes/settings.html" class="settings-link">⚙️</a>
   <div class="keypad-container">
     <div class="keypad-header">
-      <h1 class="keypad-title">The 11-Step Path to Your Next Role</h1>
+      <h1 class="keypad-title">The 13-Step Path to Your Next Role</h1>
     </div>
     <div class="progress-indicator">
-      <div>Progress: <span id="progressText">0/11</span></div>
+      <div>Progress: <span id="progressText">0/13</span></div>
     </div>
 
     <div class="path-container">
@@ -182,6 +184,14 @@
             <div class="icon">🚀</div>
             <div class="label">Launch</div>
         </button>
+        <div class="stone" data-tab="analytics" data-step="12">
+            <div class="icon">📊</div>
+            <div class="label">Analytics</div>
+        </div>
+        <div class="stone" data-tab="onboarding" data-step="13">
+            <div class="icon">🚀</div>
+            <div class="label">Onboarding</div>
+        </div>
     </div>
 
   </div>
@@ -202,7 +212,9 @@
           'offer-creation': 'wireframes/offer-creation.html',
           'compose': 'wireframes/campaign.html', // Assuming compose is campaign now
           'campaign': 'wireframes/campaign.html',
-          'deliverability-launch': 'wireframes/deliverability-launch.html'
+          'deliverability-launch': 'wireframes/deliverability-launch.html',
+          'analytics': 'wireframes/analytics.html',
+          'onboarding': 'wireframes/onboarding.html'
         };
         if (tabMap[tab]) {
           window.location.href = tabMap[tab];

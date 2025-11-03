@@ -83,12 +83,12 @@
 <body>
   <div class="tab-container">
     <div class="tab-header">
-      <h1 class="tab-title">Job Descriptions</h1>
+      <h1 class="tab-title">Client Profiles</h1>
     </div>
 
     <div class="main-grid">
         <div class="left-column">
-            <h3>Saved Jobs</h3>
+            <h3>Saved Opportunities</h3>
             <ul class="saved-list">
                 <li class="saved-item active">
                     <h4>Senior Frontend Developer</h4>
@@ -113,12 +113,12 @@
 
               <!-- Header -->
               <div class="tab-header">
-                <p class="tab-subtitle">Import and analyze job postings to identify pain points</p>
+                <p class="tab-subtitle">Import and analyze job postings to identify client needs and pain points</p>
               </div>
 
               <!-- Success Message -->
               <div class="success-message" id="successMessage">
-                ✅ Job description analyzed successfully! AI has identified key pain points and requirements.
+                ✅ Client profile analyzed successfully! AI has identified key pain points and requirements.
               </div>
 
               <!-- Import Section -->
@@ -137,55 +137,27 @@
                   <input type="text" class="form-input" id="companyName" placeholder="e.g., TechCorp Inc." />
                 </div>
 
-                <!-- Self-Grading Section -->
-                <div class="form-group" style="margin-top: 2rem; padding: 1.5rem; border: 1px solid #4b5563; border-radius: 12px; background: rgba(17, 24, 39, 0.5);">
-                  <label class="form-label" style="font-size: 1.2rem; text-align: center; display: block; margin-bottom: 1.5rem;">How do you see this position for yourself?</label>
-                  <div style="display: flex; justify-content: space-around; gap: 1rem;">
-                    <div style="text-align: center;">
-                      <input type="radio" id="grade-easy-in" name="jd-grade" value="easy-in" style="display: none;">
-                      <label for="grade-easy-in" style="cursor: pointer; display: block; padding: 1rem; border: 2px solid #374151; border-radius: 8px;">
-                        <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🎯</div>
-                        <div style="font-weight: 600;">Easy-in Position</div>
-                      </label>
-                    </div>
-                    <div style="text-align: center;">
-                      <input type="radio" id="grade-stretch" name="jd-grade" value="stretch" style="display: none;">
-                      <label for="grade-stretch" style="cursor: pointer; display: block; padding: 1rem; border: 2px solid #374151; border-radius: 8px;">
-                        <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📈</div>
-                        <div style="font-weight: 600;">Stretch Position</div>
-                      </label>
-                    </div>
-                    <div style="text-align: center;">
-                      <input type="radio" id="grade-ideal" name="jd-grade" value="ideal" style="display: none;">
-                      <label for="grade-ideal" style="cursor: pointer; display: block; padding: 1rem; border: 2px solid #374151; border-radius: 8px;">
-                        <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🚀</div>
-                        <div style="font-weight: 600;">Ideal Future Role</div>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                <button class="btn-primary" id="parseBtn" onclick="parseJobDescription()">Analyze Job Description</button>
+                <button class="btn-primary" id="parseBtn" onclick="parseJobDescription()">Analyze Client Profile</button>
               </div>
 
               <!-- Loading Spinner -->
               <div class="loading-spinner" id="loadingSpinner">
                 <img src="../ani-sm.gif" alt="Loading animation" class="loading-gif">
-                <p>AI is analyzing the job description...</p>
+                <p>AI is analyzing the client profile...</p>
               </div>
 
               <!-- Results Section -->
               <div class="results-section" id="resultsSection">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                  <h2 style="color: #ffffff; margin: 0;">How Your Resume Matches Up</h2>
-                  <button class="btn-primary" onclick="window.location.href='job-tracker.html'" style="padding: 8px 16px; font-size: 0.9rem;">Go to Job Tracker →</button>
+                  <h2 style="color: #ffffff; margin: 0;">How Your Services Match</h2>
+                  <button class="btn-primary" onclick="window.location.href='job-tracker.html'" style="padding: 8px 16px; font-size: 0.9rem;">Go to Opportunity Tracker →</button>
                 </div>
                 <div class="data-grid">
                   <!-- Cards go here -->
                 </div>
                 <div class="variable-display" style="margin-top: 2rem;">
                   <h4>Available Variables from this Step</h4>
-                  <code>{{jd_summary}}</code>, <code>{{company_name}}</code>, <code>{{top_3_skills}}</code>
+                  <code>{{client_need_summary}}</code>, <code>{{client_company_name}}</code>, <code>{{top_3_requirements}}</code>
                 </div>
               </div>
             </div>

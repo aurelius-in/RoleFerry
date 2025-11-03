@@ -346,17 +346,17 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <a href="../home.html" class="roleferry-link" style="color: #10b981; text-decoration: none; font-weight: 600;">🏠 RoleFerry.com</a>
         <div style="display: flex; gap: 1rem;">
-          <a href="job-preferences.html" class="prev-button" style="background: #6b7280; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600;">← Previous</a>
-          <a href="job-descriptions.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; position: relative; z-index: 10;">Jobs →</a>
+          <a href="job-preferences.html" class="prev-button" style="background: #6b7280; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600;">← ICP</a>
+          <a href="job-descriptions.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; position: relative; z-index: 10;">Client Profiles →</a>
         </div>
       </div>
-      <h1 class="tab-title">Candidate Profile</h1>
-      <p class="tab-subtitle">Upload and parse your resume with AI</p>
+      <h1 class="tab-title">My Profile</h1>
+      <p class="tab-subtitle">Upload your bio or resume to create your professional profile for outreach</p>
     </div>
 
     <!-- Success Message -->
     <div class="success-message" id="successMessage">
-      ✅ Resume parsed successfully! AI has extracted key information from your profile.
+      ✅ Profile parsed successfully! AI has extracted key information to use in your outreach.
     </div>
 
     <!-- Form Container -->
@@ -364,25 +364,18 @@
       <!-- Upload Section -->
       <div class="upload-section">
         <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-          <div class="upload-icon">📄</div>
-          <div class="upload-text">Click to upload resume</div>
+          <div class="upload-icon">👤</div>
+          <div class="upload-text">Click to upload your bio or resume</div>
           <div class="upload-hint">PDF, DOC, DOCX supported</div>
         </div>
         <input type="file" id="fileInput" class="file-input" accept=".pdf,.doc,.docx" onchange="handleFileSelect(event)">
-        <button class="btn-primary" id="parseBtn" onclick="parseResume()" disabled>Parse Resume with AI</button>
-      </div>
-
-      <!-- Upsell Section -->
-      <div class="upsell-section" style="margin-top: 2rem; background: rgba(251, 191, 36, 0.1); border: 1px solid #fbbF24; border-radius: 12px; padding: 1.5rem; text-align: center;">
-        <h3 style="color: #fbbF24; font-size: 1.3rem; margin-top: 0; margin-bottom: 0.5rem;">Need a Stronger Resume?</h3>
-        <p style="color: #d1d5db; margin-bottom: 1rem;">Our experts can review or even create a new resume to help you stand out.</p>
-        <button style="background: #f59e0b; color: #1f2937; padding: 10px 20px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;">Learn More About Resume Services</button>
+        <button class="btn-primary" id="parseBtn" onclick="parseResume()" disabled>Parse Profile with AI</button>
       </div>
 
       <!-- Loading Spinner -->
       <div class="loading-spinner" id="loadingSpinner">
         <img src="../ani-sm.gif" alt="Loading animation" class="loading-gif">
-        <p>AI is analyzing your resume...</p>
+        <p>AI is analyzing your profile...</p>
       </div>
 
       <!-- Results Section -->
@@ -396,9 +389,9 @@
         <div class="variable-display" style="margin-top: 2rem; background: rgba(17, 24, 39, 0.8); padding: 1.5rem; border-radius: 12px;">
           <h4 style="color: #2563eb; margin-bottom: 1rem; font-size: 1rem;">Available Variables from this Step</h4>
           <p style="color: #d1d5db; font-size: 0.9rem;">These variables can be used in your email templates:</p>
-          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{resume_summary}}</code>, 
-          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{key_skills}}</code>, 
-          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{top_achievement}}</code>
+          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{my_name}}</code>, 
+          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{my_title}}</code>, 
+          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{my_company}}</code>
         </div>
       </div>
     </div>
