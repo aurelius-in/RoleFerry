@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signals Engine - RoleFerry</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        .document-container { max-width: 1200px; }
+        .signal-card {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .signal-card:hover {
+            border-color: #f59e0b;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.1);
+        }
+        .signal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .signal-header h3 {
+            color: #f59e0b;
+            margin: 0;
+            font-size: 1.4rem;
+        }
+        .signal-source {
+            font-size: 0.9rem;
+            color: #9ca3af;
+        }
+        .signal-content p {
+            margin-bottom: 1.5rem;
+        }
+        .signal-actions {
+            text-align: right;
+        }
+        .action-button {
+            background: linear-gradient(45deg, #10b981, #2563eb);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            align-items: center;
+        }
+        .filter-bar input, .filter-bar select {
+            padding: 0.75rem;
+            background: rgba(31, 41, 55, 0.9);
+            border: 1px solid #374151;
+            color: white;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>Signals Engine</h1>
+            <p>Find companies with hiring intent before they post a job.</p>
+        </div>
+
+        <div class="filter-bar">
+            <input type="text" placeholder="Search companies or keywords...">
+            <select>
+                <option>Filter by Signal Type</option>
+                <option>New Funding</option>
+                <option>Leadership Change</option>
+                <option>Expansion / New Office</option>
+                <option>Product Launch</option>
+            </select>
+            <select>
+                <option>Filter by Location</option>
+                <option>Charleston, SC</option>
+                <option>Austin, TX</option>
+                <option>United States</option>
+            </select>
+        </div>
+
+        <div class="section">
+            <div class="signal-card">
+                <div class="signal-header">
+                    <h3>Innovate Inc. Raises $25M Series B</h3>
+                    <span class="signal-source">Source: TechCrunch | Nov 2, 2025</span>
+                </div>
+                <div class="signal-content">
+                    <p>Innovate Inc., a Charleston-based AI startup, just closed a $25M Series B round to scale their engineering and sales teams. They plan to hire 50 new roles in the next 6 months.</p>
+                    <p><strong>Email Variable Created:</strong> <code>{{signal_context}}</code> = "Innovate Inc. just raised a $25M Series B to expand their engineering and sales teams in Charleston."</p>
+                </div>
+                <div class="signal-actions">
+                    <a href="#" class="action-button">Create Campaign from Signal</a>
+                </div>
+            </div>
+
+            <div class="signal-card">
+                <div class="signal-header">
+                    <h3>DataDriven LLC Opens New Austin HQ</h3>
+                    <span class="signal-source">Source: Austin Business Journal | Oct 28, 2025</span>
+                </div>
+                <div class="signal-content">
+                    <p>DataDriven LLC, a data analytics firm, announced the opening of a new headquarters in Austin, Texas, with plans to create 100 jobs, focusing on data science and software development.</p>
+                    <p><strong>Email Variable Created:</strong> <code>{{signal_context}}</code> = "DataDriven LLC is opening a new headquarters in Austin and plans to hire 100 new data scientists and developers."</p>
+                </div>
+                <div class="signal-actions">
+                    <a href="#" class="action-button">Create Campaign from Signal</a>
+                </div>
+            </div>
+            
+            <div class="signal-card">
+                <div class="signal-header">
+                    <h3>HealthTech Corp. Appoints New CTO</h3>
+                    <span class="signal-source">Source: Company Press Release | Oct 25, 2025</span>
+                </div>
+                <div class="signal-content">
+                    <p>HealthTech Corp. has hired a new Chief Technology Officer, Jane Doe, who previously led engineering at a major competitor. New leadership often signals a change in strategy and potential team restructuring.</p>
+                    <p><strong>Email Variable Created:</strong> <code>{{signal_context}}</code> = "HealthTech Corp. recently appointed a new CTO, Jane Doe, which often precedes a strategic shift and team growth."</p>
+                </div>
+                <div class="signal-actions">
+                    <a href="#" class="action-button">Create Campaign from Signal</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <a href="wireframes.html" class="nav-button secondary">← Back to Main Flow</a>
+        </div>
+    </div>
+</body>
+</html>

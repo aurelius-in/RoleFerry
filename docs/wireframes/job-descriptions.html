@@ -13,544 +13,157 @@
     background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
     padding: 2rem;
   }
-
   .tab-header {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
   }
-
   .tab-title {
     font-size: 2.5rem;
     font-weight: 700;
     background: linear-gradient(45deg, #f59e0b, #10b981);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 1rem;
   }
-
-  .tab-subtitle {
-    font-size: 1.1rem;
-    color: #9ca3af;
-    margin-bottom: 2rem;
+  .main-grid {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
   }
-
+  .left-column {
+      background: rgba(31, 41, 55, 0.5);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid #374151;
+      height: fit-content;
+  }
+  .left-column h3 {
+      color: #ffffff;
+      margin: 0 0 1.5rem 0;
+  }
+  .saved-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+  }
+  .saved-item {
+      padding: 1rem;
+      border-radius: 8px;
+      background: rgba(17, 24, 39, 0.8);
+      margin-bottom: 1rem;
+      cursor: pointer;
+      border: 1px solid #4b5563;
+      transition: all 0.3s ease;
+  }
+  .saved-item:hover, .saved-item.active {
+      background: #2563eb;
+      border-color: #2563eb;
+  }
+  .saved-item h4 {
+      color: #ffffff;
+      margin: 0 0 0.25rem 0;
+      font-size: 1rem;
+  }
+  .saved-item p {
+      color: #9ca3af;
+      margin: 0;
+      font-size: 0.85rem;
+  }
   .form-container {
-    max-width: 1000px;
+    max-width: 100%;
     margin: 0 auto;
     background: rgba(31, 41, 55, 0.8);
     border-radius: 20px;
     padding: 2rem;
     border: 1px solid #374151;
   }
-
-  .import-section {
-    margin-bottom: 3rem;
-  }
-
-  .tab-buttons {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    justify-content: center;
-  }
-
-  .tab-btn {
-    padding: 12px 24px;
-    background: rgba(55, 65, 81, 0.8);
-    color: #9ca3af;
-    border: 2px solid #374151;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 600;
-  }
-
-  .tab-btn.active {
-    background: #2563eb;
-    color: white;
-    border-color: #2563eb;
-  }
-
-  .tab-content {
-    margin-bottom: 2rem;
-  }
-
-  .tab-pane {
-    display: none;
-  }
-
-  .tab-pane.active {
-    display: block;
-  }
-
-  .form-input, .form-textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #374151;
-    border-radius: 8px;
-    background: rgba(17, 24, 39, 0.8);
-    color: #ffffff;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-  }
-
-  .form-input:focus, .form-textarea:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-  }
-
-  .form-textarea {
-    min-height: 200px;
-    resize: vertical;
-  }
-
-  .btn-primary {
-    padding: 12px 32px;
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-  }
-
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
-  }
-
-  .btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  .results-section {
-    display: none;
-    margin-top: 2rem;
-  }
-
-  .results-section.show {
-    display: block;
-  }
-
-  .data-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
-  }
-
-  .data-card {
-    background: rgba(17, 24, 39, 0.8);
-    border: 1px solid #374151;
-    border-radius: 12px;
-    padding: 1.5rem;
-  }
-
-  .data-card h3 {
-    color: #ffffff;
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    border-bottom: 2px solid #2563eb;
-    padding-bottom: 0.5rem;
-  }
-
-  .data-card ul {
-    list-style: none;
-    padding: 0;
-  }
-
-  .data-card li {
-    color: #d1d5db;
-    margin-bottom: 0.5rem;
-    padding-left: 1rem;
-    position: relative;
-  }
-
-  .data-card li::before {
-    content: "•";
-    color: #2563eb;
-    position: absolute;
-    left: 0;
-  }
-
-  .data-card p {
-    color: #d1d5db;
-    line-height: 1.6;
-  }
-
-  .loading-spinner {
-    display: none;
-    text-align: center;
-    margin: 2rem 0;
-  }
-
-  .loading-spinner.show {
-    display: block;
-  }
-
-  .loading-gif {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 1rem;
-    display: block;
-  }
-
-  .back-button {
-    position: fixed;
-    top: 2rem;
-    left: 2rem;
-    padding: 12px 24px;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .back-button:hover {
-    background: rgba(0, 0, 0, 0.9);
-  }
-
-  .progress-indicator {
-    position: fixed;
-    top: 2rem;
-    right: 2rem;
-    background: rgba(0, 0, 0, 0.8);
-    padding: 1rem;
-    border-radius: 12px;
-    color: white;
-    font-weight: 600;
-  }
-
-  .progress-bar {
-    width: 200px;
-    height: 8px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 0.5rem;
-  }
-
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #2563eb, #10b981);
-    transition: width 0.3s ease;
-  }
-
-  .success-message {
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid #10b981;
-    border-radius: 8px;
-    padding: 1rem;
-    color: #10b981;
-    margin-bottom: 1rem;
-    display: none;
-  }
-
-  .success-message.show {
-    display: block;
-  }
-
-  .pain-point {
-    background: rgba(239, 68, 68, 0.1);
-    border-left: 4px solid #ef4444;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-radius: 0 8px 8px 0;
-  }
-
-  .pain-point h4 {
-    color: #ef4444;
-    margin-bottom: 0.5rem;
-  }
-
-  .pain-point p {
-    color: #d1d5db;
-    margin: 0;
-  }
 </style>
 </head>
 <body>
   <div class="tab-container">
-    <!-- Navigation -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-      <a href="../home.html" class="roleferry-link" style="color: #10b981; text-decoration: none; font-weight: 600;">🏠 RoleFerry.com</a>
-      <a href="context-research.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; position: relative; z-index: 10;">Context Research →</a>
-    </div>
-    
-    <!-- Back Button -->
-    <button class="back-button" onclick="goBack()">← Back to Keypad</button>
-
-    <!-- Progress Indicator -->
-    <div class="progress-indicator">
-      <div>Step 3 of 10</div>
-      <div class="progress-bar">
-        <div class="progress-fill" style="width: 30%"></div>
-      </div>
-    </div>
-
-    <!-- Header -->
     <div class="tab-header">
-      <h1 class="tab-title">Job Descriptions</h1>
-      <p class="tab-subtitle">Import and analyze job postings to identify pain points</p>
+      <h1 class="tab-title">Client Profiles</h1>
     </div>
 
-    <!-- Success Message -->
-    <div class="success-message" id="successMessage">
-      ✅ Job description analyzed successfully! AI has identified key pain points and requirements.
-    </div>
-
-    <!-- Form Container -->
-    <div class="form-container">
-      <!-- Import Section -->
-      <div class="import-section">
-        <div class="tab-buttons">
-          <button class="tab-btn active" onclick="switchTab('url')">From URL</button>
-          <button class="tab-btn" onclick="switchTab('text')">Paste Text</button>
-        </div>
-
-        <div class="tab-content">
-          <div id="urlTab" class="tab-pane active">
-            <input type="url" class="form-input" id="jobUrl" placeholder="https://www.linkedin.com/jobs/view/..." />
-          </div>
-          <div id="textTab" class="tab-pane">
-            <textarea class="form-textarea" id="jobText" placeholder="Paste the complete job description text here..."></textarea>
-          </div>
-        </div>
-
-        <!-- Company Name Field -->
-        <div class="form-group" style="margin-top: 1rem;">
-          <label for="companyName" class="form-label">Company Name (Optional)</label>
-          <input type="text" class="form-input" id="companyName" placeholder="e.g., TechCorp Inc." />
-          <small class="form-help">Adding the company name helps with better analysis and tracking</small>
-        </div>
-
-        <button class="btn-primary" id="parseBtn" onclick="parseJobDescription()">Analyze Job Description</button>
-      </div>
-
-      <!-- Loading Spinner -->
-      <div class="loading-spinner" id="loadingSpinner">
-        <img src="../ani-sm.gif" alt="Loading animation" class="loading-gif">
-        <p>AI is analyzing the job description...</p>
-      </div>
-
-      <!-- Results Section -->
-      <div class="results-section" id="resultsSection">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-          <h2 style="color: #ffffff; margin: 0;">AI Analysis Results</h2>
-          <button class="btn-secondary" onclick="exportToCSV()" style="padding: 8px 16px; font-size: 0.9rem;">
-            📊 Export CSV
-          </button>
-        </div>
-        
-        <div class="data-grid">
-          <!-- Pain Points -->
-          <div class="data-card">
-            <h3>Business Pain Points</h3>
-            <div class="pain-point">
-              <h4>Scaling Infrastructure</h4>
-              <p>Need to scale backend infrastructure to handle 10x traffic growth</p>
-            </div>
-            <div class="pain-point">
-              <h4>Data Processing</h4>
-              <p>Improving data processing efficiency for real-time analytics</p>
-            </div>
-            <div class="pain-point">
-              <h4>API Development</h4>
-              <p>Building robust and secure APIs for external partners</p>
-            </div>
-          </div>
-
-          <!-- Required Skills -->
-          <div class="data-card">
-            <h3>Required Skills</h3>
-            <p>Python, Distributed Systems, Cloud Architecture (AWS), SQL/NoSQL, API Design, Microservices, Docker, Kubernetes, CI/CD</p>
-          </div>
-
-          <!-- Success Metrics -->
-          <div class="data-card">
-            <h3>Success Metrics</h3>
-            <ul>
-              <li>Reduce system latency by 30%</li>
-              <li>Increase system uptime to 99.99%</li>
-              <li>Deliver 3 new API endpoints per quarter</li>
-              <li>Improve data processing speed by 50%</li>
+    <div class="main-grid">
+        <div class="left-column">
+            <h3>Saved Opportunities</h3>
+            <ul class="saved-list">
+                <li class="saved-item active">
+                    <h4>Senior Frontend Developer</h4>
+                    <p>Innovate Inc.</p>
+                </li>
+                <li class="saved-item">
+                    <h4>Backend Engineer</h4>
+                    <p>DataCorp</p>
+                </li>
             </ul>
-          </div>
-
-          <!-- Company Context -->
-          <div class="data-card">
-            <h3>Company Context</h3>
-            <p><strong>Size:</strong> Mid-market (500-1000 employees)</p>
-            <p><strong>Industry:</strong> Technology/SaaS</p>
-            <p><strong>Stage:</strong> Series B</p>
-            <p><strong>Tech Stack:</strong> Python, AWS, PostgreSQL, React</p>
-          </div>
-
-          <!-- Reporting Structure -->
-          <div class="data-card">
-            <h3>Reporting Structure</h3>
-            <p><strong>Reports to:</strong> VP of Engineering</p>
-            <p><strong>Team Size:</strong> 5-8 engineers</p>
-            <p><strong>Collaboration:</strong> Product, Design, DevOps</p>
-          </div>
-
-          <!-- AI Confidence -->
-          <div class="data-card">
-            <h3>AI Confidence Scores</h3>
-            <p>Pain Point Extraction: <span style="color: #10b981;">94%</span></p>
-            <p>Skills Identification: <span style="color: #10b981;">89%</span></p>
-            <p>Company Context: <span style="color: #10b981;">87%</span></p>
-            <p>Overall Accuracy: <span style="color: #10b981;">90%</span></p>
-          </div>
         </div>
-      </div>
+
+        <div class="right-column">
+            <div class="form-container">
+              <!-- Navigation -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <a href="../home.html" class="roleferry-link" style="color: #10b981; text-decoration: none; font-weight: 600;">🏠 RoleFerry.com</a>
+                <a href="pain-point-match.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600;">Pain Points →</a>
+              </div>
+              <button class="back-button" onclick="window.location.href='../index.html'">← Back to Keypad</button>
+              <div class="progress-indicator"><div>Step 3 of 10</div><div class="progress-bar"><div class="progress-fill" style="width: 30%"></div></div></div>
+
+              <!-- Header -->
+              <div class="tab-header">
+                <p class="tab-subtitle">Import and analyze job postings to identify client needs and pain points</p>
+              </div>
+
+              <!-- Success Message -->
+              <div class="success-message" id="successMessage">
+                ✅ Client profile analyzed successfully! AI has identified key pain points and requirements.
+              </div>
+
+              <!-- Import Section -->
+              <div class="import-section">
+                <div class="form-group">
+                    <label class="form-label" for="jobUrl">Job Posting URL</label>
+                    <input type="url" class="form-input" id="jobUrl" placeholder="https://www.linkedin.com/jobs/view/..." />
+                </div>
+                <div style="text-align: center; margin: 1.5rem 0; color: #9ca3af; font-weight: 600;">OR</div>
+                <div class="form-group">
+                    <label class="form-label" for="jobText">Paste Job Description</label>
+                    <textarea class="form-textarea" id="jobText" placeholder="Paste the complete job description text here..."></textarea>
+                </div>
+                <div class="form-group" style="margin-top: 1rem;">
+                  <label for="companyName" class="form-label">Company Name (Optional)</label>
+                  <input type="text" class="form-input" id="companyName" placeholder="e.g., TechCorp Inc." />
+                </div>
+
+                <button class="btn-primary" id="parseBtn" onclick="parseJobDescription()">Analyze Client Profile</button>
+              </div>
+
+              <!-- Loading Spinner -->
+              <div class="loading-spinner" id="loadingSpinner">
+                <img src="../ani-sm.gif" alt="Loading animation" class="loading-gif">
+                <p>AI is analyzing the client profile...</p>
+              </div>
+
+              <!-- Results Section -->
+              <div class="results-section" id="resultsSection">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                  <h2 style="color: #ffffff; margin: 0;">How Your Services Match</h2>
+                  <button class="btn-primary" onclick="window.location.href='job-tracker.html'" style="padding: 8px 16px; font-size: 0.9rem;">Go to Opportunity Tracker →</button>
+                </div>
+                <div class="data-grid">
+                  <!-- Cards go here -->
+                </div>
+                <div class="variable-display" style="margin-top: 2rem;">
+                  <h4>Available Variables from this Step</h4>
+                  <code>{{client_need_summary}}</code>, <code>{{client_company_name}}</code>, <code>{{top_3_requirements}}</code>
+                </div>
+              </div>
+            </div>
+        </div>
     </div>
+
   </div>
-
-  <script>
-    let currentTab = 'url';
-
-    function switchTab(tab) {
-      currentTab = tab;
-      
-      // Update tab buttons
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
-      
-      // Update tab content
-      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-      document.getElementById(tab + 'Tab').classList.add('active');
-    }
-
-    function parseJobDescription() {
-      const urlInput = document.getElementById('jobUrl');
-      const textInput = document.getElementById('jobText');
-      
-      if (currentTab === 'url' && !urlInput.value.trim()) {
-        alert('Please enter a job URL');
-        return;
-      }
-      
-      if (currentTab === 'text' && !textInput.value.trim()) {
-        alert('Please paste job description text');
-        return;
-      }
-
-      // Show loading spinner
-      document.getElementById('loadingSpinner').classList.add('show');
-      document.getElementById('parseBtn').disabled = true;
-
-      // Simulate AI parsing
-      setTimeout(() => {
-        // Hide loading spinner
-        document.getElementById('loadingSpinner').classList.remove('show');
-        
-        // Show results
-        document.getElementById('resultsSection').classList.add('show');
-        document.getElementById('successMessage').classList.add('show');
-        
-        // Save to localStorage
-        const jobData = {
-          source: currentTab,
-          content: currentTab === 'url' ? urlInput.value : textInput.value,
-          painPoints: [
-            "Scaling backend infrastructure to handle 10x traffic growth",
-            "Improving data processing efficiency for real-time analytics",
-            "Building robust and secure APIs for external partners"
-          ],
-          requiredSkills: ["Python", "Distributed Systems", "Cloud Architecture (AWS)", "SQL/NoSQL", "API Design", "Microservices", "Docker", "Kubernetes", "CI/CD"],
-          successMetrics: [
-            "Reduce system latency by 30%",
-            "Increase system uptime to 99.99%",
-            "Deliver 3 new API endpoints per quarter",
-            "Improve data processing speed by 50%"
-          ],
-          companyContext: {
-            size: "Mid-market (500-1000 employees)",
-            industry: "Technology/SaaS",
-            stage: "Series B",
-            techStack: "Python, AWS, PostgreSQL, React"
-          },
-          reportingStructure: {
-            reportsTo: "VP of Engineering",
-            teamSize: "5-8 engineers",
-            collaboration: "Product, Design, DevOps"
-          },
-          confidenceScores: {
-            painPoints: 94,
-            skills: 89,
-            companyContext: 87,
-            overall: 90
-          }
-        };
-        
-        localStorage.setItem('roleferry_job_data', JSON.stringify(jobData));
-        
-        // Show success animation
-        setTimeout(() => {
-          alert('Job description analyzed successfully! AI has identified key pain points and requirements.');
-        }, 500);
-      }, 3000);
-    }
-
-    function exportToCSV() {
-      // Get the company name
-      const companyName = document.getElementById('companyName').value || 'Unknown Company';
-      
-      // Create CSV data
-      const csvData = [
-        ['Field', 'Value'],
-        ['Company', companyName],
-        ['Pain Point 1', 'Scaling Infrastructure - Need to scale backend infrastructure to handle 10x traffic growth'],
-        ['Pain Point 2', 'Technical Debt - Legacy systems causing performance bottlenecks'],
-        ['Pain Point 3', 'Team Growth - Need to hire and onboard 5+ engineers quickly'],
-        ['Required Skill 1', 'Python/Django - 5+ years experience'],
-        ['Required Skill 2', 'AWS/Cloud - Infrastructure automation'],
-        ['Required Skill 3', 'Team Leadership - Managing 3+ engineers'],
-        ['Success Metric 1', 'Reduce system response time by 50%'],
-        ['Success Metric 2', 'Scale to handle 1M+ daily users'],
-        ['Success Metric 3', 'Build and ship 2 major features per quarter'],
-        ['Salary Range', '$120,000 - $180,000'],
-        ['Location', 'San Francisco, CA (Remote OK)'],
-        ['Experience Level', 'Senior (5+ years)'],
-        ['Job Type', 'Full-time']
-      ];
-      
-      // Convert to CSV string
-      const csvString = csvData.map(row => row.map(field => `"${field}"`).join(',')).join('\n');
-      
-      // Create and download file
-      const blob = new Blob([csvString], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${companyName.replace(/[^a-zA-Z0-9]/g, '_')}_job_analysis.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-      
-      alert('CSV file exported successfully!');
-    }
-
-    function goBack() {
-      window.location.href = '../index.html';
-    }
-
-    // Load saved data if exists
-    const savedData = localStorage.getItem('roleferry_job_data');
-    if (savedData) {
-      document.getElementById('resultsSection').classList.add('show');
-    }
-  </script>
 </body>
 </html>

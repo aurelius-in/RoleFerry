@@ -1146,3 +1146,32 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Print Styles */
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .main-nav, .copilot-rail, .toast, .mode-toggle, .icon-btn, .user-avatar, .feedback-banner, .settings-link, .nav-button, .btn-back, .btn-primary, .btn-secondary, .btn-tertiary {
+    display: none !important;
+  }
+  .document-container, .content-area {
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    color: #000 !important;
+  }
+  a {
+    color: #000 !important;
+    text-decoration: underline !important;
+  }
+  /* Ensure text is black for print */
+  p, li, div {
+    color: #000 !important;
+  }
+} 

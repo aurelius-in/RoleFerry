@@ -273,13 +273,13 @@
 
     <!-- Header -->
     <div class="tab-header">
-      <h1 class="tab-title">Context Research</h1>
+      <h1 class="tab-title">Client Intelligence</h1>
       <p class="tab-subtitle">AI-powered company and contact research for personalized outreach</p>
     </div>
 
     <!-- Success Message -->
     <div class="success-message" id="successMessage">
-      ✅ Context research completed! AI has gathered comprehensive company and contact information.
+      ✅ Client intelligence gathered! AI has compiled comprehensive company and contact information.
     </div>
 
     <!-- Form Container -->
@@ -287,7 +287,7 @@
       <!-- Research Summary -->
       <div class="research-summary">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h3 style="margin: 0;">Research Summary</h3>
+          <h3 style="margin: 0;">Client Briefing</h3>
           <button class="btn-secondary" onclick="exportResearchToCSV()" style="padding: 8px 16px; font-size: 0.9rem;">
             📊 Export CSV
           </button>
@@ -300,31 +300,31 @@
         <div class="research-grid">
           <!-- Company Summary -->
           <div class="research-card">
-            <h3>Company Summary</h3>
-            <textarea id="companySummary" placeholder="AI is gathering company information...">TechCorp is a leading technology company specializing in AI-driven solutions for enterprise clients. Founded in 2010, they have grown rapidly to become a key player in the SaaS market, known for their innovative approach to data analytics and cloud computing. Their mission is to empower businesses with intelligent insights through cutting-edge technology.</textarea>
+            <h3>Company Overview</h3>
+            <textarea id="companySummary" placeholder="AI is gathering company information...">TechCorp is a leading technology company specializing in AI-driven solutions for enterprise clients. Founded in 2026, they have grown rapidly to become a key player in the SaaS market, known for their innovative approach to data analytics and cloud computing. Their mission is to empower businesses with intelligent insights through cutting-edge technology.</textarea>
             <div class="variable-display">
               <h4>Email Variable:</h4>
-              <code>{{company_summary}}</code>
+              <code>{{client_company_summary}}</code>
             </div>
           </div>
 
           <!-- Recent News -->
           <div class="research-card">
-            <h3>Recent News & Developments</h3>
+            <h3>Buying Signals & News</h3>
             <textarea id="recentNews" placeholder="AI is gathering recent news...">TechCorp recently announced a strategic partnership with GlobalData Inc. to expand their market reach in Asia. They also reported a 25% increase in Q3 revenue, driven by strong demand for their new predictive analytics platform. The company is planning to hire 50+ engineers in the next quarter to support their expansion.</textarea>
             <div class="variable-display">
               <h4>Email Variable:</h4>
-              <code>{{recent_news}}</code>
+              <code>{{client_recent_news}}</code>
             </div>
           </div>
 
           <!-- Contact Bio -->
           <div class="research-card">
-            <h3>Contact Bio</h3>
-            <textarea id="contactBio" placeholder="AI is gathering contact information...">Jane Doe is the Hiring Manager for the AI Solutions division at TechCorp. With over 10 years of experience in talent acquisition for tech companies, she focuses on recruiting top-tier engineering and data science professionals. She is passionate about building diverse and innovative teams that drive technological advancement.</textarea>
+            <h3>Decision-Maker Bio</h3>
+            <textarea id="contactBio" placeholder="AI is gathering contact information...">Jane Doe is the VP of Engineering at TechCorp. With over 10 years of experience in the tech industry, she is responsible for driving the company's technology strategy and leading the engineering team. She is passionate about building scalable and innovative solutions that solve real-world problems.</textarea>
             <div class="variable-display">
               <h4>Email Variable:</h4>
-              <code>{{contact_bio}}</code>
+              <code>{{decision_maker_bio}}</code>
             </div>
           </div>
 
@@ -334,7 +334,7 @@
             <textarea id="companyCulture" placeholder="AI is gathering culture information...">TechCorp values innovation, collaboration, and continuous learning. They have a flat organizational structure that encourages open communication and idea sharing. The company is known for its flexible work policies, strong emphasis on work-life balance, and commitment to employee development through regular training and mentorship programs.</textarea>
             <div class="variable-display">
               <h4>Email Variable:</h4>
-              <code>{{company_culture}}</code>
+              <code>{{client_company_culture}}</code>
             </div>
           </div>
 
@@ -344,7 +344,7 @@
             <textarea id="techStack" placeholder="AI is gathering technology information...">TechCorp's technology stack includes Python, AWS, PostgreSQL, React, Docker, Kubernetes, and various AI/ML frameworks. They are migrating to microservices architecture and implementing CI/CD pipelines. The company is also investing heavily in machine learning and data science capabilities.</textarea>
             <div class="variable-display">
               <h4>Email Variable:</h4>
-              <code>{{tech_stack}}</code>
+              <code>{{client_tech_stack}}</code>
             </div>
           </div>
 
@@ -354,14 +354,14 @@
             <textarea id="marketPosition" placeholder="AI is gathering market information...">TechCorp competes with companies like DataCorp, AnalyticsPro, and CloudTech in the enterprise AI solutions market. They differentiate themselves through their proprietary algorithms and customer-centric approach. The company has a strong market position in the mid-market segment and is expanding into enterprise clients.</textarea>
             <div class="variable-display">
               <h4>Email Variable:</h4>
-              <code>{{market_position}}</code>
+              <code>{{client_market_position}}</code>
             </div>
           </div>
         </div>
 
         <div class="research-actions">
-          <button class="btn-secondary" onclick="regenerateResearch()">Regenerate Research</button>
-          <button class="btn-primary" onclick="saveResearch()">Save Research</button>
+          <button class="btn-secondary" onclick="regenerateResearch()">Regenerate Briefing</button>
+          <button class="btn-primary" onclick="saveResearch()">Save Briefing</button>
         </div>
       </div>
     </div>

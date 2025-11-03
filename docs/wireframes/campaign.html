@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Campaign - RoleFerry</title>
+<title>Compose - RoleFerry</title>
 <link rel="stylesheet" href="../styles.css" />
 <link rel="stylesheet" href="responsive.css" />
 <link rel="icon" href="../assets/roleferry_trans.png" />
@@ -13,323 +13,131 @@
     background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
     padding: 2rem;
   }
-
   .tab-header {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
   }
-
   .tab-title {
     font-size: 2.5rem;
     font-weight: 700;
-    background: linear-gradient(45deg, #ffffff, #fbbf24);
+    background: linear-gradient(45deg, #8b5cf6, #ef4444);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 1rem;
   }
-
-  .tab-subtitle {
-    font-size: 1.1rem;
-    color: #9ca3af;
-    margin-bottom: 2rem;
+  .compose-grid {
+      display: grid;
+      grid-template-columns: 300px 1fr 300px;
+      gap: 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
   }
-
-  .form-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    background: rgba(31, 41, 55, 0.8);
-    border-radius: 20px;
+  .left-column, .right-column {
+      background: rgba(31, 41, 55, 0.5);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid #374151;
+      height: fit-content;
+  }
+  .left-column h3, .right-column h3 {
+      color: #ffffff;
+      margin: 0 0 1.5rem 0;
+      font-size: 1.2rem;
+  }
+  .people-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+  }
+  .person-item {
+      padding: 1rem;
+      border-radius: 8px;
+      background: rgba(17, 24, 39, 0.8);
+      margin-bottom: 1rem;
+      cursor: pointer;
+      border: 1px solid #4b5563;
+      transition: all 0.3s ease;
+  }
+  .person-item:hover, .person-item.active {
+      background: #2563eb;
+      border-color: #2563eb;
+  }
+  .person-item h4 {
+      color: #ffffff;
+      margin: 0 0 0.25rem 0;
+      font-size: 1rem;
+  }
+  .person-item h4 {
+      color: #ffffff;
+      margin: 0 0 0.25rem 0;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+  }
+  .person-item h4 img {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      margin-right: 0.75rem;
+  }
+  .person-item p {
+      color: #9ca3af;
+      margin: 0;
+      font-size: 0.85rem;
+  }
+  .center-column .email-preview {
+    background: #ffffff;
+    border-radius: 8px;
     padding: 2rem;
-    border: 1px solid #374151;
+    color: #1f2937;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    line-height: 1.6;
+    min-height: 600px;
   }
-
-  .campaign-section {
-    margin-bottom: 3rem;
+  .email-preview .subject {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
   }
-
-  .campaign-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
+  .variables-list, .preflight-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
   }
-
-  .campaign-name {
-    flex: 1;
-    margin-right: 2rem;
+  .variables-list li {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 4px 8px;
+      border-radius: 4px;
+      color: #10b981;
+      margin-bottom: 0.5rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
   }
-
-  .campaign-name input {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #374151;
-    border-radius: 8px;
-    background: rgba(17, 24, 39, 0.8);
-    color: #ffffff;
-    font-size: 1.1rem;
-    font-weight: 600;
+  .preflight-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #374151;
   }
-
-  .campaign-name input:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  .preflight-list .status {
+      font-weight: bold;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
   }
-
-  .campaign-status {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
+  .status.green {
+      background-color: #10b981;
+      color: white;
   }
-
-  .status-badge {
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.9rem;
+  .status.yellow {
+      background-color: #f59e0b;
+      color: white;
   }
-
-  .status-badge.draft {
-    background: rgba(107, 114, 128, 0.1);
-    color: #9ca3af;
-    border: 1px solid #6b7280;
+  .status.red {
+      background-color: #ef4444;
+      color: white;
   }
-
-  .status-badge.active {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
-    border: 1px solid #10b981;
-  }
-
-  .status-badge.paused {
-    background: rgba(245, 158, 11, 0.1);
-    color: #f59e0b;
-    border: 1px solid #f59e0b;
-  }
-
-  .btn-primary {
-    padding: 12px 24px;
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-  }
-
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
-  }
-
-  .btn-secondary {
-    padding: 12px 24px;
-    background: transparent;
-    color: #9ca3af;
-    border: 2px solid #374151;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .btn-secondary:hover {
-    border-color: #6b7280;
-    color: #ffffff;
-  }
-
-  .btn-danger {
-    padding: 12px 24px;
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .btn-danger:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4);
-  }
-
-  .emails-section {
-    margin-bottom: 3rem;
-  }
-
-  .email-step {
-    background: rgba(17, 24, 39, 0.8);
-    border: 1px solid #374151;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .email-step-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-
-  .email-step-title {
-    color: #ffffff;
-    font-size: 1.1rem;
-    font-weight: 600;
-  }
-
-  .email-step-status {
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-  }
-
-  .email-step-status.draft {
-    background: rgba(107, 114, 128, 0.1);
-    color: #9ca3af;
-  }
-
-  .email-step-status.scheduled {
-    background: rgba(245, 158, 11, 0.1);
-    color: #f59e0b;
-  }
-
-  .email-step-status.sent {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
-  }
-
-  .email-step-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .form-group {
-    margin-bottom: 1rem;
-  }
-
-  .form-label {
-    display: block;
-    color: #ffffff;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-  }
-
-  .form-input, .form-textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #374151;
-    border-radius: 8px;
-    background: rgba(17, 24, 39, 0.8);
-    color: #ffffff;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-  }
-
-  .form-input:focus, .form-textarea:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-  }
-
-  .form-textarea {
-    min-height: 100px;
-    resize: vertical;
-  }
-
-  .timing-controls {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-  }
-
-  .timing-controls input {
-    width: 80px;
-    padding: 8px 12px;
-    border: 2px solid #374151;
-    border-radius: 6px;
-    background: rgba(17, 24, 39, 0.8);
-    color: #ffffff;
-    text-align: center;
-  }
-
-  .timing-controls select {
-    padding: 8px 12px;
-    border: 2px solid #374151;
-    border-radius: 6px;
-    background: rgba(17, 24, 39, 0.8);
-    color: #ffffff;
-  }
-
-  .deliverability-panel {
-    background: rgba(17, 24, 39, 0.8);
-    border: 1px solid #374151;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-  }
-
-  .deliverability-panel h3 {
-    color: #ffffff;
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    border-bottom: 2px solid #10b981;
-    padding-bottom: 0.5rem;
-  }
-
-  .deliverability-checks {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-  }
-
-  .check-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    border-radius: 8px;
-    background: rgba(0, 0, 0, 0.2);
-  }
-
-  .check-item.pass {
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid #10b981;
-  }
-
-  .check-item.warning {
-    background: rgba(245, 158, 11, 0.1);
-    border: 1px solid #f59e0b;
-  }
-
-  .check-item.fail {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid #ef4444;
-  }
-
-  .check-icon {
-    font-size: 1.2rem;
-  }
-
-  .check-text {
-    color: #d1d5db;
-    font-size: 0.9rem;
-  }
-
-  .campaign-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    margin-top: 2rem;
-  }
+  .preflight-list .label { color: #d1d5db; }
 
   .back-button {
     position: fixed;
@@ -341,423 +149,131 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .back-button:hover {
-    background: rgba(0, 0, 0, 0.9);
-  }
-
-  .progress-indicator {
-    position: fixed;
-    top: 2rem;
-    right: 2rem;
-    background: rgba(0, 0, 0, 0.8);
-    padding: 1rem;
-    border-radius: 12px;
-    color: white;
-    font-weight: 600;
-  }
-
-  .progress-bar {
-    width: 200px;
-    height: 8px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 0.5rem;
-  }
-
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #2563eb, #10b981);
-    transition: width 0.3s ease;
-  }
-
-  .success-message {
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid #10b981;
-    border-radius: 8px;
-    padding: 1rem;
-    color: #10b981;
-    margin-bottom: 1rem;
-    display: none;
-  }
-
-  .success-message.show {
-    display: block;
-  }
-
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .tab-container {
-      padding: 1rem;
-    }
-    .tab-title {
-      font-size: 2rem;
-    }
-    .form-container {
-      padding: 1.5rem;
-    }
-    .campaign-section {
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
-    }
-    .deliverability-panel {
-      order: -1;
-    }
-    .back-button {
-      position: relative;
-      top: auto;
-      left: auto;
-      margin-bottom: 1rem;
-    }
-    .progress-indicator {
-      position: relative;
-      top: auto;
-      right: auto;
-      margin-bottom: 1rem;
-    }
-    .email-sequence {
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .tab-container {
-      padding: 0.5rem;
-    }
-    .tab-title {
-      font-size: 1.5rem;
-    }
-    .form-container {
-      padding: 1rem;
-    }
-    .btn-primary, .btn-secondary {
-      width: 100%;
-      margin-bottom: 0.5rem;
-    }
-    .campaign-actions {
-      flex-direction: column;
-    }
-    .email-card {
-      padding: 1rem;
-    }
-    .email-card h4 {
-      font-size: 1rem;
-    }
   }
 </style>
 </head>
 <body>
   <div class="tab-container">
-    <!-- Navigation -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-      <a href="../home.html" class="roleferry-link" style="color: #10b981; text-decoration: none; font-weight: 600;">🏠 RoleFerry.com</a>
-      <a href="deliverability-launch.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; position: relative; z-index: 10;">Launch Campaign →</a>
-    </div>
-    
-    <!-- Back Button -->
-    <button class="back-button" onclick="goBack()">← Back to Keypad</button>
-
-    <!-- Progress Indicator -->
-    <div class="progress-indicator">
-      <div>Step 9 of 10</div>
-      <div class="progress-bar">
-        <div class="progress-fill" style="width: 90%"></div>
-      </div>
-    </div>
-
-    <!-- Header -->
+    <button class="back-button" onclick="window.location.href='../index.html'">← Back to Keypad</button>
     <div class="tab-header">
-      <h1 class="tab-title">Campaign</h1>
-      <p class="tab-subtitle">Create and manage your 3-email sequence with deliverability checks</p>
+      <h1 class="tab-title">Compose & Campaign</h1>
     </div>
 
-    <!-- Success Message -->
-    <div class="success-message" id="successMessage">
-      ✅ Campaign created successfully! Your 3-email sequence is ready for launch.
+    <div class="compose-grid">
+        <!-- Left Column: People -->
+        <div class="left-column">
+            <h3>Recipients</h3>
+            <ul class="people-list">
+                <li class="person-item active" data-email-body="<p>Hi Jane,</p><p>I was excited to see the Senior Software Engineer role at TechCorp, as my experience in scaling microservices on AWS has led to a 99.9% uptime and 20% cost reduction in previous roles. I noticed your team is focused on improving data processing efficiency, and I believe my background is a strong match for this challenge.</p><p>TechCorp's innovative approach to data analytics is impressive, and I'm confident I can contribute to your team's success.</p><p>Would you be open to a brief chat next week?</p><p>Best,<br>Oliver</p>">
+                    <h4><img src="../assets/techcorp-logo.png" alt="">Jane Doe</h4>
+                    <p>VP of Engineering • TechCorp</p>
+                </li>
+                <li class="person-item" data-email-body="<p>Hi John,</p><p>Following up on my application for the Senior Software Engineer role. My background in building secure, scalable APIs aligns well with the job description, and I'm particularly interested in TechCorp's work in the fintech space.</p><p>I'm confident my skills can help your team accelerate its product roadmap.</p><p>Best,<br>Oliver</p>">
+                    <h4><img src="../assets/techcorp-logo.png" alt="">John Smith</h4>
+                    <p>Senior Engineering Manager • TechCorp</p>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Center Column: Email Preview -->
+        <div class="center-column">
+            <div class="email-preview" contenteditable="true">
+                <div class="subject">Following up on the Senior Software Engineer role</div>
+                <div id="email-body-content">
+                    <p>Hi Jane,</p>
+                    <p>I was excited to see the Senior Software Engineer role at TechCorp, as my experience in scaling microservices on AWS has led to a 99.9% uptime and 20% cost reduction in previous roles. I noticed your team is focused on improving data processing efficiency, and I believe my background is a strong match for this challenge.</p>
+                    <p>TechCorp's innovative approach to data analytics is impressive, and I'm confident I can contribute to your team's success.</p>
+                    <p>Would you be open to a brief chat next week?</p>
+                    <p>Best,<br>Oliver</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Variables & Pre-flight -->
+        <div class="right-column">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <button class="btn-primary" style="background: #10b981;">Launch Campaign</button>
+                <a href="dry-run.html" class="btn-secondary" style="padding: 12px 24px; background: #4b5563; text-decoration: none; color: white; border-radius: 8px;">Dry Run</a>
+            </div>
+            <h3>Available Variables</h3>
+            <ul class="variables-list">
+                <li>{{contact_name}}</li>
+                <li>{{contact_title}}</li>
+                <li>{{jd_summary}}</li>
+                <li>{{challenge_1}}</li>
+                <li>{{solution_1}}</li>
+                <li>{{metric_1}}</li>
+                <li>{{offer_text}}</li>
+                <li>{{company_summary}}</li>
+                <li>{{recent_news}}</li>
+            </ul>
+            <h3 style="margin-top: 2rem;">Pre-flight Deliverability</h3>
+            <ul class="preflight-list">
+                <li>
+                    <span class="label">Domain Health</span>
+                    <span class="status green">Good</span>
+                </li>
+                <li>
+                    <span class="label">Mailbox Warm-up</span>
+                    <span class="status green">Active</span>
+                </li>
+                <li>
+                    <span class="label">Spam Words</span>
+                    <span class="status green">0 Found</span>
+                </li>
+                <li>
+                    <span class="label">Link Safety</span>
+                    <span class="status green">Secure</span>
+                </li>
+                <li>
+                    <span class="label">Image/Text Ratio</span>
+                    <span class="status yellow">Optimal</span>
+                </li>
+                <li>
+                    <span class="label">Sending Limits</span>
+                    <span class="status green">OK</span>
+                </li>
+            </ul>
+        </div>
     </div>
 
-    <!-- Form Container -->
-    <div class="form-container">
-      <!-- Campaign Header -->
-      <div class="campaign-header">
-        <div class="campaign-name">
-          <input type="text" id="campaignName" value="Job Application Campaign" placeholder="Campaign Name">
-        </div>
-        <div class="campaign-status">
-          <span class="status-badge draft" id="statusBadge">Draft</span>
-          <button class="btn-primary" onclick="launchCampaign()">Launch Campaign</button>
-        </div>
-      </div>
-
-      <!-- Emails Section -->
-      <div class="emails-section">
-        <h2 style="color: #ffffff; margin-bottom: 1.5rem;">Email Sequence</h2>
-        
-        <!-- Email 1 -->
-        <div class="email-step">
-          <div class="email-step-header">
-            <div class="email-step-title">Email 1 - Initial Outreach</div>
-            <div class="email-step-status draft">Draft</div>
-          </div>
-          <div class="email-step-content">
-            <div class="form-group">
-              <label class="form-label" for="email1Subject">Subject</label>
-              <input type="text" class="form-input" id="email1Subject" value="Quick advice on Senior Software Engineer at TechCorp?">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="email1Body">Body</label>
-              <textarea class="form-textarea" id="email1Body">Hi Jane,
-
-I noticed the Senior Software Engineer role at TechCorp and was particularly interested in your focus on scaling backend infrastructure. My background in microservices architecture has consistently led to results like 99.9% uptime and 20% cost reduction. I believe my skills are a strong fit for your team's needs.
-
-Would you be open to a brief chat to discuss how my experience can help with your current challenges?
-
-Best,
-[Your Name]</textarea>
-            </div>
-          </div>
-          <div class="timing-controls">
-            <label>Send immediately</label>
-          </div>
-        </div>
-
-        <!-- Email 2 -->
-        <div class="email-step">
-          <div class="email-step-header">
-            <div class="email-step-title">Email 2 - Follow-up</div>
-            <div class="email-step-status draft">Draft</div>
-          </div>
-          <div class="email-step-content">
-            <div class="form-group">
-              <label class="form-label" for="email2Subject">Subject</label>
-              <input type="text" class="form-input" id="email2Subject" value="Following up: Senior Software Engineer at TechCorp">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="email2Body">Body</label>
-              <textarea class="form-textarea" id="email2Body">Hi Jane,
-
-Just wanted to follow up on my previous email regarding the Senior Software Engineer role. I'm still very interested in how my experience in scaling backend infrastructure could benefit TechCorp.
-
-I've attached a brief case study of a similar project I led that resulted in 40% performance improvement and 25% cost reduction.
-
-Would love to connect if the timing is better now.
-
-Best,
-[Your Name]</textarea>
-            </div>
-          </div>
-          <div class="timing-controls">
-            <label>Send after</label>
-            <input type="number" value="2" min="1" max="7">
-            <select>
-              <option value="days">days</option>
-              <option value="hours">hours</option>
-            </select>
-            <label>
-              <input type="checkbox" checked> Stop on reply
-            </label>
-          </div>
-        </div>
-
-        <!-- Email 3 -->
-        <div class="email-step">
-          <div class="email-step-header">
-            <div class="email-step-title">Email 3 - Final Follow-up</div>
-            <div class="email-step-status draft">Draft</div>
-          </div>
-          <div class="email-step-content">
-            <div class="form-group">
-              <label class="form-label" for="email3Subject">Subject</label>
-              <input type="text" class="form-input" id="email3Subject" value="Final follow-up: Senior Software Engineer at TechCorp">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="email3Body">Body</label>
-              <textarea class="form-textarea" id="email3Body">Hi Jane,
-
-One more thought on the Senior Software Engineer position. I saw TechCorp recently partnered with GlobalData and believe my background in microservices architecture could be particularly useful for your current initiatives.
-
-I understand you're busy, so I'll keep this brief. If you're interested in learning more about how I can help with your scaling challenges, I'd be happy to share some specific examples.
-
-Best,
-[Your Name]</textarea>
-            </div>
-          </div>
-          <div class="timing-controls">
-            <label>Send after</label>
-            <input type="number" value="4" min="1" max="7">
-            <select>
-              <option value="days">days</option>
-              <option value="hours">hours</option>
-            </select>
-            <label>
-              <input type="checkbox" checked> Stop on reply
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <!-- Deliverability Panel -->
-      <div class="deliverability-panel">
-        <h3>Deliverability Checks</h3>
-        <div class="deliverability-checks">
-          <div class="check-item pass">
-            <span class="check-icon">✓</span>
-            <div class="check-text">Email Verification: All emails verified</div>
-          </div>
-          <div class="check-item pass">
-            <span class="check-icon">✓</span>
-            <div class="check-text">SPF Record: Valid</div>
-          </div>
-          <div class="check-item pass">
-            <span class="check-icon">✓</span>
-            <div class="check-text">DKIM Record: Valid</div>
-          </div>
-          <div class="check-item warning">
-            <span class="check-icon">⚠</span>
-            <div class="check-text">Spam Score: 2.1 (acceptable)</div>
-          </div>
-          <div class="check-item pass">
-            <span class="check-icon">✓</span>
-            <div class="check-text">Domain Warmup: Active</div>
-          </div>
-          <div class="check-item pass">
-            <span class="check-icon">✓</span>
-            <div class="check-text">Bounce Rate: 0.5%</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Campaign Actions -->
-      <div class="campaign-actions">
-        <button class="btn-secondary" onclick="saveCampaign()">Save Campaign</button>
-        <button class="btn-primary" onclick="launchCampaign()">Launch Campaign</button>
-      </div>
-    </div>
   </div>
 
   <script>
-    function launchCampaign() {
-      // Update status
-      document.getElementById('statusBadge').textContent = 'Active';
-      document.getElementById('statusBadge').className = 'status-badge active';
-      
-      // Update email statuses
-      document.querySelectorAll('.email-step-status').forEach(status => {
-        status.textContent = 'Scheduled';
-        status.className = 'email-step-status scheduled';
-      });
-      
-      // Save campaign data
-      const campaignData = {
-        name: document.getElementById('campaignName').value,
-        status: 'active',
-        emails: [
-          {
-            step: 1,
-            subject: document.getElementById('email1Subject').value,
-            body: document.getElementById('email1Body').value,
-            timing: 'immediate',
-            status: 'scheduled'
-          },
-          {
-            step: 2,
-            subject: document.getElementById('email2Subject').value,
-            body: document.getElementById('email2Body').value,
-            timing: '2 days',
-            status: 'scheduled'
-          },
-          {
-            step: 3,
-            subject: document.getElementById('email3Subject').value,
-            body: document.getElementById('email3Body').value,
-            timing: '4 days',
-            status: 'scheduled'
-          }
-        ],
-        deliverability: {
-          emailVerification: 'pass',
-          spfRecord: 'pass',
-          dkimRecord: 'pass',
-          spamScore: 'warning',
-          domainWarmup: 'pass',
-          bounceRate: 'pass'
-        },
-        timestamp: new Date().toISOString()
-      };
-      
-      localStorage.setItem('roleferry_campaign_data', JSON.stringify(campaignData));
-      
-      document.getElementById('successMessage').classList.add('show');
-      
-      setTimeout(() => {
-        alert('Campaign launched successfully! Your emails will be sent according to the schedule.');
-      }, 500);
-    }
+    document.addEventListener('DOMContentLoaded', () => {
+        const peopleList = document.querySelector('.people-list');
+        const emailBodyContent = document.getElementById('email-body-content');
+        const items = Array.from(peopleList.querySelectorAll('.person-item'));
 
-    function saveCampaign() {
-      const campaignData = {
-        name: document.getElementById('campaignName').value,
-        status: 'draft',
-        emails: [
-          {
-            step: 1,
-            subject: document.getElementById('email1Subject').value,
-            body: document.getElementById('email1Body').value,
-            timing: 'immediate',
-            status: 'draft'
-          },
-          {
-            step: 2,
-            subject: document.getElementById('email2Subject').value,
-            body: document.getElementById('email2Body').value,
-            timing: '2 days',
-            status: 'draft'
-          },
-          {
-            step: 3,
-            subject: document.getElementById('email3Subject').value,
-            body: document.getElementById('email3Body').value,
-            timing: '4 days',
-            status: 'draft'
-          }
-        ],
-        timestamp: new Date().toISOString()
-      };
-      
-      localStorage.setItem('roleferry_campaign_data', JSON.stringify(campaignData));
-      
-      alert('Campaign saved successfully!');
-    }
-
-    function goBack() {
-      window.location.href = '../index.html';
-    }
-
-    // Load saved data if exists
-    const savedData = localStorage.getItem('roleferry_campaign_data');
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      if (data.name) {
-        document.getElementById('campaignName').value = data.name;
-        
-        if (data.status === 'active') {
-          document.getElementById('statusBadge').textContent = 'Active';
-          document.getElementById('statusBadge').className = 'status-badge active';
+        function setActiveItem(item) {
+            items.forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            emailBodyContent.innerHTML = item.dataset.emailBody;
         }
-        
-        if (data.emails) {
-          data.emails.forEach((email, index) => {
-            const stepIndex = index + 1;
-            document.getElementById(`email${stepIndex}Subject`).value = email.subject;
-            document.getElementById(`email${stepIndex}Body`).value = email.body;
-          });
-        }
-      }
-    }
+
+        peopleList.addEventListener('click', (e) => {
+            const targetItem = e.target.closest('.person-item');
+            if (targetItem) {
+                setActiveItem(targetItem);
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            const currentActive = peopleList.querySelector('.person-item.active');
+            let currentIndex = items.indexOf(currentActive);
+
+            if (e.key === 'j') { // Down
+                e.preventDefault();
+                const nextIndex = (currentIndex + 1) % items.length;
+                setActiveItem(items[nextIndex]);
+            } else if (e.key === 'k') { // Up
+                e.preventDefault();
+                const prevIndex = (currentIndex - 1 + items.length) % items.length;
+                setActiveItem(items[prevIndex]);
+            }
+        });
+    });
   </script>
+
 </body>
 </html>

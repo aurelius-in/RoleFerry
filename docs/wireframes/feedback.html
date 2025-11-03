@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Feedback - RoleFerry</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        .document-container { max-width: 900px; }
+        .feedback-form-section {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .feedback-form-section h2 {
+            color: #f59e0b;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #374151;
+            padding-bottom: 1rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            color: #d1d5db;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(17, 24, 39, 0.9);
+            border: 1px solid #4b5563;
+            color: white;
+            border-radius: 8px;
+        }
+        .form-group textarea {
+            min-height: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>Weekly Feedback</h1>
+            <p>Your feedback is critical for making RoleFerry better every week.</p>
+        </div>
+
+        <div class="feedback-form-section">
+            <h2>Targeted Questions</h2>
+            <div class="form-group">
+                <label>1. What was the most valuable feature you used this week?</label>
+                <input type="text">
+            </div>
+            <div class="form-group">
+                <label>2. What was the most confusing or frustrating part of your experience?</label>
+                <input type="text">
+            </div>
+            <div class="form-group">
+                <label>3. Did RoleFerry help you sign or advance a client deal this week? How?</label>
+                <input type="text">
+            </div>
+            <div class="form-group">
+                <label>4. Is there anything you wanted to do but couldn't?</label>
+                <input type="text">
+            </div>
+            <div class="form-group">
+                <label>5. How would you rate the quality of the AI-generated content (emails, variables)? (1-5)</label>
+                <input type="number" min="1" max="5">
+            </div>
+            <div class="form-group">
+                <label>6. What is the #1 thing we should build next?</label>
+                <input type="text">
+            </div>
+        </div>
+        
+        <div class="feedback-form-section">
+            <h2>General Feedback</h2>
+            <div class="form-group">
+                <label>Have anything else to share? (Bugs, ideas, etc.)</label>
+                <textarea></textarea>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <a href="../wireframes.html" class="nav-button secondary">← Back to Main Flow</a>
+            <button class="nav-button">Submit Feedback</button>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onboarding - RoleFerry</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="icon" href="../assets/roleferry_trans.png">
+    <style>
+        .document-container { max-width: 800px; }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist-item {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        .checklist-item input[type="checkbox"] {
+            margin-right: 1.5rem;
+            width: 20px;
+            height: 20px;
+        }
+        .checklist-item-content h3 {
+            color: #f59e0b;
+            font-size: 1.2rem;
+            margin: 0 0 0.5rem 0;
+        }
+        .checklist-item-content p {
+            color: #9ca3af;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="document-header">
+            <h1>Welcome to RoleFerry!</h1>
+            <p>Complete these steps to get started with your first client acquisition campaign.</p>
+        </div>
+
+        <ul class="checklist">
+            <li class="checklist-item">
+                <input type="checkbox" id="step1" />
+                <label for="step1" class="checklist-item-content">
+                    <h3>Define Your Ideal Client Profile (ICP)</h3>
+                    <p>Tell us about the companies and people you want to work with.</p>
+                </label>
+            </li>
+            <li class="checklist-item">
+                <input type="checkbox" id="step2" />
+                <label for="step2" class="checklist-item-content">
+                    <h3>Create Your First Client Profile</h3>
+                    <p>Import a job description to analyze a potential client's needs.</p>
+                </label>
+            </li>
+            <li class="checklist-item">
+                <input type="checkbox" id="step3" />
+                <label for="step3" class="checklist-item-content">
+                    <h3>Find Decision-Makers</h3>
+                    <p>Let our AI find the right people to contact at your target companies.</p>
+                </label>
+            </li>
+            <li class="checklist-item">
+                <input type="checkbox" id="step4" />
+                <label for="step4" class="checklist-item-content">
+                    <h3>Launch Your First Campaign</h3>
+                    <p>Start reaching out to potential clients with personalized messages.</p>
+                </label>
+            </li>
+        </ul>
+
+        <div class="navigation">
+            <a href="../wireframes.html" class="nav-button secondary">← Back to Main Flow</a>
+        </div>
+    </div>
+</body>
+</html>

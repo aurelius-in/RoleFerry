@@ -13,597 +13,157 @@
     background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
     padding: 2rem;
   }
-
   .tab-header {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
   }
-
   .tab-title {
     font-size: 2.5rem;
     font-weight: 700;
     background: linear-gradient(45deg, #ffffff, #fbbf24);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 1rem;
   }
-
-  .tab-subtitle {
-    font-size: 1.1rem;
-    color: #9ca3af;
-    margin-bottom: 2rem;
+  .main-grid {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
   }
-
+  .left-column {
+      background: rgba(31, 41, 55, 0.5);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid #374151;
+      height: fit-content;
+  }
+  .left-column h3 {
+      color: #ffffff;
+      margin: 0 0 1.5rem 0;
+  }
+  .saved-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+  }
+  .saved-item {
+      padding: 1rem;
+      border-radius: 8px;
+      background: rgba(17, 24, 39, 0.8);
+      margin-bottom: 1rem;
+      cursor: pointer;
+      border: 1px solid #4b5563;
+  }
+  .saved-item.active {
+      background: #2563eb;
+      border-color: #2563eb;
+  }
+  .saved-item h4 {
+      color: #ffffff;
+      margin: 0 0 0.25rem 0;
+  }
+  .saved-item p {
+      color: #9ca3af;
+      margin: 0;
+      font-size: 0.85rem;
+  }
   .form-container {
-    max-width: 1000px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0;
     background: rgba(31, 41, 55, 0.8);
     border-radius: 20px;
     padding: 2rem;
     border: 1px solid #374151;
   }
-
-  .search-section {
-    margin-bottom: 3rem;
+  .contact-list {
+    list-style: none;
+    padding: 0;
   }
-
-  .search-input {
-    width: 100%;
-    padding: 16px 20px;
-    border: 2px solid #374151;
-    border-radius: 12px;
-    background: rgba(17, 24, 39, 0.8);
-    color: #ffffff;
-    font-size: 1.1rem;
-    transition: all 0.3s ease;
-    margin-bottom: 1rem;
-  }
-
-  .search-input:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-  }
-
-  .search-hint {
-    color: #9ca3af;
-    font-size: 0.9rem;
-    margin-bottom: 2rem;
-  }
-
-  .btn-primary {
-    padding: 12px 32px;
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-  }
-
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
-  }
-
-  .btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  .contacts-section {
-    display: none;
-    margin-top: 2rem;
-  }
-
-  .contacts-section.show {
-    display: block;
-  }
-
-  .contacts-grid {
-    display: grid;
-    gap: 1.5rem;
-    margin-top: 2rem;
-  }
-
-  .contact-card {
-    background: rgba(17, 24, 39, 0.8);
-    border: 1px solid #374151;
-    border-radius: 12px;
+  .contact-item {
+    display: flex;
+    align-items: center;
     padding: 1.5rem;
-    transition: all 0.3s ease;
+    border-bottom: 1px solid #374151;
   }
-
-  .contact-card:hover {
-    border-color: #2563eb;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
-  }
-
-  .contact-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-  }
-
-  .contact-info h3 {
-    color: #ffffff;
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-  }
-
-  .contact-info p {
-    color: #9ca3af;
-    margin-bottom: 0.25rem;
-  }
-
-  .contact-actions {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-  }
-
-  .verification-badge {
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-
-  .verification-badge.valid {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
-    border: 1px solid #10b981;
-  }
-
-  .verification-badge.risky {
-    background: rgba(245, 158, 11, 0.1);
-    color: #f59e0b;
-    border: 1px solid #f59e0b;
-  }
-
-  .verification-badge.invalid {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border: 1px solid #ef4444;
-  }
-
-  .confidence-score {
-    background: rgba(37, 99, 235, 0.1);
-    border: 1px solid #2563eb;
-    border-radius: 6px;
-    padding: 4px 8px;
-    font-size: 0.8rem;
-    color: #2563eb;
-    font-weight: 600;
-  }
-
-  .btn-select {
-    padding: 8px 16px;
-    background: #10b981;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .btn-select:hover {
-    background: #059669;
-    transform: translateY(-1px);
-  }
-
-  .btn-select.selected {
-    background: #2563eb;
-  }
-
-  .loading-spinner {
-    display: none;
-    text-align: center;
-    margin: 2rem 0;
-  }
-
-  .loading-spinner.show {
-    display: block;
-  }
-
-  .loading-gif {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 1rem;
-    display: block;
-  }
-
-  .back-button {
-    position: fixed;
-    top: 2rem;
-    left: 2rem;
-    padding: 12px 24px;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .back-button:hover {
-    background: rgba(0, 0, 0, 0.9);
-  }
-
-  .progress-indicator {
-    position: fixed;
-    top: 2rem;
-    right: 2rem;
-    background: rgba(0, 0, 0, 0.8);
-    padding: 1rem;
-    border-radius: 12px;
-    color: white;
-    font-weight: 600;
-  }
-
-  .progress-bar {
-    width: 200px;
-    height: 8px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 0.5rem;
-  }
-
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #2563eb, #10b981);
-    transition: width 0.3s ease;
-  }
-
-  .success-message {
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid #10b981;
-    border-radius: 8px;
-    padding: 1rem;
-    color: #10b981;
-    margin-bottom: 1rem;
-    display: none;
-  }
-
-  .success-message.show {
-    display: block;
-  }
-
-  .selected-contact {
-    background: rgba(37, 99, 235, 0.1);
-    border: 2px solid #2563eb;
-  }
-
-  .contact-details {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #374151;
-  }
-
-  .contact-details p {
-    color: #d1d5db;
-    margin-bottom: 0.5rem;
-  }
-
-  .contact-details strong {
-    color: #ffffff;
+  .contact-item:last-child {
+      border-bottom: none;
   }
 </style>
 </head>
 <body>
   <div class="tab-container">
-    <!-- Navigation -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-      <a href="../home.html" class="roleferry-link" style="color: #10b981; text-decoration: none; font-weight: 600;">🏠 RoleFerry.com</a>
-      <a href="pain-point-match.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; position: relative; z-index: 10;">Pain Point Match →</a>
-    </div>
-    
-    <!-- Back Button -->
-    <button class="back-button" onclick="goBack()">← Back to Keypad</button>
-
-    <!-- Progress Indicator -->
-    <div class="progress-indicator">
-      <div>Step 5 of 10</div>
-      <div class="progress-bar">
-        <div class="progress-fill" style="width: 50%"></div>
-      </div>
-    </div>
-
-    <!-- Header -->
     <div class="tab-header">
-      <h1 class="tab-title">Find Contact</h1>
-      <p class="tab-subtitle">Discover and verify hiring managers with AI-powered search</p>
+      <h1 class="tab-title">Find & Select Decision-Makers</h1>
     </div>
 
-    <!-- Success Message -->
-    <div class="success-message" id="successMessage">
-      ✅ Contacts found and verified! Select your target contact to proceed.
-    </div>
-
-    <!-- Form Container -->
-    <div class="form-container">
-      <!-- Search Section -->
-      <div class="search-section">
-        <input type="text" class="search-input" id="searchInput" placeholder="Enter company name, job title, or LinkedIn URL...">
-        <p class="search-hint">Try: "TechCorp hiring manager", "VP Engineering", or paste a LinkedIn profile URL</p>
-        <button class="btn-primary" id="searchBtn" onclick="searchContacts()">Find Contacts</button>
-      </div>
-
-      <!-- Loading Spinner -->
-      <div class="loading-spinner" id="loadingSpinner">
-        <img src="../ani-sm.gif" alt="Loading animation" class="loading-gif">
-        <p>AI is searching for contacts and verifying emails...</p>
-      </div>
-
-      <!-- Contacts Section -->
-      <div class="contacts-section" id="contactsSection">
-        <h2 style="color: #ffffff; text-align: center; margin-bottom: 1rem;">Found Contacts</h2>
-        <p style="color: #9ca3af; text-align: center; margin-bottom: 1rem;">Select up to 3 contacts for your outreach</p>
-        <div id="selectionCounter" style="color: #10b981; font-weight: 600; margin-bottom: 1rem; text-align: center;">0/3 contacts selected</div>
-        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 8px; padding: 1rem; margin-bottom: 2rem; font-size: 0.9rem; color: #d1d5db; max-width: 600px; margin-left: auto; margin-right: auto;">
-          <strong>Why limit to 3 contacts?</strong> This helps maintain deliverability and prevents your emails from being flagged as spam. We recommend contacting multiple people at the same company, but not too many to avoid looking unprofessional.
+    <div class="main-grid">
+        <div class="left-column">
+            <h3>Contacts for:</h3>
+            <div class="saved-item active" style="margin-bottom: 2rem;">
+                <h4>Senior Frontend Developer</h4>
+                <p>Innovate Inc.</p>
+            </div>
+            <h3>Saved Contacts</h3>
+            <ul class="saved-list">
+                <li class="saved-item">
+                    <h4>Jane Doe</h4>
+                    <p>VP of Engineering</p>
+                </li>
+                <li class="saved-item">
+                    <h4>Alice Johnson</h4>
+                    <p>Director of Talent...</p>
+                </li>
+            </ul>
         </div>
-        
-        <div class="contacts-grid" id="contactsGrid">
-          <!-- Contact 1 -->
-          <div class="contact-card" data-contact="1">
-            <div class="contact-header">
-              <div class="contact-info">
-                <h3>Jane Doe</h3>
-                <p>Hiring Manager</p>
-                <p>jane.doe@techcorp.com</p>
-              </div>
-              <div class="contact-actions">
-                <span class="verification-badge valid">✓ Valid</span>
-                <span class="confidence-score">95%</span>
-                <button class="btn-select" onclick="selectContact(1)">Select</button>
-              </div>
-            </div>
-            <div class="contact-details">
-              <p><strong>Company:</strong> TechCorp</p>
-              <p><strong>Department:</strong> Engineering</p>
-              <p><strong>LinkedIn:</strong> linkedin.com/in/janedoe</p>
-              <p><strong>Verification:</strong> Email verified via NeverBounce</p>
-            </div>
-          </div>
 
-          <!-- Contact 2 -->
-          <div class="contact-card" data-contact="2">
-            <div class="contact-header">
-              <div class="contact-info">
-                <h3>John Smith</h3>
-                <p>VP of Engineering</p>
-                <p>john.smith@techcorp.com</p>
-              </div>
-              <div class="contact-actions">
-                <span class="verification-badge risky">⚠ Risky</span>
-                <span class="confidence-score">88%</span>
-                <button class="btn-select" onclick="selectContact(2)">Select</button>
-              </div>
+        <div class="right-column">
+            <div class="form-container">
+                <p class="tab-subtitle" style="text-align: center; margin-bottom: 1rem;">AI has suggested the best contacts based on the client profile. Select who to reach out to.</p>
+                <ul class="contact-list" id="contactList">
+                    <li class="contact-item">
+                      <input type="checkbox" id="contact1" name="contact1">
+                      <div class="contact-details">
+                        <h4>Jane Doe</h4>
+                        <p>VP of Engineering</p>
+                      </div>
+                      <div class="contact-meta">
+                        <span class="badge recommended">★ Recommended</span>
+                        <a href="#" class="social-link" title="View LinkedIn Profile">🔗</a>
+                      </div>
+                    </li>
+                    <li class="contact-item">
+                      <input type="checkbox" id="contact2" name="contact2">
+                      <div class="contact-details">
+                        <h4>John Smith</h4>
+                        <p>Senior Engineering Manager</p>
+                      </div>
+                      <div class="contact-meta">
+                        <a href="#" class="social-link" title="View LinkedIn Profile">🔗</a>
+                      </div>
+                    </li>
+                </ul>
+                <div class="form-actions">
+                    <button class="btn-primary" onclick="verifySelectedContacts()">Verify Selected Contacts</button>
+                </div>
+                <div class="variable-display" style="margin-top: 2rem;">
+                  <h4>Available Variables from this Step</h4>
+                  <code>{{decision_maker_name}}</code>, <code>{{decision_maker_title}}</code>, <code>{{decision_maker_company}}</code>
+                </div>
             </div>
-            <div class="contact-details">
-              <p><strong>Company:</strong> TechCorp</p>
-              <p><strong>Department:</strong> Engineering</p>
-              <p><strong>LinkedIn:</strong> linkedin.com/in/johnsmith</p>
-              <p><strong>Verification:</strong> Email may be outdated</p>
-            </div>
-          </div>
-
-          <!-- Contact 3 -->
-          <div class="contact-card" data-contact="3">
-            <div class="contact-header">
-              <div class="contact-info">
-                <h3>Alice Johnson</h3>
-                <p>HR Business Partner</p>
-                <p>alice.johnson@techcorp.com</p>
-              </div>
-              <div class="contact-actions">
-                <span class="verification-badge invalid">✗ Invalid</span>
-                <span class="confidence-score">70%</span>
-                <button class="btn-select" onclick="selectContact(3)">Select</button>
-              </div>
-            </div>
-            <div class="contact-details">
-              <p><strong>Company:</strong> TechCorp</p>
-              <p><strong>Department:</strong> Human Resources</p>
-              <p><strong>LinkedIn:</strong> linkedin.com/in/alicejohnson</p>
-              <p><strong>Verification:</strong> Email bounced, may be invalid</p>
-            </div>
-          </div>
-
-          <!-- Contact 4 -->
-          <div class="contact-card" data-contact="4">
-            <div class="contact-header">
-              <div class="contact-info">
-                <h3>Bob Williams</h3>
-                <p>Engineering Manager</p>
-                <p>bob.williams@techcorp.com</p>
-              </div>
-              <div class="contact-actions">
-                <span class="verification-badge valid">✓ Valid</span>
-                <span class="confidence-score">92%</span>
-                <button class="btn-select" onclick="selectContact(4)">Select</button>
-              </div>
-            </div>
-            <div class="contact-details">
-              <p><strong>Company:</strong> TechCorp</p>
-              <p><strong>Department:</strong> Engineering</p>
-              <p><strong>LinkedIn:</strong> linkedin.com/in/bobwilliams</p>
-              <p><strong>Verification:</strong> Email verified via MillionVerifier</p>
-            </div>
-          </div>
         </div>
-      </div>
     </div>
+
   </div>
-
-  <script>
-    let selectedContacts = [];
-
-    function searchContacts() {
-      const searchInput = document.getElementById('searchInput');
-      if (!searchInput.value.trim()) {
-        alert('Please enter a search query');
-        return;
-      }
-
-      // Show loading spinner
-      document.getElementById('loadingSpinner').classList.add('show');
-      document.getElementById('searchBtn').disabled = true;
-
-      // Simulate AI search and verification
-      setTimeout(() => {
-        // Hide loading spinner
-        document.getElementById('loadingSpinner').classList.remove('show');
-        
-        // Show contacts
-        document.getElementById('contactsSection').classList.add('show');
-        document.getElementById('successMessage').classList.add('show');
-        
-        // Save to localStorage
-        const contactData = {
-          searchQuery: searchInput.value,
-          contacts: [
-            {
-              id: 1,
-              name: "Jane Doe",
-              title: "Hiring Manager",
-              email: "jane.doe@techcorp.com",
-              company: "TechCorp",
-              department: "Engineering",
-              linkedin: "linkedin.com/in/janedoe",
-              verificationStatus: "valid",
-              confidence: 95,
-              verificationMethod: "NeverBounce"
-            },
-            {
-              id: 2,
-              name: "John Smith",
-              title: "VP of Engineering",
-              email: "john.smith@techcorp.com",
-              company: "TechCorp",
-              department: "Engineering",
-              linkedin: "linkedin.com/in/johnsmith",
-              verificationStatus: "risky",
-              confidence: 88,
-              verificationMethod: "MillionVerifier"
-            },
-            {
-              id: 3,
-              name: "Alice Johnson",
-              title: "HR Business Partner",
-              email: "alice.johnson@techcorp.com",
-              company: "TechCorp",
-              department: "Human Resources",
-              linkedin: "linkedin.com/in/alicejohnson",
-              verificationStatus: "invalid",
-              confidence: 70,
-              verificationMethod: "Bounced"
-            },
-            {
-              id: 4,
-              name: "Bob Williams",
-              title: "Engineering Manager",
-              email: "bob.williams@techcorp.com",
-              company: "TechCorp",
-              department: "Engineering",
-              linkedin: "linkedin.com/in/bobwilliams",
-              verificationStatus: "valid",
-              confidence: 92,
-              verificationMethod: "MillionVerifier"
-            }
-          ]
-        };
-        
-        localStorage.setItem('roleferry_contacts_data', JSON.stringify(contactData));
-        
-        // Show success animation
-        setTimeout(() => {
-          alert('Contacts found and verified! Select your target contact to proceed.');
-        }, 500);
-      }, 3000);
+<script>
+  function verifySelectedContacts() {
+    const checkboxes = document.querySelectorAll('.contact-list input[type="checkbox']:checked');
+    if (checkboxes.length === 0) {
+      alert('Please select at least one contact to verify.');
+      return;
     }
-
-    function selectContact(contactId) {
-      // No need to remove previous selections - we allow multiple
-      
-      // Toggle selection for clicked contact
-      const contactElement = document.querySelector(`[data-contact="${contactId}"]`);
-      const isSelected = contactElement.classList.contains('selected-contact');
-      
-      if (isSelected) {
-        // Deselect contact
-        contactElement.classList.remove('selected-contact');
-        contactElement.querySelector('.btn-select').textContent = 'Select';
-        contactElement.querySelector('.btn-select').classList.remove('selected');
-        
-        // Remove from selected contacts
-        selectedContacts = selectedContacts.filter(id => id !== contactId);
-      } else {
-        // Check if we can select more contacts (max 3)
-        if (selectedContacts.length >= 3) {
-          alert('You can select up to 3 contacts. Please deselect a contact first.');
-          return;
-        }
-        
-        // Select contact
-        contactElement.classList.add('selected-contact');
-        contactElement.querySelector('.btn-select').textContent = 'Selected';
-        contactElement.querySelector('.btn-select').classList.add('selected');
-        
-        // Add to selected contacts
-        selectedContacts.push(contactId);
-      }
-      
-      // Save selection
-      const contactData = JSON.parse(localStorage.getItem('roleferry_contacts_data') || '{}');
-      contactData.selectedContacts = selectedContacts;
-      localStorage.setItem('roleferry_contacts_data', JSON.stringify(contactData));
-      
-      // Update selection counter
-      updateSelectionCounter();
-      
-      // Show success message
-      setTimeout(() => {
-        if (!isSelected) {
-          alert(`Contact ${contactId} selected! (${selectedContacts.length}/3 selected)`);
-        }
-      }, 500);
-    }
-
-    function updateSelectionCounter() {
-      const counter = document.getElementById('selectionCounter');
-      if (counter) {
-        counter.textContent = `${selectedContacts.length}/3 contacts selected`;
-      }
-    }
-
-    function goBack() {
-      window.location.href = '../index.html';
-    }
-
-    // Load saved data if exists
-    const savedData = localStorage.getItem('roleferry_contacts_data');
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      if (data.contacts) {
-        document.getElementById('contactsSection').classList.add('show');
-        if (data.selectedContact) {
-          selectContact(data.selectedContact);
-        }
-      }
-    }
-  </script>
+    alert(`Simulating verification for ${checkboxes.length} contact(s).`);
+  }
+</script>
 </body>
 </html>

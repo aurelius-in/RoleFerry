@@ -290,21 +290,21 @@
     <div class="tab-header">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <a href="../home.html" class="roleferry-link" style="color: #10b981; text-decoration: none; font-weight: 600;">🏠 RoleFerry.com</a>
-        <a href="candidate-profile.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; position: relative; z-index: 10;">Resume →</a>
+        <a href="candidate-profile.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; position: relative; z-index: 10;">My Profile →</a>
       </div>
-      <h1 class="tab-title" id="tabTitle">Job Preferences</h1>
-      <p class="tab-subtitle">Tell us what you're looking for in your next role</p>
+      <h1 class="tab-title" id="tabTitle">Ideal Client Profile (ICP)</h1>
+      <p class="tab-subtitle">Define your target companies and ideal clients for business development</p>
       
       <!-- Mode Toggle -->
       <div class="mode-toggle">
-        <button class="mode-btn active" id="jobSeekerMode">Job Seeker</button>
-        <button class="mode-btn" id="recruiterMode">Recruiter</button>
+        <button class="mode-btn" id="jobSeekerMode">Job Seeker</button>
+        <button class="mode-btn active" id="recruiterMode">Recruiter</button>
       </div>
     </div>
 
     <!-- Success Message -->
     <div class="success-message" id="successMessage">
-      ✅ Preferences saved successfully! You can now proceed to the next step.
+      ✅ ICP saved successfully! You can now proceed to the next step.
     </div>
 
     <!-- Form Container -->
@@ -313,38 +313,32 @@
         <div class="form-grid">
           <!-- Industries -->
           <div class="form-group">
-            <label class="form-label" for="industries">Industries</label>
+            <label class="form-label" for="industries">Target Industries (Select up to 5)</label>
             <select class="form-select" id="industries" multiple>
-              <option value="software">Software & Technology</option>
-              <option value="finance">Finance & Banking</option>
-              <option value="healthcare">Healthcare & Medical</option>
-              <option value="marketing">Marketing & Advertising</option>
-              <option value="consulting">Consulting</option>
-              <option value="education">Education</option>
-              <option value="retail">Retail & E-commerce</option>
-              <option value="manufacturing">Manufacturing</option>
+                <option value="">- Select an Industry -</option>
+                <option value="staffing-recruiting">Staffing and Recruiting</option>
+                <option value="information-technology-services">Information Technology and Services</option>
+                <option value="management-consulting">Management Consulting</option>
+                <option value="marketing-advertising">Marketing and Advertising</option>
+                <option value="computer-software">Computer Software</option>
             </select>
           </div>
 
           <!-- Roles -->
           <div class="form-group">
-            <label class="form-label" for="roles">Job Roles</label>
-            <select class="form-select" id="roles" multiple>
-              <option value="software-engineer">Software Engineer</option>
-              <option value="product-manager">Product Manager</option>
-              <option value="data-scientist">Data Scientist</option>
-              <option value="marketing-manager">Marketing Manager</option>
-              <option value="sales-manager">Sales Manager</option>
-              <option value="hr-manager">HR Manager</option>
-              <option value="operations-manager">Operations Manager</option>
-              <option value="designer">Designer</option>
-            </select>
+            <label class="form-label" for="roles">Target Client Roles</label>
+            <textarea class="form-textarea" id="roles" placeholder="e.g., VP of Talent Acquisition, Director of Engineering, Head of Marketing"></textarea>
           </div>
 
-          <!-- Salary Range -->
+          <!-- Company Size -->
           <div class="form-group">
-            <label class="form-label" for="salaryRange">Salary Range</label>
-            <input type="text" class="form-input" id="salaryRange" placeholder="e.g., $80,000 - $120,000">
+            <label class="form-label" for="companySize">Company Size</label>
+            <select class="form-select" id="companySize">
+              <option value="startup">Startup (1-50 employees)</option>
+              <option value="small">Small (51-200 employees)</option>
+              <option value="medium">Medium (201-1000 employees)</option>
+              <option value="large">Large (1000+ employees)</option>
+            </select>
           </div>
 
           <!-- Location -->
@@ -353,57 +347,24 @@
             <input type="text" class="form-input" id="location" placeholder="e.g., Remote, New York, San Francisco">
           </div>
 
-          <!-- Work Type -->
-          <div class="form-group">
-            <label class="form-label" for="workType">Work Type</label>
-            <select class="form-select" id="workType" multiple>
-              <option value="remote">Remote</option>
-              <option value="hybrid">Hybrid</option>
-              <option value="onsite">On-site</option>
-              <option value="contract">Contract</option>
-              <option value="part-time">Part-time</option>
-            </select>
-          </div>
-
-          <!-- Company Size -->
-          <div class="form-group">
-            <label class="form-label" for="companySize">Company Size</label>
-            <select class="form-select" id="companySize">
-              <option value="">Any Size</option>
-              <option value="startup">Startup (1-50 employees)</option>
-              <option value="small">Small (51-200 employees)</option>
-              <option value="medium">Medium (201-1000 employees)</option>
-              <option value="large">Large (1000+ employees)</option>
-            </select>
-          </div>
-
-          <!-- Experience Level -->
-          <div class="form-group">
-            <label class="form-label" for="experienceLevel">Experience Level</label>
-            <select class="form-select" id="experienceLevel">
-              <option value="entry">Entry Level (0-2 years)</option>
-              <option value="mid">Mid Level (3-5 years)</option>
-              <option value="senior">Senior Level (6-10 years)</option>
-              <option value="lead">Lead/Principal (10+ years)</option>
-            </select>
-          </div>
-
-          <!-- Skills -->
-          <div class="form-group">
-            <label class="form-label" for="skills">Key Skills</label>
-            <textarea class="form-textarea" id="skills" placeholder="List your key skills separated by commas"></textarea>
-          </div>
-
           <!-- Additional Notes -->
           <div class="form-group" style="grid-column: 1 / -1;">
             <label class="form-label" for="additionalNotes">Additional Notes</label>
-            <textarea class="form-textarea" id="additionalNotes" placeholder="Any other preferences or requirements..."></textarea>
+            <textarea class="form-textarea" id="additionalNotes" placeholder="Any other preferences or requirements for your ideal client..."></textarea>
           </div>
+        </div>
+
+        <div class="variable-display" style="margin-top: 2rem; background: rgba(17, 24, 39, 0.8); padding: 1.5rem; border-radius: 12px;">
+          <h4 style="color: #2563eb; margin-bottom: 1rem; font-size: 1rem;">Available Variables from this Step</h4>
+          <p style="color: #d1d5db; font-size: 0.9rem;">These variables can be used in your email templates:</p>
+          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{client_roles}}</code>, 
+          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{client_industries}}</code>, 
+          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{client_company_size}}</code>
         </div>
 
         <div class="form-actions">
           <button type="button" class="btn-secondary" onclick="resetForm()">Reset</button>
-          <button type="submit" class="btn-primary">Save Preferences</button>
+          <button type="submit" class="btn-primary">Save ICP</button>
         </div>
       </form>
     </div>
