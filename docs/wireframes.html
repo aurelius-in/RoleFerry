@@ -3,91 +3,205 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>RoleFerry - Smart Job Search Platform</title>
+<title>RoleFerry - The 12-Step Path to Your Next Role</title>
 <link rel="stylesheet" href="styles.css" />
 <link rel="icon" href="assets/roleferry_trans.png" />
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f172a 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
   .keypad-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-    padding: 1rem;
+    padding: 2rem 1rem;
+    position: relative;
   }
+
   .keypad-header {
     text-align: center;
     margin-bottom: 2rem;
+    z-index: 10;
+    position: relative;
   }
-  .path-container {
-      position: relative;
-      width: 600px;
-      height: 600px;
-  }
-  .stone {
-      position: absolute;
-      width: 120px;
-      height: 120px;
-      background: #374151;
-      border-radius: 50%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: white;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: 3px solid #4b5563;
-  }
-  .stone:hover {
-      transform: scale(1.1);
-      border-color: #2563eb;
-  }
-  .stone.completed {
-      background: #10b981;
-      border-color: #10b981;
-  }
-  .stone .icon { font-size: 2rem; }
-  .stone .label { font-size: 0.8rem; font-weight: 600; margin-top: 0.5rem; }
 
-  /* S-Path Positions */
-  .stone[data-step="1"] { top: 0; left: 50px; }
-  .stone[data-step="2"] { top: 0; left: 240px; }
-  .stone[data-step="3"] { top: 0; left: 430px; }
-  .stone[data-step="4"] { top: 150px; left: 430px; }
-  .stone[data-step="5"] { top: 150px; left: 240px; }
-  .stone[data-step="6"] { top: 150px; left: 50px; }
-  .stone[data-step="7"] { top: 300px; left: 50px; }
-  .stone[data-step="8"] { top: 300px; left: 240px; }
-  .stone[data-step="9"] { top: 300px; left: 430px; }
-  .stone[data-step="10"] { top: 450px; left: 430px; }
-  .stone[data-step="12"] { top: 450px; left: 50px; }
-  .stone[data-step="13"] { top: 450px; left: 240px; }
-  .launch-button[data-step="11"] {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 200px;
-      height: 60px;
+  .branding-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
   }
+
+  .wordmark-logo {
+    height: 60px;
+    width: auto;
+  }
+
+  .animated-logo {
+    height: 60px;
+    width: auto;
+  }
+
+  .keypad-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(45deg, #FF6B35, #FFD23F, #4A90E2, #87CEEB);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+  }
+
+  .keypad-subtitle {
+    font-size: 1.2rem;
+    color: #9ca3af;
+    margin-bottom: 0.5rem;
+    font-style: italic;
+  }
+
+  .path-container {
+    position: relative;
+    width: 900px;
+    height: 700px;
+    border-radius: 20px;
+    padding: 2rem;
+    z-index: 1;
+  }
+
+  .stone {
+    position: absolute;
+    width: 180px;
+    height: 100px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 5;
+    padding: 0.5rem;
+  }
+
+  .stone-image {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    z-index: 1;
+    opacity: 0.9;
+    pointer-events: none;
+    transition: all 0.3s ease;
+  }
+
+  .stone:hover .stone-image {
+    transform: scale(1.1);
+  }
+
+  .stone.completed .stone-image {
+    filter: brightness(1.2) saturate(1.3);
+  }
+
+  .stone-content {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+  }
+
+  .stone .icon {
+    font-size: 2rem;
+    color: #1a1a1a;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.9);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    flex-shrink: 0;
+  }
+
+  .stone-label-text {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.9);
+    line-height: 1.2;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* 12-Step S-Curve Positioning - Closer together, almost touching */
+  .stone[data-step="1"] { top: 40px; left: 20px; }
+  .stone[data-step="2"] { top: 40px; left: 210px; }
+  .stone[data-step="3"] { top: 40px; left: 400px; }
+  .stone[data-step="4"] { top: 40px; left: 590px; }
+  .stone[data-step="5"] { top: 160px; left: 590px; }
+  .stone[data-step="6"] { top: 160px; left: 400px; }
+  .stone[data-step="7"] { top: 160px; left: 210px; }
+  .stone[data-step="8"] { top: 160px; left: 20px; }
+  .stone[data-step="9"] { top: 320px; left: 20px; }
+  .stone[data-step="10"] { top: 320px; left: 210px; }
+  .stone[data-step="11"] { top: 320px; left: 400px; }
+  .stone[data-step="12"] { top: 320px; left: 590px; }
+
+  /* Launch Campaign stone with reversed colors */
+  .stone.launch-stone {
+    position: relative;
+  }
+
+  .stone.launch-stone .stone-image {
+    filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(1.2);
+  }
+
+  .stone.launch-stone .stone-label-text {
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
+    font-weight: 800;
+  }
+
+  .stone.launch-stone .icon {
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+  }
+
+  .stone.launch-stone:hover .stone-image {
+    filter: invert(1) hue-rotate(180deg) brightness(1.0) contrast(1.3);
+  }
+
   .progress-indicator {
     position: fixed;
     top: 2rem;
     left: 2rem;
-    background: rgba(0, 0, 0, 0.8);
-    padding: 1rem;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 1rem 1.5rem;
     border-radius: 12px;
     color: white;
+    font-weight: 600;
+    z-index: 100;
+    border: 2px solid rgba(74, 144, 226, 0.5);
   }
+
   .settings-link {
     position: fixed;
     top: 2rem;
     right: 2rem;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     padding: 1rem;
     border-radius: 50%;
     color: white;
@@ -98,19 +212,33 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 100;
+    border: 2px solid rgba(74, 144, 226, 0.5);
+    transition: all 0.3s ease;
   }
+
+  .settings-link:hover {
+    background: rgba(74, 144, 226, 0.9);
+    transform: scale(1.1);
+  }
+
   .feedback-banner {
-    background: #2563eb;
-    color: white;
+    background: linear-gradient(135deg, #4A90E2 0%, #87CEEB 100%);
+    color: #1a1a1a;
     padding: 1rem;
     text-align: center;
     position: relative;
+    font-weight: 600;
+    z-index: 100;
   }
+
   .feedback-banner a {
-    color: white;
+    color: #1a1a1a;
     font-weight: bold;
     text-decoration: underline;
+    margin-left: 0.5rem;
   }
+
   .feedback-banner .close-btn {
     position: absolute;
     top: 50%;
@@ -118,9 +246,103 @@
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: white;
+    color: #1a1a1a;
     font-size: 1.5rem;
     cursor: pointer;
+    font-weight: bold;
+  }
+
+  /* Footsteps Animation */
+  .footstep {
+    position: absolute;
+    width: 45px;
+    height: 90px;
+    background: #1a1a1a;
+    border-radius: 60% 60% 50% 50%;
+    opacity: 0;
+    transform-origin: 50% 80%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .footstep::before {
+    content: "";
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 26px;
+    height: 22px;
+    border-radius: 50%;
+    background: #2d2d2d;
+  }
+
+  .footstep.left {
+    transform: rotate(-18deg);
+  }
+
+  .footstep.right {
+    transform: rotate(18deg);
+  }
+
+  .footstep.visible {
+    animation: stepAppear 0.6s forwards;
+  }
+
+  .footstep.fade-out {
+    animation: stepFadeOut 1s forwards;
+  }
+
+  @keyframes stepAppear {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -30%) scale(0.6) rotate(var(--rot, 0deg));
+    }
+    40% {
+      opacity: 1;
+      transform: translate(-50%, -55%) scale(1.05) rotate(var(--rot, 0deg));
+    }
+    100% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1) rotate(var(--rot, 0deg));
+    }
+  }
+
+  @keyframes stepFadeOut {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.8) rotate(var(--rot, 0deg));
+    }
+  }
+
+  /* Responsive Design */
+  @media (max-width: 900px) {
+    .path-container {
+      width: 100%;
+      max-width: 600px;
+      height: 600px;
+    }
+
+    .stone {
+      width: 80px;
+      height: 80px;
+    }
+
+    .stone .icon {
+      font-size: 2rem;
+    }
+
+    .stone .label {
+      font-size: 0.65rem;
+    }
+
+    .keypad-title {
+      font-size: 2rem;
+    }
   }
 </style>
 </head>
@@ -133,94 +355,235 @@
   <a href="wireframes/settings.html" class="settings-link">⚙️</a>
   <div class="keypad-container">
     <div class="keypad-header">
-      <h1 class="keypad-title">The 13-Step Path to Your Next Role</h1>
+      <div class="branding-section">
+        <img src="wordmark.png" alt="RoleFerry" class="wordmark-logo">
+        <img src="ani-sm.gif" alt="RoleFerry Animation" class="animated-logo">
+      </div>
+      <h1 class="keypad-title">The 12-Step Path to Your Next Role</h1>
+      <p class="keypad-subtitle">Transform your job search with intelligent automation</p>
     </div>
     <div class="progress-indicator">
-      <div>Progress: <span id="progressText">0/13</span></div>
+      <div>Progress: <span id="progressText">0/12</span></div>
     </div>
 
-    <div class="path-container">
-        <div class="stone" data-tab="signals-engine" data-step="1">
-            <div class="icon">📡</div>
-            <div class="label">Signals Engine</div>
+    <div class="path-container" id="pathContainer">
+      <!-- 12 Steps -->
+      <div class="stone" data-tab="signals-engine" data-step="1" title="Discover job opportunities">
+        <img src="assets/stones.png" alt="Stone" class="stone-image">
+        <div class="stone-content">
+          <div class="icon">📡</div>
+          <div class="stone-label-text">Signals Engine</div>
         </div>
-        <div class="stone" data-tab="job-preferences" data-step="2">
-            <div class="icon">🎯</div>
-            <div class="label">Job Preferences</div>
+      </div>
+      <div class="stone" data-tab="job-preferences" data-step="2" title="Define ideal role criteria">
+        <img src="assets/stones.png" alt="Stone" class="stone-image">
+        <div class="stone-content">
+          <div class="icon">🎯</div>
+          <div class="stone-label-text">Job Preferences</div>
         </div>
-        <div class="stone" data-tab="candidate-profile" data-step="3">
-            <div class="icon">📄</div>
-            <div class="label">Your Profile</div>
+      </div>
+      <div class="stone" data-tab="candidate-profile" data-step="3" title="Upload resume and build profile">
+        <img src="assets/stones.png" alt="Stone" class="stone-image">
+        <div class="stone-content">
+          <div class="icon">📄</div>
+          <div class="stone-label-text">Your Profile</div>
         </div>
-        <div class="stone" data-tab="job-descriptions" data-step="4">
-            <div class="icon">📋</div>
-            <div class="label">Job Descriptions</div>
+      </div>
+      <div class="stone" data-tab="job-descriptions" data-step="4" title="Select and analyze job postings">
+        <img src="assets/stones.png" alt="Stone" class="stone-image">
+        <div class="stone-content">
+          <div class="icon">📋</div>
+          <div class="stone-label-text">Job Descriptions</div>
         </div>
-        <div class="stone" data-tab="context-research" data-step="5">
-            <div class="icon">🔍</div>
-            <div class="label">Context Research</div>
+      </div>
+      <div class="stone" data-tab="pain-point-match" data-step="5" title="See alignment score and fit">
+        <img src="assets/stones.png" alt="Stone" class="stone-image">
+        <div class="stone-content">
+          <div class="icon">🔗</div>
+          <div class="stone-label-text">Pain Point Match</div>
         </div>
-        <div class="stone" data-tab="find-contact" data-step="6">
-            <div class="icon">👤</div>
-            <div class="label">Find Contact</div>
+      </div>
+      <div class="stone" data-tab="context-research" data-step="6" title="Research company and role context">
+        <img src="assets/stones.png" alt="Stone" class="stone-image">
+        <div class="stone-content">
+          <div class="icon">🔍</div>
+          <div class="stone-label-text">Context Research</div>
         </div>
-        <div class="stone" data-tab="pain-point-match" data-step="7">
-            <div class="icon">🔗</div>
-            <div class="label">Pain Point Match</div>
+      </div>
+      <div class="stone" data-tab="find-contact" data-step="7" title="Discover decision-makers">
+        <img src="assets/stones.png" alt="Stone" class="stone-image">
+        <div class="stone-content">
+          <div class="icon">👤</div>
+          <div class="stone-label-text">Find Contact</div>
         </div>
-        <div class="stone" data-tab="offer-creation" data-step="8">
-            <div class="icon">💼</div>
-            <div class="label">Offer Creation</div>
+      </div>
+      <div class="stone" data-tab="offer-creation" data-step="8" title="Craft personalized value proposition">
+        <img src="assets/stones.png" alt="Stone" class="stone-image">
+        <div class="stone-content">
+          <div class="icon">💼</div>
+          <div class="stone-label-text">Offer Creation</div>
         </div>
-        <div class="stone" data-tab="compose" data-step="9">
-            <div class="icon">✍️</div>
-            <div class="label">Compose</div>
+      </div>
+      <div class="stone" data-tab="compose" data-step="9" title="Write personalized email">
+        <img src="assets/stones.png" alt="Stone" class="stone-image">
+        <div class="stone-content">
+          <div class="icon">✍️</div>
+          <div class="stone-label-text">Compose</div>
         </div>
-        <div class="stone" data-tab="campaign" data-step="10">
-            <div class="icon">📧</div>
-            <div class="label">Campaign</div>
+      </div>
+      <div class="stone" data-tab="campaign" data-step="10" title="Create follow-up sequence">
+        <img src="assets/stones.png" alt="Stone" class="stone-image">
+        <div class="stone-content">
+          <div class="icon">📧</div>
+          <div class="stone-label-text">Campaign</div>
         </div>
-        <button class="launch-button stone" data-tab="deliverability-launch" data-step="11">
-            <div class="icon">🚀</div>
-            <div class="label">Launch</div>
-        </button>
-        <div class="stone" data-tab="analytics" data-step="12">
-            <div class="icon">📊</div>
-            <div class="label">Analytics</div>
+      </div>
+      <div class="stone" data-tab="analytics" data-step="11" title="Track results and performance">
+        <img src="assets/stones.png" alt="Stone" class="stone-image">
+        <div class="stone-content">
+          <div class="icon">📊</div>
+          <div class="stone-label-text">Analytics</div>
         </div>
-        <div class="stone" data-tab="onboarding" data-step="13">
-            <div class="icon">🚀</div>
-            <div class="label">Onboarding</div>
+      </div>
+      <div class="stone launch-stone" data-tab="deliverability-launch" data-step="12" title="Send with deliverability checks">
+        <img src="assets/stones.png" alt="Stone" class="stone-image">
+        <div class="stone-content">
+          <div class="icon">🚀</div>
+          <div class="stone-label-text">Launch Campaign</div>
         </div>
+      </div>
     </div>
-
   </div>
 
 <script>
-    // Simplified script for navigation
+  let completedSteps = new Set();
+  let lastClickedStep = null;
+  let footsteps = [];
+
+  // Initialize from localStorage
+  function loadProgress() {
+    const saved = localStorage.getItem('roleferry-progress');
+    if (saved) {
+      completedSteps = new Set(JSON.parse(saved));
+      completedSteps.forEach(step => {
+        const element = document.querySelector(`[data-step="${step}"]`);
+        if (element) element.classList.add('completed');
+      });
+      updateProgress();
+    }
+  }
+
+  function saveProgress() {
+    localStorage.setItem('roleferry-progress', JSON.stringify([...completedSteps]));
+  }
+
+  function updateProgress() {
+    const progressText = document.getElementById('progressText');
+    progressText.textContent = `${completedSteps.size}/12`;
+  }
+
+  function getStepPosition(stepElement) {
+    const container = document.getElementById('pathContainer');
+    const containerRect = container.getBoundingClientRect();
+    const stepRect = stepElement.getBoundingClientRect();
+    return {
+      x: stepRect.left - containerRect.left + stepRect.width / 2,
+      y: stepRect.top - containerRect.top + stepRect.height / 2
+    };
+  }
+
+  function createFootsteps(fromStep, toStep) {
+    // Clear existing footsteps with fade out
+    footsteps.forEach(foot => {
+      foot.classList.add('fade-out');
+      setTimeout(() => foot.remove(), 1000);
+    });
+    footsteps = [];
+
+    const fromPos = getStepPosition(fromStep);
+    const toPos = getStepPosition(toStep);
+    
+    const dx = toPos.x - fromPos.x;
+    const dy = toPos.y - fromPos.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    
+    // Create footsteps along the path
+    const numSteps = Math.max(3, Math.floor(distance / 60));
+    
+    for (let i = 0; i < numSteps; i++) {
+      const t = (i + 1) / (numSteps + 1);
+      const x = fromPos.x + dx * t;
+      const y = fromPos.y + dy * t;
+      
+      const footstep = document.createElement('div');
+      footstep.className = `footstep ${i % 2 === 0 ? 'left' : 'right'}`;
+      footstep.style.left = `${x}px`;
+      footstep.style.top = `${y}px`;
+      footstep.style.setProperty('--rot', `${angle}deg`);
+      
+      const container = document.getElementById('pathContainer');
+      container.appendChild(footstep);
+      footsteps.push(footstep);
+      
+      // Animate in with delay
+      setTimeout(() => {
+        footstep.classList.add('visible');
+      }, i * 150);
+    }
+  }
+
+  function handleStepClick(stepElement) {
+    const step = parseInt(stepElement.getAttribute('data-step'));
+    const tab = stepElement.getAttribute('data-tab');
+    
+    // Create footsteps if there's a previous step
+    if (lastClickedStep && lastClickedStep !== stepElement) {
+      createFootsteps(lastClickedStep, stepElement);
+    }
+    
+    lastClickedStep = stepElement;
+    completedSteps.add(step);
+    stepElement.classList.add('completed');
+    saveProgress();
+    updateProgress();
+    
+    // Navigate to wireframe page
+    const tabMap = {
+      'signals-engine': 'wireframes/signals-engine.html',
+      'job-preferences': 'wireframes/job-preferences.html',
+      'candidate-profile': 'wireframes/candidate-profile.html',
+      'job-descriptions': 'wireframes/job-descriptions.html',
+      'pain-point-match': 'wireframes/pain-point-match.html',
+      'context-research': 'wireframes/context-research.html',
+      'find-contact': 'wireframes/find-contact.html',
+      'offer-creation': 'wireframes/offer-creation.html',
+      'compose': 'wireframes/compose.html',
+      'campaign': 'wireframes/campaign.html',
+      'deliverability-launch': 'wireframes/deliverability-launch.html',
+      'analytics': 'wireframes/analytics.html'
+    };
+    
+    if (tabMap[tab]) {
+      // Small delay to show footsteps animation
+      setTimeout(() => {
+        window.location.href = tabMap[tab];
+      }, 500);
+    }
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    loadProgress();
+    
+    // Add click handlers to all stones
     document.querySelectorAll('.stone').forEach(button => {
       button.addEventListener('click', (e) => {
-        const tab = button.getAttribute('data-tab');
-        const tabMap = {
-          'signals-engine': 'wireframes/signals-engine.html',
-          'job-preferences': 'wireframes/job-preferences.html',
-          'candidate-profile': 'wireframes/candidate-profile.html',
-          'job-descriptions': 'wireframes/job-descriptions.html',
-          'context-research': 'wireframes/context-research.html',
-          'find-contact': 'wireframes/find-contact.html',
-          'pain-point-match': 'wireframes/pain-point-match.html',
-          'offer-creation': 'wireframes/offer-creation.html',
-          'compose': 'wireframes/campaign.html', // Assuming compose is campaign now
-          'campaign': 'wireframes/campaign.html',
-          'deliverability-launch': 'wireframes/deliverability-launch.html',
-          'analytics': 'wireframes/analytics.html',
-          'onboarding': 'wireframes/onboarding.html'
-        };
-        if (tabMap[tab]) {
-          window.location.href = tabMap[tab];
-        }
+        e.preventDefault();
+        handleStepClick(button);
       });
     });
+  });
 </script>
 </body>
 </html>

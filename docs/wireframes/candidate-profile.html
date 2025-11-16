@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="../styles.css" />
 <link rel="stylesheet" href="responsive.css" />
 <link rel="icon" href="../assets/roleferry_trans.png" />
+<script src="api-utils.js"></script>
 <style>
   .tab-container {
     min-height: 100vh;
@@ -17,6 +18,24 @@
   .tab-header {
     text-align: center;
     margin-bottom: 3rem;
+  }
+
+  .branding-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .wordmark-logo {
+    height: 50px;
+    width: auto;
+  }
+
+  .animated-logo {
+    height: 50px;
+    width: auto;
   }
 
   .tab-title {
@@ -91,14 +110,14 @@
 
   .btn-primary {
     padding: 12px 32px;
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #10b981 0%, #2563eb 100%);
     color: white;
     border: none;
     border-radius: 8px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
     margin-top: 1rem;
   }
 
@@ -191,27 +210,53 @@
     top: 2rem;
     left: 2rem;
     padding: 12px 24px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     color: white;
+    border: 2px solid rgba(74, 144, 226, 0.5);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 600;
+    z-index: 100;
+  }
+
+  .back-button:hover {
+    background: rgba(74, 144, 226, 0.9);
+  }
+
+  .next-button {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #4A90E2 0%, #87CEEB 100%);
+    color: #1a1a1a;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 700;
+    z-index: 100;
   }
 
-  .back-button:hover {
-    background: rgba(0, 0, 0, 0.9);
+  .next-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(74, 144, 226, 0.4);
   }
 
   .progress-indicator {
     position: fixed;
-    top: 2rem;
+    top: 5rem;
     right: 2rem;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     padding: 1rem;
     border-radius: 12px;
     color: white;
     font-weight: 600;
+    border: 2px solid rgba(74, 144, 226, 0.5);
+    z-index: 100;
   }
 
   .progress-bar {
@@ -330,28 +375,23 @@
 </head>
 <body>
   <div class="tab-container">
-    <!-- Back Button -->
-    <button class="back-button" onclick="goBack()">← Back to Keypad</button>
+    <!-- Navigation -->
+    <a href="../wireframes.html" class="back-button">← Back to Path</a>
+    <a href="job-descriptions.html" class="next-button">Job Descriptions →</a>
 
     <!-- Progress Indicator -->
     <div class="progress-indicator">
-      <div>Step 2 of 10</div>
-      <div class="progress-bar">
-        <div class="progress-fill" style="width: 20%"></div>
-      </div>
+      <div>Step 3 of 12</div>
     </div>
 
     <!-- Header -->
     <div class="tab-header">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <a href="../home.html" class="roleferry-link" style="color: #10b981; text-decoration: none; font-weight: 600;">🏠 RoleFerry.com</a>
-        <div style="display: flex; gap: 1rem;">
-          <a href="job-preferences.html" class="prev-button" style="background: #6b7280; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600;">← ICP</a>
-          <a href="job-descriptions.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; position: relative; z-index: 10;">Client Profiles →</a>
-        </div>
+      <div class="branding-section">
+        <img src="../wordmark.png" alt="RoleFerry" class="wordmark-logo">
+        <img src="../ani-sm.gif" alt="RoleFerry Animation" class="animated-logo">
       </div>
-      <h1 class="tab-title">My Profile</h1>
-      <p class="tab-subtitle">Upload your bio or resume to create your professional profile for outreach</p>
+      <h1 class="tab-title">Your Profile</h1>
+      <p class="tab-subtitle">Upload your resume to build your professional profile</p>
     </div>
 
     <!-- Success Message -->
@@ -412,7 +452,7 @@
       }
     }
 
-    function parseResume() {
+    async function parseResume() {
       if (!selectedFile) {
         alert('Please select a file first');
         return;
@@ -422,60 +462,44 @@
       document.getElementById('loadingSpinner').classList.add('show');
       document.getElementById('parseBtn').disabled = true;
 
-      // Simulate AI parsing
-      setTimeout(() => {
-        // Hide loading spinner
-        document.getElementById('loadingSpinner').classList.remove('show');
+      try {
+        // Create FormData for file upload
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        // Upload and parse resume via API
+        const response = await ResumeAPI.upload(formData);
         
-        // Show results
-        document.getElementById('resultsSection').classList.add('show');
-        document.getElementById('successMessage').classList.add('show');
-        
-        // Save to localStorage
-        const resumeData = {
-          positions: [
-            { title: "Senior Software Engineer", company: "TechCorp", tenure: "3 years" },
-            { title: "Software Developer", company: "InnovateX", tenure: "2 years" },
-            { title: "Junior Developer", company: "StartupCo", tenure: "1 year" }
-          ],
-          metrics: [
-            "Increased system efficiency by 20%",
-            "Led team of 5 engineers",
-            "Reduced deployment time by 50%",
-            "Improved customer satisfaction by 30%"
-          ],
-          skills: ["Python", "React", "AWS", "Machine Learning", "Docker", "Kubernetes", "PostgreSQL", "JavaScript", "TypeScript", "Node.js"],
-          problemsSolved: [
-            "Optimized database queries reducing response time by 40%",
-            "Reduced cloud infrastructure costs by 25%",
-            "Implemented CI/CD pipeline reducing deployment errors by 60%",
-            "Built scalable microservices architecture"
-          ],
-          accomplishments: [
-            "Developed new feature resulting in 15% revenue increase",
-            "Mentored 3 junior developers",
-            "Led migration to cloud infrastructure",
-            "Implemented automated testing reducing bugs by 70%"
-          ],
-          confidenceScores: {
-            positions: 95,
-            skills: 88,
-            metrics: 92,
-            overall: 91
+        if (response.success) {
+          // Hide loading spinner
+          document.getElementById('loadingSpinner').classList.remove('show');
+          
+          // Show results
+          document.getElementById('resultsSection').classList.add('show');
+          document.getElementById('successMessage').classList.add('show');
+          
+          // Save to localStorage
+          localStorage.setItem('roleferry_resume_data', JSON.stringify(response.data));
+          
+          // Update progress in main wireframes page
+          const completedSteps = JSON.parse(localStorage.getItem('roleferry-progress') || '[]');
+          if (!completedSteps.includes(3)) {
+            completedSteps.push(3);
+            localStorage.setItem('roleferry-progress', JSON.stringify(completedSteps));
           }
-        };
-        
-        localStorage.setItem('roleferry_resume_data', JSON.stringify(resumeData));
-        
-        // Show success animation
-        setTimeout(() => {
-          alert('Resume parsed successfully! AI has extracted key information from your profile.');
-        }, 500);
-      }, 3000);
+        } else {
+          throw new Error(response.message || 'Failed to parse resume');
+        }
+      } catch (error) {
+        console.error('Error parsing resume:', error);
+        document.getElementById('loadingSpinner').classList.remove('show');
+        alert('Failed to parse resume: ' + error.message);
+        document.getElementById('parseBtn').disabled = false;
+      }
     }
 
     function goBack() {
-      window.location.href = '../index.html';
+      window.location.href = '../wireframes.html';
     }
 
     // Drag and drop functionality

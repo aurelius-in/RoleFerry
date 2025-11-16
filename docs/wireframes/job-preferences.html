@@ -7,10 +7,11 @@
 <link rel="stylesheet" href="../styles.css" />
 <link rel="stylesheet" href="responsive.css" />
 <link rel="icon" href="../assets/roleferry_trans.png" />
+<script src="api-utils.js"></script>
 <style>
   .tab-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f172a 100%);
     padding: 2rem;
   }
 
@@ -19,10 +20,28 @@
     margin-bottom: 3rem;
   }
 
+  .branding-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .wordmark-logo {
+    height: 50px;
+    width: auto;
+  }
+
+  .animated-logo {
+    height: 50px;
+    width: auto;
+  }
+
   .tab-title {
     font-size: 2.5rem;
     font-weight: 700;
-    background: linear-gradient(45deg, #fbbf24, #f59e0b);
+    background: linear-gradient(45deg, #FF6B35, #FFD23F);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -35,34 +54,8 @@
     margin-bottom: 2rem;
   }
 
-  .mode-toggle {
-    display: flex;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 4px;
-    margin: 0 auto 2rem;
-    width: fit-content;
-  }
-
-  .mode-btn {
-    padding: 12px 24px;
-    border: none;
-    background: transparent;
-    color: #9ca3af;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 600;
-  }
-
-  .mode-btn.active {
-    background: #2563eb;
-    color: white;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-  }
-
   .form-container {
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
     background: rgba(31, 41, 55, 0.8);
     border-radius: 20px;
@@ -101,8 +94,8 @@
 
   .form-input:focus, .form-select:focus, .form-textarea:focus {
     outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: #4A90E2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
 
   .form-select[multiple] {
@@ -123,19 +116,24 @@
 
   .btn-primary {
     padding: 12px 32px;
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    color: white;
+    background: linear-gradient(135deg, #FF6B35 0%, #FFD23F 100%);
+    color: #1a1a1a;
     border: none;
     border-radius: 8px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
   }
 
   .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+    box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .btn-secondary {
@@ -159,42 +157,53 @@
     top: 2rem;
     left: 2rem;
     padding: 12px 24px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     color: white;
+    border: 2px solid rgba(74, 144, 226, 0.5);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 600;
+    z-index: 100;
+  }
+
+  .back-button:hover {
+    background: rgba(74, 144, 226, 0.9);
+  }
+
+  .next-button {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #4A90E2 0%, #87CEEB 100%);
+    color: #1a1a1a;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 700;
+    z-index: 100;
   }
 
-  .back-button:hover {
-    background: rgba(0, 0, 0, 0.9);
+  .next-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(74, 144, 226, 0.4);
   }
 
   .progress-indicator {
     position: fixed;
-    top: 2rem;
+    top: 5rem;
     right: 2rem;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     padding: 1rem;
     border-radius: 12px;
     color: white;
     font-weight: 600;
-  }
-
-  .progress-bar {
-    width: 200px;
-    height: 8px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 0.5rem;
-  }
-
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #2563eb, #10b981);
-    transition: width 0.3s ease;
+    border: 2px solid rgba(74, 144, 226, 0.5);
+    z-index: 100;
   }
 
   .success-message {
@@ -209,6 +218,25 @@
 
   .success-message.show {
     display: block;
+  }
+
+  .error-message {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #ef4444;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .error-message.show {
+    display: block;
+  }
+
+  .loading {
+    opacity: 0.6;
+    pointer-events: none;
   }
 
   /* Responsive Design */
@@ -230,11 +258,13 @@
       gap: 1.5rem;
     }
     
-    .back-button {
+    .back-button, .next-button {
       position: relative;
       top: auto;
       left: auto;
+      right: auto;
       margin-bottom: 1rem;
+      display: inline-block;
     }
     
     .progress-indicator {
@@ -244,225 +274,369 @@
       margin-bottom: 1rem;
     }
   }
-
-  @media (max-width: 480px) {
-    .tab-container {
-      padding: 0.5rem;
-    }
-    
-    .tab-title {
-      font-size: 1.5rem;
-    }
-    
-    .form-container {
-      padding: 1rem;
-    }
-    
-    .form-input, .form-select, .form-textarea {
-      font-size: 16px; /* Prevents zoom on iOS */
-    }
-    
-    .btn-primary, .btn-secondary {
-      width: 100%;
-      margin-bottom: 0.5rem;
-    }
-    
-    .form-actions {
-      flex-direction: column;
-    }
-  }
 </style>
 </head>
 <body>
   <div class="tab-container">
-    <!-- Back Button -->
-    <button class="back-button" onclick="goBack()">← Back to Keypad</button>
+    <!-- Navigation -->
+    <a href="../wireframes.html" class="back-button">← Back to Path</a>
+    <a href="candidate-profile.html" class="next-button">Your Profile →</a>
 
     <!-- Progress Indicator -->
     <div class="progress-indicator">
-      <div>Step 1 of 10</div>
-      <div class="progress-bar">
-        <div class="progress-fill" style="width: 10%"></div>
-      </div>
+      <div>Step 2 of 12</div>
     </div>
 
     <!-- Header -->
     <div class="tab-header">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <a href="../home.html" class="roleferry-link" style="color: #10b981; text-decoration: none; font-weight: 600;">🏠 RoleFerry.com</a>
-        <a href="candidate-profile.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; position: relative; z-index: 10;">My Profile →</a>
+      <div class="branding-section">
+        <img src="../wordmark.png" alt="RoleFerry" class="wordmark-logo">
+        <img src="../ani-sm.gif" alt="RoleFerry Animation" class="animated-logo">
       </div>
-      <h1 class="tab-title" id="tabTitle">Ideal Client Profile (ICP)</h1>
-      <p class="tab-subtitle">Define your target companies and ideal clients for business development</p>
-      
-      <!-- Mode Toggle -->
-      <div class="mode-toggle">
-        <button class="mode-btn" id="jobSeekerMode">Job Seeker</button>
-        <button class="mode-btn active" id="recruiterMode">Recruiter</button>
-      </div>
+      <h1 class="tab-title">Job Preferences</h1>
+      <p class="tab-subtitle">Tell us what you're looking for in your next role</p>
     </div>
 
-    <!-- Success Message -->
+    <!-- Success/Error Messages -->
     <div class="success-message" id="successMessage">
-      ✅ ICP saved successfully! You can now proceed to the next step.
+      ✅ Job preferences saved successfully! You can now proceed to the next step.
     </div>
+    <div class="error-message" id="errorMessage"></div>
 
     <!-- Form Container -->
     <div class="form-container">
       <form id="preferencesForm">
         <div class="form-grid">
-          <!-- Industries -->
+          <!-- Work Values -->
           <div class="form-group">
-            <label class="form-label" for="industries">Target Industries (Select up to 5)</label>
-            <select class="form-select" id="industries" multiple>
-                <option value="">- Select an Industry -</option>
-                <option value="staffing-recruiting">Staffing and Recruiting</option>
-                <option value="information-technology-services">Information Technology and Services</option>
-                <option value="management-consulting">Management Consulting</option>
-                <option value="marketing-advertising">Marketing and Advertising</option>
-                <option value="computer-software">Computer Software</option>
+            <label class="form-label" for="values">Work Values (Select up to 3)</label>
+            <select class="form-select" id="values" multiple>
+              <option value="">Loading values...</option>
             </select>
           </div>
 
-          <!-- Roles -->
+          <!-- Role Categories -->
           <div class="form-group">
-            <label class="form-label" for="roles">Target Client Roles</label>
-            <textarea class="form-textarea" id="roles" placeholder="e.g., VP of Talent Acquisition, Director of Engineering, Head of Marketing"></textarea>
+            <label class="form-label" for="roleCategories">Role Categories</label>
+            <select class="form-select" id="roleCategories" multiple>
+              <option value="">Loading categories...</option>
+            </select>
+          </div>
+
+          <!-- Location Preferences -->
+          <div class="form-group">
+            <label class="form-label" for="locationPreferences">Location Preferences</label>
+            <select class="form-select" id="locationPreferences" multiple>
+              <option value="Remote">Remote</option>
+              <option value="Hybrid">Hybrid</option>
+              <option value="On-site">On-site</option>
+            </select>
+          </div>
+
+          <!-- Work Type -->
+          <div class="form-group">
+            <label class="form-label" for="workType">Work Type</label>
+            <select class="form-select" id="workType" multiple>
+              <option value="Full-Time">Full-Time</option>
+              <option value="Part-Time">Part-Time</option>
+              <option value="Contract">Contract</option>
+              <option value="Freelance">Freelance</option>
+            </select>
+          </div>
+
+          <!-- Role Type -->
+          <div class="form-group">
+            <label class="form-label" for="roleType">Role Type</label>
+            <select class="form-select" id="roleType" multiple>
+              <option value="Individual Contributor">Individual Contributor</option>
+              <option value="Manager">Manager</option>
+              <option value="Director">Director</option>
+              <option value="VP">VP</option>
+              <option value="C-Level">C-Level</option>
+            </select>
           </div>
 
           <!-- Company Size -->
           <div class="form-group">
             <label class="form-label" for="companySize">Company Size</label>
-            <select class="form-select" id="companySize">
-              <option value="startup">Startup (1-50 employees)</option>
-              <option value="small">Small (51-200 employees)</option>
-              <option value="medium">Medium (201-1000 employees)</option>
-              <option value="large">Large (1000+ employees)</option>
+            <select class="form-select" id="companySize" multiple>
+              <option value="1-50 employees">1-50 employees</option>
+              <option value="51-200 employees">51-200 employees</option>
+              <option value="201-500 employees">201-500 employees</option>
+              <option value="501-1000 employees">501-1000 employees</option>
+              <option value="1000+ employees">1000+ employees</option>
             </select>
           </div>
 
-          <!-- Location -->
+          <!-- Industries -->
           <div class="form-group">
-            <label class="form-label" for="location">Location</label>
-            <input type="text" class="form-input" id="location" placeholder="e.g., Remote, New York, San Francisco">
+            <label class="form-label" for="industries">Industries</label>
+            <select class="form-select" id="industries" multiple>
+              <option value="">Loading industries...</option>
+            </select>
           </div>
 
-          <!-- Additional Notes -->
-          <div class="form-group" style="grid-column: 1 / -1;">
-            <label class="form-label" for="additionalNotes">Additional Notes</label>
-            <textarea class="form-textarea" id="additionalNotes" placeholder="Any other preferences or requirements for your ideal client..."></textarea>
+          <!-- Skills -->
+          <div class="form-group">
+            <label class="form-label" for="skills">Skills</label>
+            <select class="form-select" id="skills" multiple>
+              <option value="">Loading skills...</option>
+            </select>
           </div>
-        </div>
 
-        <div class="variable-display" style="margin-top: 2rem; background: rgba(17, 24, 39, 0.8); padding: 1.5rem; border-radius: 12px;">
-          <h4 style="color: #2563eb; margin-bottom: 1rem; font-size: 1rem;">Available Variables from this Step</h4>
-          <p style="color: #d1d5db; font-size: 0.9rem;">These variables can be used in your email templates:</p>
-          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{client_roles}}</code>, 
-          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{client_industries}}</code>, 
-          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{client_company_size}}</code>
+          <!-- Minimum Salary -->
+          <div class="form-group">
+            <label class="form-label" for="minimumSalary">Minimum Salary</label>
+            <input type="text" class="form-input" id="minimumSalary" placeholder="e.g., $80,000">
+          </div>
+
+          <!-- Job Search Status -->
+          <div class="form-group">
+            <label class="form-label" for="jobSearchStatus">Job Search Status</label>
+            <select class="form-select" id="jobSearchStatus">
+              <option value="">Select status...</option>
+              <option value="Actively looking">Actively looking</option>
+              <option value="Open to opportunities">Open to opportunities</option>
+              <option value="Not actively looking">Not actively looking</option>
+            </select>
+          </div>
+
+          <!-- State -->
+          <div class="form-group">
+            <label class="form-label" for="state">State (Optional)</label>
+            <input type="text" class="form-input" id="state" placeholder="e.g., California">
+          </div>
         </div>
 
         <div class="form-actions">
           <button type="button" class="btn-secondary" onclick="resetForm()">Reset</button>
-          <button type="submit" class="btn-primary">Save ICP</button>
+          <button type="submit" class="btn-primary" id="submitBtn">Save Preferences</button>
         </div>
       </form>
     </div>
   </div>
 
   <script>
-    let currentMode = 'job-seeker';
+    let optionsLoaded = false;
 
-    // Mode Toggle Functionality
-    document.getElementById('jobSeekerMode').addEventListener('click', () => {
-      currentMode = 'job-seeker';
-      updateModeUI();
-    });
+    // Load options from API
+    async function loadOptions() {
+      try {
+        const [valuesRes, roleCategoriesRes, industriesRes, skillsRes] = await Promise.all([
+          JobPreferencesAPI.getOptions.values(),
+          JobPreferencesAPI.getOptions.roleCategories(),
+          JobPreferencesAPI.getOptions.industries(),
+          JobPreferencesAPI.getOptions.skills()
+        ]);
 
-    document.getElementById('recruiterMode').addEventListener('click', () => {
-      currentMode = 'recruiter';
-      updateModeUI();
-    });
+        // Populate values
+        const valuesSelect = document.getElementById('values');
+        valuesSelect.innerHTML = '<option value="">Select work values...</option>';
+        valuesRes.values.forEach(value => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = value;
+          valuesSelect.appendChild(option);
+        });
 
-    function updateModeUI() {
-      const jobSeekerBtn = document.getElementById('jobSeekerMode');
-      const recruiterBtn = document.getElementById('recruiterMode');
-      const tabTitle = document.getElementById('tabTitle');
-      const tabSubtitle = document.querySelector('.tab-subtitle');
-      
-      if (currentMode === 'job-seeker') {
-        jobSeekerBtn.classList.add('active');
-        recruiterBtn.classList.remove('active');
-        tabTitle.textContent = 'Job Preferences';
-        tabSubtitle.textContent = 'Tell us what you\'re looking for in your next role';
-      } else {
-        recruiterBtn.classList.add('active');
-        jobSeekerBtn.classList.remove('active');
-        tabTitle.textContent = 'Ideal Client Profile (ICP)';
-        tabSubtitle.textContent = 'Define your target companies and ideal clients';
+        // Populate role categories
+        const roleCategoriesSelect = document.getElementById('roleCategories');
+        roleCategoriesSelect.innerHTML = '<option value="">Select role categories...</option>';
+        roleCategoriesRes.role_categories.forEach(category => {
+          const option = document.createElement('option');
+          option.value = category;
+          option.textContent = category;
+          roleCategoriesSelect.appendChild(option);
+        });
+
+        // Populate industries
+        const industriesSelect = document.getElementById('industries');
+        industriesSelect.innerHTML = '<option value="">Select industries...</option>';
+        industriesRes.industries.forEach(industry => {
+          const option = document.createElement('option');
+          option.value = industry;
+          option.textContent = industry;
+          industriesSelect.appendChild(option);
+        });
+
+        // Populate skills
+        const skillsSelect = document.getElementById('skills');
+        skillsSelect.innerHTML = '<option value="">Select skills...</option>';
+        skillsRes.skills.forEach(skill => {
+          const option = document.createElement('option');
+          option.value = skill;
+          option.textContent = skill;
+          skillsSelect.appendChild(option);
+        });
+
+        optionsLoaded = true;
+      } catch (error) {
+        console.error('Error loading options:', error);
+        showError('Failed to load form options. Please refresh the page.');
       }
     }
 
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      errorDiv.textContent = message;
+      errorDiv.classList.add('show');
+      setTimeout(() => {
+        errorDiv.classList.remove('show');
+      }, 5000);
+    }
+
+    function showSuccess() {
+      const successDiv = document.getElementById('successMessage');
+      successDiv.classList.add('show');
+    }
+
     // Form Submission
-    document.getElementById('preferencesForm').addEventListener('submit', (e) => {
+    document.getElementById('preferencesForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      // Collect form data
-      const formData = {
-        industries: Array.from(document.getElementById('industries').selectedOptions).map(option => option.value),
-        roles: Array.from(document.getElementById('roles').selectedOptions).map(option => option.value),
-        salaryRange: document.getElementById('salaryRange').value,
-        location: document.getElementById('location').value,
-        workType: Array.from(document.getElementById('workType').selectedOptions).map(option => option.value),
-        companySize: document.getElementById('companySize').value,
-        experienceLevel: document.getElementById('experienceLevel').value,
-        skills: document.getElementById('skills').value,
-        additionalNotes: document.getElementById('additionalNotes').value,
-        mode: currentMode
-      };
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving...';
+      document.getElementById('preferencesForm').classList.add('loading');
 
-      // Save to localStorage
-      localStorage.setItem('roleferry_preferences', JSON.stringify(formData));
-      
-      // Show success message
-      document.getElementById('successMessage').classList.add('show');
-      
-      // Update progress
-      setTimeout(() => {
-        alert('Preferences saved! You can now proceed to the next step.');
-      }, 1000);
+      try {
+        // Collect form data matching API structure
+        const preferences = {
+          values: Array.from(document.getElementById('values').selectedOptions).map(opt => opt.value).filter(v => v),
+          role_categories: Array.from(document.getElementById('roleCategories').selectedOptions).map(opt => opt.value).filter(v => v),
+          location_preferences: Array.from(document.getElementById('locationPreferences').selectedOptions).map(opt => opt.value).filter(v => v),
+          work_type: Array.from(document.getElementById('workType').selectedOptions).map(opt => opt.value).filter(v => v),
+          role_type: Array.from(document.getElementById('roleType').selectedOptions).map(opt => opt.value).filter(v => v),
+          company_size: Array.from(document.getElementById('companySize').selectedOptions).map(opt => opt.value).filter(v => v),
+          industries: Array.from(document.getElementById('industries').selectedOptions).map(opt => opt.value).filter(v => v),
+          skills: Array.from(document.getElementById('skills').selectedOptions).map(opt => opt.value).filter(v => v),
+          minimum_salary: document.getElementById('minimumSalary').value || '',
+          job_search_status: document.getElementById('jobSearchStatus').value || '',
+          state: document.getElementById('state').value || null,
+          user_mode: 'job-seeker'
+        };
+
+        // Save to backend
+        const response = await JobPreferencesAPI.save(preferences);
+        
+        if (response.success) {
+          // Also save to localStorage as backup
+          localStorage.setItem('roleferry_preferences', JSON.stringify(preferences));
+          showSuccess();
+          
+          // Update progress in main wireframes page
+          const completedSteps = JSON.parse(localStorage.getItem('roleferry-progress') || '[]');
+          if (!completedSteps.includes(2)) {
+            completedSteps.push(2);
+            localStorage.setItem('roleferry-progress', JSON.stringify(completedSteps));
+          }
+        } else {
+          throw new Error(response.message || 'Failed to save preferences');
+        }
+      } catch (error) {
+        console.error('Error saving preferences:', error);
+        showError('Failed to save preferences: ' + error.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save Preferences';
+        document.getElementById('preferencesForm').classList.remove('loading');
+      }
     });
 
     function resetForm() {
       document.getElementById('preferencesForm').reset();
       document.getElementById('successMessage').classList.remove('show');
-    }
-
-    function goBack() {
-      window.location.href = '../index.html';
+      document.getElementById('errorMessage').classList.remove('show');
     }
 
     // Load saved data if exists
-    const savedData = localStorage.getItem('roleferry_preferences');
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      // Populate form with saved data
-      Object.keys(data).forEach(key => {
-        const element = document.getElementById(key);
-        if (element) {
-          if (element.type === 'select-multiple') {
-            Array.from(element.options).forEach(option => {
-              option.selected = data[key].includes(option.value);
+    async function loadSavedData() {
+      try {
+        // Try to load from backend first (would need user_id in real app)
+        // For now, load from localStorage
+        const savedData = localStorage.getItem('roleferry_preferences');
+        if (savedData) {
+          const data = JSON.parse(savedData);
+          
+          // Populate form fields
+          if (data.values) {
+            data.values.forEach(value => {
+              const option = Array.from(document.getElementById('values').options).find(opt => opt.value === value);
+              if (option) option.selected = true;
             });
-          } else {
-            element.value = data[key];
+          }
+          
+          if (data.role_categories) {
+            data.role_categories.forEach(cat => {
+              const option = Array.from(document.getElementById('roleCategories').options).find(opt => opt.value === cat);
+              if (option) option.selected = true;
+            });
+          }
+          
+          if (data.location_preferences) {
+            data.location_preferences.forEach(loc => {
+              const option = Array.from(document.getElementById('locationPreferences').options).find(opt => opt.value === loc);
+              if (option) option.selected = true;
+            });
+          }
+          
+          if (data.work_type) {
+            data.work_type.forEach(wt => {
+              const option = Array.from(document.getElementById('workType').options).find(opt => opt.value === wt);
+              if (option) option.selected = true;
+            });
+          }
+          
+          if (data.role_type) {
+            data.role_type.forEach(rt => {
+              const option = Array.from(document.getElementById('roleType').options).find(opt => opt.value === rt);
+              if (option) option.selected = true;
+            });
+          }
+          
+          if (data.company_size) {
+            data.company_size.forEach(cs => {
+              const option = Array.from(document.getElementById('companySize').options).find(opt => opt.value === cs);
+              if (option) option.selected = true;
+            });
+          }
+          
+          if (data.industries) {
+            data.industries.forEach(ind => {
+              const option = Array.from(document.getElementById('industries').options).find(opt => opt.value === ind);
+              if (option) option.selected = true;
+            });
+          }
+          
+          if (data.skills) {
+            data.skills.forEach(skill => {
+              const option = Array.from(document.getElementById('skills').options).find(opt => opt.value === skill);
+              if (option) option.selected = true;
+            });
+          }
+          
+          if (data.minimum_salary) {
+            document.getElementById('minimumSalary').value = data.minimum_salary;
+          }
+          
+          if (data.job_search_status) {
+            document.getElementById('jobSearchStatus').value = data.job_search_status;
+          }
+          
+          if (data.state) {
+            document.getElementById('state').value = data.state;
           }
         }
-      });
+      } catch (error) {
+        console.error('Error loading saved data:', error);
+      }
     }
 
     // Initialize
-    updateModeUI();
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadOptions();
+      await loadSavedData();
+    });
   </script>
 </body>
 </html>
