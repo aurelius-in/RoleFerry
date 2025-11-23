@@ -376,13 +376,14 @@
 <body>
   <div class="tab-container">
     <!-- Navigation -->
-    <a href="../wireframes.html" class="back-button">← Back to Path</a>
-    <a href="job-descriptions.html" class="next-button">Job Descriptions →</a>
-
-    <!-- Progress Indicator -->
-    <div class="progress-indicator">
-      <div>Step 3 of 12</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; position: fixed; top: 2rem; left: 2rem; right: 2rem; z-index: 100;">
+      <a href="../wireframes.html" class="back-button" style="position: static;">← Back to Path</a>
+      <div class="progress-indicator" style="position: static; margin: 0;">
+        <div>Step 3 of 12</div>
+      </div>
     </div>
+
+    <a href="job-descriptions.html" class="next-button">Job Descriptions →</a>
 
     <!-- Header -->
     <div class="tab-header">
@@ -423,7 +424,25 @@
         <h2 style="color: #ffffff; text-align: center; margin-bottom: 2rem;">AI Extracted Data</h2>
         
         <div class="data-grid">
-          <!-- ... existing data-cards ... -->
+          <!-- Cards will be populated by JS -->
+          <div class="data-card">
+             <h3>Key Metrics</h3>
+             <ul id="metricsList">
+               <!-- Populated by JS -->
+             </ul>
+          </div>
+          <div class="data-card">
+             <h3>Business Challenges Solved</h3>
+             <ul id="challengesList">
+               <!-- Populated by JS -->
+             </ul>
+          </div>
+          <div class="data-card">
+             <h3>Notable Accomplishments</h3>
+             <ul id="accomplishmentsList">
+               <!-- Populated by JS -->
+             </ul>
+          </div>
         </div>
 
         <div class="variable-display" style="margin-top: 2rem; background: rgba(17, 24, 39, 0.8); padding: 1.5rem; border-radius: 12px;">
@@ -478,6 +497,34 @@
           document.getElementById('resultsSection').classList.add('show');
           document.getElementById('successMessage').classList.add('show');
           
+          // Populate Data
+          const mockData = {
+             metrics: [
+                "37.5% revenue increase ($200M to $275M)",
+                "20% increase in feature utilization",
+                "Improved net retention by 8 basis points"
+             ],
+             challenges: [
+                "Scaling customer-centric strategy across onboarding",
+                "Integrating two legacy CS orgs",
+                "Improving customer satisfaction for $40M firm"
+             ],
+             accomplishments: [
+                "Restructured customer segmentation",
+                "Launched enterprise-wide Customer Success Council",
+                "Built inaugural CS organization"
+             ]
+          };
+
+          const metricsList = document.getElementById('metricsList');
+          metricsList.innerHTML = mockData.metrics.map(m => `<li>${m}</li>`).join('');
+
+          const challengesList = document.getElementById('challengesList');
+          challengesList.innerHTML = mockData.challenges.map(c => `<li>${c}</li>`).join('');
+          
+          const accomplishmentsList = document.getElementById('accomplishmentsList');
+          accomplishmentsList.innerHTML = mockData.accomplishments.map(a => `<li>${a}</li>`).join('');
+
           // Save to localStorage
           localStorage.setItem('roleferry_resume_data', JSON.stringify(response.data));
           
