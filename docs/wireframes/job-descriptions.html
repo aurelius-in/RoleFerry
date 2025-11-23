@@ -88,7 +88,13 @@
 
     <div class="main-grid">
         <div class="left-column">
-            <h3>Saved Opportunities</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0;">Saved Opportunities</h3>
+                <select style="background: #374151; color: white; border: 1px solid #4b5563; padding: 4px; border-radius: 4px; font-size: 0.8rem;">
+                    <option>Sort by Date</option>
+                    <option>Sort by Grade</option>
+                </select>
+            </div>
             <ul class="saved-list">
                 <li class="saved-item active">
                     <h4>Senior Frontend Developer</h4>
@@ -105,11 +111,12 @@
             <div class="form-container">
               <!-- Navigation -->
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <a href="../home.html" class="roleferry-link" style="color: #10b981; text-decoration: none; font-weight: 600;">🏠 RoleFerry.com</a>
-                <a href="pain-point-match.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600;">Pain Points →</a>
+                 <a href="../wireframes.html" class="back-button" style="position: static; color: white; background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px; text-decoration: none;">← Back to Path</a>
+                 <div class="progress-indicator" style="position: static; margin: 0; background: rgba(0,0,0,0.8); color: white; padding: 8px 12px; border-radius: 8px; border: 1px solid #374151;">
+                    Step 2 of 12
+                 </div>
+                 <a href="pinpoint-match.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600;">Continue →</a>
               </div>
-              <button class="back-button" onclick="window.location.href='../index.html'">← Back to Keypad</button>
-              <div class="progress-indicator"><div>Step 3 of 10</div><div class="progress-bar"><div class="progress-fill" style="width: 30%"></div></div></div>
 
               <!-- Header -->
               <div class="tab-header">
@@ -117,47 +124,80 @@
               </div>
 
               <!-- Success Message -->
-              <div class="success-message" id="successMessage">
+              <div class="success-message" id="successMessage" style="display: none; background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; padding: 1rem; border-radius: 8px; color: #10b981; margin-bottom: 1rem;">
                 ✅ Client profile analyzed successfully! AI has identified key pain points and requirements.
               </div>
 
               <!-- Import Section -->
               <div class="import-section">
-                <div class="form-group">
-                    <label class="form-label" for="jobUrl">Job Posting URL</label>
-                    <input type="url" class="form-input" id="jobUrl" placeholder="https://www.linkedin.com/jobs/view/..." />
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label" for="jobUrl" style="color: white; display: block; margin-bottom: 0.5rem;">Job Posting URL</label>
+                    <input type="url" class="form-input" id="jobUrl" placeholder="https://www.linkedin.com/jobs/view/..." style="width: 100%; padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.3); border: 1px solid #374151; color: white;" />
                 </div>
                 <div style="text-align: center; margin: 1.5rem 0; color: #9ca3af; font-weight: 600;">OR</div>
-                <div class="form-group">
-                    <label class="form-label" for="jobText">Paste Job Description</label>
-                    <textarea class="form-textarea" id="jobText" placeholder="Paste the complete job description text here..."></textarea>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label" for="jobText" style="color: white; display: block; margin-bottom: 0.5rem;">Paste Job Description</label>
+                    <textarea class="form-textarea" id="jobText" placeholder="Paste the complete job description text here..." style="width: 100%; height: 150px; padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.3); border: 1px solid #374151; color: white;"></textarea>
                 </div>
                 <div class="form-group" style="margin-top: 1rem;">
-                  <label for="companyName" class="form-label">Company Name (Optional)</label>
-                  <input type="text" class="form-input" id="companyName" placeholder="e.g., TechCorp Inc." />
+                  <label for="companyName" class="form-label" style="color: white; display: block; margin-bottom: 0.5rem;">Company Name (Optional)</label>
+                  <input type="text" class="form-input" id="companyName" placeholder="e.g., TechCorp Inc." style="width: 100%; padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.3); border: 1px solid #374151; color: white;" />
                 </div>
 
-                <button class="btn-primary" id="parseBtn" onclick="parseJobDescription()">Analyze Client Profile</button>
+                <button class="btn-primary" id="parseBtn" onclick="parseJobDescription()" style="margin-top: 1rem; width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer;">Analyze Client Profile</button>
               </div>
 
               <!-- Loading Spinner -->
-              <div class="loading-spinner" id="loadingSpinner">
-                <img src="../ani-sm.gif" alt="Loading animation" class="loading-gif">
-                <p>AI is analyzing the client profile...</p>
+              <div class="loading-spinner" id="loadingSpinner" style="display: none; text-align: center; margin: 2rem 0;">
+                <img src="../ani-sm.gif" alt="Loading animation" class="loading-gif" style="width: 50px;">
+                <p style="color: #9ca3af;">AI is analyzing the client profile...</p>
               </div>
 
               <!-- Results Section -->
-              <div class="results-section" id="resultsSection">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                  <h2 style="color: #ffffff; margin: 0;">How Your Services Match</h2>
-                  <button class="btn-primary" onclick="window.location.href='job-tracker.html'" style="padding: 8px 16px; font-size: 0.9rem;">Go to Opportunity Tracker →</button>
+              <div class="results-section" id="resultsSection" style="display: none;">
+                <div style="background: rgba(17, 24, 39, 0.5); border: 1px solid #374151; padding: 1rem; border-radius: 8px; margin-bottom: 2rem;">
+                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                      <h3 style="color: white; margin: 0;">Analysis Results</h3>
+                      <div class="grading-section">
+                        <select style="background: #374151; color: white; border: 1px solid #4b5563; padding: 8px; border-radius: 6px;">
+                           <option value="" disabled selected>Grade this Position</option>
+                           <option value="1">1. Easiest / Shoo-in</option>
+                           <option value="2">2. Stretch Position</option>
+                           <option value="3">3. Ideal Future Position</option>
+                        </select>
+                      </div>
+                   </div>
+                   <p style="color: #9ca3af; font-size: 0.9rem; margin-bottom: 0.5rem;">
+                      <strong>JD Link:</strong> <a href="#" id="jdLinkDisplay" style="color: #2563eb;">https://linkedin.com/jobs/view/...</a>
+                   </p>
                 </div>
-                <div class="data-grid">
-                  <!-- Cards go here -->
+
+                <div class="data-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                  <div class="data-card" style="background: rgba(17, 24, 39, 0.8); padding: 1.5rem; border-radius: 12px; border: 1px solid #374151;">
+                      <h4 style="color: white; border-bottom: 2px solid #ef4444; padding-bottom: 0.5rem; margin-bottom: 1rem;">Business Challenges</h4>
+                      <ul style="list-style: none; padding: 0; color: #d1d5db;">
+                          <li style="margin-bottom: 0.5rem;">• High turnover in engineering team</li>
+                          <li style="margin-bottom: 0.5rem;">• Struggling with candidate quality</li>
+                      </ul>
+                  </div>
+                  <div class="data-card" style="background: rgba(17, 24, 39, 0.8); padding: 1.5rem; border-radius: 12px; border: 1px solid #374151;">
+                      <h4 style="color: white; border-bottom: 2px solid #8b5cf6; padding-bottom: 0.5rem; margin-bottom: 1rem;">JD Jargon</h4>
+                      <ul style="list-style: none; padding: 0; color: #d1d5db;">
+                          <li style="margin-bottom: 0.5rem;">• "Rockstar developer"</li>
+                          <li style="margin-bottom: 0.5rem;">• "Fast-paced environment"</li>
+                          <li style="margin-bottom: 0.5rem;">• "Wear multiple hats"</li>
+                      </ul>
+                  </div>
                 </div>
-                <div class="variable-display" style="margin-top: 2rem;">
-                  <h4>Available Variables from this Step</h4>
-                  <code>{{client_need_summary}}</code>, <code>{{client_company_name}}</code>, <code>{{top_3_requirements}}</code>
+                
+                <div style="margin-top: 2rem; text-align: right;">
+                  <button class="btn-primary" onclick="window.location.href='pinpoint-match.html'" style="padding: 12px 24px; background: #10b981; border: none; border-radius: 6px; color: white; cursor: pointer;">Continue to Match →</button>
+                </div>
+
+                <div class="variable-display" style="margin-top: 2rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                  <h4 style="color: #2563eb; margin-bottom: 0.5rem; font-size: 0.9rem;">Available Variables</h4>
+                  <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{jd_link}}</code>, 
+                  <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{jd_jargon}}</code>
                 </div>
               </div>
             </div>
@@ -165,5 +205,15 @@
     </div>
 
   </div>
+  <script>
+    function parseJobDescription() {
+        document.getElementById('loadingSpinner').style.display = 'block';
+        setTimeout(() => {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'block';
+        }, 1500);
+    }
+  </script>
 </body>
 </html>

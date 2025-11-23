@@ -18,6 +18,7 @@ interface ResumeExtract {
     context: string;
   }>;
   skills: string[];
+  businessChallenges: string[];
   accomplishments: string[];
   tenure: Array<{
     company: string;
@@ -78,6 +79,12 @@ export default function ResumePage() {
           }
         ],
         skills: ["Python", "JavaScript", "React", "Node.js", "AWS", "Docker", "PostgreSQL"],
+        businessChallenges: [
+          "Scaling customer-centric strategy across onboarding, expansion, and value realization efforts",
+          "Integrating two legacy CS orgs into a unified global operating model",
+          "Improving customer satisfaction for a $40M consulting firm",
+          "Driving adoption and ROI for a $250M+ SaaS provider"
+        ],
         accomplishments: [
           "Reduced system latency by 40% through microservices architecture",
           "Led team of 5 engineers in cross-functional projects",
@@ -134,14 +141,24 @@ export default function ResumePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4 mb-4">
+        <a href="/foundry" className="inline-flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors">
+          <span className="mr-2">←</span> Back to Path
+        </a>
+      </div>
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-sm border p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Resume / Candidate Profile</h1>
-            <p className="text-gray-600">
-              Upload your resume or candidate profile to extract key information for personalized outreach.
-            </p>
-          </div>
+              <div className="flex justify-between items-center mb-8">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Resume / Candidate Profile</h1>
+                  <p className="text-gray-600">
+                    Upload your resume or candidate profile to extract key information for personalized outreach.
+                  </p>
+                </div>
+                <div className="bg-gray-900 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-gray-700">
+                  Step 3 of 12
+                </div>
+              </div>
 
           {!extract ? (
             <div className="text-center py-12">
@@ -300,6 +317,36 @@ export default function ResumePage() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Business Challenges */}
+              <div>
+                <h3 className="text-xl font-semibold mb-4">Business Challenges Solved</h3>
+                <ul className="space-y-2">
+                  {extract.businessChallenges.map((challenge, index) => (
+                    <li key={index} className="flex items-start space-x-2">
+                      <span className="text-orange-500 mt-1">•</span>
+                      {isEditing ? (
+                         <div className="flex-1 flex space-x-2">
+                           <input
+                             type="text"
+                             value={challenge}
+                             onChange={(e) => handleEdit('businessChallenges', index, e.target.value)}
+                             className="flex-1 border border-gray-300 rounded-md px-3 py-2"
+                           />
+                           <button
+                             onClick={() => handleRemoveItem('businessChallenges', index)}
+                             className="text-red-600 hover:text-red-800 text-sm"
+                           >
+                             Remove
+                           </button>
+                         </div>
+                      ) : (
+                        <span>{challenge}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
               </div>
 
               {/* Skills */}
