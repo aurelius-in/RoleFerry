@@ -209,7 +209,7 @@
     position: fixed;
     top: 2rem;
     left: 2rem;
-    padding: 12px 24px;
+    padding: 12px;
     background: rgba(0, 0, 0, 0.9);
     color: white;
     border: 2px solid rgba(74, 144, 226, 0.5);
@@ -219,6 +219,15 @@
     text-decoration: none;
     font-weight: 600;
     z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .back-button svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
   }
 
   .back-button:hover {
@@ -377,7 +386,11 @@
   <div class="tab-container">
     <!-- Navigation -->
     <div style="display: flex; justify-content: space-between; align-items: center; position: fixed; top: 2rem; left: 2rem; right: 2rem; z-index: 100;">
-      <a href="../wireframes.html" class="back-button" style="position: static;">← Back to Path</a>
+      <a href="../wireframes.html" class="back-button" title="Back to Path">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+      </svg>
+    </a>
       <div class="progress-indicator" style="position: static; margin: 0;">
         <div>Step 3 of 12</div>
       </div>
@@ -530,8 +543,9 @@
         const formData = new FormData();
         formData.append('file', selectedFile);
 
-        // Upload and parse resume via API
-        const response = await ResumeAPI.upload(formData);
+        // Simulate API processing delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        const response = { success: true };
         
         if (response.success) {
           // Hide loading spinner
@@ -621,7 +635,7 @@
           referencesList.innerHTML = mockData.references.map(ref => `<li><strong>${ref.name}</strong> - ${ref.role} <br><span style="font-size:0.9em; color:#9ca3af;">${ref.contact}</span></li>`).join('');
 
           // Save to localStorage
-          localStorage.setItem('roleferry_resume_data', JSON.stringify(response.data));
+          localStorage.setItem('roleferry_resume_data', JSON.stringify(mockData));
           
           // Update progress in main wireframes page
           const completedSteps = JSON.parse(localStorage.getItem('roleferry-progress') || '[]');

@@ -168,7 +168,11 @@
 <body>
   <div class="tab-container">
     <div style="display: flex; justify-content: space-between; align-items: center; position: fixed; top: 2rem; left: 2rem; right: 2rem; z-index: 100;">
-       <button class="back-button" onclick="window.location.href='../wireframes.html'" style="position: static;">← Back to Path</button>
+       <a href="../wireframes.html" class="back-button" title="Back to Path" style="position: static; display: flex; align-items: center; justify-content: center;">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; fill: white;">
+             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+          </svg>
+       </a>
        <div class="progress-indicator" style="background: rgba(0,0,0,0.8); color: white; padding: 8px 12px; border-radius: 8px; border: 1px solid #374151;">
           Step 9 of 12
        </div>
