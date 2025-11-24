@@ -1,83 +1,54 @@
-# Week 6 Updates - RoleFerry
+# Week 6 Updates
 
-This document outlines the updates and improvements made to the RoleFerry platform during Week 6, specifically addressing client feedback regarding missing features, variable extraction, user flow enhancements, and terminology standardization.
+**Date:** November 24, 2025
+**Branch:** `develop`
 
-## Summary of Changes
+## Overview
+This week focused on a major overhaul of the **RoleFerry** workflow, enhancing the navigation structure, standardizing UI elements, and ensuring a seamless 12-step user journey. Key improvements include the introduction of realistic mock data for wireframes, a "Pain Point" terminology refactor, and improved navigation anchors.
 
-### 1. Resume / Candidate Profile Page (Step 3)
-**Goal:** Enhance the resume parsing capabilities to extract specific variables for outreach and improve the display of candidate data.
+## Key Changes
 
-*   **New Email Variables:** Added extraction and display for the following key variables as requested:
-    *   **Key Metrics:** Quantitative achievements (e.g., "37.5% revenue increase", "20% increase in feature utilization").
-    *   **Business Challenges Solved:** Qualitative problem-solving examples (e.g., "Scaling customer-centric strategy", "Integrating legacy orgs").
-    *   **Notable Accomplishments:** Specific wins (e.g., "Restructured customer segmentation", "Launched Customer Success Council").
-    *   **Positions Held:** History of roles.
-    *   **Tenure:** Length of time positions were held.
-*   **UI Updates:**
-    *   Updated the `ResumePage` frontend to display these new categories distinctly.
-    *   Updated `candidate-profile.html` wireframe to show realistic parsed data immediately upon "loading" a resume, simulating the AI extraction process with comprehensive mock data (Demographics, Education, Work Experience, References, etc.).
-    *   Changed the primary action button label to **"Load Resume"** for clarity.
+### 1. Workflow & Navigation
+- **12-Step Linear Workflow**: Defined and implemented a strict linear progression from *Signals Engine* (Step 1) to *Deliverability Launch* (Step 12).
+- **Home Anchor**: Replaced inconsistent "Back" buttons with a standardized **Home Icon** in the top-left corner of all wireframes, linking back to the main `wireframes.html` index.
+- **Step Indicators**: Added "Step X of 12" badges to all screens to provide users with clear progress context.
+- **Workflow Documentation**: Created `week_6_workflow.md` detailing the logic, purpose, and justification for each step in the user journey.
+- **Fixed Navigation Flow**: Restored missing links and corrected the sequence:
+    - `pain-point-match.html` (Step 5) -> `context-research.html` (Step 6)
+    - `context-research.html` (Step 6) -> `job-tracker.html` (Step 7)
+    - `job-tracker.html` (Step 7) -> `find-contact.html` (Step 8)
+    - `find-contact.html` (Step 8) -> `offer-creation.html` (Step 9)
+    - `offer-creation.html` (Step 9) -> `compose.html` (Step 10)
 
-### 2. Job Descriptions Page (Step 2)
-**Goal:** Improve the utility of the JD analysis by adding grading logic, jargon detection, and sorting.
+### 2. Resume Page (Step 3)
+- **New Variables**: Added extraction and display for *Business Challenges Solved*, *Key Metrics*, *Notable Accomplishments*, *Positions Held*, and *Tenure*.
+- **Mock Data**: Replaced empty states with realistic candidate data (e.g., "Jane Doe, VP of Engineering").
+- **UI Update**: Added a specific "Business Challenges" section to the resume profile view.
 
-*   **New Variables:**
-    *   **JD Link:** Now capturing and displaying the source URL of the job posting.
-    *   **JD Jargon:** identifying and extracting corporate jargon (e.g., "Rockstar", "Wear multiple hats") to help candidates mirror or avoid specific language.
-*   **Grading System:**
-    *   Implemented a manual grading dropdown for candidates to classify opportunities:
-        1.  **Shoo-in Position:** Have skills now / Easiest to interview.
-        2.  **Stretch Position:** A step up from current role.
-        3.  **Ideal Position:** Future goal / several steps up.
-*   **Sorting & Management:**
-    *   Added functionality to sort saved JDs by **Date** or **Grade**, helping candidates prioritize their pipeline.
-*   **UI Updates:**
-    *   Refined the card layout to accommodate the new fields and grading controls.
+### 3. Job Descriptions Page (Step 4)
+- **Grading System**: Implemented a JD grading feature allowing users to classify roles as "Shoo-in", "Stretch", or "Ideal Future".
+- **Jargon Extraction**: Added visual display for "JD Jargon" extracted from descriptions.
+- **Sorting**: Enabled sorting of job descriptions by Grade or Date.
 
-### 3. Offer Creation Page (Step 9)
-**Goal:** Restore missing features and improve the offer generation workflow.
+### 4. Offer Creation Page (Step 9)
+- **Layout Overhaul**: Redesigned as a 2-column layout with an **Offer Library** sidebar and an **Offer Editor** main area.
+- **Tone Selection**: Expanded audience tone options to 8 categories (Recruiter, Manager, Executive, Developer, Sales, Startup, Enterprise, Custom).
+- **New Fields**: Added inputs for "Optional Link" and "Video Upload".
 
-*   **Layout Overhaul:** Implemented a **2-column layout**:
-    *   **Left Sidebar (Offer Library):** Persistent access to saved offers for quick reference and reuse.
-    *   **Main Area (Editor):** Focused space for drafting and customizing the current offer.
-*   **Tone & Audience Expansion:** Expanded the tone selection to 8 distinct options to better match the target audience:
-    *   *Recruiter (Efficiency)*
-    *   *Manager (Competence)*
-    *   *Executive (ROI/Strategy)*
-    *   *Developer (Technical)*
-    *   *Sales (Results)*
-    *   *Startup (Innovation)*
-    *   *Enterprise (Process)*
-    *   *Custom Tone*
-*   **New Features:**
-    *   **Insert Snippet:** Button to inject reusable content blocks.
-    *   **Optional Link:** Field to add portfolio or case study links (`{{offer_link}}`).
-    *   **Video Upload:** Placeholder for attaching intro videos (`{{offer_video}}`).
+### 5. Terminology Refactor
+- **"Pinpoint" to "Pain Point"**: Renamed all files, API endpoints, and UI text from "Pinpoint Match" to "Pain Point Match" to align with industry standard sales terminology.
 
-### 4. "Pain Point" Terminology Refactor
-**Goal:** Ensure consistent and professional terminology across the platform.
+### 6. Wireframe Polish
+- **Mock Data Integration**: Removed "Loading..." spinners from all wireframes. Forms now pre-populate with realistic data (e.g., Industries, Skills) to ensure a smooth demo experience.
+- **Error Removal**: Fixed console errors related to missing API endpoints in the static wireframe environment.
 
-*   **Refactor:** Changed all instances of "Pinpoint" to **"Pain Point"** across the codebase and wireframes.
-    *   Renamed `pinpoint-match.html` to `pain-point-match.html`.
-    *   Updated API endpoints and frontend routes to use `/pain-point-match`.
-    *   Updated UI labels to clearly refer to "Pain Point Match" and "Pain Point Analysis".
+## Files Updated
+- `frontend/src/app/resume/page.tsx`
+- `frontend/src/app/job-descriptions/page.tsx`
+- `frontend/src/app/offer-creation/page.tsx`
+- `docs/wireframes/*.html` (All wireframe files)
+- `week_6_workflow.md` (New documentation)
 
-### 5. Navigation & UX Polish
-**Goal:** Ensure intuitive flow, consistent branding, and fix broken navigation elements.
-
-*   **Consistent Home Navigation:** Implemented a standardized **Home Icon** button in the top-left corner of *all* wireframe pages.
-    *   This button consistently links back to `wireframes.html`, ensuring users can always return to the main menu.
-    *   Applied to: `onboarding.html`, `signals-engine.html`, `job-preferences.html`, `candidate-profile.html`, `job-descriptions.html`, `pain-point-match.html`, `context-research.html`, `find-contact.html`, `offer-creation.html`, `compose.html`, `campaign.html`, `deliverability-launch.html`, `analytics.html`, `settings.html`, `feedback.html`, `dry-run.html`, `job-tracker.html`.
-*   **Step Indicators:** Restored and standardized "Step X of 12" indicators to provide clear progress context across the flow.
-*   **Mock Data Integration:**
-    *   Removed "Loading..." error states from wireframes (e.g., **Job Preferences**).
-    *   Hardcoded realistic mock data for dropdowns (Industries, Skills, Work Values) and API simulations so demos flow smoothly without requiring a live backend connection.
-
-### 6. Frontend & Wireframe Synchronization
-*   All changes have been applied in parallel to the **React Frontend** (`frontend/src/app/...`) and the **HTML Wireframes** (`docs/wireframes/...`) to keep the prototype and the codebase aligned.
-
----
-
-**Next Steps:**
-*   Continue refining the "Pain Point Match" logic to utilize the new "Business Challenges" variable.
-*   Finalize the "Compose" step to fully leverage the expanded "Tone" options.
+## Next Steps
+- User testing of the complete 12-step flow.
+- Integration of the wireframe logic into the Next.js frontend backend.

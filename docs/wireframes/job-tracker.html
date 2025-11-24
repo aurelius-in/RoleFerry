@@ -155,6 +155,25 @@
   .back-button:hover {
     background: rgba(74, 144, 226, 0.9);
   }
+  .next-button {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #4A90E2 0%, #87CEEB 100%);
+    color: #1a1a1a;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 700;
+    z-index: 100;
+  }
+  .next-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(74, 144, 226, 0.4);
+  }
   .progress-indicator {
     position: fixed;
     top: 5rem;
@@ -179,10 +198,11 @@
     .tracker-column {
       min-width: 100%;
     }
-    .back-button {
+    .back-button, .next-button {
       position: relative;
       top: auto;
       left: auto;
+      right: auto;
       margin-bottom: 1rem;
       display: inline-block;
     }
@@ -202,6 +222,7 @@
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
       </svg>
     </a>
+    <a href="find-contact.html" class="next-button">Find Decision Makers →</a>
     
     <div class="progress-indicator">
       <div>Step 7 of 12</div>
