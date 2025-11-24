@@ -89,15 +89,181 @@
   .contact-item:last-child {
       border-bottom: none;
   }
+  .contact-item input[type="checkbox"] {
+    margin-right: 1rem;
+    width: 18px;
+    height: 18px;
+    accent-color: #2563eb;
+  }
+  .contact-details h4 {
+    color: #ffffff;
+    font-size: 1.1rem;
+    margin: 0 0 0.25rem 0;
+  }
+  .contact-details p {
+    color: #9ca3af;
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  .contact-meta {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .badge.recommended {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .social-link {
+    text-decoration: none;
+    font-size: 1.2rem;
+  }
+  .btn-primary {
+    padding: 12px 32px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+  }
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 2rem;
+  }
+  .variable-display {
+    background: rgba(37, 99, 235, 0.1);
+    border: 1px solid #2563eb;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 2rem;
+  }
+  .variable-display h4 {
+    color: #2563eb;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .variable-display code {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #10b981;
+    font-family: 'Courier New', monospace;
+  }
+  
+  .back-button {
+    position: fixed;
+    top: 2rem;
+    left: 2rem;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    border: 2px solid rgba(74, 144, 226, 0.5);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 600;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .back-button:hover {
+    background: rgba(74, 144, 226, 0.9);
+  }
+  
+  .next-button {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #4A90E2 0%, #87CEEB 100%);
+    color: #1a1a1a;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 700;
+    z-index: 100;
+  }
+  .next-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(74, 144, 226, 0.4);
+  }
+
+  .progress-indicator {
+    position: fixed;
+    top: 5rem;
+    right: 2rem;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 1rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    border: 2px solid rgba(74, 144, 226, 0.5);
+    z-index: 100;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .tab-container {
+      padding: 1rem;
+    }
+    .tab-title {
+      font-size: 2rem;
+    }
+    .main-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    .left-column {
+      margin-bottom: 1rem;
+    }
+    .back-button, .next-button {
+      position: relative;
+      top: auto;
+      left: auto;
+      right: auto;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+    .progress-indicator {
+      position: relative;
+      top: auto;
+      right: auto;
+      margin-bottom: 1rem;
+    }
+  }
 </style>
 </head>
 <body>
   <div class="tab-container">
-    <a href="../wireframes.html" class="back-button" title="Back to Path" style="position: fixed; top: 2rem; left: 2rem; padding: 12px; background: rgba(0, 0, 0, 0.9); color: white; border: 2px solid rgba(74, 144, 226, 0.5); border-radius: 8px; cursor: pointer; transition: all 0.3s ease; text-decoration: none; font-weight: 600; z-index: 100; display: flex; align-items: center; justify-content: center;">
+    <a href="../wireframes.html" class="back-button" title="Back to Path">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; fill: white;">
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
       </svg>
     </a>
+    <a href="compose.html" class="next-button">Compose →</a>
+
+    <div class="progress-indicator">
+      <div>Step 9 of 12</div>
+    </div>
+
     <div class="tab-header">
       <h1 class="tab-title">Find & Select Decision-Makers</h1>
     </div>

@@ -143,22 +143,75 @@
     position: fixed;
     top: 2rem;
     left: 2rem;
-    padding: 12px 24px;
-    background: rgba(0, 0, 0, 0.8);
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.9);
     color: white;
-    border: none;
+    border: 2px solid rgba(74, 144, 226, 0.5);
     border-radius: 8px;
     cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 600;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .back-button:hover {
+    background: rgba(74, 144, 226, 0.9);
+  }
+  .progress-indicator {
+    position: fixed;
+    top: 5rem;
+    right: 2rem;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 1rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    border: 2px solid rgba(74, 144, 226, 0.5);
+    z-index: 100;
+  }
+  /* Responsive Design */
+  @media (max-width: 1200px) {
+    .compose-grid {
+      grid-template-columns: 1fr;
+      max-width: 800px;
+    }
+  }
+  @media (max-width: 768px) {
+    .tab-container {
+      padding: 1rem;
+    }
+    .back-button {
+      position: relative;
+      top: auto;
+      left: auto;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+    .progress-indicator {
+      position: relative;
+      top: auto;
+      right: auto;
+      margin-bottom: 1rem;
+    }
   }
 </style>
 </head>
 <body>
     <div class="tab-container">
-    <a href="../wireframes.html" class="back-button" title="Back to Path" style="display: flex; align-items: center; justify-content: center;">
+    <!-- Navigation -->
+    <a href="../wireframes.html" class="back-button" title="Back to Path">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; fill: white;">
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
       </svg>
     </a>
+    
+    <div class="progress-indicator">
+      <div>Step 11 of 12</div>
+    </div>
+
     <div class="tab-header">
       <h1 class="tab-title">Compose & Campaign</h1>
     </div>
@@ -196,15 +249,15 @@
         <!-- Right Column: Variables & Pre-flight -->
         <div class="right-column">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <button class="btn-primary" style="background: #10b981;">Launch Campaign</button>
-                <a href="dry-run.html" class="btn-secondary" style="padding: 12px 24px; background: #4b5563; text-decoration: none; color: white; border-radius: 8px;">Dry Run</a>
+                <button class="btn-primary" style="background: #10b981; border:none; padding:12px 24px; border-radius:8px; color:white; font-weight:bold; cursor:pointer;">Launch Campaign</button>
+                <a href="dry-run.html" class="btn-secondary" style="padding: 12px 24px; background: #4b5563; text-decoration: none; color: white; border-radius: 8px; font-weight:bold;">Dry Run</a>
             </div>
             <h3>Available Variables</h3>
             <ul class="variables-list">
                 <li>{{contact_name}}</li>
                 <li>{{contact_title}}</li>
                 <li>{{jd_summary}}</li>
-                <li>{{challenge_1}}</li>
+                <li>{{pain_point_1}}</li>
                 <li>{{solution_1}}</li>
                 <li>{{metric_1}}</li>
                 <li>{{offer_text}}</li>

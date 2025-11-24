@@ -146,11 +146,19 @@
     display: block;
   }
 
-  .loading-gif {
-    width: 80px;
-    height: 80px;
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #374151;
+    border-top: 4px solid #2563eb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
     margin: 0 auto 1rem;
-    display: block;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
 
   .back-button {
@@ -158,27 +166,56 @@
     top: 2rem;
     left: 2rem;
     padding: 12px 24px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     color: white;
+    border: 2px solid rgba(74, 144, 226, 0.5);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 600;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .back-button:hover {
+    background: rgba(74, 144, 226, 0.9);
+  }
+
+  .next-button {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #4A90E2 0%, #87CEEB 100%);
+    color: #1a1a1a;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 700;
+    z-index: 100;
   }
 
-  .back-button:hover {
-    background: rgba(0, 0, 0, 0.9);
+  .next-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(74, 144, 226, 0.4);
   }
 
   .progress-indicator {
     position: fixed;
-    top: 2rem;
+    top: 5rem;
     right: 2rem;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     padding: 1rem;
     border-radius: 12px;
     color: white;
     font-weight: 600;
+    border: 2px solid rgba(74, 144, 226, 0.5);
+    z-index: 100;
   }
 
   .progress-bar {
@@ -250,29 +287,57 @@
     color: #d1d5db;
     line-height: 1.6;
   }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .tab-container {
+      padding: 1rem;
+    }
+    
+    .tab-title {
+      font-size: 2rem;
+    }
+    
+    .form-container {
+      padding: 1.5rem;
+    }
+    
+    .research-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    
+    .back-button, .next-button {
+      position: relative;
+      top: auto;
+      left: auto;
+      right: auto;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+    
+    .progress-indicator {
+      position: relative;
+      top: auto;
+      right: auto;
+      margin-bottom: 1rem;
+    }
+  }
 </style>
 </head>
 <body>
   <div class="tab-container">
     <!-- Navigation -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-      <a href="../home.html" class="roleferry-link" style="color: #10b981; text-decoration: none; font-weight: 600;">🏠 RoleFerry.com</a>
-      <a href="find-contact.html" class="next-button" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; position: relative; z-index: 10;">Find Contact →</a>
-    </div>
-    
-    <!-- Back Button -->
-    <a href="../wireframes.html" class="back-button" title="Back to Path" style="display: flex; align-items: center; justify-content: center;">
+    <a href="../wireframes.html" class="back-button" title="Back to Path">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; fill: white;">
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
       </svg>
     </a>
+    <a href="campaign.html" class="next-button">Compose & Campaign →</a>
 
     <!-- Progress Indicator -->
     <div class="progress-indicator">
-      <div>Step 6 of 10</div>
-      <div class="progress-bar">
-        <div class="progress-fill" style="width: 60%"></div>
-      </div>
+      <div>Step 8 of 12</div>
     </div>
 
     <!-- Header -->
@@ -449,10 +514,6 @@
       window.URL.revokeObjectURL(url);
       
       alert('Research data exported to CSV successfully!');
-    }
-
-    function goBack() {
-      window.location.href = '../index.html';
     }
 
     // Load saved data if exists
