@@ -92,74 +92,6 @@
     font-weight: 500;
   }
 
-  .check-card {
-    background: rgba(17, 24, 39, 0.8);
-    border: 1px solid #374151;
-    border-radius: 12px;
-    padding: 1.5rem;
-    transition: all 0.3s ease;
-  }
-
-  .check-card.pass {
-    border-color: #10b981;
-    background: rgba(16, 185, 129, 0.1);
-  }
-
-  .check-card.warning {
-    border-color: #f59e0b;
-    background: rgba(245, 158, 11, 0.1);
-  }
-
-  .check-card.fail {
-    border-color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-  }
-
-  .check-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-
-  .check-title {
-    color: #ffffff;
-    font-size: 1.1rem;
-    font-weight: 600;
-  }
-
-  .check-status {
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-  }
-
-  .check-status.pass {
-    background: rgba(16, 185, 129, 0.2);
-    color: #10b981;
-  }
-
-  .check-status.warning {
-    background: rgba(245, 158, 11, 0.2);
-    color: #f59e0b;
-  }
-
-  .check-status.fail {
-    background: rgba(239, 68, 68, 0.2);
-    color: #ef4444;
-  }
-
-  .check-details {
-    color: #d1d5db;
-    font-size: 0.9rem;
-    line-height: 1.6;
-  }
-
-  .check-details strong {
-    color: #ffffff;
-  }
-
   .launch-section {
     text-align: center;
     margin-bottom: 3rem;
@@ -292,16 +224,22 @@
     top: 2rem;
     left: 2rem;
     padding: 12px 24px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     color: white;
-    border: none;
+    border: 2px solid rgba(74, 144, 226, 0.5);
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 600;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .back-button:hover {
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(74, 144, 226, 0.9);
   }
 
   .progress-indicator {
@@ -373,14 +311,12 @@
       grid-template-columns: 1fr;
       gap: 1.5rem;
     }
-    .preflight-panel {
-      order: -1;
-    }
     .back-button {
       position: relative;
       top: auto;
       left: auto;
       margin-bottom: 1rem;
+      display: inline-block;
     }
     .progress-indicator {
       position: relative;
@@ -388,7 +324,7 @@
       right: auto;
       margin-bottom: 1rem;
     }
-    .check-grid {
+    .checks-grid {
       grid-template-columns: 1fr;
       gap: 1rem;
     }
@@ -404,26 +340,20 @@
     .form-container {
       padding: 1rem;
     }
-    .btn-primary, .btn-secondary {
+    .launch-button {
       width: 100%;
       margin-bottom: 0.5rem;
     }
     .launch-actions {
       flex-direction: column;
     }
-    .check-item {
-      padding: 1rem;
-    }
-    .check-item h4 {
-      font-size: 1rem;
-    }
   }
 </style>
 </head>
 <body>
   <div class="tab-container">
-    <!-- Back Button -->
-    <a href="../wireframes.html" class="back-button" title="Back to Path" style="display: flex; align-items: center; justify-content: center;">
+    <!-- Navigation -->
+    <a href="../wireframes.html" class="back-button" title="Back to Path">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; fill: white;">
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
       </svg>
@@ -431,7 +361,7 @@
 
     <!-- Progress Indicator -->
     <div class="progress-indicator">
-      <div>Step 10 of 10</div>
+      <div>Step 12 of 12</div>
       <div class="progress-bar">
         <div class="progress-fill" style="width: 100%"></div>
       </div>
@@ -584,10 +514,6 @@
           alert('Campaign launched successfully! Your emails are being sent according to schedule.');
         }, 1000);
       }, 3000);
-    }
-
-    function goBack() {
-      window.location.href = '../index.html';
     }
 
     // Load saved data if exists

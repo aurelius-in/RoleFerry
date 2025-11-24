@@ -1,6 +1,6 @@
 # Week 6 Updates - RoleFerry
 
-This document outlines the updates and improvements made to the RoleFerry platform during Week 6, specifically addressing client feedback regarding missing features, variable extraction, and user flow enhancements.
+This document outlines the updates and improvements made to the RoleFerry platform during Week 6, specifically addressing client feedback regarding missing features, variable extraction, user flow enhancements, and terminology standardization.
 
 ## Summary of Changes
 
@@ -54,21 +54,30 @@ This document outlines the updates and improvements made to the RoleFerry platfo
     *   **Optional Link:** Field to add portfolio or case study links (`{{offer_link}}`).
     *   **Video Upload:** Placeholder for attaching intro videos (`{{offer_video}}`).
 
-### 4. Navigation & UX Polish
-**Goal:** Ensure intuitive flow and fix broken navigation elements.
+### 4. "Pain Point" Terminology Refactor
+**Goal:** Ensure consistent and professional terminology across the platform.
 
-*   **Step Indicators:** Restored the "Step X of 12" indicators in the top right corner of the wireframes to provide clear progress context.
-*   **"Back to Keypad" Navigation:** Standardized the "Back to Path" / "Back to Keypad" buttons to ensure they link correctly to the main navigation hub (`wireframes.html` or `index.html`).
+*   **Refactor:** Changed all instances of "Pinpoint" to **"Pain Point"** across the codebase and wireframes.
+    *   Renamed `pinpoint-match.html` to `pain-point-match.html`.
+    *   Updated API endpoints and frontend routes to use `/pain-point-match`.
+    *   Updated UI labels to clearly refer to "Pain Point Match" and "Pain Point Analysis".
+
+### 5. Navigation & UX Polish
+**Goal:** Ensure intuitive flow, consistent branding, and fix broken navigation elements.
+
+*   **Consistent Home Navigation:** Implemented a standardized **Home Icon** button in the top-left corner of *all* wireframe pages.
+    *   This button consistently links back to `wireframes.html`, ensuring users can always return to the main menu.
+    *   Applied to: `onboarding.html`, `signals-engine.html`, `job-preferences.html`, `candidate-profile.html`, `job-descriptions.html`, `pain-point-match.html`, `context-research.html`, `find-contact.html`, `offer-creation.html`, `compose.html`, `campaign.html`, `deliverability-launch.html`, `analytics.html`, `settings.html`, `feedback.html`, `dry-run.html`, `job-tracker.html`.
+*   **Step Indicators:** Restored and standardized "Step X of 12" indicators to provide clear progress context across the flow.
 *   **Mock Data Integration:**
     *   Removed "Loading..." error states from wireframes (e.g., **Job Preferences**).
-    *   Hardcoded realistic mock data for dropdowns (Industries, Skills, Work Values) so demos flow smoothly without requiring a live backend connection.
+    *   Hardcoded realistic mock data for dropdowns (Industries, Skills, Work Values) and API simulations so demos flow smoothly without requiring a live backend connection.
 
-### 5. Frontend & Wireframe Synchronization
+### 6. Frontend & Wireframe Synchronization
 *   All changes have been applied in parallel to the **React Frontend** (`frontend/src/app/...`) and the **HTML Wireframes** (`docs/wireframes/...`) to keep the prototype and the codebase aligned.
 
 ---
 
 **Next Steps:**
-*   Continue refining the "Pinpoint Match" logic to utilize the new "Business Challenges" variable.
+*   Continue refining the "Pain Point Match" logic to utilize the new "Business Challenges" variable.
 *   Finalize the "Compose" step to fully leverage the expanded "Tone" options.
-
