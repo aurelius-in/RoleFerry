@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="../styles.css">
     <link rel="icon" href="../assets/roleferry_trans.png">
     <style>
-        .document-container { max-width: 800px; }
+        .document-container { max-width: 800px; margin: 0 auto; padding: 2rem; }
         .checklist {
             list-style: none;
             padding: 0;
@@ -35,52 +35,94 @@
             color: #9ca3af;
             margin: 0;
         }
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            border: 2px solid rgba(74, 144, 226, 0.5);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .back-button:hover {
+            background: rgba(74, 144, 226, 0.9);
+        }
+        .back-button svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+        .tab-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            padding: 2rem;
+        }
+        @media (max-width: 768px) {
+            .back-button {
+                position: relative;
+                top: auto;
+                left: auto;
+                margin-bottom: 1rem;
+                display: inline-flex;
+            }
+            .tab-container {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="document-container">
-        <div class="document-header">
-            <h1>Welcome to RoleFerry!</h1>
-            <p>Complete these steps to get started with your first client acquisition campaign.</p>
-        </div>
+    <div class="tab-container">
+        <a href="../wireframes.html" class="back-button" title="Back to Path">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+            </svg>
+        </a>
 
-        <ul class="checklist">
-            <li class="checklist-item">
-                <input type="checkbox" id="step1" />
-                <label for="step1" class="checklist-item-content">
-                    <h3>Define Your Ideal Client Profile (ICP)</h3>
-                    <p>Tell us about the companies and people you want to work with.</p>
-                </label>
-            </li>
-            <li class="checklist-item">
-                <input type="checkbox" id="step2" />
-                <label for="step2" class="checklist-item-content">
-                    <h3>Create Your First Client Profile</h3>
-                    <p>Import a job description to analyze a potential client's needs.</p>
-                </label>
-            </li>
-            <li class="checklist-item">
-                <input type="checkbox" id="step3" />
-                <label for="step3" class="checklist-item-content">
-                    <h3>Find Decision-Makers</h3>
-                    <p>Let our AI find the right people to contact at your target companies.</p>
-                </label>
-            </li>
-            <li class="checklist-item">
-                <input type="checkbox" id="step4" />
-                <label for="step4" class="checklist-item-content">
-                    <h3>Launch Your First Campaign</h3>
-                    <p>Start reaching out to potential clients with personalized messages.</p>
-                </label>
-            </li>
-        </ul>
+        <div class="document-container">
+            <div class="document-header">
+                <h1>Welcome to RoleFerry!</h1>
+                <p>Complete these steps to get started with your first client acquisition campaign.</p>
+            </div>
 
-        <div class="navigation">
-            <a href="../wireframes.html" class="nav-button secondary" title="Back to Path" style="display: flex; align-items: center; justify-content: center; width: fit-content; padding: 12px;">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; fill: currentColor;">
-                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-                </svg>
-            </a>
+            <ul class="checklist">
+                <li class="checklist-item">
+                    <input type="checkbox" id="step1" />
+                    <label for="step1" class="checklist-item-content">
+                        <h3>Define Your Ideal Client Profile (ICP)</h3>
+                        <p>Tell us about the companies and people you want to work with.</p>
+                    </label>
+                </li>
+                <li class="checklist-item">
+                    <input type="checkbox" id="step2" />
+                    <label for="step2" class="checklist-item-content">
+                        <h3>Create Your First Client Profile</h3>
+                        <p>Import a job description to analyze a potential client's needs.</p>
+                    </label>
+                </li>
+                <li class="checklist-item">
+                    <input type="checkbox" id="step3" />
+                    <label for="step3" class="checklist-item-content">
+                        <h3>Find Decision-Makers</h3>
+                        <p>Let our AI find the right people to contact at your target companies.</p>
+                    </label>
+                </li>
+                <li class="checklist-item">
+                    <input type="checkbox" id="step4" />
+                    <label for="step4" class="checklist-item-content">
+                        <h3>Launch Your First Campaign</h3>
+                        <p>Start reaching out to potential clients with personalized messages.</p>
+                    </label>
+                </li>
+            </ul>
         </div>
     </div>
 </body>

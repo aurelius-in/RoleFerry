@@ -8,9 +8,6 @@
 <link rel="stylesheet" href="responsive.css" />
 <link rel="icon" href="../assets/roleferry_trans.png" />
 <style>
-  body {
-    background: #0a0a0a;
-  }
   .tab-container {
     min-height: 100vh;
     background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
@@ -18,392 +15,317 @@
   }
   .tab-header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
   }
   .tab-title {
     font-size: 2.5rem;
     font-weight: 700;
-    background: linear-gradient(45deg, #2563eb, #10b981);
+    background: linear-gradient(45deg, #10b981, #2563eb);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     margin-bottom: 1rem;
   }
-  .tracker-stats {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1.5rem;
+  .tab-subtitle {
+    font-size: 1.1rem;
+    color: #9ca3af;
     margin-bottom: 2rem;
   }
-  .stat-item {
-    color: #9ca3af;
-    font-weight: 600;
-  }
-  .stat-item span {
-    color: #ffffff;
-    font-size: 1.2rem;
-    margin-right: 0.5rem;
-  }
-  .tracker-tabs {
-    display: flex;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 4px;
-  }
-  .tracker-tab {
-    padding: 10px 20px;
-    border: none;
-    background: transparent;
-    color: #9ca3af;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 600;
-  }
-  .tracker-tab.active {
-    background: #2563eb;
-    color: white;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-  }
-  .action-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-  .search-bar {
-    position: relative;
-    flex-grow: 1;
-  }
-  .search-input {
-    width: 100%;
-    padding: 12px 16px 12px 40px;
-    border: 2px solid #374151;
-    border-radius: 8px;
-    background: rgba(17, 24, 39, 0.8);
-    color: #ffffff;
-    font-size: 1rem;
-  }
-  .search-icon {
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9ca3af;
-  }
-  .action-buttons button {
-    padding: 10px 16px;
-    background: rgba(55, 65, 81, 0.8);
-    color: #d1d5db;
-    border: 1px solid #4b5563;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 600;
-  }
-  .action-buttons button:hover {
-    background: #4b5563;
-    color: #ffffff;
-  }
-  .btn-add-app {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-    color: white !important;
-    border: none !important;
-  }
-  .filter-bar {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    padding: 1rem;
-    background: rgba(31, 41, 55, 0.5);
-    border-radius: 12px;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-  }
-  .filter-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .filter-group label {
-    color: #9ca3af;
-    font-size: 0.9rem;
-    font-weight: 600;
-  }
-  .filter-bar select, .filter-bar input {
-    background: rgba(17, 24, 39, 0.8);
-    color: #ffffff;
-    border: 1px solid #4b5563;
-    border-radius: 6px;
-    padding: 8px 12px;
-  }
-  .filter-bar select[multiple] {
-    min-width: 200px;
-  }
-
-  .kanban-board {
+  .tracker-board {
     display: flex;
     gap: 1.5rem;
     overflow-x: auto;
     padding-bottom: 1rem;
-    min-height: 60vh;
+    max-width: 1600px;
+    margin: 0 auto;
   }
-  .kanban-column {
-    flex: 1 0 250px;
-    min-width: 250px;
+  .tracker-column {
+    flex: 1;
+    min-width: 300px;
     background: rgba(31, 41, 55, 0.5);
     border-radius: 12px;
     padding: 1rem;
-    border-top: 4px solid;
+    border: 1px solid #374151;
   }
-  .btn-move-stage {
-      background: transparent;
-      border: 1px solid #4b5563;
-      color: #9ca3af;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      font-weight: 600;
-      transition: all 0.3s ease;
+  .column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid;
   }
-  .btn-move-stage:hover {
-      background: #2563eb;
-      color: white;
-      border-color: #2563eb;
-  }
-  .kanban-column h3 {
-    color: #ffffff;
-    font-size: 1.1rem;
+  .column-title {
     font-weight: 600;
-    margin-bottom: 1.5rem;
+    color: #ffffff;
   }
-  .kanban-column[data-col="saved"] { border-color: #6b7280; }
-  .kanban-column[data-col="applied"] { border-color: #3b82f6; }
-  .kanban-column[data-col="interviewing"] { border-color: #f59e0b; }
-  .kanban-column[data-col="offer"] { border-color: #10b981; }
-  .kanban-column[data-col="rejected"] { border-color: #ef4444; }
+  .column-count {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    color: #d1d5db;
+  }
   .job-card {
-    background: rgba(17, 24, 39, 0.9);
+    background: rgba(17, 24, 39, 0.8);
     border: 1px solid #4b5563;
     border-radius: 8px;
     padding: 1rem;
     margin-bottom: 1rem;
     cursor: grab;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
   }
   .job-card:hover {
-    border-color: #2563eb;
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-color: #60a5fa;
   }
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 0.5rem;
-  }
-  .card-header h4 {
-    font-size: 1rem;
+  .job-title {
     font-weight: 600;
     color: #ffffff;
-    margin: 0;
+    margin-bottom: 0.25rem;
   }
-  .heart-icon {
-    cursor: pointer;
+  .company-name {
     color: #9ca3af;
-    transition: color 0.3s ease;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
   }
-  .heart-icon:hover, .heart-icon.active {
+  .job-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+  }
+  .job-date {
+    color: #6b7280;
+  }
+  .priority-badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .priority-high {
+    background: rgba(239, 68, 68, 0.2);
     color: #ef4444;
   }
-  .card-body p {
-    font-size: 0.9rem;
+  .priority-medium {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+  }
+  .add-job-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: transparent;
+    border: 2px dashed #374151;
     color: #9ca3af;
-    margin: 0 0 1rem 0;
-  }
-  .card-footer {
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
     display: flex;
-    justify-content: flex-end;
     align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
   }
-  .suitcase-icon {
-    font-size: 1.5rem;
-    color: #6b7280;
+  .add-job-btn:hover {
+    border-color: #60a5fa;
+    color: #60a5fa;
+    background: rgba(37, 99, 235, 0.1);
   }
   .back-button {
     position: fixed;
     top: 2rem;
     left: 2rem;
     padding: 12px 24px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     color: white;
-    border: none;
+    border: 2px solid rgba(74, 144, 226, 0.5);
     border-radius: 8px;
     cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 600;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .back-button:hover {
+    background: rgba(74, 144, 226, 0.9);
+  }
+  .progress-indicator {
+    position: fixed;
+    top: 5rem;
+    right: 2rem;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 1rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    border: 2px solid rgba(74, 144, 226, 0.5);
+    z-index: 100;
+  }
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .tab-container {
+      padding: 1rem;
+    }
+    .tracker-board {
+      flex-direction: column;
+      overflow-x: visible;
+    }
+    .tracker-column {
+      min-width: 100%;
+    }
+    .back-button {
+      position: relative;
+      top: auto;
+      left: auto;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+    .progress-indicator {
+      position: relative;
+      top: auto;
+      right: auto;
+      margin-bottom: 1rem;
+    }
   }
 </style>
 </head>
 <body>
   <div class="tab-container">
-    <a href="../wireframes.html" class="back-button" title="Back to Path" style="display: flex; align-items: center; justify-content: center;">
+    <a href="../wireframes.html" class="back-button" title="Back to Path">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; fill: white;">
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
       </svg>
     </a>
+    
+    <div class="progress-indicator">
+      <div>Step 7 of 12</div>
+    </div>
+
     <div class="tab-header">
-      <h1 class="tab-title">JobTracker</h1>
-      <div class="tracker-stats">
-        <div class="stat-item"><span>1</span> TOTAL JOBS</div>
-        <div class="tracker-tabs">
-          <button class="tracker-tab active" data-tab="active">Active</button>
-          <button class="tracker-tab" data-tab="archived">Archived</button>
-        </div>
-      </div>
+      <h1 class="tab-title">Job Tracker</h1>
+      <p class="tab-subtitle">Manage your job search pipeline from discovery to offer</p>
     </div>
 
-    <div class="action-bar">
-      <div class="search-bar">
-        <span class="search-icon">🔍</span>
-        <input type="text" class="search-input" placeholder="Search for roles or companies...">
-      </div>
-      <div class="action-buttons">
-        <button>Archive All</button>
-        <button>Flow Chart</button>
-        <button>Export CSV</button>
-        <button>Import CSV</button>
-    <!-- Filter Bar -->
-    <div class="filter-bar">
-      <div class="filter-group">
-        <label for="appliedFrom">Applied from</label>
-        <input type="date" id="appliedFrom">
-        <label for="appliedUntil">until</label>
-        <input type="date" id="appliedUntil">
-      </div>
-      <div class="filter-group">
-        <label for="jobType">Job Type</label>
-        <select id="jobType">
-          <option value="all">All</option>
-          <option value="full-time">Full-time</option>
-          <option value="part-time">Part-time</option>
-          <option value="contract">Contract</option>
-          <option value="internship">Internship</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label for="status">Status</label>
-        <select id="status">
-          <option value="all">All</option>
-          <option value="active">Active</option>
-          <option value="stale">Stale</option>
-          <option value="needs-follow-up">Needs Follow-up</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label for="visibleCols">Visible Columns</label>
-        <select id="visibleCols" multiple>
-          <option value="saved" selected>Saved</option>
-          <option value="applied" selected>Applied</option>
-          <option value="phone-screen" selected>Phone Screen</option>
-          <option value="interviewing" selected>Interviewing</option>
-          <option value="negotiation" selected>Negotiation</option>
-          <option value="offer" selected>Offer</option>
-          <option value="rejected" selected>Rejected</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="kanban-board" id="kanbanBoard">
-      <!-- Column: Saved -->
-      <div class="kanban-column" data-col="saved">
-        <h3>Saved (0)</h3>
-        <!-- JS will add cards here -->
-      </div>
-
-      <!-- Column: Applied -->
-      <div class="kanban-column" data-col="applied">
-        <h3>Applied (1)</h3>
-        <div class="job-card" draggable="true">
-          <div class="card-header">
-            <h4>Senior Frontend Developer</h4>
-            <span class="heart-icon active">♥</span>
-          </div>
-          <div class="card-body">
-            <p>Innovate Inc. - San Francisco, CA (Remote)</p>
-          </div>
-          <div class="card-footer">
-            <button class="btn-move-stage">Move to Next Stage →</button>
+    <div class="tracker-board">
+      <!-- Wishlist Column -->
+      <div class="tracker-column">
+        <div class="column-header" style="border-color: #9ca3af;">
+          <span class="column-title">Wishlist</span>
+          <span class="column-count">3</span>
+        </div>
+        <div class="job-card">
+          <div class="job-title">Product Manager</div>
+          <div class="company-name">Google</div>
+          <div class="job-meta">
+            <span class="priority-badge priority-high">High</span>
+            <span class="job-date">Added 2d ago</span>
           </div>
         </div>
+        <div class="job-card">
+          <div class="job-title">Senior PM</div>
+          <div class="company-name">Stripe</div>
+          <div class="job-meta">
+            <span class="priority-badge priority-high">High</span>
+            <span class="job-date">Added 3d ago</span>
+          </div>
+        </div>
+        <div class="job-card">
+          <div class="job-title">Group PM</div>
+          <div class="company-name">Airbnb</div>
+          <div class="job-meta">
+            <span class="priority-badge priority-medium">Medium</span>
+            <span class="job-date">Added 5d ago</span>
+          </div>
+        </div>
+        <button class="add-job-btn" onclick="addJob('wishlist')">+ Add Job</button>
       </div>
 
-      <!-- Column: Phone Screen -->
-      <div class="kanban-column" data-col="phone-screen">
-        <h3>Phone Screen (0)</h3>
-        <!-- JS will add cards here -->
+      <!-- Applied Column -->
+      <div class="tracker-column">
+        <div class="column-header" style="border-color: #60a5fa;">
+          <span class="column-title">Applied</span>
+          <span class="column-count">2</span>
+        </div>
+        <div class="job-card">
+          <div class="job-title">Lead Product Manager</div>
+          <div class="company-name">Linear</div>
+          <div class="job-meta">
+            <span class="priority-badge priority-high">High</span>
+            <span class="job-date">Applied 1d ago</span>
+          </div>
+        </div>
+        <div class="job-card">
+          <div class="job-title">Product Lead</div>
+          <div class="company-name">Notion</div>
+          <div class="job-meta">
+            <span class="priority-badge priority-medium">Medium</span>
+            <span class="job-date">Applied 4d ago</span>
+          </div>
+        </div>
+        <button class="add-job-btn" onclick="addJob('applied')">+ Add Job</button>
       </div>
 
-      <!-- Column: Interviewing -->
-      <div class="kanban-column" data-col="interviewing">
-        <h3>Interviewing (0)</h3>
-        <!-- JS will add cards here -->
+      <!-- Interviewing Column -->
+      <div class="tracker-column">
+        <div class="column-header" style="border-color: #f59e0b;">
+          <span class="column-title">Interviewing</span>
+          <span class="column-count">1</span>
+        </div>
+        <div class="job-card">
+          <div class="job-title">Principal PM</div>
+          <div class="company-name">Figma</div>
+          <div class="job-meta">
+            <span class="priority-badge priority-high">High</span>
+            <span class="job-date">Phone Screen tmrw</span>
+          </div>
+        </div>
+        <button class="add-job-btn" onclick="addJob('interviewing')">+ Add Job</button>
       </div>
 
-      <!-- Column: Negotiating -->
-      <div class="kanban-column" data-col="negotiation">
-        <h3>Negotiation (0)</h3>
-        <!-- JS will add cards here -->
+      <!-- Offer Column -->
+      <div class="tracker-column">
+        <div class="column-header" style="border-color: #10b981;">
+          <span class="column-title">Offer</span>
+          <span class="column-count">0</span>
+        </div>
+        <button class="add-job-btn" onclick="addJob('offer')">+ Add Job</button>
       </div>
 
-      <!-- Column: Offer -->
-      <div class="kanban-column" data-col="offer">
-        <h3>Offer (0)</h3>
-        <!-- JS will add cards here -->
-      </div>
-
-      <!-- Column: Rejected -->
-      <div class="kanban-column" data-col="rejected">
-        <h3>Rejected (0)</h3>
-        <!-- JS will add cards here -->
+      <!-- Rejected Column -->
+      <div class="tracker-column">
+        <div class="column-header" style="border-color: #ef4444;">
+          <span class="column-title">Rejected</span>
+          <span class="column-count">1</span>
+        </div>
+        <div class="job-card" style="opacity: 0.7;">
+          <div class="job-title">Senior PM</div>
+          <div class="company-name">Meta</div>
+          <div class="job-meta">
+            <span class="priority-badge" style="background: #374151; color: #9ca3af;">Closed</span>
+            <span class="job-date">Rejected 1w ago</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-<script>
-  // Basic tab switching
-  const tabs = document.querySelectorAll('.tracker-tab');
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      // In a real app, you would filter the jobs shown based on the active tab
-      console.log(`Switched to ${tab.dataset.tab} view`);
-    });
-  });
-
-  // NOTE: Drag and drop functionality for a Kanban board is complex.
-  // The following is a placeholder to indicate where that logic would go.
-  document.querySelectorAll('.job-card').forEach(card => {
-    card.addEventListener('dragstart', (e) => {
-      // Logic to handle what happens when you start dragging a card
-      console.log('Drag started for:', e.target);
-      // e.dataTransfer.setData('text/plain', card.id);
-    });
-  });
-
-  document.querySelectorAll('.kanban-column').forEach(column => {
-    column.addEventListener('dragover', (e) => {
-      e.preventDefault(); // Allow drop
-    });
-
-    column.addEventListener('drop', (e) => {
-      e.preventDefault();
-      // Logic to handle dropping a card into a new column
-      console.log('Card dropped in:', column.dataset.col);
-    });
-  });
-</script>
+  <script>
+    function addJob(column) {
+      const jobTitle = prompt("Enter Job Title:");
+      if (jobTitle) {
+        const company = prompt("Enter Company Name:");
+        if (company) {
+          alert(`Added ${jobTitle} at ${company} to ${column} column.`);
+          // In a real app, this would add the card to the DOM and update the database
+        }
+      }
+    }
+  </script>
 </body>
 </html>

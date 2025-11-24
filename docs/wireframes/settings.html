@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="../styles.css">
     <link rel="icon" href="../assets/roleferry_trans.png">
     <style>
-        .document-container { max-width: 900px; }
+        .document-container { max-width: 900px; margin: 0 auto; padding: 2rem; }
         .setting-section {
             background: rgba(31, 41, 55, 0.8);
             border: 1px solid #374151;
@@ -75,66 +75,108 @@
         }
         input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(26px); }
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            border: 2px solid rgba(74, 144, 226, 0.5);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .back-button:hover {
+            background: rgba(74, 144, 226, 0.9);
+        }
+        .back-button svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+        .tab-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            padding: 2rem;
+        }
+        @media (max-width: 768px) {
+            .back-button {
+                position: relative;
+                top: auto;
+                left: auto;
+                margin-bottom: 1rem;
+                display: inline-flex;
+            }
+            .tab-container {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="document-container">
-        <div class="document-header">
-            <h1>Settings</h1>
-            <p>Manage your account and campaign preferences.</p>
-        </div>
+    <div class="tab-container">
+        <a href="../wireframes.html" class="back-button" title="Back to Path">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+            </svg>
+        </a>
 
-        <div class="setting-section">
-            <h2>Sending & Deliverability Safeguards</h2>
-            <div class="form-group">
-                <label for="daily-limit">Daily Sending Limit (per inbox)</label>
-                <input type="number" id="daily-limit" value="50" placeholder="e.g., 50">
+        <div class="document-container">
+            <div class="document-header">
+                <h1>Settings</h1>
+                <p>Manage your account and campaign preferences.</p>
             </div>
 
-            <div class="form-group">
-                <label for="send-window">Sending Window</label>
-                <select id="send-window">
-                    <option>8am - 5pm (Recommended)</option>
-                    <option>9am - 6pm</option>
-                    <option>24 hours (Not Recommended)</option>
-                </select>
-            </div>
+            <div class="setting-section">
+                <h2>Sending & Deliverability Safeguards</h2>
+                <div class="form-group">
+                    <label for="daily-limit">Daily Sending Limit (per inbox)</label>
+                    <input type="number" id="daily-limit" value="50" placeholder="e.g., 50">
+                </div>
 
-            <div class="form-group">
-                <label>Mailbox Warm-up</label>
-                <div class="toggle-switch">
-                    <label class="switch">
-                        <input type="checkbox" checked>
-                        <span class="slider"></span>
-                    </label>
-                    <span>Auto-warmup enabled (Recommended)</span>
+                <div class="form-group">
+                    <label for="send-window">Sending Window</label>
+                    <select id="send-window">
+                        <option>8am - 5pm (Recommended)</option>
+                        <option>9am - 6pm</option>
+                        <option>24 hours (Not Recommended)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Mailbox Warm-up</label>
+                    <div class="toggle-switch">
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Auto-warmup enabled (Recommended)</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Auto-pause on Soft Bounce</label>
+                    <div class="toggle-switch">
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Pause campaign for 24 hours if a soft bounce is detected.</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label>Auto-pause on Soft Bounce</label>
-                <div class="toggle-switch">
-                    <label class="switch">
-                        <input type="checkbox" checked>
-                        <span class="slider"></span>
-                    </label>
-                    <span>Pause campaign for 24 hours if a soft bounce is detected.</span>
-                </div>
+            <div class="setting-section">
+                <h2>Connected Inboxes</h2>
+                <!-- This would be dynamically populated -->
+                <p>oliver@roleferry.com - <span style="color: #10b981;">Warm-up Active, Healthy</span></p>
             </div>
-        </div>
-
-        <div class="setting-section">
-            <h2>Connected Inboxes</h2>
-            <!-- This would be dynamically populated -->
-            <p>oliver@roleferry.com - <span style="color: #10b981;">Warm-up Active, Healthy</span></p>
-        </div>
-
-        <div class="navigation">
-            <a href="../wireframes.html" class="nav-button secondary" title="Back to Path" style="display: flex; align-items: center; justify-content: center; width: fit-content; padding: 12px;">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; fill: currentColor;">
-                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-                </svg>
-            </a>
         </div>
     </div>
 </body>
