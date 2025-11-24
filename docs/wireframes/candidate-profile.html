@@ -410,7 +410,7 @@
           <div class="upload-hint">PDF, DOC, DOCX supported</div>
         </div>
         <input type="file" id="fileInput" class="file-input" accept=".pdf,.doc,.docx" onchange="handleFileSelect(event)">
-        <button class="btn-primary" id="parseBtn" onclick="parseResume()" disabled>Parse Profile with AI</button>
+        <button class="btn-primary" id="parseBtn" onclick="parseResume()" disabled>Load Resume</button>
       </div>
 
       <!-- Loading Spinner -->
@@ -424,22 +424,66 @@
         <h2 style="color: #ffffff; text-align: center; margin-bottom: 2rem;">AI Extracted Data</h2>
         
         <div class="data-grid">
-          <!-- Cards will be populated by JS -->
+          <!-- Personal Info -->
+          <div class="data-card">
+             <h3>Personal Information</h3>
+             <ul id="personalInfoList">
+               <!-- Populated by JS -->
+             </ul>
+          </div>
+
+          <!-- Education -->
+          <div class="data-card">
+             <h3>Education</h3>
+             <ul id="educationList">
+               <!-- Populated by JS -->
+             </ul>
+          </div>
+
+          <!-- Work Experience -->
+          <div class="data-card">
+             <h3>Work Experience</h3>
+             <ul id="experienceList">
+               <!-- Populated by JS -->
+             </ul>
+          </div>
+
+          <!-- Key Metrics -->
           <div class="data-card">
              <h3>Key Metrics</h3>
              <ul id="metricsList">
                <!-- Populated by JS -->
              </ul>
           </div>
+
+          <!-- Business Challenges -->
           <div class="data-card">
              <h3>Business Challenges Solved</h3>
              <ul id="challengesList">
                <!-- Populated by JS -->
              </ul>
           </div>
+
+          <!-- Accomplishments -->
           <div class="data-card">
              <h3>Notable Accomplishments</h3>
              <ul id="accomplishmentsList">
+               <!-- Populated by JS -->
+             </ul>
+          </div>
+
+          <!-- Skills -->
+          <div class="data-card">
+             <h3>Skills & Expertise</h3>
+             <ul id="skillsList">
+               <!-- Populated by JS -->
+             </ul>
+          </div>
+
+          <!-- References -->
+          <div class="data-card">
+             <h3>References</h3>
+             <ul id="referencesList">
                <!-- Populated by JS -->
              </ul>
           </div>
@@ -499,22 +543,64 @@
           
           // Populate Data
           const mockData = {
+             personalInfo: {
+                name: "Alex Johnson",
+                title: "Senior Software Engineer",
+                email: "alex.johnson@example.com",
+                phone: "+1 (555) 123-4567",
+                location: "San Francisco, CA",
+                linkedin: "linkedin.com/in/alexjohnson"
+             },
+             education: [
+                { degree: "M.S. Computer Science", school: "Stanford University", year: "2016" },
+                { degree: "B.S. Electrical Engineering", school: "UC Berkeley", year: "2014" }
+             ],
+             experience: [
+                { role: "Senior Software Engineer", company: "TechCorp", duration: "2019 - Present", details: "Leading backend infrastructure team." },
+                { role: "Software Engineer", company: "InnovateX", duration: "2016 - 2019", details: "Full stack development for SaaS platform." }
+             ],
              metrics: [
                 "37.5% revenue increase ($200M to $275M)",
                 "20% increase in feature utilization",
-                "Improved net retention by 8 basis points"
+                "Improved net retention by 8 basis points",
+                "Reduced cloud costs by 15% annually"
              ],
              challenges: [
                 "Scaling customer-centric strategy across onboarding",
                 "Integrating two legacy CS orgs",
-                "Improving customer satisfaction for $40M firm"
+                "Improving customer satisfaction for $40M firm",
+                "Migrating monolithic architecture to microservices"
              ],
              accomplishments: [
                 "Restructured customer segmentation",
                 "Launched enterprise-wide Customer Success Council",
-                "Built inaugural CS organization"
+                "Built inaugural CS organization",
+                "Mentored 5 junior engineers to promotion"
+             ],
+             skills: [
+                "Python", "React", "AWS", "Docker", "Kubernetes", "PostgreSQL", "System Design", "Agile Methodology"
+             ],
+             references: [
+                { name: "Sarah Smith", role: "VP Engineering, TechCorp", contact: "sarah.s@techcorp.com" },
+                { name: "Mike Brown", role: "CTO, InnovateX", contact: "mike.b@innovatex.com" }
              ]
           };
+
+          const personalInfoList = document.getElementById('personalInfoList');
+          personalInfoList.innerHTML = `
+            <li><strong>Name:</strong> ${mockData.personalInfo.name}</li>
+            <li><strong>Title:</strong> ${mockData.personalInfo.title}</li>
+            <li><strong>Email:</strong> ${mockData.personalInfo.email}</li>
+            <li><strong>Phone:</strong> ${mockData.personalInfo.phone}</li>
+            <li><strong>Location:</strong> ${mockData.personalInfo.location}</li>
+            <li><strong>LinkedIn:</strong> ${mockData.personalInfo.linkedin}</li>
+          `;
+
+          const educationList = document.getElementById('educationList');
+          educationList.innerHTML = mockData.education.map(edu => `<li><strong>${edu.degree}</strong> - ${edu.school} (${edu.year})</li>`).join('');
+
+          const experienceList = document.getElementById('experienceList');
+          experienceList.innerHTML = mockData.experience.map(exp => `<li><strong>${exp.role}</strong> at ${exp.company} (${exp.duration})<br><span style="font-size:0.9em; color:#9ca3af;">${exp.details}</span></li>`).join('');
 
           const metricsList = document.getElementById('metricsList');
           metricsList.innerHTML = mockData.metrics.map(m => `<li>${m}</li>`).join('');
@@ -524,6 +610,15 @@
           
           const accomplishmentsList = document.getElementById('accomplishmentsList');
           accomplishmentsList.innerHTML = mockData.accomplishments.map(a => `<li>${a}</li>`).join('');
+
+          const skillsList = document.getElementById('skillsList');
+          skillsList.innerHTML = mockData.skills.map(s => `<li style="display:inline-block; background:rgba(37,99,235,0.2); padding:2px 8px; border-radius:4px; margin:2px; color:#60a5fa;">${s}</li>`).join('');
+          // Clean up bullets for skills since they are badges
+          skillsList.style.listStyle = 'none';
+          skillsList.querySelectorAll('li').forEach(li => li.style.paddingLeft = '8px'); // Reset padding
+
+          const referencesList = document.getElementById('referencesList');
+          referencesList.innerHTML = mockData.references.map(ref => `<li><strong>${ref.name}</strong> - ${ref.role} <br><span style="font-size:0.9em; color:#9ca3af;">${ref.contact}</span></li>`).join('');
 
           // Save to localStorage
           localStorage.setItem('roleferry_resume_data', JSON.stringify(response.data));

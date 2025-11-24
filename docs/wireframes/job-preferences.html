@@ -419,20 +419,24 @@
   <script>
     let optionsLoaded = false;
 
-    // Load options from API
+    // Load options from Mock Data
     async function loadOptions() {
       try {
-        const [valuesRes, roleCategoriesRes, industriesRes, skillsRes] = await Promise.all([
-          JobPreferencesAPI.getOptions.values(),
-          JobPreferencesAPI.getOptions.roleCategories(),
-          JobPreferencesAPI.getOptions.industries(),
-          JobPreferencesAPI.getOptions.skills()
-        ]);
+        // Simulate network delay slightly for realism, but always succeed
+        await new Promise(resolve => setTimeout(resolve, 100)); 
+
+        // Mock Data for Options
+        const mockOptions = {
+            values: ["Innovation", "Growth", "Impact", "Mission-Driven", "Diversity", "Work-Life Balance", "Autonomy", "Collaboration", "Compensation", "Learning"],
+            roleCategories: ["Product Management", "Engineering", "Data Science", "Design", "Sales", "Marketing", "Customer Success"],
+            industries: ["Software & Technology", "AI & Machine Learning", "FinTech", "Healthcare", "E-commerce", "Enterprise Software", "Cybersecurity"],
+            skills: ["Python", "React", "AWS", "Machine Learning", "Docker", "Kubernetes", "PostgreSQL", "JavaScript", "TypeScript", "Node.js", "Java", "Go", "C++"]
+        };
 
         // Populate values
         const valuesSelect = document.getElementById('values');
         valuesSelect.innerHTML = '<option value="">Select work values...</option>';
-        valuesRes.values.forEach(value => {
+        mockOptions.values.forEach(value => {
           const option = document.createElement('option');
           option.value = value;
           option.textContent = value;
@@ -442,7 +446,7 @@
         // Populate role categories
         const roleCategoriesSelect = document.getElementById('roleCategories');
         roleCategoriesSelect.innerHTML = '<option value="">Select role categories...</option>';
-        roleCategoriesRes.role_categories.forEach(category => {
+        mockOptions.roleCategories.forEach(category => {
           const option = document.createElement('option');
           option.value = category;
           option.textContent = category;
@@ -452,7 +456,7 @@
         // Populate industries
         const industriesSelect = document.getElementById('industries');
         industriesSelect.innerHTML = '<option value="">Select industries...</option>';
-        industriesRes.industries.forEach(industry => {
+        mockOptions.industries.forEach(industry => {
           const option = document.createElement('option');
           option.value = industry;
           option.textContent = industry;
@@ -462,7 +466,7 @@
         // Populate skills
         const skillsSelect = document.getElementById('skills');
         skillsSelect.innerHTML = '<option value="">Select skills...</option>';
-        skillsRes.skills.forEach(skill => {
+        mockOptions.skills.forEach(skill => {
           const option = document.createElement('option');
           option.value = skill;
           option.textContent = skill;
@@ -472,7 +476,8 @@
         optionsLoaded = true;
       } catch (error) {
         console.error('Error loading options:', error);
-        showError('Failed to load form options. Please refresh the page.');
+        // Even on error, we don't show failure message in demo mode
+        // Just log it and maybe set default values if critical
       }
     }
 
