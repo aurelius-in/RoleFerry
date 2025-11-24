@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-interface PinpointMatch {
-  pinpoint_1: string;
+interface PainPointMatch {
+  painPoint_1: string;
   solution_1: string;
   metric_1: string;
-  pinpoint_2: string;
+  painPoint_2: string;
   solution_2: string;
   metric_2: string;
-  pinpoint_3: string;
+  painPoint_3: string;
   solution_3: string;
   metric_3: string;
   alignment_score: number;
@@ -30,7 +30,7 @@ interface Offer {
 export default function OfferCreationPage() {
   const router = useRouter();
   const [mode, setMode] = useState<'job-seeker' | 'recruiter'>('job-seeker');
-  const [pinpointMatches, setPinpointMatches] = useState<PinpointMatch[]>([]);
+  const [painPointMatches, setPainPointMatches] = useState<PainPointMatch[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedTone, setSelectedTone] = useState<Offer['tone']>('manager');
@@ -47,10 +47,10 @@ export default function OfferCreationPage() {
       setMode('recruiter');
     }
     
-    // Load pinpoint matches from localStorage
-    const savedMatches = localStorage.getItem('pinpoint_matches');
+    // Load pain point matches from localStorage
+    const savedMatches = localStorage.getItem('pain_point_matches');
     if (savedMatches) {
-      setPinpointMatches(JSON.parse(savedMatches));
+      setPainPointMatches(JSON.parse(savedMatches));
     }
     
     // Listen for mode changes
@@ -63,22 +63,22 @@ export default function OfferCreationPage() {
   }, []);
 
   const generateOffer = async () => {
-    if (pinpointMatches.length === 0) return;
+    if (painPointMatches.length === 0) return;
     
     setIsGenerating(true);
     
     // Simulate AI offer generation
     setTimeout(() => {
-      const match = pinpointMatches[0];
+      const match = painPointMatches[0];
       let content = "";
       let title = "";
       
       if (mode === 'job-seeker') {
-        title = `How I Can Solve ${match.pinpoint_1.split(' ').slice(0, 3).join(' ')}`;
-        content = `I understand you're facing ${match.pinpoint_1.toLowerCase()}. In my previous role, I ${match.solution_1.toLowerCase()}, resulting in ${match.metric_1}. I'm confident I can bring similar results to your team.`;
+        title = `How I Can Solve ${match.painPoint_1.split(' ').slice(0, 3).join(' ')}`;
+        content = `I understand you're facing ${match.painPoint_1.toLowerCase()}. In my previous role, I ${match.solution_1.toLowerCase()}, resulting in ${match.metric_1}. I'm confident I can bring similar results to your team.`;
       } else {
-        title = `Perfect Candidate for ${match.pinpoint_1.split(' ').slice(0, 3).join(' ')}`;
-        content = `I have an exceptional candidate who has successfully ${match.solution_1.toLowerCase()}, achieving ${match.metric_1}. They would be an ideal fit for your ${match.pinpoint_1.toLowerCase()} challenge.`;
+        title = `Perfect Candidate for ${match.painPoint_1.split(' ').slice(0, 3).join(' ')}`;
+        content = `I have an exceptional candidate who has successfully ${match.solution_1.toLowerCase()}, achieving ${match.metric_1}. They would be an ideal fit for your ${match.painPoint_1.toLowerCase()} challenge.`;
       }
       
       // Adjust tone based on audience
@@ -242,27 +242,27 @@ export default function OfferCreationPage() {
                 </p>
               </div>
 
-              {pinpointMatches.length === 0 ? (
+              {painPointMatches.length === 0 ? (
                 <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
                   <div className="mb-4 text-4xl">🎯</div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Pinpoint Matches</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Pain Point Matches</h3>
                   <p className="text-gray-600 mb-6">
-                    Please complete the Pinpoint Match step first.
+                    Please complete the Pain Point Match step first.
                   </p>
                   <button
-                    onClick={() => router.push('/pinpoint-match')}
+                    onClick={() => router.push('/pain-point-match')}
                     className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
                   >
-                    Go to Pinpoint Match
+                    Go to Pain Point Match
                   </button>
                 </div>
               ) : (
                 <div className="space-y-8">
-                  {/* Pinpoint Match Summary Card */}
+                  {/* Pain Point Match Summary Card */}
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                      <h3 className="text-sm font-semibold text-blue-900 uppercase tracking-wide mb-2">Target Opportunity</h3>
-                     <p className="text-blue-800 font-medium mb-1">Challenge: {pinpointMatches[0].pinpoint_1}</p>
-                     <p className="text-blue-700 text-sm">Proposed Solution: {pinpointMatches[0].solution_1} ({pinpointMatches[0].metric_1})</p>
+                     <p className="text-blue-800 font-medium mb-1">Challenge: {painPointMatches[0].painPoint_1}</p>
+                     <p className="text-blue-700 text-sm">Proposed Solution: {painPointMatches[0].solution_1} ({painPointMatches[0].metric_1})</p>
                   </div>
 
                   {/* Tone Selection */}

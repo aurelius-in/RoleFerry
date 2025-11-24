@@ -101,16 +101,16 @@ const JobDescriptionsAPI = {
  */
 const PainPointMatchAPI = {
   generate: async (matchData) => {
-    return apiCall('/pinpoint-match/generate', 'POST', matchData);
+    return apiCall('/pain-point-match/generate', 'POST', matchData);
   },
   save: async (matchData) => {
-    return apiCall('/pinpoint-match/save', 'POST', matchData);
+    return apiCall('/pain-point-match/save', 'POST', matchData);
   },
   get: async (userId) => {
-    return apiCall(`/pinpoint-match/${userId}`, 'GET');
+    return apiCall(`/pain-point-match/${userId}`, 'GET');
   },
   getScore: async (userId) => {
-    return apiCall(`/pinpoint-match/${userId}/score`, 'GET');
+    return apiCall(`/pain-point-match/${userId}/score`, 'GET');
   }
 };
 

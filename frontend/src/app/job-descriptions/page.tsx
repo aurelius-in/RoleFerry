@@ -92,7 +92,7 @@ export default function JobDescriptionsPage() {
   const handleContinue = () => {
     if (jobDescriptions.length > 0) {
       localStorage.setItem('job_descriptions', JSON.stringify(jobDescriptions));
-      router.push('/pinpoint-match');
+      router.push('/pain-point-match');
     }
   };
 
