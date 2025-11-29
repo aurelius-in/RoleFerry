@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Context Research - RoleFerry</title>
+<title>Company Research - RoleFerry</title>
 <link rel="stylesheet" href="../styles.css" />
 <link rel="stylesheet" href="responsive.css" />
 <link rel="icon" href="../assets/roleferry_trans.png" />
@@ -288,6 +288,53 @@
     line-height: 1.6;
   }
 
+  /* Signals Styles */
+  .signal-card {
+      background: rgba(31, 41, 55, 0.8);
+      border: 1px solid #374151;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: all 0.3s ease;
+  }
+  .signal-card:hover {
+      border-color: #f59e0b;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.1);
+  }
+  .signal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+  }
+  .signal-header h3 {
+      color: #f59e0b;
+      margin: 0;
+      font-size: 1.4rem;
+  }
+  .signal-source {
+      font-size: 0.9rem;
+      color: #9ca3af;
+  }
+  .signal-content p {
+      margin-bottom: 1.5rem;
+      color: #d1d5db;
+  }
+  .filter-bar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      align-items: center;
+  }
+  .filter-bar input, .filter-bar select {
+      padding: 0.75rem;
+      background: rgba(31, 41, 55, 0.9);
+      border: 1px solid #374151;
+      color: white;
+      border-radius: 8px;
+  }
+
   /* Responsive Design */
   @media (max-width: 768px) {
     .tab-container {
@@ -322,46 +369,93 @@
       right: auto;
       margin-bottom: 1rem;
     }
+
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
   }
 </style>
 </head>
 <body>
   <div class="tab-container">
     <!-- Navigation -->
-    <a href="../wireframes.html" class="back-button" title="Back to Path">
+    <a href="pain-point-match.html" class="back-button" title="Back to Path">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; fill: white;">
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
       </svg>
     </a>
-    <a href="job-tracker.html" class="next-button">Job Tracker →</a>
+    <a href="decision-makers.html" class="next-button">Decision Makers →</a>
 
     <!-- Progress Indicator -->
     <div class="progress-indicator">
-      <div>Step 6 of 12</div>
+      <div>Step 6 of 13</div>
     </div>
 
     <!-- Header -->
     <div class="tab-header">
-      <h1 class="tab-title">Client Intelligence</h1>
-      <p class="tab-subtitle">AI-powered company and contact research for personalized outreach</p>
+      <h1 class="tab-title">Company Research</h1>
+      <p class="tab-subtitle">Hiring signals and company intelligence to contextualize your outreach.</p>
     </div>
 
     <!-- Success Message -->
     <div class="success-message" id="successMessage">
-      ✅ Client intelligence gathered! AI has compiled comprehensive company and contact information.
+      ✅ Company research saved! Signals and briefing data are ready for the next step.
     </div>
 
     <!-- Form Container -->
     <div class="form-container">
+      
+      <!-- Signals Section (Merged from Signals Engine) -->
+      <h3 style="color: #f59e0b; margin-bottom: 1rem;">Hiring Signals</h3>
+      <div class="filter-bar">
+          <input type="text" placeholder="Search signals...">
+          <select>
+              <option>Filter by Signal Type</option>
+              <option>New Funding</option>
+              <option>Leadership Change</option>
+              <option>Expansion</option>
+          </select>
+          <select>
+              <option>Filter by Location</option>
+              <option>Austin, TX</option>
+              <option>Remote</option>
+          </select>
+      </div>
+
+      <div class="signal-card">
+          <div class="signal-header">
+              <h3>TechCorp Raises $50M Series B</h3>
+              <span class="signal-source">Source: TechCrunch | Nov 2, 2025</span>
+          </div>
+          <div class="signal-content">
+              <p>TechCorp just closed a $50M Series B round to scale their engineering and sales teams. They plan to hire 100 new roles in the next 6 months.</p>
+              <p><strong>Email Variable:</strong> <code>{{signal_context}}</code></p>
+          </div>
+      </div>
+
+      <div class="signal-card">
+          <div class="signal-header">
+              <h3>New Office Opening in Austin</h3>
+              <span class="signal-source">Source: Austin Business Journal | Oct 28, 2025</span>
+          </div>
+          <div class="signal-content">
+              <p>TechCorp announced the opening of a new headquarters in Austin, Texas, with plans to create 50 jobs in engineering and product.</p>
+              <p><strong>Email Variable:</strong> <code>{{signal_context_2}}</code></p>
+          </div>
+      </div>
+
+      <hr style="border-color: #374151; margin: 3rem 0;">
+
       <!-- Research Summary -->
       <div class="research-summary">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h3 style="margin: 0;">Client Briefing</h3>
+          <h3 style="margin: 0;">Company Briefing</h3>
           <button class="btn-secondary" onclick="exportResearchToCSV()" style="padding: 8px 16px; font-size: 0.9rem;">
             📊 Export CSV
           </button>
         </div>
-        <p>AI has automatically gathered company information, recent news, and contact details. You can edit the generated content below to customize your outreach approach.</p>
+        <p>AI has gathered company information, news, and culture notes. Edit below to refine your knowledge base.</p>
       </div>
 
       <!-- Research Section -->
@@ -370,67 +464,47 @@
           <!-- Company Summary -->
           <div class="research-card">
             <h3>Company Overview</h3>
-            <textarea id="companySummary" placeholder="AI is gathering company information...">TechCorp is a leading technology company specializing in AI-driven solutions for enterprise clients. Founded in 2026, they have grown rapidly to become a key player in the SaaS market, known for their innovative approach to data analytics and cloud computing. Their mission is to empower businesses with intelligent insights through cutting-edge technology.</textarea>
+            <textarea id="companySummary" placeholder="AI is gathering company information...">TechCorp is a leading technology company specializing in AI-driven solutions for enterprise clients. Founded in 2026, they have grown rapidly to become a key player in the SaaS market, known for their innovative approach to data analytics and cloud computing.</textarea>
             <div class="variable-display">
               <h4>Email Variable:</h4>
-              <code>{{client_company_summary}}</code>
+              <code>{{company.summary}}</code>
             </div>
           </div>
 
           <!-- Recent News -->
           <div class="research-card">
-            <h3>Buying Signals & News</h3>
-            <textarea id="recentNews" placeholder="AI is gathering recent news...">TechCorp recently announced a strategic partnership with GlobalData Inc. to expand their market reach in Asia. They also reported a 25% increase in Q3 revenue, driven by strong demand for their new predictive analytics platform. The company is planning to hire 50+ engineers in the next quarter to support their expansion.</textarea>
+            <h3>Recent News</h3>
+            <textarea id="recentNews" placeholder="AI is gathering recent news...">TechCorp recently announced a strategic partnership with GlobalData Inc. to expand their market reach in Asia. They also reported a 25% increase in Q3 revenue.</textarea>
             <div class="variable-display">
               <h4>Email Variable:</h4>
-              <code>{{client_recent_news}}</code>
-            </div>
-          </div>
-
-          <!-- Contact Bio -->
-          <div class="research-card">
-            <h3>Decision-Maker Bio</h3>
-            <textarea id="contactBio" placeholder="AI is gathering contact information...">Jane Doe is the VP of Engineering at TechCorp. With over 10 years of experience in the tech industry, she is responsible for driving the company's technology strategy and leading the engineering team. She is passionate about building scalable and innovative solutions that solve real-world problems.</textarea>
-            <div class="variable-display">
-              <h4>Email Variable:</h4>
-              <code>{{decision_maker_bio}}</code>
+              <code>{{company.news}}</code>
             </div>
           </div>
 
           <!-- Company Culture -->
           <div class="research-card">
             <h3>Company Culture & Values</h3>
-            <textarea id="companyCulture" placeholder="AI is gathering culture information...">TechCorp values innovation, collaboration, and continuous learning. They have a flat organizational structure that encourages open communication and idea sharing. The company is known for its flexible work policies, strong emphasis on work-life balance, and commitment to employee development through regular training and mentorship programs.</textarea>
+            <textarea id="companyCulture" placeholder="AI is gathering culture information...">TechCorp values innovation, collaboration, and continuous learning. They have a flat organizational structure that encourages open communication and idea sharing.</textarea>
             <div class="variable-display">
               <h4>Email Variable:</h4>
-              <code>{{client_company_culture}}</code>
-            </div>
-          </div>
-
-          <!-- Tech Stack -->
-          <div class="research-card">
-            <h3>Technology Stack</h3>
-            <textarea id="techStack" placeholder="AI is gathering technology information...">TechCorp's technology stack includes Python, AWS, PostgreSQL, React, Docker, Kubernetes, and various AI/ML frameworks. They are migrating to microservices architecture and implementing CI/CD pipelines. The company is also investing heavily in machine learning and data science capabilities.</textarea>
-            <div class="variable-display">
-              <h4>Email Variable:</h4>
-              <code>{{client_tech_stack}}</code>
+              <code>{{company.culture}}</code>
             </div>
           </div>
 
           <!-- Market Position -->
           <div class="research-card">
-            <h3>Market Position & Competitors</h3>
-            <textarea id="marketPosition" placeholder="AI is gathering market information...">TechCorp competes with companies like DataCorp, AnalyticsPro, and CloudTech in the enterprise AI solutions market. They differentiate themselves through their proprietary algorithms and customer-centric approach. The company has a strong market position in the mid-market segment and is expanding into enterprise clients.</textarea>
+            <h3>Market Position</h3>
+            <textarea id="marketPosition" placeholder="AI is gathering market information...">TechCorp competes with companies like DataCorp and AnalyticsPro. They differentiate themselves through their proprietary algorithms and customer-centric approach.</textarea>
             <div class="variable-display">
               <h4>Email Variable:</h4>
-              <code>{{client_market_position}}</code>
+              <code>{{company.market_position}}</code>
             </div>
           </div>
         </div>
 
         <div class="research-actions">
           <button class="btn-secondary" onclick="regenerateResearch()">Regenerate Briefing</button>
-          <button class="btn-primary" onclick="saveResearch()">Save Briefing</button>
+          <button class="btn-primary" onclick="saveResearch()">Save Research</button>
         </div>
       </div>
     </div>
@@ -438,81 +512,36 @@
 
   <script>
     function regenerateResearch() {
-      // Show loading spinner
+      // Show loading spinner (mock)
       const spinner = document.createElement('div');
       spinner.className = 'loading-spinner show';
       spinner.innerHTML = '<div class="spinner"></div><p>AI is regenerating research...</p>';
       document.querySelector('.research-section').appendChild(spinner);
 
-      // Simulate AI regeneration
       setTimeout(() => {
         spinner.remove();
-        
-        // Update content with new AI-generated text
-        document.getElementById('companySummary').value = "TechCorp is a rapidly growing technology company that specializes in AI-driven solutions for enterprise clients. Since their founding in 2010, they have established themselves as a key player in the SaaS market, known for their innovative approach to data analytics and cloud computing.";
-        
-        document.getElementById('recentNews').value = "TechCorp recently secured $50M in Series B funding and announced plans to expand their engineering team by 100+ people. They also launched a new AI-powered analytics platform that has seen 300% growth in user adoption since its release.";
-        
-        document.getElementById('contactBio').value = "Jane Doe is the Senior Hiring Manager for the AI Solutions division at TechCorp. With over 12 years of experience in tech recruitment, she specializes in identifying and attracting top-tier engineering talent. She is known for her data-driven approach to hiring and her commitment to building diverse, high-performing teams.";
-        
         alert('Research regenerated successfully!');
-      }, 2000);
+      }, 1500);
     }
 
     function saveResearch() {
       const researchData = {
         companySummary: document.getElementById('companySummary').value,
         recentNews: document.getElementById('recentNews').value,
-        contactBio: document.getElementById('contactBio').value,
         companyCulture: document.getElementById('companyCulture').value,
-        techStack: document.getElementById('techStack').value,
         marketPosition: document.getElementById('marketPosition').value,
         timestamp: new Date().toISOString()
       };
       
       localStorage.setItem('roleferry_research_data', JSON.stringify(researchData));
-      
       document.getElementById('successMessage').classList.add('show');
       
       setTimeout(() => {
-        alert('Research saved successfully! You can now proceed to the next step.');
+        // Just show message, don't auto-redirect so user can see it
       }, 500);
     }
 
     function exportResearchToCSV() {
-      // Get all the research data
-      const companySummary = document.getElementById('companySummary')?.value || 'Not available';
-      const recentNews = document.getElementById('recentNews')?.value || 'Not available';
-      const contactBio = document.getElementById('contactBio')?.value || 'Not available';
-      const companyCulture = document.getElementById('companyCulture')?.value || 'Not available';
-      const techStack = document.getElementById('techStack')?.value || 'Not available';
-      const marketPosition = document.getElementById('marketPosition')?.value || 'Not available';
-      
-      // Create CSV data
-      const csvData = [
-        ['Research Field', 'Content'],
-        ['Company Summary', companySummary],
-        ['Recent News', recentNews],
-        ['Contact Bio', contactBio],
-        ['Company Culture', companyCulture],
-        ['Technology Stack', techStack],
-        ['Market Position', marketPosition]
-      ];
-      
-      // Convert to CSV string
-      const csvString = csvData.map(row => row.map(field => `"${field.replace(/"/g, '""')}"`).join(',')).join('\n');
-      
-      // Create and download file
-      const blob = new Blob([csvString], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'context_research_export.csv';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-      
       alert('Research data exported to CSV successfully!');
     }
 
@@ -523,9 +552,7 @@
       if (data.companySummary) {
         document.getElementById('companySummary').value = data.companySummary;
         document.getElementById('recentNews').value = data.recentNews;
-        document.getElementById('contactBio').value = data.contactBio;
         document.getElementById('companyCulture').value = data.companyCulture;
-        document.getElementById('techStack').value = data.techStack;
         document.getElementById('marketPosition').value = data.marketPosition;
       }
     }

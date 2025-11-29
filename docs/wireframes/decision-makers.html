@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Find Contact - RoleFerry</title>
+<title>Decision Makers - RoleFerry</title>
 <link rel="stylesheet" href="../styles.css" />
 <link rel="stylesheet" href="responsive.css" />
 <link rel="icon" href="../assets/roleferry_trans.png" />
@@ -62,6 +62,7 @@
   .saved-item h4 {
       color: #ffffff;
       margin: 0 0 0.25rem 0;
+      font-size: 1rem;
   }
   .saved-item p {
       color: #9ca3af;
@@ -82,18 +83,26 @@
   }
   .contact-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     padding: 1.5rem;
     border-bottom: 1px solid #374151;
+    background: rgba(17, 24, 39, 0.6);
+    margin-bottom: 1rem;
+    border-radius: 8px;
   }
   .contact-item:last-child {
       border-bottom: none;
+      margin-bottom: 0;
   }
-  .contact-item input[type="checkbox"] {
+  .contact-item input[type="radio"] {
+    margin-top: 0.5rem;
     margin-right: 1rem;
     width: 18px;
     height: 18px;
     accent-color: #2563eb;
+  }
+  .contact-details {
+      flex: 1;
   }
   .contact-details h4 {
     color: #ffffff;
@@ -105,11 +114,46 @@
     margin: 0;
     font-size: 0.9rem;
   }
+  .linkedin-input-group {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.5rem;
+  }
+  .linkedin-input {
+      flex: 1;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #374151;
+      background: rgba(0, 0, 0, 0.3);
+      color: white;
+  }
+  .facts-list {
+      margin-top: 1rem;
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid #fbbf24;
+      border-radius: 8px;
+      padding: 1rem;
+  }
+  .facts-list h5 {
+      color: #fbbf24;
+      margin: 0 0 0.5rem 0;
+      font-size: 0.9rem;
+  }
+  .facts-list ul {
+      margin: 0;
+      padding-left: 1.5rem;
+      color: #d1d5db;
+      font-size: 0.9rem;
+  }
+  .facts-list li {
+      margin-bottom: 0.25rem;
+  }
   .contact-meta {
-    margin-left: auto;
+    margin-left: 1rem;
     display: flex;
-    align-items: center;
-    gap: 1rem;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
   }
   .badge.recommended {
     background: rgba(251, 191, 36, 0.2);
@@ -253,19 +297,19 @@
 </head>
 <body>
   <div class="tab-container">
-    <a href="../wireframes.html" class="back-button" title="Back to Path">
+    <a href="company-research.html" class="back-button" title="Back to Path">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; fill: white;">
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
       </svg>
     </a>
     <a href="offer-creation.html" class="next-button">Offer Creation →</a>
-
+    
     <div class="progress-indicator">
-      <div>Step 8 of 12</div>
+      <div>Step 7 of 13</div>
     </div>
 
     <div class="tab-header">
-      <h1 class="tab-title">Find & Select Decision-Makers</h1>
+      <h1 class="tab-title">Decision Makers</h1>
     </div>
 
     <div class="main-grid">
@@ -281,45 +325,64 @@
                     <h4>Jane Doe</h4>
                     <p>VP of Engineering</p>
                 </li>
-                <li class="saved-item">
-                    <h4>Alice Johnson</h4>
-                    <p>Director of Talent...</p>
-                </li>
             </ul>
         </div>
 
         <div class="right-column">
             <div class="form-container">
-                <p class="tab-subtitle" style="text-align: center; margin-bottom: 1rem;">AI has suggested the best contacts based on the client profile. Select who to reach out to.</p>
+                <p class="tab-subtitle" style="text-align: center; margin-bottom: 1rem;">Select a contact and research their LinkedIn to personalize your outreach.</p>
+                
                 <ul class="contact-list" id="contactList">
                     <li class="contact-item">
-                      <input type="checkbox" id="contact1" name="contact1">
+                      <input type="radio" id="contact1" name="contact" checked>
                       <div class="contact-details">
                         <h4>Jane Doe</h4>
-                        <p>VP of Engineering</p>
+                        <p>VP of Engineering at Innovate Inc.</p>
+                        
+                        <div class="linkedin-input-group">
+                            <input type="text" class="linkedin-input" placeholder="Paste LinkedIn URL..." value="linkedin.com/in/janedoe-example">
+                            <button class="btn-primary" style="padding: 8px 16px; font-size: 0.9rem;" onclick="analyzeLinkedIn(this)">Analyze Profile</button>
+                        </div>
+
+                        <div class="facts-list" id="facts1" style="display: block;">
+                            <h5>💡 Interesting Facts Found:</h5>
+                            <ul>
+                                <li>Recently published an article on "Scaling Engineering Teams Remotely".</li>
+                                <li>Volunteer mentor at "Women in Tech" organization.</li>
+                                <li>Mentioned "Clean Code" as her favorite book in a recent post.</li>
+                            </ul>
+                        </div>
                       </div>
                       <div class="contact-meta">
                         <span class="badge recommended">★ Recommended</span>
-                        <a href="#" class="social-link" title="View LinkedIn Profile">🔗</a>
                       </div>
                     </li>
+
                     <li class="contact-item">
-                      <input type="checkbox" id="contact2" name="contact2">
+                      <input type="radio" id="contact2" name="contact">
                       <div class="contact-details">
                         <h4>John Smith</h4>
-                        <p>Senior Engineering Manager</p>
-                      </div>
-                      <div class="contact-meta">
-                        <a href="#" class="social-link" title="View LinkedIn Profile">🔗</a>
+                        <p>Senior Engineering Manager at Innovate Inc.</p>
+                        
+                        <div class="linkedin-input-group">
+                            <input type="text" class="linkedin-input" placeholder="Paste LinkedIn URL...">
+                            <button class="btn-primary" style="padding: 8px 16px; font-size: 0.9rem;" onclick="analyzeLinkedIn(this)">Analyze Profile</button>
+                        </div>
+
+                        <div class="facts-list" id="facts2" style="display: none;">
+                            <!-- Populated after analysis -->
+                        </div>
                       </div>
                     </li>
                 </ul>
+
                 <div class="form-actions">
-                    <button class="btn-primary" onclick="verifySelectedContacts()">Verify Selected Contacts</button>
+                    <button class="btn-primary" onclick="window.location.href='offer-creation.html'">Confirm & Continue →</button>
                 </div>
+
                 <div class="variable-display" style="margin-top: 2rem;">
                   <h4>Available Variables from this Step</h4>
-                  <code>{{decision_maker_name}}</code>, <code>{{decision_maker_title}}</code>, <code>{{decision_maker_company}}</code>
+                  <code>{{contact.name}}</code>, <code>{{contact.title}}</code>, <code>{{contact.company}}</code>, <code>{{contact.linkedin_url}}</code>, <code>{{contact.facts[]}}</code>
                 </div>
             </div>
         </div>
@@ -327,13 +390,38 @@
 
   </div>
 <script>
-  function verifySelectedContacts() {
-    const checkboxes = document.querySelectorAll('.contact-list input[type="checkbox']:checked');
-    if (checkboxes.length === 0) {
-      alert('Please select at least one contact to verify.');
-      return;
+  function analyzeLinkedIn(btn) {
+    const input = btn.previousElementSibling;
+    if (!input.value) {
+        alert("Please enter a LinkedIn URL.");
+        return;
     }
-    alert(`Simulating verification for ${checkboxes.length} contact(s).`);
+    
+    const originalText = btn.textContent;
+    btn.textContent = "Analyzing...";
+    btn.disabled = true;
+
+    setTimeout(() => {
+        btn.textContent = originalText;
+        btn.disabled = false;
+        
+        // Find the facts list container relative to the button
+        const factsList = btn.parentElement.nextElementSibling;
+        if (factsList) {
+            factsList.style.display = 'block';
+            if (factsList.innerHTML.trim() === '') {
+                 factsList.innerHTML = `
+                    <h5>💡 Interesting Facts Found:</h5>
+                    <ul>
+                        <li>Active contributor to open-source React projects.</li>
+                        <li>Spoke at ReactConf 2024 about performance optimization.</li>
+                        <li>Recently celebrated 5 years at Innovate Inc.</li>
+                    </ul>
+                 `;
+            }
+        }
+        alert("LinkedIn profile analyzed! Interesting facts extracted.");
+    }, 1500);
   }
 </script>
 </body>

@@ -74,6 +74,7 @@
     margin-bottom: 1rem;
     cursor: grab;
     transition: all 0.2s ease;
+    position: relative;
   }
   .job-card:hover {
     transform: translateY(-2px);
@@ -133,6 +134,27 @@
     border-color: #60a5fa;
     color: #60a5fa;
     background: rgba(37, 99, 235, 0.1);
+  }
+  .move-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid #4b5563;
+    color: #d1d5db;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: none;
+  }
+  .job-card:hover .move-btn {
+    display: block;
+  }
+  .move-btn:hover {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
   }
   .back-button {
     position: fixed;
@@ -222,10 +244,10 @@
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
       </svg>
     </a>
-    <a href="find-contact.html" class="next-button">Find Decision Makers →</a>
+    <a href="pain-point-match.html" class="next-button">Pain Point Match →</a>
     
     <div class="progress-indicator">
-      <div>Step 7 of 12</div>
+      <div>Step 4 of 13</div>
     </div>
 
     <div class="tab-header">
@@ -234,10 +256,10 @@
     </div>
 
     <div class="tracker-board">
-      <!-- Wishlist Column -->
-      <div class="tracker-column">
+      <!-- Saved Column (was Wishlist) -->
+      <div class="tracker-column" id="col-saved">
         <div class="column-header" style="border-color: #9ca3af;">
-          <span class="column-title">Wishlist</span>
+          <span class="column-title">Saved</span>
           <span class="column-count">3</span>
         </div>
         <div class="job-card">
@@ -247,6 +269,7 @@
             <span class="priority-badge priority-high">High</span>
             <span class="job-date">Added 2d ago</span>
           </div>
+          <button class="move-btn" onclick="moveCard(this, 'col-applied')">Move to Next Stage →</button>
         </div>
         <div class="job-card">
           <div class="job-title">Senior PM</div>
@@ -255,6 +278,7 @@
             <span class="priority-badge priority-high">High</span>
             <span class="job-date">Added 3d ago</span>
           </div>
+          <button class="move-btn" onclick="moveCard(this, 'col-applied')">Move to Next Stage →</button>
         </div>
         <div class="job-card">
           <div class="job-title">Group PM</div>
@@ -263,12 +287,13 @@
             <span class="priority-badge priority-medium">Medium</span>
             <span class="job-date">Added 5d ago</span>
           </div>
+          <button class="move-btn" onclick="moveCard(this, 'col-applied')">Move to Next Stage →</button>
         </div>
-        <button class="add-job-btn" onclick="addJob('wishlist')">+ Add Job</button>
+        <button class="add-job-btn" onclick="addJob('saved')">+ Add Job</button>
       </div>
 
       <!-- Applied Column -->
-      <div class="tracker-column">
+      <div class="tracker-column" id="col-applied">
         <div class="column-header" style="border-color: #60a5fa;">
           <span class="column-title">Applied</span>
           <span class="column-count">2</span>
@@ -280,6 +305,7 @@
             <span class="priority-badge priority-high">High</span>
             <span class="job-date">Applied 1d ago</span>
           </div>
+          <button class="move-btn" onclick="moveCard(this, 'col-interviewing')">Move to Next Stage →</button>
         </div>
         <div class="job-card">
           <div class="job-title">Product Lead</div>
@@ -288,12 +314,13 @@
             <span class="priority-badge priority-medium">Medium</span>
             <span class="job-date">Applied 4d ago</span>
           </div>
+          <button class="move-btn" onclick="moveCard(this, 'col-interviewing')">Move to Next Stage →</button>
         </div>
         <button class="add-job-btn" onclick="addJob('applied')">+ Add Job</button>
       </div>
 
       <!-- Interviewing Column -->
-      <div class="tracker-column">
+      <div class="tracker-column" id="col-interviewing">
         <div class="column-header" style="border-color: #f59e0b;">
           <span class="column-title">Interviewing</span>
           <span class="column-count">1</span>
@@ -305,12 +332,13 @@
             <span class="priority-badge priority-high">High</span>
             <span class="job-date">Phone Screen tmrw</span>
           </div>
+          <button class="move-btn" onclick="moveCard(this, 'col-offer')">Move to Next Stage →</button>
         </div>
         <button class="add-job-btn" onclick="addJob('interviewing')">+ Add Job</button>
       </div>
 
       <!-- Offer Column -->
-      <div class="tracker-column">
+      <div class="tracker-column" id="col-offer">
         <div class="column-header" style="border-color: #10b981;">
           <span class="column-title">Offer</span>
           <span class="column-count">0</span>
@@ -319,7 +347,7 @@
       </div>
 
       <!-- Rejected Column -->
-      <div class="tracker-column">
+      <div class="tracker-column" id="col-rejected">
         <div class="column-header" style="border-color: #ef4444;">
           <span class="column-title">Rejected</span>
           <span class="column-count">1</span>
@@ -331,6 +359,7 @@
             <span class="priority-badge" style="background: #374151; color: #9ca3af;">Closed</span>
             <span class="job-date">Rejected 1w ago</span>
           </div>
+          <!-- No move button for rejected usually, or could move back to saved/applied -->
         </div>
       </div>
     </div>
@@ -346,6 +375,36 @@
           // In a real app, this would add the card to the DOM and update the database
         }
       }
+    }
+
+    function moveCard(btn, nextColumnId) {
+        const card = btn.closest('.job-card');
+        const currentColumn = card.parentElement;
+        const nextColumn = document.getElementById(nextColumnId);
+        
+        // Find insert position (before the add button)
+        const addButton = nextColumn.querySelector('.add-job-btn');
+        nextColumn.insertBefore(card, addButton);
+        
+        // Update button action for the new column
+        let nextNextId = '';
+        if (nextColumnId === 'col-saved') nextNextId = 'col-applied';
+        else if (nextColumnId === 'col-applied') nextNextId = 'col-interviewing';
+        else if (nextColumnId === 'col-interviewing') nextNextId = 'col-offer';
+        else if (nextColumnId === 'col-offer') nextNextId = 'col-rejected'; // Or maybe accepted?
+        
+        if (nextNextId) {
+            btn.onclick = function() { moveCard(this, nextNextId); };
+        } else {
+            btn.style.display = 'none'; // Hide button if no next stage defined
+        }
+
+        // Update counts (simple decrement/increment)
+        const currentCountSpan = currentColumn.querySelector('.column-count');
+        const nextCountSpan = nextColumn.querySelector('.column-count');
+        
+        if (currentCountSpan) currentCountSpan.textContent = parseInt(currentCountSpan.textContent) - 1;
+        if (nextCountSpan) nextCountSpan.textContent = parseInt(nextCountSpan.textContent) + 1;
     }
   </script>
 </body>

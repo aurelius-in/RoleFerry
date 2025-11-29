@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Candidate Profile - RoleFerry</title>
+<title>Your Profile - RoleFerry</title>
 <link rel="stylesheet" href="../styles.css" />
 <link rel="stylesheet" href="responsive.css" />
 <link rel="icon" href="../assets/roleferry_trans.png" />
@@ -268,21 +268,6 @@
     z-index: 100;
   }
 
-  .progress-bar {
-    width: 200px;
-    height: 8px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 0.5rem;
-  }
-
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #2563eb, #10b981);
-    transition: width 0.3s ease;
-  }
-
   .success-message {
     background: rgba(16, 185, 129, 0.1);
     border: 1px solid #10b981;
@@ -295,17 +280,6 @@
 
   .success-message.show {
     display: block;
-  }
-
-  .confidence-score {
-    display: inline-block;
-    background: rgba(37, 99, 235, 0.1);
-    border: 1px solid #2563eb;
-    border-radius: 6px;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.8rem;
-    color: #2563eb;
-    margin-left: 0.5rem;
   }
 
   /* Responsive Design */
@@ -327,11 +301,13 @@
       gap: 1.5rem;
     }
     
-    .back-button {
+    .back-button, .next-button {
       position: relative;
       top: auto;
       left: auto;
+      right: auto;
       margin-bottom: 1rem;
+      display: inline-block;
     }
     
     .progress-indicator {
@@ -340,63 +316,23 @@
       right: auto;
       margin-bottom: 1rem;
     }
-    
-    .upload-area {
-      padding: 2rem;
-    }
-    
-    .upload-icon {
-      font-size: 3rem;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .tab-container {
-      padding: 0.5rem;
-    }
-    
-    .tab-title {
-      font-size: 1.5rem;
-    }
-    
-    .form-container {
-      padding: 1rem;
-    }
-    
-    .upload-area {
-      padding: 1.5rem;
-    }
-    
-    .upload-icon {
-      font-size: 2.5rem;
-    }
-    
-    .upload-text {
-      font-size: 1.2rem;
-    }
-    
-    .btn-primary {
-      width: 100%;
-      margin-top: 1rem;
-    }
   }
 </style>
 </head>
 <body>
   <div class="tab-container">
     <!-- Navigation -->
-    <div style="display: flex; justify-content: space-between; align-items: center; position: fixed; top: 2rem; left: 2rem; right: 2rem; z-index: 100;">
-      <a href="../wireframes.html" class="back-button" title="Back to Path">
+    <a href="../wireframes.html" class="back-button" title="Back to Path">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
       </svg>
     </a>
-      <div class="progress-indicator" style="position: static; margin: 0;">
-        <div>Step 3 of 12</div>
-      </div>
-    </div>
-
     <a href="job-descriptions.html" class="next-button">Job Descriptions →</a>
+
+    <!-- Progress Indicator -->
+    <div class="progress-indicator">
+      <div>Step 2 of 13</div>
+    </div>
 
     <!-- Header -->
     <div class="tab-header">
@@ -419,7 +355,7 @@
       <div class="upload-section">
         <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
           <div class="upload-icon">👤</div>
-          <div class="upload-text">Click to upload your bio or resume</div>
+          <div class="upload-text">Click to upload your resume</div>
           <div class="upload-hint">PDF, DOC, DOCX supported</div>
         </div>
         <input type="file" id="fileInput" class="file-input" accept=".pdf,.doc,.docx" onchange="handleFileSelect(event)">
@@ -437,77 +373,66 @@
         <h2 style="color: #ffffff; text-align: center; margin-bottom: 2rem;">AI Extracted Data</h2>
         
         <div class="data-grid">
-          <!-- Personal Info -->
-          <div class="data-card">
-             <h3>Personal Information</h3>
-             <ul id="personalInfoList">
-               <!-- Populated by JS -->
-             </ul>
-          </div>
-
-          <!-- Education -->
-          <div class="data-card">
-             <h3>Education</h3>
-             <ul id="educationList">
-               <!-- Populated by JS -->
-             </ul>
-          </div>
-
-          <!-- Work Experience -->
-          <div class="data-card">
-             <h3>Work Experience</h3>
-             <ul id="experienceList">
-               <!-- Populated by JS -->
-             </ul>
-          </div>
-
           <!-- Key Metrics -->
           <div class="data-card">
              <h3>Key Metrics</h3>
-             <ul id="metricsList">
-               <!-- Populated by JS -->
-             </ul>
+             <ul id="metricsList"></ul>
           </div>
 
           <!-- Business Challenges -->
           <div class="data-card">
              <h3>Business Challenges Solved</h3>
-             <ul id="challengesList">
-               <!-- Populated by JS -->
-             </ul>
+             <ul id="challengesList"></ul>
           </div>
 
-          <!-- Accomplishments -->
+          <!-- Notable Accomplishments -->
           <div class="data-card">
              <h3>Notable Accomplishments</h3>
-             <ul id="accomplishmentsList">
-               <!-- Populated by JS -->
-             </ul>
+             <ul id="accomplishmentsList"></ul>
+          </div>
+
+          <!-- Years of Experience & Tenure -->
+          <div class="data-card">
+             <h3>Experience Summary</h3>
+             <p id="experienceSummary" style="color: #10b981; font-weight: bold; font-size: 1.2rem; margin-bottom: 0.5rem;"></p>
+             <p id="tenureSummary" style="color: #d1d5db; font-size: 0.9rem;"></p>
+          </div>
+
+          <!-- Positions Held -->
+          <div class="data-card">
+             <h3>Positions Held</h3>
+             <ul id="positionsList"></ul>
+          </div>
+
+          <!-- Education -->
+          <div class="data-card">
+             <h3>Education</h3>
+             <ul id="educationList"></ul>
+          </div>
+
+          <!-- Certifications -->
+          <div class="data-card">
+             <h3>Certifications</h3>
+             <ul id="certificationsList"></ul>
           </div>
 
           <!-- Skills -->
           <div class="data-card">
-             <h3>Skills & Expertise</h3>
-             <ul id="skillsList">
-               <!-- Populated by JS -->
-             </ul>
-          </div>
-
-          <!-- References -->
-          <div class="data-card">
-             <h3>References</h3>
-             <ul id="referencesList">
-               <!-- Populated by JS -->
-             </ul>
+             <h3>Skills</h3>
+             <ul id="skillsList"></ul>
           </div>
         </div>
 
         <div class="variable-display" style="margin-top: 2rem; background: rgba(17, 24, 39, 0.8); padding: 1.5rem; border-radius: 12px;">
           <h4 style="color: #2563eb; margin-bottom: 1rem; font-size: 1rem;">Available Variables from this Step</h4>
-          <p style="color: #d1d5db; font-size: 0.9rem;">These variables can be used in your email templates:</p>
-          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{my_name}}</code>, 
-          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{my_title}}</code>, 
-          <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{my_company}}</code>
+          <p style="color: #d1d5db; font-size: 0.9rem; margin-bottom: 1rem;">These variables are now available for downstream steps:</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+              <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">profile.key_metrics[]</code>
+              <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">profile.business_challenges[]</code>
+              <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">profile.accomplishments[]</code>
+              <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">profile.total_years_experience</code>
+              <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">profile.positions[]</code>
+          </div>
         </div>
       </div>
     </div>
@@ -524,7 +449,7 @@
         document.getElementById('uploadArea').style.borderColor = '#10b981';
         document.getElementById('uploadArea').style.background = 'rgba(16, 185, 129, 0.1)';
         document.querySelector('.upload-text').textContent = `Selected: ${file.name}`;
-        document.querySelector('.upload-hint').textContent = 'Click "Parse Resume with AI" to analyze';
+        document.querySelector('.upload-hint').textContent = 'Click "Load Resume" to analyze';
       }
     }
 
@@ -534,118 +459,101 @@
         return;
       }
 
-      // Show loading spinner
       document.getElementById('loadingSpinner').classList.add('show');
       document.getElementById('parseBtn').disabled = true;
 
       try {
-        // Create FormData for file upload
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-
-        // Simulate API processing delay
         await new Promise(resolve => setTimeout(resolve, 1500));
-        const response = { success: true };
         
-        if (response.success) {
-          // Hide loading spinner
-          document.getElementById('loadingSpinner').classList.remove('show');
-          
-          // Show results
-          document.getElementById('resultsSection').classList.add('show');
-          document.getElementById('successMessage').classList.add('show');
-          
-          // Populate Data
-          const mockData = {
-             personalInfo: {
-                name: "Alex Johnson",
-                title: "Senior Software Engineer",
-                email: "alex.johnson@example.com",
-                phone: "+1 (555) 123-4567",
-                location: "San Francisco, CA",
-                linkedin: "linkedin.com/in/alexjohnson"
-             },
-             education: [
-                { degree: "M.S. Computer Science", school: "Stanford University", year: "2016" },
-                { degree: "B.S. Electrical Engineering", school: "UC Berkeley", year: "2014" }
-             ],
-             experience: [
-                { role: "Senior Software Engineer", company: "TechCorp", duration: "2019 - Present", details: "Leading backend infrastructure team." },
-                { role: "Software Engineer", company: "InnovateX", duration: "2016 - 2019", details: "Full stack development for SaaS platform." }
-             ],
-             metrics: [
-                "37.5% revenue increase ($200M to $275M)",
-                "20% increase in feature utilization",
-                "Improved net retention by 8 basis points",
-                "Reduced cloud costs by 15% annually"
-             ],
-             challenges: [
-                "Scaling customer-centric strategy across onboarding",
-                "Integrating two legacy CS orgs",
-                "Improving customer satisfaction for $40M firm",
-                "Migrating monolithic architecture to microservices"
-             ],
-             accomplishments: [
-                "Restructured customer segmentation",
-                "Launched enterprise-wide Customer Success Council",
-                "Built inaugural CS organization",
-                "Mentored 5 junior engineers to promotion"
-             ],
-             skills: [
-                "Python", "React", "AWS", "Docker", "Kubernetes", "PostgreSQL", "System Design", "Agile Methodology"
-             ],
-             references: [
-                { name: "Sarah Smith", role: "VP Engineering, TechCorp", contact: "sarah.s@techcorp.com" },
-                { name: "Mike Brown", role: "CTO, InnovateX", contact: "mike.b@innovatex.com" }
-             ]
-          };
+        // Mock Data based on Implementation Brief
+        const mockData = {
+           personalInfo: {
+              name: "Alex Johnson",
+              title: "Senior Software Engineer",
+              location: "San Francisco, CA"
+           },
+           key_metrics: [
+              "Grew ARR from $29M to $275M (+37.5%)",
+              "20% increase in feature utilization",
+              "Improved net retention by 8 basis points",
+              "Reduced cloud costs by 15% annually"
+           ],
+           business_challenges: [
+              "Scaling customer-centric strategy across onboarding",
+              "Integrating two legacy CS orgs into unified model",
+              "Improving customer satisfaction for $40M firm",
+              "Migrating monolithic architecture to microservices"
+           ],
+           accomplishments: [
+              "Restructured customer segmentation strategy",
+              "Launched enterprise-wide Customer Success Council",
+              "Built inaugural CS organization from ground up",
+              "Mentored 5 junior engineers to promotion"
+           ],
+           experience_summary: {
+              total_years: 8,
+              current_tenure: 4.5
+           },
+           positions: [
+              { title: "Senior Software Engineer", company: "TechCorp", duration: "2019 - Present" },
+              { title: "Software Engineer", company: "InnovateX", duration: "2016 - 2019" }
+           ],
+           education: [
+              { degree: "M.S. Computer Science", school: "Stanford University", year: "2016" },
+              { degree: "B.S. Electrical Engineering", school: "UC Berkeley", year: "2014" }
+           ],
+           certifications: [
+              "AWS Certified Solutions Architect",
+              "Certified Kubernetes Administrator (CKA)"
+           ],
+           skills: [
+              "Python", "React", "AWS", "Docker", "Kubernetes", "PostgreSQL", "System Design", "Agile Methodology"
+           ]
+        };
 
-          const personalInfoList = document.getElementById('personalInfoList');
-          personalInfoList.innerHTML = `
-            <li><strong>Name:</strong> ${mockData.personalInfo.name}</li>
-            <li><strong>Title:</strong> ${mockData.personalInfo.title}</li>
-            <li><strong>Email:</strong> ${mockData.personalInfo.email}</li>
-            <li><strong>Phone:</strong> ${mockData.personalInfo.phone}</li>
-            <li><strong>Location:</strong> ${mockData.personalInfo.location}</li>
-            <li><strong>LinkedIn:</strong> ${mockData.personalInfo.linkedin}</li>
-          `;
+        // Render Data
+        document.getElementById('loadingSpinner').classList.remove('show');
+        document.getElementById('resultsSection').classList.add('show');
+        document.getElementById('successMessage').classList.add('show');
 
-          const educationList = document.getElementById('educationList');
-          educationList.innerHTML = mockData.education.map(edu => `<li><strong>${edu.degree}</strong> - ${edu.school} (${edu.year})</li>`).join('');
+        // Key Metrics
+        document.getElementById('metricsList').innerHTML = mockData.key_metrics.map(m => `<li>${m}</li>`).join('');
+        
+        // Business Challenges
+        document.getElementById('challengesList').innerHTML = mockData.business_challenges.map(c => `<li>${c}</li>`).join('');
+        
+        // Accomplishments
+        document.getElementById('accomplishmentsList').innerHTML = mockData.accomplishments.map(a => `<li>${a}</li>`).join('');
 
-          const experienceList = document.getElementById('experienceList');
-          experienceList.innerHTML = mockData.experience.map(exp => `<li><strong>${exp.role}</strong> at ${exp.company} (${exp.duration})<br><span style="font-size:0.9em; color:#9ca3af;">${exp.details}</span></li>`).join('');
+        // Experience Summary
+        document.getElementById('experienceSummary').textContent = `Total Relevant Experience: ${mockData.experience_summary.total_years} Years`;
+        document.getElementById('tenureSummary').textContent = `Current Company Tenure: ${mockData.experience_summary.current_tenure} Years`;
 
-          const metricsList = document.getElementById('metricsList');
-          metricsList.innerHTML = mockData.metrics.map(m => `<li>${m}</li>`).join('');
+        // Positions
+        document.getElementById('positionsList').innerHTML = mockData.positions.map(p => `<li><strong>${p.title}</strong> at ${p.company} <br><span style="font-size:0.9em; color:#9ca3af;">${p.duration}</span></li>`).join('');
 
-          const challengesList = document.getElementById('challengesList');
-          challengesList.innerHTML = mockData.challenges.map(c => `<li>${c}</li>`).join('');
-          
-          const accomplishmentsList = document.getElementById('accomplishmentsList');
-          accomplishmentsList.innerHTML = mockData.accomplishments.map(a => `<li>${a}</li>`).join('');
+        // Education
+        document.getElementById('educationList').innerHTML = mockData.education.map(e => `<li><strong>${e.degree}</strong> - ${e.school} (${e.year})</li>`).join('');
 
-          const skillsList = document.getElementById('skillsList');
-          skillsList.innerHTML = mockData.skills.map(s => `<li style="display:inline-block; background:rgba(37,99,235,0.2); padding:2px 8px; border-radius:4px; margin:2px; color:#60a5fa;">${s}</li>`).join('');
-          // Clean up bullets for skills since they are badges
-          skillsList.style.listStyle = 'none';
-          skillsList.querySelectorAll('li').forEach(li => li.style.paddingLeft = '8px'); // Reset padding
+        // Certifications
+        document.getElementById('certificationsList').innerHTML = mockData.certifications.map(c => `<li>${c}</li>`).join('');
 
-          const referencesList = document.getElementById('referencesList');
-          referencesList.innerHTML = mockData.references.map(ref => `<li><strong>${ref.name}</strong> - ${ref.role} <br><span style="font-size:0.9em; color:#9ca3af;">${ref.contact}</span></li>`).join('');
+        // Skills
+        const skillsList = document.getElementById('skillsList');
+        skillsList.innerHTML = mockData.skills.map(s => `<li style="display:inline-block; background:rgba(37,99,235,0.2); padding:2px 8px; border-radius:4px; margin:2px; color:#60a5fa;">${s}</li>`).join('');
+        skillsList.style.listStyle = 'none';
+        skillsList.querySelectorAll('li').forEach(li => li.style.paddingLeft = '8px');
 
-          // Save to localStorage
-          localStorage.setItem('roleferry_resume_data', JSON.stringify(mockData));
-          
-          // Update progress in main wireframes page
-          const completedSteps = JSON.parse(localStorage.getItem('roleferry-progress') || '[]');
-          if (!completedSteps.includes(3)) {
-            completedSteps.push(3);
-            localStorage.setItem('roleferry-progress', JSON.stringify(completedSteps));
-          }
-        } else {
-          throw new Error(response.message || 'Failed to parse resume');
+        // Save to localStorage
+        localStorage.setItem('roleferry_resume_data', JSON.stringify(mockData));
+        
+        // Update progress
+        const completedSteps = JSON.parse(localStorage.getItem('roleferry-progress') || '[]');
+        if (!completedSteps.includes(2)) {
+          completedSteps.push(2);
+          localStorage.setItem('roleferry-progress', JSON.stringify(completedSteps));
         }
+
       } catch (error) {
         console.error('Error parsing resume:', error);
         document.getElementById('loadingSpinner').classList.remove('show');
@@ -654,45 +562,17 @@
       }
     }
 
-    function goBack() {
-      window.location.href = '../wireframes.html';
-    }
-
-    // Drag and drop functionality
+    // Drag and drop
     const uploadArea = document.getElementById('uploadArea');
-    
-    uploadArea.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      uploadArea.classList.add('dragover');
-    });
-    
-    uploadArea.addEventListener('dragleave', () => {
-      uploadArea.classList.remove('dragover');
-    });
-    
+    uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+    uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('dragover'); });
     uploadArea.addEventListener('drop', (e) => {
       e.preventDefault();
       uploadArea.classList.remove('dragover');
-      
-      const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        const file = files[0];
-        if (file.type === 'application/pdf' || 
-            file.type === 'application/msword' || 
-            file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-          selectedFile = file;
-          document.getElementById('parseBtn').disabled = false;
-          document.getElementById('uploadArea').style.borderColor = '#10b981';
-          document.getElementById('uploadArea').style.background = 'rgba(16, 185, 129, 0.1)';
-          document.querySelector('.upload-text').textContent = `Selected: ${file.name}`;
-          document.querySelector('.upload-hint').textContent = 'Click "Parse Resume with AI" to analyze';
-        } else {
-          alert('Please select a valid file (PDF, DOC, DOCX)');
-        }
-      }
+      if (e.dataTransfer.files.length > 0) handleFileSelect({ target: { files: e.dataTransfer.files } });
     });
 
-    // Load saved data if exists
+    // Load saved data
     const savedData = localStorage.getItem('roleferry_resume_data');
     if (savedData) {
       document.getElementById('resultsSection').classList.add('show');
