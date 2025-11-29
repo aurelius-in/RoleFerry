@@ -5,37 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analytics - RoleFerry</title>
     <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="responsive.css">
     <link rel="icon" href="../assets/roleferry_trans.png">
     <style>
-        body {
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-            color: #ffffff;
+        .tab-container {
             min-height: 100vh;
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-        .document-container { 
-            max-width: 1000px; 
-            margin: 0 auto; 
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
             padding: 2rem;
         }
-        .document-header {
+        .tab-header {
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
         }
-        .document-header h1 {
+        .tab-title {
             font-size: 2.5rem;
             font-weight: 700;
             background: linear-gradient(45deg, #10b981, #2563eb);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
         }
-        .document-header p {
+        .tab-subtitle {
             color: #9ca3af;
             font-size: 1.1rem;
+            margin-bottom: 2rem;
+            text-align: center;
         }
-        .analytics-grid {
+        .analytics-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .metric-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
@@ -47,76 +46,68 @@
             border-radius: 12px;
             padding: 1.5rem;
             text-align: center;
+            transition: transform 0.2s;
         }
-        .metric-card h3 {
-            color: #f59e0b;
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: #3b82f6;
+        }
+        .metric-label {
+            color: #9ca3af;
             font-size: 0.9rem;
-            margin: 0 0 0.5rem 0;
-            font-weight: 600;
+            margin-bottom: 0.5rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
-        .metric-card p {
-            font-size: 2rem;
-            font-weight: bold;
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .metric-sub {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        .trend-up { color: #10b981; }
+        .trend-down { color: #ef4444; }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #374151;
+            padding-bottom: 0.5rem;
+        }
+        .section-header h2 {
             color: #ffffff;
             margin: 0;
-        }
-        .section {
-            background: rgba(31, 41, 55, 0.8);
-            border: 1px solid #374151;
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-        .section h2 {
-            color: #ffffff;
             font-size: 1.5rem;
-            margin: 0 0 1.5rem 0;
-            border-bottom: 2px solid #2563eb;
-            padding-bottom: 0.5rem;
-            display: inline-block;
         }
+        
         .campaign-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 1rem;
-            background: transparent;
+            background: rgba(17, 24, 39, 0.5);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 3rem;
         }
         .campaign-table th, .campaign-table td {
             padding: 1rem;
             text-align: left;
-            border-bottom: 1px solid #4b5563;
+            border-bottom: 1px solid #374151;
             color: #d1d5db;
         }
         .campaign-table th {
+            background: rgba(31, 41, 55, 0.9);
             color: #ffffff;
             font-weight: 600;
             cursor: pointer;
         }
-        .campaign-table th:hover {
-            color: #2563eb;
-        }
-        .campaign-table tbody tr:hover {
-            background: rgba(37, 99, 235, 0.1);
-        }
-        .export-button {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            margin-top: 1.5rem;
-            display: inline-block;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-        .export-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-        }
+        .campaign-table tr:hover { background: rgba(31, 41, 55, 0.7); }
+        .campaign-table td:first-child { font-weight: 500; color: #ffffff; }
+
         .back-button {
             position: fixed;
             top: 2rem;
@@ -129,218 +120,185 @@
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
+            font-weight: 600;
+            z-index: 100;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        .back-button:hover { background: rgba(74, 144, 226, 0.9); }
+
+        .next-button {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #4A90E2 0%, #87CEEB 100%);
+            color: #1a1a1a;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: 700;
             z-index: 100;
         }
-        .back-button:hover {
-            background: rgba(74, 144, 226, 0.9);
+        .next-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.4);
         }
-        .back-button svg {
-            width: 24px;
-            height: 24px;
-            fill: currentColor;
+
+        .progress-indicator {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 1rem;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            border: 2px solid rgba(74, 144, 226, 0.5);
+            z-index: 100;
         }
 
         @media (max-width: 768px) {
-            .document-container { padding: 1rem; }
-            .back-button {
+            .tab-container { padding: 1rem; }
+            .back-button, .next-button {
                 position: relative;
                 top: auto;
                 left: auto;
+                right: auto;
                 margin-bottom: 1rem;
-                display: inline-flex;
+                display: inline-block;
             }
-            .analytics-grid {
-                grid-template-columns: 1fr 1fr;
+            .progress-indicator {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-bottom: 1rem;
             }
+            .metric-grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
 <body>
-    <div class="document-container">
-        <a href="../wireframes.html" class="back-button" title="Back to Path">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <div class="tab-container">
+        <a href="deliverability-launch.html" class="back-button" title="Back to Path">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; fill: white;">
                 <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
             </svg>
         </a>
+        <a href="feedback.html" class="next-button">Give Feedback →</a>
 
-        <div class="document-header">
-            <h1>Analytics Dashboard</h1>
-            <p>Track your client acquisition and campaign performance.</p>
+        <div class="progress-indicator">
+            <div>Step 12 of 13</div>
         </div>
 
-        <div class="analytics-grid">
-            <div class="metric-card">
-                <h3>Overall Reply Rate</h3>
-                <p style="color: #10b981;">15.2%</p>
-            </div>
-            <div class="metric-card">
-                <h3>Meetings Booked</h3>
-                <p style="color: #3b82f6;">8</p>
-            </div>
-            <div class="metric-card">
-                <h3>Opportunities</h3>
-                <p style="color: #8b5cf6;">12</p>
-            </div>
-            <div class="metric-card">
-                <h3>Pipeline Value</h3>
-                <p style="color: #f59e0b;">$120,000</p>
-            </div>
+        <div class="tab-header">
+            <h1 class="tab-title">Analytics</h1>
+            <p class="tab-subtitle">Real-time performance metrics for your outreach campaigns.</p>
         </div>
 
-        <div class="section">
-            <h2>Campaign Performance</h2>
-            <div style="background: rgba(17, 24, 39, 0.5); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                <canvas id="campaignChart" width="400" height="150"></canvas>
+        <div class="analytics-container">
+            <!-- Top-level Stats -->
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Total Sent</div>
+                    <div class="metric-value">42</div>
+                    <div class="metric-sub trend-up">▲ 12 this week</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Open Rate</div>
+                    <div class="metric-value">68%</div>
+                    <div class="metric-sub trend-up">▲ 5% vs avg</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Reply Rate</div>
+                    <div class="metric-value">14%</div>
+                    <div class="metric-sub trend-up">▲ 2% vs avg</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Positive Reply Rate</div>
+                    <div class="metric-value">4.5%</div>
+                    <div class="metric-sub trend-up">2 meetings booked</div>
+                </div>
             </div>
+
+            <!-- Campaign Performance Table -->
+            <div class="section-header">
+                <h2>Campaign Performance</h2>
+                <button style="background: transparent; border: 1px solid #4b5563; color: #9ca3af; padding: 6px 12px; border-radius: 6px; cursor: pointer;">Export CSV</button>
+            </div>
+            
             <div style="overflow-x: auto;">
-                <table class="campaign-table" id="campaignTable">
+                <table class="campaign-table">
                     <thead>
                         <tr>
-                            <th onclick="sortTable(0)">Campaign Name</th>
-                            <th onclick="sortTable(1)">Replies</th>
-                            <th onclick="sortTable(2)">Meetings</th>
-                            <th onclick="sortTable(3)">Opportunities</th>
-                            <th onclick="sortTable(4)">Reply Rate</th>
-                            <th onclick="sortTable(5)">Meeting Rate</th>
+                            <th>Campaign Name</th>
+                            <th>Sent</th>
+                            <th>Opens</th>
+                            <th>Replies</th>
+                            <th>Positive</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Charleston Pilot - Q1 2026</td>
-                            <td>15</td>
-                            <td>5</td>
-                            <td>3</td>
-                            <td>18.7%</td>
-                            <td>6.2%</td>
+                            <td>Senior Software Engineer - TechCorp</td>
+                            <td>8</td>
+                            <td>6 (75%)</td>
+                            <td>2 (25%)</td>
+                            <td>1 (12.5%)</td>
+                            <td><span style="color: #10b981;">Active</span></td>
                         </tr>
                         <tr>
-                            <td>Austin Tech Expansion - Q1 2026</td>
+                            <td>Product Manager - Fintech Roles</td>
+                            <td>24</td>
+                            <td>15 (62%)</td>
+                            <td>3 (12.5%)</td>
+                            <td>1 (4.1%)</td>
+                            <td><span style="color: #10b981;">Active</span></td>
+                        </tr>
+                        <tr>
+                            <td>Startup Outreach - Austin</td>
                             <td>10</td>
-                            <td>3</td>
-                            <td>2</td>
-                            <td>12.5%</td>
-                            <td>3.7%</td>
+                            <td>8 (80%)</td>
+                            <td>1 (10%)</td>
+                            <td>0 (0%)</td>
+                            <td><span style="color: #f59e0b;">Paused</span></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <button class="export-button" onclick="exportTableToCSV('campaign-performance.csv')">Export to CSV</button>
+
+            <!-- Step Analytics -->
+            <div class="section-header">
+                <h2>Step Analytics Breakdown</h2>
+            </div>
+            
+            <div class="metric-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 0;">
+                <div class="metric-card">
+                    <div class="metric-label">Step 1: Intro</div>
+                    <div class="metric-value" style="font-size: 1.5rem;">70% Open</div>
+                    <div class="metric-sub">5% Reply</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Step 2: Nudge</div>
+                    <div class="metric-value" style="font-size: 1.5rem;">65% Open</div>
+                    <div class="metric-sub">8% Reply</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Step 3: Value</div>
+                    <div class="metric-value" style="font-size: 1.5rem;">60% Open</div>
+                    <div class="metric-sub">3% Reply</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Step 4: Final</div>
+                    <div class="metric-value" style="font-size: 1.5rem;">55% Open</div>
+                    <div class="metric-sub">1% Reply</div>
+                </div>
+            </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        function sortTable(n) {
-            var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-            table = document.getElementById("campaignTable");
-            switching = true;
-            dir = "asc";
-            while (switching) {
-                switching = false;
-                rows = table.rows;
-                for (i = 1; i < (rows.length - 1); i++) {
-                    shouldSwitch = false;
-                    x = rows[i].getElementsByTagName("TD")[n];
-                    y = rows[i + 1].getElementsByTagName("TD")[n];
-                    if (dir == "asc") {
-                        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                            shouldSwitch = true;
-                            break;
-                        }
-                    } else if (dir == "desc") {
-                        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-                            shouldSwitch = true;
-                            break;
-                        }
-                    }
-                }
-                if (shouldSwitch) {
-                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                    switching = true;
-                    switchcount++;
-                } else {
-                    if (switchcount == 0 && dir == "asc") {
-                        dir = "desc";
-                        switching = true;
-                    }
-                }
-            }
-        }
-
-        function exportTableToCSV(filename) {
-            var csv = [];
-            var rows = document.querySelectorAll("table tr");
-            for (var i = 0; i < rows.length; i++) {
-                var row = [], cols = rows[i].querySelectorAll("td, th");
-                for (var j = 0; j < cols.length; j++) 
-                    row.push(cols[j].innerText);
-                csv.push(row.join(","));
-            }
-            downloadCSV(csv.join("\n"), filename);
-        }
-
-        function downloadCSV(csv, filename) {
-            var csvFile;
-            var downloadLink;
-            csvFile = new Blob([csv], {type: "text/csv"});
-            downloadLink = document.createElement("a");
-            downloadLink.download = filename;
-            downloadLink.href = window.URL.createObjectURL(csvFile);
-            downloadLink.style.display = "none";
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-        }
-
-        var ctx = document.getElementById('campaignChart').getContext('2d');
-        Chart.defaults.color = '#d1d5db';
-        Chart.defaults.borderColor = '#374151';
-        
-        var myChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Charleston Pilot', 'Austin Tech Expansion'],
-                datasets: [{
-                    label: 'Reply Rate (%)',
-                    data: [18.7, 12.5],
-                    backgroundColor: 'rgba(245, 158, 11, 0.5)',
-                    borderColor: 'rgba(245, 158, 11, 1)',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Meeting Rate (%)',
-                    data: [6.2, 3.7],
-                    backgroundColor: 'rgba(16, 185, 129, 0.5)',
-                    borderColor: 'rgba(16, 185, 129, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: '#374151'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: '#ffffff'
-                        }
-                    }
-                }
-            }
-        });
-    </script>
 </body>
 </html>
