@@ -293,7 +293,6 @@
     </svg>
   </a>
   <div class="progress-indicator">
-    <div>Step 13 of 13</div>
     <div>Questions Answered: <span id="answeredCount">0</span> / <span id="totalCount">0</span></div>
   </div>
 
@@ -306,14 +305,59 @@
     <form id="feedbackForm">
       <!-- Step 1: Job Preferences -->
       <div class="feedback-form-section">
-        <h2>Job Preferences</h2>
+        <h2>1. Job Preferences</h2>
         
         <div class="form-group" data-required="true">
-          <label>How easy was it to set your preferences? <span class="required">*</span></label>
-          <textarea name="preferences_ease" placeholder="Was it clear how to use this feature?" required></textarea>
+          <label>How easy was it to set your preferences? Did we miss any key industries or roles? <span class="required">*</span></label>
+          <textarea name="preferences_feedback" placeholder="Was it clear how to use this feature?" required></textarea>
           <div class="not-applicable">
-            <input type="checkbox" name="preferences_ease_na" id="preferences_ease_na">
-            <label for="preferences_ease_na">Not Applicable</label>
+            <input type="checkbox" name="preferences_feedback_na" id="preferences_feedback_na">
+            <label for="preferences_feedback_na">Not Applicable</label>
+          </div>
+          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
+        </div>
+      </div>
+
+      <!-- Step 2: Your Profile -->
+      <div class="feedback-form-section">
+        <h2>2. Your Profile</h2>
+        
+        <div class="form-group" data-required="true">
+          <label>Was the resume parsing accurate? Did the 'Years of Experience' card match reality? <span class="required">*</span></label>
+          <textarea name="profile_feedback" placeholder="Did the extracted data look correct?" required></textarea>
+          <div class="not-applicable">
+            <input type="checkbox" name="profile_feedback_na" id="profile_feedback_na">
+            <label for="profile_feedback_na">Not Applicable</label>
+          </div>
+          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
+        </div>
+      </div>
+
+      <!-- Step 3: Job Descriptions -->
+      <div class="feedback-form-section">
+        <h2>3. Job Descriptions</h2>
+        
+        <div class="form-group" data-required="true">
+          <label>Was the jargon analysis helpful? Did the grading system (Easiest/Stretch/Ideal) make sense? <span class="required">*</span></label>
+          <textarea name="jd_feedback" placeholder="Did this help you prioritize applications?" required></textarea>
+          <div class="not-applicable">
+            <input type="checkbox" name="jd_feedback_na" id="jd_feedback_na">
+            <label for="jd_feedback_na">Not Applicable</label>
+          </div>
+          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
+        </div>
+      </div>
+
+      <!-- Step 4: Job Tracker -->
+      <div class="feedback-form-section">
+        <h2>4. Job Tracker</h2>
+        
+        <div class="form-group" data-required="true">
+          <label>Is the Kanban board intuitive? What other columns or actions would you need? <span class="required">*</span></label>
+          <textarea name="tracker_feedback" placeholder="How was the tracking experience?" required></textarea>
+          <div class="not-applicable">
+            <input type="checkbox" name="tracker_feedback_na" id="tracker_feedback_na">
+            <label for="tracker_feedback_na">Not Applicable</label>
           </div>
           <div class="error-message">Please provide feedback or select "Not Applicable"</div>
         </div>
@@ -321,14 +365,119 @@
 
       <!-- Step 5: Pain Point Match -->
       <div class="feedback-form-section">
-        <h2>Pain Point Match</h2>
+        <h2>5. Pain Point Match</h2>
         
         <div class="form-group" data-required="true">
-          <label>Was the pain point matching score helpful? <span class="required">*</span></label>
-          <textarea name="match_helpful" placeholder="Did the match score make sense?" required></textarea>
+          <label>Did the side-by-side comparison (Challenge vs Solution) help you see the fit? Was the match score realistic? <span class="required">*</span></label>
+          <textarea name="match_feedback" placeholder="Did the match score make sense?" required></textarea>
           <div class="not-applicable">
-            <input type="checkbox" name="match_helpful_na" id="match_helpful_na">
-            <label for="match_helpful_na">Not Applicable</label>
+            <input type="checkbox" name="match_feedback_na" id="match_feedback_na">
+            <label for="match_feedback_na">Not Applicable</label>
+          </div>
+          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
+        </div>
+      </div>
+
+      <!-- Step 6: Company Research -->
+      <div class="feedback-form-section">
+        <h2>6. Company Research</h2>
+        
+        <div class="form-group" data-required="true">
+          <label>Was the company signal data relevant? Did it help frame your application? <span class="required">*</span></label>
+          <textarea name="research_feedback" placeholder="Did you find useful insights?" required></textarea>
+          <div class="not-applicable">
+            <input type="checkbox" name="research_feedback_na" id="research_feedback_na">
+            <label for="research_feedback_na">Not Applicable</label>
+          </div>
+          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
+        </div>
+      </div>
+
+      <!-- Step 7: Decision Makers -->
+      <div class="feedback-form-section">
+        <h2>7. Decision Makers</h2>
+        
+        <div class="form-group" data-required="true">
+          <label>Did we find the right people? Was the 'Interesting Facts' section useful for icebreakers? <span class="required">*</span></label>
+          <textarea name="decision_maker_feedback" placeholder="Were the contacts relevant?" required></textarea>
+          <div class="not-applicable">
+            <input type="checkbox" name="decision_maker_feedback_na" id="decision_maker_feedback_na">
+            <label for="decision_maker_feedback_na">Not Applicable</label>
+          </div>
+          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
+        </div>
+      </div>
+
+      <!-- Step 8: Offer Creation -->
+      <div class="feedback-form-section">
+        <h2>8. Offer Creation</h2>
+        
+        <div class="form-group" data-required="true">
+          <label>Did the generated email capture your voice? Was the 'Flattery' or 'Mentorship' tone effective? <span class="required">*</span></label>
+          <textarea name="offer_feedback" placeholder="How was the email quality?" required></textarea>
+          <div class="not-applicable">
+            <input type="checkbox" name="offer_feedback_na" id="offer_feedback_na">
+            <label for="offer_feedback_na">Not Applicable</label>
+          </div>
+          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
+        </div>
+      </div>
+
+      <!-- Step 9: Campaign Sequence -->
+      <div class="feedback-form-section">
+        <h2>9. Campaign Sequence</h2>
+        
+        <div class="form-group" data-required="true">
+          <label>Was the 4-step sequence logical? Did the 'Edit' flow work for you? <span class="required">*</span></label>
+          <textarea name="campaign_feedback" placeholder="Did the sequence flow well?" required></textarea>
+          <div class="not-applicable">
+            <input type="checkbox" name="campaign_feedback_na" id="campaign_feedback_na">
+            <label for="campaign_feedback_na">Not Applicable</label>
+          </div>
+          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
+        </div>
+      </div>
+
+      <!-- Step 10: Dry Run / QA -->
+      <div class="feedback-form-section">
+        <h2>10. Dry Run / QA</h2>
+        
+        <div class="form-group" data-required="true">
+          <label>Did the inbox preview give you confidence to send? What else would you like to check? <span class="required">*</span></label>
+          <textarea name="dryrun_feedback" placeholder="Did you feel ready to send?" required></textarea>
+          <div class="not-applicable">
+            <input type="checkbox" name="dryrun_feedback_na" id="dryrun_feedback_na">
+            <label for="dryrun_feedback_na">Not Applicable</label>
+          </div>
+          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
+        </div>
+      </div>
+
+      <!-- Step 11: Launch Campaign -->
+      <div class="feedback-form-section">
+        <h2>11. Launch Campaign</h2>
+        
+        <div class="form-group" data-required="true">
+          <label>Was the pre-flight check clear? Did you feel ready to launch? <span class="required">*</span></label>
+          <textarea name="launch_feedback" placeholder="How was the launch experience?" required></textarea>
+          <div class="not-applicable">
+            <input type="checkbox" name="launch_feedback_na" id="launch_feedback_na">
+            <label for="launch_feedback_na">Not Applicable</label>
+          </div>
+          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
+        </div>
+      </div>
+
+      <!-- Step 12: Analytics -->
+      <div class="feedback-form-section">
+        <h2>12. Analytics</h2>
+        
+        <div class="form-group" data-required="true">
+          <label>Did the metrics (Open Rate, Reply Rate) help you track success? What other stats do you need? <span class="required">*</span></label>
+          <textarea name="analytics_feedback" placeholder="Were the metrics useful?" required></textarea>
+          <div class="not-applicable">
+            <input type="checkbox" name="analytics_feedback_na" id="analytics_feedback_na">
+            <label for="analytics_feedback_na">Not Applicable</label>
           </div>
           <div class="error-message">Please provide feedback or select "Not Applicable"</div>
         </div>
@@ -391,7 +540,7 @@
         if (hasValue || isNA) {
           group.classList.remove('disabled');
           if (hasValue) {
-            naCheckbox.checked = false;
+            if (naCheckbox) naCheckbox.checked = false;
           }
           errorMsg.classList.remove('show');
           answeredQuestions.add(group);
@@ -408,7 +557,7 @@
         if (hasValue || isNA) {
           group.classList.remove('disabled');
           if (hasValue) {
-            naCheckbox.checked = false;
+            if (naCheckbox) naCheckbox.checked = false;
           }
           errorMsg.classList.remove('show');
           answeredQuestions.add(group);
