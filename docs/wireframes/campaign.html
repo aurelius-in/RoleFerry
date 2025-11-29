@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Compose - RoleFerry</title>
+<title>Campaign Sequence - RoleFerry</title>
 <link rel="stylesheet" href="../styles.css" />
 <link rel="stylesheet" href="responsive.css" />
 <link rel="icon" href="../assets/roleferry_trans.png" />
@@ -15,7 +15,7 @@
   }
   .tab-header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
   }
   .tab-title {
     font-size: 2.5rem;
@@ -24,99 +24,110 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
-  .compose-grid {
+  .sequence-grid {
       display: grid;
-      grid-template-columns: 300px 1fr 300px;
+      grid-template-columns: 1fr 300px;
       gap: 2rem;
-      max-width: 1600px;
+      max-width: 1400px;
       margin: 0 auto;
   }
-  .left-column, .right-column {
+  .sequence-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+  }
+  .sequence-step {
+      background: rgba(31, 41, 55, 0.8);
+      border: 1px solid #374151;
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+  }
+  .sequence-step:hover {
+      border-color: #8b5cf6;
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.1);
+  }
+  .step-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #4b5563;
+      padding-bottom: 0.5rem;
+  }
+  .step-title {
+      font-size: 1.2rem;
+      color: #ffffff;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+  }
+  .step-badge {
+      background: #8b5cf6;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+  }
+  .step-timing {
+      color: #9ca3af;
+      font-size: 0.9rem;
+  }
+  .step-content {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 1rem;
+      border-radius: 8px;
+      color: #d1d5db;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+      max-height: 150px;
+      overflow-y: auto;
+  }
+  .step-actions {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+  }
+  .btn-icon {
+      background: transparent;
+      border: 1px solid #4b5563;
+      color: #9ca3af;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+  }
+  .btn-icon:hover {
+      border-color: #8b5cf6;
+      color: #ffffff;
+      background: rgba(139, 92, 246, 0.1);
+  }
+  .sidebar {
       background: rgba(31, 41, 55, 0.5);
       border-radius: 12px;
       padding: 1.5rem;
       border: 1px solid #374151;
       height: fit-content;
   }
-  .left-column h3, .right-column h3 {
+  .sidebar h3 {
       color: #ffffff;
       margin: 0 0 1.5rem 0;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
   }
-  .people-list {
+  .preflight-list {
       list-style: none;
       padding: 0;
       margin: 0;
-  }
-  .person-item {
-      padding: 1rem;
-      border-radius: 8px;
-      background: rgba(17, 24, 39, 0.8);
-      margin-bottom: 1rem;
-      cursor: pointer;
-      border: 1px solid #4b5563;
-      transition: all 0.3s ease;
-  }
-  .person-item:hover, .person-item.active {
-      background: #2563eb;
-      border-color: #2563eb;
-  }
-  .person-item h4 {
-      color: #ffffff;
-      margin: 0 0 0.25rem 0;
-      font-size: 1rem;
-  }
-  .person-item h4 {
-      color: #ffffff;
-      margin: 0 0 0.25rem 0;
-      font-size: 1rem;
-      display: flex;
-      align-items: center;
-  }
-  .person-item h4 img {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      margin-right: 0.75rem;
-  }
-  .person-item p {
-      color: #9ca3af;
-      margin: 0;
-      font-size: 0.85rem;
-  }
-  .center-column .email-preview {
-    background: #ffffff;
-    border-radius: 8px;
-    padding: 2rem;
-    color: #1f2937;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    line-height: 1.6;
-    min-height: 600px;
-  }
-  .email-preview .subject {
-      font-size: 1.2rem;
-      font-weight: bold;
-      margin-bottom: 1.5rem;
-  }
-  .variables-list, .preflight-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-  }
-  .variables-list li {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 4px 8px;
-      border-radius: 4px;
-      color: #10b981;
-      margin-bottom: 0.5rem;
-      font-family: 'Courier New', monospace;
-      font-size: 0.9rem;
   }
   .preflight-list li {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.5rem 0;
+      padding: 0.75rem 0;
       border-bottom: 1px solid #374151;
   }
   .preflight-list .status {
@@ -125,19 +136,9 @@
       border-radius: 12px;
       font-size: 0.8rem;
   }
-  .status.green {
-      background-color: #10b981;
-      color: white;
-  }
-  .status.yellow {
-      background-color: #f59e0b;
-      color: white;
-  }
-  .status.red {
-      background-color: #ef4444;
-      color: white;
-  }
-  .preflight-list .label { color: #d1d5db; }
+  .status.green { background-color: #10b981; color: white; }
+  .status.yellow { background-color: #f59e0b; color: white; }
+  .preflight-list .label { color: #d1d5db; font-size: 0.9rem; }
 
   .back-button {
     position: fixed;
@@ -157,9 +158,28 @@
     align-items: center;
     justify-content: center;
   }
-  .back-button:hover {
-    background: rgba(74, 144, 226, 0.9);
+  .back-button:hover { background: rgba(74, 144, 226, 0.9); }
+
+  .next-button {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #4A90E2 0%, #87CEEB 100%);
+    color: #1a1a1a;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 700;
+    z-index: 100;
   }
+  .next-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(74, 144, 226, 0.4);
+  }
+
   .progress-indicator {
     position: fixed;
     top: 5rem;
@@ -172,165 +192,149 @@
     border: 2px solid rgba(74, 144, 226, 0.5);
     z-index: 100;
   }
+
   /* Responsive Design */
-  @media (max-width: 1200px) {
-    .compose-grid {
-      grid-template-columns: 1fr;
-      max-width: 800px;
-    }
-  }
-  @media (max-width: 768px) {
-    .tab-container {
-      padding: 1rem;
-    }
-    .back-button {
-      position: relative;
-      top: auto;
-      left: auto;
-      margin-bottom: 1rem;
-      display: inline-block;
-    }
-    .progress-indicator {
-      position: relative;
-      top: auto;
-      right: auto;
-      margin-bottom: 1rem;
-    }
+  @media (max-width: 1024px) {
+    .sequence-grid { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
   }
 </style>
 </head>
 <body>
-    <div class="tab-container">
-    <!-- Navigation -->
+  <div class="tab-container">
     <a href="../wireframes.html" class="back-button" title="Back to Path">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; fill: white;">
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
       </svg>
     </a>
-    
+    <a href="dry-run.html" class="next-button">Dry Run / QA →</a>
+
     <div class="progress-indicator">
-      <div>Step 11 of 12</div>
+      <div>Step 9 of 13</div>
     </div>
 
     <div class="tab-header">
-      <h1 class="tab-title">Compose & Campaign</h1>
+      <h1 class="tab-title">Campaign Sequence</h1>
     </div>
 
-    <div class="compose-grid">
-        <!-- Left Column: People -->
-        <div class="left-column">
-            <h3>Recipients</h3>
-            <ul class="people-list">
-                <li class="person-item active" data-email-body="<p>Hi Jane,</p><p>I was excited to see the Senior Software Engineer role at TechCorp, as my experience in scaling microservices on AWS has led to a 99.9% uptime and 20% cost reduction in previous roles. I noticed your team is focused on improving data processing efficiency, and I believe my background is a strong match for this challenge.</p><p>TechCorp's innovative approach to data analytics is impressive, and I'm confident I can contribute to your team's success.</p><p>Would you be open to a brief chat next week?</p><p>Best,<br>Oliver</p>">
-                    <h4><img src="../assets/techcorp-logo.png" alt="">Jane Doe</h4>
-                    <p>VP of Engineering • TechCorp</p>
-                </li>
-                <li class="person-item" data-email-body="<p>Hi John,</p><p>Following up on my application for the Senior Software Engineer role. My background in building secure, scalable APIs aligns well with the job description, and I'm particularly interested in TechCorp's work in the fintech space.</p><p>I'm confident my skills can help your team accelerate its product roadmap.</p><p>Best,<br>Oliver</p>">
-                    <h4><img src="../assets/techcorp-logo.png" alt="">John Smith</h4>
-                    <p>Senior Engineering Manager • TechCorp</p>
-                </li>
-            </ul>
-        </div>
+    <div class="sequence-grid">
+        <div class="sequence-list">
+            <!-- Step 1 -->
+            <div class="sequence-step">
+                <div class="step-header">
+                    <div class="step-title">
+                        <span class="step-badge">Step 1</span> Initial Outreach
+                    </div>
+                    <span class="step-timing">Send Immediately</span>
+                </div>
+                <div class="step-content">Subject: Strategic discussion: {{job_title}} at {{company_name}}
 
-        <!-- Center Column: Email Preview -->
-        <div class="center-column">
-            <div class="email-preview" contenteditable="true">
-                <div class="subject">Following up on the Senior Software Engineer role</div>
-                <div id="email-body-content">
-                    <p>Hi Jane,</p>
-                    <p>I was excited to see the Senior Software Engineer role at TechCorp, as my experience in scaling microservices on AWS has led to a 99.9% uptime and 20% cost reduction in previous roles. I noticed your team is focused on improving data processing efficiency, and I believe my background is a strong match for this challenge.</p>
-                    <p>TechCorp's innovative approach to data analytics is impressive, and I'm confident I can contribute to your team's success.</p>
-                    <p>Would you be open to a brief chat next week?</p>
-                    <p>Best,<br>Oliver</p>
+Hi {{contact.name}},
+
+I've been following {{company.name}}'s recent work on...</div>
+                <div class="step-actions">
+                    <button class="btn-icon" onclick="editStep(1)">✏️ Edit</button>
+                    <button class="btn-icon">👁️ Preview</button>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="sequence-step">
+                <div class="step-header">
+                    <div class="step-title">
+                        <span class="step-badge">Step 2</span> Polite Nudge
+                    </div>
+                    <span class="step-timing">+3 Days</span>
+                </div>
+                <div class="step-content">Subject: Re: Strategic discussion: {{job_title}} at {{company_name}}
+
+Hi {{contact.name}},
+
+Just bubbling this up in case it got buried. I'm still very interested in discussing how I can help with {{pain_point_1}}...</div>
+                <div class="step-actions">
+                    <button class="btn-icon" onclick="editStep(2)">✏️ Edit</button>
+                    <button class="btn-icon">👁️ Preview</button>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="sequence-step">
+                <div class="step-header">
+                    <div class="step-title">
+                        <span class="step-badge">Step 3</span> Value Add
+                    </div>
+                    <span class="step-timing">+4 Days</span>
+                </div>
+                <div class="step-content">Subject: Relevant case study for {{company_name}}
+
+Hi {{contact.name}},
+
+I thought you might find this case study relevant given {{company.news}}. It details how I solved a similar challenge...</div>
+                <div class="step-actions">
+                    <button class="btn-icon" onclick="editStep(3)">✏️ Edit</button>
+                    <button class="btn-icon">👁️ Preview</button>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="sequence-step">
+                <div class="step-header">
+                    <div class="step-title">
+                        <span class="step-badge">Step 4</span> Final Attempt
+                    </div>
+                    <span class="step-timing">+5 Days</span>
+                </div>
+                <div class="step-content">Subject: Final check-in
+
+Hi {{contact.name}},
+
+I'll assume now isn't the right time. If priorities change regarding {{pain_point_1}}, feel free to reach out.
+
+Best,
+[Your Name]</div>
+                <div class="step-actions">
+                    <button class="btn-icon" onclick="editStep(4)">✏️ Edit</button>
+                    <button class="btn-icon">👁️ Preview</button>
                 </div>
             </div>
         </div>
 
-        <!-- Right Column: Variables & Pre-flight -->
-        <div class="right-column">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <button class="btn-primary" style="background: #10b981; border:none; padding:12px 24px; border-radius:8px; color:white; font-weight:bold; cursor:pointer;">Launch Campaign</button>
-                <a href="dry-run.html" class="btn-secondary" style="padding: 12px 24px; background: #4b5563; text-decoration: none; color: white; border-radius: 8px; font-weight:bold;">Dry Run</a>
-            </div>
-            <h3>Available Variables</h3>
-            <ul class="variables-list">
-                <li>{{contact_name}}</li>
-                <li>{{contact_title}}</li>
-                <li>{{jd_summary}}</li>
-                <li>{{pain_point_1}}</li>
-                <li>{{solution_1}}</li>
-                <li>{{metric_1}}</li>
-                <li>{{offer_text}}</li>
-                <li>{{company_summary}}</li>
-                <li>{{recent_news}}</li>
-            </ul>
-            <h3 style="margin-top: 2rem;">Pre-flight Deliverability</h3>
+        <div class="sidebar">
+            <h3>Campaign Health</h3>
             <ul class="preflight-list">
                 <li>
-                    <span class="label">Domain Health</span>
-                    <span class="status green">Good</span>
-                </li>
-                <li>
-                    <span class="label">Mailbox Warm-up</span>
-                    <span class="status green">Active</span>
+                    <span class="label">Sequence Length</span>
+                    <span class="status green">Optimal (4)</span>
                 </li>
                 <li>
                     <span class="label">Spam Words</span>
                     <span class="status green">0 Found</span>
                 </li>
                 <li>
-                    <span class="label">Link Safety</span>
-                    <span class="status green">Secure</span>
+                    <span class="label">Sending Volume</span>
+                    <span class="status yellow">~50/day</span>
                 </li>
                 <li>
-                    <span class="label">Image/Text Ratio</span>
-                    <span class="status yellow">Optimal</span>
-                </li>
-                <li>
-                    <span class="label">Sending Limits</span>
-                    <span class="status green">OK</span>
+                    <span class="label">Personalization</span>
+                    <span class="status green">High</span>
                 </li>
             </ul>
+            <div style="margin-top: 2rem; text-align: center;">
+                <button class="btn-icon" style="width: 100%; border-color: #10b981; color: #10b981;" onclick="window.location.href='dry-run.html'">Proceed to Dry Run →</button>
+            </div>
         </div>
     </div>
 
   </div>
-
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const peopleList = document.querySelector('.people-list');
-        const emailBodyContent = document.getElementById('email-body-content');
-        const items = Array.from(peopleList.querySelectorAll('.person-item'));
-
-        function setActiveItem(item) {
-            items.forEach(i => i.classList.remove('active'));
-            item.classList.add('active');
-            emailBodyContent.innerHTML = item.dataset.emailBody;
-        }
-
-        peopleList.addEventListener('click', (e) => {
-            const targetItem = e.target.closest('.person-item');
-            if (targetItem) {
-                setActiveItem(targetItem);
-            }
-        });
-
-        document.addEventListener('keydown', (e) => {
-            const currentActive = peopleList.querySelector('.person-item.active');
-            let currentIndex = items.indexOf(currentActive);
-
-            if (e.key === 'j') { // Down
-                e.preventDefault();
-                const nextIndex = (currentIndex + 1) % items.length;
-                setActiveItem(items[nextIndex]);
-            } else if (e.key === 'k') { // Up
-                e.preventDefault();
-                const prevIndex = (currentIndex - 1 + items.length) % items.length;
-                setActiveItem(items[prevIndex]);
-            }
-        });
-    });
+      function editStep(stepNum) {
+          const stepContent = document.querySelectorAll('.step-content')[stepNum - 1];
+          const currentText = stepContent.innerText;
+          const newText = prompt("Edit Step " + stepNum + " Content:", currentText);
+          if (newText !== null) {
+              stepContent.innerText = newText;
+          }
+      }
   </script>
-
 </body>
 </html>

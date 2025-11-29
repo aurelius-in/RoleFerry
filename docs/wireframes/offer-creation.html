@@ -26,9 +26,9 @@
   }
   .main-grid {
       display: grid;
-      grid-template-columns: 300px 1fr;
+      grid-template-columns: 250px 1fr 250px;
       gap: 2rem;
-      max-width: 1400px;
+      max-width: 1600px;
       margin: 0 auto;
   }
   .left-column {
@@ -79,11 +79,18 @@
       margin: 0 0 0.75rem 0;
       font-size: 0.85rem;
   }
-  .right-column {
+  .center-column {
     background: rgba(31, 41, 55, 0.8);
     border-radius: 20px;
     padding: 2rem;
     border: 1px solid #374151;
+  }
+  .right-column {
+    background: rgba(31, 41, 55, 0.5);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #374151;
+    height: fit-content;
   }
   .form-group {
       margin-bottom: 1.5rem;
@@ -104,16 +111,9 @@
     font-size: 1rem;
   }
   .form-textarea {
-      min-height: 150px;
+      min-height: 300px;
+      resize: vertical;
   }
-  .upload-area {
-    border: 2px dashed #374151;
-    border-radius: 8px;
-    padding: 2rem;
-    text-align: center;
-    cursor: pointer;
-  }
-  .upload-area:hover { border-color: #2563eb; }
   .btn-primary {
     padding: 12px 32px;
     background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
@@ -163,22 +163,109 @@
     color: #9ca3af;
     font-size: 0.8rem;
   }
+  .variables-panel h3 {
+    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #10b981;
+    padding-bottom: 0.5rem;
+  }
+  .variable-item {
+    background: rgba(37, 99, 235, 0.1);
+    border: 1px solid #2563eb;
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .variable-item:hover {
+    background: rgba(37, 99, 235, 0.2);
+  }
+  .variable-item code {
+    color: #10b981;
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .variable-item p {
+    color: #d1d5db;
+    font-size: 0.8rem;
+    margin: 0.25rem 0 0 0;
+  }
+  .jargon-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .jargon-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #2563eb;
+  }
+  .jargon-toggle label {
+    color: #d1d5db;
+    font-size: 0.9rem;
+  }
+  .next-button {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #4A90E2 0%, #87CEEB 100%);
+    color: #1a1a1a;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 700;
+    z-index: 100;
+  }
+  .next-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(74, 144, 226, 0.4);
+  }
+  .progress-indicator {
+    position: fixed;
+    top: 5rem;
+    right: 2rem;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 1rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    border: 2px solid rgba(74, 144, 226, 0.5);
+    z-index: 100;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .main-grid {
+      grid-template-columns: 1fr;
+    }
+    .left-column, .right-column {
+      display: none; /* Hide sidebars on smaller screens or stack them */
+    }
+  }
 </style>
 </head>
 <body>
   <div class="tab-container">
-    <div style="display: flex; justify-content: space-between; align-items: center; position: fixed; top: 2rem; left: 2rem; right: 2rem; z-index: 100;">
-       <a href="../wireframes.html" class="back-button" title="Back to Path" style="position: static; display: flex; align-items: center; justify-content: center;">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; fill: white;">
-             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-          </svg>
-       </a>
-       <div class="progress-indicator" style="background: rgba(0,0,0,0.8); color: white; padding: 8px 12px; border-radius: 8px; border: 1px solid #374151;">
-          Step 9 of 12
-       </div>
+    <a href="../wireframes.html" class="back-button" title="Back to Path">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; fill: white;">
+         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+      </svg>
+    </a>
+    <a href="campaign.html" class="next-button">Campaign Sequence →</a>
+
+    <div class="progress-indicator">
+      <div>Step 8 of 13</div>
     </div>
 
-    <div class="tab-header" style="margin-top: 4rem;">
+    <div class="tab-header">
       <h1 class="tab-title">Offer Creation</h1>
     </div>
 
@@ -203,93 +290,129 @@
                         <span class="tag">Analytics</span>
                     </div>
                 </li>
-                <li class="saved-item">
-                    <h4>API Security Offer</h4>
-                    <p>Robust and secure APIs...</p>
-                    <div>
-                        <span class="tag">Security</span>
-                        <span class="tag">API</span>
-                    </div>
-                </li>
             </ul>
         </div>
 
-        <!-- Right Column: Offer Editor -->
-        <div class="right-column">
+        <!-- Center Column: Offer Editor -->
+        <div class="center-column">
             <!-- Tone Selection -->
             <div class="form-group">
                <label class="form-label">Select Tone & Audience</label>
                <div class="tone-grid">
-                  <div class="tone-option">
-                     <span class="tone-label">Recruiter</span>
-                     <span class="tone-desc">Efficiency</span>
+                  <div class="tone-option selected" onclick="selectTone(this, 'standard')">
+                     <span class="tone-label">Standard</span>
+                     <span class="tone-desc">Professional</span>
                   </div>
-                  <div class="tone-option">
-                     <span class="tone-label">Manager</span>
-                     <span class="tone-desc">Competence</span>
+                  <div class="tone-option" onclick="selectTone(this, 'mentorship')">
+                     <span class="tone-label">Mentorship</span>
+                     <span class="tone-desc">Respectful/Learning</span>
                   </div>
-                  <div class="tone-option">
+                  <div class="tone-option" onclick="selectTone(this, 'executive')">
                      <span class="tone-label">Executive</span>
                      <span class="tone-desc">ROI/Strategy</span>
                   </div>
-                  <div class="tone-option">
+                  <div class="tone-option" onclick="selectTone(this, 'flattery')">
+                     <span class="tone-label">Flattery</span>
+                     <span class="tone-desc">Complimentary</span>
+                  </div>
+                  <div class="tone-option" onclick="selectTone(this, 'developer')">
                      <span class="tone-label">Developer</span>
                      <span class="tone-desc">Technical</span>
                   </div>
-                  <div class="tone-option">
+                  <div class="tone-option" onclick="selectTone(this, 'sales')">
                      <span class="tone-label">Sales</span>
                      <span class="tone-desc">Results</span>
                   </div>
-                  <div class="tone-option">
+                  <div class="tone-option" onclick="selectTone(this, 'startup')">
                      <span class="tone-label">Startup</span>
                      <span class="tone-desc">Innovation</span>
                   </div>
-                  <div class="tone-option">
-                     <span class="tone-label">Enterprise</span>
-                     <span class="tone-desc">Process</span>
-                  </div>
-                  <div class="tone-option selected">
-                     <span class="tone-label">Custom Tone</span>
+                  <div class="tone-option" onclick="selectTone(this, 'custom')">
+                     <span class="tone-label">Custom</span>
                      <span class="tone-desc">Personalized</span>
                   </div>
                </div>
-               <input type="text" class="form-input" placeholder="Describe your desired tone: e.g., Professional but friendly" value="Professional but friendly">
+            </div>
+
+            <!-- Jargon Toggle -->
+            <div class="jargon-toggle">
+                <input type="checkbox" id="jargonToggle" onchange="toggleJargon()">
+                <label for="jargonToggle">Simplify Language (replace jargon with definitions)</label>
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="offerContent">Personalized Offer</label>
-                <div class="editor-toolbar" style="margin-bottom: 0.5rem;">
-                    <button class="btn-secondary" style="padding: 8px 16px; background: #4b5563; color: white; border: none; border-radius: 4px; cursor: pointer;">Insert Snippet</button>
-                </div>
-                <textarea id="offerContent" class="form-textarea" placeholder="AI is generating your personalized offer...">I understand you're facing the challenge of scaling your backend infrastructure to handle 10x traffic growth. Based on my experience with similar scaling challenges at TechCorp, I can offer you a comprehensive analysis of your current architecture and a detailed roadmap for optimization.</textarea>
+                <label class="form-label" for="emailSubject">Subject Line</label>
+                <input type="text" class="form-input" id="emailSubject" value="Strategic discussion: {{job_title}} at {{company_name}}">
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="offerLink">Optional Link (e.g., portfolio, case study)</label>
-                <input type="text" id="offerLink" class="form-input" placeholder="https://your-portfolio.com/project-x">
-            </div>
+                <label class="form-label" for="offerContent">Email Body</label>
+                <textarea id="offerContent" class="form-textarea">Hi {{contact.name}},
 
-            <div class="form-group">
-                <label class="form-label">Upload Video (Optional)</label>
-                <div class="upload-area">
-                    <p>🎬 Click or drag to upload a short intro video</p>
-                </div>
-            </div>
+I've been following {{company.name}}'s recent work on {{company.news}} and noticed you are tackling {{pp_match.pairs[0].jd_snippet}}.
 
-            <div class="variable-display" style="margin-top: 1rem;">
-              <h4 style="color: #2563eb; margin-bottom: 1rem; font-size: 1rem;">Available Variable from this Step</h4>
-              <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{offer_text}}</code>, 
-              <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{offer_link}}</code>, 
-              <code style="background: rgba(0, 0, 0, 0.3); padding: 2px 6px; border-radius: 4px; color: #10b981;">{{offer_video}}</code>
+Based on my experience delivering {{pp_match.pairs[0].resume_snippet}}, I believe I can help you achieve {{metric_1}}.
+
+I noticed on your LinkedIn that {{contact.facts[0]}}. I'd love to connect and discuss how my background in {{solution_1}} aligns with your team's goals.
+
+Best,
+[Your Name]</textarea>
             </div>
 
             <div style="text-align: center; margin-top: 2rem;">
-                <button class="btn-primary">Save Offer</button>
-                <button class="btn-primary" onclick="window.location.href='compose.html'" style="margin-left: 1rem; background: #10b981;">Continue →</button>
+                <button class="btn-primary" onclick="alert('Offer saved!')">Save Offer</button>
+                <button class="btn-primary" onclick="window.location.href='campaign.html'" style="margin-left: 1rem; background: #10b981;">Continue →</button>
+            </div>
+        </div>
+
+        <!-- Right Column: Variables -->
+        <div class="right-column variables-panel">
+            <h3>Available Variables</h3>
+            <div class="variable-item" onclick="insertVariable('{{contact.name}}')">
+                <code>{{contact.name}}</code>
+                <p>Contact Name</p>
+            </div>
+            <div class="variable-item" onclick="insertVariable('{{company.name}}')">
+                <code>{{company.name}}</code>
+                <p>Company Name</p>
+            </div>
+            <div class="variable-item" onclick="insertVariable('{{pp_match.pairs[0].jd_snippet}}')">
+                <code>{{pp_match...}}</code>
+                <p>Pain Point</p>
+            </div>
+            <div class="variable-item" onclick="insertVariable('{{pp_match.pairs[0].resume_snippet}}')">
+                <code>{{pp_match...}}</code>
+                <p>Your Solution</p>
+            </div>
+            <div class="variable-item" onclick="insertVariable('{{contact.facts[0]}}')">
+                <code>{{contact.facts[0]}}</code>
+                <p>Interesting Fact</p>
             </div>
         </div>
     </div>
 
   </div>
+  <script>
+      function selectTone(el, tone) {
+          document.querySelectorAll('.tone-option').forEach(opt => opt.classList.remove('selected'));
+          el.classList.add('selected');
+          // Logic to regenerate email based on tone would go here
+      }
+
+      function insertVariable(variable) {
+          const textarea = document.getElementById('offerContent');
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const text = textarea.value;
+          textarea.value = text.substring(0, start) + variable + text.substring(end);
+          textarea.focus();
+          textarea.selectionStart = textarea.selectionEnd = start + variable.length;
+      }
+
+      function toggleJargon() {
+          // Logic to simplify jargon
+          alert("Jargon toggle clicked (simulation)");
+      }
+  </script>
 </body>
 </html>

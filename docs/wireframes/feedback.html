@@ -293,159 +293,27 @@
     </svg>
   </a>
   <div class="progress-indicator">
+    <div>Step 13 of 13</div>
     <div>Questions Answered: <span id="answeredCount">0</span> / <span id="totalCount">0</span></div>
   </div>
 
   <div class="document-container">
     <div class="document-header">
-      <div class="branding-section">
-        <img src="../wordmark.png" alt="RoleFerry" class="wordmark-logo">
-        <img src="../ani-sm.gif" alt="RoleFerry Animation" class="animated-logo">
-      </div>
-      <h1>Weekly Feedback</h1>
-      <p>As a job seeker tester, your detailed feedback helps us improve every part of RoleFerry. Please answer all questions or select "Not Applicable" for each.</p>
+      <h1>Give Feedback</h1>
+      <p>Your feedback helps us improve RoleFerry. Complete this survey to unlock your discounted pricing.</p>
     </div>
 
     <form id="feedbackForm">
-      <!-- Step 1: Signals Engine -->
+      <!-- Step 1: Job Preferences -->
       <div class="feedback-form-section">
-        <h2>Step 1: Signals Engine</h2>
-        <h3>Discovering Job Opportunities</h3>
+        <h2>Job Preferences</h2>
         
         <div class="form-group" data-required="true">
-          <label>How easy was it to discover job opportunities using the Signals Engine? <span class="required">*</span></label>
-          <textarea name="signals_ease" placeholder="Describe your experience finding opportunities. Was it clear how to use this feature? Any confusion?" required></textarea>
+          <label>How easy was it to set your preferences? <span class="required">*</span></label>
+          <textarea name="preferences_ease" placeholder="Was it clear how to use this feature?" required></textarea>
           <div class="not-applicable">
-            <input type="checkbox" name="signals_ease_na" id="signals_ease_na">
-            <label for="signals_ease_na">Not Applicable - I didn't use this feature</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>Did you notice any visual or functional issues with the Signals Engine screen? <span class="required">*</span></label>
-          <textarea name="signals_issues" placeholder="Any bugs, broken buttons, confusing layout, or aesthetic problems?" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="signals_issues_na" id="signals_issues_na">
-            <label for="signals_issues_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>What improvements would make the Signals Engine more useful for your job search? <span class="required">*</span></label>
-          <textarea name="signals_improvements" placeholder="What features or changes would help you find better opportunities?" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="signals_improvements_na" id="signals_improvements_na">
-            <label for="signals_improvements_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-      </div>
-
-      <!-- Step 2: Job Preferences -->
-      <div class="feedback-form-section">
-        <h2>Step 2: Job Preferences</h2>
-        <h3>Setting Your Ideal Role Criteria</h3>
-        
-        <div class="form-group" data-required="true">
-          <label>Was the Job Preferences form clear and easy to fill out? <span class="required">*</span></label>
-          <textarea name="preferences_clarity" placeholder="Were the questions clear? Was anything confusing or missing?" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="preferences_clarity_na" id="preferences_clarity_na">
-            <label for="preferences_clarity_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>Did you encounter any issues saving or loading your preferences? <span class="required">*</span></label>
-          <textarea name="preferences_functional" placeholder="Any errors, missing options, or broken functionality?" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="preferences_functional_na" id="preferences_functional_na">
-            <label for="preferences_functional_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>How could the Job Preferences screen be improved visually or functionally? <span class="required">*</span></label>
-          <textarea name="preferences_improvements" placeholder="Layout, design, user experience suggestions" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="preferences_improvements_na" id="preferences_improvements_na">
-            <label for="preferences_improvements_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-      </div>
-
-      <!-- Step 3: Your Profile -->
-      <div class="feedback-form-section">
-        <h2>Step 3: Your Profile</h2>
-        <h3>Resume Upload and Profile Building</h3>
-        
-        <div class="form-group" data-required="true">
-          <label>How well did the resume upload and parsing work? <span class="required">*</span></label>
-          <textarea name="profile_upload" placeholder="Did your resume upload successfully? Was the AI extraction accurate?" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="profile_upload_na" id="profile_upload_na">
-            <label for="profile_upload_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>What information was missing or incorrectly extracted from your resume? <span class="required">*</span></label>
-          <textarea name="profile_accuracy" placeholder="Skills, experience, metrics, or other data that was wrong or missing" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="profile_accuracy_na" id="profile_accuracy_na">
-            <label for="profile_accuracy_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>Any visual or functional issues with the Profile screen? <span class="required">*</span></label>
-          <textarea name="profile_issues" placeholder="UI problems, broken features, confusing elements" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="profile_issues_na" id="profile_issues_na">
-            <label for="profile_issues_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-      </div>
-
-      <!-- Step 4: Job Descriptions -->
-      <div class="feedback-form-section">
-        <h2>Step 4: Job Descriptions</h2>
-        <h3>Selecting and Analyzing Job Postings</h3>
-        
-        <div class="form-group" data-required="true">
-          <label>How easy was it to import and analyze job descriptions? <span class="required">*</span></label>
-          <textarea name="jd_import" placeholder="Was the import process clear? Did the analysis provide useful insights?" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="jd_import_na" id="jd_import_na">
-            <label for="jd_import_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>What issues did you notice with the Job Descriptions screen? <span class="required">*</span></label>
-          <textarea name="jd_issues" placeholder="Functional bugs, visual problems, or confusing elements" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="jd_issues_na" id="jd_issues_na">
-            <label for="jd_issues_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>How could job description analysis be more helpful for your job search? <span class="required">*</span></label>
-          <textarea name="jd_improvements" placeholder="What additional information or features would be valuable?" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="jd_improvements_na" id="jd_improvements_na">
-            <label for="jd_improvements_na">Not Applicable</label>
+            <input type="checkbox" name="preferences_ease_na" id="preferences_ease_na">
+            <label for="preferences_ease_na">Not Applicable</label>
           </div>
           <div class="error-message">Please provide feedback or select "Not Applicable"</div>
         </div>
@@ -453,287 +321,14 @@
 
       <!-- Step 5: Pain Point Match -->
       <div class="feedback-form-section">
-        <h2>Step 5: Pain Point Match</h2>
-        <h3>Alignment Score and Fit Analysis</h3>
+        <h2>Pain Point Match</h2>
         
         <div class="form-group" data-required="true">
-          <label>Was the pain point matching score helpful and accurate? <span class="required">*</span></label>
-          <textarea name="match_helpful" placeholder="Did the match score make sense? Was the explanation clear?" required></textarea>
+          <label>Was the pain point matching score helpful? <span class="required">*</span></label>
+          <textarea name="match_helpful" placeholder="Did the match score make sense?" required></textarea>
           <div class="not-applicable">
             <input type="checkbox" name="match_helpful_na" id="match_helpful_na">
             <label for="match_helpful_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>Any issues with the Pain Point Match screen functionality or design? <span class="required">*</span></label>
-          <textarea name="match_issues" placeholder="Bugs, visual problems, or confusing presentation" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="match_issues_na" id="match_issues_na">
-            <label for="match_issues_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>What would make the match analysis more useful for deciding which jobs to pursue? <span class="required">*</span></label>
-          <textarea name="match_improvements" placeholder="Additional metrics, visualizations, or explanations needed" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="match_improvements_na" id="match_improvements_na">
-            <label for="match_improvements_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-      </div>
-
-      <!-- Step 6: Context Research -->
-      <div class="feedback-form-section">
-        <h2>Step 6: Context Research</h2>
-        <h3>Company and Role Context Gathering</h3>
-        
-        <div class="form-group" data-required="true">
-          <label>How useful was the context research information? <span class="required">*</span></label>
-          <textarea name="context_useful" placeholder="Was the company/role information helpful? What was missing?" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="context_useful_na" id="context_useful_na">
-            <label for="context_useful_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>Any problems with the Context Research screen? <span class="required">*</span></label>
-          <textarea name="context_issues" placeholder="Functional or visual issues you encountered" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="context_issues_na" id="context_issues_na">
-            <label for="context_issues_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>What additional context would help you personalize your outreach better? <span class="required">*</span></label>
-          <textarea name="context_improvements" placeholder="Information types or features that would be valuable" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="context_improvements_na" id="context_improvements_na">
-            <label for="context_improvements_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-      </div>
-
-      <!-- Step 7: Find Contact -->
-      <div class="feedback-form-section">
-        <h2>Step 7: Find Contact</h2>
-        <h3>Discovering Decision-Makers</h3>
-        
-        <div class="form-group" data-required="true">
-          <label>How well did the contact finding feature work? <span class="required">*</span></label>
-          <textarea name="contact_finding" placeholder="Were the right contacts found? Was email verification accurate?" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="contact_finding_na" id="contact_finding_na">
-            <label for="contact_finding_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>Any issues with the Find Contact screen? <span class="required">*</span></label>
-          <textarea name="contact_issues" placeholder="Bugs, broken features, or confusing UI elements" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="contact_issues_na" id="contact_issues_na">
-            <label for="contact_issues_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>How could contact discovery be improved? <span class="required">*</span></label>
-          <textarea name="contact_improvements" placeholder="Features or information that would make this more useful" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="contact_improvements_na" id="contact_improvements_na">
-            <label for="contact_improvements_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-      </div>
-
-      <!-- Step 8: Offer Creation -->
-      <div class="feedback-form-section">
-        <h2>Step 8: Offer Creation</h2>
-        <h3>Crafting Your Value Proposition</h3>
-        
-        <div class="form-group" data-required="true">
-          <label>How helpful was the AI-generated offer/pitch? <span class="required">*</span></label>
-          <textarea name="offer_quality" placeholder="Was the generated content relevant and personalized? What was missing?" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="offer_quality_na" id="offer_quality_na">
-            <label for="offer_quality_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>Any problems with the Offer Creation screen? <span class="required">*</span></label>
-          <textarea name="offer_issues" placeholder="Functional bugs, visual issues, or confusing workflow" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="offer_issues_na" id="offer_issues_na">
-            <label for="offer_issues_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>What would make offer creation more effective for your job applications? <span class="required">*</span></label>
-          <textarea name="offer_improvements" placeholder="Tone options, customization features, or content improvements" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="offer_improvements_na" id="offer_improvements_na">
-            <label for="offer_improvements_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-      </div>
-
-      <!-- Step 9: Compose -->
-      <div class="feedback-form-section">
-        <h2>Step 9: Compose</h2>
-        <h3>Writing Personalized Emails</h3>
-        
-        <div class="form-group" data-required="true">
-          <label>How well did the email composition feature work? <span class="required">*</span></label>
-          <textarea name="compose_quality" placeholder="Was the generated email good? Were variables substituted correctly?" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="compose_quality_na" id="compose_quality_na">
-            <label for="compose_quality_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>Any issues with the Compose screen functionality or design? <span class="required">*</span></label>
-          <textarea name="compose_issues" placeholder="Bugs, UI problems, or confusing elements" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="compose_issues_na" id="compose_issues_na">
-            <label for="compose_issues_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>What improvements would make email composition better? <span class="required">*</span></label>
-          <textarea name="compose_improvements" placeholder="Editing features, templates, or content suggestions" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="compose_improvements_na" id="compose_improvements_na">
-            <label for="compose_improvements_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-      </div>
-
-      <!-- Step 10: Campaign -->
-      <div class="feedback-form-section">
-        <h2>Step 10: Campaign</h2>
-        <h3>Creating Follow-Up Sequences</h3>
-        
-        <div class="form-group" data-required="true">
-          <label>How useful was the campaign/sequence creation? <span class="required">*</span></label>
-          <textarea name="campaign_useful" placeholder="Did the follow-up sequence make sense? Was timing appropriate?" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="campaign_useful_na" id="campaign_useful_na">
-            <label for="campaign_useful_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>Any problems with the Campaign screen? <span class="required">*</span></label>
-          <textarea name="campaign_issues" placeholder="Functional or visual issues encountered" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="campaign_issues_na" id="campaign_issues_na">
-            <label for="campaign_issues_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>How could campaign management be improved? <span class="required">*</span></label>
-          <textarea name="campaign_improvements" placeholder="Features or changes that would help manage follow-ups better" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="campaign_improvements_na" id="campaign_improvements_na">
-            <label for="campaign_improvements_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-      </div>
-
-      <!-- Step 11: Launch -->
-      <div class="feedback-form-section">
-        <h2>Step 11: Launch</h2>
-        <h3>Deliverability Checks and Sending</h3>
-        
-        <div class="form-group" data-required="true">
-          <label>How well did the launch/deliverability checks work? <span class="required">*</span></label>
-          <textarea name="launch_checks" placeholder="Were pre-flight checks helpful? Did emails send successfully?" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="launch_checks_na" id="launch_checks_na">
-            <label for="launch_checks_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>Any issues with the Launch screen? <span class="required">*</span></label>
-          <textarea name="launch_issues" placeholder="Bugs, errors, or confusing elements during launch" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="launch_issues_na" id="launch_issues_na">
-            <label for="launch_issues_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>What would improve the launch experience? <span class="required">*</span></label>
-          <textarea name="launch_improvements" placeholder="Additional checks, better feedback, or workflow improvements" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="launch_improvements_na" id="launch_improvements_na">
-            <label for="launch_improvements_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-      </div>
-
-      <!-- Step 12: Analytics -->
-      <div class="feedback-form-section">
-        <h2>Step 12: Analytics</h2>
-        <h3>Tracking Results and Performance</h3>
-        
-        <div class="form-group" data-required="true">
-          <label>How useful were the analytics and tracking features? <span class="required">*</span></label>
-          <textarea name="analytics_useful" placeholder="Did the metrics help you understand your campaign performance?" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="analytics_useful_na" id="analytics_useful_na">
-            <label for="analytics_useful_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>Any problems with the Analytics screen? <span class="required">*</span></label>
-          <textarea name="analytics_issues" placeholder="Functional bugs, visual issues, or confusing data presentation" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="analytics_issues_na" id="analytics_issues_na">
-            <label for="analytics_issues_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>What analytics would be most valuable for your job search? <span class="required">*</span></label>
-          <textarea name="analytics_improvements" placeholder="Additional metrics, visualizations, or insights needed" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="analytics_improvements_na" id="analytics_improvements_na">
-            <label for="analytics_improvements_na">Not Applicable</label>
           </div>
           <div class="error-message">Please provide feedback or select "Not Applicable"</div>
         </div>
@@ -744,7 +339,7 @@
         <h2>Overall Experience</h2>
         
         <div class="form-group" data-required="true">
-          <label>How would you rate the overall user experience? (1-5, where 5 is excellent) <span class="required">*</span></label>
+          <label>How would you rate the overall user experience? (1-5) <span class="required">*</span></label>
           <input type="number" name="overall_rating" min="1" max="5" required>
           <div class="not-applicable">
             <input type="checkbox" name="overall_rating_na" id="overall_rating_na">
@@ -754,48 +349,17 @@
         </div>
 
         <div class="form-group" data-required="true">
-          <label>What was the most frustrating part of using RoleFerry this week? <span class="required">*</span></label>
-          <textarea name="frustrations" placeholder="Be specific about what caused frustration and why" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="frustrations_na" id="frustrations_na">
-            <label for="frustrations_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
-          <label>What was the most valuable feature for your job search? <span class="required">*</span></label>
-          <textarea name="most_valuable" placeholder="Which feature helped you the most and why?" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="most_valuable_na" id="most_valuable_na">
-            <label for="most_valuable_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
-
-        <div class="form-group" data-required="true">
           <label>What is the #1 thing we should build or fix next? <span class="required">*</span></label>
-          <textarea name="top_priority" placeholder="The most important improvement or feature for your job search" required></textarea>
+          <textarea name="top_priority" placeholder="The most important improvement" required></textarea>
           <div class="not-applicable">
             <input type="checkbox" name="top_priority_na" id="top_priority_na">
             <label for="top_priority_na">Not Applicable</label>
           </div>
           <div class="error-message">Please provide feedback or select "Not Applicable"</div>
         </div>
-
-        <div class="form-group" data-required="true">
-          <label>Any additional bugs, issues, or suggestions? <span class="required">*</span></label>
-          <textarea name="additional_feedback" placeholder="Anything else we should know about your experience" required></textarea>
-          <div class="not-applicable">
-            <input type="checkbox" name="additional_feedback_na" id="additional_feedback_na">
-            <label for="additional_feedback_na">Not Applicable</label>
-          </div>
-          <div class="error-message">Please provide feedback or select "Not Applicable"</div>
-        </div>
       </div>
 
       <div class="navigation">
-        <a href="../wireframes.html" class="nav-button secondary">← Back to Path</a>
         <button type="submit" class="nav-button primary" id="submitBtn">Submit Feedback</button>
       </div>
     </form>

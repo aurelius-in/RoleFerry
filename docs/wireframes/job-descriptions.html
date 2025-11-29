@@ -82,7 +82,7 @@
     position: fixed;
     top: 2rem;
     left: 2rem;
-    padding: 12px 24px;
+    padding: 12px;
     background: rgba(0, 0, 0, 0.9);
     color: white;
     border: 2px solid rgba(74, 144, 226, 0.5);
@@ -196,15 +196,15 @@
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
       </svg>
     </a>
-    <a href="pain-point-match.html" class="next-button">Pain Point Match →</a>
+    <a href="job-tracker.html" class="next-button">Job Tracker →</a>
 
     <!-- Progress Indicator -->
     <div class="progress-indicator">
-      <div>Step 4 of 12</div>
+      <div>Step 3 of 13</div>
     </div>
 
     <div class="tab-header">
-      <h1 class="tab-title">Client Profiles</h1>
+      <h1 class="tab-title">Job Descriptions</h1>
     </div>
 
     <div class="main-grid">
@@ -237,7 +237,7 @@
 
               <!-- Success Message -->
               <div class="success-message" id="successMessage" style="display: none; background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; padding: 1rem; border-radius: 8px; color: #10b981; margin-bottom: 1rem;">
-                ✅ Client profile analyzed successfully! AI has identified key pain points and requirements.
+                ✅ Job description analyzed successfully! AI has identified key pain points and requirements.
               </div>
 
               <!-- Import Section -->
@@ -256,13 +256,13 @@
                   <input type="text" class="form-input" id="companyName" placeholder="e.g., TechCorp Inc." />
                 </div>
 
-                <button class="btn-primary" id="parseBtn" onclick="parseJobDescription()">Analyze Client Profile</button>
+                <button class="btn-primary" id="parseBtn" onclick="parseJobDescription()">Analyze Job Description</button>
               </div>
 
               <!-- Loading Spinner -->
               <div class="loading-spinner" id="loadingSpinner" style="display: none; text-align: center; margin: 2rem 0;">
                 <img src="../ani-sm.gif" alt="Loading animation" class="loading-gif" style="width: 50px;">
-                <p style="color: #9ca3af;">AI is analyzing the client profile...</p>
+                <p style="color: #9ca3af;">AI is analyzing the job description...</p>
               </div>
 
               <!-- Results Section -->
@@ -273,7 +273,7 @@
                       <div class="grading-section">
                         <select style="background: #374151; color: white; border: 1px solid #4b5563; padding: 8px; border-radius: 6px;">
                            <option value="" disabled selected>Grade this Position</option>
-                           <option value="1">1. Easiest / Shoo-in</option>
+                           <option value="1">1. Easiest to Obtain</option>
                            <option value="2">2. Stretch Position</option>
                            <option value="3">3. Ideal Future Position</option>
                         </select>
@@ -303,7 +303,7 @@
                 </div>
                 
                 <div style="margin-top: 2rem; text-align: right;">
-                  <button class="btn-primary" onclick="window.location.href='pain-point-match.html'" style="padding: 12px 24px; background: #10b981; border: none; border-radius: 6px; color: white; cursor: pointer;">Continue to Match →</button>
+                  <button class="btn-primary" onclick="window.location.href='job-tracker.html'" style="padding: 12px 24px; background: #10b981; border: none; border-radius: 6px; color: white; cursor: pointer;">Save & Continue →</button>
                 </div>
 
                 <div class="variable-display" style="margin-top: 2rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
@@ -324,6 +324,13 @@
             document.getElementById('loadingSpinner').style.display = 'none';
             document.getElementById('successMessage').style.display = 'block';
             document.getElementById('resultsSection').style.display = 'block';
+            
+            // Update progress
+            const completedSteps = JSON.parse(localStorage.getItem('roleferry-progress') || '[]');
+            if (!completedSteps.includes(3)) {
+              completedSteps.push(3);
+              localStorage.setItem('roleferry-progress', JSON.stringify(completedSteps));
+            }
         }, 1500);
     }
   </script>

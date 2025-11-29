@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>RoleFerry - The 12-Step Path to Your Next Role</title>
+<title>RoleFerry - The 13-Step Path to Your Next Role</title>
 <link rel="stylesheet" href="styles.css" />
 <link rel="icon" href="assets/roleferry_trans.png" />
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
@@ -77,7 +77,7 @@
   .path-container {
     position: relative;
     width: 900px;
-    height: 700px;
+    height: 800px;
     border-radius: 20px;
     padding: 2rem;
     z-index: 1;
@@ -147,40 +147,41 @@
     flex-shrink: 0;
   }
 
-  /* 12-Step S-Curve Positioning - Closer together, almost touching */
+  /* 13-Step S-Curve Positioning */
+  /* Row 1: Left -> Right (1-4) */
   .stone[data-step="1"] { top: 40px; left: 20px; }
   .stone[data-step="2"] { top: 40px; left: 210px; }
   .stone[data-step="3"] { top: 40px; left: 400px; }
   .stone[data-step="4"] { top: 40px; left: 590px; }
+  
+  /* Row 2: Right -> Left (5-8) */
   .stone[data-step="5"] { top: 160px; left: 590px; }
   .stone[data-step="6"] { top: 160px; left: 400px; }
   .stone[data-step="7"] { top: 160px; left: 210px; }
   .stone[data-step="8"] { top: 160px; left: 20px; }
+  
+  /* Row 3: Left -> Right (9-12) */
   .stone[data-step="9"] { top: 320px; left: 20px; }
   .stone[data-step="10"] { top: 320px; left: 210px; }
   .stone[data-step="11"] { top: 320px; left: 400px; }
   .stone[data-step="12"] { top: 320px; left: 590px; }
 
-  /* Launch Campaign stone with reversed colors */
-  .stone.launch-stone {
-    position: relative;
-  }
+  /* Row 4: Right -> Left (13) */
+  .stone[data-step="13"] { top: 480px; left: 590px; }
 
-  .stone.launch-stone .stone-image {
+
+  /* Launch Campaign stone (Step 11) with reversed colors */
+  .stone[data-step="11"] .stone-image {
     filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(1.2);
   }
 
-  .stone.launch-stone .stone-label-text {
+  .stone[data-step="11"] .stone-label-text {
     color: #ffffff;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
     font-weight: 800;
   }
 
-  .stone.launch-stone .icon {
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
-  }
-
-  .stone.launch-stone:hover .stone-image {
+  .stone[data-step="11"]:hover .stone-image {
     filter: invert(1) hue-rotate(180deg) brightness(1.0) contrast(1.3);
   }
 
@@ -230,6 +231,7 @@
     position: relative;
     font-weight: 600;
     z-index: 100;
+    display: none; /* Hidden by default until verified */
   }
 
   .feedback-banner a {
@@ -324,7 +326,7 @@
     .path-container {
       width: 100%;
       max-width: 600px;
-      height: 600px;
+      height: 900px;
     }
 
     .stone {
@@ -347,7 +349,7 @@
 </style>
 </head>
 <body>
-  <div class="feedback-banner" id="feedbackBanner">
+  <div class="feedback-banner" id="feedbackBanner" style="display: block;">
     <span>It's Friday! Time for your weekly feedback.</span>
     <a href="wireframes/feedback.html">Give Feedback</a>
     <button class="close-btn" onclick="document.getElementById('feedbackBanner').style.display='none'">&times;</button>
@@ -359,41 +361,41 @@
         <img src="wordmark.png" alt="RoleFerry" class="wordmark-logo">
         <img src="ani-sm.gif" alt="RoleFerry Animation" class="animated-logo">
       </div>
-      <h1 class="keypad-title">The 12-Step Path to Your Next Role</h1>
+      <h1 class="keypad-title">The 13-Step Path to Your Next Role</h1>
       <p class="keypad-subtitle">Transform your job search with intelligent automation</p>
     </div>
     <div class="progress-indicator">
-      <div>Progress: <span id="progressText">0/12</span></div>
+      <div>Progress: <span id="progressText">0/13</span></div>
     </div>
 
     <div class="path-container" id="pathContainer">
-      <!-- 12 Steps -->
-      <div class="stone" data-tab="signals-engine" data-step="1" title="Discover job opportunities">
-        <img src="assets/stones.png" alt="Stone" class="stone-image">
-        <div class="stone-content">
-          <div class="icon">📡</div>
-          <div class="stone-label-text">Signals Engine</div>
-        </div>
-      </div>
-      <div class="stone" data-tab="job-preferences" data-step="2" title="Define ideal role criteria">
+      <!-- 13 Steps -->
+      <div class="stone" data-tab="job-preferences" data-step="1" title="Define ideal role criteria">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
           <div class="icon">🎯</div>
           <div class="stone-label-text">Job Preferences</div>
         </div>
       </div>
-      <div class="stone" data-tab="candidate-profile" data-step="3" title="Upload resume and build profile">
+      <div class="stone" data-tab="candidate-profile" data-step="2" title="Upload resume and build profile">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
           <div class="icon">📄</div>
           <div class="stone-label-text">Your Profile</div>
         </div>
       </div>
-      <div class="stone" data-tab="job-descriptions" data-step="4" title="Select and analyze job postings">
+      <div class="stone" data-tab="job-descriptions" data-step="3" title="Select and analyze job postings">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
           <div class="icon">📋</div>
           <div class="stone-label-text">Job Descriptions</div>
+        </div>
+      </div>
+      <div class="stone" data-tab="job-tracker" data-step="4" title="Manage your pipeline">
+        <img src="assets/stones.png" alt="Stone" class="stone-image">
+        <div class="stone-content">
+          <div class="icon">📌</div>
+          <div class="stone-label-text">Job Tracker</div>
         </div>
       </div>
       <div class="stone" data-tab="pain-point-match" data-step="5" title="See alignment score and fit">
@@ -403,18 +405,18 @@
           <div class="stone-label-text">Pain Point Match</div>
         </div>
       </div>
-      <div class="stone" data-tab="context-research" data-step="6" title="Research company and role context">
+      <div class="stone" data-tab="company-research" data-step="6" title="Research company and role context">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
           <div class="icon">🔍</div>
-          <div class="stone-label-text">Context Research</div>
+          <div class="stone-label-text">Company Research</div>
         </div>
       </div>
-      <div class="stone" data-tab="find-contact" data-step="7" title="Discover decision-makers">
+      <div class="stone" data-tab="decision-makers" data-step="7" title="Discover decision-makers">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
           <div class="icon">👤</div>
-          <div class="stone-label-text">Find Contact</div>
+          <div class="stone-label-text">Decision Makers</div>
         </div>
       </div>
       <div class="stone" data-tab="offer-creation" data-step="8" title="Craft personalized value proposition">
@@ -424,32 +426,39 @@
           <div class="stone-label-text">Offer Creation</div>
         </div>
       </div>
-      <div class="stone" data-tab="compose" data-step="9" title="Write personalized email">
-        <img src="assets/stones.png" alt="Stone" class="stone-image">
-        <div class="stone-content">
-          <div class="icon">✍️</div>
-          <div class="stone-label-text">Compose</div>
-        </div>
-      </div>
-      <div class="stone" data-tab="campaign" data-step="10" title="Create follow-up sequence">
+      <div class="stone" data-tab="campaign" data-step="9" title="Create follow-up sequence">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
           <div class="icon">📧</div>
           <div class="stone-label-text">Campaign</div>
         </div>
       </div>
-      <div class="stone" data-tab="analytics" data-step="11" title="Track results and performance">
+      <div class="stone" data-tab="dry-run" data-step="10" title="Review and QA your sequence">
+        <img src="assets/stones.png" alt="Stone" class="stone-image">
+        <div class="stone-content">
+          <div class="icon">✅</div>
+          <div class="stone-label-text">Dry Run / QA</div>
+        </div>
+      </div>
+      <div class="stone" data-tab="deliverability-launch" data-step="11" title="Send with deliverability checks">
+        <img src="assets/stones.png" alt="Stone" class="stone-image">
+        <div class="stone-content">
+          <div class="icon">🚀</div>
+          <div class="stone-label-text">Launch Campaign</div>
+        </div>
+      </div>
+      <div class="stone" data-tab="analytics" data-step="12" title="Track results and performance">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
           <div class="icon">📊</div>
           <div class="stone-label-text">Analytics</div>
         </div>
       </div>
-      <div class="stone launch-stone" data-tab="deliverability-launch" data-step="12" title="Send with deliverability checks">
+      <div class="stone" data-tab="feedback" data-step="13" title="Provide feedback">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
-          <div class="icon">🚀</div>
-          <div class="stone-label-text">Launch Campaign</div>
+          <div class="icon">💬</div>
+          <div class="stone-label-text">Feedback</div>
         </div>
       </div>
     </div>
@@ -479,7 +488,7 @@
 
   function updateProgress() {
     const progressText = document.getElementById('progressText');
-    progressText.textContent = `${completedSteps.size}/12`;
+    progressText.textContent = `${completedSteps.size}/13`;
   }
 
   function getStepPosition(stepElement) {
@@ -550,18 +559,19 @@
     
     // Navigate to wireframe page
     const tabMap = {
-      'signals-engine': 'wireframes/signals-engine.html',
       'job-preferences': 'wireframes/job-preferences.html',
       'candidate-profile': 'wireframes/candidate-profile.html',
       'job-descriptions': 'wireframes/job-descriptions.html',
+      'job-tracker': 'wireframes/job-tracker.html',
       'pain-point-match': 'wireframes/pain-point-match.html',
-      'context-research': 'wireframes/context-research.html',
-      'find-contact': 'wireframes/find-contact.html',
+      'company-research': 'wireframes/company-research.html',
+      'decision-makers': 'wireframes/decision-makers.html',
       'offer-creation': 'wireframes/offer-creation.html',
-      'compose': 'wireframes/compose.html',
       'campaign': 'wireframes/campaign.html',
+      'dry-run': 'wireframes/dry-run.html',
       'deliverability-launch': 'wireframes/deliverability-launch.html',
-      'analytics': 'wireframes/analytics.html'
+      'analytics': 'wireframes/analytics.html',
+      'feedback': 'wireframes/feedback.html'
     };
     
     if (tabMap[tab]) {

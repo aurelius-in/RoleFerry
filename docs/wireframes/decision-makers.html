@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Decision Makers - RoleFerry</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="responsive.css" />
+  <link rel="icon" href="../assets/roleferry_trans.png" />
+  <style>
+    .tab-container {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      padding: 2rem;
+    }
+    .tab-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .tab-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(45deg, #ffffff, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .main-grid {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    .filter-sidebar {
+        background: rgba(31, 41, 55, 0.5);
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid #374151;
+        height: fit-content;
+    }
+    .filter-sidebar h3 {
+        color: #ffffff;
+        margin: 0 0 1.5rem 0;
+        font-size: 1.1rem;
+    }
+    .filter-group {
+        margin-bottom: 1.5rem;
+    }
+    .filter-label {
+        display: flex;
+        justify-content: space-between;
+        color: #d1d5db;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+    }
+    .filter-content input[type="text"] {
+        width: 100%;
+        padding: 6px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid #4b5563;
+        border-radius: 4px;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+    .filter-option {
+        display: flex;
+        justify-content: space-between;
+        color: #9ca3af;
+        font-size: 0.85rem;
+        padding: 4px 0;
+        cursor: pointer;
+    }
+    .filter-option:hover { color: white; }
+    .toggle-switch {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        color: #9ca3af;
+        font-size: 0.85rem;
+    }
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 32px;
+        height: 18px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #4b5563;
+        transition: .4s;
+        border-radius: 18px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 14px;
+        width: 14px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #2563eb; }
+    input:checked + .slider:before { transform: translateX(14px); }
+
+    .form-container {
+      max-width: 100%;
+      margin: 0;
+      background: rgba(31, 41, 55, 0.8);
+      border-radius: 20px;
+      padding: 2rem;
+      border: 1px solid #374151;
+    }
+    .contact-list {
+      list-style: none;
+      padding: 0;
+    }
+    .contact-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 1.5rem;
+      border-bottom: 1px solid #374151;
+      background: rgba(17, 24, 39, 0.6);
+      margin-bottom: 1rem;
+      border-radius: 8px;
+    }
+    .contact-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+    .contact-item input[type="radio"] {
+      margin-top: 0.5rem;
+      margin-right: 1rem;
+      width: 18px;
+      height: 18px;
+      accent-color: #2563eb;
+    }
+    .contact-details {
+        flex: 1;
+    }
+    .contact-details h4 {
+      color: #ffffff;
+      font-size: 1.1rem;
+      margin: 0 0 0.25rem 0;
+    }
+    .contact-details p {
+      color: #9ca3af;
+      margin: 0;
+      font-size: 0.9rem;
+    }
+    .linkedin-input-group {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+    .linkedin-input {
+        flex: 1;
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #374151;
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+    }
+    .facts-list {
+        margin-top: 1rem;
+        background: rgba(251, 191, 36, 0.1);
+        border: 1px solid #fbbf24;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    .facts-list h5 {
+        color: #fbbf24;
+        margin: 0 0 0.5rem 0;
+        font-size: 0.9rem;
+    }
+    .facts-list ul {
+        margin: 0;
+        padding-left: 1.5rem;
+        color: #d1d5db;
+        font-size: 0.9rem;
+    }
+    .facts-list li {
+        margin-bottom: 0.25rem;
+    }
+    .contact-meta {
+      margin-left: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.5rem;
+    }
+    .badge.recommended {
+      background: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .btn-primary {
+      padding: 12px 32px;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+    }
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 2rem;
+    }
+    .variable-display {
+      background: rgba(37, 99, 235, 0.1);
+      border: 1px solid #2563eb;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+    .variable-display h4 {
+      color: #2563eb;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .variable-display code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #10b981;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .back-button {
+      position: fixed;
+      top: 2rem;
+      left: 2rem;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      border: 2px solid rgba(74, 144, 226, 0.5);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      font-weight: 600;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .back-button:hover {
+      background: rgba(74, 144, 226, 0.9);
+    }
+    
+    .next-button {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #4A90E2 0%, #87CEEB 100%);
+      color: #1a1a1a;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      font-weight: 700;
+      z-index: 100;
+    }
+    .next-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(74, 144, 226, 0.4);
+    }
+
+    .progress-indicator {
+      position: fixed;
+      top: 5rem;
+      right: 2rem;
+      background: rgba(0, 0, 0, 0.9);
+      padding: 1rem;
+      border-radius: 12px;
+      color: white;
+      font-weight: 600;
+      border: 2px solid rgba(74, 144, 226, 0.5);
+      z-index: 100;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .tab-container {
+        padding: 1rem;
+      }
+      .tab-title {
+        font-size: 2rem;
+      }
+      .main-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+      .filter-sidebar {
+        margin-bottom: 1rem;
+      }
+      .back-button, .next-button {
+        position: relative;
+        top: auto;
+        left: auto;
+        right: auto;
+        margin-bottom: 1rem;
+        display: inline-block;
+      }
+      .progress-indicator {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-bottom: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="tab-container">
+    <a href="../wireframes.html" class="back-button" title="Back to Path">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; fill: white;">
+        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+      </svg>
+    </a>
+    <a href="offer-creation.html" class="next-button">Offer Creation →</a>
+    
+    <div class="progress-indicator">
+      <div>Step 7 of 13</div>
+    </div>
+
+    <div class="tab-header">
+      <h1 class="tab-title">Decision Makers</h1>
+    </div>
+
+    <div class="main-grid">
+        <!-- Filter Sidebar (Sales Navigator Style) -->
+        <div class="filter-sidebar">
+            <h3>Lead Filters</h3>
+            
+            <div class="filter-group">
+                <div class="filter-label">Role Function <span style="font-size: 0.8rem;">+</span></div>
+                <div class="filter-content">
+                    <input type="text" placeholder="Add functions...">
+                    <div class="filter-option"><span>Accounting</span> <span style="color: #4b5563;">Exclude</span></div>
+                    <div class="filter-option"><span>Administrative</span> <span style="color: #4b5563;">Exclude</span></div>
+                    <div class="filter-option"><span>Arts and Design</span> <span style="color: #4b5563;">Exclude</span></div>
+                    <div class="filter-option"><span>Business Development</span> <span style="color: #4b5563;">Exclude</span></div>
+                    <div class="filter-option"><span>Engineering</span> <span style="color: #4b5563;">Exclude</span></div>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <div class="filter-label">Buyer Intent <span style="font-size: 0.8rem;">?</span></div>
+                <div class="filter-content">
+                    <div class="toggle-switch">
+                        <span>Following your company</span>
+                        <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+                    </div>
+                    <div class="toggle-switch">
+                        <span>Viewed your profile recently</span>
+                        <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <div class="filter-label">Recent Updates</div>
+                <div class="filter-content">
+                    <div class="toggle-switch">
+                        <span>Changed jobs</span>
+                        <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                    </div>
+                    <div class="toggle-switch">
+                        <span>Posted on LinkedIn</span>
+                        <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact List -->
+        <div class="right-column">
+            <div class="form-container">
+                <p class="tab-subtitle" style="text-align: center; margin-bottom: 1rem;">Select a contact and research their LinkedIn to personalize your outreach.</p>
+                
+                <ul class="contact-list" id="contactList">
+                    <li class="contact-item">
+                      <input type="radio" id="contact1" name="contact" checked>
+                      <div class="contact-details">
+                        <h4>Jane Doe</h4>
+                        <p>VP of Engineering at Innovate Inc.</p>
+                        <p style="font-size: 0.8rem; color: #10b981; margin-top: 4px;">★ Posted about "Engineering Scaling" 2 days ago</p>
+                        
+                        <div class="linkedin-input-group">
+                            <input type="text" class="linkedin-input" placeholder="Paste LinkedIn URL..." value="linkedin.com/in/janedoe-example">
+                            <button class="btn-primary" style="padding: 8px 16px; font-size: 0.9rem;" onclick="analyzeLinkedIn(this)">Analyze Profile</button>
+                        </div>
+
+                        <div class="facts-list" id="facts1" style="display: block;">
+                            <h5>💡 Interesting Facts Found:</h5>
+                            <ul>
+                                <li>Recently published an article on "Scaling Engineering Teams Remotely".</li>
+                                <li>Volunteer mentor at "Women in Tech" organization.</li>
+                                <li>Mentioned "Clean Code" as her favorite book in a recent post.</li>
+                            </ul>
+                        </div>
+                      </div>
+                      <div class="contact-meta">
+                        <span class="badge recommended">★ Recommended</span>
+                      </div>
+                    </li>
+
+                    <li class="contact-item">
+                      <input type="radio" id="contact2" name="contact">
+                      <div class="contact-details">
+                        <h4>John Smith</h4>
+                        <p>Senior Engineering Manager at Innovate Inc.</p>
+                        
+                        <div class="linkedin-input-group">
+                            <input type="text" class="linkedin-input" placeholder="Paste LinkedIn URL...">
+                            <button class="btn-primary" style="padding: 8px 16px; font-size: 0.9rem;" onclick="analyzeLinkedIn(this)">Analyze Profile</button>
+                        </div>
+
+                        <div class="facts-list" id="facts2" style="display: none;">
+                            <!-- Populated after analysis -->
+                        </div>
+                      </div>
+                    </li>
+                </ul>
+
+                <div class="form-actions">
+                    <button class="btn-primary" onclick="window.location.href='offer-creation.html'">Confirm & Continue →</button>
+                </div>
+
+                <div class="variable-display" style="margin-top: 2rem;">
+                  <h4>Available Variables from this Step</h4>
+                  <code>{{contact.name}}</code>, <code>{{contact.title}}</code>, <code>{{contact.company}}</code>, <code>{{contact.linkedin_url}}</code>, <code>{{contact.facts[]}}</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  </div>
+<script>
+  function analyzeLinkedIn(btn) {
+    const input = btn.previousElementSibling;
+    if (!input.value) {
+        alert("Please enter a LinkedIn URL.");
+        return;
+    }
+    
+    const originalText = btn.textContent;
+    btn.textContent = "Analyzing...";
+    btn.disabled = true;
+
+    setTimeout(() => {
+        btn.textContent = originalText;
+        btn.disabled = false;
+        
+        // Find the facts list container relative to the button
+        const factsList = btn.parentElement.nextElementSibling;
+        if (factsList) {
+            factsList.style.display = 'block';
+            if (factsList.innerHTML.trim() === '') {
+                 factsList.innerHTML = `
+                    <h5>💡 Interesting Facts Found:</h5>
+                    <ul>
+                        <li>Active contributor to open-source React projects.</li>
+                        <li>Spoke at ReactConf 2024 about performance optimization.</li>
+                        <li>Recently celebrated 5 years at Innovate Inc.</li>
+                    </ul>
+                 `;
+            }
+        }
+        alert("LinkedIn profile analyzed! Interesting facts extracted.");
+    }, 1500);
+  }
+</script>
+</body>
+</html>

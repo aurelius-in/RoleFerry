@@ -248,6 +248,50 @@
     pointer-events: none;
   }
 
+  /* Tag Input Styles */
+  .tag-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 8px;
+    border: 2px solid #374151;
+    border-radius: 8px;
+    background: rgba(17, 24, 39, 0.8);
+    min-height: 48px;
+  }
+
+  .tag {
+    background: rgba(74, 144, 226, 0.2);
+    border: 1px solid rgba(74, 144, 226, 0.5);
+    color: #4A90E2;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.9rem;
+  }
+
+  .tag-close {
+    cursor: pointer;
+    font-weight: bold;
+    color: #ffffff;
+  }
+
+  .tag-input {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1rem;
+    flex: 1;
+    min-width: 150px;
+    padding: 4px;
+  }
+
+  .tag-input:focus {
+    outline: none;
+  }
+
   /* Responsive Design */
   @media (max-width: 768px) {
     .tab-container {
@@ -297,7 +341,7 @@
 
     <!-- Progress Indicator -->
     <div class="progress-indicator">
-      <div>Step 2 of 12</div>
+      <div>Step 1 of 13</div>
     </div>
 
     <!-- Header -->
@@ -334,6 +378,7 @@
             <select class="form-select" id="roleCategories" multiple>
               <option value="">Loading categories...</option>
             </select>
+            <input type="text" class="form-input" id="otherRoleCategory" placeholder="Other role category (optional)" style="margin-top: 0.5rem;">
           </div>
 
           <!-- Location Preferences -->
@@ -359,9 +404,12 @@
 
           <!-- Role Type -->
           <div class="form-group">
-            <label class="form-label" for="roleType">Role Type</label>
+            <label class="form-label" for="roleType">Role Type (Seniority)</label>
             <select class="form-select" id="roleType" multiple>
+              <option value="Entry Level">Entry Level</option>
               <option value="Individual Contributor">Individual Contributor</option>
+              <option value="Senior">Senior</option>
+              <option value="Principal / Staff / Tech Lead">Principal / Staff / Tech Lead</option>
               <option value="Manager">Manager</option>
               <option value="Director">Director</option>
               <option value="VP">VP</option>
@@ -377,24 +425,25 @@
               <option value="51-200 employees">51-200 employees</option>
               <option value="201-500 employees">201-500 employees</option>
               <option value="501-1000 employees">501-1000 employees</option>
-              <option value="1000+ employees">1000+ employees</option>
+              <option value="1000-5000 employees">1000-5000 employees</option>
+              <option value="5000+ employees">5000+ employees</option>
             </select>
           </div>
 
           <!-- Industries -->
           <div class="form-group">
             <label class="form-label" for="industries">Industries</label>
-            <select class="form-select" id="industries" multiple>
+            <select class="form-select" id="industries" multiple style="min-height: 200px;">
               <option value="">Loading industries...</option>
             </select>
           </div>
 
-          <!-- Skills -->
+          <!-- Skills (Tag Input) -->
           <div class="form-group">
-            <label class="form-label" for="skills">Skills</label>
-            <select class="form-select" id="skills" multiple>
-              <option value="">Loading skills...</option>
-            </select>
+            <label class="form-label" for="skillsInput">Skills (Type and press Enter)</label>
+            <div class="tag-container" id="skillsContainer">
+              <input type="text" class="tag-input" id="skillsInput" placeholder="Add a skill...">
+            </div>
           </div>
 
           <!-- Minimum Salary -->
@@ -431,24 +480,35 @@
 
   <script>
     let optionsLoaded = false;
+    let skills = [];
 
     // Load options from Mock Data
     async function loadOptions() {
       try {
-        // Simulate network delay slightly for realism, but always succeed
         await new Promise(resolve => setTimeout(resolve, 100)); 
 
-        // Mock Data for Options
         const mockOptions = {
             values: ["Innovation", "Growth", "Impact", "Mission-Driven", "Diversity", "Work-Life Balance", "Autonomy", "Collaboration", "Compensation", "Learning"],
-            roleCategories: ["Product Management", "Engineering", "Data Science", "Design", "Sales", "Marketing", "Customer Success"],
-            industries: ["Software & Technology", "AI & Machine Learning", "FinTech", "Healthcare", "E-commerce", "Enterprise Software", "Cybersecurity"],
-            skills: ["Python", "React", "AWS", "Machine Learning", "Docker", "Kubernetes", "PostgreSQL", "JavaScript", "TypeScript", "Node.js", "Java", "Go", "C++"]
+            roleCategories: [
+                "Technology & Engineering", "Data & Analytics", "AI / ML", "Product Management", 
+                "Program Management", "Project Management", "Marketing", "Sales / GTM", 
+                "RevOps", "Cybersecurity", "UI / UX & Design", "Finance / FP&A / Accounting", 
+                "Procurement & Logistics", "Recruiter / Talent Acquisition", "Career Coach"
+            ],
+            industries: [
+                "Software & Technology", "AI & Machine Learning", "FinTech", "Healthcare", "E-commerce", 
+                "Enterprise Software", "Cybersecurity", "Biotechnology", "Pharmaceuticals", "Medical Devices",
+                "Manufacturing", "Automotive", "Aerospace & Defense", "Energy & Utilities", "CleanTech",
+                "Retail & Consumer Goods", "Logistics & Supply Chain", "Transportation", "Real Estate", "Construction",
+                "Banking", "Insurance", "Investment Management", "Consulting", "Legal Services",
+                "Education & EdTech", "Media & Entertainment", "Gaming", "Telecommunications", "Travel & Hospitality",
+                "Food & Beverage", "Agriculture", "Non-Profit", "Government"
+            ]
         };
 
         // Populate values
         const valuesSelect = document.getElementById('values');
-        valuesSelect.innerHTML = '<option value="">Select work values...</option>';
+        valuesSelect.innerHTML = ''; // Clear loading message
         mockOptions.values.forEach(value => {
           const option = document.createElement('option');
           option.value = value;
@@ -458,7 +518,7 @@
 
         // Populate role categories
         const roleCategoriesSelect = document.getElementById('roleCategories');
-        roleCategoriesSelect.innerHTML = '<option value="">Select role categories...</option>';
+        roleCategoriesSelect.innerHTML = '';
         mockOptions.roleCategories.forEach(category => {
           const option = document.createElement('option');
           option.value = category;
@@ -468,7 +528,7 @@
 
         // Populate industries
         const industriesSelect = document.getElementById('industries');
-        industriesSelect.innerHTML = '<option value="">Select industries...</option>';
+        industriesSelect.innerHTML = '';
         mockOptions.industries.forEach(industry => {
           const option = document.createElement('option');
           option.value = industry;
@@ -476,22 +536,49 @@
           industriesSelect.appendChild(option);
         });
 
-        // Populate skills
-        const skillsSelect = document.getElementById('skills');
-        skillsSelect.innerHTML = '<option value="">Select skills...</option>';
-        mockOptions.skills.forEach(skill => {
-          const option = document.createElement('option');
-          option.value = skill;
-          option.textContent = skill;
-          skillsSelect.appendChild(option);
-        });
-
         optionsLoaded = true;
       } catch (error) {
         console.error('Error loading options:', error);
-        // Even on error, we don't show failure message in demo mode
-        // Just log it and maybe set default values if critical
       }
+    }
+
+    // Skill Tag Logic
+    const skillsInput = document.getElementById('skillsInput');
+    const skillsContainer = document.getElementById('skillsContainer');
+
+    skillsInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const skill = skillsInput.value.trim();
+            if (skill && !skills.includes(skill)) {
+                addSkill(skill);
+                skillsInput.value = '';
+            }
+        }
+    });
+
+    function addSkill(skill) {
+        skills.push(skill);
+        renderSkills();
+    }
+
+    function removeSkill(skill) {
+        skills = skills.filter(s => s !== skill);
+        renderSkills();
+    }
+
+    function renderSkills() {
+        // Clear current tags except input
+        const tags = skillsContainer.querySelectorAll('.tag');
+        tags.forEach(tag => tag.remove());
+
+        // Add tags before input
+        skills.forEach(skill => {
+            const tag = document.createElement('div');
+            tag.className = 'tag';
+            tag.innerHTML = `${skill} <span class="tag-close" onclick="removeSkill('${skill}')">&times;</span>`;
+            skillsContainer.insertBefore(tag, skillsInput);
+        });
     }
 
     function showError(message) {
@@ -518,39 +605,35 @@
       document.getElementById('preferencesForm').classList.add('loading');
 
       try {
-        // Collect form data matching API structure
         const preferences = {
           values: Array.from(document.getElementById('values').selectedOptions).map(opt => opt.value).filter(v => v),
           role_categories: Array.from(document.getElementById('roleCategories').selectedOptions).map(opt => opt.value).filter(v => v),
+          other_role_category: document.getElementById('otherRoleCategory').value || '',
           location_preferences: Array.from(document.getElementById('locationPreferences').selectedOptions).map(opt => opt.value).filter(v => v),
           work_type: Array.from(document.getElementById('workType').selectedOptions).map(opt => opt.value).filter(v => v),
           role_type: Array.from(document.getElementById('roleType').selectedOptions).map(opt => opt.value).filter(v => v),
           company_size: Array.from(document.getElementById('companySize').selectedOptions).map(opt => opt.value).filter(v => v),
           industries: Array.from(document.getElementById('industries').selectedOptions).map(opt => opt.value).filter(v => v),
-          skills: Array.from(document.getElementById('skills').selectedOptions).map(opt => opt.value).filter(v => v),
+          skills: skills,
           minimum_salary: document.getElementById('minimumSalary').value || '',
           job_search_status: document.getElementById('jobSearchStatus').value || '',
           state: document.getElementById('state').value || null,
           user_mode: 'job-seeker'
         };
 
-        // Save to backend
-        const response = await JobPreferencesAPI.save(preferences);
+        // Simulate save
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        if (response.success) {
-          // Also save to localStorage as backup
-          localStorage.setItem('roleferry_preferences', JSON.stringify(preferences));
-          showSuccess();
-          
-          // Update progress in main wireframes page
-          const completedSteps = JSON.parse(localStorage.getItem('roleferry-progress') || '[]');
-          if (!completedSteps.includes(2)) {
-            completedSteps.push(2);
-            localStorage.setItem('roleferry-progress', JSON.stringify(completedSteps));
-          }
-        } else {
-          throw new Error(response.message || 'Failed to save preferences');
+        localStorage.setItem('roleferry_preferences', JSON.stringify(preferences));
+        showSuccess();
+        
+        // Update progress
+        const completedSteps = JSON.parse(localStorage.getItem('roleferry-progress') || '[]');
+        if (!completedSteps.includes(1)) {
+          completedSteps.push(1);
+          localStorage.setItem('roleferry-progress', JSON.stringify(completedSteps));
         }
+        
       } catch (error) {
         console.error('Error saving preferences:', error);
         showError('Failed to save preferences: ' + error.message);
@@ -563,6 +646,8 @@
 
     function resetForm() {
       document.getElementById('preferencesForm').reset();
+      skills = [];
+      renderSkills();
       document.getElementById('successMessage').classList.remove('show');
       document.getElementById('errorMessage').classList.remove('show');
     }
@@ -570,13 +655,10 @@
     // Load saved data if exists
     async function loadSavedData() {
       try {
-        // Try to load from backend first (would need user_id in real app)
-        // For now, load from localStorage
         const savedData = localStorage.getItem('roleferry_preferences');
         if (savedData) {
           const data = JSON.parse(savedData);
           
-          // Populate form fields
           if (data.values) {
             data.values.forEach(value => {
               const option = Array.from(document.getElementById('values').options).find(opt => opt.value === value);
@@ -591,6 +673,10 @@
             });
           }
           
+          if (data.other_role_category) {
+            document.getElementById('otherRoleCategory').value = data.other_role_category;
+          }
+
           if (data.location_preferences) {
             data.location_preferences.forEach(loc => {
               const option = Array.from(document.getElementById('locationPreferences').options).find(opt => opt.value === loc);
@@ -627,10 +713,8 @@
           }
           
           if (data.skills) {
-            data.skills.forEach(skill => {
-              const option = Array.from(document.getElementById('skills').options).find(opt => opt.value === skill);
-              if (option) option.selected = true;
-            });
+            skills = data.skills;
+            renderSkills();
           }
           
           if (data.minimum_salary) {

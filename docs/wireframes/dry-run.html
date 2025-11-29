@@ -3,64 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sequence Dry Run - RoleFerry</title>
+    <title>Sequence QA Dry Run - RoleFerry</title>
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="responsive.css">
     <link rel="icon" href="../assets/roleferry_trans.png">
     <style>
-        body {
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-            color: #ffffff;
+        .tab-container {
             min-height: 100vh;
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-        .document-container { 
-            max-width: 900px; 
-            margin: 0 auto; 
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
             padding: 2rem;
         }
-        .document-header {
+        .tab-header {
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
         }
-        .document-header h1 {
+        .tab-title {
             font-size: 2.5rem;
             font-weight: 700;
             background: linear-gradient(45deg, #10b981, #2563eb);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
         }
-        .document-header p {
+        .tab-subtitle {
             color: #9ca3af;
             font-size: 1.1rem;
+            margin-bottom: 2rem;
+            text-align: center;
         }
         .thread-container {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
+            max-width: 900px; 
+            margin: 0 auto; 
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid #374151;
             border-radius: 12px;
             padding: 2rem;
-            color: #1f2937;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
         }
         .email-message {
             margin-bottom: 2rem;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #4b5563;
             padding-bottom: 2rem;
+            position: relative;
         }
         .email-message:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .email-header {
             margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
         }
-        .email-header .author { font-weight: bold; }
-        .email-header .date { color: #6b7280; font-size: 0.9rem; }
-        .email-body p { line-height: 1.6; }
+        .email-meta {
+            color: #d1d5db;
+        }
+        .email-meta .author { font-weight: bold; color: #ffffff; }
+        .email-meta .date { color: #9ca3af; font-size: 0.9rem; margin-top: 0.25rem; }
+        .email-body {
+            color: #d1d5db;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: 8px;
+        }
         .sequence-step {
-            color: #ef4444;
+            color: #8b5cf6;
             font-weight: bold;
             margin-bottom: 0.5rem;
             font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .edit-btn {
+            background: transparent;
+            border: 1px solid #4b5563;
+            color: #9ca3af;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .edit-btn:hover {
+            color: white;
+            border-color: #8b5cf6;
         }
         .back-button {
             position: fixed;
@@ -74,109 +99,206 @@
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
+            font-weight: 600;
+            z-index: 100;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 100;
         }
         .back-button:hover {
             background: rgba(74, 144, 226, 0.9);
         }
-        .back-button svg {
-            width: 24px;
-            height: 24px;
-            fill: currentColor;
-        }
-        .nav-button {
-            display: inline-block;
+        .next-button {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
             padding: 12px 24px;
+            background: linear-gradient(135deg, #4A90E2 0%, #87CEEB 100%);
+            color: #1a1a1a;
+            border: none;
             border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
+            cursor: pointer;
             transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: 700;
+            z-index: 100;
         }
-        .nav-button.secondary {
-            background: transparent;
-            color: #9ca3af;
-            border: 2px solid #374151;
+        .next-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.4);
         }
-        .nav-button.secondary:hover {
-            border-color: #6b7280;
-            color: #ffffff;
+        .progress-indicator {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 1rem;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            border: 2px solid rgba(74, 144, 226, 0.5);
+            z-index: 100;
         }
-
+        .action-bar {
+            margin-top: 3rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .btn-primary {
+            padding: 12px 32px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        /* Responsive Design */
         @media (max-width: 768px) {
-            .document-container { padding: 1rem; }
-            .back-button {
+            .tab-container { padding: 1rem; }
+            .back-button, .next-button {
                 position: relative;
                 top: auto;
                 left: auto;
+                right: auto;
                 margin-bottom: 1rem;
-                display: inline-flex;
+                display: inline-block;
+            }
+            .progress-indicator {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-bottom: 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="document-container">
+    <div class="tab-container">
         <a href="../wireframes.html" class="back-button" title="Back to Path">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; fill: white;">
                 <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
             </svg>
         </a>
+        <a href="deliverability-launch.html" class="next-button">Launch Campaign →</a>
 
-        <div class="document-header">
-            <h1>Sequence QA Dry Run</h1>
-            <p>This is how your full email sequence will appear in the recipient's inbox.</p>
+        <div class="progress-indicator">
+            <div>Step 10 of 13</div>
+        </div>
+
+        <div class="tab-header">
+            <h1 class="tab-title">Sequence QA Dry Run</h1>
+            <p class="tab-subtitle">Preview your full email sequence exactly as the recipient will see it.</p>
         </div>
 
         <div class="thread-container">
+            <!-- Step 1 -->
             <div class="email-message">
                 <div class="sequence-step">Step 1: Initial Outreach</div>
                 <div class="email-header">
-                    <span class="author">Oliver</span> to <span class="author">Jane Doe</span>
-                    <div class="date">Monday, Nov 3, 2025, 9:05 AM</div>
+                    <div class="email-meta">
+                        <span class="author">You</span> to <span class="author">Jane Doe</span>
+                        <div class="date">Monday, Nov 3, 2025, 9:05 AM</div>
+                    </div>
+                    <button class="edit-btn" onclick="editEmail(this)">✏️ Edit</button>
                 </div>
-                <div class="email-body">
-                    <p>Hi Jane,</p>
-                    <p>I was excited to see the Senior Software Engineer role at TechCorp, as my experience in scaling microservices on AWS has led to a 99.9% uptime and 20% cost reduction in previous roles. I noticed your team is focused on improving data processing efficiency, and I believe my background is a strong match for this challenge.</p>
-                    <p>Would you be open to a brief chat next week?</p>
-                    <p>Best,<br>Oliver</p>
-                </div>
+                <div class="email-body">Subject: Strategic discussion: Senior Software Engineer at TechCorp
+
+Hi Jane,
+
+I've been following TechCorp's recent work on AI-driven analytics and noticed you are tackling data processing efficiency.
+
+Based on my experience delivering 99.9% uptime and 20% cost reduction at CloudSystems, I believe I can help you achieve similar scalability.
+
+I noticed on your LinkedIn that you recently spoke about remote team scaling. I'd love to connect and discuss how my background aligns with your team's goals.
+
+Best,
+[Your Name]</div>
             </div>
 
+            <!-- Step 2 -->
             <div class="email-message">
-                <div class="sequence-step">Step 2: Polite Nudge (3 days later)</div>
+                <div class="sequence-step">Step 2: Polite Nudge (+3 Days)</div>
                 <div class="email-header">
-                    <span class="author">Oliver</span> to <span class="author">Jane Doe</span>
-                    <div class="date">Thursday, Nov 6, 2025, 10:15 AM</div>
+                    <div class="email-meta">
+                        <span class="author">You</span> to <span class="author">Jane Doe</span>
+                        <div class="date">Thursday, Nov 6, 2025, 9:15 AM</div>
+                    </div>
+                    <button class="edit-btn" onclick="editEmail(this)">✏️ Edit</button>
                 </div>
-                <div class="email-body">
-                    <p>Hi Jane,</p>
-                    <p>Just wanted to quickly follow up on my previous email. My experience in cloud cost optimization could be a valuable asset to your team as you scale.</p>
-                    <p>Let me know if you have a few minutes to connect this week.</p>
-                    <p>Best,<br>Oliver</p>
-                </div>
+                <div class="email-body">Subject: Re: Strategic discussion: Senior Software Engineer at TechCorp
+
+Hi Jane,
+
+Just bubbling this up in case it got buried. I'm still very interested in discussing how I can help with your backend scalability challenges.
+
+Best,
+[Your Name]</div>
             </div>
 
+            <!-- Step 3 -->
             <div class="email-message">
-                <div class="sequence-step">Step 3: Value Add (7 days later)</div>
+                <div class="sequence-step">Step 3: Value Add (+4 Days)</div>
                 <div class="email-header">
-                    <span class="author">Oliver</span> to <span class="author">Jane Doe</span>
-                    <div class="date">Monday, Nov 10, 2025, 9:30 AM</div>
+                    <div class="email-meta">
+                        <span class="author">You</span> to <span class="author">Jane Doe</span>
+                        <div class="date">Monday, Nov 10, 2025, 10:00 AM</div>
+                    </div>
+                    <button class="edit-btn" onclick="editEmail(this)">✏️ Edit</button>
                 </div>
-                <div class="email-body">
-                    <p>Hi Jane,</p>
-                    <p>In case you're interested, here is a brief case study on how I helped a previous company reduce their AWS costs by 20% while improving performance: [link to case study]</p>
-                    <p>I'm confident I can bring similar results to TechCorp.</p>
-                    <p>Best,<br>Oliver</p>
+                <div class="email-body">Subject: Relevant case study for TechCorp
+
+Hi Jane,
+
+I thought you might find this case study relevant given TechCorp's recent Series B funding. It details how I solved a similar infrastructure bottleneck at my previous role: [Link to Case Study]
+
+I'm confident I can bring similar results to your engineering team.
+
+Best,
+[Your Name]</div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="email-message">
+                <div class="sequence-step">Step 4: Final Attempt (+5 Days)</div>
+                <div class="email-header">
+                    <div class="email-meta">
+                        <span class="author">You</span> to <span class="author">Jane Doe</span>
+                        <div class="date">Saturday, Nov 15, 2025, 9:00 AM</div>
+                    </div>
+                    <button class="edit-btn" onclick="editEmail(this)">✏️ Edit</button>
                 </div>
+                <div class="email-body">Subject: Final check-in
+
+Hi Jane,
+
+I'll assume now isn't the right time. If priorities change regarding backend scalability, feel free to reach out.
+
+Best,
+[Your Name]</div>
             </div>
         </div>
 
-        <div class="navigation" style="margin-top: 2rem;">
-            <a href="campaign.html" class="nav-button secondary">← Back to Composer</a>
+        <div class="action-bar">
+            <a href="campaign.html" style="color: #9ca3af; text-decoration: none; padding: 12px;">← Back to Sequence</a>
+            <a href="deliverability-launch.html" class="btn-primary">Ready to Launch →</a>
         </div>
     </div>
+
+    <script>
+        function editEmail(btn) {
+            const body = btn.parentElement.nextElementSibling;
+            const currentText = body.innerText;
+            // Simple prompt for editing - could be replaced with inline editable
+            const newText = prompt("Edit Email Body:", currentText);
+            if (newText !== null) {
+                body.innerText = newText;
+            }
+        }
+    </script>
 </body>
 </html>

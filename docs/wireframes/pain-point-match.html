@@ -48,46 +48,46 @@
       margin-bottom: 1.5rem;
       text-align: center;
   }
-  .pain-point {
-    background: rgba(239, 68, 68, 0.1);
-    border-left: 4px solid #ef4444;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-radius: 0 8px 8px 0;
-  }
-  .pain-point h4 {
-    color: #ef4444;
-    margin: 0 0 0.5rem 0;
-  }
-  .pain-point p {
-    color: #d1d5db;
-    margin: 0;
-  }
-  .research-card {
-    background: rgba(17, 24, 39, 0.8);
-    border: 1px solid #374151;
-    border-radius: 12px;
-    padding: 1.5rem;
+  .match-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
     margin-bottom: 2rem;
+    align-items: start;
   }
-  .research-card h3 {
-    color: #ffffff;
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    border-bottom: 2px solid #2563eb;
-    padding-bottom: 0.5rem;
+  .match-card {
+      background: rgba(17, 24, 39, 0.9);
+      border: 1px solid #4b5563;
+      border-radius: 12px;
+      padding: 1.5rem;
+      height: 100%;
   }
-  .research-card textarea {
-    width: 100%;
-    min-height: 120px;
-    padding: 12px 16px;
-    border: 2px solid #374151;
-    border-radius: 8px;
-    background: rgba(17, 24, 39, 0.8);
-    color: #ffffff;
-    font-size: 1rem;
-    resize: vertical;
+  .match-card h4 {
+      color: #ef4444;
+      font-size: 1.1rem;
+      margin: 0 0 1rem 0;
+      border-bottom: 2px solid #ef4444;
+      padding-bottom: 0.5rem;
+  }
+  .match-card.solution h4 {
+      color: #10b981;
+      border-color: #10b981;
+  }
+  .match-card p {
+      color: #d1d5db;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+  }
+  .match-card textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 12px 16px;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      background: rgba(10, 10, 10, 0.8);
+      color: #ffffff;
+      font-size: 0.95rem;
+      resize: vertical;
   }
   .variable-display {
     background: rgba(37, 99, 235, 0.1);
@@ -106,37 +106,6 @@
     padding: 2px 6px;
     border-radius: 4px;
     color: #10b981;
-  }
-  .match-card {
-      background: rgba(17, 24, 39, 0.9);
-      border: 1px solid #4b5563;
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-  }
-  .match-card h4 {
-      color: #ef4444;
-      font-size: 1.1rem;
-      margin: 0 0 1rem 0;
-  }
-  .match-card .solution-group {
-      margin-top: 1rem;
-  }
-  .match-card label {
-      display: block;
-      color: #10b981;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-  }
-  .match-card textarea {
-      width: 100%;
-      min-height: 80px;
-      padding: 12px 16px;
-      border: 1px solid #374151;
-      border-radius: 8px;
-      background: rgba(10, 10, 10, 0.8);
-      color: #ffffff;
-      font-size: 0.95rem;
   }
   .back-button {
     position: fixed;
@@ -195,11 +164,9 @@
     .tab-container {
       padding: 1rem;
     }
-    .tab-title {
-      font-size: 2rem;
-    }
-    .form-container {
-      padding: 1.5rem;
+    .match-row {
+      grid-template-columns: 1fr;
+      gap: 1rem;
     }
     .back-button, .next-button {
       position: relative;
@@ -226,11 +193,11 @@
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
       </svg>
     </a>
-    <a href="context-research.html" class="next-button">Context Research →</a>
+    <a href="company-research.html" class="next-button">Company Research →</a>
 
     <!-- Progress Indicator -->
     <div class="progress-indicator">
-      <div>Step 5 of 12</div>
+      <div>Step 5 of 13</div>
     </div>
 
     <!-- Header -->
@@ -240,76 +207,71 @@
     </div>
 
     <div class="form-container">
-      <!-- AI Analysis of Pain Points -->
-      <div class="pain-point-summary">
-        <h3>AI Analysis of Job Description</h3>
-        <div class="pain-point">
-          <h4>Scaling Infrastructure</h4>
-          <p>Need to scale backend infrastructure to handle 10x traffic growth.</p>
+      
+      <!-- Fit Score -->
+      <div style="background: rgba(31, 41, 55, 0.8); border: 1px solid #10b981; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; text-align: center;">
+        <h3 style="color: #10b981; font-size: 1.5rem; margin: 0 0 1rem 0;">Fit Score: 88%</h3>
+        <p style="color: #d1d5db; max-width: 800px; margin: 0 auto;">Strong match based on your extensive experience with microservices and AWS, directly addressing their primary challenge of scaling infrastructure.</p>
+      </div>
+
+      <!-- Match Pair 1 -->
+      <div class="match-row">
+        <!-- Challenge Side -->
+        <div class="match-card">
+          <h4>Challenge 1 (From JD)</h4>
+          <p><strong>Requirement:</strong> "Experience scaling backend infrastructure to handle high traffic loads."</p>
+          <div class="variable-display">
+            <h4>Variable:</h4>
+            <code>pp_match.pairs[0].jd_snippet</code>
+          </div>
         </div>
-        <div class="pain-point">
-          <h4>Data Processing</h4>
-          <p>Improving data processing efficiency for real-time analytics.</p>
-        </div>
-        <div class="pain-point">
-          <h4>API Development</h4>
-          <p>Building robust and secure APIs for external partners.</p>
+        
+        <!-- Solution Side -->
+        <div class="match-card solution">
+          <h4>Your Solution (From Resume)</h4>
+          <label style="color: #10b981; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Relevant Experience:</label>
+          <textarea>My experience scaling microservices on AWS, handling peak loads with auto-scaling groups and load balancers.</textarea>
+          
+          <label style="color: #10b981; font-size: 0.9rem; display: block; margin-top: 1rem; margin-bottom: 0.5rem;">Key Metric:</label>
+          <textarea>Achieved 99.9% uptime and 20% cost reduction through optimized infrastructure.</textarea>
+          
+          <div class="variable-display">
+            <h4>Variables:</h4>
+            <code>pp_match.pairs[0].resume_snippet</code>
+          </div>
         </div>
       </div>
 
-      <!-- Fit Score v1.1 -->
-      <div class="research-card" style="border-color: #10b981;">
-        <h3 style="color: #10b981; font-size: 1.5rem; text-align: center; border: none; padding: 0;">Fit Score: 88%</h3>
-        <p style="text-align: center; color: #d1d5db; margin-top: 1rem;"><strong>Why:</strong> Strong match based on your extensive experience with microservices and AWS, directly addressing their primary challenge of scaling infrastructure. Minor gap in direct experience with their specific data processing tools, but your core skills are highly transferable.</p>
-        <div class="variable-display" style="margin-top: 1.5rem; border-color: #10b981;">
-          <h4 style="color: #10b981;">Top 3 Contributing Variables:</h4>
-          <code>{{solution_1}}</code>, <code>{{metric_1}}</code>, <code>{{resume_keyword_match}}</code>
+      <!-- Match Pair 2 -->
+      <div class="match-row">
+        <!-- Challenge Side -->
+        <div class="match-card">
+          <h4>Challenge 2 (From JD)</h4>
+          <p><strong>Requirement:</strong> "Ability to improve data processing efficiency for real-time analytics."</p>
+          <div class="variable-display">
+            <h4>Variable:</h4>
+            <code>pp_match.pairs[1].jd_snippet</code>
+          </div>
+        </div>
+        
+        <!-- Solution Side -->
+        <div class="match-card solution">
+          <h4>Your Solution (From Resume)</h4>
+          <label style="color: #10b981; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Relevant Experience:</label>
+          <textarea>Implemented real-time data pipelines using Kafka and Apache Flink to process 1M+ events per second.</textarea>
+          
+          <label style="color: #10b981; font-size: 0.9rem; display: block; margin-top: 1rem; margin-bottom: 0.5rem;">Key Metric:</label>
+          <textarea>Reduced data latency by 40% and improved analytics dashboard load times by 2x.</textarea>
+          
+          <div class="variable-display">
+            <h4>Variables:</h4>
+            <code>pp_match.pairs[1].resume_snippet</code>
+          </div>
         </div>
       </div>
 
-      <!-- Company Summary (from Context Research) -->
-      <div class="research-card">
-        <h3>Company Summary</h3>
-        <textarea id="companySummary">TechCorp is a leading technology company specializing in AI-driven solutions for enterprise clients. Founded in 2026, they have grown rapidly to become a key player in the SaaS market, known for their innovative approach to data analytics and cloud computing.</textarea>
-        <div class="variable-display">
-          <h4>Email Variable:</h4>
-          <code>{{company_summary}}</code>
-        </div>
-      </div>
-
-      <!-- Match Cards -->
-      <div class="match-card">
-        <h4>Challenge 1: Scaling Infrastructure</h4>
-        <p><strong>Company Pain Point:</strong> Need to scale backend infrastructure to handle 10x traffic growth.</p>
-        <div class="solution-group">
-          <label for="solution1">Your Solution</label>
-          <textarea id="solution1" placeholder="How have you solved this before?">My experience scaling microservices on AWS, handling peak loads with auto-scaling groups and load balancers.</textarea>
-        </div>
-        <div class="solution-group" style="margin-top: 1rem;">
-          <label for="metric1">Key Metric</label>
-          <textarea id="metric1" placeholder="What was the measurable result?">Achieved 99.9% uptime and 20% cost reduction through optimized infrastructure.</textarea>
-        </div>
-        <div class="variable-display" style="margin-top: 1rem;">
-          <h4 style="font-size: 0.9rem;">Available Variables:</h4>
-          <code>{{pain_point_1}}</code>, <code>{{solution_1}}</code>, <code>{{metric_1}}</code>
-        </div>
-      </div>
-
-      <div class="match-card">
-        <h4>Challenge 2: Data Processing</h4>
-        <p><strong>Company Pain Point:</strong> Improving data processing efficiency for real-time analytics.</p>
-        <div class="solution-group">
-          <label for="solution2">Your Solution</label>
-          <textarea id="solution2" placeholder="How have you solved this before?"></textarea>
-        </div>
-        <div class="solution-group" style="margin-top: 1rem;">
-          <label for="metric2">Key Metric</label>
-          <textarea id="metric2" placeholder="What was the measurable result?"></textarea>
-        </div>
-        <div class="variable-display" style="margin-top: 1rem;">
-          <h4 style="font-size: 0.9rem;">Available Variables:</h4>
-          <code>{{pain_point_2}}</code>, <code>{{solution_2}}</code>, <code>{{metric_2}}</code>
-        </div>
+      <div style="text-align: right; margin-top: 2rem;">
+        <button onclick="window.location.href='company-research.html'" style="padding: 12px 32px; background: linear-gradient(135deg, #10b981 0%, #2563eb 100%); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">Save & Continue →</button>
       </div>
 
     </div>
