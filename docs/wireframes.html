@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>RoleFerry - The 13-Step Path to Your Next Role</title>
+<title>RoleFerry - The 12-Step Path to Your Next Role</title>
 <link rel="stylesheet" href="styles.css" />
 <link rel="icon" href="assets/roleferry_trans.png" />
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
@@ -77,7 +77,7 @@
   .path-container {
     position: relative;
     width: 900px;
-    height: 800px;
+    height: 700px;
     border-radius: 20px;
     padding: 2rem;
     z-index: 1;
@@ -147,7 +147,7 @@
     flex-shrink: 0;
   }
 
-  /* 13-Step S-Curve Positioning */
+  /* 12-Step S-Curve Positioning */
   /* Row 1: Left -> Right (1-4) */
   .stone[data-step="1"] { top: 40px; left: 20px; }
   .stone[data-step="2"] { top: 40px; left: 210px; }
@@ -166,25 +166,10 @@
   .stone[data-step="11"] { top: 320px; left: 400px; }
   .stone[data-step="12"] { top: 320px; left: 590px; }
 
-  /* Row 4: Right -> Left (13) */
-  .stone[data-step="13"] { top: 480px; left: 590px; }
-
-
-  /* Launch Campaign stone (Step 11) with reversed colors */
-  .stone[data-step="11"] .stone-image {
-    filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(1.2);
-  }
-
-  .stone[data-step="11"] .stone-label-text {
-    color: #ffffff;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
-    font-weight: 800;
-  }
-
-  .stone[data-step="11"]:hover .stone-image {
-    filter: invert(1) hue-rotate(180deg) brightness(1.0) contrast(1.3);
-  }
-
+  /* Launch Campaign stone (Step 11 is not launch anymore, 11 is Deliverability Launch, 12 is Analytics) */
+  /* Actually Step 11 is Launch, Step 12 is Analytics per plan. */
+  /* Let's check logic: 11 is Launch, 12 is Analytics. */
+  
   .progress-indicator {
     position: fixed;
     top: 2rem;
@@ -231,7 +216,7 @@
     position: relative;
     font-weight: 600;
     z-index: 100;
-    display: none; /* Hidden by default until verified */
+    display: block;
   }
 
   .feedback-banner a {
@@ -326,7 +311,7 @@
     .path-container {
       width: 100%;
       max-width: 600px;
-      height: 900px;
+      height: 700px;
     }
 
     .stone {
@@ -349,7 +334,7 @@
 </style>
 </head>
 <body>
-  <div class="feedback-banner" id="feedbackBanner" style="display: block;">
+  <div class="feedback-banner" id="feedbackBanner">
     <span>It's Friday! Time for your weekly feedback.</span>
     <a href="wireframes/feedback.html">Give Feedback</a>
     <button class="close-btn" onclick="document.getElementById('feedbackBanner').style.display='none'">&times;</button>
@@ -361,15 +346,15 @@
         <img src="wordmark.png" alt="RoleFerry" class="wordmark-logo">
         <img src="ani-sm.gif" alt="RoleFerry Animation" class="animated-logo">
       </div>
-      <h1 class="keypad-title">The 13-Step Path to Your Next Role</h1>
+      <h1 class="keypad-title">The 12-Step Path to Your Next Role</h1>
       <p class="keypad-subtitle">Transform your job search with intelligent automation</p>
     </div>
     <div class="progress-indicator">
-      <div>Progress: <span id="progressText">0/13</span></div>
+      <div>Progress: <span id="progressText">0/12</span></div>
     </div>
 
     <div class="path-container" id="pathContainer">
-      <!-- 13 Steps -->
+      <!-- 12 Steps -->
       <div class="stone" data-tab="job-preferences" data-step="1" title="Define ideal role criteria">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
@@ -454,13 +439,6 @@
           <div class="stone-label-text">Analytics</div>
         </div>
       </div>
-      <div class="stone" data-tab="feedback" data-step="13" title="Provide feedback">
-        <img src="assets/stones.png" alt="Stone" class="stone-image">
-        <div class="stone-content">
-          <div class="icon">💬</div>
-          <div class="stone-label-text">Feedback</div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -488,7 +466,7 @@
 
   function updateProgress() {
     const progressText = document.getElementById('progressText');
-    progressText.textContent = `${completedSteps.size}/13`;
+    progressText.textContent = `${completedSteps.size}/12`;
   }
 
   function getStepPosition(stepElement) {
@@ -570,8 +548,7 @@
       'campaign': 'wireframes/campaign.html',
       'dry-run': 'wireframes/dry-run.html',
       'deliverability-launch': 'wireframes/deliverability-launch.html',
-      'analytics': 'wireframes/analytics.html',
-      'feedback': 'wireframes/feedback.html'
+      'analytics': 'wireframes/analytics.html'
     };
     
     if (tabMap[tab]) {
