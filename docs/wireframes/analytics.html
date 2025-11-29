@@ -108,6 +108,58 @@
         .campaign-table tr:hover { background: rgba(31, 41, 55, 0.7); }
         .campaign-table td:first-child { font-weight: 500; color: #ffffff; }
 
+        .deliverability-section {
+            background: rgba(31, 41, 55, 0.6);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid #374151;
+            margin-bottom: 3rem;
+        }
+        .warmup-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        .warmup-stats {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1rem;
+        }
+        .warmup-stat h4 {
+            color: #9ca3af;
+            font-size: 0.9rem;
+            margin: 0 0 0.5rem 0;
+        }
+        .warmup-stat p {
+            color: #ffffff;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .warmup-chart-container {
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            gap: 1rem;
+            padding-top: 1rem;
+        }
+        .warmup-bar {
+            flex: 1;
+            background: #10b981;
+            border-radius: 4px 4px 0 0;
+            transition: height 0.3s;
+            position: relative;
+        }
+        .warmup-bar:hover::after {
+            content: attr(data-value);
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 0.8rem;
+        }
+
         .back-button {
             position: fixed;
             top: 2rem;
@@ -177,7 +229,7 @@
                 right: auto;
                 margin-bottom: 1rem;
             }
-            .metric-grid { grid-template-columns: 1fr 1fr; }
+            .metric-grid, .warmup-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -200,104 +252,137 @@
         </div>
 
         <div class="analytics-container">
-            <!-- Top-level Stats -->
+            <!-- Top-level Stats (Instantly Style) -->
             <div class="metric-grid">
                 <div class="metric-card">
                     <div class="metric-label">Total Sent</div>
-                    <div class="metric-value">42</div>
+                    <div class="metric-value">51.9K</div>
                     <div class="metric-sub trend-up">▲ 12 this week</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-label">Open Rate</div>
-                    <div class="metric-value">68%</div>
+                    <div class="metric-value">25.62%</div>
                     <div class="metric-sub trend-up">▲ 5% vs avg</div>
                 </div>
                 <div class="metric-card">
+                    <div class="metric-label">Click Rate</div>
+                    <div class="metric-value">1.49%</div>
+                    <div class="metric-sub trend-up">▲ 0.2% vs avg</div>
+                </div>
+                <div class="metric-card">
                     <div class="metric-label">Reply Rate</div>
-                    <div class="metric-value">14%</div>
+                    <div class="metric-value">0.7%</div>
                     <div class="metric-sub trend-up">▲ 2% vs avg</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Positive Reply Rate</div>
-                    <div class="metric-value">4.5%</div>
-                    <div class="metric-sub trend-up">2 meetings booked</div>
+                    <div class="metric-label">Opportunities</div>
+                    <div class="metric-value">43 <span style="font-size: 1rem; color: #10b981; vertical-align: middle;">| $17,000</span></div>
+                    <div class="metric-sub trend-up">Pipeline Value</div>
                 </div>
             </div>
 
-            <!-- Campaign Performance Table -->
+            <!-- Step Analytics Breakdown (Table Style) -->
             <div class="section-header">
-                <h2>Campaign Performance</h2>
-                <button style="background: transparent; border: 1px solid #4b5563; color: #9ca3af; padding: 6px 12px; border-radius: 6px; cursor: pointer;">Export CSV</button>
+                <h2>Step Analytics</h2>
             </div>
             
-            <div style="overflow-x: auto;">
+            <div style="overflow-x: auto; margin-bottom: 3rem;">
                 <table class="campaign-table">
                     <thead>
                         <tr>
-                            <th>Campaign Name</th>
+                            <th>Step</th>
                             <th>Sent</th>
-                            <th>Opens</th>
-                            <th>Replies</th>
-                            <th>Positive</th>
-                            <th>Status</th>
+                            <th>Opened</th>
+                            <th>Replied</th>
+                            <th>Clicked</th>
+                            <th>Opportunities</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Senior Software Engineer - TechCorp</td>
-                            <td>8</td>
-                            <td>6 (75%)</td>
-                            <td>2 (25%)</td>
-                            <td>1 (12.5%)</td>
-                            <td><span style="color: #10b981;">Active</span></td>
+                            <td>Step 1: Initial Outreach</td>
+                            <td>1,970</td>
+                            <td>0 | 0%</td>
+                            <td>0 | 0%</td>
+                            <td>8 | 0.41%</td>
+                            <td>0</td>
                         </tr>
                         <tr>
-                            <td>Product Manager - Fintech Roles</td>
-                            <td>24</td>
-                            <td>15 (62%)</td>
-                            <td>3 (12.5%)</td>
-                            <td>1 (4.1%)</td>
-                            <td><span style="color: #10b981;">Active</span></td>
+                            <td>Step 2: Polite Nudge</td>
+                            <td>1,955</td>
+                            <td>0 | 0%</td>
+                            <td>5 | 0.26%</td>
+                            <td>6 | 0.31%</td>
+                            <td>1</td>
                         </tr>
                         <tr>
-                            <td>Startup Outreach - Austin</td>
-                            <td>10</td>
-                            <td>8 (80%)</td>
-                            <td>1 (10%)</td>
-                            <td>0 (0%)</td>
-                            <td><span style="color: #f59e0b;">Paused</span></td>
+                            <td>Step 3: Value Add</td>
+                            <td>1,200</td>
+                            <td>800 | 66%</td>
+                            <td>45 | 3.7%</td>
+                            <td>20 | 1.6%</td>
+                            <td>2</td>
+                        </tr>
+                        <tr>
+                            <td>Step 4: Final Attempt</td>
+                            <td>1,155</td>
+                            <td>600 | 52%</td>
+                            <td>12 | 1%</td>
+                            <td>5 | 0.4%</td>
+                            <td>0</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <!-- Step Analytics -->
+            <!-- Deliverability / Warmup Section -->
             <div class="section-header">
-                <h2>Step Analytics Breakdown</h2>
+                <h2>Deliverability & Warmup</h2>
             </div>
             
-            <div class="metric-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 0;">
-                <div class="metric-card">
-                    <div class="metric-label">Step 1: Intro</div>
-                    <div class="metric-value" style="font-size: 1.5rem;">70% Open</div>
-                    <div class="metric-sub">5% Reply</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Step 2: Nudge</div>
-                    <div class="metric-value" style="font-size: 1.5rem;">65% Open</div>
-                    <div class="metric-sub">8% Reply</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Step 3: Value</div>
-                    <div class="metric-value" style="font-size: 1.5rem;">60% Open</div>
-                    <div class="metric-sub">3% Reply</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Step 4: Final</div>
-                    <div class="metric-value" style="font-size: 1.5rem;">55% Open</div>
-                    <div class="metric-sub">1% Reply</div>
+            <div class="deliverability-section">
+                <div class="warmup-grid">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div style="width: 40px; height: 40px; background: #a78bfa; border-radius: 50%; display: flex; align-items: center; justify-content: center;">📧</div>
+                            <div>
+                                <h3 style="margin: 0; color: white;">astaples@truestgridsolar.info</h3>
+                                <span style="color: #10b981; font-size: 0.8rem;">● Active</span>
+                            </div>
+                        </div>
+                        <div class="warmup-stats">
+                            <div class="warmup-stat">
+                                <h4>Warmup Emails Sent</h4>
+                                <p>105</p>
+                            </div>
+                            <div class="warmup-stat">
+                                <h4>Warmup Emails Received</h4>
+                                <p>179</p>
+                            </div>
+                            <div class="warmup-stat">
+                                <h4>Saved from Spam</h4>
+                                <p>0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="color: #9ca3af; margin-bottom: 1rem;">Warmup Emails Sent (Last 7 Days)</h4>
+                        <div class="warmup-chart-container">
+                            <div class="warmup-bar" style="height: 100%" data-value="15"></div>
+                            <div class="warmup-bar" style="height: 100%" data-value="15"></div>
+                            <div class="warmup-bar" style="height: 100%" data-value="15"></div>
+                            <div class="warmup-bar" style="height: 100%" data-value="15"></div>
+                            <div class="warmup-bar" style="height: 100%" data-value="15"></div>
+                            <div class="warmup-bar" style="height: 100%" data-value="15"></div>
+                            <div class="warmup-bar" style="height: 100%" data-value="15"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; color: #9ca3af; font-size: 0.7rem; margin-top: 0.5rem;">
+                            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                        </div>
+                    </div>
                 </div>
             </div>
+
         </div>
     </div>
 </body>
