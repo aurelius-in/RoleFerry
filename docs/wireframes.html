@@ -239,18 +239,17 @@
     font-weight: bold;
   }
 
-  /* Footsteps Animation */
-  .footstep {
+  /* Footstep GIF overlay on stones */
+  .footstep-gif {
     position: absolute;
-    width: 45px;
-    height: 90px;
-    background: #1a1a1a;
-    border-radius: 60% 60% 50% 50%;
-    opacity: 0;
-    transform-origin: 50% 80%;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
-    z-index: 3;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 0.5;
     pointer-events: none;
+    z-index: 4;
   }
 
   .footstep::before {
@@ -445,7 +444,9 @@
 <script>
   let completedSteps = new Set();
   let lastClickedStep = null;
-  let footsteps = [];
+  const LEFT_FOOT_SRC = 'wireframes/assets/left-foot.gif';
+  const RIGHT_FOOT_SRC = 'wireframes/assets/right-foot.gif';
+  let isAnimatingPath = false;
 
   // Initialize from localStorage
   function loadProgress() {
@@ -469,65 +470,61 @@
     progressText.textContent = `${completedSteps.size}/12`;
   }
 
-  function getStepPosition(stepElement) {
-    const container = document.getElementById('pathContainer');
-    const containerRect = container.getBoundingClientRect();
-    const stepRect = stepElement.getBoundingClientRect();
-    return {
-      x: stepRect.left - containerRect.left + stepRect.width / 2,
-      y: stepRect.top - containerRect.top + stepRect.height / 2
-    };
+  function addFootstepOverlay(stepElement, stepNumber) {
+    if (!stepElement || stepElement.querySelector('.footstep-gif')) return;
+
+    const isOdd = stepNumber % 2 === 1;
+    const img = document.createElement('img');
+    img.src = isOdd ? LEFT_FOOT_SRC : RIGHT_FOOT_SRC;
+    img.alt = isOdd ? 'Left footstep' : 'Right footstep';
+    img.className = 'footstep-gif';
+
+    // Base scale so the overlay fits nicely inside the stone
+    const baseScale = 'scale(0.9)';
+
+    // Flip horizontally for the second row (steps 5–8) since the path snakes back
+    if (stepNumber >= 5 && stepNumber <= 8) {
+      img.style.transform = `${baseScale} scaleX(-1)`;
+    } else {
+      img.style.transform = baseScale;
+    }
+
+    stepElement.appendChild(img);
   }
 
-  function createFootsteps(fromStep, toStep) {
-    // Clear existing footsteps with fade out
-    footsteps.forEach(foot => {
-      foot.classList.add('fade-out');
-      setTimeout(() => foot.remove(), 1000);
-    });
-    footsteps = [];
+  function playFootstepSequence(targetStep, onComplete) {
+    isAnimatingPath = true;
 
-    const fromPos = getStepPosition(fromStep);
-    const toPos = getStepPosition(toStep);
-    
-    const dx = toPos.x - fromPos.x;
-    const dy = toPos.y - fromPos.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-    
-    // Create footsteps along the path
-    const numSteps = Math.max(3, Math.floor(distance / 60));
-    
-    for (let i = 0; i < numSteps; i++) {
-      const t = (i + 1) / (numSteps + 1);
-      const x = fromPos.x + dx * t;
-      const y = fromPos.y + dy * t;
-      
-      const footstep = document.createElement('div');
-      footstep.className = `footstep ${i % 2 === 0 ? 'left' : 'right'}`;
-      footstep.style.left = `${x}px`;
-      footstep.style.top = `${y}px`;
-      footstep.style.setProperty('--rot', `${angle}deg`);
-      
-      const container = document.getElementById('pathContainer');
-      container.appendChild(footstep);
-      footsteps.push(footstep);
-      
-      // Animate in with delay
-      setTimeout(() => {
-        footstep.classList.add('visible');
-      }, i * 150);
+    const steps = [];
+    for (let i = 1; i <= targetStep; i++) {
+      const stone = document.querySelector(`.stone[data-step="${i}"]`);
+      if (stone) {
+        steps.push({ element: stone, stepNumber: i });
+      }
     }
+
+    steps.forEach((item, index) => {
+      setTimeout(() => {
+        addFootstepOverlay(item.element, item.stepNumber);
+
+        // When the final step's overlay has started, wait a bit then navigate
+        if (index === steps.length - 1) {
+          setTimeout(() => {
+            isAnimatingPath = false;
+            if (typeof onComplete === 'function') {
+              onComplete();
+            }
+          }, 300);
+        }
+      }, index * 500);
+    });
   }
 
   function handleStepClick(stepElement) {
+    if (isAnimatingPath) return;
+
     const step = parseInt(stepElement.getAttribute('data-step'));
     const tab = stepElement.getAttribute('data-tab');
-    
-    // Create footsteps if there's a previous step
-    if (lastClickedStep && lastClickedStep !== stepElement) {
-      createFootsteps(lastClickedStep, stepElement);
-    }
     
     lastClickedStep = stepElement;
     completedSteps.add(step);
@@ -552,10 +549,9 @@
     };
     
     if (tabMap[tab]) {
-      // Small delay to show footsteps animation
-      setTimeout(() => {
+      playFootstepSequence(step, () => {
         window.location.href = tabMap[tab];
-      }, 500);
+      });
     }
   }
 
