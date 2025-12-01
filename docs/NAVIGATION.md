@@ -8,7 +8,7 @@
 
 ### Wireframes (10-Tab Workflow)
 - **[Job Preferences](wireframes/job-preferences.html)** - Set job preferences or ICP
-- **[Candidate Profile](wireframes/candidate-profile.html)** - Resume upload and parsing
+- **[Your Resume](wireframes/candidate-resume.html)** - Resume upload and parsing
 - **[Job Descriptions](wireframes/job-descriptions.html)** - Job description analysis
 - **[Pinpoint Match](wireframes/pinpoint-match.html)** - AI-powered matching
 - **[Find Contact](wireframes/find-contact.html)** - Contact search and verification

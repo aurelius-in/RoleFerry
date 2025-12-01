@@ -8,7 +8,7 @@ const files = fs.readdirSync(wireframesDir);
 // List of wireframe files to update
 const wireframeFiles = [
   'job-preferences.html',
-  'candidate-profile.html',
+  'candidate-resume.html',
   'job-descriptions.html',
   'pinpoint-match.html',
   'find-contact.html',

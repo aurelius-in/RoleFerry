@@ -31,8 +31,57 @@
     color: #9ca3af;
     margin-bottom: 2rem;
   }
+  .main-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .left-column {
+    background: rgba(31, 41, 55, 0.5);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #374151;
+    height: fit-content;
+  }
+  .left-column h3 {
+    color: #ffffff;
+    margin: 0 0 1.5rem 0;
+  }
+  .saved-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .saved-item {
+    padding: 1rem;
+    border-radius: 8px;
+    background: rgba(17, 24, 39, 0.8);
+    margin-bottom: 1rem;
+    cursor: pointer;
+    border: 1px solid #4b5563;
+    transition: all 0.3s ease;
+  }
+  .saved-item:hover, .saved-item.active {
+    background: #2563eb;
+    border-color: #2563eb;
+  }
+  .saved-item h4 {
+    color: #ffffff;
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+  }
+  .saved-item p {
+    color: #9ca3af;
+    margin: 0;
+    font-size: 0.85rem;
+  }
+  .right-column {
+    max-width: 100%;
+  }
   .form-container {
-    max-width: 1000px;
+    max-width: 100%;
     margin: 0 auto;
   }
   .pain-point-summary {
@@ -147,22 +196,14 @@
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(74, 144, 226, 0.4);
   }
-  .progress-indicator {
-    position: fixed;
-    top: 5rem;
-    right: 2rem;
-    background: rgba(0, 0, 0, 0.9);
-    padding: 1rem;
-    border-radius: 12px;
-    color: white;
-    font-weight: 600;
-    border: 2px solid rgba(74, 144, 226, 0.5);
-    z-index: 100;
-  }
   /* Responsive Design */
   @media (max-width: 768px) {
     .tab-container {
       padding: 1rem;
+    }
+    .main-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
     }
     .match-row {
       grid-template-columns: 1fr;
@@ -175,12 +216,6 @@
       right: auto;
       margin-bottom: 1rem;
       display: inline-block;
-    }
-    .progress-indicator {
-      position: relative;
-      top: auto;
-      right: auto;
-      margin-bottom: 1rem;
     }
   }
 </style>
@@ -195,23 +230,44 @@
     </a>
     <a href="company-research.html" class="next-button">Company Research →</a>
 
-    <!-- Progress Indicator -->
-    <div class="progress-indicator">
-      <div>Step 5 of 13</div>
-    </div>
-
     <!-- Header -->
     <div class="tab-header">
       <h1 class="tab-title">Pain Point Match</h1>
       <p class="tab-subtitle">Align your skills and experience directly with the company's needs.</p>
     </div>
 
-    <div class="form-container">
+    <div class="main-grid">
+      <div class="left-column">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="margin: 0;">Saved Opportunities</h3>
+          <select style="background: #374151; color: white; border: 1px solid #4b5563; padding: 4px; border-radius: 4px; font-size: 0.8rem;">
+            <option>Sort by Date</option>
+            <option>Sort by Grade</option>
+          </select>
+        </div>
+        <ul class="saved-list" id="savedJobsList">
+          <li class="saved-item active" data-job-id="frontend">
+            <h4>Senior Frontend Developer</h4>
+            <p>Innovate Inc.</p>
+          </li>
+          <li class="saved-item" data-job-id="backend">
+            <h4>Backend Engineer</h4>
+            <p>DataCorp</p>
+          </li>
+          <li class="saved-item" data-job-id="ml">
+            <h4>ML Engineer</h4>
+            <p>Insight Analytics</p>
+          </li>
+        </ul>
+      </div>
+
+      <div class="right-column">
+    <div class="form-container" id="matchContent">
       
       <!-- Fit Score -->
-      <div style="background: rgba(31, 41, 55, 0.8); border: 1px solid #10b981; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; text-align: center;">
-        <h3 style="color: #10b981; font-size: 1.5rem; margin: 0 0 1rem 0;">Fit Score: 88%</h3>
-        <p style="color: #d1d5db; max-width: 800px; margin: 0 auto;">Strong match based on your extensive experience with microservices and AWS, directly addressing their primary challenge of scaling infrastructure.</p>
+      <div id="fitScoreCard" style="background: rgba(31, 41, 55, 0.8); border: 1px solid #10b981; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; text-align: center;">
+        <h3 id="fitScoreHeading" style="color: #10b981; font-size: 1.5rem; margin: 0 0 1rem 0;">Fit Score: 88%</h3>
+        <p id="fitScoreSummary" style="color: #d1d5db; max-width: 800px; margin: 0 auto;">Strong match based on your extensive experience with microservices and AWS, directly addressing their primary challenge of scaling infrastructure.</p>
       </div>
 
       <!-- Match Pair 1 -->
@@ -219,7 +275,7 @@
         <!-- Challenge Side -->
         <div class="match-card">
           <h4>Challenge 1 (From JD)</h4>
-          <p><strong>Requirement:</strong> "Experience scaling backend infrastructure to handle high traffic loads."</p>
+          <p id="challenge1Text"><strong>Requirement:</strong> "Experience scaling backend infrastructure to handle high traffic loads."</p>
           <div class="variable-display">
             <h4>Variable:</h4>
             <code>pp_match.pairs[0].jd_snippet</code>
@@ -230,10 +286,10 @@
         <div class="match-card solution">
           <h4>Your Solution (From Resume)</h4>
           <label style="color: #10b981; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Relevant Experience:</label>
-          <textarea>My experience scaling microservices on AWS, handling peak loads with auto-scaling groups and load balancers.</textarea>
+          <textarea id="solution1Experience">My experience scaling microservices on AWS, handling peak loads with auto-scaling groups and load balancers.</textarea>
           
           <label style="color: #10b981; font-size: 0.9rem; display: block; margin-top: 1rem; margin-bottom: 0.5rem;">Key Metric:</label>
-          <textarea>Achieved 99.9% uptime and 20% cost reduction through optimized infrastructure.</textarea>
+          <textarea id="solution1Metric">Achieved 99.9% uptime and 20% cost reduction through optimized infrastructure.</textarea>
           
           <div class="variable-display">
             <h4>Variables:</h4>
@@ -247,7 +303,7 @@
         <!-- Challenge Side -->
         <div class="match-card">
           <h4>Challenge 2 (From JD)</h4>
-          <p><strong>Requirement:</strong> "Ability to improve data processing efficiency for real-time analytics."</p>
+          <p id="challenge2Text"><strong>Requirement:</strong> "Ability to improve data processing efficiency for real-time analytics."</p>
           <div class="variable-display">
             <h4>Variable:</h4>
             <code>pp_match.pairs[1].jd_snippet</code>
@@ -258,10 +314,10 @@
         <div class="match-card solution">
           <h4>Your Solution (From Resume)</h4>
           <label style="color: #10b981; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Relevant Experience:</label>
-          <textarea>Implemented real-time data pipelines using Kafka and Apache Flink to process 1M+ events per second.</textarea>
+          <textarea id="solution2Experience">Implemented real-time data pipelines using Kafka and Apache Flink to process 1M+ events per second.</textarea>
           
           <label style="color: #10b981; font-size: 0.9rem; display: block; margin-top: 1rem; margin-bottom: 0.5rem;">Key Metric:</label>
-          <textarea>Reduced data latency by 40% and improved analytics dashboard load times by 2x.</textarea>
+          <textarea id="solution2Metric">Reduced data latency by 40% and improved analytics dashboard load times by 2x.</textarea>
           
           <div class="variable-display">
             <h4>Variables:</h4>
@@ -273,8 +329,72 @@
       <div style="text-align: right; margin-top: 2rem;">
         <button onclick="window.location.href='company-research.html'" style="padding: 12px 32px; background: linear-gradient(135deg, #10b981 0%, #2563eb 100%); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">Save & Continue →</button>
       </div>
-
+    </div>
+      </div>
     </div>
   </div>
+  <script>
+    const jobMatchConfigs = {
+      frontend: {
+        fitScore: '92%',
+        summary: 'Excellent alignment with your React, TypeScript, and design system experience for a modern SaaS frontend.',
+        challenge1: '<strong>Requirement:</strong> "Own the frontend architecture for a React/TypeScript design system used by millions of users."',
+        solution1Experience: 'Led frontend architecture for a React/TypeScript design system adopted by 12+ product teams.',
+        solution1Metric: 'Increased component reuse by 45% and reduced UI bugs in production by 30%.',
+        challenge2: '<strong>Requirement:</strong> "Collaborate with designers to ship pixel-perfect UI quickly."',
+        solution2Experience: 'Partnered closely with design to implement Figma-driven UI workflows and reusable layout primitives.',
+        solution2Metric: 'Cut average feature delivery time from 3 weeks to 10 days while improving visual consistency scores.'
+      },
+      backend: {
+        fitScore: '88%',
+        summary: 'Strong match based on your microservices and AWS experience, addressing their need for scalable APIs.',
+        challenge1: '<strong>Requirement:</strong> "Design and maintain scalable microservices handling high traffic APIs."',
+        solution1Experience: 'Designed and operated Go/Node microservices behind an API gateway, handling millions of requests per day.',
+        solution1Metric: 'Achieved 99.9% uptime and 20% cost reduction through right-sized instances and autoscaling.',
+        challenge2: '<strong>Requirement:</strong> "Improve data processing efficiency for real-time analytics."',
+        solution2Experience: 'Implemented Kafka-based streaming pipelines for real-time metrics ingestion.',
+        solution2Metric: 'Reduced processing latency by 40% and improved dashboard freshness from 5 minutes to under 60 seconds.'
+      },
+      ml: {
+        fitScore: '84%',
+        summary: 'Good fit for ML modeling and experimentation, especially around recommendation systems and forecasting.',
+        challenge1: '<strong>Requirement:</strong> "Build and deploy machine learning models for personalization."',
+        solution1Experience: 'Developed and deployed recommendation models for personalized in-app content.',
+        solution1Metric: 'Increased engagement with recommended content by 25% and lifted session length by 18%.',
+        challenge2: '<strong>Requirement:</strong> "Collaborate with data engineering to productionize models."',
+        solution2Experience: 'Worked with data engineering to productionize models via feature stores and scheduled training jobs.',
+        solution2Metric: 'Reduced model retraining time from 3 hours to 45 minutes and improved A/B iteration speed.'
+      }
+    };
+
+    function applyMatchConfig(configKey) {
+      const config = jobMatchConfigs[configKey];
+      if (!config) return;
+
+      document.getElementById('fitScoreHeading').textContent = `Fit Score: ${config.fitScore}`;
+      document.getElementById('fitScoreSummary').textContent = config.summary;
+      document.getElementById('challenge1Text').innerHTML = config.challenge1;
+      document.getElementById('solution1Experience').value = config.solution1Experience;
+      document.getElementById('solution1Metric').value = config.solution1Metric;
+      document.getElementById('challenge2Text').innerHTML = config.challenge2;
+      document.getElementById('solution2Experience').value = config.solution2Experience;
+      document.getElementById('solution2Metric').value = config.solution2Metric;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Default to frontend role
+      applyMatchConfig('frontend');
+
+      const savedItems = document.querySelectorAll('#savedJobsList .saved-item');
+      savedItems.forEach(item => {
+        item.addEventListener('click', () => {
+          savedItems.forEach(i => i.classList.remove('active'));
+          item.classList.add('active');
+          const jobId = item.getAttribute('data-job-id');
+          applyMatchConfig(jobId);
+        });
+      });
+    });
+  </script>
 </body>
 </html>

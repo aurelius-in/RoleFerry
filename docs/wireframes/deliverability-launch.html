@@ -56,6 +56,15 @@
     border-bottom: 2px solid #f59e0b;
     padding-bottom: 0.5rem;
   }
+.campaign-name-input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #4b5563;
+  background: rgba(15,23,42,0.9);
+  color: #e5e7eb;
+  font-size: 0.95rem;
+}
   .detail-row {
     display: flex;
     justify-content: space-between;
@@ -164,19 +173,6 @@
     box-shadow: 0 8px 24px rgba(74, 144, 226, 0.4);
   }
 
-  .progress-indicator {
-    position: fixed;
-    top: 5rem;
-    right: 2rem;
-    background: rgba(0, 0, 0, 0.9);
-    padding: 1rem;
-    border-radius: 12px;
-    color: white;
-    font-weight: 600;
-    border: 2px solid rgba(74, 144, 226, 0.5);
-    z-index: 100;
-  }
-
   @media (max-width: 768px) {
     .tab-container { padding: 1rem; }
     .back-button {
@@ -185,12 +181,6 @@
       left: auto;
       margin-bottom: 1rem;
       display: inline-block;
-    }
-    .progress-indicator {
-      position: relative;
-      top: auto;
-      right: auto;
-      margin-bottom: 1rem;
     }
   }
 </style>
@@ -204,10 +194,6 @@
     </a>
     <a href="analytics.html" class="next-button" id="nextButton">View Analytics →</a>
 
-    <div class="progress-indicator">
-      <div>Step 11 of 13</div>
-    </div>
-
     <div class="tab-header">
       <h1 class="tab-title">Launch Campaign</h1>
       <p class="tab-subtitle">You are about to launch your outreach campaign.</p>
@@ -218,23 +204,31 @@
         <h3>Campaign Summary</h3>
         <div class="detail-row">
             <span class="detail-label">Campaign Name</span>
-            <span class="detail-value">Senior Software Engineer - TechCorp</span>
+            <span class="detail-value" style="flex:1; text-align:right;">
+              <input
+                type="text"
+                id="campaignName"
+                class="campaign-name-input"
+                placeholder="2025-12-01 – Top 20 growth-stage SaaS – Personalized video intro"
+                value="2025-12-01 – Top 20 SaaS – Personalized video intro"
+              />
+            </span>
         </div>
         <div class="detail-row">
             <span class="detail-label">Recipients</span>
-            <span class="detail-value">2 Contacts (Jane Doe, John Smith)</span>
+            <span class="detail-value">75 Contacts</span>
         </div>
         <div class="detail-row">
-            <span class="detail-label">Sequence Length</span>
-            <span class="detail-value">4 Emails</span>
+            <span class="detail-label">Roles applied</span>
+            <span class="detail-value">20 Roles</span>
         </div>
         <div class="detail-row">
-            <span class="detail-label">Estimated Duration</span>
-            <span class="detail-value">12 Days</span>
+            <span class="detail-label">Companies</span>
+            <span class="detail-value">18 Companies</span>
         </div>
         <div class="detail-row">
             <span class="detail-label">Total Volume</span>
-            <span class="detail-value">8 Emails Total</span>
+            <span class="detail-value">300 Emails Total</span>
         </div>
       </div>
 

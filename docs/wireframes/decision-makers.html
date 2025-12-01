@@ -155,6 +155,20 @@
       margin: 0;
       font-size: 0.9rem;
     }
+    .contact-tags {
+      margin-top: 0.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+    }
+    .contact-tag {
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      color: #9ca3af;
+      background: rgba(15,23,42,0.8);
+    }
     .linkedin-input-group {
         margin-top: 1rem;
         display: flex;
@@ -287,19 +301,6 @@
       box-shadow: 0 8px 24px rgba(74, 144, 226, 0.4);
     }
 
-    .progress-indicator {
-      position: fixed;
-      top: 5rem;
-      right: 2rem;
-      background: rgba(0, 0, 0, 0.9);
-      padding: 1rem;
-      border-radius: 12px;
-      color: white;
-      font-weight: 600;
-      border: 2px solid rgba(74, 144, 226, 0.5);
-      z-index: 100;
-    }
-
     /* Responsive Design */
     @media (max-width: 768px) {
       .tab-container {
@@ -323,12 +324,6 @@
         margin-bottom: 1rem;
         display: inline-block;
       }
-      .progress-indicator {
-        position: relative;
-        top: auto;
-        right: auto;
-        margin-bottom: 1rem;
-      }
     }
   </style>
 </head>
@@ -340,10 +335,6 @@
       </svg>
     </a>
     <a href="offer-creation.html" class="next-button">Offer Creation →</a>
-    
-    <div class="progress-indicator">
-      <div>Step 7 of 13</div>
-    </div>
 
     <div class="tab-header">
       <h1 class="tab-title">Decision Makers</h1>
@@ -355,40 +346,32 @@
             <h3>Lead Filters</h3>
             
             <div class="filter-group">
-                <div class="filter-label">Role Function <span style="font-size: 0.8rem;">+</span></div>
+                <div class="filter-label">Location <span style="font-size: 0.8rem;">▼</span></div>
                 <div class="filter-content">
-                    <input type="text" placeholder="Add functions...">
-                    <div class="filter-option"><span>Accounting</span> <span style="color: #4b5563;">Exclude</span></div>
-                    <div class="filter-option"><span>Administrative</span> <span style="color: #4b5563;">Exclude</span></div>
-                    <div class="filter-option"><span>Arts and Design</span> <span style="color: #4b5563;">Exclude</span></div>
-                    <div class="filter-option"><span>Business Development</span> <span style="color: #4b5563;">Exclude</span></div>
-                    <div class="filter-option"><span>Engineering</span> <span style="color: #4b5563;">Exclude</span></div>
+                    <div class="filter-option"><span>US – East (EST)</span></div>
+                    <div class="filter-option"><span>US – West (PST)</span></div>
+                    <div class="filter-option"><span>UK & Europe</span></div>
                 </div>
             </div>
 
             <div class="filter-group">
-                <div class="filter-label">Buyer Intent <span style="font-size: 0.8rem;">?</span></div>
+                <div class="filter-label">Management level <span style="font-size: 0.8rem;">▼</span></div>
                 <div class="filter-content">
-                    <div class="toggle-switch">
-                        <span>Following your company</span>
-                        <label class="switch"><input type="checkbox"><span class="slider"></span></label>
-                    </div>
-                    <div class="toggle-switch">
-                        <span>Viewed your profile recently</span>
-                        <label class="switch"><input type="checkbox"><span class="slider"></span></label>
-                    </div>
+                    <div class="filter-option"><span>VP / C-level</span></div>
+                    <div class="filter-option"><span>Director</span></div>
+                    <div class="filter-option"><span>Manager / Lead</span></div>
                 </div>
             </div>
 
             <div class="filter-group">
-                <div class="filter-label">Recent Updates</div>
+                <div class="filter-label">Signals</div>
                 <div class="filter-content">
                     <div class="toggle-switch">
-                        <span>Changed jobs</span>
+                        <span>Changed jobs recently</span>
                         <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
                     </div>
                     <div class="toggle-switch">
-                        <span>Posted on LinkedIn</span>
+                        <span>Active on LinkedIn</span>
                         <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
                     </div>
                 </div>
@@ -406,6 +389,10 @@
                       <div class="contact-details">
                         <h4>Jane Doe</h4>
                         <p>VP of Engineering at Innovate Inc.</p>
+                        <div class="contact-tags">
+                          <span class="contact-tag">Time zone: America/New_York (EST)</span>
+                          <span class="contact-tag">VP · Engineering</span>
+                        </div>
                         <p style="font-size: 0.8rem; color: #10b981; margin-top: 4px;">★ Posted about "Engineering Scaling" 2 days ago</p>
                         
                         <div class="linkedin-input-group">
@@ -432,6 +419,10 @@
                       <div class="contact-details">
                         <h4>John Smith</h4>
                         <p>Senior Engineering Manager at Innovate Inc.</p>
+                        <div class="contact-tags">
+                          <span class="contact-tag">Time zone: America/Los_Angeles (PST)</span>
+                          <span class="contact-tag">Manager · Engineering</span>
+                        </div>
                         
                         <div class="linkedin-input-group">
                             <input type="text" class="linkedin-input" placeholder="Paste LinkedIn URL...">
