@@ -25,11 +25,69 @@
     -webkit-text-fill-color: transparent;
   }
   .sequence-grid {
-      display: grid;
-      grid-template-columns: 1fr 300px;
-      gap: 2rem;
-      max-width: 1400px;
-      margin: 0 auto;
+    display: grid;
+    grid-template-columns: 260px 1fr 300px;
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .contact-sidebar {
+    background: rgba(31, 41, 55, 0.5);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #374151;
+    height: fit-content;
+  }
+  .contact-sidebar h3 {
+    color: #ffffff;
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+  }
+  .contact-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .contact-filters select {
+    background: #111827;
+    color: #e5e7eb;
+    border: 1px solid #374151;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+  }
+  .contact-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .contact-item {
+    padding: 0.75rem;
+    border-radius: 8px;
+    background: rgba(17,24,39,0.8);
+    margin-bottom: 0.75rem;
+    border: 1px solid #4b5563;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .contact-item:hover,
+  .contact-item.active {
+    border-color: #8b5cf6;
+    background: rgba(139,92,246,0.25);
+  }
+  .contact-item .name {
+    color: #f9fafb;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+  .contact-item .meta {
+    color: #9ca3af;
+    font-size: 0.8rem;
+  }
+  .contact-item .email {
+    color: #60a5fa;
+    font-size: 0.75rem;
   }
   .sequence-list {
       display: flex;
@@ -85,6 +143,18 @@
       max-height: 150px;
       overflow-y: auto;
   }
+  .step-editor {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid #4b5563;
+      background: rgba(0, 0, 0, 0.6);
+      color: #e5e7eb;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+      min-height: 150px;
+      resize: vertical;
+  }
   .step-actions {
       margin-top: 1rem;
       display: flex;
@@ -138,6 +208,7 @@
   }
   .status.green { background-color: #10b981; color: white; }
   .status.yellow { background-color: #f59e0b; color: white; }
+   .status.blue { background-color: #3b82f6; color: white; }
   .preflight-list .label { color: #d1d5db; font-size: 0.9rem; }
 
   .back-button {
@@ -192,10 +263,15 @@
     border: 2px solid rgba(74, 144, 226, 0.5);
     z-index: 100;
   }
+  .spam-word {
+    color: #f97316;
+    font-weight: 600;
+  }
 
   /* Responsive Design */
   @media (max-width: 1024px) {
     .sequence-grid { grid-template-columns: 1fr; }
+    .contact-sidebar { margin-bottom: 1.5rem; }
     .sidebar { display: none; }
   }
 </style>
@@ -207,18 +283,48 @@
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
       </svg>
     </a>
-    <a href="dry-run.html" class="next-button">Dry Run / QA →</a>
-
-    <div class="progress-indicator">
-      <div>Step 9 of 13</div>
-    </div>
+    <a href="deliverability-launch.html" class="next-button">Launch Campaign →</a>
 
     <div class="tab-header">
       <h1 class="tab-title">Campaign Sequence</h1>
     </div>
 
     <div class="sequence-grid">
-        <div class="sequence-list">
+        <div class="contact-sidebar">
+            <h3>Contacts</h3>
+            <div class="contact-filters">
+              <select>
+                <option>All locations</option>
+                <option>US (EST)</option>
+                <option>US (PST)</option>
+              </select>
+              <select>
+                <option>All levels</option>
+                <option>VP / C-level</option>
+                <option>Director</option>
+                <option>Manager / IC</option>
+              </select>
+            </div>
+            <ul class="contact-list" id="contactList">
+              <li class="contact-item active" data-contact-id="jane">
+                <div class="name">Jane Doe</div>
+                <div class="meta">VP Engineering · TechCorp</div>
+                <div class="email">jane.doe@techcorp.com</div>
+              </li>
+              <li class="contact-item" data-contact-id="alex">
+                <div class="name">Alex Rivera</div>
+                <div class="meta">Head of Data · Innovate Analytics</div>
+                <div class="email">alex.rivera@innovate.ai</div>
+              </li>
+              <li class="contact-item" data-contact-id="morgan">
+                <div class="name">Morgan Lee</div>
+                <div class="meta">VP Customer Success · GrowthLoop</div>
+                <div class="email">morgan.lee@growthloop.io</div>
+              </li>
+            </ul>
+        </div>
+
+        <div class="sequence-list" id="sequenceList">
             <!-- Step 1 -->
             <div class="sequence-step">
                 <div class="step-header">
@@ -233,8 +339,8 @@ Hi {{contact.name}},
 
 I've been following {{company.name}}'s recent work on...</div>
                 <div class="step-actions">
-                    <button class="btn-icon" onclick="editStep(1)">✏️ Edit</button>
-                    <button class="btn-icon">👁️ Preview</button>
+                    <button class="btn-icon" onclick="toggleEditStep(1, this)">✏️ Edit</button>
+                    <button class="btn-icon" onclick="scrollToPreview()">👁️ Preview</button>
                 </div>
             </div>
 
@@ -244,7 +350,20 @@ I've been following {{company.name}}'s recent work on...</div>
                     <div class="step-title">
                         <span class="step-badge">Step 2</span> Polite Nudge
                     </div>
-                    <span class="step-timing">+3 Days</span>
+                    <span class="step-timing">Send after 
+                      <select id="delayStep2" style="background:#111827;color:#e5e7eb;border:1px solid #4b5563;border-radius:4px;padding:2px 4px;font-size:0.8rem;">
+                        <option>1</option>
+                        <option selected>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                        <option>6</option>
+                        <option>7</option>
+                        <option>8</option>
+                        <option>9</option>
+                        <option>10</option>
+                      </select> days
+                    </span>
                 </div>
                 <div class="step-content">Subject: Re: Strategic discussion: {{job_title}} at {{company_name}}
 
@@ -252,8 +371,8 @@ Hi {{contact.name}},
 
 Just bubbling this up in case it got buried. I'm still very interested in discussing how I can help with {{pain_point_1}}...</div>
                 <div class="step-actions">
-                    <button class="btn-icon" onclick="editStep(2)">✏️ Edit</button>
-                    <button class="btn-icon">👁️ Preview</button>
+                    <button class="btn-icon" onclick="toggleEditStep(2, this)">✏️ Edit</button>
+                    <button class="btn-icon" onclick="scrollToPreview()">👁️ Preview</button>
                 </div>
             </div>
 
@@ -263,7 +382,19 @@ Just bubbling this up in case it got buried. I'm still very interested in discus
                     <div class="step-title">
                         <span class="step-badge">Step 3</span> Value Add
                     </div>
-                    <span class="step-timing">+4 Days</span>
+                    <span class="step-timing">Send after 
+                      <select id="delayStep3" style="background:#111827;color:#e5e7eb;border:1px solid #4b5563;border-radius:4px;padding:2px 4px;font-size:0.8rem;">
+                        <option>1</option>
+                        <option>2</option>
+                        <option selected>4</option>
+                        <option>5</option>
+                        <option>6</option>
+                        <option>7</option>
+                        <option>8</option>
+                        <option>9</option>
+                        <option>10</option>
+                      </select> days
+                    </span>
                 </div>
                 <div class="step-content">Subject: Relevant case study for {{company_name}}
 
@@ -271,8 +402,8 @@ Hi {{contact.name}},
 
 I thought you might find this case study relevant given {{company.news}}. It details how I solved a similar challenge...</div>
                 <div class="step-actions">
-                    <button class="btn-icon" onclick="editStep(3)">✏️ Edit</button>
-                    <button class="btn-icon">👁️ Preview</button>
+                    <button class="btn-icon" onclick="toggleEditStep(3, this)">✏️ Edit</button>
+                    <button class="btn-icon" onclick="scrollToPreview()">👁️ Preview</button>
                 </div>
             </div>
 
@@ -282,7 +413,19 @@ I thought you might find this case study relevant given {{company.news}}. It det
                     <div class="step-title">
                         <span class="step-badge">Step 4</span> Final Attempt
                     </div>
-                    <span class="step-timing">+5 Days</span>
+                    <span class="step-timing">Send after 
+                      <select id="delayStep4" style="background:#111827;color:#e5e7eb;border:1px solid #4b5563;border-radius:4px;padding:2px 4px;font-size:0.8rem;">
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                        <option selected>7</option>
+                        <option>8</option>
+                        <option>9</option>
+                        <option>10</option>
+                      </select> days
+                    </span>
                 </div>
                 <div class="step-content">Subject: Final check-in
 
@@ -293,8 +436,8 @@ I'll assume now isn't the right time. If priorities change regarding {{pain_poin
 Best,
 [Your Name]</div>
                 <div class="step-actions">
-                    <button class="btn-icon" onclick="editStep(4)">✏️ Edit</button>
-                    <button class="btn-icon">👁️ Preview</button>
+                    <button class="btn-icon" onclick="toggleEditStep(4, this)">✏️ Edit</button>
+                    <button class="btn-icon" onclick="scrollToPreview()">👁️ Preview</button>
                 </div>
             </div>
         </div>
@@ -303,38 +446,265 @@ Best,
             <h3>Campaign Health</h3>
             <ul class="preflight-list">
                 <li>
-                    <span class="label">Sequence Length</span>
-                    <span class="status green">Optimal (4)</span>
+                    <span class="label">Email length</span>
+                    <span class="status blue" id="emailLengthStatus">0 characters (optimal 300–500)</span>
                 </li>
                 <li>
                     <span class="label">Spam Words</span>
-                    <span class="status green">0 Found</span>
+                    <span class="status green" id="spamStatus">0 found</span>
                 </li>
                 <li>
                     <span class="label">Sending Volume</span>
-                    <span class="status yellow">~50/day</span>
-                </li>
-                <li>
-                    <span class="label">Personalization</span>
-                    <span class="status green">High</span>
+                    <span class="status yellow">~50/day (placeholder)</span>
                 </li>
             </ul>
             <div style="margin-top: 2rem; text-align: center;">
-                <button class="btn-icon" style="width: 100%; border-color: #10b981; color: #10b981;" onclick="window.location.href='dry-run.html'">Proceed to Dry Run →</button>
+                <button class="btn-icon" style="width: 100%; border-color: #10b981; color: #10b981;" onclick="scrollToPreview()">Preview campaign ↓</button>
             </div>
         </div>
     </div>
 
+    <div id="previewSection" style="max-width: 1000px; margin: 3rem auto 0; background: rgba(17,24,39,0.9); border-radius: 16px; border: 1px solid #374151; padding: 2rem;">
+      <h2 style="color:#ffffff; margin-top:0; margin-bottom:0.5rem;">Preview Campaign</h2>
+      <p style="color:#9ca3af; font-size:0.95rem; margin-bottom:1.5rem;">This is how your full sequence will be sent for the currently selected contact.</p>
+      <div id="previewList" style="display:flex; flex-direction:column; gap:1rem;"></div>
+    </div>
+
   </div>
   <script>
-      function editStep(stepNum) {
-          const stepContent = document.querySelectorAll('.step-content')[stepNum - 1];
-          const currentText = stepContent.innerText;
-          const newText = prompt("Edit Step " + stepNum + " Content:", currentText);
-          if (newText !== null) {
-              stepContent.innerText = newText;
-          }
+      const campaignTemplates = {
+        jane: {
+          steps: [
+`Subject: Strategic discussion: Senior Software Engineer at TechCorp
+
+Hi Jane,
+
+I've been following TechCorp's recent work on real-time personalization and would love to help you push it further...`,
+`Subject: Re: Strategic discussion: Senior Software Engineer at TechCorp
+
+Hi Jane,
+
+Just bubbling this up in case it got buried. I'm still excited about helping your team scale experimentation on AWS...`,
+`Subject: Case study: 20% infra cost reduction
+
+Hi Jane,
+
+Sharing a quick case study where I reduced infra costs by 20% while improving reliability...`,
+`Subject: Final check-in – Senior Software Engineer
+
+Hi Jane,
+
+I'll assume now isn't the right time. If priorities change around scaling experimentation and infra, I'm happy to revisit.
+
+Best,
+Alex`
+          ]
+        },
+        alex: {
+          steps: [
+`Subject: Data platform discussion: Senior Data Engineer at Innovate Analytics
+
+Hi Alex,
+
+Your work on event pipelines at Innovate caught my eye—I've led similar migrations from batch to streaming...`,
+`Subject: Re: Data platform discussion
+
+Hi Alex,
+
+Quick nudge in case this slipped. I can help consolidate your Kafka/Flink stack and reduce pipeline latency...`,
+`Subject: Real-time analytics case study
+
+Hi Alex,
+
+Here's a short example of how I helped ship real-time dashboards for 1M+ events/second...`,
+`Subject: Final check-in – Senior Data Engineer
+
+Hi Alex,
+
+No worries if now isn't ideal. If priorities shift around real-time analytics or ML feature stores, feel free to reach out.
+
+Best,
+Alex`
+          ]
+        },
+        morgan: {
+          steps: [
+`Subject: Customer Success ops discussion – RoleFerry pilot
+
+Hi Morgan,
+
+Given GrowthLoop's focus on expansion and renewals, I think RoleFerry could help your CSMs prioritize high-intent accounts...`,
+`Subject: Re: Customer Success ops discussion
+
+Hi Morgan,
+
+Just following up—happy to show you how similar teams improved response rates using personalized outreach...`,
+`Subject: CS playbook automation example
+
+Hi Morgan,
+
+Sharing a quick example of automating renewal playbooks that increased on-time renewals by 12%...`,
+`Subject: Final check-in – CS ops pilot
+
+Hi Morgan,
+
+I'll drop this here for now. If you later want to experiment with a CS-focused outbound pilot, I'd love to collaborate.
+
+Best,
+Alex`
+          ]
+        }
+      };
+
+      function getStepElement(index) {
+        const editors = document.querySelectorAll('.step-editor');
+        const contents = document.querySelectorAll('.step-content');
+        if (editors.length && editors[index]) return editors[index];
+        return contents[index];
       }
+
+      function updateEmailLength(stepIndex = 0) {
+        const target = getStepElement(stepIndex);
+        if (!target) return;
+        const text = target.value !== undefined ? target.value : target.textContent;
+        const length = text.length;
+        const statusEl = document.getElementById('emailLengthStatus');
+        if (statusEl) {
+          statusEl.textContent = `${length} characters (optimal 300–500)`;
+        }
+      }
+
+      function highlightSpamWords() {
+        const spamWords = ['free', 'guaranteed', 'act now'];
+        const contents = document.querySelectorAll('.step-content');
+        let totalFound = 0;
+
+        contents.forEach(el => {
+          let html = el.innerHTML;
+          spamWords.forEach(word => {
+            const regex = new RegExp(`\\b(${word})\\b`, 'gi');
+            const before = html;
+            html = html.replace(regex, '<span class="spam-word">$1</span>');
+            if (before !== html) {
+              const matches = before.match(regex);
+              if (matches) totalFound += matches.length;
+            }
+          });
+          el.innerHTML = html;
+        });
+
+        const spamStatus = document.getElementById('spamStatus');
+        if (spamStatus) {
+          spamStatus.textContent = `${totalFound} found`;
+          spamStatus.classList.toggle('green', totalFound === 0);
+          spamStatus.classList.toggle('yellow', totalFound > 0);
+        }
+      }
+
+      function applyCampaignTemplate(contactId) {
+        const template = campaignTemplates[contactId];
+        if (!template) return;
+        const contents = document.querySelectorAll('.sequence-list .step-content');
+        template.steps.forEach((text, idx) => {
+          if (contents[idx]) {
+            contents[idx].textContent = text;
+          }
+        });
+        updateEmailLength(0);
+        highlightSpamWords();
+        renderPreview();
+      }
+
+      function toggleEditStep(stepNum, buttonEl) {
+        const index = stepNum - 1;
+        const step = document.querySelectorAll('.sequence-step')[index];
+        if (!step) return;
+
+        const isEditing = step.getAttribute('data-editing') === 'true';
+
+        if (!isEditing) {
+          const contentDiv = step.querySelector('.step-content');
+          const textarea = document.createElement('textarea');
+          textarea.className = 'step-editor';
+          textarea.value = contentDiv.textContent;
+          contentDiv.replaceWith(textarea);
+          step.setAttribute('data-editing', 'true');
+          if (buttonEl) buttonEl.textContent = '✔ Done';
+          textarea.addEventListener('input', () => updateEmailLength(index));
+          updateEmailLength(index);
+        } else {
+          const textarea = step.querySelector('.step-editor');
+          const div = document.createElement('div');
+          div.className = 'step-content';
+          div.textContent = textarea.value;
+          textarea.replaceWith(div);
+          step.setAttribute('data-editing', 'false');
+          if (buttonEl) buttonEl.textContent = '✏️ Edit';
+          highlightSpamWords();
+          updateEmailLength(index);
+          renderPreview();
+        }
+      }
+
+      function scrollToPreview() {
+        renderPreview();
+        const section = document.getElementById('previewSection');
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+
+      function renderPreview() {
+        const list = document.getElementById('previewList');
+        if (!list) return;
+        list.innerHTML = '';
+        const contents = document.querySelectorAll('.sequence-list .step-content');
+        contents.forEach((el, idx) => {
+          const wrapper = document.createElement('div');
+          wrapper.style.border = '1px solid #374151';
+          wrapper.style.borderRadius = '8px';
+          wrapper.style.padding = '0.75rem 1rem';
+          wrapper.style.background = 'rgba(15,23,42,0.9)';
+
+          const title = document.createElement('div');
+          title.style.color = '#e5e7eb';
+          title.style.fontSize = '0.9rem';
+          title.style.fontWeight = '600';
+          title.style.marginBottom = '0.25rem';
+          title.textContent = `Step ${idx + 1}`;
+
+          const body = document.createElement('pre');
+          body.style.margin = '0';
+          body.style.whiteSpace = 'pre-wrap';
+          body.style.color = '#9ca3af';
+          body.style.fontFamily = `'Courier New', monospace`;
+          body.style.fontSize = '0.85rem';
+          body.textContent = el.textContent;
+
+          wrapper.appendChild(title);
+          wrapper.appendChild(body);
+          list.appendChild(wrapper);
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        // Apply default template and metrics
+        applyCampaignTemplate('jane');
+        updateEmailLength(0);
+        highlightSpamWords();
+        renderPreview();
+
+        // Wire contact selection
+        const contactItems = document.querySelectorAll('#contactList .contact-item');
+        contactItems.forEach(item => {
+          item.addEventListener('click', () => {
+            contactItems.forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            const id = item.getAttribute('data-contact-id');
+            applyCampaignTemplate(id);
+          });
+        });
+      });
   </script>
 </body>
 </html>

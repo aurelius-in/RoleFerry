@@ -14,7 +14,7 @@ Quick orientation:
 |---|---|---|---|---|
 | 1 | Signals Engine | `wireframes/signals-engine.html` | Identify buying signals before jobs post | Filter, review signal cards, “Create Campaign from Signal” |
 | 2 | Job Preferences | `wireframes/job-preferences.html` | Capture personal preferences for targeting | Fill multi-selects, “Save Preferences” |
-| 3 | Candidate Profile | `wireframes/candidate-profile.html` | Upload resume/profile and parse with AI | Upload file, “Parse Profile with AI” |
+| 3 | Your Resume | `wireframes/candidate-resume.html` | Upload resume and parse with AI | Upload file, “Load Resume” |
 | 4 | Job Descriptions (Client Profiles) | `wireframes/job-descriptions.html` | Import/analyze job postings | Paste URL or JD text, “Analyze Client Profile” |
 | 5 | Pain Point Match | `wireframes/pain-point-match.html` | Align resume to JD, compute Fit Score | Review pain points, fill solution/metric, proceed |
 | 6 | Context Research | `wireframes/context-research.html` | AI-assisted company and contact research | Edit sections, “Regenerate Briefing”, “Save Briefing”, CSV export |
@@ -79,7 +79,7 @@ Link: `wireframes/job-preferences.html`
 
 
 ## 3) Candidate Profile
-Link: `wireframes/candidate-profile.html`
+Link: `wireframes/candidate-resume.html`
 
 - Purpose: Converts a resume/profile into structured data with AI. This powers matching, offer creation, and variable substitution (your name, title, and achievements) later.
 

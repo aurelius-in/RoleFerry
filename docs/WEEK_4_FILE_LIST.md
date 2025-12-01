@@ -5,7 +5,7 @@
 ### 🎯 **Core Wireframes & Frontend**
 - `docs/index.html` - Main homepage with keypad navigation
 - `docs/wireframes/job-preferences.html` - Job Preferences/ICP tab
-- `docs/wireframes/candidate-profile.html` - Resume/Candidate Profile tab
+- `docs/wireframes/candidate-resume.html` - Resume/Candidate Profile tab
 - `docs/wireframes/job-descriptions.html` - Job Descriptions tab
 - `docs/wireframes/pinpoint-match.html` - Pinpoint Match tab
 - `docs/wireframes/find-contact.html` - Find Contact tab

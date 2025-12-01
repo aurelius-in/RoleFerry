@@ -1,0 +1,534 @@
+RoleFerry Week 8 Meeting Transcript:
+[Context: Below is a conversation between Dave March and Oliver Ellison who are developing the Roleferry App together.   The transcription didn't indicate who was talking, and it doesn't matter who was talking because both people are decision makers and so whatever is said, especially whatever is agreed upon, needs to be updated.  Since it is a conversation, some ideas are discussed before they figure out the best approach that makes sense, so try to implement the latter best approach decisions more than the beginnings of new topics/screens discussed.]
+
+Okay, that’s for a while. I want to start to promoting it and, you know,
+okay.
+Great. It looks like it’s working. Yeah, so I was able to take the transcript from last time, and that helps. So it was, you know, took everything that we talked about and I think it did pretty good, right? Helping me keep track of all the—do you like—did you see the footprints?
+Oh, yeah. I just saw that. When you click on it, it gives a footprint. I just noticed that. So when you click any of them, the footprint all the way up to the one that you clicked. So it’s like you click the last one analytics. Oh, I just noticed that. It should do like left, right, left, right, and it does like the snake pattern I wanted. I mean, I don’t know if it’s a good thing or a bad thing or if it’s just stupid or not, but at least it did what I asked it to do. I had to create my own little footprint graphic with GPT. And then yeah, it’s new. Yeah, I don’t know. It’s new. I don’t know if it’s good, but it’s new.
+It’s cool. The reason they’re there is because I wanted to show the order of the buttons because it’s not necessarily obvious. Just based on their positioning, it may not be clear which is first. I thought maybe the footprints would help with that. It still isn’t as explicit as it should be. We can simply number them. That might be the most obvious thing that would be—yeah, yeah. I think the graphic is cool, but you might want to number them for like a little one, two, three, four, five. Not the number. All right. That’s the most cool way. Okay. Did you want to go by screen by screen and do a last check before we conclude the—yeah. I mean, I looked at it. I looked at it previously. Sent me an email. I didn’t really have a chance to look. So I’ve been about a job JD—was it a JD checker or something? Yeah, JD picker. You got to pick the JD.
+And so—so what do I—I clicked the third button, the job descriptions. And it loads the job description screen. And what do you want to see on that screen that isn’t there?
+I guess you—it’s in the pain point map screen. Oh, it’s on the pain point map screen. Okay.
+All right So going to pain point map, which is after job tracker.
+Okay.  Oh by the way it displays "Progress: 4/12" or something out of 20 but it's erroneous and that #/12 is not needed.  They don't need a progress notifier anywhere on the page.  I agree. Okay I'll remove it.  Thanks.  No problem.  
+So right now it shows the two challenges and a solution for each challenge.
+Oh, you mean the place where you would select the job? On the left? Yeah. Yeah. Okay. So right now the pain point map screen is missing the needed column on the left where you would select the job that you’re doing the pain point match for.
+Correct. The page that already has that is the job descriptions page so it has a column called saved opportunities where you can sort by date or sort by grade. I don’t know if we want to sort by those two things but sorting by whatever and then saved opportunities column on the left side of the job descriptions you want to similar or identical column for the pain point match screen that has the saved opportunities and then some jobs that can be selected that for that and then you can pick the job and then the pain point match that’s being displayed on the right of that column would be reflecting the specific job those okay, that’s the only addition that you see?
+Uh-huh Okay.
+All right So let’s go through a workflow just for a good measure, just for due diligence, right? Make sure we like the workflow. Other than me numbering these things,
+which I want to do in a way that’s like less tacky than just like one, two, three, four, five, it may be that our only option if we don’t think of anything more creative. I was hoping the footsteps would help.
+They kind of do, but maybe not enough.
+I think the footsteps is a nice animation. And I think people like to see it, but I mean, the idea is like after job preferences, the opted job tracker, do they go offer creation or pain point match? That’s kind of where the confusion is. So, I mean, an arrow, obviously, again, numbers would be the most obvious thing. But an arrow going down from job tracker, the thing is it displays a little bit differently when you’re looking at it on a phone, right?
+So the number of buttons per column will change. And we want it responsive to phone since I think people use their phones more than they use their computers.
+Yeah. It’s true. So we’re not creating a business application. We’re creating a application for regular people.
+They don’t necessarily spend time on laptops anymore.
+And they probably won’t be doing this at their job since they are looking for work.
+Yeah. They’re probably going to be using a laptop. Most people have laptops.
+I don’t know that it’s true that most people have laptops. I think most people like you and I have laptops.
+Most people who are our ideal customers probably do have laptops, but whether they spend time on their laptop when they’re not employed is a different story.
+It’s a question mark. I don’t know the answer, but it’s possible that they don’t.
+Especially if they haven’t started the job search yet because they don’t know what to do. So maybe once they start using RealFair, I’m sure they’re going to be using it and they’ll be online because they need to get on something like what do they call it? Sales navigator. And they probably want to use their laptop for that because it’s not as good on the phone. The app version of it sucks. I tried using sales navigator on the app version. It’s missing a lot of features.
+So yeah. But up until we want them to see the app probably the demo version before we’ve sold them anything. Right?
+Yeah. And we’re not creating an app on the App Store or iPhone and stuff. We can.
+Okay. I mean, it isn’t we could. Is this a thing we want to definitely not do for any reason?
+I just think we just need to get I think that’s kind of the last thing we want to do. We really wanted to get it out there. I don’t want to make an app first. You want to make you want to just do what we have here and then have people kind of play around with it and then maybe if an app is like a last thing because then it’s like if you’re doing an app, then it’s like, is it a free app? There’s a whole bunch of questions. We talked about price points. By the way, go to the give feedback. I want to see if so you scroll to the bottom.
+Give feedback Okay. Let’s see if it has yeah, the last question, it says would you pay $99 a month for this tool? If not, what price point makes sense? I think we’re going to go 250. Okay.
+So 250. 249. It’s because you know. Live in a world where people like to feel like you’re being clever for some reason with their prices. 247. 247.95.
+24783. All right. Deal.
+All right No,
+so okay, I guess that was my question. You just answered it. So we’re doing the 249. And I don’t even see it. I see impact and results. Click
+did you click feedback? Can you scroll to the very bottom, the very last question? Very last question. Oh, yeah. Would you pay $99 a month for this tool? If not, what price would make sense? Yeah. So we want people, I mean, obviously, they’re biased towards like, how about free? Or let’s do 20 bucks. But their bias is going to be lowball, but it might help to get some feedback on the price that might be a little bit objective sometimes. And we can think about that. I think with a few hundred responses or whatever, we’re able to get from people. We talked about my kind of thinking of like, when I was working with bands, once we got over a dozen bands, it was just super hard to keep them busy. And I don’t know if that’ll be true for you and I, but it might be a similar kind of problem, right? We want to make sure that our first 12 people or 20 people are super happy. Right?
+So for shooting for the 20 golden customers, that are willing to pay the $250, they’re willing to work with us on the beta version, they’re willing to answer the survey, are they getting the 50% off? So at the top of this survey, I put your detailed insights are critical for our beta release. Complete the survey to unlock your 50% early adopter discount. I’m just putting this there to shoot it at you to see what you think, not because I’m making executive decisions here. And then I also said underneath, roll fairy beta tester, we need rigorous feedback to justify your discount. Please be specific, critical, and honest. We want to know what works, what doesn’t, and exactly how we can make your job search better. So we’re pretty transparent here what we’re trying to accomplish, right? We want to give them a discount in exchange. We want value from them on what it is. So we can list the app for $500 and give it to them for $250.
+Yeah. So this question at the bottom might be, would you pay $499 for this app?
+If not what price point makes sense And we’ll probably get answers all over the board from $1 to $20 to $1,000. We will literally be super happy with it. Right? But we might gain some insight from all those responses, right?
+And then they’re going to give it an overall rating. These are just little things. It’ll point out some red flags, right? So if we’re like, if we think we’re doing great and everybody just fucking hates the app because it’s just stupid to them and it doesn’t, there’s something that doesn’t make sense to them or something’s not working. There might be one feature in particular that they’re all just like, why the hell is this even here? I don’t even know what to do with this. And we’ll probably learn that if, let’s say, all 20 of our customers are giving us a similar kind of answer for one section. That’s the hope, right?
+Anyway, so I’ll just change on the beta feedback on the feedback page. The bottom, I’ll change it to would you pay $499 for this tool? If not, what price points make sense? For the EG and the inside of the thing, I’ll put yes, it saves me hours or no, I’d pay $200. Right? And that will just make a little more sense. And at the top, are we having? Yeah. I mean, I think 200. I think 200, 250
+is pretty reasonable.
+So 250 is really where we want to be.
+If we’re going to do a $500 discount, we’ll do $500. Between 50% discount, 250, that works
+We don’t want this to be like a debt-based business model. We’re like, ChatGPT, I was looking at ChatGPT, it’s like they put like 500 billion dollars into it already and they have many, many money yet. It works if you’re a billionaire.
+Yeah, it works if you’re a billionaire. Yeah, we’re obviously not billionaires. We’re like surviving. But I mean, till I met you, I was unemployed, right?
+I mean, I don’t know what your situation is but I know I’m a survival mode. But we’re a little beyond that since I have a good job now and I can think about it extracurricular kind of project like this one. But yeah, we’re not billionaires. Jeff Bezos, of course, he operated at a loss for most of his products for most of his company for years. And his investors he’d already told them, “Look, we’re going to be operating at a loss for five years straight before we make our first dollar.” But here’s my plan. And because we’re going to beat out all the competition and make all these companies go bankrupt, we’ll be on top. And we can afford to do it. So all these people knowing that he was going to be operating at a loss, weren’t expecting the stocks to go up, weren’t expecting the company to make any money. And because he had a long-term plan that made sense, and I guess they knew enough about the guy and his other work that they trusted him, but they beat out all the competitors. And you’ve seen Toys R Us and a ton of other companies go bankrupt because of Amazon. But it’s because they literally starved the competition from any—I mean, if you can buy what you need on Amazon, for cheaper than you can buy anywhere else and the shipping is free, and you don’t have to leave your house. I mean, it’s like, why would you go anywhere? Right?
+Yeah, it’s crazy Why would you go anywhere? So he saw a vision and he was able to sell that vision to these billionaires who funded his company. And I mean, I don’t even think he was a billionaire before Amazon. I think he was doing pretty good, but Amazon’s what made him a billionaire.
+So anyways, we’re not billionaires and we can’t operate at a loss. Especially not for five years. So also since I’m having to connect all these backend services and pay for them, I want to be making money quickly and cover them. That’s what I’m saying. You got to do—we looked at the math already. I mean, 250 at 20 people is going to be the 5,000 a month. That’s what we’re really looking for.
+Okay.
+250 times 20 people, right?
+20 That makes sense to me. Now, 20 is kind of an intuitive number. We don’t know for sure that that’s like our cap, but it feels right. And if we can keep 20 people happy,
+then we need to figure out how to scale to 200.
+And then once we’re able to keep 200 people happy, we need to figure out how to scale to 2,000 and so on. So we should be trying to add a zero to that every quarter or every whatever, right?
+However, whatever period of time feels right.
+Yeah. So I think to make those first 20 people happy is going to be a challenge, right? They’re going to tell us things about our app. We have to make some changes. They’re going to—some things won’t be working. We’ll probably have made some assumptions that were wrong and we’ll have to adjust those. And we’ll have 20 happy customers by the end of it, whatever quarter you want to do this quarterly. Every few months. And then same thing for the next once we have those 20 customers happy, we need to figure out how to scale.
+So I think once we’ve kind of drilled the app down to a functional app that makes 20 customers happy, I think making 200 customers happy might just be an automatic thing. We don’t need to change much, just provide that same app that made those 20 customers happy to 200 people. Continue to collect feedback, continue to make adjustments. I think at that point, once there’s 200 really happy customers or at least 90-something percent of them are super happy with the app, then we can try to scale again to the next decimal. Right? Move up to 2,000. I just kind of seems like a—at no point should we just take it off the rails and be like, “Okay, world, but we could.” Like you said, but I think if we put it on the app store, after we’ve reached that 200 happy customer market, then maybe that would make sense. Yeah. Yeah, yeah, yeah. I mean, right now, we’re really just need to get the people that are on LinkedIn that are on that are in the—that are friends, that are people like this, and that are just really eager to or really inspired by what we’re doing. We got to get people like that. That’s kind of what we got to do. People that know me, people that know you, and are like,
+“Yeah, this is real. Wow, this is real cool.” So you had a chance to look over the—every screen now, all the options that we want are on there.
+So you went to the—the job preferences page, for example. The work values that are in there are the work values we need to have. The role categories are the ones we want. Yeah, yeah. All that looks squared away. Okay. Yeah. Role categories, work preferences. This is all good. I added a lot of industries.
+I made the—I added another layer of company sizes. 1,000 to 5,000, 5,000 plus.
+Role categories. I added a few work values. Yeah, it’s all good. Yeah. We talked through that. I mean,
+the resume was good. We needed to do this resume thing. That was a big piece. We got the variables from the resume.
+The variables are written in a different way. Profile key metrics. We’re using profile instead of resume.
+So maybe that’s a thing.
+So let’s talk about that a little bit.
+Okay. So I’m going to go to your profile. Yeah, your profile. I was thinking that was going to be your—your profile I think that your resume might be a better, what should we call it? Name. But the whole point of this section is resume. Fine. You’re right. It’s more obvious. Your profile is only makes sense if you already know the app, so. If you’re new to the app, you want to know what. That’s where you put your resume because they probably came to this app with a resume ready to upload. Where do I put that? So first, you got to look at their job preferences. They’re going to select their options, and they’re going to upload their resume. So we’re going to rename both the heading of the your profile page so it’s the candidate hyphen profile dot HTML is the current name of the file we want to rename that candidate resume.
+Your profile is the heading on that screen. We want to change that to your resume. And
+on the little stone graphic on the wireframes HTML screen, it says your profile we want to change that to your resume.
+Okay.
+And then all the variables as well It should say resume key metrics. Right now, it says profile key metrics.
+Okay.
+I think that it would be easier for people to recognize when they see the variables later on to see resume key metrics. Oh, you mean down at the bottom. Okay. So the available variables from this step is profile dot key metrics. We want to change that to resume dot key metrics. And resume dot business challenges instead of profile dot business challenges. And resume dot accomplishments instead of profile dot accomplishments. And resume total underscore years underscore experience. And also resume dot position. So wherever it has a profile on those key metrics, we wanted to be replaced with resume.
+Cool.
+Okay.
+Do we like the name dry run slash QA? That was another one. Let’s see.
+The thing is you have to wait to go there.
+It’s two seconds, but I mean, if you think it’s too long.
+Is there a back button? Oh, you just got to go home. There’s a home button. Since no—there isn’t a back button. Do you think there should be a back button?
+I feel like a back button would be—like previous step.
+Like previous step yeah. Okay. So on all the screens,
+except for the job preferences screen, because it’s the first screen, but on all the screens, we want the home button in the top left corner and next to that, we want a fat icon that’s shaped like a left arrow that points back, and it’s going to take us—we can even have the previous step, the words previous step inside the fat left pointing arrow.
+I have to say fat left pointing arrow, or I’m going to get this skinny line that looks like an arrow.
+It does that to me.
+Yeah. Also, on campaign,
+let’s see here.
+Campaign All right. The campaign button.
+So the campaign button It was like step nine.
+Yeah, step nine. All right.
+And you noticed it added the edit in the previous networking. I noticed that. Yeah. But when you click on edit, it comes up as a—I don’t know how you call it—a dialog box. It comes up as a really small one-row sized edit. Pop up. Yeah. Yeah. Can we just edit within this square? Yeah. So on the campaign sequence, and I think it’s not just that one. On the campaign screen,
+and on the dry run screen as well.
+When you click edit,
+it pulls up like you said, a little dialog pop up that’s just one little row, and it’s super hard to see your message. And that’s not good. What we want the edit button to do is make the field where the message is already being displayed an editable field. Right?
+In fact, it should probably just default to being editable. I don’t know why you need to push edit first, but maybe it’s good because it prevents us from accidentally editing our message if we don’t want to. But we can click—once we click edit, the field that displays the message—all those fields on both the—when you click dry run QA and campaign, we want all of those fields to be editable.
+Or at least the one that was clicked edit on. So when you click edit, I want to be able to edit the field. I don’t need an extra pop-up dialog. And certainly not the way it’s done with the single line where I can’t see the whole message.
+All right And remember, there’s a back button pointing to the left that’s a big fat arrow that says previous step.
+Yep.
+And so all right. So we’re making the initial message in the offer library.
+And it looks like we lost some features.
+Where In the offer creation section. Oh.
+Looks like we lost some features like video link or portfolio link. All right. So let’s describe each feature that’s missing. In case it can’t retrieve a previous version as easily.
+Everything’s archived, of course, like you said. It has the versioning. And it’s part of GitHub, but it might be easier just to kind of describe what we want here. So we want a video—a place where they upload their video. And once this video called again,
+this is just like their introduction video. Okay. That’s fine. Introduction video. You called it something else before, but introduction video is intuitive and easy to remember.
+And see, this field is editable.
+I don’t know When I said add an edit button to make it editable, it’s like,
+decides to go and hold the direction These are already editable, so I don’t really know why I didn’t just keep them that way, but whatever. Okay. So we want a place or upload intro video.
+Yeah. There’s really a section.
+I’d say above subject line. Okay. So before there’s even any text fields, like above the subject line, below the tone,
+should it be below the tone? Below the tone. Yeah. Below the tone. Above the subject line. Because the tone doesn’t relate specifically to the message being generated? Yeah.
+Yeah. So what do you kind of want them close to each other?
+You think that you put the video under it? What? No. I’m just saying that if the tone relates to the email, then you would want them adjacent.
+Right I mean, I was just thinking to put the video above the subject line, but you can easily put it under the email body. Yeah. I don’t have a preference. I’m just asking you if it makes sense to you to have the select tone and audience. By putting it above the video, right,
+and then having the email message below the video, I’m separating the idea of select tone and audience from the email.
+Yeah. I mean,
+you are. And do we want to Because these things are connected. And we want to make sure they understand that.
+I’d say let’s put it under the email body then. Put the video below. Okay. So add intro video, button. It can say add intro video. And because not everybody’s going to have an intro video, there’s some people who are just not going to do that. Functional.
+And then there can be a screen. That gives them tips on how to create an intro video.
+Honestly, all I want in this section is a link.
+Okay. So just add your intro video and then as the coach will take the time. We don’t need a screen that tells them about how to create an intro video. Just the coach will do that and they can figure it out themselves if they don’t have a coach.
+Yeah. Okay. Yeah. Okay. Fine. So upload or add intro video or upload intro video. And it’ll be like a little shape of a little movie icon. It’s a little—yeah. Add intro movie. Yeah. You can use Loom.
+They can do it themselves. They can just use a Loom video. Do you want a link that pops up Loom?
+Yeah. Because make it easy for them. Make it convenient. Okay.
+So do a little link to Loom or they can just upload.
+So there should be add intro video. And then two buttons. Under that heading, one that says—it’s probably a separate card from the first card with the select tone and audience. And the email subject and body will be a separate card underneath that about video stuff. So there’ll be the heading that says add intro video. There’ll be the button that has upload video. There’ll be another button that says use Loom. And if they click that, it should open up the Loom website in a separate pop-up that won’t take them away from the app.
+Right And then they can go ahead and figure out how to use Loom, I guess.
+That was very intuitive. Very easy. Cool.
+All right What else is missing from this screen?
+Then a portfolio. Like a portfolio link. And are there other links like do you want to do like portfolio links? Well, we’re adding links. Do you want to have a portfolio link? Social media link? Like LinkedIn or whatever? Yeah. You can put social media like LinkedIn profile. Yeah. Any other links while we’re adding links?
+Social media profile link.
+And landing page link. The landing page link.
+Website. Okay. So the website or landing page or something. Yeah. Should there be separate fields for each of those things or a button where you click to like GitHub button and it pops up, it creates a GitHub field? Or just like they can type any links? I just want it to be—I want it to be self-service. So it’s kind of like there’s just spots that are more like placeholders for them to jog their memory. So there’ll be a GitHub—they’ll field for a GitHub, one for LinkedIn, one for the other social media ones, or any other ones that are professional ones?
+Yeah. You have website or GitHub. Website, GitHub, LinkedIn. Is there another social media? Another social media thing they might want to include that’s not one of those?
+I can’t really think of one. Other link is fine. We’ll just do other link for the fourth one. All right. Fine. Yeah. Like a podcast link. Sure. Why not? YouTube. Yeah. Like a YouTube. Like a YouTube link. So they have a YouTube account, like they can have their YouTube, their LinkedIn, their GitHub. Their portfolio and then other link. And that should be enough. That’s five. Places to add. That could be at the bottom. So they don’t have to scroll through a bunch of fields. They’re probably going to leave half of them blank anyways. Because most people don’t have all those things. Some people might. Yeah. And then before they get to all those links, they’re going to be—they’re going to be uploading their video. They’re going to be clicking Loom as an option. Okay. Fine. Anything else on this screen that we need to add?
+No. Okay.
+Next button is takes you to the campaign sequence. Yeah. So then again, they need to—these edit buttons need to just make this field editable, not pop up some little tiny thing that’s hard to edit.
+Yep. And the—I think that could be some help with the help with the follow-up messages. I think that’s what we were trying to say here with the campaign health. I was trying to work on that. But essentially what we want it to do is work off of the initial outreach message that they built out.
+And then work off of that and try to say like,
+“Sure medium, long.” Okay.
+So you want AI-generated messages based off of the original outreach message. The original outreach. And then so for each, for the original outreach message, we need the initial outreach, the polite nudge email, the value-add email, and a final attempt email. Yeah. And yeah. So we want AI to create that for them. Okay.
+All right And also this needs to be scrollable. It says polite nudge and it says plus three days.
+That needs to be like adjustable or scrollable. Like you can adjust this to like one day or two days or four days.
+So the number of days.
+So there’d be the word days and then a drop-down where they’d select the number of days.
+So when they would do the polite nudge would be anywhere from one to ten days.
+And they could basically have the one to ten days options for all of this. Right.
+Preferably like at least a day apart.
+Yeah. I find two days is minimum.
+Okay.
+All right But we’ll just give them the option of one to ten days for each of these options. One would be the latest final attempt that you had sent someone. How many days should they? So the first email and then the second one would be two. And then I went after that could be three. And then the final attempt could be another three. So yeah, you got one to ten. You should be fine. Okay.
+And then maybe one of those options will be the recommended number.
+Because they’re probably recommended. Because they’re probably going to be like pre-selected. So it will automatically select saying like here it looks like it’s recommending plus three days. For the first. Yeah. Plus four. I’ll think between two to four. Okay. But two on step two, three on step three. And you can do well, you might actually want to do two and then three and two. Or you might want to do three, two, four. But are we to assume that the days, the number of days is from the initial outreach? Yeah. From the initial outreach. Yeah. So seven days away would be like the final attempt is a week after you sent the initial outreach.
+Yeah. And maybe that’s the recommendation. So if our final attempt will recommend they do their final outreach, their final attempt one week from the day they send their initial outreach. For value add, it’ll be like four days, it’ll be five days, right? So like if they do their initial outreach on a Monday, they do a value add on Friday and then on Monday they send their final attempt.
+Yeah. With a polite nudge, like a day or two after the initial maybe. So we’ll have those recommended numbers plugged in and pre-selected, but they can always go up there and change the recommended numbers.
+I’m being verbose for the transcript, obviously, so. Okay. All righty. So are we done looking at the screen? Is there anything else we want to add?
+Sequence plan By the way, do we want the job picker over here on the left too where they pick the job that we’re talking about for the initial outreach? Or in this case, are they selecting a person? Who does the initial outreach go to? It’s an individual, isn’t it?
+So it really how they’re doing that is that the offer creation.
+An offer creation, they’re creating their email and then they’re putting all these variables for the person. And all that stuff is in the offer library, an offer creation. So essentially, your offer creation tab, whatever they create on the offer creation tab, the email body immediately goes to the first message on the initial outreach. Okay. Assuming that the app doesn’t change aesthetically, like it stays the same as far as the way it looks when we actually launch it, which I’m sure it won’t, but let’s say it did just for the sake of making sense of what we currently have here. When they get to the campaign sequence page, how are they going to be confident that the right person is selected? Or the right job is selected or the right that they even know who’s outreaches they’re editing when they edit them.
+So they should either display the name and the company that’s getting changed, or they need a selector on the left, right?
+Yeah, I might have to. Because like I said, if we’re not, like assuming this is the design that we’re putting out there, the way it’s currently, if I got to this page, I would be like,
+“Wait a minute is this the initial outreach for everybody? Is this the initial outreach for a specific person?” Well, I mean, if you look at the offer creation page, and you see here we have the contact name, we have the contact name one, right?
+For a company name, it would have to, so like you see how there’s like written out? That’s how I see it is like, I’ve been following company name. Now, when they put company name, there has to be under some kind of umbrella with all the contacts under it. Okay.
+So they might have several different offers creation things that they’ve created. So they have like their data-focused offer, and their default tech offer. Right? But then they get to the next screen,
+right They got so what we’re screen, what we’re looking at a second ago, campaign.
+Campaign sequence. Yeah. So you’re saying that when they get to this screen, they should probably also have like specific campaigns that maybe they’ll, for certain groups of people, they’ll want to have an initial outreach of polite nudge and a value add and a final attempt that looked a certain way. Depending on who they’re outreaching to, like we had for the offer creation where it was like the data one and the other one, right? Does that make sense? Like it just seems like is this global for all things and do we like that? And are they going to like that?
+It doesn’t make a ton of sense to me, currently. I mean, you know, as we’ve developed it, it’s close, but I just think you need to either create different campaign types and have those campaign types displayed in the left-hand column. Right? And then how would you do it? Would you have a campaign type or would you have it per company or per person? I mean, to me, campaign type seems consistent with what we did on the offer creation screen.
+Yeah, I think that it is going to be so the offer creation there’s an offer library should there be a campaign library, I guess.
+Campaign library.
+Or when we edit this initial outreach, the supply nudge is value add, is it for everybody? And then at some point, when we launch this campaign, right,
+or the dry run or whatever stage,
+how would they do it? We have to look at how instantly he’s doing it.
+How instantly does it now is share my screen here.
+I’ll have to reinvent the wheel here. I just got to look at what they’re doing. Yeah, I’m not trying to, I just want to make sure it makes sense. Currently, it seems to be missing something. I agree with you. But I want to show you how these guys are dealing with that now. Okay.
+So I’m sharing my screen. Whoa, your video just went bonkers.
+Is it good or no? Well, your face was weird.
+What’s that It’s like fire. It’s going off? Like fireworks.
+It’s like tripping. But I won’t look at that Look at your other screen. Okay, sorry, go ahead.
+We’re doing, oh, this is it Okay, so I’m going to preview. And then I like put in like which person to put in, right? So the you see how like it changes? So there’s a kind of selector, if you will, here.
+Okay.
+This is my person Email. Huh? My person.
+Yeah, the selector is by the email of the person, because the email of the person is also the company name. Okay.
+Okay.
+So if I put in Kira at Inspire Brands, it knows that it’s for the Wild Wings. For example.
+So the email has to be based off of the email, because the email has both the name and the company.
+Okay, let’s go back to our app and see if that makes sense and how we do that.
+Okay. Okay, so we’re looking at campaign name.
+So I’ll speed up the animation. It takes a little bit too long to get there. All right, so campaign sequence. So on the left, right now, it has the fields say job title and company name.
+By this screen. Yeah, so the email Would we already have this populated? Email address. Yeah, I think that the unique identifier if you look at it from the perspective of like a pivot table or something like that,
+or if you look up, whatever it is, if you look up, there’s like a unique identifier. And the unique identifier with the email address, because the email address would trigger the job title, the company name, and the person’s name. Okay.
+All right And do we want a right-hand or left-hand column here? That lists like all the people? I mean, behind it, like will be the email, but it might be like nobody’s going to memorize 100 emails, so it’s going to be the name and position and like name and title and company. Right?
+For each of those individuals, that they’re on their campaign list. And then for each of those, these will repopulate and so will their little fields that say like job title and company name with the variables, right? So all those variables will be replaced accordingly.
+With the variables that associate with that specific user account. So on the left here, we need contact. Yes. Okay. So they click, they select a contact, click. Yeah, they select a contact behind it is the email, like you said, that’s like the unique identifier, but that’s more in the back end. And then, but what they see is, you know, the title and the person and the company. Yeah. And the contact also the contact also has the personalizations, right, too.
+Yeah, yeah. And all the information that, yeah, all the personalizations, anything else that was done in previous screens that led up to this one. And then that will help inform the initial outreach, the employment edge, and so on.
+Yeah. Okay.
+Yeah, that makes sense. Coming to this screen with no context on where we’re at or who we clicked on last could be very problematic.
+Right. Yeah, come into the campaign sequence screen. Yeah. Yeah, because they don’t know who they clicked on last. Maybe they forgot. Maybe they’re not sure, especially if it’s just displaying variables. So the variables here need to be fixed.
+Yeah, this is almost like the preview screen. This is more of like a preview. Yeah.
+Like when I go to instantly, I go to I see that in the preview screen.
+Okay. Do we have a preview screen? Well, the dry run.
+We don’t have a preview screen, but the sequence, the campaign sequence page is like a preview of what the message is going to look like. Yeah, see, look. Now, let’s go to the next one, the dry run. Right?
+So that one, that one is the similar problem, where on the left, who’s are we looking at, right?
+Now unless this is comprehensive, and it has initial outreaches for all the people on your campaign list. But if you’re trying to hit up 100 people today, right,
+then you don’t want to see you don’t have to scroll for five minutes to see them all.
+No, you just want to have the contacts selector. Yeah, the contacts selector on this screen as well. So what’s the main? We actually need it. That’s what I’m curious. Is it redundant?
+Is the campaign screen in the dry run? Let’s look at what features are on each NC. Because remember, we consolidated two screens last time.
+So the campaign sequence currently has the same categories, right? As the dry run page.
+But the campaign sequence also has sequence length, which is an interesting piece, the spam word.
+I don’t know if it needs sending volume. It’s not necessarily in this section. But the personalization is good.
+So this campaign health card, if you will,
+is not on the dry run.
+I don’t think we need the dry run step. Yeah, because like you said, it’s like a preview already on the campaign screen.
+Yeah.
+Okay, what do you think about this campaign health thing?
+It tells us that the sequence length is optimal. The spam words are zero found. The sending volume is… That’s just confusing. Why do you need that then? Why do you need what?
+Why do you need sending volume in there? Yeah, I think it borrowed it from another app.
+And stuck it there based on a previous conversation where we told it to emulate instantly or one of these other apps.
+And that’s where it got it from So personalization, I don’t know. But I think spam words is good because it’s like scans it for like spammy shit that makes people mad and delete your email and block you, right?
+Yeah, no, I like that And the spam sequence length is cool because I was having that problem. I was like, “This is getting too long.” I was trying to use up all the maximum characters to get like maximum value for my spam, right? So then I realized this is too long. And then I was like, “Some of these shorter messages are being…” I was getting kind of equal results. Right?
+It’s not science until you’ve done like thousands and thousands and you can look at your response rate. But for me, I was getting pretty consistent results, whether I sent them a super long one or a super short one. So sequence length didn’t seem to matter a ton, but who knows on an individual basis it might have made a big difference. I know when I get a big long email, I was like, “I’m not reading that.” So well, you can really, the thing is, you can get it really short but really personalized and it really works well. Yeah.
+So you can make it like we actually have it here in our offer creation email. That could be super short, but really personalized.
+I’m following company name recent work on company news and notice you’re tracking or notice you’re tackling pain point. Yeah. Right? This is a pretty short email. Well, it isn’t complete and it’s dot, dot, dot, implies there’s more, right? Or B.
+Oh, which I don’t know which screen you’re looking at actually. I’m looking at offer creation. Just to point out how short the message is. I was looking at a different screen. Okay, so on offer creation, yeah, it’s pretty short email. Yeah, email body. Yeah, it’s a pretty short thing.
+Okay, well,
+we’re going to change these emails a hundred times. Right now we’re trying to figure out the flow of the page.
+Yeah, so we don’t need to lock them in there. Sequence length is good. Right? I think that’s a good piece to have. We should have sequence length.
+Wait, sequence length, wait a second. Sequence length is saying how many is going to be in the sequence, four steps. Yeah, we already know that. We don’t need that. So we don’t need sequence length. What we need is like word count optimal. Yeah, word count. We need word count. Yeah, yeah. I was wondering that too. I was like, “Wait, sequence length.” And then I didn’t think about it more, but yeah, that’s not the right word.
+That’s just counting the number of steps, and we don’t need that. It’s clearly like there are four. We can count that high. Right? So spam words, I like spam words because that will give them a sense of like, “Oh, good, I’m not.” There are no spam words in my emails, right? Because it’s a very personal thing to send an email to a person, even if 99% of them don’t write you back. It’s still that one. It’s like it’s a relationship. So it’s awkward when like, “Oh, wow, I’m really embarrassed by the email.” And then the sequence length, so instead it should say word count instead of on the campaign sequence screen or the campaign.html. Instead of sequence length, we want email length. And then it should have optimal word count.
+Yeah. You also do like a body thing, like email body and we can also like might be able to click on it and be like, “Email talk about word count and talk about like the email body you can make it small, medium, or large.” Like which could be equaling just for a number, something like word counts 200, word counts 4, word counts 200 for small, word count is 400 for medium, word count is 600 for large, kind of an idea. And we’ll do this as a dropdown?
+Yeah. It could be an option. Okay. Okay. So on the left, so which one are we keeping and which one are we losing? It looks like so the dry run QA just seems redundant. We’ll just lose it. Yeah.
+All right So dry run QA is going to go away. It doesn’t offer anything extra. It’s just kind of restates our emails.
+So goodbye sequence QA or dry run QA screen button and the little thing. We’ll probably end up with another stepping stone at some point that will replace it with, but for now it’s just going to go away and there’s only going to be 11 steps for until the other one becomes obvious to us. Or maybe it’ll be dropped down to 10 steps, whatever the case, but we’re just going to lose dry run and not worry about the number of steps right now. And then the campaign is the one we’re going to focus on.
+All the things when you click edit are going to just make the little field editable instead of sequence length. It’s going to say email length. They’re going to be able to choose their email length. The number of spam words will be scanned, zero found.
+Hopefully And then the sending volume, we’re going to delete that because we’re not specifying the sending volume. It’s just however many they decided to send. And then personalization, I mean, that’s very unnecessary. I don’t see how they’re really still doing. Right. So we’re going to lose personalization too. So yeah. I mean, it’s clear how many.
+The only way that you can quantify that is like how many variables, but
+I don’t think that would be useful. Why would you put in? Again, everything is personalized. The whole entire, this whole entire. Yeah. It’s just like. It’s all about personalization.
+It’s trying to be helpful Yeah, trying to be helpful. There’s all kinds of random stuff. So right now there’s a button that says proceed to dry run. But since the dry run is now gone, we want that to say proceed to launch campaign. So from the campaign screen,
+by the way, so since there’s no dry run,
+we maybe put a verb before the word campaign on the button.
+The reason is bring new campaign. Yeah, maybe a preview campaign because there’s already a launch campaign. So you don’t want a campaign and then a launch campaign. It feels redundant. So preview campaign and then from that screen, instead of the next button taking you to proceed to dry run, it should say proceed to launch campaign. Or even just proceed to launch works. And then there’s actually two of those buttons on that screen. There’s one underneath the campaign health, right? I think we could probably lose the whole campaign health card.
+But somewhere it should have some kind of a little card like that where it shows the sequence or the email length, not the sequence length, but the email length. It’s kind of provides some options for the email length based on standard number of words for. And by the way, if you’re setting this over LinkedIn, it’s going to have a max number of words, right? So that might be one of the options. It’s like the LinkedIn max and then there’ll be the email recommended non-spam max and then the optimal recommended for messages. Yeah. For example, if you go on if you go on LinkedIn, you start to write a message out, it has a green, red, has all that stuff, right?
+So I’ll just share my screen so you see what I’m saying. Just to add to what you’re saying without distracting too much from your point, when I had my best success by sending those before you have them as a contact and you go up to what is it called? When you try to add a friend and it says, “Oh, send a note.” So the send a note only lets you do like 100 characters or whatever. It’s really small. And so it’s just enough to send them either a link to my article or one link, right? And so it’s very short. And so I had to be very succinct to be like,
+those, by the way, I sent a lot of those really fast and I got the best response rate from that. It was more than 10%. It was probably like, I don’t know.
+On a connect request. On a connection request, it has sent a note. Yeah. Those I got the best response from and they were very short because they had to be in order to fit in the box. And those are 300 characters. Yeah. So that was great. Those were the best in terms I can definitely say. Those are characters and not those are not words. Yeah, yeah. So those are those by far I can say with total confidence that I had the best response in terms of people writing me back and saying, “Yeah.” Like I said up several demos, that way. Like demoing like app builds. So usually I’d look at what they were doing. I would create an app and then I would demo the app for them. And I would say, “Hey, I have an app that relates to this. I want to show it to you.” And boom, I was getting like a ton of calls. So set up for that. Anyways. Sorry, I didn’t take away from what you were sharing with me.
+All right I think you have a great point So that’s a good point you make there. And so the point really is characters versus word count, right?
+So what I’m sharing right now on my screen is over here on the bottom right, it says there’s a heads up. Messages with fewer than 500 characters get best response rates. That’s what they say. Oh, it’s kind of consistent with what I was saying. Okay. Yeah.
+Because they know how to read it. This is a message. This is a message. If you’re on LinkedIn, and you’re trying to send a connection,
+it’s 300, like I said, is your limit. 300. Fewer than 300 is fewer than 500. So there you go.
+But yeah. Okay. So optimal would be 500 or fewer.
+The character is not words.
+Characters. Yeah.
+Yeah. Okay. So it should be character count is what you’re saying. Okay. So yeah, I guess what you’re saying. I wasn’t sure the point you were making until I heard. Okay. So the what we want for the we don’t want sequence length. We don’t want word count. We want email length. And then we want it to measure the number of characters. And the optimal should be somewhere between 3 and 500 characters.
+Yeah. So optimal is between 300 and 500 characters. We want to scan it for scam words. Spam words. Or scam words. No longer sharing audio and video with. Well, I hear you.
+AI. We’re having to the AI.
+I hear you and I see you.
+We’re having to the AI to fall off. Oh, read AI. No, no. You mean the transcription? I’m not even using that.
+Oh, you’re not even using it Oh, okay. No, I am transcribing, but I’m using Tana.
+Okay. Okay. Yeah. Let me see if it transcribed the last thing that I said. It says and so all right. So we’re making wait, I’m on the wrong screen here.
+See the last thing I transcribed. It says AI. We’re having to the AI. I hear you and I see you. We’re having to the AI to fall off. Oh, read AI. No, no. You mean the transcription? I’m not even using that. Oh, you’re not even why this would be like an endless loop if I just kept reading, right?
+Okay. Okay.
+So it’s still transcribing. And it was very useful last time. I love that it doesn’t have to join your meeting and it doesn’t necessarily know who is talking. That’s kind of not important for us, right?
+Yeah. All right. So yeah. All right. Let’s see if we can conclusively say that we’ve covered everything here.
+What are we looking at? Did I close the role fairy screen?
+Okay. So back to the wireframes. So we talked about removing the dry run QA. We’re going to remove that. We’re going to add the character count.
+To the campaign screen. We’re going to change that button to preview campaign.
+So it’s going to have word count, the optimal word count is between 3 and 500 characters, but they have the drop-down option to increase it.
+We’re going to have it scan it for spam words. It’s going to tell us how many were found. And highlight them so we can find them. That’ll be kind of good, right? Like highlight the spam word in red or whatever so we can find the spam word and change it to a different word and it can recommend. A lot of these things like to rewrite your stuff, which I find a little bit too much. So like there’s a resume website that I use and it’s like always trying to rewrite my resume sections after I spend tons of time getting AI to write them in the first place. Right?
+And I’ve got this perfect section and it’s like, “Hey, let me rewrite that for you.” I was like, “Dude, fucking shut up. Do not change my shit.” Like I finally got it on the screen the way I wanted and you’re going to just change it? No. I already figured out. Like I already got six different AIs to recommend to me how my things should be. Why do you want to change it again? Anyways.
+Okay. So we will offer them the spam words that are highlighted in red.
+And then they can fix it themselves or they can I don’t want to make it too complicated. We’ll just highlight it in red and they can figure out if they want to change it to a different word.
+Yeah.
+So yeah. Okay.
+And then on the left side of the campaign sequence screen, we do want to be able to select our contact. So yeah, there’ll be a contact selector and then that will populate these accordingly with the available names replaced by whomever and whichever company the based on that contact. The what did you call it? The email variable is like the ID that everything is saved under. Oh, yeah. Yeah. Yeah.
+The unique identifier The unique identifier. I like that because everybody’s got a different email with no chance of overlap there.
+So yeah, that’ll work Okay.
+I guess we’ll just go to the next screen and we’re moving dry run. And then we’re on the launch campaign screen. Anything else we want on here? So after today,
+go ahead. Launch campaign is pretty much just giving you the I think that you should be able to edit this name here.
+It’s a campaign name is 100. There’s a whole way of name campaigns too. There’s like you want to use traditional naming conventions. Because some people will there is a training. There’s a whole training on how to name campaigns.
+You don’t want it to be like I don’t know, hard to understand. You want to have some kind of like standard. It should be an open it should be an open field. You can write in there. And then the message that’s there before you write in your message is like the template of how you should write a campaign name.
+Does that make sense?
+No. I mean, I just these aren’t advertising executives. These are just kids trying to get jobs.
+Yeah, no, but I’m trying to say like, you know how we did you know how you went to the questions before in the beginning of this meeting? And then like when you when they answered the questions, you had like things in there in the answer box.
+Yeah, yeah.
+Yeah. So I think that should be like for the campaign name, same idea. And that. So it’ll recommend the campaign name based on what you type? Yeah. Like it’ll be just like the template of how you’re supposed to write out a campaign name. All right. Can it be recommended? And if they want to give it some crazy-ass name, they still can?
+Yeah, yeah, yeah. No, yeah. They can always give that, but it’s just like it’s just a campaign name on the left, but then it also on the right says like it shows like a format of like day number of contacts and company name. Like some kind of like standard naming convention. You know what I mean? Okay. Can you like copy like give me some campaign name? Give me an example of an optimal campaign name and we’ll use that as a default.
+Yeah. I’ll just like I’ll just type it in the chat. Okay.
+That will be at least they’ll have a standard to go by. And if they like that standard, they can use it.
+Yeah. I don’t think most people looking for jobs are going to have like 20 campaigns very quickly. They might work up to that, but hopefully the unemployed long enough to need that many, right? So they’ll have like a few campaigns. And if our app works the way it should, they should have a job by the time they’ve finished their third campaign, right?
+Maybe their fifth I don’t know It’s probably like day like you could put like 11:30, 25.
+Top. Companies.
+I’m trying to companies.
+You can put whatever they want to put, but I’m just trying to put some just give them some kind of structure.
+Can you put this in the chat Yeah. Put it in the chat. Top 20 companies.
+Let’s also wait to see which one is working too. We also want them to do this because this is actually the day that we want. As a business owner. I see.
+So we want them to name their campaigns because then we get the data from using them using the app. We get to see the data. Then we want to know what they did. So well, then maybe we should actually save in the step and have the campaign name created for them based on the variables that are input because that’s also an easy thing to implement. Might be easier than praying and hoping everybody follows your format. Is it just the campaign name is automatically generated based on things that they enter? Yeah. I think that’s going to be good. Yeah. Yeah. That’s easier than like hoping people understand what the hell you’re trying to do. Yeah. I think you’re right. Yeah. Because also we want this data because then we have all the data of what campaigns are doing the best.
+Because if we have 20 users and then we see that the users that are using personalized they’re using the personalization field of company news with video introduction. They’re getting the highest reply rates and we then know on the back end that that’s the best campaign. Okay.
+Now I get it Okay. So what we want is for on the launch campaign screen, it’s going to display the campaign name that was created for them based on how they built their campaign. In this case, this is a campaign that has like some of their job preferences might be in there as well. So let’s say they prefer growth on like growth, hybrid,
+contract roles. So they’d be like a few of those variables might be in the it could be a relatively long campaign name.
+And then for maybe some other screens, we’ll have yeah. So a lot of their job preferences, basically the contact name could be created on the job references screen, right?
+So by the time I was thinking yeah. By the time they complete the job preferences screen, they’ve put in a lot of variables here. And that would be their campaign.
+Well, the job preferences doesn’t indicate how the email will be created. The job preferences just indicates what their preferences are. That’s not actually what we’re quantifying or measuring. Gotcha. Success on. What we’re measuring the success on is really the offer creation.
+And let’s see here. Let me go back. Hold on. And so they’re we’re measuring our offer creation, company. It’s really all these it’s really all these the second row, really. The second row of what? What screen are you on?
+Oh, if you look at the if you go back to the home, the homepage. Yeah. Of Row Ferry. Oh, the second row of buttons. The middle row. Yeah. Those are really what we’re what we want to test. Essentially, what’s happening from a big picture, like big, big, big 10,000-foot view, we have these 20 people that are running this app. And we have all the data in the back end seeing how everybody is doing what you’re doing.
+And we want to see from our super admin view, what are these people that are getting the offers so quickly out of the 20 people? What are they doing?
+That’s different than the other people And then if we see that they’re choosing a particular offer with a particular research done with decision makers, and company research, and pain point match, it’s going to be the variables from these second row things that are really going to be the determining factors, I think. Okay.
+So the decision makers we’re going to select a bunch of folks. But the filters might be in there. So if they have a filter of like exclude accounting or whatever, or following the company, so that might be so basically, the second row. So the variables that are selected on offer creation, the variables that are selected on decision makers,
+and maybe a couple from the job preferences, you said middle row, but company research? Yeah. I think, yeah. I don’t think I think that I think it’s going to be the middle row because the pain point match is going to include the resume and the job description, right?
+But is that campaign going to change? So like a different campaign is going to have a different pain point match because they’re going to have a similar job, the similar kind of everybody’s pain point match is going to be different. We have 20 people on this app. Everybody’s pain point match is going to be different because everybody’s going to have a different resume. I’m talking about for the same person. So if the same person has five campaigns, for the same person has five campaigns, is their pain point match going to be drastically different?
+For each of those campaigns, they’re going to have the same resume each time. And their jobs are going to change, right? So they’re using different criteria to select jobs.
+We’re just talking about the problem of creating a campaign name. Based on an algorithm of picking different variables they select. Yeah. That’s what I’m saying. Yeah. So what we just want to have a good quality campaign name that we create for them so that when we go back into the records, we can see it’s easier for us to find out which campaign they were using that got the most results. Fair enough.
+Okay.
+So it’s going to be a really long-ass campaign name. But their name is going to be the first variable in that campaign name. So that as far as they’re concerned, they don’t need to see the whole campaign name. They can have it reviewed in version that has their last name. And then all those other strings that are pulled from all those different middle row items. Okay. And then they don’t need to see the whole thing. So when they see campaign name, they’re going to see Johnson, underscore, and then 10 more characters, and then dah, dah, dah, and they don’t need to see the whole thing. Because that’s going to be a long-ass thing. I mean, because there’s no limit to how many I mean, we could have it we’re going to have 1,000-character file name, really, but actually, there is a limit at some point. I think it’s like 128 characters, something like that. But anyways, it won’t be that long. You get the point. Yeah. Okay. Fair enough. So let’s look at this campaign summary. We’ve talked a lot about how we’re going to create the campaign name. I think we’re not going to let them create it. We’re going to create it. And it’s going to have their last name as the first, maybe even their first and last name, like first name, underscore, last name, maybe last name first. So last name, underscore, first name, and then underscore,
+variable from middle row variables in the thing and then so on and a bunch of others. And then they can’t see the whole thing. It gets cut off at character 20 or something.
+Okay. And then recipient. So in here, we’ve only selected Jane Doe and John Smith, but they’re probably going to have like 10 or 15 by the time they’re done. Maybe more, right? The recipient or yeah.
+And the sequence length is the four emails. I don’t know why sequence length. I think everybody gets four. I guess you could unselect yeah, you could have three. Yeah.
+Sometimes I do three. I don’t always do four. So you could do it doesn’t have to be I mean, I don’t know why you wouldn’t just make everybody send the four. Maybe that follow-up one will be the one that gets them their job, right?
+I don’t know Yeah. I mean, I don’t know why the sequence length needs to be a thing. Just make them do the four. Do you want to get a job or not? People underestimate the power of manipulation and harassment. People eventually come around.
+Anyways, I just don’t know the need for sequence length is. I think we can remove that one. I mean, you can be three or four.
+You don’t really have to go crazy. I mean, I don’t think it needs to be in the launch campaign section, but fair enough. So we’re going to remove that from the launch campaign section. Estimated duration, also, is that necessary?
+So from the angle of I think that this is kind of like how many emails are being sent. They don’t really need to know this. This is more of an analytical kind of piece. Email being sent. They want to know how many emails they’re going to send because that’s value. That’s very visible, right? It’s like, “Oh, this shit’s going to send out 100 emails for me.” Righteous, right? That’s exciting, I feel like. Maybe I could send out 100 emails. Or maybe they’ll be like, “You know what? I’m going to add some more to this list and send out more than what I have listed here.” So I just think we could remove the estimated duration and the sequence length. Recipients, here it’s showing two contacts, and then it has the names of the people. But I think if you had 100 contacts, you certainly don’t want to see 100 names listed in the little thing.
+So maybe just say number of recipients. Maybe just the number sign, recipients, instead of recipients. So it should be number recipients, recipient count or something that makes sense, and then remove sequence length and estimated duration. Again, we’re talking about the launch the deliverability hyphen launch HTML with the heading launch campaign. We’re going to remove the sequence length and the estimated duration is what do we want to add to it? Anything? What else are they going to want to see before they launch their campaign? They’re going to want to know their tone. Because on one screen, they selected their tone. Is that going to be for the whole campaign?
+Yeah. When they went to offer creation, right? That’s where they selected their tone.
+They might want to try a different tone. Like for different within the same campaign, they’re going to have let me think about that. Well, we’ve talked about a lot of other details, but I can’t think of everything at once. It’s okay. We’re doing this in iterations.
+I’m able to think about other stuff that I didn’t think about before because we’re working on the big stuff, right?
+So you’re saying that can we do multiple tones in one campaign? Because if we didn’t, the campaign name would include tone as one of the variables, right?
+So there might be one campaign that has a mentorship tone. Or it could be a tone per email. If you wanted, we could have their campaign. It has those four emails. They could all have slightly different tones.
+But again, tone is more person-specific, right? So you have a tone that you use for an executive and a tone you use for a tech person and a tone you might use for an entrepreneur or whatever. Different tones, right? Yeah. That tone would have to match with the job title. We don’t know that we have that set up like that. Yeah. So we might need to move some stuff around. But what makes sense? So we don’t have to figure out everything. I can start connecting some of this back stuff, and we can kind of figure out what makes sense as we connect things. I’m okay with calling it good. I just want to know if you have any more ideas with the launch campaign on this screen.
+Again, tone, tone could be let’s go ahead and say we’re going to add the tone.
+Because let’s assume that the whole campaign has the same tone.
+Unless that’s definitely wrong. If that’s definitely wrong, we won’t do that. Is that definitely wrong?
+I think it’s going to make a lot more work for us. Okay.
+We can do a different campaign, different tone. But we should use everybody that is going to be in this campaign is going to be entrepreneur that we can use this tone for them. But to yeah, I don’t know if it adds any value. It would just make it, like you said, more complicated.
+I think it makes it more complicated. Yeah. Yeah. Okay. Forget that. Forget the tone. We won’t list that on the campaign summary.
+We’re going to have the campaign name that’s auto-generated, the recipients is just going to be the number of recipients. There’s not going to be a sequence length or an estimated duration. But there is going to be a total volume. We want to know how many emails are being sent. So that’ll give them a sense of how big their campaign is. Is there anything else? We’ve already said there’s too many tones per campaign. We just have a tone. What else is there? There’s one campaign, one tone. We looked at resume things. We looked at job descriptions.
+Launch campaign I mean, are we applying for more than one job in this campaign?
+It tells us how many emails but it doesn’t tell us and it tells us how many it tells us how many emails. It doesn’t tell us how many jobs we’re applying for. It tells us how many people. Companies. Companies. Companies.
+Because recipients you can have three contacts in one company. Right? Yeah. Well, what about roles? I mean, could you not apply for more than one job within the same company? So because I’ve done that. I’ve had a recruiter reach us out. They’re like, “Hey, go to our jobs page. There’s four roles you could apply there. Do you want me to submit you for both these two roles or whatever?” So and then it didn’t get around to it for any of those people. But I theoretically could have had interviewed for two different roles of the same company. I never ended up doing it. But again, they did offer that. I just decided I don’t want to do the data engineer role because I don’t want to do that job. So I’m not going to interview for it. But that was one of the things. Like they said, so maybe roles I don’t think companies is good because, like I said, there’s more than one job at each company. I remember I was what do you call it? SpaceX is really close to us, right?
+Less than an hour from here.
+So I thought it’d be kind of neat. So I just applied to a whole bunch of jobs at SpaceX. This was years ago, by the way, not recently. This was like five years ago. But I was like, excited about SpaceX. I was like, that’d be a badass place to work. They never responded to any of my applications. But I did apply to a bunch of their jobs. I wasn’t qualified for any of the things I applied for. So I don’t blame them. But I still thought it’d be so I’m just saying that you could definitely apply for more than one job at one company.
+So the efficacy or the effectiveness of that would be related to messaging the right person that is in that role. Right? So you’d want to if you wanted to apply to five different positions in one company, you would want to be able to email the right person for that job. Right?
+You’d want to be able to figure out, okay, if this is a data science kind of position, you’d want to get the recipient to be the head of data science. Yeah. Whereas if you’re doing solutions engineering, you want to be speaking to solutions engineering person.
+So when you apply to multiple positions within a company, when using email, that is really very much focused on the person that you’re speaking to. At that company.
+Okay.
+So on the campaign summary, do we want to say number of roles applied? Or do we want to, I guess that’s the only question.
+I thought about that Because I don’t know that this concretely points to how many jobs they’re applying for.
+Yeah.
+Saying the number of contacts. Because they may contact three people at one job. They may contact one company about three jobs. Right? They might
+listing the recipients is good. Listing the number of them anyways. But and then the number of companies perhaps.
+And the number of jobs seems like a different thing.
+I can’t tell by the number of contacts and the number of companies how many jobs I applied for.
+That’s all I’m saying.
+Because I think I keep, as I talk about it, I’m thinking of more and more conversations I had where they’re telling me they had actually two roles they’re considering me for or three roles they’re considering me for. And they want to talk to someone first to figure out which role might be best for me and so on. So some of those interview processes didn’t get very far, but they did have those conversations with me. So that is a thing.
+I like the idea of how many roles you apply to because it kind of connects back to role fairy being a thing.
+So it’s like yeah. And then the campaign that is our main branding thing. So I think having that word is probably also a good thing. Right? Yeah. That’s what I’m trying to say. That’s what I’m yeah. That’s exactly what I’m trying to say. It’s kind of good to have it at the launch campaign section. You applied because I always see it like as a funny, fun thing. It’s like it comes up. It’s like, “You applied to 20 roles.” It’s so fucking clown comes out of a box.
+What You applied to 20 roles. Yeah. What’s the problem with that? That’s what they want. That’s their dopamine. They’re like, “Fuck.” They want to tell their they want to tell their spouse that they applied to 20 roles and be like, “Come here, honey. Look at the screen.” Look, I applied to 20 roles. Now shut up and let me enjoy my cake. I’m going to relax for the rest of the day. I did my shit. Yeah.
+Right Because it’s a lot of stress on the family when you’re unemployed. It’s like, “Did you even apply to any jobs?” Like, “Yeah. I applied for 20. Come look at the screen.” This isn’t as corny as you think. This is kind of relationship saver.
+
+Yeah. Well, I think that’s actually a good point. Yeah. People become married has become very vulnerable in the middle of this job insecurity thing. Women are like, “Dude, you’re this unemployed piece of shit. I’m going to leave him.” That’s fucking terrible, bro. It’s just true.
+
+Women are survivors. People are survivors, man. They can’t be married to some loser who can’t find a job for six months.
+There’s this other guy hitting on them that he’s rich.
+It’s real. It’s real life.
+
+
+That’s all this came from. You just apply for 20 roles. So obviously, we need to put that in this launch campaign. Is there anything else you want to add to launch campaign?
+Huge tangent. Just to say. It’s fine. It’s easy to clean up the transcript and not worry about it.
+Oh, man. Okay. Anything else you want to add? By the way, this isn’t like we’re launching tomorrow, by the way, right? This week, I’m going to try to connect some of the backend services and see what kind of barriers I bump into in that process. So this week, I’m doing these last touches. Right? On the thing so that whatever I connect is going to be logical. Right? And try to just try to get some of the AI working on a couple of the features. That’s for week eight. That’s the goal. These other things are mostly polished. Right? And aligning the flow the way it kind of makes sense a little bit more. But I think we’re good. Well, I’ll move on. It sounds like we’re kind of stuck on launch campaign. How about you just think about it and get back to me with other things you might want to put on launch campaign? Because it sounds like you don’t have any ideas flowing about that right now. And that’s perfectly fine. Again,
+I think we’re good We’ve probably got until all the backend things are working,
+I’ll try to get enough running to where we can launch maybe an MVP version with a few steps that are missing or whatever. And I just want to I’ll see what’s easy to connect, what’s expensive to connect. What’s most affordable to connect? What details require a lot of work? AI is helping with the work. So that shouldn’t be a barrier. Let’s move on to the analytics screen. If there’s anything you want me to touch up on that last step or remove because it’s dumb, like with some of the other things that were dumb.
+So we have remember we have the step analytics showing those? Oh, yeah. Yeah, we updated this. A little bit. So we’ve got four of these KPIs here at the top. These total sent, open rate, click rate, reply rate. It’s giving us the stuff that you get from what’s that other app you use?
+Instantly Instantly. So instantly gives you all of that stuff, right, based on your click rate and everything.
+And we may end up either connecting instantly or if we don’t have to, we’ll do our own version of instantly. Whatever is kind of cheaper and makes more sense. Since we can build our own software, it would be ideal not to. And we can use whatever backend service instantly is using. But I’ll spend this week figuring out what can be connected.
+So next Sunday, what next Sunday, what you can expect from me is I’ll have a full detailed report on what I was able to connect, what I will be connecting over the next week or two because it’s easy to do and affordable, and then what things we might want to put at a future date because it’s really expensive or just somehow harder. Okay? But
+yeah, by next week, we’ll have at least something connected. We can play with. And also, a very well-researched list of what can be connected and how quickly.
+Now that we have now that we have the flow coherent and 90% there, right, I think that’s time for that. Okay. Analytics screen. What do we like?
+I can’t say anything bad about it. We like it. Total sent,
+click rate,
+opportunities would be the roles, I think.
+And you can set up saying opportunities, you can use the word roles. Okay. I like it. It makes more it’s more like it’s more like consistent with branding, but also makes it’s just straighter to the point. Opportunities is kind of vague. An opportunity could be anything, really. So I mean, you should assume that it’s a job opportunity, but so roles applied, maybe? Yeah, it may be roles applied. And you can attribute a dollar value to each role.
+If you want to do that Right now it’s listing 43 roles at 17,000. I don’t even know. I have no clue what that means or what that’s supposed to mean.
+Yeah. Well, and I don’t think they would either. So we want to know an average salary? Yeah, I don’t know. I think we just take out that dollar value. Okay. Take out the dollar value from opportunities. Change the word opportunities to roles applied. And leave that 43 there. What’s the pipeline value?
+We’ll remove pipeline value is the dollar sign. So we’re going to lose that. Okay. So just leave roles applied and then the number 43 or whatever number they want to put there is fine. Okay.
+Reply rate.
+07 So less than 1%. Let’s hope it’s better than that. Maybe for our little demo version, we should have something higher just to kind of instill a little bit of confidence.
+We don’t really like 12% or something.
+Yeah. Okay. I mean, my best rate was closer to 10. So make it better than that because I was kind of coming out of nowhere trying to figure this shit out. So we’ll just say 12. We want to say that roles role fairy is amazing and is better than the other things. So if our reply rate is 12%, then we’re kicking everybody else’s ass, right?
+We’ve got a better tool.
+I would say Well, and we probably have a lot higher reply rate with the personalization and everything.
+So I’m going to save it like 12.7%. Stick with that. Click rate.
+Click rate is probably needs to be higher.
+Yeah, I would say click rate would be a big piece of it. Instead of 1.49, just 29. 1.49. You actually how these numbers are supposed to go, it goes from highest to lowest. That’s how it’s supposed to go. You send out 100,000 emails, open rate, we don’t really check, to be honest with you. Because in the email marketing world, by putting an open tracker, it immediately triggers the spam detectors.
+So actually, you talk to any email marketer, that’s worth the salt,
+they’ll tell you that open rate is not something you want to track.
+Do you track click rate and reply rate? Yeah. You do track click rate. And of course, reply rate. Okay. So remove open rate because that’s just going to trigger spam filters and not accomplish anything. Besides, who even knows what open rate is? Unless you’re a recruiter.
+Yeah. Open rate is not a good metric to really use anyway because sometimes AI or not necessarily AI, but security measures, they’re going to open your email just to make sure that it’s not malicious or something. So that’s the rate that it’s open. So as soon as they open it, it comes up as spam. Okay. So we’ll remove the open rate thing. We’re going to have a click rate because that actually takes them to a screen and we can track the traffic on the screen. And then the reply rate is we know that because we got the incoming emails.
+So yeah, we don’t want anything built into the emails. It’s going to track because that’s spam it. Okay. You don’t want you don’t want the open rate because it’s almost like you’re putting a pixel into the email and then that’s the kind of things that the spam filters are trained on.
+Makes sense. So yeah, you don’t want that. But I just want to give you the idea is let’s say 50,000 emails sent,
+15% click rate,
+10% reply rate, right So you want the click rate to be higher than the reply rate.
+Gotcha.
+Okay.
+And then the reply rate we already said was going to be like 12.7. So the click rate will be like 29.7. Yeah. Something like that. Yeah. Okay. Now at the bottom here, it has deliverability warmup. Are we going to warm up emails like they do on that other side? How does it instantly actually?
+Yeah. We have to warm up emails. All right.
+So I’m sure we can AI our way to doing that correctly.
+There’s probably plenty of information on how that’s done. So that it’s done correctly. And with the right tools, that it’s not going to be done incorrectly. I don’t know. How to do that. I mean, I’ve tried a lot of different—I’ve done a lot of testing on infrastructure because essentially that’s what we’re talking about here.
+And infrastructure, it’s a pretty big deal.
+I don’t know how we’re going to solve that without using the zap now, for example.
+Okay. So I’m going to talk to the transcript real quick. So we also want to generate a report. It’s going to be infrastructure feasibility report. And for each of the AI features that we want to integrate into this app, we need to understand the potential cost, the most affordable way to build this infrastructure, and it needs to be able to function at a professional level. The thing we’re talking about last is the email warmup on the analytics screen. So on analytics HTML, there’s a thing at the bottom that says deliverability and warmup, and it warms up emails. So we would like to provide that feature so that we don’t have to go through a third party. We need to know that we have a way to do that and build that ourselves. We need to do it to the industry standard that doesn’t trigger spam and doesn’t get our emails blocked. We need to do it correctly, and we need to do it intelligently. And we need to know if this is a feasible goal if what it’s going to cost us, what AI tools are going to be needed for that, and anything else we need to know. A full report on that specifically and then also for all other tools involved, we need to know infrastructure feasibility and potential costs.
+Sorry So yeah, talking to the AI here, we just want to make sure that at least that gets done so we can discuss that later.
+Yeah. And so just to have a benchmark, I mean, the ones that I’m looking at right now, we’re getting mailboxes at about $3 per month, which is really, really cheap. Okay.
+So I’ve tested a lot of different email infrastructure sites, and some of them are worse than others.
+I like I found that the one instantly has is more expensive, and it’s not as good.
+Whereas the one we have here with ZapMail,
+they’re delivering consistently good results in my tests. Yeah, you showed me that video. Okay. Yeah. Yeah.
+Okay.
+So we want to figure out what ZapMail is using and we want to duplicate it, maybe even more intelligently, but certainly affordably and not have to pay ZapMail for them to do it for us. Yeah. ZapMail seems like there’s a lot of companies that are doing this now, and I’ve tested a lot of them, and however ZapMail is doing it,
+I’ve seen the best results with them. Okay. All right. Let’s figure out—let’s dissect their reverse engineer ZapMail system here. And do it like that.
+These aren’t hard things to ask the AI to help us figure out.
+All right And so we’re done with the analytics screen. Is there anything else you want to show on an analytics screen? We discussed removing the open rate and the click rate since we don’t want to have those emails that have those trackers because that’s going to trigger spam. We do want the number of opportunities, but we’re going to rename it role applied, and we’re going to remove the dollar sign in the pipeline. Go ahead. Did you want click rate? We don’t want open rate. We don’t want open rate. Yeah. Sorry. Sorry. We do want click rate because click rate is just going to be tracked by wherever they end up clicking too.
+Yeah. We do want click rate. We don’t want open rate. Okay. We’re just removing open rate.
+Yeah. Okay.
+All right. And then the total sent reply rate is going to be 22.7, click rate is going to be 29.4.
+Yeah.
+Okay. Impressive.
+We need to—I mean, if we don’t have anything impressive, then what are we even doing here?
+Yeah. Yeah. It’s going to be—it’s going to be impressive. It makes sense.
+Yeah. Then you have a total email sent and then you have your—like it says your step analytics.
+You’ll be able to see all the emails that were sent for this particular person. So I think that’s going to be good. Yeah. I think that’s all good. Okay.
+I’m clicking return to home, and there it is.
+Any—so you did mention that the steps—I maybe want to speed up the steps a little bit. Yeah. Take some time. If you click on launch campaign, you’re waiting.
+Yeah. All right. We’ll just speed it up by twice. I don’t think it’s an extraordinary amount of time, but it’s a little bit too long. So I’ll just double the speed of that animation just to kind of—I want to see the steps. I just don’t want to see the steps for so long. I like the steps idea. I like it. Yeah. I think that’s good. The thing is, yeah, so it needs to make sense now when you—if you squeeze the screen, you can kind of see how it looks on a phone. Right. Well, what if I just put it on my phone now? Yeah. Do that. Let me do the same.
+Yeah. The signal out here in space is not that great, but see if I can—oh, it’s not even—it hasn’t updated. What do you mean?
+What do you see when you see it I go to welfare.com is showing up. My phone? Hmm?
+Oh, yeah, I see it now. But it’s still like you have to put your phone to the left side. It’s not very phone responsive. That would be another thing.
+You have to put the phone—at least for me, I got an iPhone. I got to do horizontal. I can’t hold it vertically. The little animation is now showing up, is it?
+Oh, yeah, it is. It’s just kind of faint.
+So I haven’t really spent any time on the responsiveness for the mobile devices yet.
+That is a thing that we need to do.
+Like I said, I think more people are going to be accessing our app with the phones than computers.
+I think we—oh did you notice? I didn’t even click on that gear. There’s a gear button. The little settings thing?
+Yeah, settings. Yeah. Yeah. We didn’t look at that, did we? Let’s look at the settings. Let’s look at it on the computer, though, because I’m trying to look at my phone already. I need to make it more responsive; it’s tedious. All right. So when I click settings,
+oh, it has the daily sending limit, but that’s not really how we have the flow set up, is it?
+Setting safeguards? Yeah. Well, no, this is good. You need this. Because we can only really send about 20, 20, 20 to 30 emails each inbox.
+Okay. So that’s important. Because we can leave it alone for now.
+Yeah. Now about warm-up, auto, pause, and soft bounce. And then it has the sending window. We don’t want to send after—we can either do 8 to 5 PM. It doesn’t really have time zones. But I guess it’s going to assume the time zone of the person that it’s sending it to, but it’s not going to know.
+Yeah. I have to put a time zone in there.
+We’re going to have to add the time zone next to the email.
+Yeah.
+Okay. Then I guess that’s another to-do. Where do we even enter their email? So we have the job tracker. I guess if you enter decision makers, right?
+Yeah. The emails or decision makers?
+And then on decision—the emails is where this is the decision maker section is where you get the contacts. All right. So for each decision maker, we need a time zone because everybody—even at my company, there’s people in Jamaica, and there’s people in the West Coast. Most of the companies in Washington, and there’s some other people in Texas. So I have multiple time zones within the same company. So it can’t be a time zone for the company. It’s got to be a time zone for the person. So next to on the decision makers screen, decision hyphen makers, let me turn off. We have Jane Doe and John Smith listed here.
+And then we can have a time zone somewhere that seems aesthetic and makes sense. We just have to have a contacts—oh, select a contact and research there. Okay.
+Yeah. Let me know if there’s something missing because I lose context.
+Well, this section is—this decision maker section is kind of like emulating Apollo. Okay. Apollo or Zoom info.
+Should it do it better?
+Well, if I’m going to go on Apollo, I’m going to find out who the person is, right? So I kind of feel like you’re going to have to go through the filters and find the person. On Apollo. Yeah.
+Just for your own personal identification here. However, this is what it should look like.
+Are you sharing it? I’m going to share my screen here. Okay.
+Got to log into my Apollo account.
+Continue.
+Just to get it, they’re giving me a whole bunch of shit.
+But essentially, what I’m trying to say is, you’re going to have to search for the contacts.
+Not just going to randomly come there.
+Logging.
+Work email. Coach.
+All right On my screen.
+All right Now I’m sharing my screen. So now we’re in Apollo. So this is how it’s going to look. When we prospect, it’s going to prospect.
+We’re going to go by the company. And we’re going to say, this is kind of what they’re clicking on. In terms of things that they want. Yeah. Let’s borrow some stuff here. So on the left, we have we want all those things?
+Well, all we need is the filter. So essentially, when we’re looking at, let’s say, the job preferences.
+And then we put in these role type, company size, industries,
+what we’re really kind of trying to do is pick the companies here on Apollo. That’s what really kind of what the back end would look like, right? I’m trying to say, okay, this company is 500 employees or 1,000 employees.
+Hold on a second Why is it? Pull this guy out.
+Now we got it So 500 to 10,000, 500 to 1,000, 1,000 to 2,000, 2,000 to 5,000. They’re picking this on the job preferences section. But in the back end, they have to be clicking it on the contact section here in the companies.
+Right So then that’s employees, then location,
+and probably put in some kind of city or state. I’ll just put in United States.
+And that’s important. Make sure we’re not talking to people in India.
+Industry keywords. This would be kind of like skills.
+It’s like the back end there.
+Job titles, definitely. It would be like your job titles for the people. Director, managing director.
+This needs to be kind of put in there too.
+Job titles. Where is it?
+Actually, since it’s a company screen, we don’t need to do job titles. We just need to do the company and the companies. We already got headcount growth. I get lost 12 months.
+Right It’s like 20. 600.
+And so now we have the companies.
+Then once we have the companies,
+and we can say all right, I want to select all these companies.
+I want to find people at those companies.
+Then we can go to find people. Then you have your advanced job titles.
+And things like that Now we can go to management level, we want to speak to founders, or partners, or VPs. Or C-suite.
+Or heads, or directors.
+Then we want to make sure that there are people that live in the United States, not in Jamaica.
+Send job postings. That’s good. You can see we found this is from hiring for.
+Job postings would be good.
+Jobs located in North America.
+I’m hiring for a director in North America.
+Companies in America.
+Different titles.
+Then you want to say these are verified, safe to send.
+You have people.
+Do they have time zones?
+Do they have time zones Let’s see.
+Brian.
+Location.
+They have a location where he’s at. Can I cover his time zone?
+I probably use that for the time zone.
+I’ll do it. Yeah, that’s how I—that was what started the conversation about these guys, about Apollo.
+Wanting to know about the—I mean, of course, if we’re setting up when we can call them, right? So that’s how they know, because they have the data comes with location.
+And the location you can tell the time. Makes sense.
+That would be how that works. Okay.
+These are all founders. CMOs and such.
+Now, there’s a lot of websites you can do, like find the email. Apollo is usually the best.
+You can also use find the email. B2B email, phone data, from mom’s sales team, reach more targets, da-da-da.
+Trusted by sales experts, recently.
+So these are where they charge. They charge them. This is not a good—it doesn’t make sense to buy from find the email because Apollo is bigger. Okay.
+But yeah, just trying to show you different companies that do it. Like IcyPeas. Apparently, it does it.
+IcyPeas. Email.
+All right There’s a lot of time.
+Now we’re getting into how the companies work. They have all these waterfall enrichments that they pull from all these different sites. So they can get the best data for you.
+And the best data being the best email address for this particular person. Okay.
+IcyPeas is apparently a cheap one.
+All the big companies use they have good—they have a good API.
+Just stop sharing. I’ll share IcyPeas website.
+IcyPeas.
+I’m not sure IcyPeas website. Okay.
+Not like Clay uses them. All right. Nowowski, which is one of the big names in the field.
+That’s the main force.
+Apollo. Even Apollo uses them. So they’re kind of like a—no, it doesn’t.
+Source.
+Yeah. Yeah, maybe—I’m going to bed tonight. What did you say? My wife is telling me to come to bed.
+I said I’m going to—yeah, we’ll be on over two hours. We really should be going on. We really should stop. All right. No, good. So I just took screenshots of all those things you showed me. So I got a lot to work with, and again, the main priority for this week is to work on the back end. But I’ll also feed it the transcript for any kind of polish on the—but I have to land on a habitable planet first. So this one up here looks like it has some ocean water. So I think that’s a good sign.
+So it’s about to land this year. As long as the local animals are not too hostile. But yeah, okay. So next Sunday, you’ll see some progress in the back end. You’ll have some reports on feasibility of some other items and I’ll make whatever hopefully all the polish on the front end that we discussed. Okay.
+Have a good night We’re getting there, man.
+Have a good one too. Nice talking with you.
+Yeah, man.

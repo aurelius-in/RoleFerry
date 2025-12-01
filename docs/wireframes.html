@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>RoleFerry - The 12-Step Path to Your Next Role</title>
+<title>RoleFerry - The Path to Your Next Role</title>
 <link rel="stylesheet" href="styles.css" />
 <link rel="icon" href="assets/roleferry_trans.png" />
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
@@ -145,6 +145,24 @@
     line-height: 1.2;
     white-space: nowrap;
     flex-shrink: 0;
+  }
+
+  .stone-step-number {
+    position: absolute;
+    top: 6px;
+    left: 10px;
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    background: rgba(15, 23, 42, 0.9);
+    color: #e5e7eb;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 4;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   }
 
   /* 12-Step S-Curve Positioning */
@@ -345,18 +363,19 @@
         <img src="wordmark.png" alt="RoleFerry" class="wordmark-logo">
         <img src="ani-sm.gif" alt="RoleFerry Animation" class="animated-logo">
       </div>
-      <h1 class="keypad-title">The 12-Step Path to Your Next Role</h1>
+      <h1 class="keypad-title">The Path to Your Next Role</h1>
       <p class="keypad-subtitle">Transform your job search with intelligent automation</p>
     </div>
     <div class="progress-indicator">
-      <div>Progress: <span id="progressText">0/12</span></div>
+      <div>Steps completed: <span id="progressText">0</span></div>
     </div>
 
     <div class="path-container" id="pathContainer">
-      <!-- 12 Steps -->
+      <!-- 11 Steps -->
       <div class="stone" data-tab="job-preferences" data-step="1" title="Define ideal role criteria">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
+          <div class="stone-step-number">1</div>
           <div class="icon">🎯</div>
           <div class="stone-label-text">Job Preferences</div>
         </div>
@@ -364,13 +383,15 @@
       <div class="stone" data-tab="candidate-profile" data-step="2" title="Upload resume and build profile">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
+          <div class="stone-step-number">2</div>
           <div class="icon">📄</div>
-          <div class="stone-label-text">Your Profile</div>
+          <div class="stone-label-text">Your Resume</div>
         </div>
       </div>
       <div class="stone" data-tab="job-descriptions" data-step="3" title="Select and analyze job postings">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
+          <div class="stone-step-number">3</div>
           <div class="icon">📋</div>
           <div class="stone-label-text">Job Descriptions</div>
         </div>
@@ -378,6 +399,7 @@
       <div class="stone" data-tab="job-tracker" data-step="4" title="Manage your pipeline">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
+          <div class="stone-step-number">4</div>
           <div class="icon">📌</div>
           <div class="stone-label-text">Job Tracker</div>
         </div>
@@ -385,6 +407,7 @@
       <div class="stone" data-tab="pain-point-match" data-step="5" title="See alignment score and fit">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
+          <div class="stone-step-number">5</div>
           <div class="icon">🔗</div>
           <div class="stone-label-text">Pain Point Match</div>
         </div>
@@ -392,6 +415,7 @@
       <div class="stone" data-tab="company-research" data-step="6" title="Research company and role context">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
+          <div class="stone-step-number">6</div>
           <div class="icon">🔍</div>
           <div class="stone-label-text">Company Research</div>
         </div>
@@ -399,6 +423,7 @@
       <div class="stone" data-tab="decision-makers" data-step="7" title="Discover decision-makers">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
+          <div class="stone-step-number">7</div>
           <div class="icon">👤</div>
           <div class="stone-label-text">Decision Makers</div>
         </div>
@@ -406,6 +431,7 @@
       <div class="stone" data-tab="offer-creation" data-step="8" title="Craft personalized value proposition">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
+          <div class="stone-step-number">8</div>
           <div class="icon">💼</div>
           <div class="stone-label-text">Offer Creation</div>
         </div>
@@ -413,27 +439,23 @@
       <div class="stone" data-tab="campaign" data-step="9" title="Create follow-up sequence">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
+          <div class="stone-step-number">9</div>
           <div class="icon">📧</div>
           <div class="stone-label-text">Campaign</div>
         </div>
       </div>
-      <div class="stone" data-tab="dry-run" data-step="10" title="Review and QA your sequence">
+      <div class="stone" data-tab="deliverability-launch" data-step="10" title="Send with deliverability checks">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
-          <div class="icon">✅</div>
-          <div class="stone-label-text">Dry Run / QA</div>
-        </div>
-      </div>
-      <div class="stone" data-tab="deliverability-launch" data-step="11" title="Send with deliverability checks">
-        <img src="assets/stones.png" alt="Stone" class="stone-image">
-        <div class="stone-content">
+          <div class="stone-step-number">10</div>
           <div class="icon">🚀</div>
           <div class="stone-label-text">Launch Campaign</div>
         </div>
       </div>
-      <div class="stone" data-tab="analytics" data-step="12" title="Track results and performance">
+      <div class="stone" data-tab="analytics" data-step="11" title="Track results and performance">
         <img src="assets/stones.png" alt="Stone" class="stone-image">
         <div class="stone-content">
+          <div class="stone-step-number">11</div>
           <div class="icon">📊</div>
           <div class="stone-label-text">Analytics</div>
         </div>
@@ -467,7 +489,7 @@
 
   function updateProgress() {
     const progressText = document.getElementById('progressText');
-    progressText.textContent = `${completedSteps.size}/12`;
+    progressText.textContent = `${completedSteps.size}`;
   }
 
   function addFootstepOverlay(stepElement, stepNumber) {
@@ -516,7 +538,7 @@
             }
           }, 300);
         }
-      }, index * 500);
+      }, index * 250); // Faster cadence between steps (approx 2x previous speed)
     });
   }
 
@@ -535,7 +557,7 @@
     // Navigate to wireframe page
     const tabMap = {
       'job-preferences': 'wireframes/job-preferences.html',
-      'candidate-profile': 'wireframes/candidate-profile.html',
+      'candidate-profile': 'wireframes/candidate-resume.html',
       'job-descriptions': 'wireframes/job-descriptions.html',
       'job-tracker': 'wireframes/job-tracker.html',
       'pain-point-match': 'wireframes/pain-point-match.html',
@@ -543,7 +565,6 @@
       'decision-makers': 'wireframes/decision-makers.html',
       'offer-creation': 'wireframes/offer-creation.html',
       'campaign': 'wireframes/campaign.html',
-      'dry-run': 'wireframes/dry-run.html',
       'deliverability-launch': 'wireframes/deliverability-launch.html',
       'analytics': 'wireframes/analytics.html'
     };
