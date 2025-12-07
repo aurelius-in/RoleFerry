@@ -1,3 +1,8 @@
+---
+layout: default
+title: AI Features Cursor/GPT Can Pre‑Build 
+---
+
 ## AI Features Cursor/GPT Can Pre‑Build (No Paid AI Backend Required)
 
 ### Purpose

@@ -1,3 +1,8 @@
+---
+layout: default
+title: AI Backend Price Estimate
+---
+
 ## AI Backend Price Estimates – RoleFerry (Week 9 Draft)
 
 ### Scope & Assumptions
