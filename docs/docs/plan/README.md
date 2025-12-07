@@ -1,3 +1,9 @@
+---
+layout: default
+title: RoleFerry Backend Planning Docs
+---
+
+
 ## RoleFerry Backend Planning Docs (`docs/plan`)
 
 This folder contains the Week 9–12 backend planning docs for RoleFerry. They outline **what services we need, what they cost, and how to phase them in** while keeping the beta affordable and realistic.
