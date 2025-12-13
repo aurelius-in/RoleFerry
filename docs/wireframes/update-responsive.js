@@ -10,7 +10,7 @@ const wireframeFiles = [
   'job-preferences.html',
   'candidate-resume.html',
   'job-descriptions.html',
-  'pinpoint-match.html',
+  'painpoint-match.html',
   'find-contact.html',
   'context-research.html',
   'offer-creation.html',

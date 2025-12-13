@@ -4,14 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 
-interface PinpointMatch {
-  pinpoint_1: string;
+interface PainPointMatch {
+  painpoint_1: string;
   solution_1: string;
   metric_1: string;
-  pinpoint_2: string;
+  painpoint_2: string;
   solution_2: string;
   metric_2: string;
-  pinpoint_3: string;
+  painpoint_3: string;
   solution_3: string;
   metric_3: string;
   alignment_score: number;
@@ -44,23 +44,23 @@ interface JobDescriptionsListResponse {
   job_descriptions: BackendJobDescription[];
 }
 
-interface BackendPinpointMatch {
-  pinpoint_1: string;
+interface BackendPainPointMatch {
+  painpoint_1: string;
   solution_1: string;
   metric_1: string;
-  pinpoint_2: string;
+  painpoint_2: string;
   solution_2: string;
   metric_2: string;
-  pinpoint_3: string;
+  painpoint_3: string;
   solution_3: string;
   metric_3: string;
   alignment_score: number;
 }
 
-interface PinpointMatchResponse {
+interface PainPointMatchResponse {
   success: boolean;
   message: string;
-  matches: BackendPinpointMatch[];
+  matches: BackendPainPointMatch[];
 }
 
 interface ResumeExtract {
@@ -78,11 +78,11 @@ interface ResumeExtract {
   accomplishments: string[];
 }
 
-export default function PinpointMatchPage() {
+export default function PainPointMatchPage() {
   const router = useRouter();
   const [jobDescriptions, setJobDescriptions] = useState<JobDescription[]>([]);
   const [resumeExtract, setResumeExtract] = useState<ResumeExtract | null>(null);
-  const [matches, setMatches] = useState<PinpointMatch[]>([]);
+  const [matches, setMatches] = useState<PainPointMatch[]>([]);
   const [selectedJD, setSelectedJD] = useState<JobDescription | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,28 +111,33 @@ export default function PinpointMatchPage() {
     setError(null);
 
     try {
-      const resp = await api<PinpointMatchResponse>("/pinpoint-match/generate", "POST", {
+      // Persist the selected JD for downstream steps (Offer/Compose context).
+      if (typeof window !== "undefined" && selectedJD) {
+        localStorage.setItem("selected_job_description", JSON.stringify(selectedJD));
+        localStorage.setItem("selected_job_description_id", selectedJD.id);
+      }
+
+      const resp = await api<PainPointMatchResponse>("/painpoint-match/generate", "POST", {
         job_description_id: selectedJD.id,
         resume_extract_id: "latest",
       });
       const backendMatches = resp.matches || [];
-      const mapped: PinpointMatch[] = backendMatches.map((m) => ({
-        pinpoint_1: m.pinpoint_1,
+      const mapped: PainPointMatch[] = backendMatches.map((m) => ({
+        painpoint_1: m.painpoint_1,
         solution_1: m.solution_1,
         metric_1: m.metric_1,
-        pinpoint_2: m.pinpoint_2,
+        painpoint_2: m.painpoint_2,
         solution_2: m.solution_2,
         metric_2: m.metric_2,
-        pinpoint_3: m.pinpoint_3,
+        painpoint_3: m.painpoint_3,
         solution_3: m.solution_3,
         metric_3: m.metric_3,
         alignment_score: m.alignment_score,
       }));
       setMatches(mapped);
       if (typeof window !== "undefined") {
-        localStorage.setItem("pinpoint_matches", JSON.stringify(mapped));
-        // Backwards/alternate key used by some downstream screens.
-        localStorage.setItem("pain_point_matches", JSON.stringify(mapped));
+        // New Week 10+ key:
+        localStorage.setItem("painpoint_matches", JSON.stringify(mapped));
       }
     } catch (e: any) {
       setError("Failed to generate matches. Please try again.");
@@ -143,8 +148,7 @@ export default function PinpointMatchPage() {
 
   const handleContinue = () => {
     if (matches.length > 0) {
-      localStorage.setItem('pinpoint_matches', JSON.stringify(matches));
-      localStorage.setItem('pain_point_matches', JSON.stringify(matches));
+      localStorage.setItem("painpoint_matches", JSON.stringify(matches));
       router.push('/find-contact');
     }
   };
@@ -166,7 +170,7 @@ export default function PinpointMatchPage() {
       <div className="max-w-6xl mx-auto px-4">
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Pinpoint Match</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Pain Point Match</h1>
             <p className="text-white/70">
               Compare your solutions to the job's pain points to find the best alignment.
             </p>
@@ -240,7 +244,7 @@ export default function PinpointMatchPage() {
                     disabled={isGenerating}
                     className="bg-blue-600 text-white px-8 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
-                    {isGenerating ? "Generating Matches..." : "Generate Pinpoint Matches"}
+                    {isGenerating ? "Generating Matches..." : "Generate Pain Point Matches"}
                   </button>
                 </div>
               )}
@@ -279,7 +283,7 @@ export default function PinpointMatchPage() {
                               </div>
                               <div className="flex-1">
                                 <h4 className="font-semibold text-red-900 mb-2">Pain Point</h4>
-                                <p className="text-red-800 mb-3">{match.pinpoint_1}</p>
+                                <p className="text-red-800 mb-3">{match.painpoint_1}</p>
                                 
                                 <h4 className="font-semibold text-green-900 mb-2">Your Solution</h4>
                                 <p className="text-green-800 mb-3">{match.solution_1}</p>
@@ -300,7 +304,7 @@ export default function PinpointMatchPage() {
                               </div>
                               <div className="flex-1">
                                 <h4 className="font-semibold text-red-900 mb-2">Pain Point</h4>
-                                <p className="text-red-800 mb-3">{match.pinpoint_2}</p>
+                                <p className="text-red-800 mb-3">{match.painpoint_2}</p>
                                 
                                 <h4 className="font-semibold text-green-900 mb-2">Your Solution</h4>
                                 <p className="text-green-800 mb-3">{match.solution_2}</p>
@@ -321,7 +325,7 @@ export default function PinpointMatchPage() {
                               </div>
                               <div className="flex-1">
                                 <h4 className="font-semibold text-red-900 mb-2">Pain Point</h4>
-                                <p className="text-red-800 mb-3">{match.pinpoint_3}</p>
+                                <p className="text-red-800 mb-3">{match.painpoint_3}</p>
                                 
                                 <h4 className="font-semibold text-green-900 mb-2">Your Solution</h4>
                                 <p className="text-green-800 mb-3">{match.solution_3}</p>

@@ -25,7 +25,7 @@
 - **Job Preferences/ICP**: Dynamic labeling (Job Seeker vs Recruiter modes)
 - **Resume/Candidate Profile**: AI-powered parsing and data extraction
 - **Job Descriptions**: URL import and pain point analysis
-- **Pinpoint Match**: Solution-to-challenge alignment scoring
+- **Pain Point Match**: Solution-to-challenge alignment scoring
 - **Find Contact**: Contact discovery with email verification
 - **Context Research**: Auto-pulled company and contact summaries
 - **Offer Creation**: Audience-adaptive tone (Recruiter/Manager/Exec)
@@ -79,7 +79,7 @@
 
 ### Frontend (Next.js 15 + React 19 + Tailwind CSS 4)
 - **Modern Stack**: TypeScript, React Server Components, App Router
-- **10-Tab Workflow**: Job Preferences, Resume, Job Descriptions, Pinpoint Match, Find Contact, Context Research, Offer Creation, Compose, Campaign, Deliverability/Launch
+- **10-Tab Workflow**: Job Preferences, Resume, Job Descriptions, Pain Point Match, Find Contact, Context Research, Offer Creation, Compose, Campaign, Deliverability/Launch
 - **Utility Tabs**: Dashboard, Analytics, Settings, Help
 - **Components**: Copilot Panel, Job Cards, Kanban Board, Persona Builder, IJP Wizard, Mode Toggle
 - **Responsive**: Mobile-first design, dark + light themes

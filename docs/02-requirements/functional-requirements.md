@@ -13,7 +13,7 @@
 This document specifies the functional behavior of RoleFerry platform features across Job Seeker and Recruiter modes, covering:
 - **10-Tab Workflow System**: Complete job application automation
 - **Dual-Mode Architecture**: Job Seeker vs Recruiter functionality
-- **AI-Powered Intelligence**: Resume parsing, job analysis, pinpoint matching
+- **AI-Powered Intelligence**: Resume parsing, job analysis, pain point matching
 - **Contact Discovery**: Automated enrichment with email verification
 - **Campaign Management**: 3-email sequences with deliverability checks
 - **Advanced Analytics**: Alignment correlation and cost tracking
@@ -58,7 +58,7 @@ Each requirement follows the format:
 - [ ] AI parsing extracts: pain points, required skills, success metrics
 - [ ] Parsed data available for next workflow step
 
-### REQ-WORKFLOW-004: Pinpoint Match Tab (P0)
+### REQ-WORKFLOW-004: Pain Point Match Tab (P0)
 **Description**: System shall compare resume solutions to job description pain points with alignment scoring.
 
 **Acceptance Criteria**:
@@ -94,7 +94,7 @@ Each requirement follows the format:
 **Acceptance Criteria**:
 - [ ] Tone selection: Recruiter (efficiency), Manager (competence), Exec (ROI)
 - [ ] Format options: Text, Link, Video
-- [ ] AI-generated offers based on pinpoint matches
+- [ ] AI-generated offers based on pain point matches
 - [ ] Custom offer creation capability
 - [ ] Offer storage and retrieval
 

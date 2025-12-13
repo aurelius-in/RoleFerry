@@ -2001,16 +2001,16 @@ def demo_bootstrap():
         "Skills": ["SQL", "Experimentation", "Analytics", "Roadmapping"],
     }
 
-    # Pinpoint match seed (so offer/compose can proceed immediately)
-    store.demo_pinpoint_matches = [
+    # Pain point match seed (so offer/compose can proceed immediately)
+    store.demo_painpoint_matches = [
         {
-            "pinpoint_1": "Improve onboarding activation and reduce drop-off",
+            "painpoint_1": "Improve onboarding activation and reduce drop-off",
             "solution_1": "Led onboarding funnel revamp and improved activation via experiments",
             "metric_1": "+12% activation",
-            "pinpoint_2": "Reduce churn by improving time-to-value",
+            "painpoint_2": "Reduce churn by improving time-to-value",
             "solution_2": "Built lifecycle messaging that reduced early churn",
             "metric_2": "-8% churn",
-            "pinpoint_3": "Improve insight quality and attribution",
+            "painpoint_3": "Improve insight quality and attribution",
             "solution_3": "Implemented event taxonomy + dashboards for attribution",
             "metric_3": "4x faster insights",
             "alignment_score": 0.82,
@@ -2035,7 +2035,7 @@ def demo_bootstrap():
         "success": True,
         "job_preferences": prefs,
         "job_description_id": job_desc_id,
-        "pinpoint_matches": store.demo_pinpoint_matches,
+        "painpoint_matches": store.demo_painpoint_matches,
         "selected_contacts": store.demo_selected_contacts,
     }
 

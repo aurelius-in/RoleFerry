@@ -40,6 +40,15 @@ export default function CampaignPage() {
   const [error, setError] = useState<string | null>(null);
   const [composeHelper, setComposeHelper] = useState<any>(null);
 
+  const applyVariables = (text: string, vars: Record<string, string>) => {
+    let out = text;
+    for (const [k, v] of Object.entries(vars)) {
+      if (!k) continue;
+      out = out.split(k).join(v ?? "");
+    }
+    return out;
+  };
+
   useEffect(() => {
     // Load mode from localStorage
     const stored = localStorage.getItem("rf_mode");
@@ -77,6 +86,16 @@ export default function CampaignPage() {
       // Simulate API call to generate 3-email campaign
       await new Promise(resolve => setTimeout(resolve, 2000));
 
+      // Pull variable values from the composed email (if present) so the campaign preview
+      // feels realistic instead of showing raw {{placeholders}}.
+      const variableMap: Record<string, string> = {};
+      try {
+        const vars = composedEmail?.variables || [];
+        for (const v of vars) {
+          if (v?.name) variableMap[String(v.name)] = String(v.value ?? "");
+        }
+      } catch {}
+
       // Generate 3 emails based on composed email
       const emails: EmailStep[] = [
         {
@@ -92,8 +111,11 @@ export default function CampaignPage() {
         {
           id: "email_2",
           step_number: 2,
-          subject: `Re: ${composedEmail.subject}`,
-          body: `Hi {{first_name}},\n\nJust following up on my previous message about the {{job_title}} role. I wanted to make sure you received it and see if you'd be open to a brief conversation.\n\nI'm confident my experience with {{pinpoint_1}} would be valuable for your team.\n\nBest regards,\n[Your Name]`,
+          subject: applyVariables(`Re: ${composedEmail.subject}`, variableMap),
+          body: applyVariables(
+            `Hi {{first_name}},\n\nJust following up on my previous message about the {{job_title}} role. I wanted to make sure you received it and see if you'd be open to a brief conversation.\n\nI'm confident my experience with {{painpoint_1}} would be valuable for your team.\n\nBest regards,\n[Your Name]`,
+            variableMap
+          ),
           delay_days: 2,
           delay_hours: 0,
           stop_on_reply: true,
@@ -102,8 +124,11 @@ export default function CampaignPage() {
         {
           id: "email_3",
           step_number: 3,
-          subject: `Final follow-up - {{job_title}} at {{company_name}}`,
-          body: `Hi {{first_name}},\n\nI know you're busy, so I'll keep this brief. I'm still very interested in the {{job_title}} position and believe I could make an immediate impact.\n\nIf now isn't the right time, I completely understand. I'd appreciate being kept in mind for future opportunities.\n\nThanks for your time,\n[Your Name]`,
+          subject: applyVariables(`Final follow-up - {{job_title}} at {{company_name}}`, variableMap),
+          body: applyVariables(
+            `Hi {{first_name}},\n\nI know you're busy, so I'll keep this brief. I'm still very interested in the {{job_title}} position and believe I could make an immediate impact.\n\nIf now isn't the right time, I completely understand. I'd appreciate being kept in mind for future opportunities.\n\nThanks for your time,\n[Your Name]`,
+            variableMap
+          ),
           delay_days: 4,
           delay_hours: 0,
           stop_on_reply: true,

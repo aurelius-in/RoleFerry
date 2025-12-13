@@ -115,11 +115,11 @@ async def get_wireframe_documentation() -> Dict[str, Any]:
                 "features": ["URL import", "Text input", "AI parsing", "Data extraction"],
                 "file": "docs/wireframes/job-descriptions.html"
             },
-            "pinpoint_match": {
-                "title": "Pinpoint Match Wireframe",
+            "painpoint_match": {
+                "title": "Pain Point Match Wireframe",
                 "description": "AI-powered matching and scoring interface",
                 "features": ["Alignment scoring", "Match breakdown", "Visual indicators", "Detailed analysis"],
-                "file": "docs/wireframes/pinpoint-match.html"
+                "file": "docs/wireframes/painpoint-match.html"
             },
             "find_contact": {
                 "title": "Find Contact Wireframe",
@@ -238,7 +238,7 @@ async def get_workflow_documentation() -> Dict[str, Any]:
                 },
                 {
                     "step": 4,
-                    "title": "Pinpoint Match",
+                    "title": "Pain Point Match",
                     "description": "AI-powered matching between your profile and job requirements",
                     "actions": ["Review alignment score", "Analyze match breakdown", "Understand fit"]
                 },
@@ -304,7 +304,7 @@ async def get_workflow_documentation() -> Dict[str, Any]:
                 },
                 {
                     "step": 4,
-                    "title": "Pinpoint Match",
+                    "title": "Pain Point Match",
                     "description": "AI-powered matching between candidate and job requirements",
                     "actions": ["Review alignment score", "Analyze match breakdown", "Understand fit"]
                 },
@@ -413,7 +413,7 @@ async def get_api_reference() -> Dict[str, Any]:
                 },
                 {
                     "method": "POST",
-                    "path": "/pinpoint-match/calculate",
+                    "path": "/painpoint-match/calculate",
                     "description": "Calculate alignment score"
                 },
                 {

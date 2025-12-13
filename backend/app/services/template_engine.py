@@ -12,7 +12,7 @@ import json
 
 class VariableType(Enum):
     """Types of template variables"""
-    PINPOINT = "pinpoint"
+    PAINPOINT = "painpoint"
     SOLUTION = "solution"
     METRIC = "metric"
     CONTACT = "contact"
@@ -49,10 +49,10 @@ class TemplateEngine:
     
     def __init__(self):
         self.variable_patterns = {
-            # Pinpoint variables
-            r'\{\{pinpoint_(\d+)\}\}': VariableType.PINPOINT,
-            r'\{\{challenge_(\d+)\}\}': VariableType.PINPOINT,
-            r'\{\{pain_point_(\d+)\}\}': VariableType.PINPOINT,
+            # Pain point variables
+            r'\{\{painpoint_(\d+)\}\}': VariableType.PAINPOINT,
+            r'\{\{challenge_(\d+)\}\}': VariableType.PAINPOINT,
+            r'\{\{pain_point_(\d+)\}\}': VariableType.PAINPOINT,
             
             # Solution variables
             r'\{\{solution_(\d+)\}\}': VariableType.SOLUTION,
@@ -95,9 +95,9 @@ class TemplateEngine:
         }
         
         self.variable_descriptions = {
-            "pinpoint_1": "Primary pain point or challenge identified",
-            "pinpoint_2": "Secondary pain point or challenge identified",
-            "pinpoint_3": "Tertiary pain point or challenge identified",
+            "painpoint_1": "Primary pain point or challenge identified",
+            "painpoint_2": "Secondary pain point or challenge identified",
+            "painpoint_3": "Tertiary pain point or challenge identified",
             "solution_1": "Primary solution or approach proposed",
             "solution_2": "Secondary solution or approach proposed",
             "solution_3": "Tertiary solution or approach proposed",
@@ -182,16 +182,16 @@ class TemplateEngine:
         clean_name = var_name.strip('{}')
         
         # Handle numbered variables
-        if re.match(r'pinpoint_\d+', clean_name):
+        if re.match(r'painpoint_\d+', clean_name):
             return clean_name
         elif re.match(r'solution_\d+', clean_name):
             return clean_name
         elif re.match(r'metric_\d+', clean_name):
             return clean_name
         elif re.match(r'challenge_\d+', clean_name):
-            return clean_name.replace('challenge_', 'pinpoint_')
+            return clean_name.replace('challenge_', 'painpoint_')
         elif re.match(r'pain_point_\d+', clean_name):
-            return clean_name.replace('pain_point_', 'pinpoint_')
+            return clean_name.replace('pain_point_', 'painpoint_')
         elif re.match(r'approach_\d+', clean_name):
             return clean_name.replace('approach_', 'solution_')
         elif re.match(r'method_\d+', clean_name):
@@ -210,8 +210,8 @@ class TemplateEngine:
             return str(context[var_key])
         
         # Handle numbered variables
-        if var_type == VariableType.PINPOINT:
-            return self._get_pinpoint_value(var_key, context)
+        if var_type == VariableType.PAINPOINT:
+            return self._get_painpoint_value(var_key, context)
         elif var_type == VariableType.SOLUTION:
             return self._get_solution_value(var_key, context)
         elif var_type == VariableType.METRIC:
@@ -227,19 +227,25 @@ class TemplateEngine:
         
         return None
     
-    def _get_pinpoint_value(self, var_key: str, context: Dict[str, Any]) -> Optional[str]:
-        """Get pinpoint value from context"""
+    def _get_painpoint_value(self, var_key: str, context: Dict[str, Any]) -> Optional[str]:
+        """Get pain point value from context"""
         if var_key in context:
             return str(context[var_key])
         
-        # Try to get from pinpoint matches
-        pinpoint_matches = context.get("pinpoint_matches", [])
-        if isinstance(pinpoint_matches, list) and len(pinpoint_matches) > 0:
+        # Try to get from pain point matches
+        painpoint_matches = context.get("painpoint_matches", [])
+        if isinstance(painpoint_matches, list) and len(painpoint_matches) > 0:
             index = int(var_key.split('_')[1]) - 1 if '_' in var_key else 0
-            if 0 <= index < len(pinpoint_matches):
-                match = pinpoint_matches[index]
+            if 0 <= index < len(painpoint_matches):
+                match = painpoint_matches[index]
                 if isinstance(match, dict):
-                    return match.get("pain_point", match.get("challenge", ""))
+                    # Support both modern schema (painpoint_1/2/3) and older schemas
+                    return (
+                        match.get(var_key)
+                        or match.get("pain_point")
+                        or match.get("challenge")
+                        or ""
+                    )
         
         return None
     
@@ -248,14 +254,19 @@ class TemplateEngine:
         if var_key in context:
             return str(context[var_key])
         
-        # Try to get from pinpoint matches
-        pinpoint_matches = context.get("pinpoint_matches", [])
-        if isinstance(pinpoint_matches, list) and len(pinpoint_matches) > 0:
+        # Try to get from pain point matches
+        painpoint_matches = context.get("painpoint_matches", [])
+        if isinstance(painpoint_matches, list) and len(painpoint_matches) > 0:
             index = int(var_key.split('_')[1]) - 1 if '_' in var_key else 0
-            if 0 <= index < len(pinpoint_matches):
-                match = pinpoint_matches[index]
+            if 0 <= index < len(painpoint_matches):
+                match = painpoint_matches[index]
                 if isinstance(match, dict):
-                    return match.get("solution", match.get("approach", ""))
+                    return (
+                        match.get(var_key)
+                        or match.get("solution")
+                        or match.get("approach")
+                        or ""
+                    )
         
         return None
     
@@ -264,14 +275,19 @@ class TemplateEngine:
         if var_key in context:
             return str(context[var_key])
         
-        # Try to get from pinpoint matches
-        pinpoint_matches = context.get("pinpoint_matches", [])
-        if isinstance(pinpoint_matches, list) and len(pinpoint_matches) > 0:
+        # Try to get from pain point matches
+        painpoint_matches = context.get("painpoint_matches", [])
+        if isinstance(painpoint_matches, list) and len(painpoint_matches) > 0:
             index = int(var_key.split('_')[1]) - 1 if '_' in var_key else 0
-            if 0 <= index < len(pinpoint_matches):
-                match = pinpoint_matches[index]
+            if 0 <= index < len(painpoint_matches):
+                match = painpoint_matches[index]
                 if isinstance(match, dict):
-                    return match.get("metric", match.get("result", ""))
+                    return (
+                        match.get(var_key)
+                        or match.get("metric")
+                        or match.get("result")
+                        or ""
+                    )
         
         return None
     
@@ -406,16 +422,16 @@ class TemplateEngine:
         """Get list of available variables based on context"""
         available_vars = []
         
-        # Check for pinpoint matches
-        pinpoint_matches = context.get("pinpoint_matches", [])
-        if isinstance(pinpoint_matches, list):
-            for i, match in enumerate(pinpoint_matches, 1):
+        # Check for pain point matches
+        painpoint_matches = context.get("painpoint_matches", [])
+        if isinstance(painpoint_matches, list):
+            for i, match in enumerate(painpoint_matches, 1):
                 if isinstance(match, dict):
                     if match.get("pain_point") or match.get("challenge"):
                         available_vars.append({
-                            "name": f"{{{{pinpoint_{i}}}}}",
-                            "type": "pinpoint",
-                            "description": f"Pinpoint {i}: {match.get('pain_point', match.get('challenge', ''))[:50]}..."
+                            "name": f"{{{{painpoint_{i}}}}}",
+                            "type": "painpoint",
+                            "description": f"Pain point {i}: {match.get('pain_point', match.get('challenge', ''))[:50]}..."
                         })
                     if match.get("solution") or match.get("approach"):
                         available_vars.append({

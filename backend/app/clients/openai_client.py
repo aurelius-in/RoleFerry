@@ -338,7 +338,7 @@ class OpenAIClient:
             "title": f"{role}: quick idea for {company}",
             "content": (
                 f"Hi {{first_name}},\n\n"
-                f"I noticed {company} is tackling {{pinpoint_1}}. I’ve helped teams address this by {{solution_1}} "
+                f"I noticed {company} is tackling {{painpoint_1}}. I’ve helped teams address this by {{solution_1}} "
                 f"({{metric_1}}). If it’s useful, I can share a 2–3 bullet plan tailored to {role}.\n\n"
                 f"Open to a quick 10–15 minute chat?\n\n"
                 f"Best,\n[Your Name]\n"
@@ -375,7 +375,7 @@ class OpenAIClient:
         company = str((context or {}).get("company_name") or "TechCorp")
         role = str((context or {}).get("job_title") or "the role")
         first_name = str((context or {}).get("first_name") or "there")
-        pp = str((context or {}).get("pinpoint_1") or "a key priority")
+        pp = str((context or {}).get("painpoint_1") or "a key priority")
         sol = str((context or {}).get("solution_1") or "a proven approach")
         metric = str((context or {}).get("metric_1") or "a measurable result")
         stub = {

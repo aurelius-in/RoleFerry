@@ -15,31 +15,32 @@ engine = get_engine()
 logger = logging.getLogger(__name__)
 DEMO_USER_ID = "demo-user"
 
-class PinpointMatch(BaseModel):
-    pinpoint_1: str
+class PainPointMatch(BaseModel):
+    painpoint_1: str
     solution_1: str
     metric_1: str
-    pinpoint_2: str
+    painpoint_2: str
     solution_2: str
     metric_2: str
-    pinpoint_3: str
+    painpoint_3: str
     solution_3: str
     metric_3: str
     alignment_score: float
 
-class PinpointMatchResponse(BaseModel):
+
+class PainPointMatchResponse(BaseModel):
     success: bool
     message: str
-    matches: List[PinpointMatch]
+    matches: List[PainPointMatch]
 
 class MatchRequest(BaseModel):
     job_description_id: str
     resume_extract_id: str
 
-@router.post("/generate", response_model=PinpointMatchResponse)
-async def generate_pinpoint_matches(request: MatchRequest):
+@router.post("/generate", response_model=PainPointMatchResponse)
+async def generate_painpoint_matches(request: MatchRequest):
     """
-    Generate pinpoint matches between job description pain points and resume solutions.
+    Generate pain point matches between job description pain points and resume solutions.
     """
     try:
         # Look up the selected job and the latest resume for the demo user.
@@ -100,22 +101,22 @@ async def generate_pinpoint_matches(request: MatchRequest):
         )
 
         # Helper: rule-based pairing (previous behavior)
-        def build_rule_based_match() -> PinpointMatch:
+        def build_rule_based_match() -> PainPointMatch:
             pp = list(jd_pain_points)[:3]
             acc = list(resume_accomplishments)[:3]
 
             def _safe_get(items, idx, default=""):
                 return items[idx] if idx < len(items) else default
 
-            return PinpointMatch(
-                pinpoint_1=_safe_get(pp, 0, "Need to reduce time-to-fill for engineering roles"),
+            return PainPointMatch(
+                painpoint_1=_safe_get(pp, 0, "Need to reduce time-to-fill for engineering roles"),
                 solution_1=_safe_get(
                     acc,
                     0,
                     "Reduced TTF by 40% using ATS optimization and streamlined hiring process",
                 ),
                 metric_1="",
-                pinpoint_2=_safe_get(
+                painpoint_2=_safe_get(
                     pp,
                     1,
                     "Struggling with candidate quality and cultural fit",
@@ -126,7 +127,7 @@ async def generate_pinpoint_matches(request: MatchRequest):
                     "Implemented structured interview process with cultural fit assessment",
                 ),
                 metric_2="",
-                pinpoint_3=_safe_get(
+                painpoint_3=_safe_get(
                     pp,
                     2,
                     "High turnover in engineering team affecting project delivery",
@@ -142,7 +143,7 @@ async def generate_pinpoint_matches(request: MatchRequest):
 
         # Try GPT-backed matching first when configured
         client = get_openai_client()
-        match: PinpointMatch
+        match: PainPointMatch
 
         if client.should_use_real_llm and (jd_pain_points or resume_accomplishments):
             try:
@@ -177,14 +178,14 @@ async def generate_pinpoint_matches(request: MatchRequest):
                 p2 = _pair(1)
                 p3 = _pair(2)
 
-                match = PinpointMatch(
-                    pinpoint_1=str(p1.get("jd_snippet") or (jd_pain_points[0] if jd_pain_points else "")),
+                match = PainPointMatch(
+                    painpoint_1=str(p1.get("jd_snippet") or (jd_pain_points[0] if jd_pain_points else "")),
                     solution_1=str(p1.get("resume_snippet") or (resume_accomplishments[0] if resume_accomplishments else "")),
                     metric_1=str(p1.get("metric") or ""),
-                    pinpoint_2=str(p2.get("jd_snippet") or (jd_pain_points[1] if len(jd_pain_points) > 1 else "")),
+                    painpoint_2=str(p2.get("jd_snippet") or (jd_pain_points[1] if len(jd_pain_points) > 1 else "")),
                     solution_2=str(p2.get("resume_snippet") or (resume_accomplishments[1] if len(resume_accomplishments) > 1 else "")),
                     metric_2=str(p2.get("metric") or ""),
-                    pinpoint_3=str(p3.get("jd_snippet") or (jd_pain_points[2] if len(jd_pain_points) > 2 else "")),
+                    painpoint_3=str(p3.get("jd_snippet") or (jd_pain_points[2] if len(jd_pain_points) > 2 else "")),
                     solution_3=str(p3.get("resume_snippet") or (resume_accomplishments[2] if len(resume_accomplishments) > 2 else "")),
                     metric_3=str(p3.get("metric") or ""),
                     alignment_score=alignment_score,
@@ -198,9 +199,9 @@ async def generate_pinpoint_matches(request: MatchRequest):
         try:
             async with engine.begin() as conn:
                 challenge_solution_pairs = [
-                    (match.pinpoint_1, match.solution_1),
-                    (match.pinpoint_2, match.solution_2),
-                    (match.pinpoint_3, match.solution_3),
+                    (match.painpoint_1, match.solution_1),
+                    (match.painpoint_2, match.solution_2),
+                    (match.painpoint_3, match.solution_3),
                 ]
                 for ch, sol in challenge_solution_pairs:
                     if not ch or not sol:
@@ -224,73 +225,73 @@ async def generate_pinpoint_matches(request: MatchRequest):
         except Exception:
             pass
 
-        return PinpointMatchResponse(
+        return PainPointMatchResponse(
             success=True,
-            message="Pinpoint matches generated successfully",
+            message="Pain point matches generated successfully",
             matches=[match],
         )
     except Exception as e:
         logger.exception("Error generating pain point matches")
         raise HTTPException(status_code=500, detail="Failed to generate matches")
 
-@router.post("/save", response_model=PinpointMatchResponse)
-async def save_pinpoint_matches(matches: List[PinpointMatch]):
+@router.post("/save", response_model=PainPointMatchResponse)
+async def save_painpoint_matches(matches: List[PainPointMatch]):
     """
-    Save pinpoint matches for a user.
+    Save pain point matches for a user.
     """
     try:
         # In a real app, save to database with user_id
-        return PinpointMatchResponse(
+        return PainPointMatchResponse(
             success=True,
-            message="Pinpoint matches saved successfully",
+            message="Pain point matches saved successfully",
             matches=matches
         )
     except Exception as e:
         logger.exception("Error saving pain point matches")
         raise HTTPException(status_code=500, detail="Failed to save matches")
 
-@router.get("/{user_id}", response_model=PinpointMatchResponse)
-async def get_pinpoint_matches(user_id: str):
+@router.get("/{user_id}", response_model=PainPointMatchResponse)
+async def get_painpoint_matches(user_id: str):
     """
-    Get pinpoint matches for a user.
+    Get pain point matches for a user.
     """
     try:
         # In a real app, fetch from database
         # For now, return mock data
         mock_matches = [
-            PinpointMatch(
-                pinpoint_1="Need to reduce time-to-fill for engineering roles",
+            PainPointMatch(
+                painpoint_1="Need to reduce time-to-fill for engineering roles",
                 solution_1="Reduced TTF by 40% using ATS optimization and streamlined hiring process",
                 metric_1="40% reduction, 18 vs 30 days average",
-                pinpoint_2="Struggling with candidate quality and cultural fit",
+                painpoint_2="Struggling with candidate quality and cultural fit",
                 solution_2="Implemented structured interview process with cultural fit assessment",
                 metric_2="Improved candidate quality scores by 35%",
-                pinpoint_3="High turnover in engineering team affecting project delivery",
+                painpoint_3="High turnover in engineering team affecting project delivery",
                 solution_3="Built team retention program with career development focus",
                 metric_3="Reduced turnover by 25% in 6 months",
                 alignment_score=0.85
             )
         ]
         
-        return PinpointMatchResponse(
+        return PainPointMatchResponse(
             success=True,
-            message="Pinpoint matches retrieved successfully",
+            message="Pain point matches retrieved successfully",
             matches=mock_matches
         )
     except Exception as e:
         logger.exception("Error retrieving pain point matches")
         raise HTTPException(status_code=500, detail="Failed to get matches")
 
-@router.put("/{user_id}", response_model=PinpointMatchResponse)
-async def update_pinpoint_matches(user_id: str, matches: List[PinpointMatch]):
+@router.put("/{user_id}", response_model=PainPointMatchResponse)
+async def update_painpoint_matches(user_id: str, matches: List[PainPointMatch]):
     """
-    Update pinpoint matches for a user.
+    Update pain point matches for a user.
     """
     try:
         # In a real app, update in database
-        return PinpointMatchResponse(
+        return PainPointMatchResponse(
             success=True,
-            message="Pinpoint matches updated successfully",
+            message="Pain point matches updated successfully",
             matches=matches
         )
     except Exception as e:
@@ -298,13 +299,13 @@ async def update_pinpoint_matches(user_id: str, matches: List[PinpointMatch]):
         raise HTTPException(status_code=500, detail="Failed to update matches")
 
 @router.delete("/{user_id}")
-async def delete_pinpoint_matches(user_id: str):
+async def delete_painpoint_matches(user_id: str):
     """
-    Delete pinpoint matches for a user.
+    Delete pain point matches for a user.
     """
     try:
         # In a real app, delete from database
-        return {"success": True, "message": "Pinpoint matches deleted successfully"}
+        return {"success": True, "message": "Pain point matches deleted successfully"}
     except Exception as e:
         logger.exception("Error deleting pain point matches")
         raise HTTPException(status_code=500, detail="Failed to delete matches")

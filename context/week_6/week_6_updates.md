@@ -36,7 +36,7 @@ This week focused on a major overhaul of the **RoleFerry** workflow, enhancing t
 - **New Fields**: Added inputs for "Optional Link" and "Video Upload".
 
 ### 5. Terminology Refactor
-- **"Pinpoint" to "Pain Point"**: Renamed all files, API endpoints, and UI text from "Pinpoint Match" to "Pain Point Match" to align with industry standard sales terminology.
+- **"Pain Point" to "Pain Point"**: Renamed all files, API endpoints, and UI text from "Pain Point Match" to "Pain Point Match" to align with industry standard sales terminology.
 
 ### 6. Wireframe Polish
 - **Mock Data Integration**: Removed "Loading..." spinners from all wireframes. Forms now pre-populate with realistic data (e.g., Industries, Skills) to ensure a smooth demo experience.

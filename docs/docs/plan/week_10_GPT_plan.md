@@ -31,6 +31,10 @@ For each of the 12 workflow screens, this document captures:
      - Backend helper seam (planned): `suggest_job_preferences_adjustments(preferences: JobPreferences, notes: str | None) -> JobPreferencesSuggestion`.
      - Exposed in UI as an "Ask AI to review" button, not auto‑applied.
 
+**Week 10 implementation status (now)**:
+- Backend: `POST /job-preferences/save` returns `helper` with `normalized_skills`, `suggested_skills`, `suggested_role_categories`, `notes` (GPT-backed or deterministic stub).
+- Frontend: `frontend/src/app/job-preferences/page.tsx` renders helper output inline after save.
+
 ---
 
 ### 2. Resume
@@ -61,6 +65,10 @@ For each of the 12 workflow screens, this document captures:
    - **Rewrite helper (later)**:
      - `rewrite_resume_bullets(context: ResumeRewriteContext) -> list[str]` where GPT rewrites bullets for clarity/impact.
 
+**Week 10 implementation status (now)**:
+- Backend: `POST /resume/upload` prefers GPT extraction via `OpenAIClient.summarize_resume` and returns a structured `extract` (or deterministic fallback).
+- Frontend: `frontend/src/app/resume/page.tsx` stores `localStorage.resume_extract` for downstream matching.
+
 ---
 
 ### 3. Job Descriptions
@@ -85,6 +93,10 @@ For each of the 12 workflow screens, this document captures:
        - Call `OpenAIClient.extract_job_structure(text)` when allowed.
        - Fall back to the current deterministic parser in `job_descriptions.import_job_description` when GPT is off.
 
+**Week 10 implementation status (now)**:
+- Backend: `POST /job-descriptions/import` calls `OpenAIClient.extract_job_structure` when GPT is enabled, otherwise deterministic defaults.
+- Frontend: `frontend/src/app/job-descriptions/page.tsx` stores `localStorage.job_descriptions` and routes to Pain Point Match.
+
 ---
 
 ### 4. Job Tracker
@@ -107,9 +119,12 @@ For each of the 12 workflow screens, this document captures:
    - **Backend seam function (design)**:
      - `summarize_tracker(applications: list[ApplicationSummary]) -> TrackerSummary` used to drive an "Explain my pipeline" card.
 
+**Week 10 implementation status (now)**:
+- Tracker remains deterministic (mock UI) and is not required for the GPT seams demo.
+
 ---
 
-### 5. Pain Point Match (Pinpoint Match)
+### 5. Pain Point Match
 
 1. **Intended AI behavior**
    - Perform deeper semantic matching between JD pain points and resume experience.
@@ -117,7 +132,7 @@ For each of the 12 workflow screens, this document captures:
 
 2. **Can GPT reasonably power this?**
    - **Yes, as a primary engine**, with the existing lexical pairing as a safety net.
-   - The current router (`pain_point_match.generate_pinpoint_matches`) already builds structured matches from stored JD & resume JSON; GPT can replace the heuristic pairing logic while leaving persistence unchanged.
+   - The current router (`pain_point_match.generate_painpoint_matches`) already builds structured matches from stored JD & resume JSON; GPT can replace the heuristic pairing logic while leaving persistence unchanged.
 
 3. **How GPT would be used**
    - **Inputs**: parsed JD (`pain_points`, `success_metrics`) and parsed resume (`NotableAccomplishments`, `KeyMetrics`).
@@ -127,6 +142,10 @@ For each of the 12 workflow screens, this document captures:
    - **Outputs**: structured `pairs[]` and `alignment_score` JSON used by frontend.
    - **Backend seam function (design)**:
      - `generate_pain_point_matches(jd: JobParsed, resume: ResumeParsed) -> list[Match]` implemented via `OpenAIClient.generate_pain_point_map(...)` with a fallback to the current rule‑based logic in `pain_point_match.py`.
+
+**Week 10 implementation status (now)**:
+- Backend: `POST /painpoint-match/generate` prefers GPT matching via `OpenAIClient.generate_pain_point_map` and returns `painpoint_#/solution_#/metric_#` + `alignment_score` (or deterministic fallback).
+- Frontend: `frontend/src/app/painpoint-match/page.tsx` stores:\n  - `localStorage.painpoint_matches`\n  - `localStorage.selected_job_description` (so Offer/Compose prompts stay consistent).
 
 ---
 
@@ -148,6 +167,9 @@ For each of the 12 workflow screens, this document captures:
    - **Outputs** (JSON): `company_summary`, `recent_news[]`, `company_culture`, `market_position` aligned with the fields in `ContextResearchPage`.
    - **Backend seam function (design)**:
      - `summarize_company_and_contact(context: ResearchContext) -> ResearchSummary` using `OpenAIClient.run_chat_completion` with a strict JSON schema.
+
+**Week 10 implementation status (now)**:
+- Backend: `POST /context-research/research` builds a realistic mock corpus and uses GPT to summarize it into structured fields.\n- Frontend: `frontend/src/app/context-research/page.tsx` calls the backend and stores `localStorage.context_research` for downstream Offer/Compose.
 
 ---
 
@@ -171,6 +193,9 @@ For each of the 12 workflow screens, this document captures:
      - `classify_contact_and_summarize(contact: ContactProfile) -> ContactInsights`.
      - Remains optional; the decision‑maker search UX should work fully without GPT.
 
+**Week 10 implementation status (now)**:
+- Backend: `POST /find-contact/search` returns mock contacts + GPT helper talking points.\n- Backend: `POST /find-contact/verify` verifies selected contacts deterministically.\n- Frontend: `frontend/src/app/find-contact/page.tsx` displays the helper panel and uses the backend verify endpoint (no random verification).
+
 ---
 
 ### 8. Offer Creation
@@ -192,12 +217,15 @@ For each of the 12 workflow screens, this document captures:
    - **Backend seam function (design)**:
      - `generate_offer_email(context: OfferContext) -> EmailDraft` backed by `OpenAIClient.draft_offer_email(context)` and falling back to `offer_creation.create_offer` when GPT is not available.
 
+**Week 10 implementation status (now)**:
+- Backend: `POST /offer-creation/create` is GPT-first and accepts optional `context_research`.\n- Frontend: `frontend/src/app/offer-creation/page.tsx` passes `context_research` so the draft can reference company context.
+
 ---
 
 ### 9. Compose (Email Composer)
 
 1. **Intended AI behavior**
-   - Turn structured variables ({{job_title}}, {{company_name}}, {{pinpoint_1}}, {{solution_1}}, {{metric_1}}, {{company_summary}}, {{recent_news}}, {{contact_bio}}) into a full email template.
+   - Turn structured variables ({{job_title}}, {{company_name}}, {{painpoint_1}}, {{solution_1}}, {{metric_1}}, {{company_summary}}, {{recent_news}}, {{contact_bio}}) into a full email template.
    - Detect and explain jargon, and optionally simplify language.
 
 2. **Can GPT reasonably power this?**
@@ -212,6 +240,9 @@ For each of the 12 workflow screens, this document captures:
    - **Outputs**: rewritten `body`, possibly multiple variants, which are still run through `jargon_detector` as a post‑processing step.
    - **Backend seam function (design)**:
      - `rewrite_for_tone(email: EmailDraft, tone: str, max_words: int) -> EmailDraft` using `OpenAIClient.run_chat_completion` with guardrails on variables.
+
+**Week 10 implementation status (now)**:
+- Backend: `POST /compose/generate` uses `OpenAIClient.draft_compose_email` (subject/body/variants/rationale) and runs jargon detection.\n- Frontend: `frontend/src/app/compose/page.tsx` builds variables from upstream state (selected JD, match, research, selected contacts) and sends a structured `context_data` blob.
 
 ---
 
@@ -233,6 +264,9 @@ For each of the 12 workflow screens, this document captures:
    - **Outputs**: list of suggested edits per step (`suggested_subject`, `suggested_body`, `notes[]`).
    - **Backend seam function (design)**:
      - `suggest_sequence_steps(context: CampaignContext) -> list[EmailStep]` where GPT outputs revised sequences that the user can accept per‑step.
+
+**Week 10 implementation status (now)**:
+- Campaign sequence generation remains simulated client-side for Week 10.\n- The UI surfaces GPT variant ideas from Compose (`localStorage.compose_helper`) to keep the experience “assistant-driven” without requiring new endpoints.\n- The follow-up steps substitute the real upstream variable values (so the Campaign and Deliverability screens show realistic copy instead of raw `{{placeholders}}`).
 
 ---
 
@@ -256,6 +290,9 @@ For each of the 12 workflow screens, this document captures:
    - **Backend seam function (design)**:
      - `explain_deliverability(findings: PreFlightSummary, email_body: str) -> DeliverabilityAdvice`.
 
+**Week 10 implementation status (now)**:
+- Backend: `POST /deliverability-launch/pre-flight-checks` runs deterministic checks and appends a “GPT Deliverability Helper” explanation + copy tweaks.\n- Frontend: `frontend/src/app/deliverability-launch/page.tsx` passes selected contacts to the backend so counts are realistic.
+
 ---
 
 ### 12. Analytics
@@ -276,6 +313,9 @@ For each of the 12 workflow screens, this document captures:
    - **Outputs**: short markdown summary + `suggested_actions[]`.
    - **Backend seam function (design)**:
      - `explain_analytics(snapshot: AnalyticsSnapshot) -> AnalyticsNarrative` exposed behind a "Ask AI to interpret results" control.
+
+**Week 10 implementation status (now)**:
+- Backend: `GET /analytics/explain` returns GPT-backed explanation (or deterministic stub).\n- Frontend: `frontend/src/app/analytics/page.tsx` includes a visible “GPT Helper: interpret results” panel.
 
 ---
 

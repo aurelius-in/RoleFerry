@@ -33,7 +33,7 @@
 - Job Preferences / Ideal Client Profile (ICP)
 - Resume / Candidate Profile  
 - Job Descriptions
-- Pinpoint Match
+- Pain Point Match
 - Find Contact
 - Context (Research)
 - Offer Creation
@@ -69,7 +69,7 @@
 - **Data Display**: Structured cards showing extracted information
 - **Edit Capability**: Inline editing of parsed data
 
-#### Pinpoint Match Tab
+#### Pain Point Match Tab
 - **Score Display**: Large circular progress indicator (0-100%)
 - **Match Breakdown**: Expandable cards showing challenge → solution → metric
 - **Color Coding**: Green (90%+), Blue (75-89%), Yellow (50-74%), Red (<50%)

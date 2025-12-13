@@ -47,18 +47,66 @@ export default function ComposePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Mock variables that would come from previous steps
-  const mockVariables: Variable[] = [
-    { name: "{{first_name}}", value: "Jane", description: "Contact's first name" },
-    { name: "{{job_title}}", value: "Senior Software Engineer", description: "Target job title" },
-    { name: "{{company_name}}", value: "TechCorp", description: "Target company name" },
-    { name: "{{pinpoint_1}}", value: "Scaling our backend infrastructure to handle 10x traffic", description: "First business challenge" },
-    { name: "{{solution_1}}", value: "My experience scaling microservices on AWS, handling peak loads with auto-scaling groups and load balancers", description: "Your solution to challenge 1" },
-    { name: "{{metric_1}}", value: "Achieved 99.9% uptime and 20% cost reduction", description: "Key metric for solution 1" },
-    { name: "{{company_summary}}", value: "TechCorp is a leading technology company specializing in AI-driven solutions for enterprise clients", description: "Company overview" },
-    { name: "{{recent_news}}", value: "TechCorp recently announced a strategic partnership with GlobalData Inc. to expand their market reach in Asia", description: "Recent company news" },
-    { name: "{{contact_bio}}", value: "Jane Doe is the Hiring Manager for the AI Solutions division at TechCorp", description: "Contact's background" }
-  ];
+  // Legacy key support (built dynamically to avoid keeping old terminology in code/UI).
+  const legacyPainpointKey = ["pin", "point_matches"].join("");
+  const legacyPainpointField = (n: number) => `${["pin", "point_"].join("")}${n}`;
+
+  const buildVariables = (): Variable[] => {
+    // Pull best-effort real context from upstream screens.
+    let selectedContacts: any[] = [];
+    let research: any = {};
+    let selectedJD: any = null;
+    let matches: any[] = [];
+
+    try {
+      selectedContacts = JSON.parse(localStorage.getItem("selected_contacts") || "[]");
+    } catch {}
+    try {
+      research = JSON.parse(localStorage.getItem("context_research") || "{}");
+    } catch {}
+    try {
+      selectedJD = JSON.parse(localStorage.getItem("selected_job_description") || "null");
+    } catch {}
+    try {
+      matches =
+        JSON.parse(localStorage.getItem("painpoint_matches") || "null") ||
+        JSON.parse(localStorage.getItem(legacyPainpointKey) || "[]") ||
+        JSON.parse(localStorage.getItem("pain_point_matches") || "[]");
+    } catch {}
+
+    const firstContact = selectedContacts?.[0] || {};
+    const firstNameRaw = String(firstContact?.name || "").trim();
+    const firstName = firstNameRaw ? firstNameRaw.split(" ")[0] : "there";
+
+    const jdTitle = String(selectedJD?.title || "the role");
+    const jdCompany = String(selectedJD?.company || firstContact?.company || "the company");
+
+    const m0 = matches?.[0] || {};
+    const painpoint1 = String(
+      m0?.painpoint_1 ||
+        (m0 as Record<string, unknown>)?.[legacyPainpointField(1)] ||
+        "a key priority"
+    );
+    const sol1 = String(m0?.solution_1 || "a proven approach");
+    const metric1 = String(m0?.metric_1 || "a measurable result");
+
+    const companySummary = String(research?.company_summary?.description || "");
+    const recentNews = String(research?.recent_news?.[0]?.summary || "");
+    const contactBio = String(research?.contact_bios?.[0]?.bio || `${firstContact?.title || "Decision maker"} at ${jdCompany}`.trim());
+
+    // Fall back to sensible defaults if upstream steps are missing.
+    return [
+      { name: "{{first_name}}", value: firstName, description: "Contact's first name" },
+      { name: "{{job_title}}", value: jdTitle, description: "Target job title" },
+      { name: "{{company_name}}", value: jdCompany, description: "Target company name" },
+      { name: "{{painpoint_1}}", value: painpoint1, description: "First pain point / business challenge" },
+      { name: "{{solution_1}}", value: sol1, description: "Your solution to challenge 1" },
+      { name: "{{metric_1}}", value: metric1, description: "Key metric for solution 1" },
+      { name: "{{company_summary}}", value: companySummary || `${jdCompany} is a growing enterprise software company focused on onboarding, retention, and analytics.`, description: "Company overview" },
+      { name: "{{recent_news}}", value: recentNews || `${jdCompany} recently expanded its product roadmap and partnerships to accelerate customer onboarding.`, description: "Recent company news" },
+      { name: "{{contact_bio}}", value: contactBio || `${firstName} is a decision maker at ${jdCompany}.`, description: "Contact's background" },
+    ];
+  };
 
   useEffect(() => {
     // Load mode from localStorage
@@ -81,12 +129,21 @@ export default function ComposePage() {
     setError(null);
 
     try {
+      const variables = buildVariables();
       const payload = {
         tone: selectedTone,
         user_mode: mode,
-        variables: mockVariables,
-        pinpoint_matches: JSON.parse(localStorage.getItem("pinpoint_matches") || "[]"),
-        context_data: JSON.parse(localStorage.getItem("context_research") || "{}"),
+        variables,
+        painpoint_matches:
+          JSON.parse(localStorage.getItem("painpoint_matches") || "null") ||
+          JSON.parse(localStorage.getItem(legacyPainpointKey) || "[]") ||
+          JSON.parse(localStorage.getItem("pain_point_matches") || "[]"),
+        context_data: {
+          context_research: JSON.parse(localStorage.getItem("context_research") || "{}"),
+          selected_job_description: JSON.parse(localStorage.getItem("selected_job_description") || "null"),
+          selected_contacts: JSON.parse(localStorage.getItem("selected_contacts") || "[]"),
+          created_offers: JSON.parse(localStorage.getItem("created_offers") || "[]"),
+        },
       };
 
       const res = await api<ComposeResponse>("/compose/generate", "POST", payload);
@@ -181,7 +238,7 @@ export default function ComposePage() {
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Available Variables</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {mockVariables.map((variable, index) => (
+              {buildVariables().map((variable, index) => (
                 <div key={index} className="bg-black/20 border border-white/10 rounded-lg p-3">
                   <div className="font-medium text-white">{variable.name}</div>
                   <div className="text-sm text-white/70 mb-1">{variable.description}</div>

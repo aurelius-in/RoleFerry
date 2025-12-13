@@ -39,7 +39,7 @@ RoleFerry automates job application outreach by intelligently connecting candida
 1. **Job Preferences**: Sarah sets industries (SaaS, FinTech), roles (Senior PM), salary ($120-150k), location (Remote)
 2. **Resume**: Uploads resume, AI extracts B2B SaaS experience, metrics, accomplishments
 3. **Job Descriptions**: Imports JD from LinkedIn, AI identifies pain points (scaling, user acquisition)
-4. **Pinpoint Match**: System scores 87% alignment - Sarah's growth experience matches their scaling challenges
+4. **Pain Point Match**: System scores 87% alignment - Sarah's growth experience matches their scaling challenges
 5. **Find Contact**: Discovers VP Product (hiring manager) with 95% confidence, email verified as valid
 6. **Context Research**: Auto-pulls company summary, recent funding news, contact bio
 7. **Offer Creation**: AI generates personalized pitch with Manager tone (proof of competence)
@@ -60,7 +60,7 @@ RoleFerry automates job application outreach by intelligently connecting candida
 1. **Ideal Client Profile (ICP)**: Marcus defines target companies (Series B SaaS), roles (Senior Engineers), budget ($150-200k)
 2. **Candidate Profile**: Uploads candidate resume, AI extracts technical experience, achievements, metrics
 3. **Job Descriptions**: Imports client JD, AI identifies technical challenges (microservices, scaling)
-4. **Pinpoint Match**: System scores 92% alignment - candidate's AWS experience matches their cloud challenges
+4. **Pain Point Match**: System scores 92% alignment - candidate's AWS experience matches their cloud challenges
 5. **Find Contact**: Discovers Engineering Manager with 88% confidence, email verified as valid
 6. **Context Research**: Auto-pulls company tech stack, recent engineering hires, manager background
 7. **Offer Creation**: AI generates candidate pitch with Exec tone (ROI/strategy focus)

@@ -25,7 +25,7 @@ smoke_app.include_router(
     job_descriptions.router, prefix="/job-descriptions", tags=["job-descriptions"]
 )
 smoke_app.include_router(
-    pain_point_match.router, prefix="/pinpoint-match", tags=["pinpoint-match"]
+    pain_point_match.router, prefix="/painpoint-match", tags=["painpoint-match"]
 )
 smoke_app.include_router(offer_creation.router, prefix="/offer-creation", tags=["offer-creation"])
 smoke_app.include_router(analytics_router.router, prefix="/analytics", tags=["analytics"])
@@ -78,13 +78,13 @@ Worked on B2B SaaS analytics platform.
 
     # 4) Generate pain point matches
     match_payload = {"job_description_id": job_id, "resume_extract_id": "ignored"}
-    r = client.post("/pinpoint-match/generate", json=match_payload)
-    assert_ok(r, "generate_pinpoint_matches")
+    r = client.post("/painpoint-match/generate", json=match_payload)
+    assert_ok(r, "generate_painpoint_matches")
     matches = r.json()["matches"]
 
     # 5) Create and save an offer
     offer_req = {
-        "pinpoint_matches": [matches[0]],
+        "painpoint_matches": [matches[0]],
         "tone": "manager",
         "format": "text",
         "user_mode": "job-seeker",

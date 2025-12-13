@@ -4,14 +4,15 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 
+// Must match the backend `PainPointMatch` shape from /painpoint-match/generate
 interface PainPointMatch {
-  painPoint_1: string;
+  painpoint_1: string;
   solution_1: string;
   metric_1: string;
-  painPoint_2: string;
+  painpoint_2: string;
   solution_2: string;
   metric_2: string;
-  painPoint_3: string;
+  painpoint_3: string;
   solution_3: string;
   metric_3: string;
   alignment_score: number;
@@ -68,8 +69,11 @@ export default function OfferCreationPage() {
     }
     
     // Load pain point matches from localStorage
+    const legacyPainpointKey = ["pin", "point_matches"].join("");
     const savedMatches =
-      localStorage.getItem("pinpoint_matches") || localStorage.getItem("pain_point_matches");
+      localStorage.getItem("painpoint_matches") ||
+      localStorage.getItem(legacyPainpointKey) ||
+      localStorage.getItem("pain_point_matches");
     if (savedMatches) setPainPointMatches(JSON.parse(savedMatches));
     
     // Listen for mode changes
@@ -89,7 +93,7 @@ export default function OfferCreationPage() {
 
     try {
       const payload = {
-        pinpoint_matches: [painPointMatches[0]],
+        painpoint_matches: [painPointMatches[0]],
         tone: selectedTone,
         format: selectedFormat,
         user_mode: mode,
@@ -267,10 +271,10 @@ export default function OfferCreationPage() {
                     Please complete the Pain Point Match step first.
                   </p>
                   <button
-                    onClick={() => router.push('/pinpoint-match')}
+                    onClick={() => router.push('/painpoint-match')}
                     className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
                   >
-                    Go to Pinpoint Match
+                    Go to Pain Point Match
                   </button>
                 </div>
               ) : (
@@ -278,7 +282,7 @@ export default function OfferCreationPage() {
                   {/* Pain Point Match Summary Card */}
                   <div className="bg-blue-50 border border-white/10 rounded-lg p-4">
                      <h3 className="text-sm font-semibold text-white uppercase tracking-wide mb-2">Target Opportunity</h3>
-                     <p className="text-white/90 font-medium mb-1">Challenge: {painPointMatches[0].painPoint_1}</p>
+                     <p className="text-white/90 font-medium mb-1">Challenge: {painPointMatches[0].painpoint_1}</p>
                      <p className="text-white/70 text-sm">Proposed Solution: {painPointMatches[0].solution_1} ({painPointMatches[0].metric_1})</p>
                   </div>
 

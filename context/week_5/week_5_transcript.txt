@@ -453,7 +453,7 @@ I can see them wanting to fill that out. It could be like an optional thing, but
 Yeah, we should have arrows.
 
 46:55 - Oliver Ellison
-And then pinpoint and then pinpoint match.
+And then pain point and then pain point match.
 
 47:00 - David March
 Wait, that's not pain point. That's pain point.
@@ -483,7 +483,7 @@ All right, so then you upload your your resume it goes opens your thing you can 
 And then it has like,
 
 49:09 - David March
-And so is that pinpoints they actually got it right?
+And so is that pain points they actually got it right?
 
 49:14 - Oliver Ellison
 And then it says the business pain point. So it's got the scaling infrastructure, the data processing and the API development. All right, so it parsed all the information from the thing, right?
@@ -528,7 +528,7 @@ Sometimes pop-ups are weird, they don't always show on certain things.
 Slow down on this one, slow down, slow down. So you got company, valid. What does invalid mean? Does that mean that it's verified?
 
 51:09 - Oliver Ellison
-What does that mean? Well, it's valid. I don't know. I'm not really sure what other criteria for valid. That's a good question. I don't know what valid is based on. When you click it, it should tell you why it's valid, right? So when you click valid next to Jane Doe on the found contacts page, this is for you, AI. Fix this. When I roll over valid, I want to know why it's valid. I don't want to just trust you that it's valid, okay? All right. The fifth that the All right, so now we move from finding the contact to the pinpoint match. It should be pain point, AI pain. If you call it pin point again, I will cause you pain, AI. It should be how pain point matching works. So our AI analyzes your resume solutions against the company's pain points. It even knows that it's pain point.
+What does that mean? Well, it's valid. I don't know. I'm not really sure what other criteria for valid. That's a good question. I don't know what valid is based on. When you click it, it should tell you why it's valid, right? So when you click valid next to Jane Doe on the found contacts page, this is for you, AI. Fix this. When I roll over valid, I want to know why it's valid. I don't want to just trust you that it's valid, okay? All right. The fifth that the All right, so now we move from finding the contact to the pain point match. It should be pain point, AI pain. If you call it pain point again, I will cause you pain, AI. It should be how pain point matching works. So our AI analyzes your resume solutions against the company's pain points. It even knows that it's pain point.
 
 52:58 - Oliver Ellison
 Each match shows how... I even picked that list you emailed me. I still got it wrong. Anyways, moving on. Challenge one, scaling infrastructure. Yeah, this is a big part.
@@ -639,10 +639,10 @@ Available variables, right?
 And then so the contacts first name, company name. You can plug this in points again.
 
 59:56 - David March
-Another pinpoint.
+Another pain point.
 
 1:00:01 - Oliver Ellison
-Cursor or JPT or whomever. Go into here and find wherever it says pinpoint. Change it to pain point. I don't think there's any. Any need for the word pinpoint?
+Cursor or JPT or whomever. Go into here and find wherever it says pain point. Change it to pain point. I don't think there's any. Any need for the word pain point?
 
 1:00:16 - Oliver Ellison
 All right, so and then the email preview is after you've already typed it up. Here's your email. It's customized to your own style, how you want to send. I have a feeling everybody's going to want their email to be a little different. Everybody's got a different voice. They've got a different idea of what kind of email they should send. Some are going to want to send really short emails because they don't want to bother people. Other people want to over explain, right? And then I'm not sending that. It's too long or it's too short, right? Everybody's going to have their own. You want them to send something they're comfortable with. Same with a recruiter. Probably going to have their own. Kind of style, and they're going to be like, sure, that's the only way to do it. I know that feeling. That's why I say that. Because sometimes it just depends on what mood I'm in. I just should not send this email. It's too long. And other days, I'm like, this needs to be longer. So it's kind of what mood I'm in. So anyways, after the compose and the campaign. So these are all your ideas for the most part. So then the job application campaign, you can name it and save different campaigns, of course. Email one. Quick advice on senior software engineer at Tech Hygiene.
@@ -717,7 +717,7 @@ So I don't know. There's work to be done. As you noticed, we kind of like didn't
 And I will do that.
 
 1:05:40 - Oliver Ellison
-But right now, it just looks like this. And for some reason, for pinpoint, it kept giving me this thing, even though I kept changing it to a different icon, and then it would change it back. So that's AI messing with me. I don't know. It just tries to keep me on edge a little bit. But yeah, so we can continue to look at more.
+But right now, it just looks like this. And for some reason, for pain point, it kept giving me this thing, even though I kept changing it to a different icon, and then it would change it back. So that's AI messing with me. I don't know. It just tries to keep me on edge a little bit. But yeah, so we can continue to look at more.
 
 1:05:59 - David March
 Let's go back to the app, Oliver. And let's look at that. Job section again.
@@ -882,13 +882,13 @@ But might you want to put more, you might want to have the ability to get more o
 So anyways, where were we?
 
 23:30 - Oliver Ellison
-So we find contact, pinpoint match, calculate match. I think this is going to be a big piece too. I like this piece. It's kind of redundant. The pain point match calculated successfully, your solutions align well with their challenges. Kind of redundant? Well, because we already did the whole job descriptions, and you type something here, you analyze the job description, and it tells you the business pain points, and it tells you the required... But doesn't it have a solution?
+So we find contact, pain point match, calculate match. I think this is going to be a big piece too. I like this piece. It's kind of redundant. The pain point match calculated successfully, your solutions align well with their challenges. Kind of redundant? Well, because we already did the whole job descriptions, and you type something here, you analyze the job description, and it tells you the business pain points, and it tells you the required... But doesn't it have a solution?
 
 24:08 - David March
 No, I'm not saying it's completely I'm just saying it's a little redundant.
 
 24:12 - Oliver Ellison
-Maybe we can consolidate some of it on one tab. And anyways, maybe it's fine. Just saying it might seem a little redundant anyway. So the, the pinpoint mashing work, it seems also kind of late in the stage. Cause let me see what the email says. You might be right.
+Maybe we can consolidate some of it on one tab. And anyways, maybe it's fine. Just saying it might seem a little redundant anyway. So the, the pain point mashing work, it seems also kind of late in the stage. Cause let me see what the email says. You might be right.
 
 24:30 - Unidentified Speaker
 All of them.
@@ -900,7 +900,7 @@ What email are you looking at? Hold on.
 Hold on a second. Hold on.
 
 24:49 - David March
-I sent you an email about this. Yeah, it is late. It is late. You're right. Pinpoint or pain point as it should be, is actually the fourth. It is the fourth. Oh, I see.
+I sent you an email about this. Yeah, it is late. It is late. You're right. Pain Point or pain point as it should be, is actually the fourth. It is the fourth. Oh, I see.
 
 25:06 - Oliver Ellison
 It is late. Oh, it's going like this. I didn't listen to my instructions.
@@ -927,10 +927,10 @@ No, but I think if you do it that way, it's not as redundant.
 So let's see.
 
 25:48 - Oliver Ellison
-How pinpoint matching works. Our AI analyzes your resume solutions against the company's pinpoints to find the best alignment each. So the companies comes before the jobs. So you start with the company and then you move on to the job they're offering. So, yeah. So, so resume second, right.
+How pain point matching works. Our AI analyzes your resume solutions against the company's pain points to find the best alignment each. So the companies comes before the jobs. So you start with the company and then you move on to the job they're offering. So, yeah. So, so resume second, right.
 
 26:11 - David March
-Then job description and then pinpoint there.
+Then job description and then pain point there.
 
 26:22 - Unidentified Speaker
 I mean, I'm not sure. And we can think about it some more.

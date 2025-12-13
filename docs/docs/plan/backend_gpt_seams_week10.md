@@ -1,235 +1,173 @@
-### Backend GPT Seams – Week 10 Design (Code-Level, Not Yet Fully Implemented)
+### Backend GPT Seams – Week 10 (As Implemented)
 
-This document enumerates the key "AI seams" in the backend and sketches how each can be backed either by deterministic logic (existing today) or by the new unified GPT layer (`OpenAIClient`). The goal is *design completeness*, not full implementation in Week 10.
+This document enumerates the key “AI seams” in the backend and documents the **actual Week 10 implementation**.
 
----
-
-### 1. Resume Parsing
-
-- **Existing implementation**
-  - `backend/app/services_resume.py::parse_resume(text: str) -> dict`
-    - Heuristic extraction of `KeyMetrics`, `ProblemsSolved`, `NotableAccomplishments`, `Positions`, `Domains`, `Seniority`.
-  - Used by `backend/app/routers/resume.py::upload_resume` to populate `parsed_json` in the `resume` table and to feed mock UI extract.
-
-- **Planned seam function**
-  - `def parse_resume(text: str) -> ResumeParsed` (typed wrapper on top of `services_resume.parse_resume`).
-
-- **GPT-backed path (design)**
-  - When `settings.openai_api_key` is set, `settings.mock_mode` is `False`, and `settings.llm_mode == 'openai'`:
-    - Call `OpenAIClient.summarize_resume(text)` to obtain a JSON‑style response.
-    - Validate against a Pydantic model `ResumeParsed` (e.g., positions[], key_metrics[], skills[], accomplishments[], tenure[]).
-    - On validation failure or exception, fall back to the existing heuristic `parse_resume` result.
-
-- **Feature flag pattern**
-  - `use_gpt = client.should_use_real_llm and settings.llm_mode == "openai"`.
-  - `if use_gpt: try GPT -> validate -> return; else: return rule_based`.
+Principles:
+- **GPT-default** when `OPENAI_API_KEY` is set and `LLM_MODE=openai`.
+- **Deterministic stubs** (schema-correct JSON) when GPT is unavailable or disabled, so the demo never breaks.
+- **Deterministic-only** for compliance-critical areas (verification, DNS/warmup, counting/aggregation).
 
 ---
 
-### 2. Job Description Parsing
+## Shared foundation (the unified GPT layer)
 
-- **Existing implementation**
-  - `backend/app/routers/job_descriptions.py::import_job_description`
-    - Uses deterministic defaults to create `pain_points`, `required_skills`, `success_metrics` and persists them in `job.parsed_json`.
-
-- **Planned seam function**
-  - `def parse_job_description(text: str) -> JobParsed`.
-
-- **GPT-backed path (design)**
-  - Use `OpenAIClient.extract_job_structure(text)`.
-  - Expected JSON schema (Pydantic `JobParsed`):
-    - `pain_points: list[str]`
-    - `required_skills: list[str]`
-    - `success_metrics: list[str]`.
-  - Persist the normalized JSON into `job.parsed_json` so downstream consumers (Pinpoint Match, analytics) do not need to care whether GPT or rules produced it.
-
-- **Feature flag pattern**
-  - Same as resume: `use_gpt` boolean gating a `try GPT -> fallback` flow.
+- **Client**: `backend/app/clients/openai_client.py`
+  - `OpenAIClient.should_use_real_llm`:
+    - Uses GPT when `OPENAI_API_KEY` is present, even if `ROLEFERRY_MOCK_MODE=true`.
+    - `LLM_MODE=stub` is the explicit “kill switch”.
+  - `extract_json_from_text(...)`: best-effort JSON extraction from model output.
+  - All GPT calls are made through:
+    - `run_chat_completion(messages, ..., stub_json=...)`
+    - focused helpers (`summarize_resume`, `extract_job_structure`, `generate_pain_point_map`, `draft_offer_email`, `draft_compose_email`).
 
 ---
 
-### 3. Pain Point Matching
+## Seam 1 — Resume parsing & summarization (Primary GPT)
 
-- **Existing implementation**
-  - `backend/app/routers/pain_point_match.py::generate_pinpoint_matches`
-    - Reads `job.parsed_json` and `resume.parsed_json` from the DB.
-    - Pairs up to 3 JD pain points with up to 3 resume statements using simple list slicing.
-    - Persists challenge/solution pairs into `pain_point_match` table.
-
-- **Planned seam function**
-  - `def generate_pain_point_matches(jd: JobParsed, resume: ResumeParsed) -> list[Match]`.
-
-- **GPT-backed path (design)**
-  - Build a compact context JSON (pain_points, success_metrics, notable_accomplishments, key_metrics).
-  - Call `OpenAIClient.generate_pain_point_map(jd_blob, resume_blob)`.
-  - Expected JSON schema (Pydantic `Match`):
-    - `pairs: list[{ jd_snippet: str, resume_snippet: str, metric: str }]`
-    - `alignment_score: float`.
-  - Map `pairs` into the existing `PinpointMatch` model and persist each challenge/solution pair as done today.
-
-- **Feature flag pattern**
-  - When GPT is off, re‑use the current `PinpointMatch` construction logic untouched.
+- **Endpoint**: `POST /resume/upload`
+- **File**: `backend/app/routers/resume.py`
+- **Inputs**: resume file upload (`.pdf`, `.docx`, `.txt`)
+- **Deterministic behavior**:
+  - Always runs `services_resume.parse_resume(raw_text)` for stable storage.
+  - If DB is unavailable, caches to in-memory demo store.
+- **GPT behavior (when enabled)**:
+  - Calls `OpenAIClient.summarize_resume(raw_text)`.
+  - Expected JSON output:
+    - `positions[]`, `key_metrics[]`, `skills[]`, `accomplishments[]`, `tenure[]`
+- **Fallback**:
+  - If GPT output is missing/invalid, returns a deterministic sample `ResumeExtract`.
 
 ---
 
-### 4. Offer Creation
+## Seam 2 — Job description parsing into pain points/skills/metrics (Primary GPT)
 
-- **Existing implementation**
-  - `backend/app/routers/offer_creation.py::create_offer`
-    - Generates an `Offer` by interpolating `pinpoint_matches`, tone, and mode into a deterministic template.
-  - `save_offer` persists the text body into the `offer` table.
-
-- **Planned seam function**
-  - `def generate_offer_email(context: OfferContext) -> EmailDraft`.
-    - `OfferContext` includes: user_mode, tone, format, first match triplet, company summary, contact facts.
-
-- **GPT-backed path (design)**
-  - Call `OpenAIClient.draft_offer_email(context_dict)`.
-  - Ask for a concise email body + title (subject‑like line) with explicit length constraints.
-  - Validate length and strip any hallucinated variables that do not exist in the context.
-
-- **Feature flag pattern**
-  - When GPT is disabled, call the existing `create_offer` logic to produce the same `Offer` shape.
+- **Endpoint**: `POST /job-descriptions/import`
+- **File**: `backend/app/routers/job_descriptions.py`
+- **Inputs**: `{ url?: string | null, text?: string | null }`
+- **GPT behavior (when enabled)**:
+  - Calls `OpenAIClient.extract_job_structure(content)`.
+  - Expected JSON output:
+    - `title`, `company`, `pain_points[]`, `required_skills[]`, `success_metrics[]`
+- **Fallback**:
+  - Deterministic defaults for lists + heuristics for `title/company` from the first lines.
+- **Persistence / continuity**:
+  - Best-effort DB insert.
+  - Always caches to `store.demo_job_descriptions[job_id]` so downstream steps work without Postgres.
 
 ---
 
-### 5. Compose (Email Templates)
+## Seam 3 — Pain point match & alignment scoring (Primary GPT)
 
-- **Existing implementation**
-  - `backend/app/routers/compose.py::generate_email`
-    - Builds an `EmailTemplate` using deterministic text templates and the Jinja‑style variables.
-    - Runs `jargon_detector` to find jargon and produce a simplified variant.
-
-- **Planned seam function**
-  - `def rewrite_for_tone(email: EmailDraft, tone: str, max_words: int) -> EmailDraft`.
-
-- **GPT-backed path (design)**
-  - Freeze the variable placeholders ({{...}}) and ask GPT to rewrite the body while preserving those tokens and core facts.
-  - Use `OpenAIClient.run_chat_completion` with a strict system prompt: "Do not invent new variables or change existing placeholders."
-  - Re‑run `jargon_detector` on the GPT output and keep both original and rewritten text.
-
-- **Feature flag pattern**
-  - The base template generation remains deterministic; GPT is used as a second pass when invoked.
-
----
-
-### 6. Company & Contact Research
-
-- **Existing implementation**
-  - `backend/app/services/serper_client.py` + `context_research` router (front‑end) currently rely on mocked research summaries.
-
-- **Planned seam function**
-  - `def summarize_company_and_contact(context: ResearchContext) -> ResearchSummary`.
-    - `ResearchContext` includes:
-      - Company name, domain, industry.
-      - A small set of curated SERP/snippet texts.
-      - One or more contact bios.
-
-- **GPT-backed path (design)**
-  - Call `OpenAIClient.run_chat_completion` with a system prompt that asks for JSON fields:
-    - `company_summary`, `recent_news[]`, `company_culture`, `market_position`, `contact_bios[]`.
-  - Validate via a Pydantic `ResearchSummary` model before storing in the `research` table or local storage.
-
-- **Feature flag pattern**
-  - When GPT is off, keep the current hard‑coded/example summaries.
+- **Endpoint**: `POST /painpoint-match/generate`
+- **File**: `backend/app/routers/pain_point_match.py`
+- **Inputs**: `{ job_description_id: string, resume_extract_id: string }`
+- **GPT behavior (when enabled)**:
+  - Builds compact JSON blobs from stored JD + resume.
+  - Calls `OpenAIClient.generate_pain_point_map(jd_blob, resume_blob)`.
+  - Expected JSON output:
+    - `pairs[]: { jd_snippet, resume_snippet, metric }`
+    - `alignment_score: number (0-1)`
+  - Maps pairs into the existing response schema:
+    - `painpoint_1/2/3`, `solution_1/2/3`, `metric_1/2/3`, `alignment_score`.
+- **Fallback**:
+  - Deterministic pairing based on list slicing.
+- **Persistence**:
+  - Best-effort DB insert into `pain_point_match` table.
 
 ---
 
-### 7. Lead Qualification (Already Partially Wired)
+## Seam 4 — Offer drafting (Primary GPT)
 
-- **Existing implementation**
-  - `backend/app/services/ai_qualifier.py::qualify_prospect`
-    - Previously: purely rule‑based (title heuristics) with a TODO for OpenAI.
-    - Now (Week 10): uses `OpenAIClient.run_chat_completion` when enabled, with a JSON decision schema and a rule‑based fallback.
-  - Used by `lead_qual` and `n8n_hooks` routers.
-
-- **Seam behavior**
-  - GPT path returns a small JSON object: `decision` (`yes`/`no`/`maybe`) and `reason`.
-  - On any exception or schema mismatch, the function falls back to deterministic title‑based logic.
-
-- **Feature flag pattern**
-  - Fully controlled by `OpenAIClient.should_use_real_llm` (API key + `mock_mode` + `llm_mode`).
+- **Endpoint**: `POST /offer-creation/create`
+- **File**: `backend/app/routers/offer_creation.py`
+- **Inputs**:
+  - `painpoint_matches[]`, `tone`, `format`, `user_mode`
+  - Optional `context_research` (Week 10 enhancement) so the draft can reference company context.
+- **GPT behavior (when enabled)**:
+  - Calls `OpenAIClient.draft_offer_email(context)`.
+  - Expected JSON output: `{ title: string, content: string }`
+- **Fallback**:
+  - Deterministic template offer.
 
 ---
 
-### 8. Sequence Suggestions (Campaign)
+## Seam 5 — Compose drafting + variants + rationale (Primary GPT)
 
-- **Existing implementation**
-  - Campaign router primarily uses static sequences and rule‑based spam checks.
-
-- **Planned seam function**
-  - `def suggest_sequence_steps(context: CampaignContext) -> list[EmailStep]`.
-    - `CampaignContext` includes target persona, initial email text, and current steps.
-
-- **GPT-backed path (design)**
-  - Ask GPT to propose updated subjects/bodies and/or timing suggestions for each step, with explicit constraints (no sending, no deliverability promises).
-  - Represent suggestions as `EmailStep` objects that the UI can diff against existing steps.
-
-- **Feature flag pattern**
-  - Suggestions are only generated on explicit user action (e.g., "Ask AI to improve sequence").
-
----
-
-### 9. Deliverability Explanation
-
-- **Existing implementation**
-  - `backend/app/routers/deliverability_launch.py`
-    - Deterministic pre‑flight checks: verification, spam score, DNS, bounce history, warmup.
-    - `validate_content` uses `jargon_detector` and simple spam heuristics.
-
-- **Planned seam function**
-  - `def explain_deliverability(findings: PreFlightSummary, email_body: str) -> DeliverabilityAdvice`.
-
-- **GPT-backed path (design)**
-  - GPT reads the structured findings plus body text and outputs:
-    - `summary`: 2–4 bullet points explaining issues.
-    - `suggested_edits[]`: localized wording suggestions.
-  - This is strictly advisory; the actual pass/fail logic stays in code.
-
-- **Feature flag pattern**
-  - Exposed behind an "Explain issues" button; the deliverability pipeline never depends on GPT.
+- **Endpoint**: `POST /compose/generate`
+- **File**: `backend/app/routers/compose.py`
+- **Inputs**:
+  - `tone`, `user_mode`, `variables[]`, `painpoint_matches[]`, `context_data`.
+  - Note: `context_data` is `Dict[str, Any]` so the UI can pass nested objects (research, contacts, offers, selected JD).
+- **GPT behavior (when enabled)**:
+  - Calls `OpenAIClient.draft_compose_email(context)`.
+  - Expected JSON output:
+    - `subject`, `body`, `variants[]`, `rationale`
+- **Post-processing**:
+  - Runs jargon detection and generates `simplified_body`.
+- **Fallback**:
+  - Deterministic email template if GPT output is missing/invalid.
 
 ---
 
-### 10. Analytics Narratives
+## Frontend continuity note (not a backend seam)
 
-- **Existing implementation**
-  - `backend/app/routers/analytics.py` aggregates metrics from `application` and `outreach` tables + in‑memory mocks.
+The Campaign step is intentionally simulated client-side in Week 10, but for demo realism it:
+- Substitutes the composed variable values into follow-up steps (so users see real names/company/role instead of raw `{{placeholders}}`).
 
-- **Planned seam function**
-  - `def explain_analytics(snapshot: AnalyticsSnapshot) -> AnalyticsNarrative`.
+## Seam 6 — Company + contact research summarization (Primary GPT)
 
-- **GPT-backed path (design)**
-  - Snapshot from `/analytics/overview` or `/analytics/campaign` is passed as JSON.
-  - GPT outputs a short narrative and `suggested_actions[]`.
-
-- **Feature flag pattern**
-  - Purely optional; analytics endpoints remain fully functional without GPT.
+- **Endpoint**: `POST /context-research/research`
+- **File**: `backend/app/routers/context_research.py`
+- **Inputs**: `{ contact_ids: string[], company_name: string }`
+- **Behavior**:
+  - Builds a realistic mocked “research corpus” (what provider pipelines would return).
+  - Calls `run_chat_completion(..., stub_json=...)` and expects structured JSON:
+    - `company_summary`, `contact_bios[]`, `recent_news[]`, `shared_connections[]`, `hooks[]`
+- **Helper surface**:
+  - Returns `helper.hooks` for outreach talking points.
 
 ---
 
-### Shared Feature Flag & Error-Handling Pattern
+## Seam 7 — Decision makers talking points (Helper GPT)
 
-Across all seams, the pattern is:
+- **Endpoint**: `POST /find-contact/search`
+- **File**: `backend/app/routers/find_contact.py`
+- **Behavior**:
+  - Contact discovery is mocked for Week 10.
+  - GPT helper generates:
+    - `opener_suggestions[]`, `questions_to_ask[]`, `talking_points_by_contact`.
 
-```python
-client = get_openai_client()
-use_gpt = client.should_use_real_llm  # API key + !mock_mode + llm_mode == 'openai'
+Verification:
+- **Endpoint**: `POST /find-contact/verify`
+- Uses deterministic email verification logic (Week 10 demo-safe), and verifies the real selected emails.
 
-if use_gpt:
-    try:
-        raw = client.run_chat_completion(...)
-        parsed = SchemaModel.model_validate(extract_json(raw))
-        return parsed
-    except Exception:
-        # Log and fall back to deterministic behavior
-        return rule_based_fallback(...)
-else:
-    return rule_based_fallback(...)
-```
+---
 
-This ensures:
+## Seam 8 — Deliverability explanations & copy tweaks (Helper GPT)
 
-- No caller needs to handle provider‑specific errors.
-- In `mock_mode` or when no key is present, all seams behave deterministically.
-- Switching to future providers is centralized in `OpenAIClient` and `settings.llm_mode`.
+- **Endpoint**: `POST /deliverability-launch/pre-flight-checks`
+- **File**: `backend/app/routers/deliverability_launch.py`
+- **Deterministic checks**: verification, spam score, DNS, bounce, warmup.
+- **GPT helper**:
+  - Adds a “GPT Deliverability Helper” check with:
+    - summary, copy_tweaks[], subject_variants[]
+  - Never blocks launch.
+
+---
+
+## Seam 9 — Explanatory analytics (Helper GPT)
+
+- **Endpoint**: `GET /analytics/explain`
+- **File**: `backend/app/routers/analytics.py`
+- **Inputs**: internally composes deterministic `metrics` + `campaign` snapshot.
+- **GPT output**:
+  - `insights[]`, `risks[]`, `next_actions[]`, `confidence (0-1)`
+- **Fallback**:
+  - Deterministic `stub_json` output.
+
+---
+
+## Diagnostic seam
+
+- **Endpoint**: `GET /health/llm`
+- **Purpose**: confirm whether GPT is enabled and responding; returns a probe preview.
