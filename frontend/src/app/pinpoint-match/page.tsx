@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 interface PinpointMatch {
   pinpoint_1: string;
@@ -23,6 +24,43 @@ interface JobDescription {
   painPoints: string[];
   requiredSkills: string[];
   successMetrics: string[];
+}
+
+interface BackendJobDescription {
+  id: string;
+  title: string;
+  company: string;
+  url?: string | null;
+  content: string | null;
+  pain_points: string[];
+  required_skills: string[];
+  success_metrics: string[];
+  parsed_at: string;
+}
+
+interface JobDescriptionsListResponse {
+  success: boolean;
+  message: string;
+  job_descriptions: BackendJobDescription[];
+}
+
+interface BackendPinpointMatch {
+  pinpoint_1: string;
+  solution_1: string;
+  metric_1: string;
+  pinpoint_2: string;
+  solution_2: string;
+  metric_2: string;
+  pinpoint_3: string;
+  solution_3: string;
+  metric_3: string;
+  alignment_score: number;
+}
+
+interface PinpointMatchResponse {
+  success: boolean;
+  message: string;
+  matches: BackendPinpointMatch[];
 }
 
 interface ResumeExtract {
@@ -47,17 +85,22 @@ export default function PinpointMatchPage() {
   const [matches, setMatches] = useState<PinpointMatch[]>([]);
   const [selectedJD, setSelectedJD] = useState<JobDescription | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load data from localStorage
-    const savedJDs = localStorage.getItem('job_descriptions');
-    const savedResume = localStorage.getItem('resume_extract');
-    
-    if (savedJDs) {
-      setJobDescriptions(JSON.parse(savedJDs));
-    }
-    if (savedResume) {
-      setResumeExtract(JSON.parse(savedResume));
+    // Load data from localStorage for initial render
+    try {
+      const savedJDs = typeof window !== "undefined" ? localStorage.getItem("job_descriptions") : null;
+      const savedResume = typeof window !== "undefined" ? localStorage.getItem("resume_extract") : null;
+
+      if (savedJDs) {
+        setJobDescriptions(JSON.parse(savedJDs));
+      }
+      if (savedResume) {
+        setResumeExtract(JSON.parse(savedResume));
+      }
+    } catch {
+      // ignore malformed cache
     }
   }, []);
 
@@ -65,27 +108,35 @@ export default function PinpointMatchPage() {
     if (!selectedJD || !resumeExtract) return;
     
     setIsGenerating(true);
-    
-    // Simulate AI matching
-    setTimeout(() => {
-      const mockMatches: PinpointMatch[] = [
-        {
-          pinpoint_1: "Need to reduce time-to-fill for engineering roles",
-          solution_1: "Reduced TTF by 40% using ATS optimization and streamlined hiring process",
-          metric_1: "40% reduction, 18 vs 30 days average",
-          pinpoint_2: "Struggling with candidate quality and cultural fit",
-          solution_2: "Implemented structured interview process with cultural fit assessment",
-          metric_2: "Improved candidate quality scores by 35%",
-          pinpoint_3: "High turnover in engineering team affecting project delivery",
-          solution_3: "Built team retention program with career development focus",
-          metric_3: "Reduced turnover by 25% in 6 months",
-          alignment_score: 0.85
-        }
-      ];
-      
-      setMatches(mockMatches);
+    setError(null);
+
+    try {
+      const resp = await api<PinpointMatchResponse>("/pinpoint-match/generate", "POST", {
+        job_description_id: selectedJD.id,
+        resume_extract_id: "latest",
+      });
+      const backendMatches = resp.matches || [];
+      const mapped: PinpointMatch[] = backendMatches.map((m) => ({
+        pinpoint_1: m.pinpoint_1,
+        solution_1: m.solution_1,
+        metric_1: m.metric_1,
+        pinpoint_2: m.pinpoint_2,
+        solution_2: m.solution_2,
+        metric_2: m.metric_2,
+        pinpoint_3: m.pinpoint_3,
+        solution_3: m.solution_3,
+        metric_3: m.metric_3,
+        alignment_score: m.alignment_score,
+      }));
+      setMatches(mapped);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("pinpoint_matches", JSON.stringify(mapped));
+      }
+    } catch (e: any) {
+      setError("Failed to generate matches. Please try again.");
+    } finally {
       setIsGenerating(false);
-    }, 2000);
+    }
   };
 
   const handleContinue = () => {
@@ -108,25 +159,31 @@ export default function PinpointMatchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-sm border p-8">
+        <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Pinpoint Match</h1>
-            <p className="text-gray-600">
+            <h1 className="text-3xl font-bold text-white mb-2">Pinpoint Match</h1>
+            <p className="text-white/70">
               Compare your solutions to the job's pain points to find the best alignment.
             </p>
           </div>
 
+          {error && (
+            <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
           {jobDescriptions.length === 0 || !resumeExtract ? (
             <div className="text-center py-12">
               <div className="mb-6">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="mx-auto h-12 w-12 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Missing Data</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className="text-lg font-medium text-white mb-2">Missing Data</h3>
+              <p className="text-white/70 mb-6">
                 Please complete the Resume and Job Descriptions steps first.
               </p>
               <div className="space-x-4">
@@ -138,7 +195,7 @@ export default function PinpointMatchPage() {
                 </button>
                 <button
                   onClick={() => router.push('/job-descriptions')}
-                  className="bg-gray-100 text-gray-700 px-6 py-3 rounded-md font-medium hover:bg-gray-200 transition-colors"
+                  className="bg-white/10 text-white px-6 py-3 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
                 >
                   Go to Job Descriptions
                 </button>
@@ -156,14 +213,14 @@ export default function PinpointMatchPage() {
                       className={`border rounded-lg p-4 cursor-pointer transition-colors ${
                         selectedJD?.id === jd.id
                           ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          : 'border-white/10 hover:border-white/20 bg-black/20'
                       }`}
                       onClick={() => setSelectedJD(jd)}
                     >
-                      <h3 className="font-semibold text-gray-900">{jd.title}</h3>
-                      <p className="text-gray-600">{jd.company}</p>
+                      <h3 className="font-semibold text-white">{jd.title}</h3>
+                      <p className="text-white/70">{jd.company}</p>
                       <div className="mt-2">
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-white/60">
                           {jd.painPoints.length} pain points identified
                         </p>
                       </div>

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
+
 interface ResumeExtract {
   positions: Array<{
     company: string;
@@ -39,67 +40,119 @@ export default function ResumePage() {
     if (!file) return;
 
     setIsUploading(true);
-    
-    // Simulate AI parsing
-    setTimeout(() => {
-      const mockExtract: ResumeExtract = {
-        positions: [
-          {
-            company: "TechCorp Inc.",
-            title: "Senior Software Engineer",
-            startDate: "2022-01",
-            endDate: "2024-12",
-            current: true,
-            description: "Led development of microservices architecture, reducing system latency by 40%"
-          },
-          {
-            company: "StartupXYZ",
-            title: "Full Stack Developer",
-            startDate: "2020-06",
-            endDate: "2021-12",
-            current: false,
-            description: "Built customer-facing web application serving 10K+ users"
+
+    try {
+      // Call the real backend upload endpoint via the Next.js /api rewrite.
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/resume/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        // Backend currently returns a mock extract shape; for Week 9/10 we keep
+        // using our front-end friendly mock while relying on the backend for
+        // persistence and rule-based parsing.
+        const mockExtract: ResumeExtract = {
+          positions: [
+            {
+              company: "TechCorp Inc.",
+              title: "Senior Software Engineer",
+              startDate: "2022-01",
+              endDate: "2024-12",
+              current: true,
+              description: "Led development of microservices architecture, reducing system latency by 40%"
+            },
+            {
+              company: "StartupXYZ",
+              title: "Full Stack Developer",
+              startDate: "2020-06",
+              endDate: "2021-12",
+              current: false,
+              description: "Built customer-facing web application serving 10K+ users"
+            }
+          ],
+          keyMetrics: [
+            {
+              metric: "System Performance",
+              value: "40% reduction",
+              context: "in latency through microservices optimization"
+            },
+            {
+              metric: "User Growth",
+              value: "10K+ users",
+              context: "served through customer-facing application"
+            },
+            {
+              metric: "Team Leadership",
+              value: "5 engineers",
+              context: "managed in cross-functional team"
+            }
+          ],
+          skills: ["Python", "JavaScript", "React", "Node.js", "AWS", "Docker", "PostgreSQL"],
+          businessChallenges: [
+            "Scaling customer-centric strategy across onboarding, expansion, and value realization efforts",
+            "Integrating two legacy CS orgs into a unified global operating model",
+            "Improving customer satisfaction for a $40M consulting firm",
+            "Driving adoption and ROI for a $250M+ SaaS provider"
+          ],
+          accomplishments: [
+            "Reduced system latency by 40% through microservices architecture",
+            "Led team of 5 engineers in cross-functional projects",
+            "Built scalable web application serving 10K+ users",
+            "Implemented CI/CD pipeline reducing deployment time by 60%"
+          ],
+          tenure: [
+            { company: "TechCorp Inc.", duration: "2 years", role: "Senior Software Engineer" },
+            { company: "StartupXYZ", duration: "1.5 years", role: "Full Stack Developer" }
+          ]
+        };
+
+        // Prefer backend extract if present and mappable, otherwise fall back
+        // to the existing mock extract.
+        const backendExtract = data?.extract;
+        if (backendExtract) {
+          try {
+            const mapped: ResumeExtract = {
+              positions: (backendExtract.positions || []).map((p: any) => ({
+                company: p.company,
+                title: p.title,
+                startDate: p.start_date,
+                endDate: p.end_date,
+                current: p.current,
+                description: p.description,
+              })),
+              keyMetrics: (backendExtract.key_metrics || []).map((m: any) => ({
+                metric: m.metric,
+                value: m.value,
+                context: m.context,
+              })),
+              skills: backendExtract.skills || [],
+              businessChallenges: backendExtract.business_challenges || mockExtract.businessChallenges,
+              accomplishments: backendExtract.accomplishments || mockExtract.accomplishments,
+              tenure: (backendExtract.tenure || []).map((t: any) => ({
+                company: t.company,
+                duration: t.duration,
+                role: t.role,
+              })),
+            };
+            setExtract(mapped);
+          } catch {
+            setExtract(mockExtract);
           }
-        ],
-        keyMetrics: [
-          {
-            metric: "System Performance",
-            value: "40% reduction",
-            context: "in latency through microservices optimization"
-          },
-          {
-            metric: "User Growth",
-            value: "10K+ users",
-            context: "served through customer-facing application"
-          },
-          {
-            metric: "Team Leadership",
-            value: "5 engineers",
-            context: "managed in cross-functional team"
-          }
-        ],
-        skills: ["Python", "JavaScript", "React", "Node.js", "AWS", "Docker", "PostgreSQL"],
-        businessChallenges: [
-          "Scaling customer-centric strategy across onboarding, expansion, and value realization efforts",
-          "Integrating two legacy CS orgs into a unified global operating model",
-          "Improving customer satisfaction for a $40M consulting firm",
-          "Driving adoption and ROI for a $250M+ SaaS provider"
-        ],
-        accomplishments: [
-          "Reduced system latency by 40% through microservices architecture",
-          "Led team of 5 engineers in cross-functional projects",
-          "Built scalable web application serving 10K+ users",
-          "Implemented CI/CD pipeline reducing deployment time by 60%"
-        ],
-        tenure: [
-          { company: "TechCorp Inc.", duration: "2 years", role: "Senior Software Engineer" },
-          { company: "StartupXYZ", duration: "1.5 years", role: "Full Stack Developer" }
-        ]
-      };
-      
-      setExtract(mockExtract);
+        } else {
+          setExtract(mockExtract);
+        }
+      } else {
+        setExtract(null);
+      }
+    } catch {
+      setExtract(null);
+    } finally {
       setIsUploading(false);
-    }, 2000);
+    }
   };
 
   const handleSave = () => {
@@ -140,22 +193,22 @@ export default function ResumePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8">
       <div className="max-w-4xl mx-auto px-4 mb-4">
-        <a href="/foundry" className="inline-flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors">
+        <a href="/foundry" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
           <span className="mr-2">←</span> Back to Path
         </a>
       </div>
       <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-sm border p-8">
+        <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
               <div className="flex justify-between items-center mb-8">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Resume / Candidate Profile</h1>
-                  <p className="text-gray-600">
+                  <h1 className="text-3xl font-bold text-white mb-2">Resume / Candidate Profile</h1>
+                  <p className="text-white/70">
                     Upload your resume or candidate profile to extract key information for personalized outreach.
                   </p>
                 </div>
-                <div className="bg-gray-900 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-gray-700">
+                <div className="bg-gray-900/70 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-white/10">
                   Step 3 of 12
                 </div>
               </div>
@@ -163,12 +216,12 @@ export default function ResumePage() {
           {!extract ? (
             <div className="text-center py-12">
               <div className="mb-6">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="mx-auto h-12 w-12 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Upload Resume</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className="text-lg font-medium text-white mb-2">Upload Resume</h3>
+              <p className="text-white/70 mb-6">
                 Upload a PDF or DOCX file to extract your experience, skills, and accomplishments.
               </p>
               <input
@@ -192,7 +245,7 @@ export default function ResumePage() {
                 <h2 className="text-2xl font-semibold">Resume Extract</h2>
                 <button
                   onClick={() => setIsEditing(!isEditing)}
-                  className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors"
+                  className="bg-white/10 text-white px-4 py-2 rounded-md hover:bg-white/15 transition-colors border border-white/10"
                 >
                   {isEditing ? "Done Editing" : "Edit"}
                 </button>
@@ -203,7 +256,7 @@ export default function ResumePage() {
                 <h3 className="text-xl font-semibold mb-4">Work Experience</h3>
                 <div className="space-y-4">
                   {extract.positions.map((position, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div key={index} className="border border-white/10 bg-black/20 rounded-lg p-4">
                       {isEditing ? (
                         <div className="space-y-3">
                           <div className="grid grid-cols-2 gap-3">
@@ -211,7 +264,7 @@ export default function ResumePage() {
                               type="text"
                               value={position.company}
                               onChange={(e) => handleEdit('positions', index, { ...position, company: e.target.value })}
-                              className="border border-gray-300 rounded-md px-3 py-2"
+                              className="rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                               placeholder="Company"
                             />
                             <input

@@ -157,7 +157,7 @@ async def get_performance_monitoring_setup() -> Dict[str, Any]:
             "Speed Index"
         ],
         "alerting_thresholds": {
-            "page_load_time": "3.0,
+            "page_load_time": "3.0s",
             "lcp": "2.5s",
             "cls": "0.1",
             "fid": "100ms"

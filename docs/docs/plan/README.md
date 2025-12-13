@@ -22,4 +22,18 @@ This folder contains the Week 9–12 backend planning docs for RoleFerry. They o
 - [full_backend_service_report.md](full_backend_service_report.md)  
   A synthesized **Week 9–12 roadmap** that pulls the other three docs together, mapping which services to enable each week, how much they’re likely to cost, and which **screens/endpoints** become truly live as we go.
 
+- [roleferry_app_status_report_week_9.md](roleferry_app_status_report_week_9.md)  
+  A **Week 9 app status report** summarizing how the current app and backend line up with the wireframes, how live vs demo modes behave, what’s recently been completed, and what gaps remain before a broader beta.
+
+- [week_10_GPT_plan.md](week_10_GPT_plan.md)  
+  Screen‑by‑screen **GPT applicability plan** across the 12-step workflow, including intended AI behaviors, GPT fit (yes/no), and example prompt/output shapes.
+
+- [backend_gpt_seams_week10.md](backend_gpt_seams_week10.md)  
+  A code-level **backend seam design** describing where GPT can plug in (resume, JD parsing, pain-point match, offers, compose, research, deliverability explanation, analytics narrative) with feature-flag patterns and schema expectations.
+
+- [week_10_test_plan.md](week_10_test_plan.md)  
+  A **click-through demo test plan** (plus optional API spot checks) describing expected outcomes for a first-run customer demo in both fallback and GPT-enabled modes.
+
+- [roleferry_app_status_report_week_10.md](roleferry_app_status_report_week_10.md)  
+  A **Week 10 app status report** summarizing GPT integration work completed, demo readiness, and what remains.
 

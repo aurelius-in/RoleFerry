@@ -176,12 +176,12 @@ Best regards,
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-sm border p-8">
+        <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Compose</h1>
-            <p className="text-gray-600">
+            <h1 className="text-3xl font-bold text-white mb-2">Compose</h1>
+            <p className="text-white/70">
               Generate your first email using all the data from previous steps.
             </p>
           </div>
@@ -214,9 +214,9 @@ Best regards,
             <h2 className="text-xl font-semibold mb-4">Available Variables</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {mockVariables.map((variable, index) => (
-                <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                  <div className="font-medium text-gray-900">{variable.name}</div>
-                  <div className="text-sm text-gray-600 mb-1">{variable.description}</div>
+                <div key={index} className="bg-black/20 border border-white/10 rounded-lg p-3">
+                  <div className="font-medium text-white">{variable.name}</div>
+                  <div className="text-sm text-white/70 mb-1">{variable.description}</div>
                   <div className="text-sm text-blue-600 font-mono">{variable.value}</div>
                 </div>
               ))}
@@ -235,8 +235,8 @@ Best regards,
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-red-600">{error}</p>
+            <div className="mb-6 p-4 bg-red-50 border border-white/10 rounded-md">
+              <p className="text-red-200">{error}</p>
             </div>
           )}
 

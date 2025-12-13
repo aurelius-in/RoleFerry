@@ -3,43 +3,133 @@ import { api } from "@/lib/api";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+interface SubscriptionStatus {
+  plan: string;
+  plan_label: string;
+  status: string;
+  seats: number;
+  renews_on?: string | null;
+  limits: Record<string, number>;
+}
+
 export default function Settings() {
   const [s, setS] = useState<any | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [sub, setSub] = useState<SubscriptionStatus | null>(null);
+  const [subMessage, setSubMessage] = useState<string | null>(null);
+  const [busy, setBusy] = useState<"upgrade" | "cancel" | null>(null);
+
   useEffect(() => {
     (async () => {
       try {
-        const data = await api("/settings", "GET");
-        setS(data);
+        const [settingsData, subscriptionData] = await Promise.all([
+          api("/settings", "GET"),
+          api<SubscriptionStatus>("/subscription/status", "GET"),
+        ]);
+        setS(settingsData);
+        setSub(subscriptionData);
       } catch (e: any) {
         setErr(String(e?.message || e));
       }
     })();
   }, []);
+
+  const handleUpgrade = async () => {
+    if (!sub) return;
+    setBusy("upgrade");
+    setSubMessage(null);
+    try {
+      const res = await api<{ message: string }>("/subscription/upgrade", "POST", {
+        plan: sub.plan === "beta" ? "pro" : "beta",
+      });
+      setSubMessage(res.message);
+    } catch (e: any) {
+      setSubMessage(String(e?.message || "Failed to record upgrade intent"));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleCancel = async () => {
+    setBusy("cancel");
+    setSubMessage(null);
+    try {
+      const res = await api<{ message: string }>("/subscription/cancel", "POST", {});
+      setSubMessage(res.message);
+    } catch (e: any) {
+      setSubMessage(String(e?.message || "Failed to record cancel intent"));
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-16">
       <div className="absolute inset-0 bg-black/60" />
       <div className="relative w-full max-w-xl mx-auto rounded-lg bg-white/10 backdrop-blur border border-white/10 p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="text-xl md:text-2xl font-semibold">Settings</h1>
-          <Link href="/" className="px-2 py-1 rounded bg-white/10 border border-white/10 text-sm">Close</Link>
+          <Link href="/" className="px-2 py-1 rounded bg-white/10 border border-white/10 text-sm">
+            Close
+          </Link>
         </div>
-        {err ? (
-          <div className="text-xs opacity-80 break-all">{err}</div>
-        ) : null}
+        {err ? <div className="text-xs opacity-80 break-all">{err}</div> : null}
         {s ? (
           <>
             <div className="rounded-lg p-4 bg-white/5 border border-white/10 space-y-2 text-sm">
               <div>Environment: {s.environment}</div>
               <div>MV Threshold: {s.mv_threshold}</div>
-              <div>CORS Origins: {Array.isArray(s.cors_origins) ? s.cors_origins.join(", ") : String(s.cors_origins)}</div>
+              <div>
+                CORS Origins:{" "}
+                {Array.isArray(s.cors_origins) ? s.cors_origins.join(", ") : String(s.cors_origins)}
+              </div>
               <div>Instantly Enabled: {String(s.instantly_enabled)}</div>
             </div>
+
+            {sub && (
+              <div className="rounded-lg p-4 bg-white/5 border border-white/10 space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium">Subscription</div>
+                    <div className="text-xs opacity-80">{sub.plan_label}</div>
+                  </div>
+                  <span className="px-2 py-1 rounded-full text-xs bg-emerald-500/20 border border-emerald-400/40 text-emerald-200">
+                    {sub.status}
+                  </span>
+                </div>
+                <div className="text-xs opacity-80">
+                  Seats: {sub.seats} · Limits: campaigns {sub.limits.max_campaigns ?? "—"}, contacts{" "}
+                  {sub.limits.max_contacts ?? "—"}
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={handleUpgrade}
+                    disabled={busy === "upgrade"}
+                    className="px-3 py-2 rounded bg-white/10 border border-white/20 text-xs"
+                  >
+                    {busy === "upgrade" ? "Saving..." : sub.plan === "beta" ? "Request Pro Upgrade" : "Switch to Beta"}
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    disabled={busy === "cancel"}
+                    className="px-3 py-2 rounded bg-red-500/20 border border-red-500/40 text-xs"
+                  >
+                    {busy === "cancel" ? "Saving..." : "Request Cancel"}
+                  </button>
+                </div>
+                {subMessage && <div className="text-xs opacity-80 mt-1">{subMessage}</div>}
+              </div>
+            )}
+
             <ThresholdForm current={s.mv_threshold} />
             <Citizenship />
             <div className="text-sm space-x-4">
-              <Link className="underline" href="/replies">Go to Replies tester</Link>
-              <a className="underline" href="/api/metrics" target="_blank">Metrics</a>
+              <Link className="underline" href="/replies">
+                Go to Replies tester
+              </Link>
+              <a className="underline" href="/api/metrics" target="_blank">
+                Metrics
+              </a>
             </div>
           </>
         ) : (

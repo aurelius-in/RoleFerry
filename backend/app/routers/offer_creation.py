@@ -1,9 +1,17 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import json
 
+from sqlalchemy import text as sql_text
+
+from ..db import get_engine
+from ..config import settings
+from ..clients.openai_client import get_openai_client, extract_json_from_text
+
 router = APIRouter()
+engine = get_engine()
+DEMO_USER_ID = "demo-user"
 
 class Offer(BaseModel):
     id: str
@@ -36,46 +44,110 @@ class OffersListResponse(BaseModel):
 async def create_offer(request: OfferCreationRequest):
     """
     Create a personalized offer based on pinpoint matches and audience tone.
+
+    This endpoint now prefers the centralized GPT client when available, while
+    preserving the previous deterministic template as a fallback.
     """
     try:
-        # In a real implementation, this would use AI to generate personalized offers
-        # For now, return mock data based on the request
         if not request.pinpoint_matches:
             raise HTTPException(status_code=400, detail="Pinpoint matches are required")
-        
-        match = request.pinpoint_matches[0]
-        
-        # Generate offer based on user mode and tone
-        if request.user_mode == "job-seeker":
-            title = f"How I Can Solve {match.get('pinpoint_1', 'Your Challenge').split(' ')[:3]}"
-            content = f"I understand you're facing {match.get('pinpoint_1', 'challenges').lower()}. In my previous role, I {match.get('solution_1', 'delivered results').lower()}, resulting in {match.get('metric_1', 'significant impact')}. I'm confident I can bring similar results to your team."
-        else:
-            title = f"Perfect Candidate for {match.get('pinpoint_1', 'Your Role').split(' ')[:3]}"
-            content = f"I have an exceptional candidate who has successfully {match.get('solution_1', 'achieved results').lower()}, achieving {match.get('metric_1', 'outstanding metrics')}. They would be an ideal fit for your {match.get('pinpoint_1', 'challenges').lower()} challenge."
-        
-        # Adjust tone based on audience
-        if request.tone == "recruiter":
-            content = f"Efficiency-focused: {content}"
-        elif request.tone == "manager":
-            content = f"Proof of competence: {content}"
-        elif request.tone == "exec":
-            content = f"ROI/Strategy focused: {content}"
-        
-        offer = Offer(
-            id=f"offer_{len(request.pinpoint_matches)}",
-            title=title,
-            content=content,
-            tone=request.tone,
-            format=request.format,
-            created_at="2024-01-15T10:30:00Z",
-            user_mode=request.user_mode
-        )
-        
+
+        base_match: Dict[str, Any] = request.pinpoint_matches[0]
+
+        # --- Deterministic fallback (previous behavior) -----------------
+        def build_rule_based_offer() -> Offer:
+            if request.user_mode == "job-seeker":
+                raw_label = base_match.get("pinpoint_1", "Your Challenge")
+                label_words = str(raw_label).split(" ")[:3]
+                title = f"How I Can Solve {' '.join(label_words)}"
+                content = (
+                    f"I understand you're facing {str(base_match.get('pinpoint_1', 'challenges')).lower()}. "
+                    f"In my previous role, I {str(base_match.get('solution_1', 'delivered results')).lower()}, "
+                    f"resulting in {str(base_match.get('metric_1', 'significant impact'))}. "
+                    "I'm confident I can bring similar results to your team."
+                )
+            else:
+                raw_label = base_match.get("pinpoint_1", "Your Role")
+                label_words = str(raw_label).split(" ")[:3]
+                title = f"Perfect Candidate for {' '.join(label_words)}"
+                content = (
+                    f"I have an exceptional candidate who has successfully {str(base_match.get('solution_1', 'achieved results')).lower()}, "
+                    f"achieving {str(base_match.get('metric_1', 'outstanding metrics'))}. "
+                    f"They would be an ideal fit for your {str(base_match.get('pinpoint_1', 'challenges')).lower()} challenge."
+                )
+
+            # Adjust tone based on audience
+            if request.tone == "recruiter":
+                content_prefixed = f"Efficiency-focused: {content}"
+            elif request.tone == "manager":
+                content_prefixed = f"Proof of competence: {content}"
+            elif request.tone == "exec":
+                content_prefixed = f"ROI/Strategy focused: {content}"
+            else:
+                content_prefixed = content
+
+            return Offer(
+                id=f"offer_{len(request.pinpoint_matches)}",
+                title=title,
+                content=content_prefixed,
+                tone=request.tone,
+                format=request.format,
+                created_at="2024-01-15T10:30:00Z",
+                user_mode=request.user_mode,
+            )
+
+        # --- GPT-backed path via OpenAIClient ---------------------------
+        client = get_openai_client()
+        if client.should_use_real_llm:
+            try:
+                context: Dict[str, Any] = {
+                    "user_mode": request.user_mode,
+                    "tone": request.tone,
+                    "format": request.format,
+                    "pinpoint_match": base_match,
+                }
+                raw = client.draft_offer_email(context)
+                choices = raw.get("choices") or []
+                msg = (choices[0].get("message") if choices else {}) or {}
+                content_str = str(msg.get("content") or "")
+
+                # Expect JSON: {"title": "...", "content": "..."}
+                parsed = extract_json_from_text(content_str) or {}
+                title_val = parsed.get("title")
+                body_val = parsed.get("content")
+
+                rule_fallback = build_rule_based_offer()
+                title = str(title_val or rule_fallback.title)
+                body = str(body_val or rule_fallback.content)
+
+                offer = Offer(
+                    id=f"offer_{len(request.pinpoint_matches)}",
+                    title=title,
+                    content=body,
+                    tone=request.tone,
+                    format=request.format,
+                    created_at="2024-01-15T10:30:00Z",
+                    user_mode=request.user_mode,
+                )
+
+                return OfferCreationResponse(
+                    success=True,
+                    message="Offer created successfully (GPT-backed)",
+                    offer=offer,
+                )
+            except Exception:
+                # Fall through to deterministic path on any GPT error.
+                pass
+
+        # Default: deterministic offer (existing behavior)
+        offer = build_rule_based_offer()
         return OfferCreationResponse(
             success=True,
             message="Offer created successfully",
-            offer=offer
+            offer=offer,
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create offer: {str(e)}")
 
@@ -85,11 +157,26 @@ async def save_offer(offer: Offer):
     Save an offer for a user.
     """
     try:
-        # In a real app, save to database with user_id
+        # Persist offer body & tone to the offer table for the demo user
+        async with engine.begin() as conn:
+            await conn.execute(
+                sql_text(
+                    """
+                    INSERT INTO offer (user_id, application_id, body, tone, length_preset, created_at)
+                    VALUES (:user_id, NULL, :body, :tone, NULL, now())
+                    """
+                ),
+                {
+                    "user_id": DEMO_USER_ID,
+                    "body": offer.content,
+                    "tone": offer.tone,
+                },
+            )
+
         return OfferCreationResponse(
             success=True,
             message="Offer saved successfully",
-            offer=offer
+            offer=offer,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save offer: {str(e)}")
@@ -100,33 +187,52 @@ async def get_offers(user_id: str):
     Get all offers for a user.
     """
     try:
-        # In a real app, fetch from database
-        # For now, return mock data
-        mock_offers = [
-            Offer(
-                id="offer_1",
-                title="How I Can Solve Your Engineering Challenges",
-                content="I understand you're facing challenges with time-to-fill for engineering roles. In my previous role, I reduced TTF by 40% using ATS optimization, resulting in 40% reduction, 18 vs 30 days. I'm confident I can bring similar results to your team.",
-                tone="manager",
-                format="text",
-                created_at="2024-01-15T10:30:00Z",
-                user_mode="job-seeker"
-            ),
-            Offer(
-                id="offer_2",
-                title="Perfect Candidate for Your Engineering Team",
-                content="I have an exceptional candidate who has successfully reduced TTF by 40% using ATS optimization, achieving 40% reduction, 18 vs 30 days. They would be an ideal fit for your time-to-fill challenges.",
-                tone="recruiter",
-                format="text",
-                created_at="2024-01-14T15:45:00Z",
-                user_mode="recruiter"
+        # For Week 9, fetch any stored offers for the demo user; fall back to mocks
+        async with engine.begin() as conn:
+            result = await conn.execute(
+                sql_text(
+                    """
+                    SELECT id, body, tone, created_at
+                    FROM offer
+                    WHERE user_id = :user_id
+                    ORDER BY created_at DESC
+                    """
+                ),
+                {"user_id": DEMO_USER_ID},
             )
-        ]
-        
+            rows = result.fetchall()
+
+        offers: List[Offer] = []
+        for row in rows:
+            offers.append(
+                Offer(
+                    id=str(row.id),
+                    title="Saved offer",
+                    content=row.body,
+                    tone=row.tone or "manager",
+                    format="text",
+                    created_at=row.created_at.isoformat() if getattr(row, "created_at", None) else "",
+                    user_mode="job-seeker",
+                )
+            )
+
+        if not offers:
+            offers = [
+                Offer(
+                    id="offer_1",
+                    title="How I Can Solve Your Engineering Challenges",
+                    content="I understand you're facing challenges with time-to-fill for engineering roles. In my previous role, I reduced TTF by 40% using ATS optimization, resulting in 40% reduction, 18 vs 30 days. I'm confident I can bring similar results to your team.",
+                    tone="manager",
+                    format="text",
+                    created_at="2024-01-15T10:30:00Z",
+                    user_mode="job-seeker",
+                )
+            ]
+
         return OffersListResponse(
             success=True,
             message="Offers retrieved successfully",
-            offers=mock_offers
+            offers=offers,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get offers: {str(e)}")

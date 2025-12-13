@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 interface PainPointMatch {
   painPoint_1: string;
@@ -27,6 +28,24 @@ interface Offer {
   created_at: string;
 }
 
+interface BackendOffer {
+  id: string;
+  title: string;
+  content: string;
+  tone: string;
+  format: string;
+  url?: string | null;
+  video_url?: string | null;
+  created_at: string;
+  user_mode: string;
+}
+
+interface OfferCreationResponse {
+  success: boolean;
+  message: string;
+  offer?: BackendOffer;
+}
+
 export default function OfferCreationPage() {
   const router = useRouter();
   const [mode, setMode] = useState<'job-seeker' | 'recruiter'>('job-seeker');
@@ -39,6 +58,7 @@ export default function OfferCreationPage() {
   const [offerTitle, setOfferTitle] = useState("");
   const [customTone, setCustomTone] = useState("");
   const [optionalLink, setOptionalLink] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Load mode from localStorage
@@ -66,58 +86,40 @@ export default function OfferCreationPage() {
     if (painPointMatches.length === 0) return;
     
     setIsGenerating(true);
-    
-    // Simulate AI offer generation
-    setTimeout(() => {
-      const match = painPointMatches[0];
-      let content = "";
-      let title = "";
-      
-      if (mode === 'job-seeker') {
-        title = `How I Can Solve ${match.painPoint_1.split(' ').slice(0, 3).join(' ')}`;
-        content = `I understand you're facing ${match.painPoint_1.toLowerCase()}. In my previous role, I ${match.solution_1.toLowerCase()}, resulting in ${match.metric_1}. I'm confident I can bring similar results to your team.`;
-      } else {
-        title = `Perfect Candidate for ${match.painPoint_1.split(' ').slice(0, 3).join(' ')}`;
-        content = `I have an exceptional candidate who has successfully ${match.solution_1.toLowerCase()}, achieving ${match.metric_1}. They would be an ideal fit for your ${match.painPoint_1.toLowerCase()} challenge.`;
-      }
-      
-      // Adjust tone based on audience
-      if (selectedTone === 'recruiter') {
-        content = `Efficiency-focused: ${content}`;
-      } else if (selectedTone === 'manager') {
-        content = `Proof of competence: ${content}`;
-      } else if (selectedTone === 'exec') {
-        content = `ROI/Strategy focused: ${content}`;
-      } else if (selectedTone === 'developer') {
-        content = `Technical Detail: ${content}`;
-      } else if (selectedTone === 'sales') {
-        content = `Results-Oriented: ${content}`;
-      } else if (selectedTone === 'startup') {
-        content = `Innovation-Driven: ${content}`;
-      } else if (selectedTone === 'enterprise') {
-        content = `Process-Aligned: ${content}`;
-      } else if (selectedTone === 'custom') {
-        content = `Custom Tone (${customTone}): ${content}`;
-      }
-      
-      const newOffer: Offer = {
-        id: Date.now().toString(),
-        title,
-        content,
+    setError(null);
+
+    try {
+      const payload = {
+        pinpoint_matches: [painPointMatches[0]],
         tone: selectedTone,
         format: selectedFormat,
-        url: optionalLink,
-        created_at: new Date().toISOString()
+        user_mode: mode,
       };
-      
-      setOffers(prev => [...prev, newOffer]);
-      setOfferTitle(title);
-      setOfferContent(content);
+      const resp = await api<OfferCreationResponse>("/offer-creation/create", "POST", payload);
+      const o = resp.offer;
+      if (o) {
+        const mapped: Offer = {
+          id: o.id,
+          title: o.title,
+          content: o.content,
+          tone: o.tone as Offer["tone"],
+          format: o.format as Offer["format"],
+          url: o.url || undefined,
+          video_url: o.video_url || undefined,
+          created_at: o.created_at,
+        };
+        setOffers(prev => [...prev, mapped]);
+        setOfferTitle(mapped.title);
+        setOfferContent(mapped.content);
+      }
+    } catch (e: any) {
+      setError("Failed to generate offer. Please try again.");
+    } finally {
       setIsGenerating(false);
-    }, 2000);
+    }
   };
 
-  const handleSaveOffer = () => {
+  const handleSaveOffer = async () => {
     if (offerTitle && offerContent) {
       const newOffer: Offer = {
         id: Date.now().toString(),
@@ -126,13 +128,22 @@ export default function OfferCreationPage() {
         tone: selectedTone,
         format: selectedFormat,
         url: optionalLink,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       };
-      
-      setOffers(prev => [...prev, newOffer]);
-      setOfferTitle("");
-      setOfferContent("");
-      setOptionalLink("");
+
+      try {
+        await api<OfferCreationResponse>("/offer-creation/save", "POST", {
+          ...newOffer,
+          user_mode: mode,
+          video_url: undefined,
+        });
+        setOffers(prev => [...prev, newOffer]);
+        setOfferTitle("");
+        setOfferContent("");
+        setOptionalLink("");
+      } catch (e: any) {
+        setError("Failed to save offer. Please try again.");
+      }
     }
   };
 
@@ -171,13 +182,13 @@ export default function OfferCreationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-7xl mx-auto px-4 mb-4">
         <div className="flex justify-between items-center">
-          <a href="/foundry" className="inline-flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors">
+          <a href="/foundry" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
             <span className="mr-2">←</span> Back to Path
           </a>
-          <div className="bg-gray-900 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-gray-700">
+          <div className="bg-gray-900/70 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-white/10">
             Step 9 of 12
           </div>
         </div>
@@ -187,26 +198,26 @@ export default function OfferCreationPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Sidebar: Offer Library */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-lg shadow-sm border p-6 sticky top-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Offer Library</h2>
+            <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-6 sticky top-8 shadow-2xl shadow-black/20">
+              <h2 className="text-xl font-bold text-white mb-4">Offer Library</h2>
               
               {offers.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">No offers created yet.</p>
+                <p className="text-sm text-white/60 italic">No offers created yet.</p>
               ) : (
                 <div className="space-y-3">
                   {offers.map((offer) => (
-                    <div key={offer.id} className="p-3 border rounded-lg bg-gray-50 hover:bg-blue-50 transition-colors cursor-pointer group">
+                    <div key={offer.id} className="p-3 border border-white/10 rounded-lg bg-black/20 hover:bg-white/5 transition-colors cursor-pointer group">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-semibold text-sm text-gray-900 mb-1 line-clamp-1">{offer.title}</h3>
+                          <h3 className="font-semibold text-sm text-white mb-1 line-clamp-1">{offer.title}</h3>
                           <div className="flex flex-wrap gap-1">
-                            <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full capitalize">{offer.tone}</span>
-                            <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-700 rounded-full capitalize">{offer.format}</span>
+                            <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-200 border border-white/10 rounded-full capitalize">{offer.tone}</span>
+                            <span className="text-xs px-2 py-0.5 bg-white/10 text-white/80 border border-white/10 rounded-full capitalize">{offer.format}</span>
                           </div>
                         </div>
                         <button 
                           onClick={(e) => { e.stopPropagation(); setOffers(prev => prev.filter(o => o.id !== offer.id)); }}
-                          className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="text-white/40 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           ×
                         </button>
@@ -217,7 +228,7 @@ export default function OfferCreationPage() {
               )}
 
               {offers.length > 0 && (
-                <div className="mt-6 pt-4 border-t">
+                <div className="mt-6 pt-4 border-t border-white/10">
                   <button
                     onClick={handleContinue}
                     className="w-full bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition-colors text-sm"
@@ -231,10 +242,10 @@ export default function OfferCreationPage() {
 
           {/* Main Content: Offer Creation */}
           <div className="lg:col-span-9">
-            <div className="bg-white rounded-lg shadow-sm border p-8">
+            <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
               <div className="mb-8 text-center">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Offer Creation</h1>
-                <p className="text-gray-600">
+                <h1 className="text-3xl font-bold text-white mb-2">Offer Creation</h1>
+                <p className="text-white/70">
                   {mode === 'job-seeker' 
                     ? 'Build a personalized pitch that showcases how you can solve their challenges.'
                     : 'Create compelling candidate pitches that highlight their value proposition.'
@@ -242,11 +253,17 @@ export default function OfferCreationPage() {
                 </p>
               </div>
 
+              {error && (
+                <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
+
               {painPointMatches.length === 0 ? (
-                <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                <div className="text-center py-12 bg-black/20 rounded-lg border border-dashed border-white/20">
                   <div className="mb-4 text-4xl">🎯</div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Pain Point Matches</h3>
-                  <p className="text-gray-600 mb-6">
+                  <h3 className="text-lg font-medium text-white mb-2">No Pain Point Matches</h3>
+                  <p className="text-white/70 mb-6">
                     Please complete the Pain Point Match step first.
                   </p>
                   <button
@@ -259,10 +276,10 @@ export default function OfferCreationPage() {
               ) : (
                 <div className="space-y-8">
                   {/* Pain Point Match Summary Card */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                     <h3 className="text-sm font-semibold text-blue-900 uppercase tracking-wide mb-2">Target Opportunity</h3>
-                     <p className="text-blue-800 font-medium mb-1">Challenge: {painPointMatches[0].painPoint_1}</p>
-                     <p className="text-blue-700 text-sm">Proposed Solution: {painPointMatches[0].solution_1} ({painPointMatches[0].metric_1})</p>
+                  <div className="bg-blue-50 border border-white/10 rounded-lg p-4">
+                     <h3 className="text-sm font-semibold text-white uppercase tracking-wide mb-2">Target Opportunity</h3>
+                     <p className="text-white/90 font-medium mb-1">Challenge: {painPointMatches[0].painPoint_1}</p>
+                     <p className="text-white/70 text-sm">Proposed Solution: {painPointMatches[0].solution_1} ({painPointMatches[0].metric_1})</p>
                   </div>
 
                   {/* Tone Selection */}
@@ -340,14 +357,14 @@ export default function OfferCreationPage() {
                       </div>
 
                       <div>
-                        <h3 className="font-medium text-gray-900 mb-2">Upload Video (Optional)</h3>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                        <h3 className="font-medium text-white mb-2">Upload Video (Optional)</h3>
+                        <div className="border-2 border-dashed border-white/20 bg-black/20 rounded-lg p-6 text-center hover:bg-white/5 transition-colors cursor-pointer">
                           <span className="text-2xl block mb-2">📹</span>
-                          <p className="text-sm text-gray-600">Click or drag to upload a short intro video</p>
+                          <p className="text-sm text-white/70">Click or drag to upload a short intro video</p>
                         </div>
                       </div>
 
-                      <div className="pt-4 border-t">
+                      <div className="pt-4 border-t border-white/10">
                         <div className="flex flex-col gap-3">
                           <button
                             onClick={generateOffer}
@@ -359,7 +376,7 @@ export default function OfferCreationPage() {
                           <button
                             onClick={handleSaveOffer}
                             disabled={!offerContent}
-                            className="w-full bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-md font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            className="w-full bg-white/10 border border-white/15 text-white px-6 py-3 rounded-md font-medium hover:bg-white/15 transition-colors disabled:opacity-50"
                           >
                             Save to Library
                           </button>

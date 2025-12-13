@@ -1,17 +1,18 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import HealthIndicator from "./HealthIndicator";
 import DataModal from "./DataModal";
 import ToolsModal from "./ToolsModal";
+import { DataMode, getCurrentDataMode, setCurrentDataMode } from "@/lib/dataMode";
 
 export default function Navbar() {
   const [dataOpen, setDataOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const pathname = usePathname();
-  useEffect(() => {}, []);
+  if (pathname === "/") return null; // homepage must match approved wireframe
 
   return (
     <header suppressHydrationWarning className="relative w-full flex items-center justify-between px-4 sm:px-6 py-3">
@@ -44,6 +45,7 @@ export default function Navbar() {
       </nav>
       <div className="flex items-center gap-4">
         <ModeToggle />
+        <DataModeToggle />
         <HealthIndicator />
         <ThemeToggle />
         <button aria-label="Tools" className="w-9 h-9 rounded-md flex items-center justify-center border bg-black text-white border-white/20" onClick={() => setToolsOpen(true)}>
@@ -109,6 +111,38 @@ function ModeToggle() {
         }`}
       >
         Recruiter
+      </button>
+    </div>
+  );
+}
+
+function DataModeToggle() {
+  const [mode, setMode] = useState<DataMode>("demo");
+
+  useEffect(() => {
+    setMode(getCurrentDataMode());
+  }, []);
+
+  const handleChange = (next: DataMode) => {
+    setMode(next);
+    setCurrentDataMode(next);
+  };
+
+  return (
+    <div className="hidden md:flex items-center text-xs font-semibold rounded-md border border-white/20 bg-black/40 overflow-hidden shadow-sm">
+      <button
+        type="button"
+        onClick={() => handleChange("demo")}
+        className={`px-3 py-1 transition-colors ${mode === "demo" ? "bg-white text-black" : "text-white/80 hover:bg-white/10"}`}
+      >
+        Demo
+      </button>
+      <button
+        type="button"
+        onClick={() => handleChange("live")}
+        className={`px-3 py-1 border-l border-white/20 transition-colors ${mode === "live" ? "bg-white text-black" : "text-white/80 hover:bg-white/10"}`}
+      >
+        Live
       </button>
     </div>
   );
