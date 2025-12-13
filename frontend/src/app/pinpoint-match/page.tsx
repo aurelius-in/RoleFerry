@@ -131,6 +131,8 @@ export default function PinpointMatchPage() {
       setMatches(mapped);
       if (typeof window !== "undefined") {
         localStorage.setItem("pinpoint_matches", JSON.stringify(mapped));
+        // Backwards/alternate key used by some downstream screens.
+        localStorage.setItem("pain_point_matches", JSON.stringify(mapped));
       }
     } catch (e: any) {
       setError("Failed to generate matches. Please try again.");
@@ -142,6 +144,7 @@ export default function PinpointMatchPage() {
   const handleContinue = () => {
     if (matches.length > 0) {
       localStorage.setItem('pinpoint_matches', JSON.stringify(matches));
+      localStorage.setItem('pain_point_matches', JSON.stringify(matches));
       router.push('/find-contact');
     }
   };

@@ -1938,3 +1938,104 @@ def cleanup_demo():
     store.clear_messages()
     return {"cleared": True}
 
+
+@router.post("/demo/bootstrap")
+def demo_bootstrap():
+    """
+    One-call demo bootstrap so the 12-step workflow never lacks upstream data.
+    """
+    # Reuse the existing rich seeding (jobs/candidates/contacts/messages, etc.)
+    seed_demo()
+
+    # Minimal “continuous workflow” context (also cached in memory)
+    prefs = {
+        "values": ["Impactful work", "Work-life balance", "Progressive leadership"],
+        "role_categories": ["Technical & Engineering"],
+        "location_preferences": ["Remote", "Hybrid"],
+        "work_type": ["Remote", "Hybrid"],
+        "role_type": ["Full-Time"],
+        "company_size": ["51-200 employees", "201-500 employees"],
+        "industries": ["Enterprise Software", "Data & Analytics"],
+        "skills": ["Python", "SQL", "AWS", "Experimentation", "Stakeholder Management"],
+        "minimum_salary": "$160,000",
+        "job_search_status": "Actively looking",
+        "state": "California",
+        "user_mode": "job-seeker",
+    }
+    store.demo_job_preferences = prefs
+
+    # Use the first seeded posting as a stable job description seed
+    postings = store.get_jobs("demo_jobs_1")
+    posting = postings[0] if postings else {}
+    job_desc_id = "jd_demo_bootstrap_1"
+    store.demo_job_descriptions[job_desc_id] = {
+        "id": job_desc_id,
+        "title": posting.get("title") or "Senior Product Manager, Activation",
+        "company": posting.get("company") or "Acme",
+        "url": posting.get("jd_url"),
+        "content": posting.get("jd_text") or "",
+        "parsed_json": {
+            "pain_points": [
+                "Improve onboarding activation and reduce drop-off",
+                "Reduce churn by improving time-to-value",
+                "Improve experiment velocity and insight quality",
+            ],
+            "required_skills": ["SQL", "Experimentation", "Analytics", "Product strategy", "Stakeholder management"],
+            "success_metrics": ["+15% activation", "-10% churn", "2x experiment velocity"],
+        },
+    }
+
+    # Resume seed (so match can run without uploads)
+    store.demo_latest_resume_text = (
+        "Alex Kim\nSenior Product Manager\n\n"
+        "Highlights: Led onboarding experiments; improved activation; reduced churn; built analytics dashboards.\n"
+        "Experience: GrowthLoop (PM), Initech (PM).\n"
+    )
+    store.demo_latest_resume = {
+        "NotableAccomplishments": [
+            "Led onboarding funnel revamp and improved activation via experiments",
+            "Reduced early churn with lifecycle messaging and better time-to-value",
+            "Implemented event taxonomy + dashboards for attribution",
+        ],
+        "KeyMetrics": ["+12% activation", "-8% churn", "4x faster insights"],
+        "Skills": ["SQL", "Experimentation", "Analytics", "Roadmapping"],
+    }
+
+    # Pinpoint match seed (so offer/compose can proceed immediately)
+    store.demo_pinpoint_matches = [
+        {
+            "pinpoint_1": "Improve onboarding activation and reduce drop-off",
+            "solution_1": "Led onboarding funnel revamp and improved activation via experiments",
+            "metric_1": "+12% activation",
+            "pinpoint_2": "Reduce churn by improving time-to-value",
+            "solution_2": "Built lifecycle messaging that reduced early churn",
+            "metric_2": "-8% churn",
+            "pinpoint_3": "Improve insight quality and attribution",
+            "solution_3": "Implemented event taxonomy + dashboards for attribution",
+            "metric_3": "4x faster insights",
+            "alignment_score": 0.82,
+        }
+    ]
+
+    # Contacts (selected) seed
+    store.demo_selected_contacts = [
+        {
+            "id": "contact_demo_1",
+            "name": "Jane Doe",
+            "title": "VP Product",
+            "company": store.demo_job_descriptions[job_desc_id]["company"],
+            "email": "jane.doe@acme.com",
+            "linkedin_url": "https://linkedin.com/in/janedoe",
+            "verification_status": "valid",
+            "verification_score": 92,
+        }
+    ]
+
+    return {
+        "success": True,
+        "job_preferences": prefs,
+        "job_description_id": job_desc_id,
+        "pinpoint_matches": store.demo_pinpoint_matches,
+        "selected_contacts": store.demo_selected_contacts,
+    }
+

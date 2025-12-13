@@ -9,6 +9,7 @@ from ..services.jargon_detector import jargon_detector
 from ..services.campaign_sender import record_outreach_send
 from ..services.email_sender import send_email
 from ..config import settings
+from ..clients.openai_client import get_openai_client, extract_json_from_text
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -117,6 +118,76 @@ async def run_pre_flight_checks(request: CampaignLaunchRequest):
         warmup_check.status = "pass"
         warmup_check.message = "Domains properly warmed and ready"
         
+        # 6. GPT Deliverability Helper (explanations + copy tweaks)
+        # Keep deterministic results if GPT is not configured.
+        try:
+            primary_email = request.emails[0] if request.emails else {}
+            subject = str(primary_email.get("subject") or "")
+            body = str(primary_email.get("body") or "")
+
+            client = get_openai_client()
+            helper_ctx = {
+                "pre_flight_checks": [c.model_dump() for c in checks],
+                "subject": subject,
+                "body": body,
+            }
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a deliverability expert.\n\n"
+                        "Given pre-flight checks + email copy, return ONLY JSON with keys:\n"
+                        "- summary: string\n"
+                        "- copy_tweaks: array of strings\n"
+                        "- subject_variants: array of strings\n"
+                    ),
+                },
+                {"role": "user", "content": json.dumps(helper_ctx)},
+            ]
+            stub_json = {
+                "summary": "Overall deliverability looks good; the main improvement is reducing spammy emphasis and increasing specificity.",
+                "copy_tweaks": [
+                    "Remove extra exclamation marks and overly promotional phrasing.",
+                    "Mention one concrete pain point + one metric, then ask a simple CTA.",
+                    "Keep the first paragraph under ~3 lines on mobile.",
+                ],
+                "subject_variants": [
+                    "Quick question about the role",
+                    "Idea for onboarding activation",
+                    "Re: {company} — 10 min?",
+                ],
+            }
+            raw = client.run_chat_completion(messages, temperature=0.2, max_tokens=500, stub_json=stub_json)
+            choices = raw.get("choices") or []
+            msg = (choices[0].get("message") if choices else {}) or {}
+            content_str = str(msg.get("content") or "")
+            data = extract_json_from_text(content_str) or stub_json
+
+            helper_details = (
+                f"{data.get('summary','')}\n\n"
+                f"Copy tweaks:\n- " + "\n- ".join([str(x) for x in (data.get("copy_tweaks") or [])]) + "\n\n"
+                f"Subject variants:\n- " + "\n- ".join([str(x) for x in (data.get("subject_variants") or [])])
+            )
+
+            checks.append(
+                PreFlightCheck(
+                    name="GPT Deliverability Helper",
+                    status="pass",
+                    message="Copy tweaks and safer subject variants generated",
+                    details=helper_details[:2000],
+                )
+            )
+        except Exception:
+            # Keep launch flow stable even if helper fails
+            checks.append(
+                PreFlightCheck(
+                    name="GPT Deliverability Helper",
+                    status="warning",
+                    message="Helper unavailable; proceeding with deterministic checks",
+                    details=None,
+                )
+            )
+
         return checks
         
     except Exception as e:

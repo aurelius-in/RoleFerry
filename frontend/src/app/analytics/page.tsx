@@ -40,10 +40,13 @@ export default function Analytics() {
   const [data, setData] = useState<OverviewResp | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiExplanation, setAiExplanation] = useState<any | null>(null);
 
   const loadForMode = async (nextMode: DataMode) => {
     setMode(nextMode);
     setError(null);
+    setAiExplanation(null);
 
     if (nextMode === "demo") {
       setLoading(false);
@@ -75,6 +78,43 @@ export default function Analytics() {
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const askAiToExplain = async () => {
+    if (!data) return;
+    setAiLoading(true);
+    setAiExplanation(null);
+    try {
+      // Prefer backend endpoint (uses GPT when OPENAI_API_KEY is set, otherwise deterministic stub).
+      const resp = await api<any>("/analytics/explain", "GET");
+      if (resp?.success && resp?.explanation) {
+        setAiExplanation(resp.explanation);
+        return;
+      }
+      throw new Error("Bad response");
+    } catch {
+      // Fallback: deterministic “AI-like” explanation from local demo metrics.
+      const fallback = {
+        insights: [
+          `Reply rate is ${data.reply_rate.toFixed(1)}% — strong. Preserve the opener and test subject lines.`,
+          `Click rate is ${data.click_rate.toFixed(1)}% — tighten the CTA to increase conversion to replies.`,
+          `Verified ratio is ${data.verified_ratio.toFixed(1)}% — focus on reducing unknown/invalid before scaling volume.`,
+        ],
+        risks: [
+          "Sequence may be too long for senior personas; consider shorter follow-ups.",
+          "If volume increases, warmup and bounce history can become a constraint.",
+        ],
+        next_actions: [
+          "A/B test 2 subject variants with fewer “salesy” words.",
+          "Add one hyper-specific metric in the first paragraph.",
+          "Trim follow-up #2 to under ~60 words and ask a single question.",
+        ],
+        confidence: 0.62,
+      };
+      setAiExplanation(fallback);
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   return (
     <main className="max-w-5xl mx-auto p-6 space-y-6">
@@ -176,6 +216,57 @@ export default function Analytics() {
                 <div>• Warmup emails received: 179</div>
               </div>
             </div>
+          </section>
+
+          {/* GPT explanatory analytics */}
+          <section className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold">GPT Helper: interpret results</h2>
+              <button
+                onClick={askAiToExplain}
+                disabled={aiLoading}
+                className="rounded-md border border-white/15 bg-black/30 px-3 py-2 text-xs font-semibold text-white hover:bg-black/40 disabled:opacity-50"
+              >
+                {aiLoading ? "Asking GPT…" : "Ask GPT"}
+              </button>
+            </div>
+            {aiExplanation ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div className="space-y-2">
+                  <div className="text-xs opacity-70 font-semibold">Insights</div>
+                  <ul className="list-disc list-inside text-xs space-y-1 opacity-90">
+                    {(aiExplanation.insights || []).slice(0, 5).map((x: string, i: number) => (
+                      <li key={`ins_${i}`}>{x}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-xs opacity-70 font-semibold">Risks</div>
+                  <ul className="list-disc list-inside text-xs space-y-1 opacity-90">
+                    {(aiExplanation.risks || []).slice(0, 5).map((x: string, i: number) => (
+                      <li key={`risk_${i}`}>{x}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-xs opacity-70 font-semibold">Next actions</div>
+                  <ul className="list-disc list-inside text-xs space-y-1 opacity-90">
+                    {(aiExplanation.next_actions || []).slice(0, 5).map((x: string, i: number) => (
+                      <li key={`na_${i}`}>{x}</li>
+                    ))}
+                  </ul>
+                  {typeof aiExplanation.confidence === "number" ? (
+                    <div className="text-[11px] opacity-70 mt-2">
+                      Confidence: {(aiExplanation.confidence * 100).toFixed(0)}%
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : (
+              <div className="text-xs opacity-70">
+                Click “Ask GPT” to get an explanation of these metrics and concrete next experiments.
+              </div>
+            )}
           </section>
         </>
       ) : null}

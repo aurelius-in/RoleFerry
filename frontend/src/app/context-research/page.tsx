@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 interface Contact {
   id: string;
@@ -54,7 +55,9 @@ export default function ContextResearchPage() {
   const router = useRouter();
   const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
   const [researchData, setResearchData] = useState<ResearchData | null>(null);
+  const [helper, setHelper] = useState<{ hooks?: string[]; corpus_preview?: any } | null>(null);
   const [isResearching, setIsResearching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
 
@@ -70,56 +73,102 @@ export default function ContextResearchPage() {
     if (selectedContacts.length === 0) return;
     
     setIsResearching(true);
-    
-    // Simulate AI research
-    setTimeout(() => {
-      const mockResearchData: ResearchData = {
+
+    setError(null);
+    try {
+      const companyName =
+        selectedContacts[0]?.company ||
+        (() => {
+          try {
+            const jdsRaw = localStorage.getItem("job_descriptions");
+            const jds = jdsRaw ? JSON.parse(jdsRaw) : [];
+            return jds?.[0]?.company || "TechCorp Inc.";
+          } catch {
+            return "TechCorp Inc.";
+          }
+        })();
+
+      const resp = await api<any>("/context-research/research", "POST", {
+        contact_ids: selectedContacts.map((c) => c.id),
+        company_name: companyName,
+      });
+
+      if (!resp?.success || !resp?.research_data) {
+        throw new Error(resp?.message || "Research failed");
+      }
+
+      setResearchData(resp.research_data);
+      setHelper(resp.helper || null);
+
+      // Persist for downstream screens (Compose expects `context_research`).
+      localStorage.setItem("context_research", JSON.stringify(resp.research_data));
+      localStorage.setItem("context_research_helper", JSON.stringify(resp.helper || {}));
+      // Backwards compatibility for older screen key.
+      localStorage.setItem("research_data", JSON.stringify(resp.research_data));
+    } catch {
+      // Deterministic-ish fallback if backend is unavailable.
+      const companyName = selectedContacts[0]?.company || "TechCorp Inc.";
+      const slug = companyName.toLowerCase().replace(/\s+/g, "");
+      const fallback: ResearchData = {
         company_summary: {
-          name: "TechCorp Inc.",
-          description: "TechCorp is a leading enterprise software company specializing in cloud infrastructure solutions. Founded in 2015, the company has grown to serve over 10,000 enterprise customers worldwide.",
+          name: companyName,
+          description: `${companyName} builds cloud infrastructure and analytics software for enterprise teams. Customers use it to improve onboarding, retention, and decision-making with better instrumentation.`,
           industry: "Enterprise Software",
           size: "501-1,000 employees",
           founded: "2015",
           headquarters: "San Francisco, CA",
-          website: "https://techcorp.com",
-          linkedin_url: "https://linkedin.com/company/techcorp"
+          website: `https://${slug}.com`,
+          linkedin_url: `https://linkedin.com/company/${slug}`,
         },
-        contact_bios: selectedContacts.map(contact => ({
+        contact_bios: selectedContacts.map((contact) => ({
           name: contact.name,
           title: contact.title,
           company: contact.company,
-          bio: `${contact.name} is a ${contact.title} at ${contact.company} with extensive experience in ${contact.department.toLowerCase()}. They have a proven track record of leading high-performing teams and driving innovation in their field.`,
+          bio: `${contact.name} is a ${contact.title} at ${contact.company}. Likely cares about reliability, execution velocity, and measurable outcomes.`,
           experience: "10+ years in technology leadership roles",
-          education: "MBA from Stanford University, BS Computer Science from UC Berkeley",
-          skills: ["Leadership", "Strategic Planning", "Team Management", "Technology Innovation"],
-          linkedin_url: `https://linkedin.com/in/${contact.name.toLowerCase().replace(' ', '')}`
+          education: "MBA Stanford; BS Computer Science",
+          skills: ["Leadership", "Platform engineering", "Reliability", "Hiring"],
+          linkedin_url: `https://linkedin.com/in/${contact.name.toLowerCase().replace(/\s+/g, "")}`,
         })),
         recent_news: [
           {
-            title: "TechCorp Announces $50M Series C Funding Round",
-            summary: "The company plans to use the funding to expand its engineering team and accelerate product development.",
+            title: `${companyName} expands into EMEA with new enterprise partnerships`,
+            summary: "Announced new channel partnerships and a roadmap focused on faster onboarding and improved retention analytics.",
             date: "2024-01-15",
             source: "TechCrunch",
-            url: "https://techcrunch.com/techcorp-funding"
+            url: "https://techcrunch.com/funding-news",
           },
           {
-            title: "TechCorp Launches New AI-Powered Analytics Platform",
-            summary: "The platform helps enterprises analyze their data more efficiently and make better business decisions.",
+            title: `${companyName} launches an AI-assisted analytics workflow`,
+            summary: "A new feature helps teams explain dashboard changes and propose next steps based on trends.",
             date: "2024-01-10",
             source: "VentureBeat",
-            url: "https://venturebeat.com/techcorp-ai-platform"
-          }
+            url: "https://venturebeat.com/ai-platform",
+          },
         ],
         shared_connections: [
-          "John Smith (Former colleague at StartupXYZ)",
-          "Sarah Wilson (Mutual connection from Stanford)",
-          "Mike Johnson (Industry contact from conference)"
-        ]
+          "John Smith (former colleague at StartupXYZ)",
+          "Sarah Wilson (mutual Stanford connection)",
+          "Mike Johnson (met at industry conference)",
+        ],
       };
-      
-      setResearchData(mockResearchData);
+
+      setResearchData(fallback);
+      const fallbackHelper = {
+        hooks: [
+          "Tie outreach to onboarding activation + retention outcomes",
+          "Reference recent product momentum as a reason to talk now",
+          "Offer a low-lift 2–3 bullet plan instead of a generic pitch",
+        ],
+      };
+      setHelper(fallbackHelper);
+      localStorage.setItem("context_research", JSON.stringify(fallback));
+      localStorage.setItem("context_research_helper", JSON.stringify(fallbackHelper));
+      localStorage.setItem("research_data", JSON.stringify(fallback));
+      setError("Backend unavailable — using deterministic demo research data.");
+    } finally {
       setIsResearching(false);
-    }, 3000);
+    }
   };
 
   const handleEdit = (field: string, currentValue: string) => {
@@ -153,7 +202,8 @@ export default function ContextResearchPage() {
 
   const handleContinue = () => {
     if (researchData) {
-      localStorage.setItem('research_data', JSON.stringify(researchData));
+      localStorage.setItem("context_research", JSON.stringify(researchData));
+      localStorage.setItem("research_data", JSON.stringify(researchData));
       router.push('/offer-creation');
     }
   };
@@ -183,6 +233,23 @@ export default function ContextResearchPage() {
               Hiring signals and company intelligence to contextualize your outreach.
             </p>
           </div>
+
+          {error && (
+            <div className="mb-6 rounded-lg border border-orange-400/30 bg-orange-500/10 p-4 text-sm text-white/80">
+              {error}
+            </div>
+          )}
+
+          {helper?.hooks?.length ? (
+            <div className="mb-6 rounded-lg border border-white/10 bg-black/20 p-4">
+              <div className="text-sm font-bold text-white mb-2">GPT Helper: outreach hooks</div>
+              <ul className="list-disc list-inside text-sm text-white/70 space-y-1">
+                {helper.hooks.slice(0, 5).map((h: string, i: number) => (
+                  <li key={`hook_${i}`}>{h}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
           {selectedContacts.length === 0 ? (
             <div className="text-center py-12">

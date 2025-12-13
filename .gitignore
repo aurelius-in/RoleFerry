@@ -1,0 +1,67 @@
+# --- Python -----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments (never commit)
+.venv/
+venv/
+ENV/
+env/
+backend/.venv/
+
+# --- Node / Next ------------------------------------------------------------
+node_modules/
+.next/
+out/
+
+# --- Local env / secrets ----------------------------------------------------
+.env
+.env.*
+
+# --- IDE / tooling ----------------------------------------------------------
+.cursor/
+.vscode/
+.idea/
+
+# --- OS ---------------------------------------------------------------------
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# --- Python -----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments (never commit)
+.venv/
+venv/
+ENV/
+env/
+backend/.venv/
+
+# --- Node / Next ------------------------------------------------------------
+node_modules/
+.next/
+out/
+
+# --- Local env / secrets ----------------------------------------------------
+.env
+.env.*
+
+# --- IDE / tooling ----------------------------------------------------------
+.cursor/
+.vscode/
+.idea/
+
+# --- OS ---------------------------------------------------------------------
+Thumbs.db
+Desktop.ini
+.DS_Store

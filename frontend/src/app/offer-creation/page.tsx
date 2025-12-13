@@ -68,10 +68,9 @@ export default function OfferCreationPage() {
     }
     
     // Load pain point matches from localStorage
-    const savedMatches = localStorage.getItem('pain_point_matches');
-    if (savedMatches) {
-      setPainPointMatches(JSON.parse(savedMatches));
-    }
+    const savedMatches =
+      localStorage.getItem("pinpoint_matches") || localStorage.getItem("pain_point_matches");
+    if (savedMatches) setPainPointMatches(JSON.parse(savedMatches));
     
     // Listen for mode changes
     const handleModeChange = (event: CustomEvent) => {
@@ -94,6 +93,7 @@ export default function OfferCreationPage() {
         tone: selectedTone,
         format: selectedFormat,
         user_mode: mode,
+        context_research: JSON.parse(localStorage.getItem("context_research") || "{}"),
       };
       const resp = await api<OfferCreationResponse>("/offer-creation/create", "POST", payload);
       const o = resp.offer;
@@ -150,7 +150,7 @@ export default function OfferCreationPage() {
   const handleContinue = () => {
     if (offers.length > 0) {
       localStorage.setItem('created_offers', JSON.stringify(offers));
-      router.push('/context-research');
+      router.push('/compose');
     }
   };
 
@@ -267,10 +267,10 @@ export default function OfferCreationPage() {
                     Please complete the Pain Point Match step first.
                   </p>
                   <button
-                    onClick={() => router.push('/pain-point-match')}
+                    onClick={() => router.push('/pinpoint-match')}
                     className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
                   >
-                    Go to Pain Point Match
+                    Go to Pinpoint Match
                   </button>
                 </div>
               ) : (

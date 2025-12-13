@@ -18,11 +18,19 @@ This plan is **manual click-through first** (what a customer sees), with optiona
 
 - **GPT demo (real model calls)**
   - Set:
-    - `ROLEFERRY_MOCK_MODE=false`
     - `OPENAI_API_KEY=...`
     - (Optional) `OPENAI_MODEL=gpt-4o-mini`
     - (Optional) `LLM_MODE=openai`
   - Expected: JD parsing, offer creation, resume summary (response), pain-point matching, and lead qualifier can become GPT-backed.
+  - Notes:
+    - Week 10 gating: if `OPENAI_API_KEY` is set and `LLM_MODE=openai`, GPT is the default even if `ROLEFERRY_MOCK_MODE=true`.
+
+#### B0. One-call demo bootstrap (recommended)
+
+If you want to guarantee the 12-step flow has upstream data even on first run:
+
+1. `POST /demo/bootstrap`
+2. Expected: returns seeded `job_preferences`, a `job_description_id`, `pinpoint_matches`, and `selected_contacts`.
 
 #### B. Quick sanity check: LLM health endpoint
 
