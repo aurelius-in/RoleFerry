@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 import logging
 import json
+import hashlib
 
 import httpx
 
@@ -89,11 +90,10 @@ class OpenAIClient:
 
     @property
     def should_use_real_llm(self) -> bool:
-        return (
-            bool(self.api_key)
-            and not settings.mock_mode
-            and (settings.llm_mode or "openai") == "openai"
-        )
+        # Week 10: "GPT default" when API key is present.
+        # - If OPENAI_API_KEY is set, we use GPT even when ROLEFERRY_MOCK_MODE=true.
+        # - LLM_MODE is the explicit kill switch (set to "stub" to force stubs).
+        return bool(self.api_key) and (settings.llm_mode or "openai") == "openai"
 
     def _build_headers(self) -> Dict[str, str]:
         return {
@@ -101,20 +101,38 @@ class OpenAIClient:
             "Content-Type": "application/json",
         }
 
-    def _stub_response(self, messages: List[Dict[str, str]], note: str | None = None) -> Dict[str, Any]:
+    def _stable_seed(self, messages: List[Dict[str, str]]) -> int:
+        last_user = next(
+            (m["content"] for m in reversed(messages) if m.get("role") == "user"),
+            "",
+        )
+        digest = hashlib.sha256(last_user.encode("utf-8", errors="ignore")).hexdigest()
+        return int(digest[:8], 16)
+
+    def _stub_response(
+        self,
+        messages: List[Dict[str, str]],
+        note: str | None = None,
+        *,
+        json_obj: Dict[str, Any] | None = None,
+    ) -> Dict[str, Any]:
         """
         Deterministic stub used when in mock_mode or when OpenAI is unavailable.
         Echoes the last user message with a short prefix so callers always get
         a syntactically similar response object.
         """
-        last_user = next(
-            (m["content"] for m in reversed(messages) if m.get("role") == "user"),
-            "",
-        )
         prefix = "[Stubbed GPT]"
         if note:
             prefix += f" ({note})"
-        content = f"{prefix} {last_user[:512]}"
+
+        if json_obj is not None:
+            content = json.dumps(json_obj, ensure_ascii=False)
+        else:
+            last_user = next(
+                (m["content"] for m in reversed(messages) if m.get("role") == "user"),
+                "",
+            )
+            content = f"{prefix} {last_user[:512]}"
         return {
             "id": "stub-chat-completion",
             "model": self.model,
@@ -133,6 +151,7 @@ class OpenAIClient:
         model: Optional[str] = None,
         temperature: float = 0.2,
         max_tokens: int = 512,
+        stub_json: Dict[str, Any] | None = None,
         **extra: Any,
     ) -> Dict[str, Any]:
         """
@@ -142,7 +161,7 @@ class OpenAIClient:
         even when running in stub mode.
         """
         if not self.should_use_real_llm:
-            return self._stub_response(messages, note="mock_mode or missing API key")
+            return self._stub_response(messages, note="stub_mode", json_obj=stub_json)
 
         payload: Dict[str, Any] = {
             "model": model or self.model,
@@ -190,9 +209,33 @@ class OpenAIClient:
             },
             {"role": "user", "content": text},
         ]
+        seed = self._stable_seed(messages)
+        stub = {
+            "positions": [
+                {
+                    "company": ["TechCorp", "BlueYonder", "NimbusAI"][seed % 3],
+                    "title": ["Senior Software Engineer", "Data Engineer", "Product Analyst"][seed % 3],
+                    "start_date": "2022-01",
+                    "end_date": "2024-12",
+                    "current": True,
+                    "description": "Owned a core platform initiative and delivered measurable performance and reliability gains.",
+                }
+            ],
+            "key_metrics": [
+                {"metric": "Latency", "value": "40% reduction", "context": "via caching + query optimization"},
+                {"metric": "Costs", "value": "18% reduction", "context": "through infra right-sizing"},
+            ],
+            "skills": ["Python", "SQL", "AWS", "Docker", "React"],
+            "accomplishments": [
+                "Shipped a high-availability service used by internal teams weekly",
+                "Improved observability with dashboards + alerts",
+            ],
+            "tenure": [{"company": "TechCorp", "duration": "2 years", "role": "Senior Software Engineer"}],
+        }
         return self.run_chat_completion(
             messages,
             temperature=0.1,
+            stub_json=stub,
         )
 
     def extract_job_structure(self, text: str) -> Dict[str, Any]:
@@ -214,7 +257,21 @@ class OpenAIClient:
             },
             {"role": "user", "content": text},
         ]
-        return self.run_chat_completion(messages, temperature=0.1)
+        seed = self._stable_seed(messages)
+        titles = ["Senior Product Manager", "Senior Software Engineer", "Head of Growth", "Data Scientist"]
+        companies = ["GrowthLoop", "TechCorp Inc.", "Acme Analytics", "NimbusAI"]
+        stub = {
+            "title": titles[seed % len(titles)],
+            "company": companies[(seed // 7) % len(companies)],
+            "pain_points": [
+                "Improve onboarding activation and reduce drop-off",
+                "Reduce churn by improving time-to-value",
+                "Increase visibility into funnel metrics and attribution",
+            ],
+            "required_skills": ["SQL", "Experimentation", "Stakeholder management", "Analytics", "Roadmapping"],
+            "success_metrics": ["+15% activation", "-10% churn", "Shorter cycle time for releases"],
+        }
+        return self.run_chat_completion(messages, temperature=0.1, stub_json=stub)
 
     def generate_pain_point_map(self, jd_blob: str, resume_blob: str) -> Dict[str, Any]:
         """
@@ -231,7 +288,28 @@ class OpenAIClient:
             },
             {"role": "user", "content": f"Job description:\n{jd_blob}\n\nResume:\n{resume_blob}"},
         ]
-        return self.run_chat_completion(messages, temperature=0.2)
+        seed = self._stable_seed(messages)
+        stub = {
+            "pairs": [
+                {
+                    "jd_snippet": "Improve onboarding activation and reduce drop-off",
+                    "resume_snippet": "Led onboarding funnel revamp and improved activation via experiments",
+                    "metric": "+12% activation",
+                },
+                {
+                    "jd_snippet": "Reduce churn by improving time-to-value",
+                    "resume_snippet": "Built usage-based lifecycle messaging that reduced early churn",
+                    "metric": "-8% churn",
+                },
+                {
+                    "jd_snippet": "Increase visibility into funnel metrics and attribution",
+                    "resume_snippet": "Implemented event taxonomy + dashboards for end-to-end attribution",
+                    "metric": "4x faster insights",
+                },
+            ],
+            "alignment_score": round(0.72 + ((seed % 20) / 100), 2),
+        }
+        return self.run_chat_completion(messages, temperature=0.2, stub_json=stub)
 
     def draft_offer_email(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -253,7 +331,87 @@ class OpenAIClient:
                 "content": f"Context JSON:\n{context}",
             },
         ]
-        return self.run_chat_completion(messages, temperature=0.3, max_tokens=600)
+        seed = self._stable_seed(messages)
+        company = (context or {}).get("company") or "TechCorp"
+        role = (context or {}).get("job_title") or "the role"
+        stub = {
+            "title": f"{role}: quick idea for {company}",
+            "content": (
+                f"Hi {{first_name}},\n\n"
+                f"I noticed {company} is tackling {{pinpoint_1}}. I’ve helped teams address this by {{solution_1}} "
+                f"({{metric_1}}). If it’s useful, I can share a 2–3 bullet plan tailored to {role}.\n\n"
+                f"Open to a quick 10–15 minute chat?\n\n"
+                f"Best,\n[Your Name]\n"
+            ),
+        }
+        return self.run_chat_completion(messages, temperature=0.3, max_tokens=600, stub_json=stub)
+
+    def draft_compose_email(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Draft an email for the Compose step (subject/body + optional variants).
+
+        Returns ONLY JSON:
+        - subject: string
+        - body: string
+        - variants: array of { label, subject, body }
+        - rationale: short string
+        """
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are RoleFerry's outreach copilot. Draft a concise, human email with a strong opener, "
+                    "one credibility proof, and a clear CTA. Keep it plain-language and specific.\n\n"
+                    "Return ONLY a JSON object with keys:\n"
+                    "- subject: string\n"
+                    "- body: string\n"
+                    "- variants: array of { label, subject, body }\n"
+                    "- rationale: string\n"
+                ),
+            },
+            {"role": "user", "content": f"Context JSON:\n{context}"},
+        ]
+        seed = self._stable_seed(messages)
+        company = str((context or {}).get("company_name") or "TechCorp")
+        role = str((context or {}).get("job_title") or "the role")
+        first_name = str((context or {}).get("first_name") or "there")
+        pp = str((context or {}).get("pinpoint_1") or "a key priority")
+        sol = str((context or {}).get("solution_1") or "a proven approach")
+        metric = str((context or {}).get("metric_1") or "a measurable result")
+        stub = {
+            "subject": f"{role} at {company} — quick idea",
+            "body": (
+                f"Hi {first_name},\n\n"
+                f"I noticed {company} is working through {pp}. I’ve helped teams solve similar problems by {sol} "
+                f"({metric}).\n\n"
+                f"If you’re open to it, I can share a 2–3 bullet plan tailored to {role}. "
+                f"Would a quick 10–15 minute chat this week be useful?\n\n"
+                f"Best,\n[Your Name]\n"
+            ),
+            "variants": [
+                {
+                    "label": "short_direct",
+                    "subject": f"{company}: idea for {role}",
+                    "body": (
+                        f"Hi {first_name} — quick note.\n\n"
+                        f"{pp} stood out. I’ve tackled this by {sol} ({metric}). "
+                        f"Open to a quick chat?\n\nBest,\n[Your Name]\n"
+                    ),
+                },
+                {
+                    "label": "warm_context",
+                    "subject": f"Re: {role} @ {company}",
+                    "body": (
+                        f"Hi {first_name},\n\n"
+                        f"I saw the {role} opening and did a quick scan of {company}'s priorities. "
+                        f"{pp} seems central. I’ve delivered {metric} in similar situations by {sol}.\n\n"
+                        f"Happy to share specifics—want a 10–15 min chat?\n\nBest,\n[Your Name]\n"
+                    ),
+                },
+            ][: 2 + (seed % 1)],
+            "rationale": "Two variants: one short/direct and one warm/context-driven for A/B testing.",
+        }
+        return self.run_chat_completion(messages, temperature=0.35, max_tokens=700, stub_json=stub)
 
 
 # Singleton-style accessor used across the backend

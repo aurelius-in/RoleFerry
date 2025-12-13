@@ -4,6 +4,8 @@ from sqlalchemy import text as sql_text
 
 from ..storage import store
 from ..db import get_engine
+from ..clients.openai_client import get_openai_client, extract_json_from_text
+import json
 
 
 router = APIRouter()
@@ -19,49 +21,59 @@ async def analytics_overview():
     and surfaces a verification breakdown for deliverability context.
     """
     DEMO_USER_ID = "demo-user"
+    app_rows = []
+    sent_row = None
+    verification_rows = []
 
-    async with engine.begin() as conn:
-        # Count applications by status for the demo user
-        result = await conn.execute(
-            sql_text(
-                """
-                SELECT status, COUNT(*) AS count
-                FROM application
-                WHERE user_id = :user_id
-                GROUP BY status
-                """
-            ),
-            {"user_id": DEMO_USER_ID},
-        )
-        app_rows = result.fetchall()
+    # DB is optional for demo; fall back to in-memory metrics when unavailable.
+    try:
+        async with engine.begin() as conn:
+            # Count applications by status for the demo user
+            result = await conn.execute(
+                sql_text(
+                    """
+                    SELECT status, COUNT(*) AS count
+                    FROM application
+                    WHERE user_id = :user_id
+                    GROUP BY status
+                    """
+                ),
+                {"user_id": DEMO_USER_ID},
+            )
+            app_rows = result.fetchall()
 
-        # Count outreach rows as "real" sends
-        result = await conn.execute(
-            sql_text(
-                """
-                SELECT COUNT(*) AS sent_count
-                FROM outreach
-                WHERE user_id = :user_id
-                """
-            ),
-            {"user_id": DEMO_USER_ID},
-        )
-        sent_row = result.first()
+            # Count outreach rows as "real" sends
+            result = await conn.execute(
+                sql_text(
+                    """
+                    SELECT COUNT(*) AS sent_count
+                    FROM outreach
+                    WHERE user_id = :user_id
+                    """
+                ),
+                {"user_id": DEMO_USER_ID},
+            )
+            sent_row = result.first()
 
-        # Verification breakdown from outreach
-        result = await conn.execute(
-            sql_text(
-                """
-                SELECT COALESCE(verification_status, 'unknown') AS status,
-                       COUNT(*) AS count
-                FROM outreach
-                WHERE user_id = :user_id
-                GROUP BY COALESCE(verification_status, 'unknown')
-                """
-            ),
-            {"user_id": DEMO_USER_ID},
-        )
-        verification_rows = result.fetchall()
+            # Verification breakdown from outreach
+            result = await conn.execute(
+                sql_text(
+                    """
+                    SELECT COALESCE(verification_status, 'unknown') AS status,
+                           COUNT(*) AS count
+                    FROM outreach
+                    WHERE user_id = :user_id
+                    GROUP BY COALESCE(verification_status, 'unknown')
+                    """
+                ),
+                {"user_id": DEMO_USER_ID},
+            )
+            verification_rows = result.fetchall()
+    except BaseException:
+        # fall back to store-only below
+        app_rows = []
+        sent_row = None
+        verification_rows = []
 
     by_status = {row.status: row.count for row in app_rows} if app_rows else {}
 
@@ -70,7 +82,7 @@ async def analytics_overview():
         count for status, count in by_status.items() if status and status.lower() != "saved"
     )
 
-    total_sent = int(getattr(sent_row, "sent_count", 0) or 0)
+    total_sent = int(getattr(sent_row, "sent_count", 0) or 0) if sent_row else 0
 
     # Use in-memory message mocks (if any) to approximate click/reply rates
     msgs = store.messages or []
@@ -187,4 +199,70 @@ def analytics_csv():
 @router.get("/timeseries")
 def analytics_timeseries():
     return {"points": store.list_timeseries()}
+
+
+@router.get("/explain")
+async def analytics_explain():
+    """
+    GPT-backed explanatory analytics.
+
+    Source of truth for counts remains deterministic (DB/store). GPT adds narrative:
+    - insights
+    - risks
+    - next_actions
+    """
+    metrics = await analytics_overview()
+    campaign = analytics_campaign()
+
+    context = {
+        "metrics": metrics,
+        "campaign": campaign,
+        "notes": "Explain what is working and what to change next. Keep it concise and practical.",
+    }
+
+    client = get_openai_client()
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are a deliverability and outreach analytics analyst.\n\n"
+                "Given JSON metrics, produce an executive-friendly explanation.\n"
+                "Return ONLY a JSON object with keys:\n"
+                "- insights: array of strings\n"
+                "- risks: array of strings\n"
+                "- next_actions: array of strings\n"
+                "- confidence: number 0-1\n"
+            ),
+        },
+        {"role": "user", "content": json.dumps(context)},
+    ]
+
+    stub_json = {
+        "insights": [
+            "Reply rate is driven by higher alignment scores; the top variant is outperforming.",
+            "Verification is strong; maintain list hygiene to protect deliverability.",
+        ],
+        "risks": [
+            "Some variants are underperforming—subject lines may be too generic.",
+            "If verified_ratio drops, expect bounce rate and spam placement to worsen.",
+        ],
+        "next_actions": [
+            "A/B test a shorter subject and a more specific first line tied to the top pain point.",
+            "Trim or re-verify any risky contacts before the next send batch.",
+            "Increase personalization for the bottom-performing variant and re-run deliverability check.",
+        ],
+        "confidence": 0.72,
+    }
+
+    raw = client.run_chat_completion(messages, temperature=0.25, max_tokens=700, stub_json=stub_json)
+    choices = raw.get("choices") or []
+    msg = (choices[0].get("message") if choices else {}) or {}
+    content_str = str(msg.get("content") or "")
+    data = extract_json_from_text(content_str) or stub_json
+
+    return {
+        "success": True,
+        "explanation": data,
+        "inputs": {"metrics": metrics, "campaign": campaign},
+    }
 

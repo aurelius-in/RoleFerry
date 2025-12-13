@@ -1,8 +1,36 @@
 from typing import Dict, Any
 import asyncio
 import aiohttp
+import hashlib
 from ..config import settings
 from .neverbounce_client import verify_email as nb_verify
+
+
+def _deterministic_mock_verification(email: str, provider: str) -> Dict[str, Any]:
+    """
+    Deterministic verifier for demo mode.
+    Produces stable (status, score) per email so downstream steps are consistent.
+    """
+    e = (email or "").strip().lower()
+    digest = hashlib.sha256(f"{provider}:{e}".encode("utf-8", errors="ignore")).hexdigest()
+    n = int(digest[:8], 16) % 100
+
+    # Basic heuristics + stable randomness:
+    # - obvious invalids: missing '@' or domain
+    if "@" not in e or e.endswith("@") or e.endswith("."):
+        return {"status": "invalid", "score": 0, "provider": provider, "raw": {"source": "deterministic_mock"}}
+    # - disposable-ish: 'noreply' or 'support' skew risky
+    if any(tok in e for tok in ["noreply", "no-reply", "donotreply", "support@", "info@"]):
+        status = "risky" if n < 85 else "unknown"
+        score = 55 if status == "risky" else 50
+        return {"status": status, "score": score, "provider": provider, "raw": {"source": "deterministic_mock"}}
+
+    # Stable distribution: ~70% valid, ~20% risky, ~10% unknown
+    if n < 70:
+        return {"status": "valid", "score": 85 + (n % 15), "provider": provider, "raw": {"source": "deterministic_mock"}}
+    if n < 90:
+        return {"status": "risky", "score": 55 + (n % 25), "provider": provider, "raw": {"source": "deterministic_mock"}}
+    return {"status": "unknown", "score": 50, "provider": provider, "raw": {"source": "deterministic_mock"}}
 
 
 async def verify_email_async(email: str) -> Dict[str, Any]:
@@ -11,16 +39,8 @@ async def verify_email_async(email: str) -> Dict[str, Any]:
     async def neverbounce_verify(e: str) -> Dict[str, Any]:
         """NeverBounce API integration."""
         if settings.mock_mode or not settings.neverbounce_api_key:
-            # Mock response for development
-            await asyncio.sleep(0.1)
-            status = "valid" if email and email[0].lower() < "n" else "risky"
-            score = 90 if status == "valid" else 70
-            return {
-                "status": status,
-                "score": score,
-                "provider": "neverbounce",
-                "raw": {"source": "mock"}
-            }
+            await asyncio.sleep(0.05)
+            return _deterministic_mock_verification(e, provider="neverbounce")
         
         try:
             async with aiohttp.ClientSession() as session:
@@ -66,16 +86,8 @@ async def verify_email_async(email: str) -> Dict[str, Any]:
     async def millionverifier_verify(e: str) -> Dict[str, Any]:
         """MillionVerifier API integration."""
         if settings.mock_mode or not settings.mv_api_key:
-            # Mock response for development
-            await asyncio.sleep(0.1)
-            status = "valid" if e.endswith(".com") else "risky"
-            score = 85 if status == "valid" else 60
-            return {
-                "status": status,
-                "score": score,
-                "provider": "millionverifier",
-                "raw": {"source": "mock"}
-            }
+            await asyncio.sleep(0.05)
+            return _deterministic_mock_verification(e, provider="millionverifier")
         
         try:
             async with aiohttp.ClientSession() as session:

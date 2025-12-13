@@ -29,6 +29,7 @@ class OfferCreationRequest(BaseModel):
     tone: str
     format: str
     user_mode: str = "job-seeker"
+    context_research: Optional[Dict[str, Any]] = None
 
 class OfferCreationResponse(BaseModel):
     success: bool
@@ -105,6 +106,7 @@ async def create_offer(request: OfferCreationRequest):
                     "tone": request.tone,
                     "format": request.format,
                     "pinpoint_match": base_match,
+                    "context_research": request.context_research or {},
                 }
                 raw = client.draft_offer_email(context)
                 choices = raw.get("choices") or []

@@ -38,6 +38,7 @@ export default function CampaignPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [deliverabilityCheck, setDeliverabilityCheck] = useState<DeliverabilityCheck | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [composeHelper, setComposeHelper] = useState<any>(null);
 
   useEffect(() => {
     // Load mode from localStorage
@@ -51,6 +52,12 @@ export default function CampaignPage() {
     if (composedEmail) {
       const emailData = JSON.parse(composedEmail);
       generateCampaign(emailData);
+    }
+
+    // Load helper suggestions from Compose
+    const helperRaw = localStorage.getItem("compose_helper");
+    if (helperRaw) {
+      try { setComposeHelper(JSON.parse(helperRaw)); } catch {}
     }
     
     // Listen for mode changes
@@ -217,6 +224,24 @@ export default function CampaignPage() {
             </div>
           ) : campaign ? (
             <div className="space-y-8">
+              {composeHelper?.variants?.length > 0 && (
+                <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                  <div className="text-sm font-bold text-white mb-2">GPT Helper: variant ideas</div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    {composeHelper.variants.slice(0, 2).map((v: any) => (
+                      <div key={v.label} className="rounded-lg border border-white/10 bg-white/5 p-3">
+                        <div className="text-white/80 font-semibold mb-1">{v.label}</div>
+                        <div className="text-white/70 mb-2">{v.subject}</div>
+                        <div className="text-white/60 whitespace-pre-wrap line-clamp-5">{v.body}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {composeHelper?.rationale && (
+                    <div className="mt-2 text-xs text-white/60">{composeHelper.rationale}</div>
+                  )}
+                </div>
+              )}
+
               {/* Campaign Header */}
               <div className="flex items-center justify-between">
                 <div>

@@ -30,6 +30,19 @@ export default function DeliverabilityLaunchPage() {
   const [launchResult, setLaunchResult] = useState<LaunchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const loadSelectedContacts = (): any[] => {
+    try {
+      const selected = localStorage.getItem("selected_contacts");
+      if (selected) return JSON.parse(selected);
+    } catch {}
+    try {
+      const found = localStorage.getItem("found_contacts");
+      const all = found ? JSON.parse(found) : [];
+      return Array.isArray(all) ? all.slice(0, 2) : [];
+    } catch {}
+    return [];
+  };
+
   useEffect(() => {
     // Load mode from localStorage
     const stored = localStorage.getItem("rf_mode");
@@ -64,7 +77,7 @@ export default function DeliverabilityLaunchPage() {
       const payload = {
         campaign_id: campaign.id,
         emails: campaign.emails,
-        contacts: [], // Week 11/12: contacts are still mocked; backend ignores for now.
+        contacts: loadSelectedContacts(),
       };
       const checks = await api<PreFlightCheck[]>(
         "/deliverability-launch/pre-flight-checks",
@@ -90,7 +103,7 @@ export default function DeliverabilityLaunchPage() {
       const payload = {
         campaign_id: campaign.id,
         emails: campaign.emails,
-        contacts: [],
+        contacts: loadSelectedContacts(),
       };
       const result = await api<LaunchResult>(
         "/deliverability-launch/launch",
@@ -215,18 +228,25 @@ export default function DeliverabilityLaunchPage() {
                 {preFlightChecks.length > 0 && (
                   <div className="space-y-4">
                     {preFlightChecks.map((check, index) => (
-                      <div key={index} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
+                      <div
+                        key={index}
+                        className={`flex items-center space-x-4 p-4 rounded-lg border ${
+                          check.name === "GPT Deliverability Helper"
+                            ? "border-orange-400/30 bg-orange-500/10"
+                            : "border-white/10 bg-black/20"
+                        }`}
+                      >
                         {getStatusIcon(check.status)}
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
-                            <h3 className="font-medium text-gray-900">{check.name}</h3>
+                            <h3 className="font-medium text-white">{check.name}</h3>
                             <span className={`text-sm font-medium ${getStatusColor(check.status)}`}>
                               {check.status.toUpperCase()}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 mt-1">{check.message}</p>
+                          <p className="text-sm text-white/70 mt-1">{check.message}</p>
                           {check.details && (
-                            <p className="text-sm text-yellow-600 mt-1">{check.details}</p>
+                            <p className="text-sm text-white/70 mt-1 whitespace-pre-wrap">{check.details}</p>
                           )}
                         </div>
                       </div>
@@ -237,8 +257,8 @@ export default function DeliverabilityLaunchPage() {
 
               {/* Launch Section */}
               {preFlightChecks.length > 0 && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Launch Campaign</h2>
+                <div className="bg-black/20 border border-white/10 rounded-lg p-6">
+                  <h2 className="text-xl font-semibold text-white mb-4">Launch Campaign</h2>
                   
                   {hasFailures ? (
                     <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">

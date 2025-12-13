@@ -37,6 +37,12 @@ interface JobPreferencesResponse {
   success: boolean;
   message: string;
   preferences?: BackendJobPreferences;
+  helper?: {
+    normalized_skills?: string[];
+    suggested_skills?: string[];
+    suggested_role_categories?: string[];
+    notes?: string[];
+  };
 }
 
 const VALUES_OPTIONS = [
@@ -189,6 +195,7 @@ export default function JobPreferencesPage() {
     state: "",
   });
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [helper, setHelper] = useState<JobPreferencesResponse["helper"] | null>(null);
 
   const [skillSearch, setSkillSearch] = useState("");
   const [availableSkills] = useState([
@@ -290,12 +297,16 @@ export default function JobPreferencesPage() {
         state: preferences.state,
         user_mode: mode,
       };
-      await api<JobPreferencesResponse>(
+      const res = await api<JobPreferencesResponse>(
         "/job-preferences/save",
         "POST",
         payload
       );
       setLastSaved(new Date().toLocaleTimeString());
+      if (res?.helper) {
+        setHelper(res.helper);
+        localStorage.setItem("job_preferences_helper", JSON.stringify(res.helper));
+      }
     } catch {
       // keep UX graceful even if API fails
     }
@@ -574,6 +585,41 @@ export default function JobPreferencesPage() {
               </div>
             </div>
           </div>
+
+          {helper && (
+            <div className="mt-8 rounded-lg border border-white/10 bg-black/20 p-4">
+              <div className="text-sm font-bold text-white mb-2">GPT Helper: preference suggestions</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <div className="text-white/70 font-semibold mb-1">Normalized skills</div>
+                  <div className="flex flex-wrap gap-2">
+                    {(helper.normalized_skills || []).slice(0, 12).map((s) => (
+                      <span key={s} className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80 text-xs">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-white/70 font-semibold mb-1">Suggested skills</div>
+                  <div className="flex flex-wrap gap-2">
+                    {(helper.suggested_skills || []).slice(0, 10).map((s) => (
+                      <span key={s} className="px-2 py-1 rounded-full border border-white/10 bg-blue-50 text-blue-200 text-xs">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {(helper.notes || []).length > 0 && (
+                <ul className="mt-3 list-disc list-inside text-white/70 text-sm space-y-1">
+                  {(helper.notes || []).slice(0, 4).map((n, i) => (
+                    <li key={`n_${i}`}>{n}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           <div className="mt-8 flex justify-end">
             <div className="flex items-center space-x-4">

@@ -38,6 +38,13 @@ class InMemoryStore:
         self.demo_job_descriptions: Dict[str, Dict[str, Any]] = {}
         self.demo_latest_resume: Dict[str, Any] | None = None
         self.demo_latest_resume_text: str | None = None
+        self.demo_job_preferences: Dict[str, Any] | None = None
+        self.demo_selected_contacts: List[Dict[str, Any]] = []
+        self.demo_research: Dict[str, Any] | None = None
+        self.demo_pinpoint_matches: List[Dict[str, Any]] = []
+        self.demo_offer: Dict[str, Any] | None = None
+        self.demo_compose: Dict[str, Any] | None = None
+        self.demo_campaign: Dict[str, Any] | None = None
 
     def save_ijp(self, ijp_id: str, filters: Dict[str, Any]) -> None:
         self.ijps[ijp_id] = filters

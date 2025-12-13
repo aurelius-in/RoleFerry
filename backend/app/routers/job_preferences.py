@@ -1,12 +1,15 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import logging
+import json
 
 from sqlalchemy import text, bindparam
 from sqlalchemy.dialects.postgresql import JSONB
 
 from ..db import get_engine
+from ..clients.openai_client import get_openai_client, extract_json_from_text
+from ..storage import store
 
 
 router = APIRouter()
@@ -31,6 +34,7 @@ class JobPreferencesResponse(BaseModel):
     success: bool
     message: str
     preferences: Optional[JobPreferences] = None
+    helper: Optional[Dict[str, Any]] = None
 
 DEMO_USER_ID = "demo-user"
 
@@ -42,25 +46,73 @@ async def save_job_preferences(preferences: JobPreferences):
     In a real implementation, this would save to database.
     """
     try:
-        # Persist as structured JSONB against a stubbed demo user
+        # Always cache for demo continuity (even if Postgres is down)
+        store.demo_job_preferences = preferences.model_dump()
+
+        # Persist as structured JSONB against a stubbed demo user (best-effort)
         data_obj = preferences.model_dump()
-        stmt = (
-            text(
-                """
-                INSERT INTO job_preferences (user_id, data, updated_at)
-                VALUES (:user_id, :data, now())
-                ON CONFLICT (user_id)
-                DO UPDATE SET data = EXCLUDED.data, updated_at = now()
-                """
-            ).bindparams(bindparam("data", type_=JSONB))
-        )
-        async with engine.begin() as conn:
-            await conn.execute(stmt, {"user_id": DEMO_USER_ID, "data": data_obj})
+        try:
+            stmt = (
+                text(
+                    """
+                    INSERT INTO job_preferences (user_id, data, updated_at)
+                    VALUES (:user_id, :data, now())
+                    ON CONFLICT (user_id)
+                    DO UPDATE SET data = EXCLUDED.data, updated_at = now()
+                    """
+                ).bindparams(bindparam("data", type_=JSONB))
+            )
+            async with engine.begin() as conn:
+                await conn.execute(stmt, {"user_id": DEMO_USER_ID, "data": data_obj})
+        except BaseException:
+            pass
+
+        # GPT helper: normalize skills + suggest adjacent improvements.
+        client = get_openai_client()
+        helper_context = {
+            "values": preferences.values,
+            "role_categories": preferences.role_categories,
+            "location_preferences": preferences.location_preferences,
+            "industries": preferences.industries,
+            "skills": preferences.skills,
+            "work_type": preferences.work_type,
+            "company_size": preferences.company_size,
+            "user_mode": preferences.user_mode,
+        }
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a job preferences normalization assistant.\n\n"
+                    "Return ONLY JSON with keys:\n"
+                    "- normalized_skills: array of strings (deduped, consistent casing)\n"
+                    "- suggested_skills: array of strings (3-8 items)\n"
+                    "- suggested_role_categories: array of strings (0-3 items)\n"
+                    "- notes: array of strings (short, actionable)\n"
+                ),
+            },
+            {"role": "user", "content": json.dumps(helper_context)},
+        ]
+        stub_json = {
+            "normalized_skills": sorted({s.strip() for s in (preferences.skills or []) if str(s).strip()}),
+            "suggested_skills": ["Product analytics", "Experiment design", "SQL", "Stakeholder management"],
+            "suggested_role_categories": preferences.role_categories[:1],
+            "notes": [
+                "Keep skills to 8–12 high-signal items; remove near-duplicates.",
+                "Add 1–2 domain skills that match your target industry (e.g., onboarding/activation).",
+            ],
+        }
+        raw = client.run_chat_completion(messages, temperature=0.1, max_tokens=450, stub_json=stub_json)
+        choices = raw.get("choices") or []
+        msg = (choices[0].get("message") if choices else {}) or {}
+        content_str = str(msg.get("content") or "")
+        helper = extract_json_from_text(content_str) or stub_json
 
         return JobPreferencesResponse(
             success=True,
             message="Job preferences saved successfully",
             preferences=preferences,
+            helper=helper,
         )
     except Exception as e:
         logger.exception("Error saving job preferences")
@@ -94,6 +146,24 @@ async def get_job_preferences(user_id: str):
         # If anything goes wrong with the DB, fall back to mock defaults
         pass
 
+    # Prefer demo cache if available
+    if store.demo_job_preferences:
+        try:
+            prefs_obj = JobPreferences(**store.demo_job_preferences)
+            return JobPreferencesResponse(
+                success=True,
+                message="Job preferences retrieved successfully",
+                preferences=prefs_obj,
+                helper={
+                    "normalized_skills": sorted({s.strip() for s in (prefs_obj.skills or []) if str(s).strip()}),
+                    "suggested_skills": ["SQL", "Experimentation", "Analytics", "Stakeholder management"],
+                    "suggested_role_categories": prefs_obj.role_categories[:1],
+                    "notes": ["Loaded from demo cache (DB unavailable)."],
+                },
+            )
+        except Exception:
+            pass
+
     # Fallback to existing mock defaults if nothing stored yet or DB unavailable
     mock_preferences = JobPreferences(
         values=["Impactful work", "Work-life balance"],
@@ -114,6 +184,12 @@ async def get_job_preferences(user_id: str):
         success=True,
         message="Job preferences retrieved successfully",
         preferences=mock_preferences,
+        helper={
+            "normalized_skills": sorted({s.strip() for s in (mock_preferences.skills or []) if str(s).strip()}),
+            "suggested_skills": ["SQL", "Experimentation", "Analytics", "System design"],
+            "suggested_role_categories": mock_preferences.role_categories[:1],
+            "notes": ["These are seeded demo preferences; edit them to match your target role."],
+        },
     )
 
 @router.put("/{user_id}", response_model=JobPreferencesResponse)

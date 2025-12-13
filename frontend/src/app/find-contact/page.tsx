@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 interface Contact {
   id: string;
@@ -23,6 +24,17 @@ interface VerificationBadge {
   icon: string;
 }
 
+interface ContactSearchResponse {
+  success: boolean;
+  message: string;
+  contacts: Contact[];
+  helper?: {
+    opener_suggestions?: string[];
+    questions_to_ask?: string[];
+    talking_points_by_contact?: Record<string, string[]>;
+  };
+}
+
 export default function FindContactPage() {
   const router = useRouter();
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -31,6 +43,7 @@ export default function FindContactPage() {
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [verifyingEmails, setVerifyingEmails] = useState<string[]>([]);
+  const [helper, setHelper] = useState<ContactSearchResponse["helper"] | null>(null);
 
   useEffect(() => {
     // Load any existing contacts from localStorage
@@ -44,84 +57,52 @@ export default function FindContactPage() {
     if (!searchQuery.trim()) return;
     
     setIsSearching(true);
-    
-    // Simulate contact search and verification
-    setTimeout(() => {
-      const mockContacts: Contact[] = [
-        {
-          id: "contact_1",
-          name: "Sarah Johnson",
-          title: "VP of Engineering",
-          email: "sarah.johnson@techcorp.com",
-          linkedin_url: "https://linkedin.com/in/sarahjohnson",
-          confidence: 0.95,
-          verification_status: 'valid',
-          verification_score: 92,
-          company: "TechCorp Inc.",
-          department: "Engineering",
-          level: "VP"
-        },
-        {
-          id: "contact_2", 
-          name: "Mike Chen",
-          title: "Head of Talent Acquisition",
-          email: "mike.chen@techcorp.com",
-          linkedin_url: "https://linkedin.com/in/mikechen",
-          confidence: 0.88,
-          verification_status: 'risky',
-          verification_score: 65,
-          company: "TechCorp Inc.",
-          department: "HR",
-          level: "Head"
-        },
-        {
-          id: "contact_3",
-          name: "Jennifer Martinez",
-          title: "Senior Engineering Manager",
-          email: "j.martinez@techcorp.com",
-          linkedin_url: "https://linkedin.com/in/jennifermartinez",
-          confidence: 0.92,
-          verification_status: 'valid',
-          verification_score: 89,
-          company: "TechCorp Inc.",
-          department: "Engineering",
-          level: "Senior Manager"
-        }
-      ];
-      
-      setContacts(mockContacts);
+
+    try {
+      const res = await api<ContactSearchResponse>("/find-contact/search", "POST", {
+        query: searchQuery,
+      });
+      if (!res.success) throw new Error(res.message || "Search failed");
+      setContacts(res.contacts || []);
+      setHelper(res.helper || null);
+      localStorage.setItem("found_contacts", JSON.stringify(res.contacts || []));
+    } catch {
+      // keep the page usable even if API fails
+    } finally {
       setIsSearching(false);
-    }, 2000);
+    }
   };
 
   const handleVerifyEmails = async () => {
-    const emailsToVerify = contacts
-      .filter(c => selectedContacts.includes(c.id))
-      .map(c => c.email);
+    const selected = contacts.filter(c => selectedContacts.includes(c.id));
+    const emailsToVerify = selected.map(c => c.email);
     
     if (emailsToVerify.length === 0) return;
     
     setVerifyingEmails(emailsToVerify);
     setShowVerificationModal(true);
-    
-    // Simulate email verification
-    setTimeout(() => {
-      setContacts(prev => prev.map(contact => {
-        if (selectedContacts.includes(contact.id)) {
-          // Simulate verification results
-          const isVerified = Math.random() > 0.3; // 70% chance of being valid
-          return {
-            ...contact,
-            verification_status: isVerified ? 'valid' : 'risky',
-            verification_score: isVerified ? Math.floor(Math.random() * 30) + 70 : Math.floor(Math.random() * 40) + 30
-          };
-        }
-        return contact;
-      }));
-      
+
+    try {
+      const resp = await api<any>("/find-contact/verify", "POST", {
+        contact_ids: selectedContacts,
+        contacts: selected,
+      });
+
+      const verified = resp?.verified_contacts || [];
+      const byId: Record<string, any> = {};
+      for (const c of verified) byId[c.id] = c;
+
+      setContacts(prev => {
+        const next = prev.map(c => (byId[c.id] ? { ...c, ...byId[c.id] } : c));
+        localStorage.setItem("found_contacts", JSON.stringify(next));
+        return next;
+      });
+    } catch {
+      // keep UX usable even if verify fails
+    } finally {
       setVerifyingEmails([]);
       setShowVerificationModal(false);
-    }, 3000);
+    }
   };
 
   const handleContactSelect = (contactId: string) => {
@@ -171,6 +152,45 @@ export default function FindContactPage() {
               Select a contact and research their LinkedIn to personalize your outreach.
             </p>
           </div>
+
+          {helper && (
+            <div className="mb-8 rounded-lg border border-white/10 bg-black/20 p-4">
+              <div className="text-sm font-bold text-white mb-2">GPT Helper: talking points</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <div className="text-white/70 font-semibold mb-1">Openers</div>
+                  <ul className="list-disc list-inside text-white/70 space-y-1">
+                    {(helper.opener_suggestions || []).slice(0, 4).map((t, i) => (
+                      <li key={`op_${i}`}>{t}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <div className="text-white/70 font-semibold mb-1">Questions to ask</div>
+                  <ul className="list-disc list-inside text-white/70 space-y-1">
+                    {(helper.questions_to_ask || []).slice(0, 4).map((t, i) => (
+                      <li key={`q_${i}`}>{t}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              {selectedContacts.length > 0 && helper.talking_points_by_contact && (
+                <div className="mt-3 text-sm text-white/70">
+                  <div className="font-semibold mb-1">Selected contact talking points</div>
+                  {selectedContacts.slice(0, 2).map((cid) => (
+                    <div key={cid} className="mt-2">
+                      <div className="text-white/80 font-semibold">{cid}</div>
+                      <ul className="list-disc list-inside space-y-1">
+                        {(helper.talking_points_by_contact?.[cid] || []).slice(0, 3).map((t, i) => (
+                          <li key={`${cid}_${i}`}>{t}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Search Section */}
           <div className="mb-8">

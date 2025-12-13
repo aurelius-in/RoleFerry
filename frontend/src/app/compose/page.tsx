@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 interface Variable {
   name: string;
@@ -26,12 +27,23 @@ interface EmailTemplate {
   simplified_body: string;
 }
 
+interface ComposeResponse {
+  success: boolean;
+  message: string;
+  email_template?: EmailTemplate;
+  helper?: {
+    rationale?: string;
+    variants?: { label: string; subject: string; body: string }[];
+  };
+}
+
 export default function ComposePage() {
   const router = useRouter();
   const [mode, setMode] = useState<'job-seeker' | 'recruiter'>('job-seeker');
   const [selectedTone, setSelectedTone] = useState<'recruiter' | 'manager' | 'exec'>('manager');
   const [simplifyLanguage, setSimplifyLanguage] = useState(false);
   const [emailTemplate, setEmailTemplate] = useState<EmailTemplate | null>(null);
+  const [helper, setHelper] = useState<ComposeResponse["helper"] | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,73 +81,29 @@ export default function ComposePage() {
     setError(null);
 
     try {
-      // Simulate API call to generate email
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Mock email generation based on tone and mode
-      let subject = "";
-      let body = "";
-
-      if (mode === 'job-seeker') {
-        subject = `Quick advice on {{job_title}} at {{company_name}}?`;
-        body = `Hi {{first_name}},
-
-I spotted the {{job_title}} role at {{company_name}} and think my background fits perfectly. I noticed you're facing {{pinpoint_1}}, and I have experience {{solution_1}}, resulting in {{metric_1}}.
-
-{{company_summary}} - this aligns well with my expertise in scalable systems. I'm particularly excited about {{recent_news}}.
-
-Open to a brief 15-min chat to sanity-check fit? If helpful, forwarding my resume would be amazing.
-
-Either way—thanks for considering!
-
-Best,
-[Your Name]`;
-      } else {
-        subject = `Exceptional candidate for {{job_title}} at {{company_name}}`;
-        body = `Hi {{first_name}},
-
-I have an exceptional candidate who would be perfect for your {{job_title}} role. They have successfully {{solution_1}}, achieving {{metric_1}}.
-
-Given {{company_summary}} and your recent {{recent_news}}, this candidate's background in scalable systems would be invaluable.
-
-{{contact_bio}} - I believe this candidate would be an excellent fit for your team.
-
-Would you be open to a brief call to discuss?
-
-Best regards,
-[Your Name]`;
-      }
-
-      // Adjust tone
-      if (selectedTone === 'recruiter') {
-        body = `Efficiency-focused approach:\n\n${body}`;
-      } else if (selectedTone === 'manager') {
-        body = `Proof of competence:\n\n${body}`;
-      } else if (selectedTone === 'exec') {
-        body = `ROI/Strategy focused:\n\n${body}`;
-      }
-
-      // Mock jargon detection
-      const mockJargonTerms: JargonTerm[] = [
-        { term: "API", definition: "Application Programming Interface - a set of protocols and tools for building software applications", category: "Technology", position: [0, 3] },
-        { term: "KPI", definition: "Key Performance Indicator - measurable values that demonstrate how effectively a company is achieving key business objectives", category: "Business", position: [0, 3] }
-      ];
-
-      const simplifiedBody = simplifyLanguage ? 
-        body.replace(/API/g, "API (Application Programming Interface)") : 
-        body;
-
-      const template: EmailTemplate = {
-        id: "email_1",
-        subject,
-        body,
+      const payload = {
         tone: selectedTone,
+        user_mode: mode,
         variables: mockVariables,
-        jargon_terms: mockJargonTerms,
-        simplified_body: simplifiedBody
+        pinpoint_matches: JSON.parse(localStorage.getItem("pinpoint_matches") || "[]"),
+        context_data: JSON.parse(localStorage.getItem("context_research") || "{}"),
       };
 
-      setEmailTemplate(template);
+      const res = await api<ComposeResponse>("/compose/generate", "POST", payload);
+      if (!res.success || !res.email_template) {
+        throw new Error(res.message || "Failed to generate email.");
+      }
+
+      // If the user wants simplified copy, use the server-provided simplified_body.
+      const tpl = simplifyLanguage
+        ? { ...res.email_template, body: res.email_template.simplified_body }
+        : res.email_template;
+
+      setEmailTemplate(tpl);
+      setHelper(res.helper || null);
+      if (res.helper) {
+        localStorage.setItem("compose_helper", JSON.stringify(res.helper));
+      }
     } catch (err) {
       setError("Failed to generate email. Please try again.");
     } finally {

@@ -14,7 +14,7 @@ This report summarizes the Week 10 work completed to integrate ChatGPT-style cap
 Week 10 focused on making GPT integration **centralized, resilient for demos, and easy to verify**.
 
 - **Centralized GPT client**: Implemented a single OpenAI client wrapper in the backend that enforces configuration gates, consistent response shape, and deterministic stub outputs.
-- **GPT-backed workflow upgrades**: Wired GPT into key “wow moment” seams: job description parsing, pain-point matching, offer creation, resume summary extraction (response), and lead qualification.
+- **GPT-backed workflow upgrades**: Wired GPT into the “wow moment” seams end-to-end: resume parsing/summarization, job description parsing, pain-point matching + alignment scoring, offer drafting, compose drafting, research summarization, and explanatory analytics.
 - **Demo verification**: Added a dedicated backend LLM diagnostic endpoint (`/health/llm`) and a hidden frontend **Demo Debug Panel** accessible only via a “Debug” click.
 - **Demo test plan**: Documented a full click-through Week 10 demo test plan including expected outcomes.
 
@@ -33,13 +33,14 @@ Week 10 focused on making GPT integration **centralized, resilient for demos, an
 - Added OpenAI configuration fields in settings:
   - `openai_api_key`, `openai_model`, `openai_base_url`, `llm_mode`.
 - Implemented `OpenAIClient`:
-  - `should_use_real_llm` gating based on `OPENAI_API_KEY`, `ROLEFERRY_MOCK_MODE`, and `LLM_MODE`.
-  - Deterministic stub behavior when GPT is disabled (so demos never hard-fail).
+  - **Week 10 change**: `should_use_real_llm` is now **GPT-default** when `OPENAI_API_KEY` is present (even if `ROLEFERRY_MOCK_MODE=true`). `LLM_MODE` is the explicit kill switch (set `LLM_MODE=stub` to force stubs).
+  - Deterministic stub behavior when GPT is disabled (so demos never hard-fail), including **schema-correct JSON stubs** for JSON-returning seams.
   - Centralized helper prompts:
     - `summarize_resume(...)`
     - `extract_job_structure(...)`
     - `generate_pain_point_map(...)`
     - `draft_offer_email(...)`
+    - `draft_compose_email(...)`
   - Added robust `extract_json_from_text(...)` to handle JSON responses reliably in demo conditions.
 
 ### 2) GPT-backed Endpoints (“Wow Moments”)
@@ -66,6 +67,21 @@ Week 10 focused on making GPT integration **centralized, resilient for demos, an
 - `backend/app/routers/offer_creation.py`
   - GPT can draft `{title, content}` from `pinpoint_match` + tone/mode/format.
   - Falls back to prior deterministic content.
+
+**Compose (drafting + variants)**
+- `backend/app/routers/compose.py`
+  - GPT-first drafting via `OpenAIClient.draft_compose_email(...)` with structured JSON output `{subject, body, variants, rationale}`.
+  - Returns helper metadata (variants) so the UI can show “GPT helper” suggestions for A/B testing.
+
+**Research (summarization)**
+- `backend/app/routers/context_research.py`
+  - Builds a realistic mock “research corpus” and uses GPT to produce a structured summary (`company_summary`, `contact_bios`, `recent_news`, plus outreach `hooks`).
+  - Returns helper hooks and a corpus preview to support downstream prompts (Offer/Compose).
+
+**Explanatory Analytics**
+- `backend/app/routers/analytics.py`
+  - Adds `GET /analytics/explain` for GPT-backed insights (`insights`, `risks`, `next_actions`, `confidence`).
+  - Keeps counting/aggregation deterministic; DB is optional for demo and falls back to in-memory metrics safely.
 
 **Lead Qualification (already used by lead pipeline routes)**
 - `backend/app/services/ai_qualifier.py`
@@ -128,6 +144,18 @@ Week 10 focused on making GPT integration **centralized, resilient for demos, an
 - The most important demo verification step is:
   - `GET /health/llm` shows `should_use_real_llm=true` in GPT demo mode.
 
+### Continuity / Data Availability (12-step workflow)
+
+To avoid any workflow “dead ends” (missing upstream context), the backend now includes a one-call bootstrap:
+
+- `POST /demo/bootstrap`
+  - Seeds realistic upstream mock data for Job Preferences → JD → Resume → Match → Contacts so downstream GPT prompts always have inputs.
+
+### Deterministic provider simulations (non-GPT requirements)
+
+- **Email verification**: updated mock verifier to be deterministic per email (stable results) so Launch + Analytics stay consistent across runs.
+- **Analytics counting**: DB optional; falls back to in-memory message stats if Postgres is unavailable.
+
 ---
 
 ## Documentation Delivered
@@ -141,8 +169,8 @@ Week 10 focused on making GPT integration **centralized, resilient for demos, an
 ## Known Gaps / Next Improvements
 
 - **Full pixel-perfect parity across all 12 wireframe screens**: homepage is aligned; remaining screens still need systematic styling alignment to match the exact approved HTML wireframes.
-- **Compose + Campaign GPT rewriting inside the UI flow**: currently deterministic template logic exists; GPT rewrite hooks can be added as optional actions.
-- **Research step**: UI still uses simulated research; GPT-backed summarization can be wired once SERP/scraped inputs are connected.
+- **Campaign timing/variant suggestions + Deliverability copy tweaks in UI**: helper hooks exist; remaining work is to render them more prominently and connect any additional UI affordances.
+- **Research enrichment inputs**: corpus is mocked; can be replaced with real provider pipelines (SERP, LinkedIn, news APIs) later without changing the GPT summarization seam.
 - **Resume parsing**: PDF/DOCX extraction remains simplistic; best demo results using TXT or copy/paste style text.
 
 ---
@@ -154,6 +182,10 @@ Week 10 focused on making GPT integration **centralized, resilient for demos, an
 - GPT-backed pain-point matching ✅
 - GPT-backed offer creation ✅
 - GPT-backed resume response extraction ✅
+- GPT-backed Compose drafting ✅
+- GPT-backed Research summarization ✅
+- GPT-backed explanatory Analytics ✅
+- Demo bootstrap endpoint ✅
 - LLM health diagnostics endpoint ✅
 - Hidden Demo Debug panel ✅
 - Week 10 test plan ✅

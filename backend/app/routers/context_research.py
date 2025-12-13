@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import json
 
 router = APIRouter()
+from ..clients.openai_client import get_openai_client, extract_json_from_text
 
 class CompanySummary(BaseModel):
     name: str
@@ -46,6 +47,7 @@ class ResearchResponse(BaseModel):
     success: bool
     message: str
     research_data: Optional[ResearchData] = None
+    helper: Optional[Dict[str, Any]] = None
 
 @router.post("/research", response_model=ResearchResponse)
 async def conduct_research(request: ResearchRequest):
@@ -53,63 +55,185 @@ async def conduct_research(request: ResearchRequest):
     Conduct research on company and contacts.
     """
     try:
-        # In a real implementation, this would integrate with:
-        # - Clearbit/Apollo for company data
-        # - LinkedIn API for contact bios
-        # - News APIs for recent news
-        # - Social graph APIs for shared connections
-        
-        # For now, return mock data
+        # Build a realistic mock "research corpus" (what a real provider pipeline would fetch).
+        # GPT then summarizes this corpus into structured fields for the UI.
+        company_slug = request.company_name.lower().replace(" ", "")
+        corpus = {
+            "company_name": request.company_name,
+            "about": (
+                f"{request.company_name} builds cloud infrastructure and analytics software for enterprise teams. "
+                "Customers use it to improve onboarding, retention, and decision-making with better instrumentation."
+            ),
+            "product_bullets": [
+                "Event instrumentation SDK + schema governance",
+                "Funnel + cohort analytics with attribution",
+                "Role-based dashboards for execs and operators",
+            ],
+            "recent_news_raw": [
+                {
+                    "title": f"{request.company_name} expands into EMEA with new enterprise partnerships",
+                    "snippet": "The company announced new channel partnerships and a roadmap focused on faster onboarding and improved retention analytics.",
+                    "date": "2024-01-15",
+                    "source": "TechCrunch",
+                    "url": "https://techcrunch.com/funding-news",
+                },
+                {
+                    "title": f"{request.company_name} launches an AI-assisted analytics workflow",
+                    "snippet": "A new feature helps teams explain dashboard changes and propose next steps based on trends.",
+                    "date": "2024-01-10",
+                    "source": "VentureBeat",
+                    "url": "https://venturebeat.com/ai-platform",
+                },
+            ],
+            "contacts_raw": [
+                {
+                    "name": "Sarah Johnson",
+                    "title": "VP of Engineering",
+                    "company": request.company_name,
+                    "linkedin_url": "https://linkedin.com/in/sarahjohnson",
+                    "highlights": [
+                        "Scaled a platform team from 6 to 20 engineers",
+                        "Prioritized reliability, cost, and developer experience",
+                    ],
+                }
+            ],
+            "shared_connections_raw": [
+                "John Smith (former colleague at StartupXYZ)",
+                "Sarah Wilson (mutual Stanford connection)",
+                "Mike Johnson (met at industry conference)",
+            ],
+            "website": f"https://{company_slug}.com",
+            "linkedin_company": f"https://linkedin.com/company/{company_slug}",
+            "requested_contact_ids": request.contact_ids,
+        }
+
+        client = get_openai_client()
+        # GPT-first summarization (stub returns JSON as well).
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a company + contact research summarizer for outreach.\n\n"
+                    "Given a research corpus JSON (raw provider outputs), produce a clean structured summary.\n"
+                    "Return ONLY a JSON object with keys:\n"
+                    "- company_summary: { name, description, industry, size, founded, headquarters, website, linkedin_url }\n"
+                    "- contact_bios: array of { name, title, company, bio, experience, education, skills, linkedin_url }\n"
+                    "- recent_news: array of { title, summary, date, source, url }\n"
+                    "- shared_connections: array of strings\n"
+                    "- hooks: array of short talking points for outreach\n"
+                ),
+            },
+            {"role": "user", "content": json.dumps(corpus)},
+        ]
+        stub_json = {
+            "company_summary": {
+                "name": request.company_name,
+                "description": corpus["about"],
+                "industry": "Enterprise Software",
+                "size": "501-1,000 employees",
+                "founded": "2015",
+                "headquarters": "San Francisco, CA",
+                "website": corpus["website"],
+                "linkedin_url": corpus["linkedin_company"],
+            },
+            "contact_bios": [
+                {
+                    "name": "Sarah Johnson",
+                    "title": "VP of Engineering",
+                    "company": request.company_name,
+                    "bio": "Engineering leader focused on reliability, cost efficiency, and team scaling.",
+                    "experience": "10+ years leading platform and product engineering teams.",
+                    "education": "MBA Stanford; BS Computer Science UC Berkeley",
+                    "skills": ["Leadership", "Platform engineering", "Reliability", "Hiring"],
+                    "linkedin_url": "https://linkedin.com/in/sarahjohnson",
+                }
+            ],
+            "recent_news": [
+                {
+                    "title": corpus["recent_news_raw"][0]["title"],
+                    "summary": "Expansion plus roadmap emphasis on faster onboarding and retention analytics.",
+                    "date": corpus["recent_news_raw"][0]["date"],
+                    "source": corpus["recent_news_raw"][0]["source"],
+                    "url": corpus["recent_news_raw"][0]["url"],
+                },
+                {
+                    "title": corpus["recent_news_raw"][1]["title"],
+                    "summary": "AI-assisted analytics to explain changes and suggest next best actions.",
+                    "date": corpus["recent_news_raw"][1]["date"],
+                    "source": corpus["recent_news_raw"][1]["source"],
+                    "url": corpus["recent_news_raw"][1]["url"],
+                },
+            ],
+            "shared_connections": corpus["shared_connections_raw"],
+            "hooks": [
+                "Tie outreach to onboarding activation + retention outcomes",
+                "Reference the new AI-assisted analytics launch as momentum",
+                "Offer a low-lift 2–3 bullet plan instead of a generic pitch",
+            ],
+        }
+
+        raw = client.run_chat_completion(messages, temperature=0.2, max_tokens=900, stub_json=stub_json)
+        choices = raw.get("choices") or []
+        msg = (choices[0].get("message") if choices else {}) or {}
+        content_str = str(msg.get("content") or "")
+        data = extract_json_from_text(content_str) or stub_json
+
+        cs = data.get("company_summary") or stub_json["company_summary"]
+        bios = data.get("contact_bios") or stub_json["contact_bios"]
+        news = data.get("recent_news") or stub_json["recent_news"]
+        connections = data.get("shared_connections") or stub_json["shared_connections"]
+        hooks = data.get("hooks") or stub_json["hooks"]
+
         mock_research_data = ResearchData(
             company_summary=CompanySummary(
-                name=request.company_name,
-                description=f"{request.company_name} is a leading enterprise software company specializing in cloud infrastructure solutions. Founded in 2015, the company has grown to serve over 10,000 enterprise customers worldwide.",
-                industry="Enterprise Software",
-                size="501-1,000 employees",
-                founded="2015",
-                headquarters="San Francisco, CA",
-                website=f"https://{request.company_name.lower().replace(' ', '')}.com",
-                linkedin_url=f"https://linkedin.com/company/{request.company_name.lower().replace(' ', '')}"
+                name=str(cs.get("name") or request.company_name),
+                description=str(cs.get("description") or corpus["about"]),
+                industry=str(cs.get("industry") or "Enterprise Software"),
+                size=str(cs.get("size") or "501-1,000 employees"),
+                founded=str(cs.get("founded") or "2015"),
+                headquarters=str(cs.get("headquarters") or "San Francisco, CA"),
+                website=str(cs.get("website") or corpus["website"]),
+                linkedin_url=str(cs.get("linkedin_url") or corpus["linkedin_company"]),
             ),
             contact_bios=[
                 ContactBio(
-                    name="Sarah Johnson",
-                    title="VP of Engineering",
-                    company=request.company_name,
-                    bio="Sarah Johnson is a VP of Engineering with extensive experience in technology leadership. She has a proven track record of leading high-performing teams and driving innovation in her field.",
-                    experience="10+ years in technology leadership roles",
-                    education="MBA from Stanford University, BS Computer Science from UC Berkeley",
-                    skills=["Leadership", "Strategic Planning", "Team Management", "Technology Innovation"],
-                    linkedin_url="https://linkedin.com/in/sarahjohnson"
+                    name=str(b.get("name") or ""),
+                    title=str(b.get("title") or ""),
+                    company=str(b.get("company") or request.company_name),
+                    bio=str(b.get("bio") or ""),
+                    experience=str(b.get("experience") or ""),
+                    education=str(b.get("education") or ""),
+                    skills=[str(s) for s in (b.get("skills") or [])],
+                    linkedin_url=b.get("linkedin_url"),
                 )
+                for b in bios
+                if isinstance(b, dict)
             ],
             recent_news=[
                 RecentNews(
-                    title=f"{request.company_name} Announces $50M Series C Funding Round",
-                    summary="The company plans to use the funding to expand its engineering team and accelerate product development.",
-                    date="2024-01-15",
-                    source="TechCrunch",
-                    url="https://techcrunch.com/funding-news"
-                ),
-                RecentNews(
-                    title=f"{request.company_name} Launches New AI-Powered Analytics Platform",
-                    summary="The platform helps enterprises analyze their data more efficiently and make better business decisions.",
-                    date="2024-01-10",
-                    source="VentureBeat",
-                    url="https://venturebeat.com/ai-platform"
+                    title=str(n.get("title") or ""),
+                    summary=str(n.get("summary") or ""),
+                    date=str(n.get("date") or ""),
+                    source=str(n.get("source") or ""),
+                    url=str(n.get("url") or ""),
                 )
+                for n in news
+                if isinstance(n, dict)
             ],
-            shared_connections=[
-                "John Smith (Former colleague at StartupXYZ)",
-                "Sarah Wilson (Mutual connection from Stanford)",
-                "Mike Johnson (Industry contact from conference)"
-            ]
+            shared_connections=[str(x) for x in connections],
         )
         
         return ResearchResponse(
             success=True,
             message="Research completed successfully",
-            research_data=mock_research_data
+            research_data=mock_research_data,
+            helper={
+                "hooks": hooks,
+                "corpus_preview": {
+                    "product_bullets": corpus.get("product_bullets", []),
+                    "recent_news_raw": corpus.get("recent_news_raw", []),
+                },
+            },
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to conduct research: {str(e)}")

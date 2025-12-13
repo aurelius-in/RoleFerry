@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from ..services.jargon_detector import jargon_detector, detect_jargon_in_text, simplify_text_with_jargon
+from ..clients.openai_client import get_openai_client, extract_json_from_text
 
 router = APIRouter()
 
@@ -37,6 +38,7 @@ class ComposeResponse(BaseModel):
     success: bool
     message: str
     email_template: Optional[EmailTemplate] = None
+    helper: Optional[Dict[str, Any]] = None
 
 @router.post("/generate", response_model=ComposeResponse)
 async def generate_email(request: ComposeRequest):
@@ -46,46 +48,53 @@ async def generate_email(request: ComposeRequest):
     try:
         # Create variable lookup dictionary
         variable_lookup = {var.name: var.value for var in request.variables}
-        
-        # Generate subject and body based on mode and tone
-        if request.user_mode == "job-seeker":
-            subject = f"Quick advice on {variable_lookup.get('{{job_title}}', 'this role')} at {variable_lookup.get('{{company_name}}', 'your company')}?"
-            
-            body = f"""Hi {variable_lookup.get('{{first_name}}', 'there')},
 
-I spotted the {variable_lookup.get('{{job_title}}', 'role')} at {variable_lookup.get('{{company_name}}', 'your company')} and think my background fits perfectly. I noticed you're facing {variable_lookup.get('{{pinpoint_1}}', 'challenges')}, and I have experience {variable_lookup.get('{{solution_1}}', 'solving similar problems')}, resulting in {variable_lookup.get('{{metric_1}}', 'significant impact')}.
+        # Build GPT context (everything upstream should be present here, even if mocked).
+        context = {
+            "tone": request.tone,
+            "user_mode": request.user_mode,
+            "first_name": variable_lookup.get("{{first_name}}", "") or "there",
+            "job_title": variable_lookup.get("{{job_title}}", "") or "the role",
+            "company_name": variable_lookup.get("{{company_name}}", "") or "the company",
+            "pinpoint_1": variable_lookup.get("{{pinpoint_1}}", "") or "",
+            "solution_1": variable_lookup.get("{{solution_1}}", "") or "",
+            "metric_1": variable_lookup.get("{{metric_1}}", "") or "",
+            "company_summary": variable_lookup.get("{{company_summary}}", "") or "",
+            "recent_news": variable_lookup.get("{{recent_news}}", "") or "",
+            "contact_bio": variable_lookup.get("{{contact_bio}}", "") or "",
+            "pinpoint_matches": request.pinpoint_matches or [],
+            "context_data": request.context_data or {},
+        }
 
-{variable_lookup.get('{{company_summary}}', 'Your company')} - this aligns well with my expertise. I'm particularly excited about {variable_lookup.get('{{recent_news}}', 'your recent developments')}.
+        client = get_openai_client()
+        raw = client.draft_compose_email(context)
+        choices = raw.get("choices") or []
+        msg = (choices[0].get("message") if choices else {}) or {}
+        content_str = str(msg.get("content") or "")
+        data = extract_json_from_text(content_str) or {}
 
-Open to a brief 15-min chat to sanity-check fit? If helpful, forwarding my resume would be amazing.
+        subject = str(data.get("subject") or "")
+        body = str(data.get("body") or "")
 
-Either way—thanks for considering!
-
-Best,
-[Your Name]"""
-        else:
-            subject = f"Exceptional candidate for {variable_lookup.get('{{job_title}}', 'this role')} at {variable_lookup.get('{{company_name}}', 'your company')}"
-            
-            body = f"""Hi {variable_lookup.get('{{first_name}}', 'there')},
-
-I have an exceptional candidate who would be perfect for your {variable_lookup.get('{{job_title}}', 'role')}. They have successfully {variable_lookup.get('{{solution_1}}', 'solved similar challenges')}, achieving {variable_lookup.get('{{metric_1}}', 'outstanding results')}.
-
-Given {variable_lookup.get('{{company_summary}}', 'your company')} and your recent {variable_lookup.get('{{recent_news}}', 'developments')}, this candidate's background would be invaluable.
-
-{variable_lookup.get('{{contact_bio}}', 'Your background')} - I believe this candidate would be an excellent fit for your team.
-
-Would you be open to a brief call to discuss?
-
-Best regards,
-[Your Name]"""
-        
-        # Adjust tone
-        if request.tone == "recruiter":
-            body = f"Efficiency-focused approach:\n\n{body}"
-        elif request.tone == "manager":
-            body = f"Proof of competence:\n\n{body}"
-        elif request.tone == "exec":
-            body = f"ROI/Strategy focused:\n\n{body}"
+        # As a safety net, if parsing fails, fall back to deterministic template.
+        if not subject or not body:
+            if request.user_mode == "job-seeker":
+                subject = f"Quick advice on {context['job_title']} at {context['company_name']}?"
+                body = (
+                    f"Hi {context['first_name']},\n\n"
+                    f"I spotted the {context['job_title']} role at {context['company_name']} and think my background fits. "
+                    f"I noticed you're facing {context.get('pinpoint_1') or 'a key priority'}, and I have experience "
+                    f"{context.get('solution_1') or 'solving similar problems'} ({context.get('metric_1') or 'strong results'}).\n\n"
+                    f"Open to a quick 10–15 minute chat?\n\nBest,\n[Your Name]\n"
+                )
+            else:
+                subject = f"Exceptional candidate for {context['job_title']} at {context['company_name']}"
+                body = (
+                    f"Hi {context['first_name']},\n\n"
+                    f"I have a strong candidate fit for {context['job_title']}. They’ve successfully "
+                    f"{context.get('solution_1') or 'solved similar challenges'}, achieving {context.get('metric_1') or 'strong results'}.\n\n"
+                    f"Open to a brief call to discuss?\n\nBest,\n[Your Name]\n"
+                )
         
         # Detect jargon in the body
         jargon_terms = detect_jargon_in_text(body)
@@ -119,7 +128,11 @@ Best regards,
         return ComposeResponse(
             success=True,
             message="Email generated successfully",
-            email_template=email_template
+            email_template=email_template,
+            helper={
+                "rationale": data.get("rationale"),
+                "variants": data.get("variants") or [],
+            }
         )
         
     except Exception as e:
