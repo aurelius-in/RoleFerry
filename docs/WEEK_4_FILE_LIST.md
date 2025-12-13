@@ -7,7 +7,7 @@
 - `docs/wireframes/job-preferences.html` - Job Preferences/ICP tab
 - `docs/wireframes/candidate-resume.html` - Resume/Candidate Profile tab
 - `docs/wireframes/job-descriptions.html` - Job Descriptions tab
-- `docs/wireframes/pinpoint-match.html` - Pinpoint Match tab
+- `docs/wireframes/painpoint-match.html` - Pain Point Match tab
 - `docs/wireframes/find-contact.html` - Find Contact tab
 - `docs/wireframes/context-research.html` - Context Research tab
 - `docs/wireframes/offer-creation.html` - Offer Creation tab
@@ -37,7 +37,7 @@
 - `backend/app/routers/job_preferences.py` - Job preferences API
 - `backend/app/routers/resume.py` - Resume processing API
 - `backend/app/routers/job_descriptions.py` - Job descriptions API
-- `backend/app/routers/pinpoint_match.py` - Pinpoint matching API
+- `backend/app/routers/painpoint_match.py` - Pain Point matching API
 - `backend/app/routers/email_verification.py` - Email verification API
 - `backend/app/routers/find_contact.py` - Contact finding API
 - `backend/app/routers/context_research.py` - Context research API

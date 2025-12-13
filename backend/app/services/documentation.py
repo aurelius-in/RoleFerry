@@ -77,7 +77,7 @@ class DocumentationService:
                         "content": "Import and analyze job descriptions to extract requirements, pain points, and success metrics."
                     },
                     {
-                        "title": "Pinpoint Match",
+                        "title": "Pain Point Match",
                         "content": "AI-powered matching algorithm that scores alignment between candidates and opportunities."
                     },
                     {

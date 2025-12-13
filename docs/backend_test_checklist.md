@@ -357,7 +357,7 @@ These are the essential features that make RoleFerry work. Test these first!
 
 2. **Using Postman:**
    - Method: POST
-   - URL: `http://localhost:8000/pinpoint-match/generate`
+   - URL: `http://localhost:8000/painpoint-match/generate`
    - Body (JSON):
    ```json
    {
@@ -369,9 +369,9 @@ These are the essential features that make RoleFerry work. Test these first!
    ```json
    {
      "success": true,
-     "message": "Pinpoint matches generated successfully",
+     "message": "Pain Point matches generated successfully",
      "matches": [{
-       "pinpoint_1": "Need to reduce time-to-fill",
+       "painpoint_1": "Need to reduce time-to-fill",
        "solution_1": "Reduced TTF by 40%",
        "metric_1": "40% reduction",
        "alignment_score": 0.85
@@ -382,7 +382,7 @@ These are the essential features that make RoleFerry work. Test these first!
 **Test 2: Get Alignment Score**
 1. **Using Postman:**
    - Method: GET
-   - URL: `http://localhost:8000/pinpoint-match/user123/score`
+   - URL: `http://localhost:8000/painpoint-match/user123/score`
    - Expected Response:
    ```json
    {
@@ -395,9 +395,9 @@ These are the essential features that make RoleFerry work. Test these first!
 **Test 3: Save Matches**
 1. **Using Postman:**
    - Method: POST
-   - URL: `http://localhost:8000/pinpoint-match/save`
+   - URL: `http://localhost:8000/painpoint-match/save`
    - Body (JSON) - Use matches from Test 1
-   - Expected Response: `{"success": true, "message": "Pinpoint matches saved successfully"}`
+   - Expected Response: `{"success": true, "message": "Pain Point matches saved successfully"}`
 
 **Troubleshooting:**
 - **Error: "Job description or resume not found"** → Make sure you've saved a job description and resume first
@@ -543,8 +543,8 @@ These features make RoleFerry more powerful but aren't required for basic functi
    - Body (JSON):
    ```json
    {
-     "pinpoint_matches": [{
-       "pinpoint_1": "Need to reduce time-to-fill",
+     "painpoint_matches": [{
+       "painpoint_1": "Need to reduce time-to-fill",
        "solution_1": "Reduced TTF by 40%",
        "metric_1": "40% reduction"
      }],
@@ -579,7 +579,7 @@ These features make RoleFerry more powerful but aren't required for basic functi
    - Expected Response: `{"success": true, "message": "Offer saved successfully"}`
 
 **Troubleshooting:**
-- **Error: "Pinpoint matches are required"** → Complete the Pain Point Match step first
+- **Error: "Pain Point matches are required"** → Complete the Pain Point Match step first
 - **Offer seems generic** → Make sure you have good pain point matches. Better matches = better offers.
 - **Wrong tone** → Check that you selected the correct tone. Each tone (recruiter/manager/exec) has different style.
 
@@ -620,7 +620,7 @@ These features make RoleFerry more powerful but aren't required for basic functi
        {"name": "{{first_name}}", "value": "Sarah", "description": "Contact's first name"},
        {"name": "{{company_name}}", "value": "TechCorp", "description": "Company name"}
      ],
-     "pinpoint_matches": [...],
+     "painpoint_matches": [...],
      "context_data": {
        "company_summary": "...",
        "recent_news": "..."

@@ -10,7 +10,7 @@
 - **[Job Preferences](wireframes/job-preferences.html)** - Set job preferences or ICP
 - **[Your Resume](wireframes/candidate-resume.html)** - Resume upload and parsing
 - **[Job Descriptions](wireframes/job-descriptions.html)** - Job description analysis
-- **[Pinpoint Match](wireframes/pinpoint-match.html)** - AI-powered matching
+- **[Pain Point Match](wireframes/painpoint-match.html)** - AI-powered matching
 - **[Find Contact](wireframes/find-contact.html)** - Contact search and verification
 - **[Context Research](wireframes/context-research.html)** - Company and contact research
 - **[Offer Creation](wireframes/offer-creation.html)** - Personalized offer generation

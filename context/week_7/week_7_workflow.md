@@ -128,7 +128,7 @@ We consolidated the flow into a clear 12-step path.
 *   **Argument:** Reduces decision fatigue. The "Next Step" is always obvious.
 
 ### C. "Pain Point" Refactor
-We renamed "Pinpoint Match" to "Pain Point Match".
+We renamed "Pain Point Match" to "Pain Point Match".
 *   **Argument:** Clarity and Standard Industry Terminology. It emphasizes solving the client's problem.
 
 ### D. Global Feedback

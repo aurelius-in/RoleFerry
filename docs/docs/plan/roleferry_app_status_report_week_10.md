@@ -57,15 +57,15 @@ Week 10 focused on making GPT integration **centralized, resilient for demos, an
     - `positions`, `key_metrics`, `skills`, `accomplishments`, `tenure`.
   - Falls back to deterministic mock extract when GPT is off.
 
-**Pain Point Match (Pinpoint Match)**
+**Pain Point Match**
 - `backend/app/routers/pain_point_match.py`
   - GPT can produce semantic `pairs[{jd_snippet, resume_snippet, metric}]` plus `alignment_score`.
-  - Mapping logic fills the existing `PinpointMatch` schema.
+  - Mapping logic fills the existing `PainPointMatch` schema.
   - Falls back to prior deterministic pairing.
 
 **Offer Creation (drafting)**
 - `backend/app/routers/offer_creation.py`
-  - GPT can draft `{title, content}` from `pinpoint_match` + tone/mode/format.
+  - GPT can draft `{title, content}` from `painpoint_match` + tone/mode/format.
   - Falls back to prior deterministic content.
 
 **Compose (drafting + variants)**
@@ -82,6 +82,32 @@ Week 10 focused on making GPT integration **centralized, resilient for demos, an
 - `backend/app/routers/analytics.py`
   - Adds `GET /analytics/explain` for GPT-backed insights (`insights`, `risks`, `next_actions`, `confidence`).
   - Keeps counting/aggregation deterministic; DB is optional for demo and falls back to in-memory metrics safely.
+
+### 2.5) Frontend workflow continuity (realistic demo inputs)
+
+Week 10 also required the UI to reliably pass upstream data into GPT-backed seams so the demo remains “continuous” and realistic.
+
+**Key outcomes**:
+- **Context Research now uses the backend**:
+  - `frontend/src/app/context-research/page.tsx` calls `POST /context-research/research` and stores results into `localStorage.context_research` (plus `context_research_helper`).
+  - The UI shows a visible **“GPT Helper: outreach hooks”** panel.
+- **Compose now uses real upstream context**:
+  - `frontend/src/app/compose/page.tsx` builds `{{first_name}}`, `{{job_title}}`, `{{company_name}}`, `{{painpoint_1}}`, `{{solution_1}}`, `{{metric_1}}`, etc. from prior steps (`selected_contacts`, `selected_job_description`, `painpoint_matches`, `context_research`) instead of hard-coded placeholders.
+  - The request includes a structured `context_data` blob; `backend/app/routers/compose.py` accepts nested JSON to avoid 422 errors.
+- **Campaign preview resolves placeholders**:
+  - `frontend/src/app/campaign/page.tsx` substitutes the composed variable values into follow-up steps so the sequence feels realistic in demo (no raw `{{first_name}}` / `{{job_title}}` placeholders).
+- **Pain Point Match persists the selected JD**:
+  - `frontend/src/app/painpoint-match/page.tsx` stores `localStorage.selected_job_description` + `selected_job_description_id` so downstream prompts stay consistent.
+- **Offer Creation consumes the correct match schema**:
+  - `frontend/src/app/offer-creation/page.tsx` now expects match fields as `painpoint_1/solution_1/metric_1` (matching the backend).
+  - Offer generation passes `context_research` into `POST /offer-creation/create` so the draft can reference company context.
+- **Decision Makers verification is deterministic + backend-driven**:
+  - `frontend/src/app/find-contact/page.tsx` calls `POST /find-contact/verify` for stable verification results.
+  - `backend/app/routers/find_contact.py` verifies the real selected emails (no placeholder email verification).
+- **Deliverability checks and launch now receive contacts**:
+  - `frontend/src/app/deliverability-launch/page.tsx` passes selected contacts into `POST /deliverability-launch/pre-flight-checks` and `POST /deliverability-launch/launch`.
+- **Analytics has visible GPT explanation UI**:
+  - `frontend/src/app/analytics/page.tsx` includes a “GPT Helper: interpret results” card calling `GET /analytics/explain` (with deterministic fallback).
 
 **Lead Qualification (already used by lead pipeline routes)**
 - `backend/app/services/ai_qualifier.py`
@@ -169,8 +195,8 @@ To avoid any workflow “dead ends” (missing upstream context), the backend no
 ## Known Gaps / Next Improvements
 
 - **Full pixel-perfect parity across all 12 wireframe screens**: homepage is aligned; remaining screens still need systematic styling alignment to match the exact approved HTML wireframes.
-- **Campaign timing/variant suggestions + Deliverability copy tweaks in UI**: helper hooks exist; remaining work is to render them more prominently and connect any additional UI affordances.
-- **Research enrichment inputs**: corpus is mocked; can be replaced with real provider pipelines (SERP, LinkedIn, news APIs) later without changing the GPT summarization seam.
+- **Campaign timing/variant suggestions (full assistant)**: Campaign sequence generation is still simulated client-side for Week 10; the demo remains realistic because Compose + Deliverability + Analytics are GPT-backed and fed by real upstream context.
+- **Research enrichment inputs**: the research *corpus* is mocked (by design) but summarization is GPT-backed; later we can replace corpus generation with real provider pipelines (SERP, LinkedIn, news APIs) without changing the summarization seam.
 - **Resume parsing**: PDF/DOCX extraction remains simplistic; best demo results using TXT or copy/paste style text.
 
 ---

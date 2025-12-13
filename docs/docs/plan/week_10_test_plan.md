@@ -30,7 +30,7 @@ This plan is **manual click-through first** (what a customer sees), with optiona
 If you want to guarantee the 12-step flow has upstream data even on first run:
 
 1. `POST /demo/bootstrap`
-2. Expected: returns seeded `job_preferences`, a `job_description_id`, `pinpoint_matches`, and `selected_contacts`.
+2. Expected: returns seeded `job_preferences`, a `job_description_id`, `painpoint_matches`, and `selected_contacts`.
 
 #### B. Quick sanity check: LLM health endpoint
 
@@ -148,11 +148,11 @@ This is the main click-through test. Run it once in fallback mode, then once in 
 
 #### Step 5 — Pain Point Match (GPT-backed matching)
 
-**Where:** `frontend/src/app/pinpoint-match/page.tsx`
+**Where:** `frontend/src/app/painpoint-match/page.tsx`
 
-1. Open **Pinpoint Match**.
+1. Open **Pain Point Match**.
 2. Select the imported job description.
-3. Click **Generate Pinpoint Matches**.
+3. Click **Generate Pain Point Matches**.
 
 **Expected outcome (GPT demo mode):**
 - The match result is specific and persuasive:
@@ -181,14 +181,14 @@ This is the main click-through test. Run it once in fallback mode, then once in 
 
 **Expected outcome:**
 - Contact selection works.
-- Verification statuses update (mocked simulation in UI).
+- Verification statuses update via the backend (`POST /find-contact/verify`) using deterministic provider mocks, so results are stable across runs.
 
 **What customer wants:**
 - “I can pick real people to message and see if it’s safe to email them.”
 
 ---
 
-#### Step 7 — Company Research
+#### Step 7 — Company Research (GPT-backed summarization)
 
 **Where:** `frontend/src/app/context-research/page.tsx`
 
@@ -197,7 +197,8 @@ This is the main click-through test. Run it once in fallback mode, then once in 
 3. Continue.
 
 **Expected outcome:**
-- Research fields populate (mocked for now).
+- Research fields populate via the backend (`POST /context-research/research`).
+- In GPT demo mode, the structured summary should feel “smart” and aligned to the selected company/contacts.
 - User can edit to refine.
 
 **What customer wants:**
@@ -228,11 +229,13 @@ This is the main click-through test. Run it once in fallback mode, then once in 
 
 **Where:** `frontend/src/app/compose/page.tsx` (and `backend/app/routers/compose.py`)
 
-1. Generate an email template (if UI has the control).
+1. Generate an email template.
 2. Toggle simplified/jargon features if present.
 
 **Expected outcome:**
-- Template generates and jargon detection runs.
+- Template generates via `POST /compose/generate`.
+- The variable values should now be populated from upstream steps (selected contact, selected JD, pain point match, research summary) rather than static placeholders.
+- Jargon detection runs and simplified copy is available.
 
 **What customer wants:**
 - A polished email they can send right now.
@@ -248,6 +251,8 @@ This is the main click-through test. Run it once in fallback mode, then once in 
 
 **Expected outcome:**
 - The sequence is previewable and editable.
+- The Campaign page should also show “GPT Helper: variant ideas” if Compose returned variants (stored in `localStorage.compose_helper`).
+- Follow-up steps should show substituted values (no raw `{{first_name}}` placeholders) because the campaign preview resolves variables from the composed email.
 
 **What customer wants:**
 - “I can send a full follow-up sequence, not just one email.”
@@ -264,6 +269,7 @@ This is the main click-through test. Run it once in fallback mode, then once in 
 **Expected outcome:**
 - Pre-flight checks return results.
 - Launch records outreach sends (DB-backed), even if delivery is mocked.
+- Contacts are passed from the UI into the backend, so verification counts and launch counts reflect selected recipients.
 
 **What customer wants:**
 - Confidence they won’t tank deliverability and can “push go” safely.
@@ -280,6 +286,7 @@ This is the main click-through test. Run it once in fallback mode, then once in 
 **Expected outcome:**
 - Analytics show totals, click/reply rates, breakdown by status.
 - If you launched, totals reflect outreach rows.
+- The Analytics page includes a “GPT Helper: interpret results” panel (calls `GET /analytics/explain`) that returns insights/risks/next actions (GPT-backed or deterministic stub).
 
 **What customer wants:**
 - A clear “is this working?” dashboard.
@@ -304,8 +311,8 @@ These checks help confirm GPT-backed endpoints are actually engaged.
   - Expected: response extract includes `skills`, `accomplishments`, `key_metrics`.
 
 #### D. Match generation
-- `POST /pinpoint-match/generate`
-  - Expected: `matches[0]` includes good `pinpoint_#`, `solution_#`, optional `metric_#`.
+- `POST /painpoint-match/generate`
+  - Expected: `matches[0]` includes good `painpoint_#`, `solution_#`, optional `metric_#`.
 
 #### E. Offer creation
 - `POST /offer-creation/create`
@@ -330,6 +337,6 @@ If any GPT output fails JSON parsing, the app should still remain demoable via d
 ### 4) Known “Demo Acceptable” Limitations (Week 10)
 
 - Resume PDF/DOCX parsing is still simplistic; best results with TXT or copy/paste style content.
-- Company research is currently simulated/mocked in the UI.
-- Compose/Campaign GPT rewriting is not fully integrated into the UI flow yet.
+- Company research uses a mocked corpus but is summarized via GPT; it is still “demo realistic” but not yet powered by real provider pipelines.
+- Campaign sequence generation is simulated client-side in Week 10 (Compose + Deliverability + Analytics remain GPT-backed and visible).
 - Deterministic defaults remain in place in many spots to ensure the demo never breaks.

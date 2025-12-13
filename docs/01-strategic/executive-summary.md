@@ -21,7 +21,7 @@ Traditional applicant tracking tools (spreadsheets, basic boards) provide organi
    - **Job Preferences/ICP**: Dynamic labeling (Job Seeker vs Recruiter modes)
    - **Resume/Candidate Profile**: AI-powered parsing and data extraction
    - **Job Descriptions**: URL import and pain point analysis
-   - **Pinpoint Match**: Solution-to-challenge alignment scoring
+   - **Pain Point Match**: Solution-to-challenge alignment scoring
    - **Find Contact**: Contact discovery with email verification
    - **Context Research**: Auto-pulled company and contact summaries
    - **Offer Creation**: Audience-adaptive tone (Recruiter/Manager/Exec)

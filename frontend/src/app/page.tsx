@@ -18,11 +18,13 @@ const STONES: StoneConfig[] = [
   { step: 2, tab: "candidate-profile", label: "Your Resume", icon: "📄", href: "/resume" },
   { step: 3, tab: "job-descriptions", label: "Job Descriptions", icon: "📋", href: "/job-descriptions" },
   { step: 4, tab: "job-tracker", label: "Job Tracker", icon: "📌", href: "/tracker" },
-  { step: 5, tab: "pain-point-match", label: "Pain Point Match", icon: "🔗", href: "/pinpoint-match" },
-  { step: 6, tab: "company-research", label: "Company Research", icon: "🔍", href: "/context-research" },
-  { step: 7, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
+  { step: 5, tab: "pain-point-match", label: "Pain Point Match", icon: "🔗", href: "/painpoint-match" },
+  // Flow order: choose contacts first, then do contact-aware research.
+  { step: 6, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
+  { step: 7, tab: "company-research", label: "Company Research", icon: "🔍", href: "/context-research" },
   { step: 8, tab: "offer-creation", label: "Offer Creation", icon: "💼", href: "/offer-creation" },
-  { step: 9, tab: "campaign", label: "Campaign", icon: "📧", href: "/campaign" },
+  // Week 10: Compose is the first screen in building the campaign sequence.
+  { step: 9, tab: "campaign", label: "Campaign", icon: "📧", href: "/compose" },
   { step: 10, tab: "deliverability-launch", label: "Launch Campaign", icon: "🚀", href: "/deliverability-launch" },
   { step: 11, tab: "analytics", label: "Analytics", icon: "📊", href: "/analytics" },
 ];

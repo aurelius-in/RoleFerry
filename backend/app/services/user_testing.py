@@ -88,7 +88,7 @@ class UserTestingService:
                         "Navigate to Job Descriptions tab",
                         "Import job description",
                         "Review AI-parsed job details",
-                        "Navigate to Pinpoint Match tab",
+                        "Navigate to Pain Point Match tab",
                         "Review alignment score",
                         "Analyze match breakdown"
                     ],
@@ -274,7 +274,7 @@ class UserTestingService:
                         "Navigate to Candidate Profile tab",
                         "Upload candidate resume",
                         "Review AI-parsed candidate data",
-                        "Navigate to Pinpoint Match tab",
+                        "Navigate to Pain Point Match tab",
                         "Review alignment score",
                         "Analyze match breakdown"
                     ],

@@ -109,7 +109,7 @@ def create_app() -> FastAPI:
     app.include_router(job_preferences.router, prefix="/job-preferences", tags=["job-preferences"])
     app.include_router(resume.router, prefix="/resume", tags=["resume"])
     app.include_router(job_descriptions.router, prefix="/job-descriptions", tags=["job-descriptions"])
-    app.include_router(pain_point_match.router, prefix="/pinpoint-match", tags=["pinpoint-match"])
+    app.include_router(pain_point_match.router, prefix="/painpoint-match", tags=["painpoint-match"])
     app.include_router(email_verification.router, prefix="/email-verification", tags=["email-verification"])
     app.include_router(find_contact.router, prefix="/find-contact", tags=["find-contact"])
     app.include_router(context_research.router, prefix="/context-research", tags=["context-research"])

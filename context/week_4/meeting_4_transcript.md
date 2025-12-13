@@ -240,16 +240,16 @@ Exactly — and that’s the foundation for the Offer email.
 **Oliver:**
 The back end should identify *pain points* from job descriptions — “slow onboarding,” “customer churn,” whatever — and map them to *solutions* in the resume.
 
-That becomes our “Pinpoint Match.”
+That becomes our “Pain Point Match.”
 
-We can name it something else later — “match,” “skill match” — but “Pinpoint Match” works for now so we know what we mean.
+We can name it something else later — “match,” “skill match” — but “Pain Point Match” works for now so we know what we mean.
 
 **David:**
 Right.
 
 **Oliver:**
 Those extracted insights fill the variables for the email:
-`{{pinpoint_1}}`, `{{solution_1}}`, `{{metric_1}}`, etc.
+`{{painpoint_1}}`, `{{solution_1}}`, `{{metric_1}}`, etc.
 
 That’s how the system personalizes outreach automatically.
 
@@ -278,9 +278,9 @@ Yeah, AI gets smarter with feedback. Even if it takes a few passes, it’ll figu
 ### **Part 16 – Dynamic Email Variables and Template Logic**
 
 **Oliver:**
-So yeah, on the back end, those “pinpoints” become variables in the emails. It’s like how you’d see `Hi {{first_name}}` in a template.
+So yeah, on the back end, those “pain points” become variables in the emails. It’s like how you’d see `Hi {{first_name}}` in a template.
 
-We’ll have placeholders like `{{job_title}}`, `{{pinpoint_1}}`, `{{solution_1}}`, all that. When the Offer’s generated, the system fills them in.
+We’ll have placeholders like `{{job_title}}`, `{{painpoint_1}}`, `{{solution_1}}`, all that. When the Offer’s generated, the system fills them in.
 
 **David:**
 Right — the candidate’s experience and the company’s problems plug straight into the body.
@@ -288,7 +288,7 @@ Right — the candidate’s experience and the company’s problems plug straigh
 **Oliver:**
 Exactly. It’ll say:
 
-> “Hi {{first_name}}, I saw you’re hiring for a {{job_title}}. I’ve solved {{pinpoint_1}} by {{solution_1}}…”
+> “Hi {{first_name}}, I saw you’re hiring for a {{job_title}}. I’ve solved {{painpoint_1}} by {{solution_1}}…”
 
 That’s how you get instant personalization without manual writing.
 
@@ -314,7 +314,7 @@ Exactly. Don’t over-optimize early. Let it learn from patterns.
 Each data point should carry a confidence score, like:
 
 ```json
-{ "pinpoint_1": "slow onboarding", "confidence": 0.73 }
+{ "painpoint_1": "slow onboarding", "confidence": 0.73 }
 ```
 
 That way the UI can show which results need confirmation.
@@ -611,7 +611,7 @@ Meeting 4 ended with both partners motivated and confident — seeing the produc
   1. Job Preferences
   2. Resume / Candidate Profile
   3. Job Descriptions
-  4. Pinpoint Match
+  4. Pain Point Match
   5. Find Contact
   6. Context (Research)
   7. Offer Creation
@@ -626,12 +626,12 @@ Meeting 4 ended with both partners motivated and confident — seeing the produc
 
 * Resume parsed into five sections: metrics, challenges solved, accomplishments, positions, tenure.
 * Job descriptions analyzed for company pain points.
-* AI maps “pain points” ↔ “solutions” = **Pinpoint Match**.
+* AI maps “pain points” ↔ “solutions” = **Pain Point Match**.
 * Confidence scoring and human validation loop built in.
 
 ### **Email Engine**
 
-* Templating system uses variables (`{{first_name}}`, `{{job_title}}`, `{{pinpoint_1}}`, etc.).
+* Templating system uses variables (`{{first_name}}`, `{{job_title}}`, `{{painpoint_1}}`, etc.).
 * Tone adapts by persona (Recruiter, Manager, VP).
 * Sequencer sends initial + two follow-up emails automatically.
 * Deliverability features: spam check, DNS validation, bounce tracking.
@@ -675,14 +675,14 @@ Here’s a **Meeting 4 TODOs list**, prioritized by **critical path → dependen
 
 1. **Implement 9 or 10-tab workflow shell** (David wants these arranged in a 3x3 grid like it was originally so 2 tabs will need to be one like an old-school phone number pad but with large icons instead of numbers.)
 
-   * Tabs: Job Preferences, Resume/Candidate Profile, Job Descriptions, Pinpoint Match, Find Contact, Context, Offer Creation, Compose, Campaign, Deliverability/Launch.
+   * Tabs: Job Preferences, Resume/Candidate Profile, Job Descriptions, Pain Point Match, Find Contact, Context, Offer Creation, Compose, Campaign, Deliverability/Launch.
    * Route navigation and persist progress state.
 2. **Add Dual-Mode Toggle (Job Seeker / Recruiter)**
 
    * Global switch at dashboard; dynamically rename Job Preferences→ICP and adjust copy/labels.
 3. **Wire mock data flows**
 
-   * Supply JSON fixtures for job descriptions, resumes, pinpoint matches, and contacts.
+   * Supply JSON fixtures for job descriptions, resumes, pain point matches, and contacts.
    * Mock AI extraction endpoints returning structured data + confidence scores.
 4. **Compose → Campaign handoff**
 
@@ -703,7 +703,7 @@ Here’s a **Meeting 4 TODOs list**, prioritized by **critical path → dependen
 
    * Implement resume → JSON (5 sections).
    * Implement job description → pain point JSON.
-   * Match logic to produce Pinpoint pairs.
+   * Match logic to produce Pain Point pairs.
 8. **Conditional rule logic for missing fields**
 
    * “Reports to” inference by company size.
@@ -715,7 +715,7 @@ Here’s a **Meeting 4 TODOs list**, prioritized by **critical path → dependen
 
 10. **Template variable engine**
 
-    * Implement Handlebars/Mustache or similar for `{{pinpoint_1}}`, `{{solution_1}}`, etc.
+    * Implement Handlebars/Mustache or similar for `{{painpoint_1}}`, `{{solution_1}}`, etc.
     * Add tone switch (Recruiter | Manager | VP).
 
 ---

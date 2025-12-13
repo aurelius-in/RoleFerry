@@ -25,7 +25,7 @@ class Offer(BaseModel):
     user_mode: str = "job-seeker"  # 'job-seeker' or 'recruiter'
 
 class OfferCreationRequest(BaseModel):
-    pinpoint_matches: List[dict]
+    painpoint_matches: List[dict]
     tone: str
     format: str
     user_mode: str = "job-seeker"
@@ -44,37 +44,37 @@ class OffersListResponse(BaseModel):
 @router.post("/create", response_model=OfferCreationResponse)
 async def create_offer(request: OfferCreationRequest):
     """
-    Create a personalized offer based on pinpoint matches and audience tone.
+    Create a personalized offer based on pain point matches and audience tone.
 
     This endpoint now prefers the centralized GPT client when available, while
     preserving the previous deterministic template as a fallback.
     """
     try:
-        if not request.pinpoint_matches:
-            raise HTTPException(status_code=400, detail="Pinpoint matches are required")
+        if not request.painpoint_matches:
+            raise HTTPException(status_code=400, detail="Pain point matches are required")
 
-        base_match: Dict[str, Any] = request.pinpoint_matches[0]
+        base_match: Dict[str, Any] = request.painpoint_matches[0]
 
         # --- Deterministic fallback (previous behavior) -----------------
         def build_rule_based_offer() -> Offer:
             if request.user_mode == "job-seeker":
-                raw_label = base_match.get("pinpoint_1", "Your Challenge")
+                raw_label = base_match.get("painpoint_1", "Your Challenge")
                 label_words = str(raw_label).split(" ")[:3]
                 title = f"How I Can Solve {' '.join(label_words)}"
                 content = (
-                    f"I understand you're facing {str(base_match.get('pinpoint_1', 'challenges')).lower()}. "
+                    f"I understand you're facing {str(base_match.get('painpoint_1', 'challenges')).lower()}. "
                     f"In my previous role, I {str(base_match.get('solution_1', 'delivered results')).lower()}, "
                     f"resulting in {str(base_match.get('metric_1', 'significant impact'))}. "
                     "I'm confident I can bring similar results to your team."
                 )
             else:
-                raw_label = base_match.get("pinpoint_1", "Your Role")
+                raw_label = base_match.get("painpoint_1", "Your Role")
                 label_words = str(raw_label).split(" ")[:3]
                 title = f"Perfect Candidate for {' '.join(label_words)}"
                 content = (
                     f"I have an exceptional candidate who has successfully {str(base_match.get('solution_1', 'achieved results')).lower()}, "
                     f"achieving {str(base_match.get('metric_1', 'outstanding metrics'))}. "
-                    f"They would be an ideal fit for your {str(base_match.get('pinpoint_1', 'challenges')).lower()} challenge."
+                    f"They would be an ideal fit for your {str(base_match.get('painpoint_1', 'challenges')).lower()} challenge."
                 )
 
             # Adjust tone based on audience
@@ -88,7 +88,7 @@ async def create_offer(request: OfferCreationRequest):
                 content_prefixed = content
 
             return Offer(
-                id=f"offer_{len(request.pinpoint_matches)}",
+                id=f"offer_{len(request.painpoint_matches)}",
                 title=title,
                 content=content_prefixed,
                 tone=request.tone,
@@ -105,7 +105,7 @@ async def create_offer(request: OfferCreationRequest):
                     "user_mode": request.user_mode,
                     "tone": request.tone,
                     "format": request.format,
-                    "pinpoint_match": base_match,
+                    "painpoint_match": base_match,
                     "context_research": request.context_research or {},
                 }
                 raw = client.draft_offer_email(context)
@@ -123,7 +123,7 @@ async def create_offer(request: OfferCreationRequest):
                 body = str(body_val or rule_fallback.content)
 
                 offer = Offer(
-                    id=f"offer_{len(request.pinpoint_matches)}",
+                    id=f"offer_{len(request.painpoint_matches)}",
                     title=title,
                     content=body,
                     tone=request.tone,

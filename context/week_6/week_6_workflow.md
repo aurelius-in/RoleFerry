@@ -142,6 +142,6 @@ We removed "Loading..." spinners in favor of instant Mock Data in wireframes.
 *   **Argument:** For demos and user testing, friction kills momentum. Waiting for a fake API call adds no value. Showing realistic data (e.g., "Jane Doe, VP of Engineering") immediately allows the stakeholder to evaluate the *layout* and *value* of the screen without distraction.
 
 ### E. "Pain Point" Refactor
-We renamed "Pinpoint Match" to "Pain Point Match".
-*   **Argument:** Clarity and Standard Industry Terminology. "Pain Point" is a universally understood concept in sales and consulting (identifying the client's problem). "Pinpoint" is ambiguous. Using specific language helps users understand that this step is about *solving problems*, not just precise targeting.
+We renamed "Pain Point Match" to "Pain Point Match".
+*   **Argument:** Clarity and Standard Industry Terminology. "Pain Point" is a universally understood concept in sales and consulting (identifying the client's problem). "Pain Point" is ambiguous. Using specific language helps users understand that this step is about *solving problems*, not just precise targeting.
 

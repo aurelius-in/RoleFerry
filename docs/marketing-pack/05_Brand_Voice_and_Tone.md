@@ -53,7 +53,7 @@
 
 ### Language Guidelines
 - Use plain English. Short sentences. Define acronyms.
-- Use "pain point," not "pinpoint."
+- Use "pain point," not "pain point."
 - Use benefits before features.
 - Avoid buzzword salad and corporate jargon.
 - Write like you're talking to a colleague, not a boardroom.

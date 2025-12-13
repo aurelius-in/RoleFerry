@@ -103,18 +103,18 @@ Parse job description from URL or text.
 }
 ```
 
-### 2.4 Pinpoint Match APIs
+### 2.4 Pain Point Match APIs
 
-#### POST /pinpoint-match/calculate
+#### POST /painpoint-match/calculate
 Calculate alignment score between resume and job description.
 
 **Response**:
 ```json
 {
   "alignment_score": 85,
-  "pinpoint_matches": [
+  "painpoint_matches": [
     {
-      "pinpoint": "Scaling our backend infrastructure to handle 10x traffic",
+      "pain point": "Scaling our backend infrastructure to handle 10x traffic",
       "solution": "My experience scaling microservices on AWS",
       "metric": "Achieved 99.9% uptime and 20% cost reduction"
     }
@@ -167,12 +167,12 @@ Get company and contact summaries.
 ### 2.7 Offer Creation APIs
 
 #### POST /offer-creation/create
-Create personalized offer based on pinpoint matches.
+Create personalized offer based on pain point matches.
 
 **Request Body**:
 ```json
 {
-  "pinpoint_matches": [...],
+  "painpoint_matches": [...],
   "tone": "manager",
   "format": "text",
   "user_mode": "job-seeker"
@@ -204,7 +204,7 @@ Generate email with variable substitution and jargon detection.
   "tone": "manager",
   "user_mode": "job-seeker",
   "variables": [...],
-  "pinpoint_matches": [...],
+  "painpoint_matches": [...],
   "context_data": {...}
 }
 ```

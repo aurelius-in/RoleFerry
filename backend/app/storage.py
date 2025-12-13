@@ -41,7 +41,7 @@ class InMemoryStore:
         self.demo_job_preferences: Dict[str, Any] | None = None
         self.demo_selected_contacts: List[Dict[str, Any]] = []
         self.demo_research: Dict[str, Any] | None = None
-        self.demo_pinpoint_matches: List[Dict[str, Any]] = []
+        self.demo_painpoint_matches: List[Dict[str, Any]] = []
         self.demo_offer: Dict[str, Any] | None = None
         self.demo_compose: Dict[str, Any] | None = None
         self.demo_campaign: Dict[str, Any] | None = None

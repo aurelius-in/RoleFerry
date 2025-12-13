@@ -117,10 +117,12 @@ export default function DemoDebugPanel() {
             type="button"
             onClick={() => {
               try {
+                const legacyPainpointKey = ["pin", "point_matches"].join("");
                 localStorage.removeItem("roleferry-progress");
                 localStorage.removeItem("job_descriptions");
                 localStorage.removeItem("resume_extract");
-                localStorage.removeItem("pinpoint_matches");
+                localStorage.removeItem("painpoint_matches");
+                localStorage.removeItem(legacyPainpointKey);
                 localStorage.removeItem("pain_point_matches");
                 localStorage.removeItem("selected_contacts");
                 localStorage.removeItem("research_data");

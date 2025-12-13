@@ -311,7 +311,7 @@ export default function FindContactPage() {
               {selectedContacts.length > 0 && (
                 <div className="flex justify-end space-x-4">
                   <button
-                    onClick={() => router.push('/pinpoint-match')}
+                    onClick={() => router.push('/painpoint-match')}
                     className="bg-gray-100 text-gray-700 px-6 py-3 rounded-md font-medium hover:bg-gray-200 transition-colors"
                   >
                     Back

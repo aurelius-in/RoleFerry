@@ -11,7 +11,7 @@ The system is organized around a **single `demo-user` cohort** plus feature flag
 
 The main keypad/path (`/` home) and navbar cover the spec’d journey:
 - **Path home (`/`)**: Keypad stones for `Job Preferences → Resume → Job Descriptions → Tracker → Pain Point Match → Company Research → Decision Makers → Offer Creation → Campaign → Deliverability / Launch → Analytics` (see `app/page.tsx`).
-- **Navbar**: Primary workflow tabs (`/job-preferences`, `/resume`, `/job-descriptions`, `/pinpoint-match`, `/find-contact`, `/context-research`, `/offer-creation`, `/compose`, `/campaign`, `/deliverability-launch`) and utility tabs (`/dashboard`, `/analytics`, `/settings`, `/help`) are wired and styled.
+- **Navbar**: Primary workflow tabs (`/job-preferences`, `/resume`, `/job-descriptions`, `/painpoint-match`, `/find-contact`, `/context-research`, `/offer-creation`, `/compose`, `/campaign`, `/deliverability-launch`) and utility tabs (`/dashboard`, `/analytics`, `/settings`, `/help`) are wired and styled.
 
 Most screens now have **both** a realistic UI and a concrete backend contract; several also persist to Postgres for the `demo-user`:
 - **Job Preferences (`/job-preferences`)**
@@ -23,12 +23,12 @@ Most screens now have **both** a realistic UI and a concrete backend contract; s
 - **Job Descriptions (`/job-descriptions`)**
   - Frontend: maintains a locally sortable list, but `Import Job Description` calls `POST /job-descriptions/import` with URL or text, then maps the backend’s parsed JSON into `painPoints`, `requiredSkills`, and `successMetrics`, caching to `localStorage`.
   - Backend: `job_descriptions.py` **writes real rows** to `job` and creates a starter `application` for `demo-user`, and can read/update/delete JDs from Postgres, falling back to mock data if the DB is empty or unavailable.
-- **Pain Point Match (`/pinpoint-match`)**
-  - Frontend: reads cached JDs + resume extract; when you click Generate it POSTs to `/pinpoint-match/generate` and persists the mapped matches to `localStorage`.
+- **Pain Point Match (`/painpoint-match`)**
+  - Frontend: reads cached JDs + resume extract; when you click Generate it POSTs to `/painpoint-match/generate` and persists the mapped matches to `localStorage`.
   - Backend: `pain_point_match.py` pulls `job.parsed_json` and the latest `resume.parsed_json`, performs **lexical, rule‑based pairing**, writes rows into `pain_point_match`, and returns one canonical match object; a read endpoint still returns pure mocks for fast demos.
 - **Offer Creation (`/offer-creation`)**
-  - Frontend: uses the pinpoint matches plus a rich, multi‑tone editor; `Generate AI Offer` POSTs to `/offer-creation/create`, and `Save to Library` POSTs to `/offer-creation/save`, then keeps a local offer library.
-  - Backend: `offer_creation.py` implements **template‑style offer generation** using the first pinpoint pair and the requested tone, and persists offers into the `offer` table for `demo-user`.
+  - Frontend: uses the pain point matches plus a rich, multi‑tone editor; `Generate AI Offer` POSTs to `/offer-creation/create`, and `Save to Library` POSTs to `/offer-creation/save`, then keeps a local offer library.
+  - Backend: `offer_creation.py` implements **template‑style offer generation** using the first pain point pair and the requested tone, and persists offers into the `offer` table for `demo-user`.
 - **Decision Makers (`/find-contact`)** and **Company Research (`/context-research`)**
   - Frontend: currently **100% mock‑driven** on the client (no backend calls). Contacts are generated in‑memory; verification is simulated; research data (company summary, contact bios, news, shared connections) is synthesized and then cached.
   - Backend: routers for enrichment and research exist but this specific path still acts as a **front‑end‑only experience**, which is fine for demo but not yet wired to real data providers.
@@ -105,7 +105,7 @@ This section focuses on concrete changes beyond the Week‑4/5 “wireframes + s
 ### 4.3 Frontend wiring to real APIs and data modes
 
 - Many Next.js pages were upgraded from static/wireframe to **API‑aware flows** that match the backend contracts:
-  - Job Preferences, Resume, Job Descriptions, Pinpoint Match, Offer Creation, Deliverability Launch, Analytics, and Settings all now use the shared `api` helper or `/api/*` to call FastAPI.
+  - Job Preferences, Resume, Job Descriptions, Pain Point Match, Offer Creation, Deliverability Launch, Analytics, and Settings all now use the shared `api` helper or `/api/*` to call FastAPI.
   - Local storage is used as a **performance + offline cache**, not the sole source of truth, making the app resilient when the backend is down but capable of real persistence when it is up.
 - `dataMode.ts` and the `DataModeToggle` in `Navbar` provide a **clear, global control** for Demo vs Live behavior, currently wired into Analytics and ready to be extended to other pages.
 

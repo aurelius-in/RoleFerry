@@ -27,7 +27,7 @@ export default function Navbar() {
         <NavLink href="/job-preferences" pathname={pathname}>Job Preferences</NavLink>
         <NavLink href="/resume" pathname={pathname}>Resume</NavLink>
         <NavLink href="/job-descriptions" pathname={pathname}>Jobs</NavLink>
-        <NavLink href="/pinpoint-match" pathname={pathname}>Match</NavLink>
+        <NavLink href="/painpoint-match" pathname={pathname}>Match</NavLink>
         <NavLink href="/find-contact" pathname={pathname}>Contact</NavLink>
         <NavLink href="/context-research" pathname={pathname}>Research</NavLink>
         <NavLink href="/offer-creation" pathname={pathname}>Offer</NavLink>
