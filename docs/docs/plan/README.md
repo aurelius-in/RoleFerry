@@ -22,4 +22,6 @@ This folder contains the Week 9–12 backend planning docs for RoleFerry. They o
 - [full_backend_service_report.md](full_backend_service_report.md)  
   A synthesized **Week 9–12 roadmap** that pulls the other three docs together, mapping which services to enable each week, how much they’re likely to cost, and which **screens/endpoints** become truly live as we go.
 
+- [roleferry_app_status_report_week_9.md](roleferry_app_status_report_week_9.md)  
+  A **Week 9 app status report** summarizing how the current app and backend line up with the wireframes, how live vs demo modes behave, what’s recently been completed, and what gaps remain before a broader beta.
 

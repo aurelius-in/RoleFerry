@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
+
 interface ResumeExtract {
   positions: Array<{
     company: string;
@@ -39,67 +40,119 @@ export default function ResumePage() {
     if (!file) return;
 
     setIsUploading(true);
-    
-    // Simulate AI parsing
-    setTimeout(() => {
-      const mockExtract: ResumeExtract = {
-        positions: [
-          {
-            company: "TechCorp Inc.",
-            title: "Senior Software Engineer",
-            startDate: "2022-01",
-            endDate: "2024-12",
-            current: true,
-            description: "Led development of microservices architecture, reducing system latency by 40%"
-          },
-          {
-            company: "StartupXYZ",
-            title: "Full Stack Developer",
-            startDate: "2020-06",
-            endDate: "2021-12",
-            current: false,
-            description: "Built customer-facing web application serving 10K+ users"
+
+    try {
+      // Call the real backend upload endpoint via the Next.js /api rewrite.
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/resume/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        // Backend currently returns a mock extract shape; for Week 9/10 we keep
+        // using our front-end friendly mock while relying on the backend for
+        // persistence and rule-based parsing.
+        const mockExtract: ResumeExtract = {
+          positions: [
+            {
+              company: "TechCorp Inc.",
+              title: "Senior Software Engineer",
+              startDate: "2022-01",
+              endDate: "2024-12",
+              current: true,
+              description: "Led development of microservices architecture, reducing system latency by 40%"
+            },
+            {
+              company: "StartupXYZ",
+              title: "Full Stack Developer",
+              startDate: "2020-06",
+              endDate: "2021-12",
+              current: false,
+              description: "Built customer-facing web application serving 10K+ users"
+            }
+          ],
+          keyMetrics: [
+            {
+              metric: "System Performance",
+              value: "40% reduction",
+              context: "in latency through microservices optimization"
+            },
+            {
+              metric: "User Growth",
+              value: "10K+ users",
+              context: "served through customer-facing application"
+            },
+            {
+              metric: "Team Leadership",
+              value: "5 engineers",
+              context: "managed in cross-functional team"
+            }
+          ],
+          skills: ["Python", "JavaScript", "React", "Node.js", "AWS", "Docker", "PostgreSQL"],
+          businessChallenges: [
+            "Scaling customer-centric strategy across onboarding, expansion, and value realization efforts",
+            "Integrating two legacy CS orgs into a unified global operating model",
+            "Improving customer satisfaction for a $40M consulting firm",
+            "Driving adoption and ROI for a $250M+ SaaS provider"
+          ],
+          accomplishments: [
+            "Reduced system latency by 40% through microservices architecture",
+            "Led team of 5 engineers in cross-functional projects",
+            "Built scalable web application serving 10K+ users",
+            "Implemented CI/CD pipeline reducing deployment time by 60%"
+          ],
+          tenure: [
+            { company: "TechCorp Inc.", duration: "2 years", role: "Senior Software Engineer" },
+            { company: "StartupXYZ", duration: "1.5 years", role: "Full Stack Developer" }
+          ]
+        };
+
+        // Prefer backend extract if present and mappable, otherwise fall back
+        // to the existing mock extract.
+        const backendExtract = data?.extract;
+        if (backendExtract) {
+          try {
+            const mapped: ResumeExtract = {
+              positions: (backendExtract.positions || []).map((p: any) => ({
+                company: p.company,
+                title: p.title,
+                startDate: p.start_date,
+                endDate: p.end_date,
+                current: p.current,
+                description: p.description,
+              })),
+              keyMetrics: (backendExtract.key_metrics || []).map((m: any) => ({
+                metric: m.metric,
+                value: m.value,
+                context: m.context,
+              })),
+              skills: backendExtract.skills || [],
+              businessChallenges: backendExtract.business_challenges || mockExtract.businessChallenges,
+              accomplishments: backendExtract.accomplishments || mockExtract.accomplishments,
+              tenure: (backendExtract.tenure || []).map((t: any) => ({
+                company: t.company,
+                duration: t.duration,
+                role: t.role,
+              })),
+            };
+            setExtract(mapped);
+          } catch {
+            setExtract(mockExtract);
           }
-        ],
-        keyMetrics: [
-          {
-            metric: "System Performance",
-            value: "40% reduction",
-            context: "in latency through microservices optimization"
-          },
-          {
-            metric: "User Growth",
-            value: "10K+ users",
-            context: "served through customer-facing application"
-          },
-          {
-            metric: "Team Leadership",
-            value: "5 engineers",
-            context: "managed in cross-functional team"
-          }
-        ],
-        skills: ["Python", "JavaScript", "React", "Node.js", "AWS", "Docker", "PostgreSQL"],
-        businessChallenges: [
-          "Scaling customer-centric strategy across onboarding, expansion, and value realization efforts",
-          "Integrating two legacy CS orgs into a unified global operating model",
-          "Improving customer satisfaction for a $40M consulting firm",
-          "Driving adoption and ROI for a $250M+ SaaS provider"
-        ],
-        accomplishments: [
-          "Reduced system latency by 40% through microservices architecture",
-          "Led team of 5 engineers in cross-functional projects",
-          "Built scalable web application serving 10K+ users",
-          "Implemented CI/CD pipeline reducing deployment time by 60%"
-        ],
-        tenure: [
-          { company: "TechCorp Inc.", duration: "2 years", role: "Senior Software Engineer" },
-          { company: "StartupXYZ", duration: "1.5 years", role: "Full Stack Developer" }
-        ]
-      };
-      
-      setExtract(mockExtract);
+        } else {
+          setExtract(mockExtract);
+        }
+      } else {
+        setExtract(null);
+      }
+    } catch {
+      setExtract(null);
+    } finally {
       setIsUploading(false);
-    }, 2000);
+    }
   };
 
   const handleSave = () => {
@@ -140,7 +193,7 @@ export default function ResumePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8">
       <div className="max-w-4xl mx-auto px-4 mb-4">
         <a href="/foundry" className="inline-flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors">
           <span className="mr-2">←</span> Back to Path
