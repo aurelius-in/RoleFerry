@@ -17,9 +17,11 @@ class Settings(BaseModel):
     apify_token: str | None = Field(default=os.getenv("APIFY_TOKEN"))
     apify_indeed_actor_id: str | None = Field(default=os.getenv("APIFY_INDEED_ACTOR_ID"))
 
-    # Lead-Qual providers
+    # Lead-Qual providers / LLM
     serper_api_key: str | None = Field(default=os.getenv("SERPER_API_KEY"))
     openai_api_key: str | None = Field(default=os.getenv("OPENAI_API_KEY"))
+    openai_model: str = Field(default=os.getenv("OPENAI_MODEL", "gpt-4o-mini"))
+    openai_base_url: str | None = Field(default=os.getenv("OPENAI_BASE_URL"))
     findymail_api_key: str | None = Field(default=os.getenv("FINDYMAIL_API_KEY"))
     neverbounce_api_key: str | None = Field(default=os.getenv("NEVERBOUNCE_API_KEY"))
 
@@ -29,6 +31,9 @@ class Settings(BaseModel):
 
     # Feature flags / modes
     mock_mode: bool = Field(default=os.getenv("ROLEFERRY_MOCK_MODE", "true").lower() == "true")
+    llm_mode: str = Field(
+        default=os.getenv("LLM_MODE", "openai")
+    )  # 'openai' | 'stub' | future providers
     preferred_email_verifier: str = Field(default=os.getenv("PREFERRED_EMAIL_VERIFIER", "neverbounce"))
 
     # Offer Decks / Clay-Clone
@@ -36,6 +41,15 @@ class Settings(BaseModel):
     gamma_webhook_url: str | None = Field(default=os.getenv("GAMMA_WEBHOOK_URL"))
     offer_deck_provider: str = Field(default=os.getenv("OFFER_DECK_PROVIDER", "gamma"))
     mesh_clone_enabled: bool = Field(default=os.getenv("MESH_CLONE_ENABLED", "true").lower() == "true")
+
+    # Simple SMTP email sending (internal test only)
+    smtp_host: str | None = Field(default=os.getenv("SMTP_HOST"))
+    smtp_port: int = Field(default=int(os.getenv("SMTP_PORT", "587")))
+    smtp_username: str | None = Field(default=os.getenv("SMTP_USERNAME"))
+    smtp_password: str | None = Field(default=os.getenv("SMTP_PASSWORD"))
+    smtp_from: str | None = Field(default=os.getenv("SMTP_FROM"))
+    smtp_use_tls: bool = Field(default=os.getenv("SMTP_USE_TLS", "true").lower() == "true")
+    internal_test_recipients: str | None = Field(default=os.getenv("INTERNAL_TEST_RECIPIENTS"))
 
     @property
     def instantly_enabled(self) -> bool:

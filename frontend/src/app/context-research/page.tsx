@@ -174,25 +174,25 @@ export default function ContextResearchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-sm border p-8">
+        <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Context (Research)</h1>
-            <p className="text-gray-600">
-              Research company and contact information to personalize your outreach.
+            <h1 className="text-3xl font-bold text-white mb-2">Company Research</h1>
+            <p className="text-white/70">
+              Hiring signals and company intelligence to contextualize your outreach.
             </p>
           </div>
 
           {selectedContacts.length === 0 ? (
             <div className="text-center py-12">
               <div className="mb-6">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="mx-auto h-12 w-12 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Contacts Selected</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className="text-lg font-medium text-white mb-2">No Contacts Selected</h3>
+              <p className="text-white/70 mb-6">
                 Please go back and select contacts to research.
               </p>
               <button
@@ -209,8 +209,8 @@ export default function ContextResearchPage() {
                 <h2 className="text-xl font-semibold mb-4">Selected Contacts</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {selectedContacts.map((contact) => (
-                    <div key={contact.id} className="border border-gray-200 rounded-lg p-4">
-                      <h3 className="font-semibold text-gray-900">{contact.name}</h3>
+                    <div key={contact.id} className="border border-white/10 bg-black/20 rounded-lg p-4">
+                      <h3 className="font-semibold text-white">{contact.name}</h3>
                       <p className="text-gray-600 text-sm">{contact.title}</p>
                       <p className="text-gray-500 text-xs">{contact.company}</p>
                     </div>

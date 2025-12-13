@@ -30,7 +30,11 @@ async def _exec_sql_files(engine: AsyncEngine, files: Iterable[str]) -> None:
             try:
                 with open(fp, "r", encoding="utf-8") as f:
                     sql = f.read()
-                await conn.execute(text(sql))
+                # asyncpg cannot execute multiple commands in a single prepared
+                # statement, so we split on semicolons and run statements one by one.
+                statements = [s.strip() for s in sql.split(";") if s.strip()]
+                for stmt in statements:
+                    await conn.execute(text(stmt))
             except Exception:
                 # Best-effort during scaffold; ignore idempotent failures
                 continue

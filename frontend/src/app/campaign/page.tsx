@@ -176,12 +176,12 @@ export default function CampaignPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-sm border p-8">
+        <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Campaign</h1>
-            <p className="text-gray-600">
+            <h1 className="text-3xl font-bold text-white mb-2">Campaign</h1>
+            <p className="text-white/70">
               {mode === 'job-seeker' 
                 ? 'Your 3-email outreach sequence to land the job.'
                 : 'Your 3-email sequence to pitch the candidate.'
@@ -196,8 +196,8 @@ export default function CampaignPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Generating Campaign...</h3>
-              <p className="text-gray-600">Creating your 3-email sequence with optimal timing and messaging.</p>
+              <h3 className="text-lg font-medium text-white mb-2">Generating Campaign...</h3>
+              <p className="text-white/70">Creating your 3-email sequence with optimal timing and messaging.</p>
             </div>
           ) : error ? (
             <div className="text-center py-12">
@@ -206,8 +206,8 @@ export default function CampaignPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Error</h3>
-              <p className="text-gray-600 mb-4">{error}</p>
+              <h3 className="text-lg font-medium text-white mb-2">Error</h3>
+              <p className="text-white/70 mb-4">{error}</p>
               <button
                 onClick={() => window.location.reload()}
                 className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
@@ -220,12 +220,12 @@ export default function CampaignPage() {
               {/* Campaign Header */}
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">{campaign.name}</h2>
+                  <h2 className="text-xl font-semibold text-white">{campaign.name}</h2>
                   <div className="flex items-center space-x-4 mt-2">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(campaign.status)}`}>
                       {campaign.status.toUpperCase()}
                     </span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-white/70">
                       {campaign.emails.length} emails • {campaign.emails.reduce((total, email) => total + email.delay_days, 0)} days total
                     </span>
                   </div>
@@ -240,7 +240,7 @@ export default function CampaignPage() {
 
               {/* Deliverability Check Results */}
               {deliverabilityCheck && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                <div className="bg-black/20 border border-white/10 rounded-lg p-6">
                   <h3 className="text-lg font-semibold mb-4">Deliverability Check</h3>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                     <div className="text-center">

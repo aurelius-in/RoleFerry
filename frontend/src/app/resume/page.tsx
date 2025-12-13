@@ -195,20 +195,20 @@ export default function ResumePage() {
   return (
     <div className="min-h-screen py-8">
       <div className="max-w-4xl mx-auto px-4 mb-4">
-        <a href="/foundry" className="inline-flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors">
+        <a href="/foundry" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
           <span className="mr-2">←</span> Back to Path
         </a>
       </div>
       <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-sm border p-8">
+        <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
               <div className="flex justify-between items-center mb-8">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Resume / Candidate Profile</h1>
-                  <p className="text-gray-600">
+                  <h1 className="text-3xl font-bold text-white mb-2">Resume / Candidate Profile</h1>
+                  <p className="text-white/70">
                     Upload your resume or candidate profile to extract key information for personalized outreach.
                   </p>
                 </div>
-                <div className="bg-gray-900 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-gray-700">
+                <div className="bg-gray-900/70 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-white/10">
                   Step 3 of 12
                 </div>
               </div>
@@ -216,12 +216,12 @@ export default function ResumePage() {
           {!extract ? (
             <div className="text-center py-12">
               <div className="mb-6">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="mx-auto h-12 w-12 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Upload Resume</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className="text-lg font-medium text-white mb-2">Upload Resume</h3>
+              <p className="text-white/70 mb-6">
                 Upload a PDF or DOCX file to extract your experience, skills, and accomplishments.
               </p>
               <input
@@ -245,7 +245,7 @@ export default function ResumePage() {
                 <h2 className="text-2xl font-semibold">Resume Extract</h2>
                 <button
                   onClick={() => setIsEditing(!isEditing)}
-                  className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors"
+                  className="bg-white/10 text-white px-4 py-2 rounded-md hover:bg-white/15 transition-colors border border-white/10"
                 >
                   {isEditing ? "Done Editing" : "Edit"}
                 </button>
@@ -256,7 +256,7 @@ export default function ResumePage() {
                 <h3 className="text-xl font-semibold mb-4">Work Experience</h3>
                 <div className="space-y-4">
                   {extract.positions.map((position, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div key={index} className="border border-white/10 bg-black/20 rounded-lg p-4">
                       {isEditing ? (
                         <div className="space-y-3">
                           <div className="grid grid-cols-2 gap-3">
@@ -264,7 +264,7 @@ export default function ResumePage() {
                               type="text"
                               value={position.company}
                               onChange={(e) => handleEdit('positions', index, { ...position, company: e.target.value })}
-                              className="border border-gray-300 rounded-md px-3 py-2"
+                              className="rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                               placeholder="Company"
                             />
                             <input

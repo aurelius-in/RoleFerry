@@ -2,10 +2,16 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import asyncio
+import logging
+
 from ..services.email_verifier import verify_email_async
 from ..services.jargon_detector import jargon_detector
+from ..services.campaign_sender import record_outreach_send
+from ..services.email_sender import send_email
+from ..config import settings
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 class PreFlightCheck(BaseModel):
     name: str
@@ -114,7 +120,8 @@ async def run_pre_flight_checks(request: CampaignLaunchRequest):
         return checks
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to run pre-flight checks: {str(e)}")
+        logger.exception("Error running pre-flight checks")
+        raise HTTPException(status_code=500, detail="Failed to run pre-flight checks")
 
 @router.post("/launch", response_model=LaunchResult)
 async def launch_campaign(request: CampaignLaunchRequest):
@@ -122,28 +129,68 @@ async def launch_campaign(request: CampaignLaunchRequest):
     Launch a campaign after pre-flight checks pass.
     """
     try:
-        # Simulate campaign launch process
-        await asyncio.sleep(2)
-        
-        # Mock launch results
-        campaign_id = f"camp_{request.campaign_id}"
-        emails_sent = 1  # First email sent immediately
-        scheduled_emails = len(request.emails) - 1  # Remaining emails scheduled
-        
+        # Simulate campaign launch process; Week 10 sends the first email
+        # template to each contact, recording a row in the outreach table for
+        # analytics while still mocking actual delivery.
+        await asyncio.sleep(0.5)
+
+        if not request.emails:
+            raise HTTPException(status_code=400, detail="At least one email template is required")
+
+        primary_email = request.emails[0]
+        subject = str(primary_email.get("subject") or "")
+        body = str(primary_email.get("body") or "")
+
+        emails_sent = 0
+        for contact in request.contacts:
+            to_addr = contact.get("email")
+            if not to_addr:
+                continue
+            variant = contact.get("variant") or ""
+            await record_outreach_send(
+                campaign_id=request.campaign_id,
+                contact_email=to_addr,
+                subject=subject,
+                body=body,
+                variant=variant,
+            )
+            emails_sent += 1
+
+        scheduled_emails = max(len(request.emails) - 1, 0)
+
+        # Optionally send a tiny internal test batch via SMTP when configured.
+        # This never triggers in mock_mode and only uses INTERNAL_TEST_RECIPIENTS.
+        internal_recipients_raw = settings.internal_test_recipients or ""
+        internal_recipients = [
+            r.strip() for r in internal_recipients_raw.split(",") if r.strip()
+        ]
+        if internal_recipients and not settings.mock_mode:
+            try:
+                # Fire-and-forget; we don't block launch result on SMTP success.
+                asyncio.create_task(
+                    send_email(
+                        internal_recipients,
+                        f"[RoleFerry demo] Campaign {request.campaign_id} test send",
+                        body,
+                    )
+                )
+            except Exception:
+                logger.exception("Failed to enqueue internal test email send")
+
         # Simulate some potential errors
-        errors = []
+        errors: List[str] = []
         if len(request.contacts) == 0:
             errors.append("No contacts provided")
-        
-        if any(email.get("subject", "") == "" for email in request.emails):
-            errors.append("Some emails missing subject lines")
-        
-        success = len(errors) == 0
+
+        if subject.strip() == "":
+            errors.append("Primary email missing subject line")
+
+        success = len(errors) == 0 and emails_sent > 0
         
         result = LaunchResult(
             success=success,
             message="Campaign launched successfully!" if success else "Campaign launch failed",
-            campaign_id=campaign_id if success else None,
+            campaign_id=request.campaign_id if success else None,
             emails_sent=emails_sent if success else None,
             scheduled_emails=scheduled_emails if success else None,
             errors=errors if errors else None
@@ -152,7 +199,8 @@ async def launch_campaign(request: CampaignLaunchRequest):
         return result
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to launch campaign: {str(e)}")
+        logger.exception("Error launching campaign")
+        raise HTTPException(status_code=500, detail="Failed to launch campaign")
 
 @router.get("/health-check")
 async def health_check():
@@ -176,7 +224,8 @@ async def health_check():
             "message": "All deliverability services are operational"
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+        logger.exception("Deliverability health check failed")
+        raise HTTPException(status_code=500, detail="Health check failed")
 
 @router.post("/validate-content")
 async def validate_content(content: str):
@@ -225,7 +274,8 @@ async def validate_content(content: str):
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Content validation failed: {str(e)}")
+        logger.exception("Content validation failed")
+        raise HTTPException(status_code=500, detail="Content validation failed")
 
 @router.get("/deliverability-stats")
 async def get_deliverability_stats():
@@ -252,4 +302,5 @@ async def get_deliverability_stats():
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get deliverability stats: {str(e)}")
+        logger.exception("Error retrieving deliverability stats")
+        raise HTTPException(status_code=500, detail="Failed to get deliverability stats")

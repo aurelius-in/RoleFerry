@@ -310,14 +310,14 @@ export default function JobPreferencesPage() {
   return (
     <div className="min-h-screen py-8">
       <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-sm border p-8">
+        <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-white mb-2">
               {mode === "job-seeker"
                 ? "Job Preferences"
                 : "Ideal Client Profile (ICP)"}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-white/70">
               {mode === "job-seeker"
                 ? "Tell us what you value in a new role and what you're looking for."
                 : "Define your ideal client profile for candidate sourcing."}

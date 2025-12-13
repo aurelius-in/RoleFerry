@@ -33,6 +33,11 @@ class InMemoryStore:
             "Meeting": [],
             "Deal": [],
         }
+        # Week 10 demo-first caches for 12-step workflow
+        # (used when Postgres is unavailable)
+        self.demo_job_descriptions: Dict[str, Dict[str, Any]] = {}
+        self.demo_latest_resume: Dict[str, Any] | None = None
+        self.demo_latest_resume_text: str | None = None
 
     def save_ijp(self, ijp_id: str, filters: Dict[str, Any]) -> None:
         self.ijps[ijp_id] = filters

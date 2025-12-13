@@ -1,172 +1,194 @@
-import { api } from "@/lib/api";
+"use client";
 
-type CampaignResp = { 
-  delivered: number; 
-  open: number; 
-  reply: number; 
-  positive: number; 
-  meetings: number; 
-  variants?: Record<string, { delivered: number; open: number; reply: number; positive: number }>;
-  alignment_correlation?: number;
-  cost_per_qualified_lead?: number;
-  total_campaigns?: number;
-  average_alignment_score?: number;
-  conversion_rate?: number;
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+import { DataMode, getCurrentDataMode, subscribeToDataModeChanges } from "@/lib/dataMode";
+
+type OverviewResp = {
+  total_sent: number;
+  click_rate: number;
+  reply_rate: number;
+  roles_applied: number;
+  by_status: Record<string, number>;
+  verification_breakdown: Record<string, number>;
+  verified_ratio: number;
 };
 
-export default async function Analytics() {
-  let data: CampaignResp | null = null;
-  let error: string | null = null;
-  try {
-    data = await api<CampaignResp>("/analytics/campaign", "GET");
-  } catch (e: any) {
-    error = String(e?.message || e);
-  }
-  const rate = (num: number, denom: number) => (denom ? Math.round((num / denom) * 100) : 0);
-  const openRate = data ? rate(data.open, data.delivered) : 0;
-  const replyRate = data ? rate(data.reply, data.delivered) : 0;
-  const posRate = data ? rate(data.positive, data.reply) : 0;
+const DEMO_ANALYTICS: OverviewResp = {
+  total_sent: 1240,
+  click_rate: 38.4,
+  reply_rate: 22.7,
+  roles_applied: 18,
+  by_status: {
+    saved: 6,
+    applied: 8,
+    interviewing: 3,
+    offer: 1,
+  },
+  verification_breakdown: {
+    valid: 42,
+    accept_all: 11,
+    risky: 3,
+    invalid: 2,
+    unknown: 5,
+  },
+  verified_ratio: 78.9,
+};
+
+export default function Analytics() {
+  const [mode, setMode] = useState<DataMode>("demo");
+  const [data, setData] = useState<OverviewResp | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const loadForMode = async (nextMode: DataMode) => {
+    setMode(nextMode);
+    setError(null);
+
+    if (nextMode === "demo") {
+      setLoading(false);
+      setData(DEMO_ANALYTICS);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const resp = await api<OverviewResp>("/analytics/overview", "GET");
+      setData(resp);
+    } catch (e: any) {
+      console.error(e);
+      setError(
+        "We tried to reach the live analytics API but hit a problem. Make sure the backend is running on http://localhost:8000 and that /analytics/overview is reachable."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const initial = getCurrentDataMode();
+    loadForMode(initial);
+
+    const unsubscribe = subscribeToDataModeChanges((next) => {
+      loadForMode(next);
+    });
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <main className="max-w-4xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Analytics</h1>
-      {error ? (
-        <div className="rounded-lg p-4 bg-white/5 border border-white/10 space-y-2">
-          <div className="text-sm">We couldn’t load metrics right now.</div>
-          <div className="text-xs opacity-80 break-all">{error}</div>
-          <div className="text-sm">
-            Try again shortly, or check <a className="underline" href="/status">API Status</a>.
+    <main className="max-w-5xl mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Analytics</h1>
+          <p className="text-xs text-white/70 mt-1">
+            {mode === "demo"
+              ? "Showing a richly populated demo campaign so you can feel the flow before going live."
+              : "Showing live analytics from your backend. If there’s a problem, you’ll see a clear explanation below."}
+          </p>
+        </div>
+        <span className="inline-flex items-center rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-wide">
+          Mode: <span className="ml-1 font-semibold">{mode === "demo" ? "Demo (mock data)" : "Live (API)"}</span>
+        </span>
+      </div>
+
+      {mode === "live" && error ? (
+        <div className="rounded-lg p-4 bg-red-900/40 border border-red-500/60 space-y-2 text-sm">
+          <div className="font-semibold">We couldn’t load live metrics.</div>
+          <div className="text-xs opacity-90">
+            {error}
+          </div>
+          <div className="text-xs opacity-80">
+            Check that the FastAPI server is running, then refresh. You can always switch back to Demo mode from the top-right toggle.
           </div>
         </div>
       ) : null}
+
+      {loading && (
+        <div className="text-sm text-white/70">Loading live analytics…</div>
+      )}
+
       {data ? (
         <>
-          <div>
-            <a className="px-3 py-2 rounded bg-white/10 border border-white/10 text-sm" href="/api/analytics/csv" target="_blank">Download CSV</a>
+          {/* Top-level KPIs (Instantly-style) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <KpiCard label="Total Sent" value={data.total_sent.toLocaleString()} trend="▲ 0 this week" />
+            <KpiCard label="Click Rate" value={`${data.click_rate.toFixed(1)}%`} trend="▲ vs. baseline" />
+            <KpiCard label="Reply Rate" value={`${data.reply_rate.toFixed(1)}%`} trend="▲ vs. baseline" />
+            <KpiCard label="Roles Applied" value={data.roles_applied.toString()} trend="In active campaigns" />
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <Stat label="Delivered" value={data.delivered} />
-            <Stat label="Open" value={data.open} suffix={`(${openRate}%)`} />
-            <Stat label="Reply" value={data.reply} suffix={`(${replyRate}%)`} />
-            <Stat label="Positive" value={data.positive} suffix={`(${posRate}%)`} />
-            <Stat label="Meetings" value={data.meetings} />
-          </div>
-          
-          {/* New Analytics Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="rounded-lg p-4 bg-white/5 border border-white/10">
-              <div className="text-sm opacity-80">Alignment Score Correlation</div>
-              <div className="text-2xl font-semibold">
-                {data.alignment_correlation ? `${Math.round(data.alignment_correlation * 100)}%` : 'N/A'}
-              </div>
-              <div className="text-xs opacity-60 mt-1">Correlation between match score and reply rate</div>
+
+          {/* Application status breakdown */}
+          <section className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold">Application Status</h2>
             </div>
-            
-            <div className="rounded-lg p-4 bg-white/5 border border-white/10">
-              <div className="text-sm opacity-80">Cost per Qualified Lead</div>
-              <div className="text-2xl font-semibold">
-                {data.cost_per_qualified_lead ? `$${data.cost_per_qualified_lead}` : 'N/A'}
-              </div>
-              <div className="text-xs opacity-60 mt-1">Average cost to generate one qualified lead</div>
-            </div>
-            
-            <div className="rounded-lg p-4 bg-white/5 border border-white/10">
-              <div className="text-sm opacity-80">Average Alignment Score</div>
-              <div className="text-2xl font-semibold">
-                {data.average_alignment_score ? `${Math.round(data.average_alignment_score)}%` : 'N/A'}
-              </div>
-              <div className="text-xs opacity-60 mt-1">Across {data.total_campaigns || 0} campaigns</div>
-            </div>
-          </div>
-          
-          {/* Conversion Funnel */}
-          <div className="rounded-lg border border-white/10 p-4">
-            <h3 className="text-lg font-semibold mb-4">Conversion Funnel</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Delivered</span>
-                <span className="font-medium">{data.delivered}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Opened ({openRate}%)</span>
-                <span className="font-medium">{data.open}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Replied ({replyRate}%)</span>
-                <span className="font-medium">{data.reply}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Positive Responses ({posRate}%)</span>
-                <span className="font-medium">{data.positive}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Meetings Scheduled</span>
-                <span className="font-medium">{data.meetings}</span>
-              </div>
-            </div>
-          </div>
-          {/* Simple bar-like viz */}
-          {data.variants && (
-            <div className="rounded-lg border border-white/10 p-4 space-y-2">
-              <div className="text-sm opacity-80">Variant Open Rates</div>
-              <div className="space-y-2">
-                {Object.entries(data.variants).map(([v, row]) => {
-                  const or = rate(row.open, row.delivered);
-                  return (
-                    <div key={v} className="flex items-center gap-2 text-xs">
-                      <div className="w-32 truncate">{v || "(none)"}</div>
-                      <div className="flex-1 h-2 bg-white/10 rounded">
-                        <div className="h-2 bg-blue-400 rounded" style={{ width: `${or}%` }} />
-                      </div>
-                      <div className="w-10 text-right">{or}%</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </>
-      ) : null}
-      {data?.variants && Object.keys(data.variants).length ? (
-        <div>
-          <h2 className="text-xl font-semibold mt-4">Variants</h2>
-          <div className="rounded-lg border border-white/10 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-white/5">
-                <tr>
-                  <th className="text-left p-2">Variant</th>
-                  <th className="text-left p-2">Delivered</th>
-                  <th className="text-left p-2">Open</th>
-                  <th className="text-left p-2">Reply</th>
-                  <th className="text-left p-2">Positive</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(data.variants).map(([v, row]) => (
-                  <tr key={v} className="odd:bg-white/0 even:bg-white/[.03]">
-                    <td className="p-2">{v || "(none)"}</td>
-                    <td className="p-2">{row.delivered}</td>
-                    <td className="p-2">{row.open}</td>
-                    <td className="p-2">{row.reply}</td>
-                    <td className="p-2">{row.positive}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs md:text-sm">
+                <thead className="bg-white/5">
+                  <tr>
+                    <th className="text-left p-2">Status</th>
+                    <th className="text-left p-2">Count</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                </thead>
+                <tbody>
+                  {Object.entries(data.by_status || {}).map(([status, count]) => (
+                    <tr key={status} className="odd:bg-white/0 even:bg-white/[.03]">
+                      <td className="p-2 capitalize">{status}</td>
+                      <td className="p-2">{count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* Deliverability & warmup-style panel */}
+          <section className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold">Deliverability & warmup</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="space-y-2">
+                <div className="text-xs opacity-70">Verified ratio</div>
+                <div className="text-2xl font-semibold">
+                  {data.verified_ratio.toFixed(1)}%
+                </div>
+                <div className="text-xs opacity-70">
+                  Based on email verification status from recent sends.
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-xs opacity-70">Verification breakdown</div>
+                <ul className="text-xs space-y-1">
+                  {Object.entries(data.verification_breakdown || {}).map(([k, v]) => (
+                    <li key={k} className="flex items-center justify-between">
+                      <span className="capitalize">{k}</span>
+                      <span>{v}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="space-y-1 text-xs opacity-80">
+                <div>Warmup status (mock):</div>
+                <div>• astaples@truestgridsolar.info – Active</div>
+                <div>• Warmup emails sent: 105</div>
+                <div>• Warmup emails received: 179</div>
+              </div>
+            </div>
+          </section>
+        </>
       ) : null}
     </main>
   );
 }
 
-function Stat({ label, value, suffix }: { label: string; value: number; suffix?: string }) {
+function KpiCard({ label, value, trend }: { label: string; value: string; trend: string }) {
   return (
     <div className="rounded-lg p-4 bg-white/5 border border-white/10">
-      <div className="text-sm opacity-80">{label}</div>
-      <div className="text-2xl font-semibold">
-        {value} {suffix ? <span className="text-base opacity-80">{suffix}</span> : null}
-      </div>
+      <div className="text-xs opacity-70 uppercase tracking-wide mb-1">{label}</div>
+      <div className="text-2xl font-semibold">{value}</div>
+      <div className="text-[11px] opacity-70 mt-1">{trend}</div>
     </div>
   );
 }
-

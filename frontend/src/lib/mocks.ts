@@ -42,6 +42,15 @@ const buildProspects = (n: number) => {
 
 const mocks: Record<string, MockFn> = {
   "GET /health": () => ({ status: "ok", env: "dev", version: "0.1.0" }),
+  "GET /health/llm": () => ({
+    configured: false,
+    mock_mode: true,
+    llm_mode: "openai",
+    should_use_real_llm: false,
+    model: "gpt-4o-mini",
+    probe_ok: true,
+    probe_preview: "[Stubbed GPT] LLM health probe: respond with a short acknowledgement.",
+  }),
   "GET /lead-qual/prospects": () => ({ prospects: buildProspects(12), count: 12 }),
   "GET /prospects": () => ({ prospects: buildProspects(12), count: 12 }),
   "POST /lead-qual/pipeline/run": (_b: any) => ({ ok: true, results: buildProspects(6).map(p=>({ domain: p.domain, top_prospect: { name: p.name, title: p.title, linkedin_url: p.linkedin_url, decision: p.decision, reason: p.reason, email: p.email || null, verification_status: p.verification_status, verification_score: p.verification_score || null, cost_usd: Number(p.cost_usd) } })), summary: { avg_cost_per_qualified: 0.064, steps: { serper:{count:6}, gpt:{count:6}, findymail:{count:4}, neverbounce:{count:4} } } }),

@@ -21,7 +21,7 @@ from .routers import (
     job_preferences,
     resume,
     job_descriptions,
-    pinpoint_match,
+    pain_point_match,
     email_verification,
     find_contact,
     context_research,
@@ -39,6 +39,9 @@ from .routers import (
     cross_browser_compatibility,
     user_testing,
     documentation,
+    beta_feedback,
+    demo_reset,
+    subscription,
 )
 
 
@@ -106,7 +109,7 @@ def create_app() -> FastAPI:
     app.include_router(job_preferences.router, prefix="/job-preferences", tags=["job-preferences"])
     app.include_router(resume.router, prefix="/resume", tags=["resume"])
     app.include_router(job_descriptions.router, prefix="/job-descriptions", tags=["job-descriptions"])
-    app.include_router(pinpoint_match.router, prefix="/pinpoint-match", tags=["pinpoint-match"])
+    app.include_router(pain_point_match.router, prefix="/pinpoint-match", tags=["pinpoint-match"])
     app.include_router(email_verification.router, prefix="/email-verification", tags=["email-verification"])
     app.include_router(find_contact.router, prefix="/find-contact", tags=["find-contact"])
     app.include_router(context_research.router, prefix="/context-research", tags=["context-research"])
@@ -144,6 +147,9 @@ def create_app() -> FastAPI:
     app.include_router(messages.router)
     app.include_router(crm.router)
     app.include_router(ask.router)
+    app.include_router(beta_feedback.router, tags=["beta-feedback"])
+    app.include_router(demo_reset.router, tags=["demo-reset"])
+    app.include_router(subscription.router, tags=["subscription"])
 
     return app
 

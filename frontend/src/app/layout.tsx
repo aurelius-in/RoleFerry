@@ -6,6 +6,7 @@ import { FoundryProvider } from "@/context/FoundryContext";
 import Footer from "@/components/Footer";
 import { ToastProvider } from "@/components/ToastProvider";
 import { LoadingProvider } from "@/components/LoadingProvider";
+import DemoDebugPanel from "@/components/DemoDebugPanel";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,10 +42,9 @@ export default function RootLayout({
           <LoadingProvider>
             <ToastProvider>
               <Navbar />
-              <div id="main" className="container mx-auto px-4 sm:px-6">
-                {children}
-              </div>
+              <div id="main">{children}</div>
               <Footer />
+              <DemoDebugPanel />
             </ToastProvider>
           </LoadingProvider>
         </FoundryProvider>

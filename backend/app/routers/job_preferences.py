@@ -1,9 +1,17 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
-import json
+import logging
+
+from sqlalchemy import text, bindparam
+from sqlalchemy.dialects.postgresql import JSONB
+
+from ..db import get_engine
+
 
 router = APIRouter()
+engine = get_engine()
+logger = logging.getLogger(__name__)
 
 class JobPreferences(BaseModel):
     values: List[str]
@@ -24,6 +32,9 @@ class JobPreferencesResponse(BaseModel):
     message: str
     preferences: Optional[JobPreferences] = None
 
+DEMO_USER_ID = "demo-user"
+
+
 @router.post("/save", response_model=JobPreferencesResponse)
 async def save_job_preferences(preferences: JobPreferences):
     """
@@ -31,15 +42,29 @@ async def save_job_preferences(preferences: JobPreferences):
     In a real implementation, this would save to database.
     """
     try:
-        # In a real app, save to database with user_id
-        # For now, just return success
+        # Persist as structured JSONB against a stubbed demo user
+        data_obj = preferences.model_dump()
+        stmt = (
+            text(
+                """
+                INSERT INTO job_preferences (user_id, data, updated_at)
+                VALUES (:user_id, :data, now())
+                ON CONFLICT (user_id)
+                DO UPDATE SET data = EXCLUDED.data, updated_at = now()
+                """
+            ).bindparams(bindparam("data", type_=JSONB))
+        )
+        async with engine.begin() as conn:
+            await conn.execute(stmt, {"user_id": DEMO_USER_ID, "data": data_obj})
+
         return JobPreferencesResponse(
             success=True,
             message="Job preferences saved successfully",
-            preferences=preferences
+            preferences=preferences,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to save preferences: {str(e)}")
+        logger.exception("Error saving job preferences")
+        raise HTTPException(status_code=500, detail="Failed to save preferences")
 
 @router.get("/{user_id}", response_model=JobPreferencesResponse)
 async def get_job_preferences(user_id: str):
@@ -47,31 +72,49 @@ async def get_job_preferences(user_id: str):
     Get job preferences for a user.
     In a real implementation, this would fetch from database.
     """
+    # For Week 9, we treat all traffic as a single demo user
+    _user_id = DEMO_USER_ID
     try:
-        # In a real app, fetch from database
-        # For now, return mock data
-        mock_preferences = JobPreferences(
-            values=["Impactful work", "Work-life balance"],
-            role_categories=["Technical & Engineering"],
-            location_preferences=["Remote", "Hybrid"],
-            work_type=["Remote", "Hybrid"],
-            role_type=["Full-Time"],
-            company_size=["51-200 employees", "201-500 employees"],
-            industries=["Enterprise Software", "AI & Machine Learning"],
-            skills=["Python", "JavaScript", "React"],
-            minimum_salary="$80,000",
-            job_search_status="Actively looking",
-            state="California",
-            user_mode="job-seeker"
-        )
-        
-        return JobPreferencesResponse(
-            success=True,
-            message="Job preferences retrieved successfully",
-            preferences=mock_preferences
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get preferences: {str(e)}")
+        async with engine.begin() as conn:
+            result = await conn.execute(
+                text("SELECT data FROM job_preferences WHERE user_id = :user_id"),
+                {"user_id": _user_id},
+            )
+            row = result.first()
+
+        if row and row[0]:
+            # row[0] is a JSON/JSONB object
+            prefs_obj = JobPreferences(**row[0])
+            return JobPreferencesResponse(
+                success=True,
+                message="Job preferences retrieved successfully",
+                preferences=prefs_obj,
+            )
+    except Exception:
+        # If anything goes wrong with the DB, fall back to mock defaults
+        pass
+
+    # Fallback to existing mock defaults if nothing stored yet or DB unavailable
+    mock_preferences = JobPreferences(
+        values=["Impactful work", "Work-life balance"],
+        role_categories=["Technical & Engineering"],
+        location_preferences=["Remote", "Hybrid"],
+        work_type=["Remote", "Hybrid"],
+        role_type=["Full-Time"],
+        company_size=["51-200 employees", "201-500 employees"],
+        industries=["Enterprise Software", "AI & Machine Learning"],
+        skills=["Python", "JavaScript", "React"],
+        minimum_salary="$80,000",
+        job_search_status="Actively looking",
+        state="California",
+        user_mode="job-seeker",
+    )
+
+    return JobPreferencesResponse(
+        success=True,
+        message="Job preferences retrieved successfully",
+        preferences=mock_preferences,
+    )
 
 @router.put("/{user_id}", response_model=JobPreferencesResponse)
 async def update_job_preferences(user_id: str, preferences: JobPreferences):
@@ -79,14 +122,27 @@ async def update_job_preferences(user_id: str, preferences: JobPreferences):
     Update job preferences for a user.
     """
     try:
-        # In a real app, update in database
+        data_obj = preferences.model_dump()
+        stmt = (
+            text(
+                """
+                INSERT INTO job_preferences (user_id, data, updated_at)
+                VALUES (:user_id, :data, now())
+                ON CONFLICT (user_id)
+                DO UPDATE SET data = EXCLUDED.data, updated_at = now()
+                """
+            ).bindparams(bindparam("data", type_=JSONB))
+        )
+        async with engine.begin() as conn:
+            await conn.execute(stmt, {"user_id": DEMO_USER_ID, "data": data_obj})
         return JobPreferencesResponse(
             success=True,
             message="Job preferences updated successfully",
-            preferences=preferences
+            preferences=preferences,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to update preferences: {str(e)}")
+        logger.exception("Error updating job preferences")
+        raise HTTPException(status_code=500, detail="Failed to update preferences")
 
 @router.delete("/{user_id}")
 async def delete_job_preferences(user_id: str):
@@ -94,10 +150,15 @@ async def delete_job_preferences(user_id: str):
     Delete job preferences for a user.
     """
     try:
-        # In a real app, delete from database
+        async with engine.begin() as conn:
+            await conn.execute(
+                text("DELETE FROM job_preferences WHERE user_id = :user_id"),
+                {"user_id": DEMO_USER_ID},
+            )
         return {"success": True, "message": "Job preferences deleted successfully"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to delete preferences: {str(e)}")
+        logger.exception("Error deleting job preferences")
+        raise HTTPException(status_code=500, detail="Failed to delete preferences")
 
 @router.get("/options/values")
 async def get_values_options():

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 interface PreFlightCheck {
   name: string;
@@ -56,65 +57,21 @@ export default function DeliverabilityLaunchPage() {
     setError(null);
 
     try {
-      // Simulate pre-flight checks
-      const checks: PreFlightCheck[] = [
-        {
-          name: "Email Verification",
-          status: 'pending',
-          message: "Verifying all email addresses...",
-        },
-        {
-          name: "Spam Score Check",
-          status: 'pending',
-          message: "Analyzing content for spam indicators...",
-        },
-        {
-          name: "DNS Validation",
-          status: 'pending',
-          message: "Checking SPF, DKIM, and DMARC records...",
-        },
-        {
-          name: "Bounce History",
-          status: 'pending',
-          message: "Reviewing bounce rates and reputation...",
-        },
-        {
-          name: "Domain Warmup",
-          status: 'pending',
-          message: "Ensuring domains are properly warmed...",
-        }
-      ];
-
-      setPreFlightChecks(checks);
-
-      // Simulate running checks with delays
-      for (let i = 0; i < checks.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const updatedChecks = [...checks];
-        const check = updatedChecks[i];
-        
-        // Simulate check results
-        if (check.name === "Email Verification") {
-          check.status = 'pass';
-          check.message = "All emails verified successfully";
-        } else if (check.name === "Spam Score Check") {
-          check.status = 'warning';
-          check.message = "Spam score: 2.1 (acceptable)";
-          check.details = "Consider reducing exclamation marks for better deliverability";
-        } else if (check.name === "DNS Validation") {
-          check.status = 'pass';
-          check.message = "All DNS records valid";
-        } else if (check.name === "Bounce History") {
-          check.status = 'pass';
-          check.message = "Bounce rate: 0.02% (excellent)";
-        } else if (check.name === "Domain Warmup") {
-          check.status = 'pass';
-          check.message = "Domains properly warmed and ready";
-        }
-        
-        setPreFlightChecks([...updatedChecks]);
+      if (!campaign) {
+        throw new Error("No campaign data available");
       }
+
+      const payload = {
+        campaign_id: campaign.id,
+        emails: campaign.emails,
+        contacts: [], // Week 11/12: contacts are still mocked; backend ignores for now.
+      };
+      const checks = await api<PreFlightCheck[]>(
+        "/deliverability-launch/pre-flight-checks",
+        "POST",
+        payload
+      );
+      setPreFlightChecks(checks);
     } catch (err) {
       setError("Failed to run pre-flight checks.");
     } finally {
@@ -127,18 +84,19 @@ export default function DeliverabilityLaunchPage() {
     setError(null);
 
     try {
-      // Simulate campaign launch
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      const result: LaunchResult = {
-        success: true,
-        message: "Campaign launched successfully!",
-        campaign_id: "camp_12345",
-        emails_sent: 1,
-        scheduled_emails: 2,
-        errors: []
+      if (!campaign) {
+        throw new Error("No campaign data available");
+      }
+      const payload = {
+        campaign_id: campaign.id,
+        emails: campaign.emails,
+        contacts: [],
       };
-
+      const result = await api<LaunchResult>(
+        "/deliverability-launch/launch",
+        "POST",
+        payload
+      );
       setLaunchResult(result);
     } catch (err) {
       setError("Failed to launch campaign.");
@@ -187,12 +145,12 @@ export default function DeliverabilityLaunchPage() {
   const hasFailures = preFlightChecks.some(check => check.status === 'fail');
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-sm border p-8">
+        <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Deliverability / Launch</h1>
-            <p className="text-gray-600">
+            <h1 className="text-3xl font-bold text-white mb-2">Deliverability / Launch</h1>
+            <p className="text-white/70">
               {mode === 'job-seeker' 
                 ? 'Final checks before launching your job application campaign.'
                 : 'Final checks before launching your candidate pitch campaign.'
@@ -203,12 +161,12 @@ export default function DeliverabilityLaunchPage() {
           {!campaign ? (
             <div className="text-center py-12">
               <div className="mb-6">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="mx-auto h-12 w-12 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Campaign Data</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className="text-lg font-medium text-white mb-2">No Campaign Data</h3>
+              <p className="text-white/70 mb-6">
                 Please complete the Campaign step first to launch your sequence.
               </p>
               <button
@@ -221,20 +179,20 @@ export default function DeliverabilityLaunchPage() {
           ) : (
             <div className="space-y-8">
               {/* Campaign Summary */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <h2 className="text-xl font-semibold text-blue-900 mb-4">Campaign Summary</h2>
+              <div className="bg-blue-50 border border-white/10 rounded-lg p-6">
+                <h2 className="text-xl font-semibold text-white mb-4">Campaign Summary</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <div className="text-sm text-blue-700">Campaign Name</div>
-                    <div className="font-semibold text-blue-900">{campaign.name}</div>
+                    <div className="text-sm text-white/70">Campaign Name</div>
+                    <div className="font-semibold text-white">{campaign.name}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-blue-700">Total Emails</div>
-                    <div className="font-semibold text-blue-900">{campaign.emails.length}</div>
+                    <div className="text-sm text-white/70">Total Emails</div>
+                    <div className="font-semibold text-white">{campaign.emails.length}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-blue-700">Total Duration</div>
-                    <div className="font-semibold text-blue-900">
+                    <div className="text-sm text-white/70">Total Duration</div>
+                    <div className="font-semibold text-white">
                       {campaign.emails.reduce((total: number, email: any) => total + email.delay_days, 0)} days
                     </div>
                   </div>
@@ -244,7 +202,7 @@ export default function DeliverabilityLaunchPage() {
               {/* Pre-Flight Checks */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Pre-Flight Checks</h2>
+                  <h2 className="text-xl font-semibold text-white">Pre-Flight Checks</h2>
                   <button
                     onClick={runPreFlightChecks}
                     disabled={isRunningChecks}

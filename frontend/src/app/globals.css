@@ -5,6 +5,7 @@
   --foreground: #e7ecff; /* soft light */
   --gradient-bg: linear-gradient(135deg, #0b1020 0%, #1b3a7a 60%, #7ab8ff 100%);
   --accent-gradient: linear-gradient(135deg, #ff4d00 0%, #ffb100 100%);
+  --accent: #ffb100; /* light orange */
 }
 
 @theme inline {
@@ -24,10 +25,77 @@
 }
 
 body {
-  background: linear-gradient(180deg, #000000 0%, #0b1020 25%, #0f274a 60%, #3c7bd9 100%);
+  /* App-wide dark blue gradient baseline (matches homepage vibe) */
+  background:
+    radial-gradient(1200px 800px at 20% 10%, rgba(60, 123, 217, 0.25) 0%, rgba(11, 16, 32, 0.0) 55%),
+    radial-gradient(900px 700px at 85% 20%, rgba(255, 177, 0, 0.10) 0%, rgba(11, 16, 32, 0.0) 55%),
+    linear-gradient(180deg, #05070f 0%, #0b1020 28%, #0f274a 65%, #1b3a7a 100%);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+a {
+  color: rgba(186, 215, 255, 0.95);
+}
+a:hover {
+  color: white;
+}
+
+.rf-accent {
+  color: var(--accent);
+}
+
+/* --- Global dark mode harmonization -------------------------------------- */
+/* Many pages still use "light" tailwind tokens (gray text, gray borders).
+   In demo mode we force these into a dark UI baseline. */
+html.dark body {
+  color-scheme: dark;
+}
+
+html.dark .text-gray-900 { color: rgba(255, 255, 255, 0.92) !important; }
+html.dark .text-gray-800 { color: rgba(255, 255, 255, 0.88) !important; }
+html.dark .text-gray-700 { color: rgba(255, 255, 255, 0.82) !important; }
+html.dark .text-gray-600 { color: rgba(255, 255, 255, 0.70) !important; }
+html.dark .text-gray-500 { color: rgba(255, 255, 255, 0.60) !important; }
+html.dark .text-gray-400 { color: rgba(255, 255, 255, 0.45) !important; }
+
+html.dark .border-gray-200 { border-color: rgba(255, 255, 255, 0.10) !important; }
+html.dark .border-gray-300 { border-color: rgba(255, 255, 255, 0.15) !important; }
+html.dark .border-gray-700 { border-color: rgba(255, 255, 255, 0.20) !important; }
+
+html.dark .bg-gray-50 { background-color: transparent !important; }
+html.dark .bg-gray-100 { background-color: rgba(255, 255, 255, 0.06) !important; }
+html.dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.12) !important; }
+html.dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.10) !important; }
+html.dark .bg-green-50 { background-color: rgba(34, 197, 94, 0.10) !important; }
+html.dark .bg-yellow-50 { background-color: rgba(234, 179, 8, 0.10) !important; }
+html.dark .bg-purple-50 { background-color: rgba(168, 85, 247, 0.10) !important; }
+html.dark .bg-blue-100 { background-color: rgba(59, 130, 246, 0.18) !important; }
+html.dark .bg-green-100 { background-color: rgba(34, 197, 94, 0.16) !important; }
+html.dark .bg-yellow-100 { background-color: rgba(234, 179, 8, 0.16) !important; }
+html.dark .bg-red-100 { background-color: rgba(239, 68, 68, 0.16) !important; }
+html.dark .bg-purple-100 { background-color: rgba(168, 85, 247, 0.16) !important; }
+
+html.dark .text-blue-900,
+html.dark .text-blue-800,
+html.dark .text-blue-700 { color: rgba(191, 219, 254, 0.95) !important; }
+html.dark .text-green-900,
+html.dark .text-green-800,
+html.dark .text-green-700 { color: rgba(187, 247, 208, 0.92) !important; }
+html.dark .text-yellow-900,
+html.dark .text-yellow-800,
+html.dark .text-yellow-700 { color: rgba(254, 240, 138, 0.92) !important; }
+html.dark .text-red-900,
+html.dark .text-red-800,
+html.dark .text-red-700 { color: rgba(254, 202, 202, 0.92) !important; }
+html.dark .text-purple-900,
+html.dark .text-purple-800,
+html.dark .text-purple-700 { color: rgba(233, 213, 255, 0.92) !important; }
+
+/* Convert remaining light surfaces to "dark glass" */
+html.dark .bg-white { background-color: rgba(255, 255, 255, 0.06) !important; }
+html.dark .text-black { color: rgba(255, 255, 255, 0.92) !important; }
+html.dark .border-black { border-color: rgba(255, 255, 255, 0.12) !important; }
 
 .brand-gradient {
   background: var(--accent-gradient);
