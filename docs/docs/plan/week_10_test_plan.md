@@ -19,6 +19,7 @@ This plan is **manual click-through first** (what a customer sees), with optiona
 - **GPT demo (real model calls)**
   - Set:
     - `OPENAI_API_KEY=...`
+    - (Alternative) `RoleFerryKey=...` (RoleFerry accepts this as an alias for `OPENAI_API_KEY`)
     - (Optional) `OPENAI_MODEL=gpt-4o-mini`
     - (Optional) `LLM_MODE=openai`
   - Expected: JD parsing, offer creation, resume summary (response), pain-point matching, and lead qualifier can become GPT-backed.

@@ -19,7 +19,9 @@ class Settings(BaseModel):
 
     # Lead-Qual providers / LLM
     serper_api_key: str | None = Field(default=os.getenv("SERPER_API_KEY"))
-    openai_api_key: str | None = Field(default=os.getenv("OPENAI_API_KEY"))
+    # Prefer standard OPENAI_API_KEY but allow a friendly alias for local demos.
+    # On Windows, environment variable names are case-insensitive.
+    openai_api_key: str | None = Field(default=(os.getenv("OPENAI_API_KEY") or os.getenv("RoleFerryKey")))
     openai_model: str = Field(default=os.getenv("OPENAI_MODEL", "gpt-4o-mini"))
     openai_base_url: str | None = Field(default=os.getenv("OPENAI_BASE_URL"))
     findymail_api_key: str | None = Field(default=os.getenv("FINDYMAIL_API_KEY"))

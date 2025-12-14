@@ -39,6 +39,9 @@ RoleFerry reads environment variables in the backend (see `backend/app/config.py
 
 - **`OPENAI_API_KEY`**: your OpenAI secret key
 
+**Friendly alias (optional):**
+- **`RoleFerryKey`**: you can use this instead of `OPENAI_API_KEY` for local demos (RoleFerry will accept either).
+
 ### Optional environment variables
 
 - **`OPENAI_MODEL`**: defaults to `gpt-4o-mini`
@@ -63,12 +66,30 @@ $env:LLM_MODE = "openai"           # optional
 $env:ROLEFERRY_MOCK_MODE = "true"  # optional
 ```
 
+Or using the friendly alias:
+
+```powershell
+$env:RoleFerryKey = "YOUR_KEY_HERE"
+$env:OPENAI_MODEL = "gpt-4o-mini"   # optional
+$env:LLM_MODE = "openai"           # optional
+$env:ROLEFERRY_MOCK_MODE = "true"  # optional
+```
+
 ### B) Persistent (saved on your computer)
 
 This makes the variable available in new terminals (you’ll need to restart terminals after setting):
 
 ```powershell
 setx OPENAI_API_KEY "YOUR_KEY_HERE"
+setx OPENAI_MODEL "gpt-4o-mini"
+setx LLM_MODE "openai"
+setx ROLEFERRY_MOCK_MODE "true"
+```
+
+Or using the friendly alias:
+
+```powershell
+setx RoleFerryKey "YOUR_KEY_HERE"
 setx OPENAI_MODEL "gpt-4o-mini"
 setx LLM_MODE "openai"
 setx ROLEFERRY_MOCK_MODE "true"
