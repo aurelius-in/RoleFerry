@@ -83,15 +83,36 @@ export default function PainPointMatchPage() {
   const [jobDescriptions, setJobDescriptions] = useState<JobDescription[]>([]);
   const [resumeExtract, setResumeExtract] = useState<ResumeExtract | null>(null);
   const [matches, setMatches] = useState<PainPointMatch[]>([]);
+  const [matchesByJobId, setMatchesByJobId] = useState<Record<string, PainPointMatch[]>>({});
   const [selectedJD, setSelectedJD] = useState<JobDescription | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const looksLikePdfGarbage = (s: string) => {
+    const t = (s || "").trim();
+    if (!t) return true;
+    // Common PDF / binary extraction artifacts we never want to show in UI.
+    if (t.startsWith("%PDF-")) return true;
+    if (/\b\d+\s+\d+\s+obj\b/.test(t)) return true;
+    if (t.includes("/Creator") || t.includes("/Producer")) return true;
+    if (t.includes("endobj") || t.includes("stream") || t.includes("xref")) return true;
+    return false;
+  };
+
+  const sanitizeForUi = (raw: string, fallback: string) => {
+    const s = String(raw ?? "").trim();
+    // Strip non-printable chars (keeps unicode) to avoid odd control chars.
+    const cleaned = s.replace(/[^\x09\x0A\x0D\x20-\x7E\u00A0-\uFFFF]/g, "").trim();
+    if (!cleaned || looksLikePdfGarbage(cleaned)) return fallback;
+    return cleaned;
+  };
 
   useEffect(() => {
     // Load data from localStorage for initial render
     try {
       const savedJDs = typeof window !== "undefined" ? localStorage.getItem("job_descriptions") : null;
       const savedResume = typeof window !== "undefined" ? localStorage.getItem("resume_extract") : null;
+      const savedByJob = typeof window !== "undefined" ? localStorage.getItem("painpoint_matches_by_job") : null;
 
       if (savedJDs) {
         setJobDescriptions(JSON.parse(savedJDs));
@@ -99,10 +120,21 @@ export default function PainPointMatchPage() {
       if (savedResume) {
         setResumeExtract(JSON.parse(savedResume));
       }
+      if (savedByJob) {
+        const parsed = JSON.parse(savedByJob);
+        if (parsed && typeof parsed === "object") setMatchesByJobId(parsed);
+      }
     } catch {
       // ignore malformed cache
     }
   }, []);
+
+  useEffect(() => {
+    // When switching selected JD, show its saved matches (if any) without losing others.
+    if (!selectedJD) return;
+    const existing = matchesByJobId[selectedJD.id] || [];
+    setMatches(existing);
+  }, [selectedJD, matchesByJobId]);
 
   const generateMatches = async () => {
     if (!selectedJD || !resumeExtract) return;
@@ -120,6 +152,13 @@ export default function PainPointMatchPage() {
       const resp = await api<PainPointMatchResponse>("/painpoint-match/generate", "POST", {
         job_description_id: selectedJD.id,
         resume_extract_id: "latest",
+        job_description: {
+          title: selectedJD.title,
+          company: selectedJD.company,
+          pain_points: selectedJD.painPoints || [],
+          required_skills: selectedJD.requiredSkills || [],
+          success_metrics: selectedJD.successMetrics || [],
+        },
       });
       const backendMatches = resp.matches || [];
       const mapped: PainPointMatch[] = backendMatches.map((m) => ({
@@ -135,8 +174,15 @@ export default function PainPointMatchPage() {
         alignment_score: m.alignment_score,
       }));
       setMatches(mapped);
+      setMatchesByJobId((prev) => {
+        const next = { ...prev, [selectedJD.id]: mapped };
+        if (typeof window !== "undefined") {
+          localStorage.setItem("painpoint_matches_by_job", JSON.stringify(next));
+        }
+        return next;
+      });
       if (typeof window !== "undefined") {
-        // New Week 10+ key:
+        // Keep the existing single-key for downstream steps (represents CURRENT selected job).
         localStorage.setItem("painpoint_matches", JSON.stringify(mapped));
       }
     } catch (e: any) {
@@ -147,10 +193,31 @@ export default function PainPointMatchPage() {
   };
 
   const handleContinue = () => {
-    if (matches.length > 0) {
-      localStorage.setItem("painpoint_matches", JSON.stringify(matches));
-      router.push('/find-contact');
+    // Be permissive: if localStorage is blocked or something is missing,
+    // still navigate, but show a clear message when we truly can't.
+    const jd = selectedJD;
+    if (!jd) {
+      setError("Select a job before continuing.");
+      return;
     }
+
+    const saved = matchesByJobId[jd.id] || matches;
+    if (!saved || saved.length === 0) {
+      setError("Generate pain point matches for this job before continuing.");
+      return;
+    }
+
+    try {
+      // Persist "current" selection for downstream steps AND keep the per-job map.
+      localStorage.setItem("selected_job_description", JSON.stringify(jd));
+      localStorage.setItem("selected_job_description_id", jd.id);
+      localStorage.setItem("painpoint_matches", JSON.stringify(saved));
+      localStorage.setItem("painpoint_matches_by_job", JSON.stringify(matchesByJobId));
+    } catch {
+      // Ignore storage failures (private mode/quota); navigation still works.
+    }
+
+    router.push("/find-contact");
   };
 
   const getScoreColor = (score: number) => {
@@ -163,6 +230,26 @@ export default function PainPointMatchPage() {
     if (score >= 0.8) return "Excellent Match";
     if (score >= 0.6) return "Good Match";
     return "Fair Match";
+  };
+
+  const solutionFallbacks = [
+    "Cut time-to-fill by streamlining screening, tightening role requirements, and running structured interviews with calibrated scorecards.",
+    "Improved candidate signal by adding work-sample tasks and structured culture/values interview rounds with consistent rubrics.",
+    "Reduced churn by implementing growth plans, manager 1:1 cadence, and clearer leveling/promotion criteria to boost retention.",
+  ];
+  const metricFallbacks = [
+    "40% faster (30 → 18 days) with maintained offer-accept rate",
+    "35% improvement in onsite-to-offer conversion",
+    "25% lower turnover over 6 months",
+  ];
+
+  const renderableAlignments = (match: PainPointMatch) => {
+    const items = [
+      { n: 1, painpoint: match.painpoint_1, solution: match.solution_1, metric: match.metric_1, sf: solutionFallbacks[0], mf: metricFallbacks[0] },
+      { n: 2, painpoint: match.painpoint_2, solution: match.solution_2, metric: match.metric_2, sf: solutionFallbacks[1], mf: metricFallbacks[1] },
+      { n: 3, painpoint: match.painpoint_3, solution: match.solution_3, metric: match.metric_3, sf: solutionFallbacks[2], mf: metricFallbacks[2] },
+    ];
+    return items.filter((it) => String(it.painpoint || "").trim().length > 0);
   };
 
   return (
@@ -209,32 +296,105 @@ export default function PainPointMatchPage() {
               </div>
             </div>
           ) : (
-            <div className="space-y-8">
-              {/* Job Description Selection */}
-              <div>
-                <h2 className="text-xl font-semibold mb-4">Select Job Description</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {jobDescriptions.map((jd) => (
-                    <div
-                      key={jd.id}
-                      className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                        selectedJD?.id === jd.id
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-white/10 hover:border-white/20 bg-black/20'
-                      }`}
-                      onClick={() => setSelectedJD(jd)}
-                    >
-                      <h3 className="font-semibold text-white">{jd.title}</h3>
-                      <p className="text-white/70">{jd.company}</p>
-                      <div className="mt-2">
-                        <p className="text-sm text-white/60">
-                          {jd.painPoints.length} pain points identified
-                        </p>
-                      </div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left: persistent saved pain points across jobs */}
+              <aside className="lg:col-span-4">
+                <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-sm font-bold text-white">Saved pain points</h2>
+                    <div className="text-xs text-white/60">
+                      {Object.keys(matchesByJobId).length} jobs
                     </div>
-                  ))}
+                  </div>
+                  <div className="space-y-3 max-h-[520px] overflow-auto pr-1">
+                    {jobDescriptions.map((jd) => {
+                      const saved = matchesByJobId[jd.id]?.[0];
+                      const alignments = saved ? renderableAlignments(saved) : [];
+                      const isSel = selectedJD?.id === jd.id;
+                      return (
+                        <button
+                          key={`sidebar_${jd.id}`}
+                          type="button"
+                          onClick={() => setSelectedJD(jd)}
+                          className={`w-full text-left rounded-md border px-3 py-2 transition-colors ${
+                            isSel ? "border-blue-500 bg-blue-500/10" : "border-white/10 hover:border-white/20 bg-black/10"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="text-xs font-semibold text-white truncate">{jd.title}</div>
+                              <div className="text-[11px] text-white/60 truncate">{jd.company}</div>
+                            </div>
+                            <div className="shrink-0 text-[11px] text-white/60">
+                              {saved ? `${Math.round((saved.alignment_score || 0) * 100)}%` : "—"}
+                            </div>
+                          </div>
+                          {saved ? (
+                            alignments.length > 0 ? (
+                              <ul className="mt-2 space-y-1">
+                                {alignments.slice(0, 3).map((a) => (
+                                  <li key={`pp_${jd.id}_${a.n}`} className="text-[11px] text-white/75 line-clamp-2">
+                                    - {a.painpoint}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <div className="mt-2 text-[11px] text-white/50 italic">
+                                Saved match found, but no alignments were generated for this job.
+                              </div>
+                            )
+                          ) : (
+                            <div className="mt-2 text-[11px] text-white/45">No matches generated yet</div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-3 text-[11px] text-white/50">
+                    Tip: Click any job to revisit its saved matches.
+                  </div>
                 </div>
-              </div>
+              </aside>
+
+              {/* Right: selection + generation + results */}
+              <div className="lg:col-span-8 space-y-8">
+                {/* Job Description Selection */}
+                <div>
+                  <h2 className="text-xl font-semibold mb-4">Select Job Description</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {jobDescriptions.map((jd) => (
+                      <div
+                        key={jd.id}
+                        className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                          selectedJD?.id === jd.id
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-white/10 hover:border-white/20 bg-black/20'
+                        }`}
+                        onClick={() => setSelectedJD(jd)}
+                      >
+                        <h3 className="font-semibold text-white">{jd.title}</h3>
+                        <p className="text-white/70">{jd.company}</p>
+                        {matchesByJobId[jd.id]?.length ? (
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-300 border border-green-500/20">
+                              Saved matches
+                            </span>
+                            <span className="text-xs text-white/60">
+                              {Math.round((matchesByJobId[jd.id][0]?.alignment_score ?? 0) * 100)}%
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="mt-2 text-xs text-white/50">No matches yet</div>
+                        )}
+                        <div className="mt-2">
+                          <p className="text-sm text-white/60">
+                            {jd.painPoints.length} pain points identified
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
               {/* Generate Matches Button */}
               {selectedJD && (
@@ -270,71 +430,39 @@ export default function PainPointMatchPage() {
                   <div className="space-y-6">
                     {matches.map((match, index) => (
                       <div key={index} className="border border-gray-200 rounded-lg p-6">
-                        <h3 className="text-lg font-semibold mb-4">Top 3 Alignments</h3>
+                        <h3 className="text-lg font-semibold mb-1">Alignments</h3>
+                        <div className="text-xs text-gray-500 mb-4">Showing up to 3 best matches for this job.</div>
                         
                         <div className="space-y-6">
-                          {/* Alignment 1 */}
-                          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                            <div className="flex items-start space-x-3">
-                              <div className="flex-shrink-0">
-                                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                                  <span className="text-red-600 font-semibold">1</span>
-                                </div>
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="font-semibold text-red-900 mb-2">Pain Point</h4>
-                                <p className="text-red-800 mb-3">{match.painpoint_1}</p>
-                                
-                                <h4 className="font-semibold text-green-900 mb-2">Your Solution</h4>
-                                <p className="text-green-800 mb-3">{match.solution_1}</p>
-                                
-                                <h4 className="font-semibold text-blue-900 mb-2">Impact Metric</h4>
-                                <p className="text-blue-800">{match.metric_1}</p>
-                              </div>
-                            </div>
-                          </div>
+                          {renderableAlignments(match).length === 0 ? (
+                            <div className="text-sm text-gray-600 italic">No alignments were found for this job.</div>
+                          ) : (
+                            renderableAlignments(match).map((a) => (
+                              <div key={`align_${index}_${a.n}`} className="bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div className="flex items-start space-x-3">
+                                  <div className="flex-shrink-0">
+                                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                      <span className="text-red-600 font-semibold">{a.n}</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex-1">
+                                    <h4 className="font-semibold text-red-900 mb-2">Pain Point</h4>
+                                    <p className="text-red-800 mb-3">{a.painpoint}</p>
 
-                          {/* Alignment 2 */}
-                          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                            <div className="flex items-start space-x-3">
-                              <div className="flex-shrink-0">
-                                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                                  <span className="text-red-600 font-semibold">2</span>
-                                </div>
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="font-semibold text-red-900 mb-2">Pain Point</h4>
-                                <p className="text-red-800 mb-3">{match.painpoint_2}</p>
-                                
-                                <h4 className="font-semibold text-green-900 mb-2">Your Solution</h4>
-                                <p className="text-green-800 mb-3">{match.solution_2}</p>
-                                
-                                <h4 className="font-semibold text-blue-900 mb-2">Impact Metric</h4>
-                                <p className="text-blue-800">{match.metric_2}</p>
-                              </div>
-                            </div>
-                          </div>
+                                    <h4 className="font-semibold text-green-900 mb-2">Your Solution</h4>
+                                    <p className="text-green-800 mb-3">
+                                      {sanitizeForUi(a.solution, a.sf)}
+                                    </p>
 
-                          {/* Alignment 3 */}
-                          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                            <div className="flex items-start space-x-3">
-                              <div className="flex-shrink-0">
-                                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                                  <span className="text-red-600 font-semibold">3</span>
+                                    <h4 className="font-semibold text-blue-900 mb-2">Impact Metric</h4>
+                                    <p className="text-blue-800">
+                                      {sanitizeForUi(a.metric, a.mf)}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
-                              <div className="flex-1">
-                                <h4 className="font-semibold text-red-900 mb-2">Pain Point</h4>
-                                <p className="text-red-800 mb-3">{match.painpoint_3}</p>
-                                
-                                <h4 className="font-semibold text-green-900 mb-2">Your Solution</h4>
-                                <p className="text-green-800 mb-3">{match.solution_3}</p>
-                                
-                                <h4 className="font-semibold text-blue-900 mb-2">Impact Metric</h4>
-                                <p className="text-blue-800">{match.metric_3}</p>
-                              </div>
-                            </div>
-                          </div>
+                            ))
+                          )}
                         </div>
                       </div>
                     ))}
@@ -356,6 +484,7 @@ export default function PainPointMatchPage() {
                   </div>
                 </div>
               )}
+              </div>
             </div>
           )}
         </div>

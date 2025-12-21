@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import json
+import re
 
 router = APIRouter()
 from ..clients.openai_client import get_openai_client, extract_json_from_text
@@ -42,6 +43,8 @@ class ResearchData(BaseModel):
 class ResearchRequest(BaseModel):
     contact_ids: List[str]
     company_name: str
+    # Optional: pass selected job context so we can research the right org unit for large companies.
+    selected_job_description: Optional[Dict[str, Any]] = None
 
 class ResearchResponse(BaseModel):
     success: bool
@@ -55,14 +58,82 @@ async def conduct_research(request: ResearchRequest):
     Conduct research on company and contacts.
     """
     try:
+        # Decide whether to research company-level only or a specific division/department.
+        company = (request.company_name or "").strip()
+        jd = request.selected_job_description or {}
+        jd_title = str(jd.get("title") or "").strip()
+
+        BIG_COMPANIES = {
+            "google",
+            "alphabet",
+            "microsoft",
+            "amazon",
+            "meta",
+            "apple",
+            "netflix",
+            "tesla",
+            "oracle",
+            "ibm",
+            "salesforce",
+        }
+
+        def infer_org_unit(company_name: str, job_title: str) -> Optional[str]:
+            t = (job_title or "").strip()
+            if not t:
+                return None
+            # Try to extract a clear unit from common patterns like "Role, Unit" or "Role - Unit".
+            m = re.search(r"[,\\-–—]\\s*([A-Za-z][A-Za-z0-9 &/]+)$", t)
+            if m:
+                candidate = m.group(1).strip()
+                if 3 <= len(candidate) <= 60:
+                    return candidate
+
+            low = t.lower()
+            # Common large-org divisions
+            if "cloud" in low:
+                return "Cloud"
+            if "youtube" in low:
+                return "YouTube"
+            if "ads" in low or "advertis" in low:
+                return "Ads"
+            if "search" in low:
+                return "Search"
+            if "android" in low:
+                return "Android"
+            if "maps" in low:
+                return "Maps"
+            if "workspace" in low or "g suite" in low:
+                return "Workspace"
+            if "security" in low:
+                return "Security"
+            if "payments" in low:
+                return "Payments"
+            if "ai" in low or "genai" in low or "ml" in low:
+                return "AI/ML"
+            return None
+
+        is_big_company = company.lower() in BIG_COMPANIES
+        org_unit = infer_org_unit(company, jd_title) if is_big_company else None
+        scope_label = "division" if (is_big_company and org_unit) else "company"
+        scope_target = f"{company} — {org_unit}" if (scope_label == "division") else company
+
         # Build a realistic mock "research corpus" (what a real provider pipeline would fetch).
         # GPT then summarizes this corpus into structured fields for the UI.
-        company_slug = request.company_name.lower().replace(" ", "")
+        company_slug = company.lower().replace(" ", "")
         corpus = {
-            "company_name": request.company_name,
+            "company_name": company,
+            "research_scope": scope_label,
+            "scope_target": scope_target,
+            "job_title": jd_title,
+            "job_required_skills": jd.get("required_skills") or [],
+            "job_pain_points": jd.get("pain_points") or [],
+            "job_success_metrics": jd.get("success_metrics") or [],
             "about": (
-                f"{request.company_name} builds cloud infrastructure and analytics software for enterprise teams. "
-                "Customers use it to improve onboarding, retention, and decision-making with better instrumentation."
+                (
+                    f"{company} is a large organization. This research is focused on the {org_unit} org and its priorities."
+                    if scope_label == "division"
+                    else f"{company} builds cloud infrastructure and analytics software for enterprise teams."
+                )
             ),
             "product_bullets": [
                 "Event instrumentation SDK + schema governance",
@@ -71,14 +142,14 @@ async def conduct_research(request: ResearchRequest):
             ],
             "recent_news_raw": [
                 {
-                    "title": f"{request.company_name} expands into EMEA with new enterprise partnerships",
+                    "title": f"{scope_target} expands into EMEA with new enterprise partnerships",
                     "snippet": "The company announced new channel partnerships and a roadmap focused on faster onboarding and improved retention analytics.",
                     "date": "2024-01-15",
                     "source": "TechCrunch",
                     "url": "https://techcrunch.com/funding-news",
                 },
                 {
-                    "title": f"{request.company_name} launches an AI-assisted analytics workflow",
+                    "title": f"{scope_target} launches an AI-assisted analytics workflow",
                     "snippet": "A new feature helps teams explain dashboard changes and propose next steps based on trends.",
                     "date": "2024-01-10",
                     "source": "VentureBeat",
@@ -89,7 +160,7 @@ async def conduct_research(request: ResearchRequest):
                 {
                     "name": "Sarah Johnson",
                     "title": "VP of Engineering",
-                    "company": request.company_name,
+                    "company": company,
                     "linkedin_url": "https://linkedin.com/in/sarahjohnson",
                     "highlights": [
                         "Scaled a platform team from 6 to 20 engineers",
@@ -115,6 +186,8 @@ async def conduct_research(request: ResearchRequest):
                 "content": (
                     "You are a company + contact research summarizer for outreach.\n\n"
                     "Given a research corpus JSON (raw provider outputs), produce a clean structured summary.\n"
+                    "If research_scope is 'division', focus the company_summary on the scope_target org (division/team), "
+                    "not the entire company.\n"
                     "Return ONLY a JSON object with keys:\n"
                     "- company_summary: { name, description, industry, size, founded, headquarters, website, linkedin_url }\n"
                     "- contact_bios: array of { name, title, company, bio, experience, education, skills, linkedin_url }\n"
@@ -127,7 +200,7 @@ async def conduct_research(request: ResearchRequest):
         ]
         stub_json = {
             "company_summary": {
-                "name": request.company_name,
+                "name": scope_target,
                 "description": corpus["about"],
                 "industry": "Enterprise Software",
                 "size": "501-1,000 employees",
@@ -140,7 +213,7 @@ async def conduct_research(request: ResearchRequest):
                 {
                     "name": "Sarah Johnson",
                     "title": "VP of Engineering",
-                    "company": request.company_name,
+                    "company": company,
                     "bio": "Engineering leader focused on reliability, cost efficiency, and team scaling.",
                     "experience": "10+ years leading platform and product engineering teams.",
                     "education": "MBA Stanford; BS Computer Science UC Berkeley",
@@ -166,9 +239,9 @@ async def conduct_research(request: ResearchRequest):
             ],
             "shared_connections": corpus["shared_connections_raw"],
             "hooks": [
-                "Tie outreach to onboarding activation + retention outcomes",
-                "Reference the new AI-assisted analytics launch as momentum",
-                "Offer a low-lift 2–3 bullet plan instead of a generic pitch",
+                "Focus outreach on the specific team’s outcomes, not generic company mission statements",
+                "Reference a relevant initiative/news item tied to the org’s domain",
+                "Offer a concrete 2–3 bullet plan aligned to the job’s pain points",
             ],
         }
 
@@ -229,6 +302,8 @@ async def conduct_research(request: ResearchRequest):
             research_data=mock_research_data,
             helper={
                 "hooks": hooks,
+                "research_scope": scope_label,
+                "scope_target": scope_target,
                 "corpus_preview": {
                     "product_bullets": corpus.get("product_bullets", []),
                     "recent_news_raw": corpus.get("recent_news_raw", []),

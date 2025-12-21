@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import logging
 import json
+import io
 
 from sqlalchemy import text as sql_text, bindparam
 from sqlalchemy.dialects.postgresql import JSONB
@@ -58,14 +59,65 @@ async def upload_resume(file: UploadFile = File(...)):
         if not file.filename.lower().endswith((".pdf", ".docx", ".txt")):
             raise HTTPException(status_code=400, detail="Only PDF, DOCX and TXT files are supported")
 
-        # Read file contents and attempt a simple text decode.
-        # For Week 9 we don't do true PDF/DOCX parsing; this is enough
-        # to exercise the rule-based parser and store structured data.
+        # Read file contents and extract text. We prefer true PDF/DOCX parsing;
+        # if we can't extract meaningful text, we return an explicit error rather
+        # than showing canned demo content (which confuses demos).
         contents = await file.read()
-        try:
-            raw_text = contents.decode("utf-8", errors="ignore")
-        except Exception:
-            raw_text = ""
+
+        def extract_text_from_pdf(data: bytes) -> str:
+            try:
+                from pypdf import PdfReader  # type: ignore
+            except Exception as e:
+                raise HTTPException(status_code=500, detail="PDF parsing dependency missing") from e
+            reader = PdfReader(io.BytesIO(data))
+            parts: List[str] = []
+            for page in reader.pages:
+                try:
+                    t = page.extract_text() or ""
+                except Exception:
+                    t = ""
+                if t.strip():
+                    parts.append(t)
+            return "\n\n".join(parts).strip()
+
+        def extract_text_from_docx(data: bytes) -> str:
+            try:
+                import docx  # type: ignore
+            except Exception as e:
+                raise HTTPException(status_code=500, detail="DOCX parsing dependency missing") from e
+            d = docx.Document(io.BytesIO(data))
+            parts: List[str] = []
+            for p in d.paragraphs:
+                if p.text and p.text.strip():
+                    parts.append(p.text.strip())
+            # Tables (some resumes are table-heavy)
+            for table in d.tables:
+                for row in table.rows:
+                    for cell in row.cells:
+                        txt = (cell.text or "").strip()
+                        if txt:
+                            parts.append(txt)
+            return "\n".join(parts).strip()
+
+        filename = (file.filename or "").lower()
+        raw_text = ""
+        if filename.endswith(".pdf"):
+            raw_text = extract_text_from_pdf(contents)
+        elif filename.endswith(".docx"):
+            raw_text = extract_text_from_docx(contents)
+        else:
+            try:
+                raw_text = contents.decode("utf-8", errors="ignore")
+            except Exception:
+                raw_text = ""
+
+        # If we couldn't extract real text, stop and tell the user what happened.
+        # (Common cause: scanned/image-only PDFs; requires OCR.)
+        if not raw_text or len(raw_text.strip()) < 200:
+            raise HTTPException(
+                status_code=400,
+                detail="Could not extract readable text from this file. If it's a scanned PDF, export as text-based PDF or upload a DOCX/TXT instead.",
+            )
 
         # Run rule-based parser to populate resume.* style fields for storage
         parsed = parse_resume(raw_text or "")
@@ -96,8 +148,9 @@ async def upload_resume(file: UploadFile = File(...)):
         except Exception:
             pass
 
-        # Build a ResumeExtract for the UI. Prefer GPT-backed parsing when
-        # configured; otherwise fall back to a deterministic mock structure.
+        # Build a ResumeExtract for the UI. Prefer GPT-backed parsing when configured.
+        # We no longer fall back to canned demo resume content here; if GPT fails,
+        # we fall back to a minimal structure derived from the rule-based parser.
         client = get_openai_client()
         extract_obj: Optional[ResumeExtract] = None
 
@@ -169,58 +222,77 @@ async def upload_resume(file: UploadFile = File(...)):
                         tenure=tenure,
                     )
             except Exception:
-                # On any GPT failure, we'll fall back to the deterministic mock below.
+                # On any GPT failure, we'll fall back to the rule-based parser output below.
                 extract_obj = None
 
+        # If GPT succeeded but missed fields, backfill from rule-based parsing
+        if extract_obj is not None:
+            if not extract_obj.skills:
+                extract_obj.skills = [str(s) for s in (parsed.get("Skills") or [])]
+            if not extract_obj.accomplishments:
+                extract_obj.accomplishments = [str(a) for a in (parsed.get("NotableAccomplishments") or [])]
+            if not extract_obj.tenure:
+                tenure_raw = parsed.get("Tenure") or []
+                if isinstance(tenure_raw, list):
+                    extract_obj.tenure = [
+                        Tenure(
+                            company=str(t.get("company") or ""),
+                            duration=str(t.get("duration") or ""),
+                            role=str(t.get("role") or ""),
+                        )
+                        for t in tenure_raw
+                        if isinstance(t, dict)
+                    ]
+
         if extract_obj is None:
-            # Deterministic mock structure as a safe fallback (previous behavior)
+            # Rule-based fallback derived from the parsed resume (best-effort).
+            # This should still reflect the uploaded resume text, not canned demo data.
+            positions: List[Position] = []
+            for p in (parsed.get("WorkExperience") or parsed.get("positions") or [])[:6]:
+                if isinstance(p, dict):
+                    positions.append(
+                        Position(
+                            company=str(p.get("company") or p.get("Company") or ""),
+                            title=str(p.get("title") or p.get("Title") or ""),
+                            start_date=str(p.get("start_date") or p.get("StartDate") or ""),
+                            end_date=str(p.get("end_date") or p.get("EndDate") or ""),
+                            current=bool(p.get("current") or False),
+                            description=str(p.get("description") or p.get("Description") or ""),
+                        )
+                    )
+
+            key_metrics: List[KeyMetric] = []
+            for m in (parsed.get("KeyMetrics") or parsed.get("key_metrics") or [])[:10]:
+                if isinstance(m, dict):
+                    key_metrics.append(
+                        KeyMetric(
+                            metric=str(m.get("metric") or m.get("Metric") or ""),
+                            value=str(m.get("value") or m.get("Value") or ""),
+                            context=str(m.get("context") or m.get("Context") or ""),
+                        )
+                    )
+                else:
+                    key_metrics.append(KeyMetric(metric=str(m), value="", context=""))
+
+            skills = [str(s) for s in (parsed.get("Skills") or parsed.get("skills") or [])][:40]
+            accomplishments = [str(a) for a in (parsed.get("NotableAccomplishments") or parsed.get("accomplishments") or [])][:25]
+            tenure: List[Tenure] = []
+            for t in (parsed.get("Tenure") or parsed.get("tenure") or [])[:10]:
+                if isinstance(t, dict):
+                    tenure.append(
+                        Tenure(
+                            company=str(t.get("company") or t.get("Company") or ""),
+                            duration=str(t.get("duration") or t.get("Duration") or ""),
+                            role=str(t.get("role") or t.get("Role") or ""),
+                        )
+                    )
+
             extract_obj = ResumeExtract(
-                positions=[
-                    Position(
-                        company="TechCorp Inc.",
-                        title="Senior Software Engineer",
-                        start_date="2022-01",
-                        end_date="2024-12",
-                        current=True,
-                        description="Led development of microservices architecture, reducing system latency by 40%",
-                    ),
-                    Position(
-                        company="StartupXYZ",
-                        title="Full Stack Developer",
-                        start_date="2020-06",
-                        end_date="2021-12",
-                        current=False,
-                        description="Built customer-facing web application serving 10K+ users",
-                    ),
-                ],
-                key_metrics=[
-                    KeyMetric(
-                        metric="System Performance",
-                        value="40% reduction",
-                        context="in latency through microservices optimization",
-                    ),
-                    KeyMetric(
-                        metric="User Growth",
-                        value="10K+ users",
-                        context="served through customer-facing application",
-                    ),
-                    KeyMetric(
-                        metric="Team Leadership",
-                        value="5 engineers",
-                        context="managed in cross-functional team",
-                    ),
-                ],
-                skills=["Python", "JavaScript", "React", "Node.js", "AWS", "Docker", "PostgreSQL"],
-                accomplishments=[
-                    "Reduced system latency by 40% through microservices architecture",
-                    "Led team of 5 engineers in cross-functional projects",
-                    "Built scalable web application serving 10K+ users",
-                    "Implemented CI/CD pipeline reducing deployment time by 60%",
-                ],
-                tenure=[
-                    Tenure(company="TechCorp Inc.", duration="2 years", role="Senior Software Engineer"),
-                    Tenure(company="StartupXYZ", duration="1.5 years", role="Full Stack Developer"),
-                ],
+                positions=positions,
+                key_metrics=key_metrics,
+                skills=skills,
+                accomplishments=accomplishments,
+                tenure=tenure,
             )
 
         return ResumeExtractResponse(

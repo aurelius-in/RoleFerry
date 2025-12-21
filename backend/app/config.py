@@ -1,6 +1,24 @@
+import os
+from pathlib import Path
+
 from pydantic import BaseModel
 from pydantic import Field
-import os
+
+# Load local environment files (if present) for developer convenience.
+# This enables workflows like putting RoleFerryKey in backend/.env for local testing.
+try:
+    from dotenv import load_dotenv  # type: ignore
+
+    _repo_root = Path(__file__).resolve().parents[2]
+    _backend_dir = _repo_root / "backend"
+    # If a host already provides env vars, we prefer them; however, for local demos
+    # it's common to have empty/placeholder env vars in a terminal session.
+    # Using override=True here ensures backend/.env actually takes effect locally.
+    load_dotenv(_repo_root / ".env", override=False)
+    load_dotenv(_backend_dir / ".env", override=True)
+except Exception:
+    # dotenv is optional in some deployments; env vars may be provided by the host.
+    pass
 
 
 class Settings(BaseModel):
@@ -26,6 +44,8 @@ class Settings(BaseModel):
     openai_base_url: str | None = Field(default=os.getenv("OPENAI_BASE_URL"))
     findymail_api_key: str | None = Field(default=os.getenv("FINDYMAIL_API_KEY"))
     neverbounce_api_key: str | None = Field(default=os.getenv("NEVERBOUNCE_API_KEY"))
+    # People Data Labs (decision-maker search)
+    pdl_api_key: str | None = Field(default=os.getenv("PDL_API_KEY"))
 
     # Google Sheets (optional)
     gsheet_service_json_path: str | None = Field(default=os.getenv("GOOGLE_SHEETS_SERVICE_JSON_PATH"))

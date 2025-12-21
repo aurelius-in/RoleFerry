@@ -115,6 +115,12 @@ export default function ResumePage() {
         const backendExtract = data?.extract;
         if (backendExtract) {
           try {
+            const backendBusinessChallenges = backendExtract.business_challenges;
+            const mappedBusinessChallenges =
+              Array.isArray(backendBusinessChallenges) && backendBusinessChallenges.length
+                ? backendBusinessChallenges
+                : [];
+
             const mapped: ResumeExtract = {
               positions: (backendExtract.positions || []).map((p: any) => ({
                 company: p.company,
@@ -130,7 +136,8 @@ export default function ResumePage() {
                 context: m.context,
               })),
               skills: backendExtract.skills || [],
-              businessChallenges: backendExtract.business_challenges || mockExtract.businessChallenges,
+              // Don't show canned demo bullets for a real uploaded resume.
+              businessChallenges: mappedBusinessChallenges,
               accomplishments: backendExtract.accomplishments || mockExtract.accomplishments,
               tenure: (backendExtract.tenure || []).map((t: any) => ({
                 company: t.company,

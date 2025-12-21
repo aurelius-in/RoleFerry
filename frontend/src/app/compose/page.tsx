@@ -68,10 +68,18 @@ export default function ComposePage() {
       selectedJD = JSON.parse(localStorage.getItem("selected_job_description") || "null");
     } catch {}
     try {
-      matches =
-        JSON.parse(localStorage.getItem("painpoint_matches") || "null") ||
-        JSON.parse(localStorage.getItem(legacyPainpointKey) || "[]") ||
-        JSON.parse(localStorage.getItem("pain_point_matches") || "[]");
+      const selectedJobId = String(localStorage.getItem("selected_job_description_id") || "").trim();
+      const byJobRaw = localStorage.getItem("painpoint_matches_by_job");
+      if (selectedJobId && byJobRaw) {
+        const byJob = JSON.parse(byJobRaw) as Record<string, any[]>;
+        matches = byJob?.[selectedJobId] || [];
+      }
+      if (!matches || !Array.isArray(matches) || matches.length === 0) {
+        matches =
+          JSON.parse(localStorage.getItem("painpoint_matches") || "null") ||
+          JSON.parse(localStorage.getItem(legacyPainpointKey) || "[]") ||
+          JSON.parse(localStorage.getItem("pain_point_matches") || "[]");
+      }
     } catch {}
 
     const firstContact = selectedContacts?.[0] || {};
@@ -135,9 +143,22 @@ export default function ComposePage() {
         user_mode: mode,
         variables,
         painpoint_matches:
-          JSON.parse(localStorage.getItem("painpoint_matches") || "null") ||
-          JSON.parse(localStorage.getItem(legacyPainpointKey) || "[]") ||
-          JSON.parse(localStorage.getItem("pain_point_matches") || "[]"),
+          (() => {
+            try {
+              const selectedJobId = String(localStorage.getItem("selected_job_description_id") || "").trim();
+              const byJobRaw = localStorage.getItem("painpoint_matches_by_job");
+              if (selectedJobId && byJobRaw) {
+                const byJob = JSON.parse(byJobRaw) as Record<string, any[]>;
+                const m = byJob?.[selectedJobId];
+                if (m && Array.isArray(m) && m.length) return m;
+              }
+            } catch {}
+            return (
+              JSON.parse(localStorage.getItem("painpoint_matches") || "null") ||
+              JSON.parse(localStorage.getItem(legacyPainpointKey) || "[]") ||
+              JSON.parse(localStorage.getItem("pain_point_matches") || "[]")
+            );
+          })(),
         context_data: {
           context_research: JSON.parse(localStorage.getItem("context_research") || "{}"),
           selected_job_description: JSON.parse(localStorage.getItem("selected_job_description") || "null"),

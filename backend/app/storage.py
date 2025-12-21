@@ -39,6 +39,7 @@ class InMemoryStore:
         self.demo_latest_resume: Dict[str, Any] | None = None
         self.demo_latest_resume_text: str | None = None
         self.demo_job_preferences: Dict[str, Any] | None = None
+        self.demo_job_recommendations: List[Dict[str, Any]] = []
         self.demo_selected_contacts: List[Dict[str, Any]] = []
         self.demo_research: Dict[str, Any] | None = None
         self.demo_painpoint_matches: List[Dict[str, Any]] = []

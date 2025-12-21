@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from datetime import datetime, timezone
+import os
 
 from prometheus_client import Counter, generate_latest
 from redis import Redis
@@ -100,6 +101,9 @@ async def llm_healthcheck():
         "llm_mode": settings.llm_mode,
         "should_use_real_llm": client.should_use_real_llm,
         "model": settings.openai_model,
+        # Extra diagnostics (do NOT expose secrets)
+        "env_has_RoleFerryKey": bool(os.getenv("RoleFerryKey")),
+        "env_has_OPENAI_API_KEY": bool(os.getenv("OPENAI_API_KEY")),
     }
 
     # Run a very small probe; this will return a stubbed response in mock_mode.

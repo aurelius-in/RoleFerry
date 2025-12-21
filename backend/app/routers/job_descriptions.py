@@ -3,6 +3,11 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import logging
 import json
+import re
+import html as html_lib
+import hashlib
+from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 from sqlalchemy import text as sql_text, bindparam
 from sqlalchemy.dialects.postgresql import JSONB
@@ -31,6 +36,7 @@ class JobDescriptionResponse(BaseModel):
     success: bool
     message: str
     job_description: Optional[JobDescription] = None
+    job_descriptions: Optional[List[JobDescription]] = None
 
 class JobDescriptionsListResponse(BaseModel):
     success: bool
@@ -40,6 +46,226 @@ class JobDescriptionsListResponse(BaseModel):
 class JobImportRequest(BaseModel):
     url: Optional[str] = None
     text: Optional[str] = None
+
+
+def _html_to_text(raw_html: str) -> str:
+    """
+    Very lightweight HTML-to-text. Good enough for job descriptions / listings.
+    Avoids adding heavy parsing deps.
+    """
+    s = raw_html or ""
+    # Remove script/style blocks
+    # NOTE: backref is \1 (not \\1) because this is a raw regex string.
+    s = re.sub(r"(?is)<(script|style|noscript)[^>]*>.*?</\1>", " ", s)
+    # Add newlines around common block tags
+    s = re.sub(r"(?i)</?(p|div|br|li|ul|ol|h1|h2|h3|h4|h5|h6|section|article|header|footer)[^>]*>", "\n", s)
+    # Strip remaining tags
+    s = re.sub(r"(?is)<[^>]+>", " ", s)
+    s = html_lib.unescape(s)
+    # Normalize whitespace
+    s = s.replace("\r", "\n")
+    s = re.sub(r"\n{3,}", "\n\n", s)
+    s = re.sub(r"[ \t]{2,}", " ", s)
+    return s.strip()
+
+
+def _extract_google_careers_job_urls(page_html: str) -> List[str]:
+    """
+    Best-effort extractor for Google Careers results pages.
+    We look for job detail paths like:
+      /about/careers/applications/jobs/results/<id>
+    and ignore the listing results/?... URL.
+    """
+    if not page_html:
+        return []
+    # Google pages often embed links as escaped sequences inside JS blobs.
+    normalized = (
+        page_html.replace("\\u002F", "/")
+        .replace("\\/", "/")
+        .replace("&amp;", "&")
+    )
+
+    # Primary pattern (works on the listing page HTML):
+    # href="jobs/results/<id>-<slug>?..."
+    hrefs = set(
+        re.findall(
+            r'href="(jobs/results/[^"]+)"',
+            normalized,
+            flags=re.I,
+        )
+    )
+    cleaned: List[str] = []
+    for h in hrefs:
+        if h.startswith("jobs/results/?"):
+            # pagination / result links, not job details
+            continue
+        cleaned.append("https://www.google.com/about/careers/applications/" + h.lstrip("/"))
+
+    # Secondary fallback: absolute-ish paths (rare but keep it)
+    paths = set(
+        re.findall(
+            r"/about/careers/applications/jobs/results/\\d+[\\w/%\\-]*",
+            normalized,
+            flags=re.I,
+        )
+    )
+    for p in paths:
+        if "results/?" in p:
+            continue
+        cleaned.append("https://www.google.com" + p)
+
+    # Stable order for deterministic demos
+    return sorted(set(cleaned))
+
+
+async def _fetch_url_text(url: str) -> str:
+    import httpx
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
+    async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
+        resp = await client.get(url, headers=headers)
+        resp.raise_for_status()
+        return resp.text
+
+
+def _now_iso_z() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+_KNOWN_SKILLS: List[str] = [
+    # Languages
+    "Python",
+    "JavaScript",
+    "TypeScript",
+    "Java",
+    "Go",
+    "Golang",
+    "C++",
+    "C#",
+    "Ruby",
+    "PHP",
+    "SQL",
+    # Frameworks / Frontend
+    "React",
+    "Next.js",
+    "Node.js",
+    "Express",
+    "Django",
+    "Flask",
+    "FastAPI",
+    "Spring",
+    # Cloud / DevOps
+    "AWS",
+    "GCP",
+    "Google Cloud",
+    "Azure",
+    "Docker",
+    "Kubernetes",
+    "Terraform",
+    # Data
+    "PostgreSQL",
+    "MySQL",
+    "Redis",
+    "Kafka",
+    # AI/ML
+    "LLM",
+    "Machine Learning",
+    "Deep Learning",
+]
+
+
+def _extract_skills(text: str) -> List[str]:
+    """
+    Best-effort skill extraction from raw job description text.
+    We only return skills we can actually find in the content, rather than demo defaults.
+    """
+    hay = f" {text or ''} ".lower()
+    found: List[str] = []
+    for skill in _KNOWN_SKILLS:
+        needle = skill.lower()
+        # Very light boundary matching; works well enough for common skill tokens.
+        if re.search(rf"(^|[^a-z0-9]){re.escape(needle)}([^a-z0-9]|$)", hay):
+            found.append(skill)
+    # De-dupe while preserving order
+    seen = set()
+    out: List[str] = []
+    for s in found:
+        if s not in seen:
+            out.append(s)
+            seen.add(s)
+    return out
+
+
+def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, str]:
+    title = ""
+    company = ""
+
+    lines = [ln.strip() for ln in (content or "").splitlines() if ln.strip()]
+    # Title: first non-empty line is often usable after HTML-to-text.
+    if lines:
+        title = lines[0][:120]
+
+    # Company: explicit "Company:" wins.
+    for ln in lines[:40]:
+        if ln.lower().startswith("company:"):
+            company = (ln.split(":", 1)[1].strip() or "")[:120]
+            break
+
+    # URL-based fallback
+    if url and not company:
+        host = urlparse(url).netloc.lower()
+        host = host.replace("www.", "")
+        if "google.com" in host:
+            company = "Google"
+        elif host:
+            company = host.split(":")[0].split(".")[0].capitalize()
+
+    if not title:
+        title = "Job Description"
+    if not company:
+        company = "Unknown"
+    return title, company
+
+
+def _extract_key_lines(content: str, max_items: int, keywords: List[str]) -> List[str]:
+    """
+    Pull bullet-like lines or strong sentences that look meaningful.
+    Used as a reasonable fallback for pain_points / success_metrics when GPT isn't available.
+    """
+    text = content or ""
+    candidates: List[str] = []
+    for raw in text.splitlines():
+        ln = raw.strip()
+        if not ln:
+            continue
+        ln = re.sub(r"^[\-\*\u2022]\s+", "", ln)  # remove leading bullets
+        if len(ln) < 24:
+            continue
+        score = 0
+        low = ln.lower()
+        if any(k in low for k in keywords):
+            score += 2
+        if re.search(r"\d|%|\$", ln):
+            score += 1
+        if score > 0:
+            candidates.append((score, ln[:200]))  # type: ignore[list-item]
+
+    # Sort by score desc, then keep stable order-ish by first appearance.
+    # We already collected in order; stable sort preserves that for ties.
+    candidates_sorted = sorted(candidates, key=lambda t: t[0], reverse=True)  # type: ignore[index]
+    out: List[str] = []
+    seen = set()
+    for score, ln in candidates_sorted:  # type: ignore[misc]
+        if ln in seen:
+            continue
+        out.append(ln)
+        seen.add(ln)
+        if len(out) >= max_items:
+            break
+    return out
 
 
 @router.post("/import", response_model=JobDescriptionResponse)
@@ -54,46 +280,69 @@ async def import_job_description(payload: JobImportRequest):
         if not url and not text:
             raise HTTPException(status_code=400, detail="Either URL or text must be provided")
 
-        # For Week 10, prefer GPT-backed parsing when configured; otherwise
-        # fall back to a simple deterministic parser.
-        content = text or "Job description content from URL..."
+        # If URL is provided, fetch content.
+        # If the URL appears to be a listing page (multiple jobs), extract jobs and return them.
+        page_html: str | None = None
+        if url and not text:
+            try:
+                page_html = await _fetch_url_text(url)
+            except Exception:
+                page_html = None
 
-        # --- Deterministic defaults (previous behavior) -----------------
-        # Improve first-run demo quality by pulling a best-effort title from the text.
-        # (When GPT is enabled, it may override these.)
-        title = "Senior Software Engineer"
-        company = "TechCorp Inc."
-        try:
-            lines = [ln.strip() for ln in (content or "").splitlines() if ln.strip()]
-            if lines:
-                # Heuristic: first line often contains the job title.
-                title = lines[0][:120]
-            # Heuristic: if a line starts with "Company:", use it.
-            for ln in lines[:20]:
-                if ln.lower().startswith("company:"):
-                    company = ln.split(":", 1)[1].strip()[:120] or company
-                    break
-        except Exception:
-            pass
-        pain_points: List[str] = [
-            "Need to reduce time-to-fill for engineering roles",
-            "Struggling with candidate quality and cultural fit",
-            "High turnover in engineering team affecting project delivery",
-        ]
-        required_skills: List[str] = [
-            "Python",
-            "JavaScript",
-            "React",
-            "Node.js",
-            "AWS",
-            "Docker",
-            "PostgreSQL",
-        ]
-        success_metrics: List[str] = [
-            "Reduce time-to-hire by 30%",
-            "Improve candidate quality scores",
-            "Increase team retention by 25%",
-        ]
+        # Listing-page detection (Google careers results)
+        if url and page_html and ("google.com/about/careers" in url) and ("jobs/results/?" in url):
+            job_urls = _extract_google_careers_job_urls(page_html)
+            # Keep it bounded for demos.
+            job_urls = job_urls[:12]
+            if job_urls:
+                items: List[JobDescription] = []
+                # Reuse the single-import logic for each job url, but without recursion on listings.
+                for job_url in job_urls:
+                    try:
+                        job_html = await _fetch_url_text(job_url)
+                        content = _html_to_text(job_html)
+                        # Build & persist a single JD using the logic below
+                        jd_resp = await import_job_description(JobImportRequest(url=job_url, text=content))
+                        if jd_resp.job_description:
+                            items.append(jd_resp.job_description)
+                    except Exception:
+                        continue
+
+                if items:
+                    return JobDescriptionResponse(
+                        success=True,
+                        message=f"Imported {len(items)} job descriptions from listing page",
+                        job_descriptions=items,
+                    )
+
+        # For normal single-job pages: derive content from URL HTML if text not provided.
+        if text:
+            content = text
+        elif page_html:
+            content = _html_to_text(page_html)
+        else:
+            raise HTTPException(status_code=400, detail="Failed to fetch URL content (no HTML returned)")
+
+        if not content or len(content.strip()) < 50:
+            raise HTTPException(status_code=400, detail="Job description content is empty after extraction")
+
+        parsed_at = _now_iso_z()
+
+        # --- Heuristic parsing (non-LLM fallback) ----------------------
+        title, company = _best_effort_title_company(content, url)
+        required_skills: List[str] = _extract_skills(content)
+        # We cannot truly infer "pain points" without an LLM, but we can extract
+        # meaningful lines as a practical non-mock fallback.
+        pain_points: List[str] = _extract_key_lines(
+            content,
+            max_items=3,
+            keywords=["challenge", "problem", "improve", "reduce", "increase", "help", "responsible", "you will"],
+        )
+        success_metrics: List[str] = _extract_key_lines(
+            content,
+            max_items=3,
+            keywords=["kpi", "metric", "measured", "increase", "reduce", "improve", "impact", "deliver"],
+        )
 
         parsed_json: Dict[str, Any] = {
             "pain_points": pain_points,
@@ -124,13 +373,17 @@ async def import_job_description(payload: JobImportRequest):
                         "success_metrics": success_metrics,
                     }
             except Exception:
-                # On any GPT failure, keep deterministic defaults.
+                # On any GPT failure, keep heuristic extraction.
                 pass
 
         # Persist job + a starter application row for demo user (best-effort).
         # For first-run demos, Postgres may be unavailable; in that case we still
         # return a usable response and let the frontend keep state in localStorage.
-        job_id = f"jd_demo_{len(store.demo_job_descriptions) + 1}"
+        # Stable-ish ID for de-duping and updates (avoid always incrementing "demo" ids).
+        if url:
+            job_id = "jd_" + hashlib.md5(url.encode("utf-8")).hexdigest()[:10]
+        else:
+            job_id = "jd_" + hashlib.md5((content[:500]).encode("utf-8")).hexdigest()[:10]
         try:
             stmt_job = (
                 sql_text(
@@ -191,7 +444,7 @@ async def import_job_description(payload: JobImportRequest):
             pain_points=pain_points,
             required_skills=required_skills,
             success_metrics=success_metrics,
-            parsed_at="2024-01-15T10:30:00Z",
+            parsed_at=parsed_at,
         )
 
         return JobDescriptionResponse(

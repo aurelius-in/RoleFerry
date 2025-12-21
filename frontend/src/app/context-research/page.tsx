@@ -55,7 +55,12 @@ export default function ContextResearchPage() {
   const router = useRouter();
   const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
   const [researchData, setResearchData] = useState<ResearchData | null>(null);
-  const [helper, setHelper] = useState<{ hooks?: string[]; corpus_preview?: any } | null>(null);
+  const [helper, setHelper] = useState<{
+    hooks?: string[];
+    corpus_preview?: any;
+    research_scope?: "company" | "division";
+    scope_target?: string;
+  } | null>(null);
   const [isResearching, setIsResearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -88,9 +93,15 @@ export default function ContextResearchPage() {
           }
         })();
 
+      let selectedJD: any = null;
+      try {
+        selectedJD = JSON.parse(localStorage.getItem("selected_job_description") || "null");
+      } catch {}
+
       const resp = await api<any>("/context-research/research", "POST", {
         contact_ids: selectedContacts.map((c) => c.id),
         company_name: companyName,
+        selected_job_description: selectedJD,
       });
 
       if (!resp?.success || !resp?.research_data) {
@@ -232,6 +243,15 @@ export default function ContextResearchPage() {
             <p className="text-white/70">
               Hiring signals and company intelligence to contextualize your outreach.
             </p>
+            {helper?.research_scope && (
+              <div className="mt-3 text-xs text-white/70">
+                <span className="font-semibold text-white/80">Research scope:</span>{" "}
+                {helper.research_scope === "division" ? "Division / org-level" : "Company-level"}
+                {helper.scope_target ? (
+                  <span className="text-white/60"> — {String(helper.scope_target)}</span>
+                ) : null}
+              </div>
+            )}
           </div>
 
           {error && (

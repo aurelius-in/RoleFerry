@@ -45,6 +45,23 @@ interface JobPreferencesResponse {
   };
 }
 
+type JobRecommendation = {
+  id: string;
+  label: string;
+  company: string;
+  source: string;
+  url: string;
+  rationale: string;
+  score?: number;
+  created_at?: string;
+};
+
+type JobRecommendationsResponse = {
+  success: boolean;
+  message: string;
+  recommendations: JobRecommendation[];
+};
+
 const VALUES_OPTIONS = [
   "Diversity & inclusion",
   "Impactful work",
@@ -196,6 +213,9 @@ export default function JobPreferencesPage() {
   });
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [helper, setHelper] = useState<JobPreferencesResponse["helper"] | null>(null);
+  const [recommendations, setRecommendations] = useState<JobRecommendation[]>([]);
+  const [isGeneratingRecs, setIsGeneratingRecs] = useState(false);
+  const [recsError, setRecsError] = useState<string | null>(null);
 
   const [skillSearch, setSkillSearch] = useState("");
   const [availableSkills] = useState([
@@ -312,6 +332,40 @@ export default function JobPreferencesPage() {
     }
 
     router.push("/resume");
+  };
+
+  const handleGenerateRecommendations = async () => {
+    setRecsError(null);
+    setIsGeneratingRecs(true);
+    try {
+      const payload: BackendJobPreferences = {
+        values: preferences.values,
+        role_categories: preferences.roleCategories,
+        location_preferences: preferences.locationPreferences,
+        work_type: preferences.workType,
+        role_type: preferences.roleType,
+        company_size: preferences.companySize,
+        industries: preferences.industries,
+        skills: preferences.skills,
+        minimum_salary: preferences.minimumSalary,
+        job_search_status: preferences.jobSearchStatus,
+        state: preferences.state,
+        user_mode: mode,
+      };
+      const resp = await api<JobRecommendationsResponse>(
+        "/job-preferences/recommendations",
+        "POST",
+        payload
+      );
+      const recs = resp.recommendations || [];
+      setRecommendations(recs);
+      localStorage.setItem("job_recommendations", JSON.stringify(recs));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setRecsError(msg);
+    } finally {
+      setIsGeneratingRecs(false);
+    }
   };
 
   const filteredSkills = availableSkills.filter((skill) =>
@@ -621,6 +675,59 @@ export default function JobPreferencesPage() {
             </div>
           )}
 
+          {recsError && (
+            <div className="mt-6 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">
+              Couldn’t generate job matches: {recsError}
+            </div>
+          )}
+
+          {recommendations.length > 0 && (
+            <div className="mt-8 rounded-lg border border-white/10 bg-black/20 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-bold text-white">Recommended job pages</div>
+                  <div className="text-xs text-white/60">
+                    Based on your selections — click one on the Jobs step to import listings.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => router.push("/job-descriptions")}
+                  className="text-xs underline text-white/80 hover:text-white"
+                >
+                  Open Jobs →
+                </button>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                {recommendations.map((r) => (
+                  <div key={r.id} className="rounded-md border border-white/10 bg-white/5 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-semibold text-white">{r.label}</div>
+                        <div className="text-xs text-white/60">{r.company}</div>
+                      </div>
+                      {typeof r.score === "number" && (
+                        <div className="text-xs font-semibold text-white/70">{r.score}/100</div>
+                      )}
+                    </div>
+                    <div className="mt-2 text-xs text-white/70">{r.rationale}</div>
+                    <div className="mt-3">
+                      <a
+                        href={r.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-300 underline hover:text-blue-200"
+                      >
+                        Open job page
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="mt-8 flex justify-end">
             <div className="flex items-center space-x-4">
               {lastSaved && (
@@ -628,6 +735,14 @@ export default function JobPreferencesPage() {
                   Saved just now ({lastSaved})
                 </span>
               )}
+              <button
+                type="button"
+                onClick={handleGenerateRecommendations}
+                disabled={isGeneratingRecs}
+                className="bg-white/10 text-white px-6 py-3 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10 disabled:opacity-50"
+              >
+                {isGeneratingRecs ? "Generating…" : "Generate job matches"}
+              </button>
               <button
                 onClick={handleSave}
                 className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
