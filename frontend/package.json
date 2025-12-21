@@ -6,7 +6,9 @@
     "dev": "node ./scripts/copy-assets.mjs && next dev --turbopack",
     "build": "node ./scripts/copy-assets.mjs && next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "react": "19.1.0",
@@ -14,6 +16,7 @@
     "next": "15.5.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^19",

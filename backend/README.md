@@ -48,7 +48,8 @@ Env keys
 
 ```
 SERPER_API_KEY=
-OPENAI_API_KEY=
+OPENAI_API_KEY=          # (preferred) OpenAI key for GPT features
+RoleFerryKey=            # (alias) alternative name accepted by the app
 FINDYMAIL_API_KEY=
 NEVERBOUNCE_API_KEY=
 GOOGLE_SHEETS_SERVICE_JSON_PATH=

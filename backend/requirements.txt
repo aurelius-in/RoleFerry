@@ -14,3 +14,7 @@ alembic==1.13.2
 gspread==6.1.2
 google-auth==2.34.0
 
+# File text extraction (resume/job docs)
+pypdf==6.0.0
+python-docx==1.2.0
+

@@ -68,13 +68,37 @@ export default function OfferCreationPage() {
       setMode('recruiter');
     }
     
-    // Load pain point matches from localStorage
+    // Load pain point matches from localStorage (prefer matches for selected job id)
     const legacyPainpointKey = ["pin", "point_matches"].join("");
-    const savedMatches =
-      localStorage.getItem("painpoint_matches") ||
-      localStorage.getItem(legacyPainpointKey) ||
-      localStorage.getItem("pain_point_matches");
-    if (savedMatches) setPainPointMatches(JSON.parse(savedMatches));
+    try {
+      const selectedJobId = localStorage.getItem("selected_job_description_id") || "";
+      const byJobRaw = localStorage.getItem("painpoint_matches_by_job");
+      if (selectedJobId && byJobRaw) {
+        const byJob = JSON.parse(byJobRaw) as Record<string, PainPointMatch[]>;
+        const m = byJob?.[selectedJobId];
+        if (m && Array.isArray(m) && m.length) {
+          setPainPointMatches(m);
+        } else {
+          const savedMatches =
+            localStorage.getItem("painpoint_matches") ||
+            localStorage.getItem(legacyPainpointKey) ||
+            localStorage.getItem("pain_point_matches");
+          if (savedMatches) setPainPointMatches(JSON.parse(savedMatches));
+        }
+      } else {
+        const savedMatches =
+          localStorage.getItem("painpoint_matches") ||
+          localStorage.getItem(legacyPainpointKey) ||
+          localStorage.getItem("pain_point_matches");
+        if (savedMatches) setPainPointMatches(JSON.parse(savedMatches));
+      }
+    } catch {
+      const savedMatches =
+        localStorage.getItem("painpoint_matches") ||
+        localStorage.getItem(legacyPainpointKey) ||
+        localStorage.getItem("pain_point_matches");
+      if (savedMatches) setPainPointMatches(JSON.parse(savedMatches));
+    }
     
     // Listen for mode changes
     const handleModeChange = (event: CustomEvent) => {

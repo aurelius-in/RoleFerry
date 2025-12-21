@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 import logging
 import json
 import hashlib
+import time
 
 import httpx
 
@@ -171,15 +172,68 @@ class OpenAIClient:
         }
         payload.update(extra or {})
 
+        # Retry a few times for transient provider issues.
+        # IMPORTANT: we do NOT generally retry 429 because for many demo failures it's
+        # "insufficient_quota" (billing), which will never succeed and just adds latency.
+        retry_statuses = {500, 502, 503, 504}
+        backoffs = [0.8, 1.6, 3.2]
         try:
             with httpx.Client(base_url=self.base_url, timeout=self.timeout_seconds) as client:
-                resp = client.post("/chat/completions", json=payload, headers=self._build_headers())
-                resp.raise_for_status()
-                data = resp.json()
-                return data
-        except httpx.HTTPStatusError as e:
-            logger.warning("OpenAI chat completion HTTP error: %s", e, exc_info=True)
-            return self._stub_response(messages, note=f"http_error {e.response.status_code}")
+                last_status: int | None = None
+                for attempt, backoff in enumerate([0.0] + backoffs):
+                    if backoff:
+                        time.sleep(backoff)
+                    try:
+                        resp = client.post("/chat/completions", json=payload, headers=self._build_headers())
+                        resp.raise_for_status()
+                        return resp.json()
+                    except httpx.HTTPStatusError as e:
+                        last_status = int(getattr(e.response, "status_code", 0) or 0)
+                        # Try to surface a helpful reason for the demo operator (quota, billing, rate limit).
+                        reason = ""
+                        err_code = ""
+                        try:
+                            err_json = e.response.json()
+                            err_obj = (err_json or {}).get("error") or {}
+                            msg = str(err_obj.get("message") or "").strip()
+                            code = str(err_obj.get("code") or "").strip()
+                            typ = str(err_obj.get("type") or "").strip()
+                            err_code = code
+                            reason_parts = [p for p in [code, typ, msg] if p]
+                            if reason_parts:
+                                reason = " | ".join(reason_parts)
+                        except Exception:
+                            try:
+                                reason = (e.response.text or "").strip()
+                            except Exception:
+                                reason = ""
+                        reason = reason[:240] if reason else ""
+
+                        # Retry transient errors.
+                        # - 5xx: retry
+                        # - 429: retry only if it doesn't look like a quota/billing issue.
+                        if attempt < len(backoffs):
+                            if last_status in retry_statuses:
+                                logger.warning(
+                                    "OpenAI HTTP %s; retrying (attempt %s/%s)",
+                                    last_status,
+                                    attempt + 1,
+                                    len(backoffs) + 1,
+                                )
+                                continue
+                            if last_status == 429 and err_code and err_code != "insufficient_quota":
+                                logger.warning(
+                                    "OpenAI HTTP 429 (%s); retrying (attempt %s/%s)",
+                                    err_code,
+                                    attempt + 1,
+                                    len(backoffs) + 1,
+                                )
+                                continue
+                        logger.warning("OpenAI chat completion HTTP error: %s", e, exc_info=True)
+                        note = f"http_error {last_status}"
+                        if reason:
+                            note += f" ({reason})"
+                        return self._stub_response(messages, note=note)
         except Exception as e:  # pragma: no cover - defensive catch-all
             logger.exception("OpenAI chat completion failed", exc_info=e)
             return self._stub_response(messages, note="exception")

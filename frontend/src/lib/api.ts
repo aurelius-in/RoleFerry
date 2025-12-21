@@ -10,21 +10,40 @@ export async function api<T>(path: string, method: HttpMethod = "GET", body?: un
   } else {
     url = path.startsWith("/") ? `/api${path}` : `/api/${path}`;
   }
-  // Mock fallback
-  if (!isServer) {
-    const mock = getMockResponse(path.startsWith("/") ? path : "/" + path, method, body);
+
+  // Client-side mock behavior:
+  // - If NEXT_PUBLIC_USE_CLIENT_MOCKS=true, prefer mocks (demo/fallback mode).
+  // - Otherwise, call the backend and surface errors (don't silently mask issues with mocks).
+  const normalizedPath = path.startsWith("/") ? path : "/" + path;
+  const useClientMocks = !isServer && (process.env.NEXT_PUBLIC_USE_CLIENT_MOCKS || "").toLowerCase() === "true";
+  const tryMock = () => (!isServer ? getMockResponse(normalizedPath, method, body) : undefined);
+
+  if (useClientMocks) {
+    const mock = tryMock();
     if (mock !== undefined) return mock as T;
   }
-  const res = await fetch(url, {
-    method,
-    headers: { "Content-Type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined,
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`API ${method} ${url} failed: ${res.status} ${text}`);
+
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`API ${method} ${url} failed: ${res.status} ${text}`);
+    }
+
+    return (await res.json()) as T;
+  } catch (err) {
+    // Network error / fetch failure → only allow mock fallback if explicitly enabled.
+    if (useClientMocks) {
+      const mock = tryMock();
+      if (mock !== undefined) return mock as T;
+    }
+    throw err;
   }
-  return (await res.json()) as T;
 }
 

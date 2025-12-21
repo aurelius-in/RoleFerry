@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import logging
 import json
 
@@ -36,6 +36,8 @@ class PainPointMatchResponse(BaseModel):
 class MatchRequest(BaseModel):
     job_description_id: str
     resume_extract_id: str
+    # Optional fallback from frontend when the job isn't present in DB/demo store.
+    job_description: Optional[Dict[str, Any]] = None
 
 @router.post("/generate", response_model=PainPointMatchResponse)
 async def generate_painpoint_matches(request: MatchRequest):
@@ -82,11 +84,14 @@ async def generate_painpoint_matches(request: MatchRequest):
             job_row = None
             resume_row = None
 
-        # Prefer DB if available, otherwise use in-memory demo cache
+        # Prefer DB if available, otherwise use in-memory demo cache; finally accept client payload.
         if not job_row and request.job_description_id in store.demo_job_descriptions:
             jd_parsed = store.demo_job_descriptions[request.job_description_id].get("parsed_json") or {}
         else:
             jd_parsed = (job_row.parsed_json if job_row else {}) or {}
+
+        if not jd_parsed and isinstance(request.job_description, dict):
+            jd_parsed = request.job_description or {}
 
         if not resume_row and store.demo_latest_resume:
             resume_parsed = store.demo_latest_resume or {}
@@ -94,51 +99,82 @@ async def generate_painpoint_matches(request: MatchRequest):
             resume_parsed = (resume_row.parsed_json if resume_row else {}) or {}
 
         jd_pain_points = jd_parsed.get("pain_points") or []
-        resume_accomplishments = (
+        def _to_text(x: Any) -> str:
+            if x is None:
+                return ""
+            if isinstance(x, str):
+                return x
+            if isinstance(x, dict):
+                # Common resume shapes
+                for k in ("accomplishment", "context", "metric", "value", "description", "text"):
+                    v = x.get(k)
+                    if isinstance(v, str) and v.strip():
+                        return v
+                try:
+                    return json.dumps(x, ensure_ascii=False)
+                except Exception:
+                    return str(x)
+            return str(x)
+
+        def _looks_like_pdf_garbage(s: str) -> bool:
+            t = (s or "").strip()
+            if not t:
+                return True
+            if t.startswith("%PDF-"):
+                return True
+            if " obj" in t and "endobj" in t:
+                return True
+            if "/Creator" in t or "/Producer" in t:
+                return True
+            if "stream" in t and "endstream" in t:
+                return True
+            return False
+
+        raw_accomplishments = (
             resume_parsed.get("NotableAccomplishments")
             or resume_parsed.get("KeyMetrics")
             or []
         )
+        # Normalize + filter out PDF/binary artifacts so we never show them as "solutions".
+        resume_accomplishments = []
+        if isinstance(raw_accomplishments, list):
+            for a in raw_accomplishments:
+                txt = _to_text(a).strip()
+                if not txt or _looks_like_pdf_garbage(txt):
+                    continue
+                resume_accomplishments.append(txt)
+        else:
+            txt = _to_text(raw_accomplishments).strip()
+            if txt and not _looks_like_pdf_garbage(txt):
+                resume_accomplishments = [txt]
 
-        # Helper: rule-based pairing (previous behavior)
+        # Helper: rule-based pairing (avoid demo defaults; allow 0–3 alignments)
         def build_rule_based_match() -> PainPointMatch:
-            pp = list(jd_pain_points)[:3]
-            acc = list(resume_accomplishments)[:3]
+            pp = [str(x).strip() for x in (jd_pain_points or []) if str(x).strip()]
+            acc = [str(x).strip() for x in (resume_accomplishments or []) if str(x).strip()]
 
-            def _safe_get(items, idx, default=""):
-                return items[idx] if idx < len(items) else default
+            def _safe_get(items, idx) -> str:
+                return items[idx] if idx < len(items) else ""
+
+            # Best-effort score: more real inputs -> higher confidence
+            score = 0.55
+            score += 0.1 if len(pp) >= 1 else 0.0
+            score += 0.1 if len(acc) >= 1 else 0.0
+            score += 0.05 if len(pp) >= 2 else 0.0
+            score += 0.05 if len(acc) >= 2 else 0.0
+            score = min(score, 0.9)
 
             return PainPointMatch(
-                painpoint_1=_safe_get(pp, 0, "Need to reduce time-to-fill for engineering roles"),
-                solution_1=_safe_get(
-                    acc,
-                    0,
-                    "Reduced TTF by 40% using ATS optimization and streamlined hiring process",
-                ),
+                painpoint_1=_safe_get(pp, 0),
+                solution_1=_safe_get(acc, 0),
                 metric_1="",
-                painpoint_2=_safe_get(
-                    pp,
-                    1,
-                    "Struggling with candidate quality and cultural fit",
-                ),
-                solution_2=_safe_get(
-                    acc,
-                    1,
-                    "Implemented structured interview process with cultural fit assessment",
-                ),
+                painpoint_2=_safe_get(pp, 1),
+                solution_2=_safe_get(acc, 1),
                 metric_2="",
-                painpoint_3=_safe_get(
-                    pp,
-                    2,
-                    "High turnover in engineering team affecting project delivery",
-                ),
-                solution_3=_safe_get(
-                    acc,
-                    2,
-                    "Built team retention program with career development focus",
-                ),
+                painpoint_3=_safe_get(pp, 2),
+                solution_3=_safe_get(acc, 2),
                 metric_3="",
-                alignment_score=0.8,
+                alignment_score=score,
             )
 
         # Try GPT-backed matching first when configured
@@ -178,16 +214,23 @@ async def generate_painpoint_matches(request: MatchRequest):
                 p2 = _pair(1)
                 p3 = _pair(2)
 
+                def _safe_list_get(items: list, idx: int) -> str:
+                    try:
+                        v = items[idx]
+                        return str(v).strip()
+                    except Exception:
+                        return ""
+
                 match = PainPointMatch(
-                    painpoint_1=str(p1.get("jd_snippet") or (jd_pain_points[0] if jd_pain_points else "")),
-                    solution_1=str(p1.get("resume_snippet") or (resume_accomplishments[0] if resume_accomplishments else "")),
-                    metric_1=str(p1.get("metric") or ""),
-                    painpoint_2=str(p2.get("jd_snippet") or (jd_pain_points[1] if len(jd_pain_points) > 1 else "")),
-                    solution_2=str(p2.get("resume_snippet") or (resume_accomplishments[1] if len(resume_accomplishments) > 1 else "")),
-                    metric_2=str(p2.get("metric") or ""),
-                    painpoint_3=str(p3.get("jd_snippet") or (jd_pain_points[2] if len(jd_pain_points) > 2 else "")),
-                    solution_3=str(p3.get("resume_snippet") or (resume_accomplishments[2] if len(resume_accomplishments) > 2 else "")),
-                    metric_3=str(p3.get("metric") or ""),
+                    painpoint_1=str(p1.get("jd_snippet") or _safe_list_get(jd_pain_points, 0)).strip(),
+                    solution_1=str(p1.get("resume_snippet") or _safe_list_get(resume_accomplishments, 0)).strip(),
+                    metric_1=str(p1.get("metric") or "").strip(),
+                    painpoint_2=str(p2.get("jd_snippet") or _safe_list_get(jd_pain_points, 1)).strip(),
+                    solution_2=str(p2.get("resume_snippet") or _safe_list_get(resume_accomplishments, 1)).strip(),
+                    metric_2=str(p2.get("metric") or "").strip(),
+                    painpoint_3=str(p3.get("jd_snippet") or _safe_list_get(jd_pain_points, 2)).strip(),
+                    solution_3=str(p3.get("resume_snippet") or _safe_list_get(resume_accomplishments, 2)).strip(),
+                    metric_3=str(p3.get("metric") or "").strip(),
                     alignment_score=alignment_score,
                 )
             except Exception:

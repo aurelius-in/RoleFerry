@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import logging
 import json
+from urllib.parse import quote_plus
+from datetime import datetime, timezone
 
 from sqlalchemy import text, bindparam
 from sqlalchemy.dialects.postgresql import JSONB
@@ -35,8 +37,241 @@ class JobPreferencesResponse(BaseModel):
     message: str
     preferences: Optional[JobPreferences] = None
     helper: Optional[Dict[str, Any]] = None
+    recommendations: Optional[List[Dict[str, Any]]] = None
+
+
+class JobRecommendation(BaseModel):
+    id: str
+    label: str
+    company: str
+    source: str
+    url: str
+    rationale: str
+    score: int = 0
+    created_at: str
+
+
+class JobRecommendationsResponse(BaseModel):
+    success: bool
+    message: str
+    recommendations: List[JobRecommendation]
 
 DEMO_USER_ID = "demo-user"
+
+
+def _now_iso_z() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _keywords_from_preferences(p: JobPreferences) -> str:
+    parts: List[str] = []
+    parts.extend(p.role_categories or [])
+    parts.extend(p.industries or [])
+    parts.extend(p.skills or [])
+    # Keep it short-ish for query params
+    s = " ".join([str(x).strip() for x in parts if str(x).strip()])
+    s = " ".join(s.split())
+    return s[:160] if s else "software engineering"
+
+
+def _location_hint(p: JobPreferences) -> str:
+    # Very lightweight location hint (used for some career site search urls).
+    if p.state and str(p.state).strip():
+        return f"United States, {p.state.strip()}"
+    # If remote is selected, bias remote.
+    locs = [x.lower() for x in (p.location_preferences or [])]
+    if any("remote" in x for x in locs):
+        return "Remote"
+    return "United States"
+
+
+def _build_google_careers_url(p: JobPreferences) -> str:
+    # This matches the style of URL you provided.
+    base = "https://www.google.com/about/careers/applications/jobs/results/"
+    employment_types: List[str] = []
+    for rt in p.role_type or []:
+        low = rt.lower()
+        if "full" in low:
+            employment_types.append("FULL_TIME")
+        elif "part" in low:
+            employment_types.append("PART_TIME")
+        elif "intern" in low:
+            employment_types.append("INTERN")
+        elif "contract" in low:
+            employment_types.append("TEMPORARY")
+    if not employment_types:
+        employment_types = ["FULL_TIME"]
+
+    # Google careers query param accepts a comma-separated skills string.
+    skills = ", ".join([s.strip() for s in (p.skills or []) if str(s).strip()])
+    if not skills:
+        skills = "software"
+
+    # Note: we keep this simple & robust; we can add more params later.
+    return (
+        f"{base}?employment_type={employment_types[0]}"
+        f"&skills={quote_plus(skills)}"
+    )
+
+
+def _deterministic_recommendations(p: JobPreferences) -> List[JobRecommendation]:
+    created_at = _now_iso_z()
+    keywords = _keywords_from_preferences(p)
+    loc = _location_hint(p)
+
+    recs: List[JobRecommendation] = []
+
+    # 1) The exact "Google Careers results page" style link.
+    recs.append(
+        JobRecommendation(
+            id="google-careers",
+            label="Google Careers (tailored results)",
+            company="Google",
+            source="google_careers",
+            url=_build_google_careers_url(p),
+            rationale="Matches your selected skills/work style; good for high-signal SWE/AI roles.",
+            score=90,
+            created_at=created_at,
+        )
+    )
+
+    # 2) A few other major career-site search pages (best-effort URL formats).
+    q = quote_plus(keywords)
+    lc = quote_plus(loc)
+    recs.extend(
+        [
+            JobRecommendation(
+                id="microsoft-careers",
+                label="Microsoft Careers (search)",
+                company="Microsoft",
+                source="microsoft_careers",
+                url=f"https://jobs.careers.microsoft.com/global/en/search?q={q}&lc={lc}",
+                rationale="Large volume of roles; strong fit if you selected enterprise/software/AI.",
+                score=75,
+                created_at=created_at,
+            ),
+            JobRecommendation(
+                id="amazon-jobs",
+                label="Amazon Jobs (search)",
+                company="Amazon",
+                source="amazon_jobs",
+                url=f"https://www.amazon.jobs/en/search?offset=0&result_limit=20&sort=relevant&keywords={q}",
+                rationale="High hiring volume; useful for broad software roles and many locations.",
+                score=70,
+                created_at=created_at,
+            ),
+            JobRecommendation(
+                id="netflix-jobs",
+                label="Netflix Jobs (search)",
+                company="Netflix",
+                source="netflix_jobs",
+                url=f"https://jobs.netflix.com/search?q={q}",
+                rationale="Great for senior product/engineering if your skills match their stack.",
+                score=60,
+                created_at=created_at,
+            ),
+            JobRecommendation(
+                id="greenhouse-search",
+                label="Greenhouse boards (meta-search)",
+                company="Various",
+                source="greenhouse",
+                url=f"https://boards.greenhouse.io/search?query={q}",
+                rationale="Catches startup/mid-size roles across many companies on Greenhouse.",
+                score=65,
+                created_at=created_at,
+            ),
+        ]
+    )
+
+    # Cap for UI sanity
+    return recs[:8]
+
+
+@router.post("/recommendations", response_model=JobRecommendationsResponse)
+async def generate_job_recommendations(preferences: JobPreferences):
+    """
+    Turn Job Preferences into a list of recommended job search page URLs + rationale.
+
+    - Uses LLM when configured.
+    - Falls back to deterministic URL patterns when LLM isn't available.
+    """
+    try:
+        # Cache prefs for downstream steps
+        store.demo_job_preferences = preferences.model_dump()
+
+        client = get_openai_client()
+        created_at = _now_iso_z()
+
+        if client.should_use_real_llm:
+            # Ask for job listing page URLs that are easy to click/import in the UI.
+            payload = {
+                "preferences": preferences.model_dump(),
+                "resume_hint": store.demo_latest_resume or {},
+                "constraints": {
+                    "max_items": 8,
+                    "must_include_one_google_careers_results_url": True,
+                    "return_urls_only_from_official_career_sites_or_well_known_ats": True,
+                },
+            }
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a job search strategist.\n\n"
+                        "Given user job preferences, generate a ranked list of job listing/search page URLs.\n"
+                        "Return ONLY JSON with key:\n"
+                        "- recommendations: array of { id, label, company, source, url, rationale, score }\n\n"
+                        "Rules:\n"
+                        "- URLs must be direct search/listing pages (not blog posts).\n"
+                        "- Include at least 1 Google Careers results URL (like https://www.google.com/about/careers/applications/jobs/results/?...).\n"
+                        "- Keep rationales 1 sentence.\n"
+                        "- score: 0-100.\n"
+                    ),
+                },
+                {"role": "user", "content": json.dumps(payload)},
+            ]
+            stub = {"recommendations": [r.model_dump(exclude={"created_at"}) for r in _deterministic_recommendations(preferences)]}
+            raw = client.run_chat_completion(messages, temperature=0.3, max_tokens=700, stub_json=stub)
+            choices = raw.get("choices") or []
+            msg = (choices[0].get("message") if choices else {}) or {}
+            content_str = str(msg.get("content") or "")
+            data = extract_json_from_text(content_str) or stub
+            rec_items = (data or {}).get("recommendations") or []
+
+            recs: List[JobRecommendation] = []
+            for item in rec_items:
+                if not isinstance(item, dict):
+                    continue
+                try:
+                    recs.append(
+                        JobRecommendation(
+                            id=str(item.get("id") or "")[:64] or f"rec_{len(recs)+1}",
+                            label=str(item.get("label") or "Recommended jobs")[:120],
+                            company=str(item.get("company") or "Unknown")[:120],
+                            source=str(item.get("source") or "unknown")[:64],
+                            url=str(item.get("url") or ""),
+                            rationale=str(item.get("rationale") or "")[:240],
+                            score=int(item.get("score") or 0),
+                            created_at=created_at,
+                        )
+                    )
+                except Exception:
+                    continue
+
+            if not recs:
+                recs = _deterministic_recommendations(preferences)
+
+            store.demo_job_recommendations = [r.model_dump() for r in recs]
+            return JobRecommendationsResponse(success=True, message="Recommendations generated", recommendations=recs)
+
+        # Fallback: deterministic recs
+        recs = _deterministic_recommendations(preferences)
+        store.demo_job_recommendations = [r.model_dump() for r in recs]
+        return JobRecommendationsResponse(success=True, message="Recommendations generated (no LLM)", recommendations=recs)
+
+    except Exception:
+        logger.exception("Error generating recommendations")
+        raise HTTPException(status_code=500, detail="Failed to generate recommendations")
 
 
 @router.post("/save", response_model=JobPreferencesResponse)

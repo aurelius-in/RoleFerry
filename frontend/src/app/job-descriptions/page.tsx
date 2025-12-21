@@ -1,8 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+
+const JARGON_PHRASES = [
+  "fast-paced environment",
+  "rockstar",
+  "wear multiple hats",
+  "self-starter",
+  "move fast",
+  "high ownership",
+  "results-driven",
+  "detail-oriented",
+  "world-class",
+  "best-in-class",
+  "passion for excellence",
+];
+
+function extractJargon(text: string): string[] {
+  const hay = (text || "").toLowerCase();
+  const found: string[] = [];
+  for (const p of JARGON_PHRASES) {
+    if (hay.includes(p)) found.push(p);
+  }
+  // Prettify for display
+  return found.map((p) => p.replace(/^\w/, (c) => c.toUpperCase()));
+}
 
 interface JobDescription {
   id: string;
@@ -40,40 +64,85 @@ interface JobDescriptionResponse {
   success: boolean;
   message: string;
   job_description?: BackendJobDescription;
+  job_descriptions?: BackendJobDescription[];
 }
+
+type JobRecommendation = {
+  id: string;
+  label: string;
+  company: string;
+  source: string;
+  url: string;
+  rationale: string;
+  score?: number;
+  created_at?: string;
+};
 
 export default function JobDescriptionsPage() {
   const router = useRouter();
-  const [jobDescriptions, setJobDescriptions] = useState<JobDescription[]>(() => {
-    // Seed from localStorage for snappy UX; backend fetch happens on demand via import.
-    try {
-      const cached = typeof window !== "undefined" ? localStorage.getItem("job_descriptions") : null;
-      return cached ? JSON.parse(cached) : [];
-    } catch {
-      return [];
-    }
-  });
+  // Important: avoid reading localStorage during the initial render to prevent
+  // React hydration mismatches (which can break click interactions).
+  const [hasMounted, setHasMounted] = useState(false);
+  const [jobDescriptions, setJobDescriptions] = useState<JobDescription[]>([]);
+  const [recommendations, setRecommendations] = useState<JobRecommendation[]>([]);
   const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
   const [importUrl, setImportUrl] = useState("");
   const [importText, setImportText] = useState("");
-  const [showImportModal, setShowImportModal] = useState(false);
   const [importType, setImportType] = useState<'url' | 'text'>('url');
   const [sortBy, setSortBy] = useState<'date' | 'grade'>('date');
+  const suggestedUrl =
+    "https://www.google.com/about/careers/applications/jobs/results/?employment_type=FULL_TIME&degree=MASTERS&skills=software%2C%20architecture%2C%20ai";
+
+  useEffect(() => {
+    setHasMounted(true);
+    try {
+      const cached = localStorage.getItem("job_descriptions");
+      if (cached) {
+        const parsed = JSON.parse(cached) as JobDescription[];
+        // Drop old demo placeholder JDs so they don't keep showing up as "mock output".
+        const cleaned = (parsed || []).filter((jd) => {
+          const isOldDemoId = (jd.id || "").startsWith("jd_demo_");
+          const isOldDemoContent =
+            (jd.company || "") === "TechCorp Inc." &&
+            (jd.content || "").startsWith("Job description content from URL");
+          return !isOldDemoId && !isOldDemoContent;
+        });
+        setJobDescriptions(cleaned);
+        localStorage.setItem("job_descriptions", JSON.stringify(cleaned));
+      }
+    } catch {
+      // ignore malformed cache
+    }
+
+    try {
+      const recs = localStorage.getItem("job_recommendations");
+      if (recs) setRecommendations(JSON.parse(recs));
+    } catch {
+      // ignore malformed recs cache
+    }
+  }, []);
 
   const handleImport = async () => {
-    if (!importUrl && !importText) return;
-    
+    const hasUrl = importType === "url" && Boolean(importUrl.trim());
+    const hasText = importType === "text" && Boolean(importText.trim());
+    if (!hasUrl && !hasText) return;
+
+    setImportError(null);
     setIsImporting(true);
 
     try {
       const payload = {
-        url: importType === "url" ? importUrl || null : null,
-        text: importType === "text" ? importText || null : null,
+        url: hasUrl ? importUrl.trim() : null,
+        text: hasText ? importText.trim() : null,
       };
       const resp = await api<JobDescriptionResponse>("/job-descriptions/import", "POST", payload);
-      const jd = resp.job_description;
-      if (jd) {
-        const mapped: JobDescription = {
+      const jds = (resp.job_descriptions && resp.job_descriptions.length)
+        ? resp.job_descriptions
+        : (resp.job_description ? [resp.job_description] : []);
+
+      if (jds.length) {
+        const mappedAll: JobDescription[] = jds.map((jd) => ({
           id: jd.id,
           title: jd.title,
           company: jd.company,
@@ -82,30 +151,34 @@ export default function JobDescriptionsPage() {
           painPoints: jd.pain_points || [],
           requiredSkills: jd.required_skills || [],
           successMetrics: jd.success_metrics || [],
-          jdJargon: [
-            "Fast-paced environment",
-            "Rockstar developer",
-            "Wear multiple hats",
-            "Passion for excellence",
-          ],
+          jdJargon: extractJargon(jd.content || ""),
           grade: undefined,
           parsedAt: jd.parsed_at || new Date().toISOString(),
-        };
-        setJobDescriptions(prev => {
-          const next = [...prev, mapped];
+        }));
+
+        setJobDescriptions((prev) => {
+          // Merge by id: replace existing items (so re-importing the same URL updates the card),
+          // and append truly new ones.
+          const next = [...prev];
+          for (const m of mappedAll) {
+            const idx = next.findIndex((p) => p.id === m.id);
+            if (idx >= 0) next[idx] = { ...next[idx], ...m };
+            else next.push(m);
+          }
           if (typeof window !== "undefined") {
             localStorage.setItem("job_descriptions", JSON.stringify(next));
           }
           return next;
         });
       }
-    } catch {
-      // Fallback: keep existing state if backend import fails.
-    } finally {
-      setIsImporting(false);
-      setShowImportModal(false);
+      // Only clear inputs on success
       setImportUrl("");
       setImportText("");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setImportError(msg);
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -155,15 +228,147 @@ export default function JobDescriptionsPage() {
             </div>
           </div>
 
+          {recommendations.length > 0 && (
+            <div className="mb-6 rounded-lg border border-white/10 bg-black/20 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-bold text-white">Recommended job pages</div>
+                  <div className="text-xs text-white/60">
+                    From your Job Preferences — click one to populate the URL field.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.removeItem("job_recommendations");
+                    setRecommendations([]);
+                  }}
+                  className="text-xs underline text-white/70 hover:text-white"
+                >
+                  Clear
+                </button>
+              </div>
+
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                {recommendations.slice(0, 8).map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => {
+                      setImportType("url");
+                      setImportUrl(r.url);
+                    }}
+                    className="text-left rounded-md border border-white/10 bg-white/5 p-3 hover:bg-white/10 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-semibold text-white">{r.label}</div>
+                        <div className="text-xs text-white/60">{r.company}</div>
+                      </div>
+                      {typeof r.score === "number" && (
+                        <div className="text-xs font-semibold text-white/70">{r.score}/100</div>
+                      )}
+                    </div>
+                    <div className="mt-1 text-xs text-white/70">{r.rationale}</div>
+                    <div className="mt-2 text-xs text-blue-300 underline">Use this URL</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="mb-6 flex justify-between items-center">
-            <button
-              onClick={() => setShowImportModal(true)}
-              className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
-            >
-              Import Job Description
-            </button>
+            <div className="flex-1">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="inline-flex rounded-full border border-white/10 bg-black/25 p-1">
+                      <button
+                        type="button"
+                        onClick={() => setImportType("url")}
+                        aria-pressed={importType === "url"}
+                        className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                          importType === "url"
+                            ? "brand-gradient text-black"
+                            : "text-white/80 hover:bg-white/10"
+                        }`}
+                      >
+                        Import URL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setImportType("text")}
+                        aria-pressed={importType === "text"}
+                        className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                          importType === "text"
+                            ? "brand-gradient text-black"
+                            : "text-white/80 hover:bg-white/10"
+                        }`}
+                      >
+                        Paste text
+                      </button>
+                    </div>
+                  </div>
+
+                  {importType === "url" ? (
+                    <>
+                      <div className="text-xs text-white/70 mb-1">Paste a job URL</div>
+                      <input
+                        type="url"
+                        value={importUrl}
+                        onChange={(e) => setImportUrl(e.target.value)}
+                        placeholder="Paste a job URL (or a listing URL) and import"
+                        className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <div className="mt-1 text-xs text-white/60">
+                        Suggested:{" "}
+                        <button
+                          type="button"
+                          className="underline hover:text-white"
+                          onClick={() => {
+                            // Always switch to URL mode so the user immediately sees the populated field.
+                            setImportType("url");
+                            setImportUrl(suggestedUrl);
+                          }}
+                        >
+                          Google Careers results page
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-xs text-white/70 mb-1">Paste Job description</div>
+                      <textarea
+                        value={importText}
+                        onChange={(e) => setImportText(e.target.value)}
+                        placeholder="Paste Job description"
+                        className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 min-h-[280px] resize-y"
+                      />
+                    </>
+                  )}
+
+                  {importError && (
+                    <div className="mt-2 text-xs text-red-300">
+                      Import failed: {importError}
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleImport}
+                    disabled={
+                      isImporting ||
+                      (importType === "url" ? !importUrl.trim() : !importText.trim())
+                    }
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    {isImporting ? "Parsing..." : "Import"}
+                  </button>
+                </div>
+              </div>
+            </div>
             
-            {jobDescriptions.length > 0 && (
+            {hasMounted && jobDescriptions.length > 0 && (
               <select 
                 value={sortBy} 
                 onChange={(e) => setSortBy(e.target.value as 'date' | 'grade')}
@@ -175,7 +380,7 @@ export default function JobDescriptionsPage() {
             )}
           </div>
 
-          {jobDescriptions.length === 0 ? (
+          {!hasMounted || jobDescriptions.length === 0 ? (
             <div className="text-center py-12">
               <div className="mb-6">
                 <svg className="mx-auto h-12 w-12 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -274,17 +479,19 @@ export default function JobDescriptionsPage() {
                     </div>
 
                     {/* JD Jargon */}
-                    <div>
-                      <h4 className="font-semibold text-white mb-3">JD Jargon</h4>
-                      <ul className="space-y-2">
-                        {jd.jdJargon.map((jargon, index) => (
-                          <li key={index} className="flex items-start space-x-2">
-                            <span className="text-purple-500 mt-1">•</span>
-                            <span className="text-sm text-white/70 italic">{jargon}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    {jd.jdJargon.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-white mb-3">JD Jargon</h4>
+                        <ul className="space-y-2">
+                          {jd.jdJargon.map((jargon, index) => (
+                            <li key={index} className="flex items-start space-x-2">
+                              <span className="text-purple-500 mt-1">•</span>
+                              <span className="text-sm text-white/70 italic">{jargon}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-white/10">
@@ -315,85 +522,6 @@ export default function JobDescriptionsPage() {
           )}
         </div>
       </div>
-
-      {/* Import Modal */}
-      {showImportModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="rounded-lg border border-white/10 bg-slate-950/90 backdrop-blur max-w-2xl w-full p-6 text-slate-100 shadow-2xl shadow-black/30">
-            <h2 className="text-xl font-semibold mb-4">Import Job Description</h2>
-            
-            <div className="mb-4">
-              <div className="flex space-x-4 mb-4">
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="importType"
-                    value="url"
-                    checked={importType === 'url'}
-                    onChange={(e) => setImportType(e.target.value as 'url' | 'text')}
-                    className="text-blue-600"
-                  />
-                  <span>Import from URL</span>
-                </label>
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="importType"
-                    value="text"
-                    checked={importType === 'text'}
-                    onChange={(e) => setImportType(e.target.value as 'url' | 'text')}
-                    className="text-blue-600"
-                  />
-                  <span>Paste Text</span>
-                </label>
-              </div>
-
-              {importType === 'url' ? (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Job Description URL
-                  </label>
-                  <input
-                    type="url"
-                    value={importUrl}
-                    onChange={(e) => setImportUrl(e.target.value)}
-                    placeholder="https://company.com/job-posting"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  />
-                </div>
-              ) : (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Job Description Text
-                  </label>
-                  <textarea
-                    value={importText}
-                    onChange={(e) => setImportText(e.target.value)}
-                    placeholder="Paste the job description text here..."
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 h-32"
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setShowImportModal(false)}
-                className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleImport}
-                disabled={isImporting || (!importUrl && !importText)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                {isImporting ? "Parsing..." : "Import"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

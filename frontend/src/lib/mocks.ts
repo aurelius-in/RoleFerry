@@ -58,6 +58,24 @@ const mocks: Record<string, MockFn> = {
   "GET /analytics/campaign": () => ({ campaigns: Array.from({length: 10}).map((_,i)=>({ name:`Campaign ${i+1}`, delivered: 400 + i*50, open_rate: 35 + (i%15), reply_rate: 5 + (i%8), positive: (2 + (i%6) + Math.random()).toFixed(1) })) }),
   "GET /crm/board": () => ({ lanes: { People: Array.from({length: 6}).map((_,i)=>({ id:`p_${i}`, name:`${randomChoice(firstNames)} ${randomChoice(lastNames)}`, title: randomChoice(["Recruiter","Director of Product","Head of Talent"]), company: randomChoice(companies), note: "", assignee: "", due_date: null })), Conversation: [], Meeting: [], Deal: [] } }),
   "GET /messages": () => ({ messages: Array.from({length: 20}).map((_,i)=>({ id:`m_${i+100}`, contact:`${randomChoice(firstNames).toLowerCase()}@${randomChoice(domains)}`, variant: i%2?"B":"A", subject:`Subject ${i+1}`, opened: i%3===0, replied: i%5===0 })) }),
+  "POST /painpoint-match/generate": () => ({
+    success: true,
+    message: "Pain point matches generated successfully",
+    matches: [
+      {
+        painpoint_1: "Need to reduce time-to-fill for engineering roles",
+        solution_1: "Cut time-to-fill by streamlining screening, tightening role requirements, and running structured interviews with calibrated scorecards.",
+        metric_1: "40% faster (30 → 18 days) with maintained offer-accept rate",
+        painpoint_2: "Struggling with candidate quality and cultural fit",
+        solution_2: "Improved candidate signal by adding work-sample tasks and structured culture/values interview rounds with consistent rubrics.",
+        metric_2: "35% improvement in onsite-to-offer conversion",
+        painpoint_3: "High turnover in engineering team affecting project delivery",
+        solution_3: "Reduced churn by implementing growth plans, manager 1:1 cadence, and clearer leveling/promotion criteria to boost retention.",
+        metric_3: "25% lower turnover over 6 months",
+        alignment_score: 0.85,
+      },
+    ],
+  }),
 };
 
 export function getMockResponse(path: string, method: string, body?: any): any | undefined {

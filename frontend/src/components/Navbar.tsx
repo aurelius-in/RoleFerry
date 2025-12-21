@@ -12,61 +12,110 @@ export default function Navbar() {
   const [dataOpen, setDataOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const pathname = usePathname();
-  if (pathname === "/") return null; // homepage must match approved wireframe
+  const hideOnHome = pathname === "/"; // homepage must match approved wireframe
+  if (hideOnHome) return null;
 
   return (
-    <header suppressHydrationWarning className="relative w-full flex items-center justify-between px-4 sm:px-6 py-3">
-      {/* Left: logo + wordmark */}
-      <div className="flex items-center gap-3">
-        <Image src="/roleferry_trans.png" alt="RoleFerry" width={140} height={38} priority />
-        <Image src="/wordmark.png" alt="RoleFerry" width={160} height={32} priority />
-      </div>
-      {/* Center: navigation */}
-      <nav className="hidden sm:flex flex-1 items-center justify-center gap-6 text-lg font-semibold">
-        {/* Primary Workflow Tabs */}
-        <NavLink href="/job-preferences" pathname={pathname}>Job Preferences</NavLink>
-        <NavLink href="/resume" pathname={pathname}>Resume</NavLink>
-        <NavLink href="/job-descriptions" pathname={pathname}>Jobs</NavLink>
-        <NavLink href="/painpoint-match" pathname={pathname}>Match</NavLink>
-        <NavLink href="/find-contact" pathname={pathname}>Contact</NavLink>
-        <NavLink href="/context-research" pathname={pathname}>Research</NavLink>
-        <NavLink href="/offer-creation" pathname={pathname}>Offer</NavLink>
-        <NavLink href="/compose" pathname={pathname}>Compose</NavLink>
-        <NavLink href="/campaign" pathname={pathname}>Campaign</NavLink>
-        <NavLink href="/deliverability-launch" pathname={pathname}>Launch</NavLink>
-        
-        {/* Utility Tabs */}
-        <div className="ml-4 pl-4 border-l border-gray-300">
-          <NavLink href="/dashboard" pathname={pathname}>Dashboard</NavLink>
-          <NavLink href="/analytics" pathname={pathname}>Analytics</NavLink>
-          <NavLink href="/settings" pathname={pathname}>Settings</NavLink>
-          <NavLink href="/help" pathname={pathname}>Help</NavLink>
+    <header suppressHydrationWarning className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/20 backdrop-blur">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2">
+        {/* Top row: logo + utilities */}
+        <div className="flex items-center justify-between gap-3">
+          {/* Left: logo + wordmark */}
+          <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/roleferry_trans.png"
+            alt="RoleFerry"
+            width={190}
+            height={52}
+            priority
+            className="h-9 w-auto sm:h-10"
+          />
+          <Image
+            src="/wordmark.png"
+            alt="RoleFerry"
+            width={210}
+            height={44}
+            priority
+            className="h-7 w-auto sm:h-8"
+          />
+          </Link>
+
+          {/* Right: utility + toggles (tight) */}
+          <div className="flex items-center gap-1.5">
+            <ModeToggle />
+            <DataModeToggle />
+            <HealthIndicator />
+            <ThemeToggle />
+            <button
+              aria-label="Tools"
+              className="w-8 h-8 rounded-md flex items-center justify-center border bg-black text-white border-white/20"
+              onClick={() => setToolsOpen(true)}
+            >
+              {/* Wrench icon */}
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22.7 19.3l-6.4-6.4a6.5 6.5 0 01-8.1-8.1l4.1 4.1 2.8-.7.7-2.8L11.7 1a6.5 6.5 0 008.1 8.1l6.4 6.4-3.5 3.5zM2 22l6-6 2 2-6 6H2v-2z"/></svg>
+            </button>
+            <Link
+              href="/settings"
+              aria-label="Settings"
+              className="w-8 h-8 rounded-md flex items-center justify-center border bg-black text-white border-white/20"
+            >
+              {/* Hamburger icon */}
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>
+            </Link>
+          </div>
         </div>
-      </nav>
-      <div className="flex items-center gap-4">
-        <ModeToggle />
-        <DataModeToggle />
-        <HealthIndicator />
-        <ThemeToggle />
-        <button aria-label="Tools" className="w-9 h-9 rounded-md flex items-center justify-center border bg-black text-white border-white/20" onClick={() => setToolsOpen(true)}>
-          {/* Wrench icon */}
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.7 19.3l-6.4-6.4a6.5 6.5 0 01-8.1-8.1l4.1 4.1 2.8-.7.7-2.8L11.7 1a6.5 6.5 0 008.1 8.1l6.4 6.4-3.5 3.5zM2 22l6-6 2 2-6 6H2v-2z"/></svg>
-        </button>
-        <Link href="/settings" aria-label="Settings" className="w-9 h-9 rounded-md flex items-center justify-center border bg-black text-white border-white/20">
-          {/* Hamburger icon */}
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>
-        </Link>
+
+        {/* Second row: primary + utility nav directly under the logo (very compact) */}
+        <nav className="mt-2 flex items-center gap-0 overflow-x-auto whitespace-nowrap pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <NavPill href="/job-preferences" pathname={pathname}>Job Prefs</NavPill>
+          <NavPill href="/resume" pathname={pathname}>Resume</NavPill>
+          <NavPill href="/job-descriptions" pathname={pathname}>Jobs</NavPill>
+          <NavPill href="/painpoint-match" pathname={pathname}>Match</NavPill>
+          <NavPill href="/find-contact" pathname={pathname}>Contact</NavPill>
+          <NavPill href="/context-research" pathname={pathname}>Research</NavPill>
+          <NavPill href="/offer-creation" pathname={pathname}>Offer</NavPill>
+          <NavPill href="/compose" pathname={pathname}>Compose</NavPill>
+          <NavPill href="/campaign" pathname={pathname}>Campaign</NavPill>
+          <NavPill href="/deliverability-launch" pathname={pathname}>Launch</NavPill>
+          <span className="mx-1 h-4 w-px bg-white/10" />
+          <NavPill href="/" pathname={pathname} kind="utility">Dashboard</NavPill>
+          <NavPill href="/analytics" pathname={pathname} kind="utility">Analytics</NavPill>
+          <NavPill href="/settings" pathname={pathname} kind="utility">Settings</NavPill>
+          <NavPill href="/help" pathname={pathname} kind="utility">Help</NavPill>
+        </nav>
+
+        <DataModal open={dataOpen} onClose={() => setDataOpen(false)} />
+        <ToolsModal open={toolsOpen} onClose={() => setToolsOpen(false)} />
       </div>
-      <DataModal open={dataOpen} onClose={() => setDataOpen(false)} />
-      <ToolsModal open={toolsOpen} onClose={() => setToolsOpen(false)} />
     </header>
   );
 }
 
-function NavLink({ href, pathname, children }: { href: string; pathname: string | null; children: React.ReactNode }) {
+function NavPill({
+  href,
+  pathname,
+  children,
+  kind = "primary",
+}: {
+  href: string;
+  pathname: string | null;
+  children: React.ReactNode;
+  kind?: "primary" | "utility";
+}) {
   const active = pathname === href || (href !== "/" && pathname?.startsWith(href));
+  const base =
+    "inline-flex items-center justify-center rounded-full border px-1.5 py-0.5 text-[10px] font-semibold tracking-normal transition-colors select-none leading-4";
+  const inactive =
+    kind === "utility"
+      ? "bg-white/5 text-white/80 border-white/10 hover:bg-white/10 hover:text-white"
+      : "bg-black/20 text-white/80 border-white/10 hover:bg-white/10 hover:text-white";
+  const activeCls =
+    kind === "utility"
+      ? "brand-gradient text-black border-white/10 shadow-sm shadow-black/20"
+      : "brand-gradient text-black border-white/10 shadow-sm shadow-black/20";
+
   return (
-    <Link href={href} className={`hover:underline ${active ? "text-orange-400" : "opacity-90"}`}>
+    <Link href={href} className={`${base} ${active ? activeCls : inactive}`}>
       {children}
     </Link>
   );
@@ -91,10 +140,10 @@ function ModeToggle() {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1">
       <button
         onClick={toggle}
-        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+        className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors ${
           mode === 'job-seeker' 
             ? 'bg-blue-600 text-white' 
             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -104,7 +153,7 @@ function ModeToggle() {
       </button>
       <button
         onClick={toggle}
-        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+        className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors ${
           mode === 'recruiter' 
             ? 'bg-blue-600 text-white' 
             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -129,18 +178,18 @@ function DataModeToggle() {
   };
 
   return (
-    <div className="hidden md:flex items-center text-xs font-semibold rounded-md border border-white/20 bg-black/40 overflow-hidden shadow-sm">
+    <div className="hidden md:flex items-center text-[11px] font-semibold rounded-md border border-white/20 bg-black/40 overflow-hidden shadow-sm">
       <button
         type="button"
         onClick={() => handleChange("demo")}
-        className={`px-3 py-1 transition-colors ${mode === "demo" ? "bg-white text-black" : "text-white/80 hover:bg-white/10"}`}
+        className={`px-2 py-0.5 transition-colors ${mode === "demo" ? "bg-white text-black" : "text-white/80 hover:bg-white/10"}`}
       >
         Demo
       </button>
       <button
         type="button"
         onClick={() => handleChange("live")}
-        className={`px-3 py-1 border-l border-white/20 transition-colors ${mode === "live" ? "bg-white text-black" : "text-white/80 hover:bg-white/10"}`}
+        className={`px-2 py-0.5 border-l border-white/20 transition-colors ${mode === "live" ? "bg-white text-black" : "text-white/80 hover:bg-white/10"}`}
       >
         Live
       </button>
@@ -167,13 +216,13 @@ function ThemeToggle() {
     localStorage.setItem("rf_theme", root.classList.contains("dark") ? "dark" : "light");
   };
   return (
-    <button onClick={toggle} aria-label={isDark ? "Switch to day" : "Switch to night"} className={`w-9 h-9 rounded-md flex items-center justify-center border ${isDark ? "bg-black text-white border-white/20" : "bg-white text-black border-black/20"}`}>
+    <button onClick={toggle} aria-label={isDark ? "Switch to day" : "Switch to night"} className={`w-8 h-8 rounded-md flex items-center justify-center border ${isDark ? "bg-black text-white border-white/20" : "bg-white text-black border-black/20"}`}>
       {isDark ? (
         // Sun icon
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zm10.45 14.32l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM12 4V1h-0v3h0zm0 19v-3h-0v3h0zm8-11h3v0h-3v0zm-19 0H1v0h3v0zm15.24-7.16l1.8-1.79-1.41-1.41-1.79 1.8 1.4 1.4zM4.22 19.78l-1.8 1.79 1.41 1.41 1.79-1.8-1.4-1.4zM12 6a6 6 0 100 12 6 6 0 000-12z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zm10.45 14.32l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM12 4V1h-0v3h0zm0 19v-3h-0v3h0zm8-11h3v0h-3v0zm-19 0H1v0h3v0zm15.24-7.16l1.8-1.79-1.41-1.41-1.79 1.8 1.4 1.4zM4.22 19.78l-1.8 1.79 1.41 1.41 1.79-1.8-1.4-1.4zM12 6a6 6 0 100 12 6 6 0 000-12z"/></svg>
       ) : (
         // Moon icon
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21.64 13a9 9 0 01-11.31-11.31A9 9 0 1021.64 13z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21.64 13a9 9 0 01-11.31-11.31A9 9 0 1021.64 13z"/></svg>
       )}
     </button>
   );

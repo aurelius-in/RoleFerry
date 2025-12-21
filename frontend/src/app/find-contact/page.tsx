@@ -44,12 +44,41 @@ export default function FindContactPage() {
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [verifyingEmails, setVerifyingEmails] = useState<string[]>([]);
   const [helper, setHelper] = useState<ContactSearchResponse["helper"] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const isRealEmail = (email?: string) => {
+    const e = String(email || "").trim().toLowerCase();
+    if (!e) return false;
+    if (e === "unknown@example.com") return false;
+    if (e.endsWith("@example.com")) return false;
+    return true;
+  };
 
   useEffect(() => {
     // Load any existing contacts from localStorage
     const savedContacts = localStorage.getItem('found_contacts');
     if (savedContacts) {
-      setContacts(JSON.parse(savedContacts));
+      try {
+        const parsed: Contact[] = JSON.parse(savedContacts);
+        const looksLikeOldMock = Array.isArray(parsed) && parsed.some((c) => {
+          const company = String((c as any)?.company || "");
+          const email = String((c as any)?.email || "");
+          const id = String((c as any)?.id || "");
+          return (
+            company.toLowerCase().includes("techcorp") ||
+            email.toLowerCase().endsWith("@techcorp.com") ||
+            ["contact_1", "contact_2", "contact_3"].includes(id)
+          );
+        });
+
+        if (looksLikeOldMock) {
+          localStorage.removeItem("found_contacts");
+        } else {
+          setContacts(parsed);
+        }
+      } catch {
+        localStorage.removeItem("found_contacts");
+      }
     }
   }, []);
 
@@ -57,6 +86,10 @@ export default function FindContactPage() {
     if (!searchQuery.trim()) return;
     
     setIsSearching(true);
+    setError(null);
+    // Clear any previously cached results so we don't show stale demo contacts on failure.
+    setContacts([]);
+    setSelectedContacts([]);
 
     try {
       const res = await api<ContactSearchResponse>("/find-contact/search", "POST", {
@@ -66,8 +99,13 @@ export default function FindContactPage() {
       setContacts(res.contacts || []);
       setHelper(res.helper || null);
       localStorage.setItem("found_contacts", JSON.stringify(res.contacts || []));
-    } catch {
-      // keep the page usable even if API fails
+    } catch (e: any) {
+      const msg = String(e?.message || "");
+      // Surface the backend error so users know they need to configure PDL or refine the query.
+      setError(msg.includes("404") ? "No decision makers found for that company. Try a more specific company name." : msg || "Search failed.");
+      try {
+        localStorage.removeItem("found_contacts");
+      } catch {}
     } finally {
       setIsSearching(false);
     }
@@ -75,7 +113,7 @@ export default function FindContactPage() {
 
   const handleVerifyEmails = async () => {
     const selected = contacts.filter(c => selectedContacts.includes(c.id));
-    const emailsToVerify = selected.map(c => c.email);
+    const emailsToVerify = selected.map(c => c.email).filter((e) => isRealEmail(e));
     
     if (emailsToVerify.length === 0) return;
     
@@ -153,6 +191,12 @@ export default function FindContactPage() {
             </p>
           </div>
 
+          {error && (
+            <div className="mb-6 rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+              {error}
+            </div>
+          )}
+
           {helper && (
             <div className="mb-8 rounded-lg border border-white/10 bg-black/20 p-4">
               <div className="text-sm font-bold text-white mb-2">GPT Helper: talking points</div>
@@ -218,14 +262,32 @@ export default function FindContactPage() {
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">Found Contacts</h2>
-                {selectedContacts.length > 0 && (
-                  <button
-                    onClick={handleVerifyEmails}
-                    className="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition-colors"
-                  >
-                    Verify Selected Emails ({selectedContacts.length})
-                  </button>
-                )}
+                {selectedContacts.length > 0 && (() => {
+                  const verifiableCount = contacts.filter(
+                    (c) => selectedContacts.includes(c.id) && isRealEmail(c.email)
+                  ).length;
+                  const canVerify = verifiableCount > 0;
+                  const verifyLabel = `Verify emails (${verifiableCount}/${selectedContacts.length})`;
+
+                  return (
+                  <div className="flex items-center gap-2">
+                    {canVerify && (
+                      <button
+                        onClick={handleVerifyEmails}
+                        className="px-4 py-2 rounded-md font-medium transition-colors bg-green-600 text-white hover:bg-green-700"
+                      >
+                        {verifyLabel}
+                      </button>
+                    )}
+                    <button
+                      onClick={handleContinue}
+                      className="px-4 py-2 rounded-md font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      Continue (LinkedIn outreach)
+                    </button>
+                  </div>
+                  );
+                })()}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -260,10 +322,12 @@ export default function FindContactPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-gray-500 text-sm">Email:</span>
-                          <span className="text-sm font-mono">{contact.email}</span>
-                        </div>
+                        {isRealEmail(contact.email) && (
+                          <div className="flex items-center space-x-2">
+                            <span className="text-gray-500 text-sm">Email:</span>
+                            <span className="text-sm font-mono">{contact.email}</span>
+                          </div>
+                        )}
                         
                         <div className="flex items-center space-x-2">
                           <span className="text-gray-500 text-sm">Confidence:</span>
@@ -292,7 +356,11 @@ export default function FindContactPage() {
                         {contact.linkedin_url && (
                           <div>
                             <a
-                              href={contact.linkedin_url}
+                              href={
+                                contact.linkedin_url.startsWith("http://") || contact.linkedin_url.startsWith("https://")
+                                  ? contact.linkedin_url
+                                  : `https://${contact.linkedin_url.replace(/^\/+/, "")}`
+                              }
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:text-blue-800 text-sm"
