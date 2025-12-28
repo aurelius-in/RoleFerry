@@ -1,5 +1,6 @@
 param(
-  [switch]$Build
+  [switch]$Build,
+  [switch]$ProdFrontend
 )
 
 if ($Build) {
@@ -9,6 +10,11 @@ if ($Build) {
 docker compose up -d db redis backend
 Push-Location frontend
 npm install
-npm run dev
+if ($ProdFrontend) {
+  npm run build
+  npm run start
+} else {
+  npm run dev
+}
 Pop-Location
 

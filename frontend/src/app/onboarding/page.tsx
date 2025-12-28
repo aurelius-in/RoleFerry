@@ -1,13 +1,14 @@
 export default function Onboarding() {
   const steps = [
     { label: "Set ENV keys (APIFY, INSTANTLY, MV)", href: "/settings" },
-    { label: "Create IJP filters", href: "/foundry/ijp" },
-    { label: "Ingest jobs", href: "/foundry/jobs" },
-    { label: "Parse candidate", href: "/foundry/candidate" },
-    { label: "Score matches", href: "/foundry/match" },
-    { label: "Find and verify contacts", href: "/foundry/contacts" },
-    { label: "Generate outreach", href: "/foundry/outreach" },
-    { label: "Build & push sequence", href: "/foundry/sequence" },
+    { label: "Import job descriptions", href: "/job-descriptions" },
+    { label: "Upload resume / candidate profile", href: "/resume" },
+    { label: "Match pain points", href: "/painpoint-match" },
+    { label: "Find contacts (Email or LinkedIn)", href: "/find-contact" },
+    { label: "Company + contact research", href: "/context-research" },
+    { label: "Create an offer", href: "/offer-creation" },
+    { label: "Compose outreach", href: "/compose" },
+    { label: "Build a campaign", href: "/campaign" },
     { label: "Track analytics", href: "/analytics" },
   ];
   return (

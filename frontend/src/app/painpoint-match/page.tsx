@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import StarRating from "@/components/StarRating";
 
 interface PainPointMatch {
   painpoint_1: string;
@@ -255,6 +256,11 @@ export default function PainPointMatchPage() {
   return (
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
+        <div className="mb-4">
+          <a href="/job-descriptions" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+            <span className="mr-2">←</span> Back to Jobs
+          </a>
+        </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Pain Point Match</h1>
@@ -423,6 +429,9 @@ export default function PainPointMatchPage() {
                           {getScoreLabel(matches[0].alignment_score)}
                         </div>
                         <div className="text-sm text-gray-500">Alignment Score</div>
+                            <div className="mt-1 flex justify-center">
+                              <StarRating value={matches[0].alignment_score} scale="fraction" showNumeric />
+                            </div>
                       </div>
                     </div>
                   </div>

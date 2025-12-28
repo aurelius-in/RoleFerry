@@ -275,6 +275,13 @@ class Contact(BaseModel):
     company: str
     department: str
     level: str
+    email_source: Optional[str] = None
+    location_name: Optional[str] = None
+    location_country: Optional[str] = None
+    job_company_website: Optional[str] = None
+    job_company_linkedin_url: Optional[str] = None
+    job_company_industry: Optional[str] = None
+    job_company_size: Optional[str] = None
 
 class ContactSearchRequest(BaseModel):
     query: str
@@ -409,7 +416,7 @@ async def search_contacts(request: ContactSearchRequest):
                 contacts: List[Contact] = []
                 for p in people:
                     # If we don't have a real email, leave it blank and let the UI hide it.
-                    email_guess = ""
+                    email_guess = str(p.email or "").strip()
                     name = (p.name or "").strip()
                     if name and name == name.lower():
                         name = " ".join([w[:1].upper() + w[1:] for w in name.split()])
@@ -427,6 +434,13 @@ async def search_contacts(request: ContactSearchRequest):
                             company=p.company or q,
                             department=_infer_department(p.title),
                             level=_infer_level(p.title),
+                            email_source=p.email_source,
+                            location_name=p.location_name,
+                            location_country=p.location_country,
+                            job_company_website=p.job_company_website,
+                            job_company_linkedin_url=p.job_company_linkedin_url,
+                            job_company_industry=p.job_company_industry,
+                            job_company_size=p.job_company_size,
                         )
                     )
 
@@ -446,7 +460,11 @@ async def search_contacts(request: ContactSearchRequest):
                     {
                         "role": "system",
                         "content": (
-                            "You generate outreach talking points for decision makers.\n\n"
+                            "You generate outreach talking points for decision makers. "
+                            "Focus on business value and relevant industry questions.\n\n"
+                            "Style constraints:\n"
+                            "- Hard ban: do NOT use clichés like \"I hope you're doing well\", \"How are you?\", or \"Thank you for your time\".\n"
+                            "- suggestions should be direct and value-oriented.\n\n"
                             "Return ONLY JSON with keys:\n"
                             "- talking_points_by_contact: object mapping contact_id -> array of strings\n"
                             "- opener_suggestions: array of strings\n"
@@ -458,12 +476,12 @@ async def search_contacts(request: ContactSearchRequest):
                 stub_json = {
                     "talking_points_by_contact": {},
                     "opener_suggestions": [
-                        "Quick question on your priorities for the role",
-                        "Noticed a theme in the job posting — here’s a concrete idea",
+                        "Quick question on your priorities for the team",
+                        "Noticed a theme in the roadmap — here’s a concrete idea",
                     ],
                     "questions_to_ask": [
                         "What’s the most urgent outcome you need in the next 90 days?",
-                        "Where is the team currently feeling the most pain (quality, speed, cost)?",
+                        "Where is the team currently feeling the most friction (quality or speed)?",
                     ],
                 }
                 raw_llm = client.run_chat_completion(messages, temperature=0.25, max_tokens=650, stub_json=stub_json)
@@ -512,7 +530,50 @@ async def search_contacts(request: ContactSearchRequest):
                 page_text = _html_to_text(fetched["html"])
                 contacts = _extract_contacts_from_text(page_text, company=company, domain=domain, source_url=fetched["url"])
 
-        # 3) If we still have nothing, surface a clear failure (don't silently fake it)
+        # 3) If we still have nothing, try OpenAI as a final backup to identify public personas
+        if not contacts and settings.openai_api_key:
+            try:
+                client = get_openai_client()
+                # Ask GPT to identify likely decision makers based on its training data (broad knowledge).
+                # We strictly ask for name, title, and LinkedIn search URL.
+                prompt = (
+                    f"Identify 3-5 key decision makers (engineering leadership, talent acquisition, or executive) "
+                    f"at the company '{company}'. For each person, provide their name and exact job title. "
+                    f"Only include people who are likely to still be there or are well-known leaders. "
+                    f"Return ONLY a JSON object with a key 'people' which is an array of {{name, title}}."
+                )
+                messages = [{"role": "user", "content": prompt}]
+                raw_gpt = client.run_chat_completion(messages, temperature=0.1, max_tokens=500)
+                choices = raw_gpt.get("choices") or []
+                content_str = str((choices[0].get("message") if choices else {}).get("content") or "")
+                data = extract_json_from_text(content_str)
+                gpt_people = data.get("people") if isinstance(data, dict) else []
+                
+                if gpt_people and isinstance(gpt_people, list):
+                    for p in gpt_people:
+                        nm = str(p.get("name") or "").strip()
+                        ttl = str(p.get("title") or "").strip()
+                        if nm and ttl:
+                            cid = hashlib.sha256(f"gpt_backup:{nm}:{ttl}".encode("utf-8")).hexdigest()[:12]
+                            contacts.append(
+                                Contact(
+                                    id=f"gpt_{cid}",
+                                    name=nm,
+                                    title=ttl,
+                                    email=_guess_email(nm, domain or "example.com"),
+                                    linkedin_url=_linkedin_search_url(nm, company),
+                                    confidence=0.6,  # Lower confidence because it's from training data, not a live scrape
+                                    verification_status="unknown",
+                                    verification_score=None,
+                                    company=company,
+                                    department=_infer_department(ttl),
+                                    level=_infer_level(ttl),
+                                )
+                            )
+            except Exception:
+                logger.exception("OpenAI contact backup failed")
+
+        # 4) If we still have nothing, surface a clear failure
         if not contacts:
             raise HTTPException(
                 status_code=404,

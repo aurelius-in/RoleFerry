@@ -44,6 +44,8 @@ class InMemoryStore:
         self.demo_research: Dict[str, Any] | None = None
         self.demo_painpoint_matches: List[Dict[str, Any]] = []
         self.demo_offer: Dict[str, Any] | None = None
+        # Offer library per user (used when Postgres is unavailable)
+        self.demo_offer_library_by_user: Dict[str, List[Dict[str, Any]]] = {}
         self.demo_compose: Dict[str, Any] | None = None
         self.demo_campaign: Dict[str, Any] | None = None
 

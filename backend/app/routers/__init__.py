@@ -1,5 +1,6 @@
 # Router imports - automatically includes all API routers
 from . import (
+    auth,
     health,
     accessibility,
     analytics_tracking,
@@ -19,6 +20,7 @@ from . import (
     livepages,
     personas,
     job_preferences,
+    gap_analysis,
     resume,
     job_descriptions,
     pain_point_match,
@@ -63,6 +65,7 @@ from . import (
 )
 
 __all__ = [
+    "auth",
     "health",
     "accessibility",
     "analytics_tracking",

@@ -1,10 +1,10 @@
-from fastapi import APIRouter
-from fastapi import Response
+from fastapi import APIRouter, Response, Request, HTTPException
 from sqlalchemy import text as sql_text
 
 from ..storage import store
 from ..db import get_engine
 from ..clients.openai_client import get_openai_client, extract_json_from_text
+from ..auth import require_current_user
 import json
 
 
@@ -13,14 +13,14 @@ engine = get_engine()
 
 
 @router.get("/overview")
-async def analytics_overview():
+async def analytics_overview(http_request: Request):
     """
     Week 11+ analytics overview.
-    Derives KPIs from application + outreach tables for the demo user,
-    while still using in-memory message stats for click/reply approximations,
-    and surfaces a verification breakdown for deliverability context.
+    Derives KPIs from application + outreach tables for the demo user...
     """
-    DEMO_USER_ID = "demo-user"
+    user = await require_current_user(http_request)
+    user_id = user.id
+    
     app_rows = []
     sent_row = None
     verification_rows = []
@@ -38,7 +38,7 @@ async def analytics_overview():
                     GROUP BY status
                     """
                 ),
-                {"user_id": DEMO_USER_ID},
+                {"user_id": user_id},
             )
             app_rows = result.fetchall()
 
@@ -51,7 +51,7 @@ async def analytics_overview():
                     WHERE user_id = :user_id
                     """
                 ),
-                {"user_id": DEMO_USER_ID},
+                {"user_id": user_id},
             )
             sent_row = result.first()
 
@@ -66,7 +66,7 @@ async def analytics_overview():
                     GROUP BY COALESCE(verification_status, 'unknown')
                     """
                 ),
-                {"user_id": DEMO_USER_ID},
+                {"user_id": user_id},
             )
             verification_rows = result.fetchall()
     except BaseException:
@@ -83,6 +83,34 @@ async def analytics_overview():
     )
 
     total_sent = int(getattr(sent_row, "sent_count", 0) or 0) if sent_row else 0
+
+    # Fetch recent sends
+    recent_sends = []
+    try:
+        async with engine.begin() as conn:
+            result = await conn.execute(
+                sql_text(
+                    """
+                    SELECT id, contact_email, subject, sent_at, verification_status, verification_score
+                    FROM outreach
+                    WHERE user_id = :user_id
+                    ORDER BY sent_at DESC
+                    LIMIT 5
+                    """
+                ),
+                {"user_id": user_id},
+            )
+            for row in result.fetchall():
+                recent_sends.append({
+                    "id": str(row.id),
+                    "contact_email": row.contact_email,
+                    "subject": row.subject,
+                    "sent_at": row.sent_at.isoformat() if row.sent_at else "",
+                    "verification_status": row.verification_status,
+                    "verification_score": row.verification_score,
+                })
+    except Exception:
+        pass
 
     # Use in-memory message mocks (if any) to approximate click/reply rates
     msgs = store.messages or []
@@ -119,6 +147,7 @@ async def analytics_overview():
         "by_status": by_status,
         "verification_breakdown": verification_breakdown,
         "verified_ratio": round(verified_ratio, 1),
+        "recent_sends": recent_sends,
     }
 
 
@@ -202,7 +231,7 @@ def analytics_timeseries():
 
 
 @router.get("/explain")
-async def analytics_explain():
+async def analytics_explain(http_request: Request):
     """
     GPT-backed explanatory analytics.
 
@@ -211,7 +240,7 @@ async def analytics_explain():
     - risks
     - next_actions
     """
-    metrics = await analytics_overview()
+    metrics = await analytics_overview(http_request)
     campaign = analytics_campaign()
 
     context = {

@@ -28,6 +28,15 @@ COMMON_TITLES = [
 ]
 
 
+# PDFs (especially from Word/Google Docs templates) often use non-standard bullet glyphs
+# (e.g., "" / "") that survive text extraction.
+_BULLET_RE = re.compile(r"^(\-|\*|•|‣|▪|●|·|||\uFFFD)\s*")
+
+
+def _is_bullet_line(s: str) -> bool:
+    return bool(_BULLET_RE.match((s or "").lstrip()))
+
+
 def infer_seniority_from_text(text: str) -> str:
     t = text.lower()
     if "director" in t or "head of" in t or "lead" in t:
@@ -42,18 +51,74 @@ def infer_seniority_from_text(text: str) -> str:
 
 
 def extract_key_metrics(lines: List[str]) -> List[str]:
-    # Lines with numbers/percents often are metrics
+    """
+    Heuristic key metrics extractor.
+
+    We only extract metrics that are explicitly present in the resume text
+    (numbers, currency, percents, scale indicators). We do NOT invent metrics.
+    """
     metrics: List[str] = []
-    for l in lines:
-        if re.search(r"(\d+%|\b\d+[kKmM]?\b)", l):
+
+    # Recognize numbers that are more likely to be "impact" than just years.
+    has_metric_token = re.compile(
+        r"("
+        r"\$\s*\d[\d,]*(?:\.\d+)?\s*(?:[kKmMbB])?\+?"
+        r"|\b\d{2,3}%\b|\b\d+%\b"
+        r"|\b\d[\d,]*(?:\.\d+)?\s*(?:k|m|b)\+?\b"
+        r"|\b\d{2,}\b"
+        r")"
+    )
+    looks_like_year = re.compile(r"\b(19|20)\d{2}\b")
+    looks_like_year_range = re.compile(r"\b(19|20)\d{2}\b\s*[-–—]\s*\b(19|20)\d{2}\b")
+    looks_like_phone = re.compile(r"\b\d{3}[- )]\d{3}[- ]\d{4}\b")
+
+    for raw in lines:
+        l = (raw or "").strip()
+        if len(l) < 10 or len(l) > 240:
+            continue
+        low = l.lower()
+        if "linkedin.com" in low or "mailto:" in low or "@" in low:
+            continue
+        if looks_like_phone.search(l):
+            continue
+        if looks_like_year_range.search(l):
+            continue
+
+        if not has_metric_token.search(l):
+            continue
+
+        # If it contains a year token, require stronger metric markers to avoid date noise.
+        if looks_like_year.search(l):
+            if re.search(r"(\$|%|\b\d[\d,]*\s*(?:k|m|b)\b)", l, re.I):
+                metrics.append(l)
+            else:
+                continue
+        else:
             metrics.append(l)
-    return metrics[:10]
+
+    # De-dupe while preserving order
+    seen = set()
+    out: List[str] = []
+    for m in metrics:
+        k = m.lower()
+        if k in seen:
+            continue
+        seen.add(k)
+        out.append(m)
+        if len(out) >= 12:
+            break
+    return out[:10]
 
 
 def extract_problems_and_accomplishments(lines: List[str]) -> Dict[str, List[str]]:
-    bullets = [l for l in lines if l.startswith(("- ", "• ", "* "))]
-    problems = bullets[:10]
-    accomplishments = [l for l in bullets if re.search(r"(launched|shipped|improved|reduced|increased)", l, re.I)]
+    bullets = [l for l in lines if _is_bullet_line(l)]
+    problems = bullets[:12]
+    accomplishments = [
+        l
+        for l in bullets
+        if re.search(r"(launched|shipped|improved|reduced|increased|optimized|built|designed|delivered|led)", l, re.I)
+        or re.search(r"(\$|%|\b\d[\d,]*\s*(?:k|m|b)\b)", l, re.I)
+    ]
     return {
         "ProblemsSolved": problems[:10],
         "NotableAccomplishments": accomplishments[:10],
@@ -62,14 +127,47 @@ def extract_problems_and_accomplishments(lines: List[str]) -> Dict[str, List[str
 
 _MAJOR_HEADINGS = {
     "SUMMARY",
+    "PROFESSIONAL SUMMARY",
+    "PROFILE",
+    # Experience
     "EXPERIENCE",
+    "PROFESSIONAL EXPERIENCE",
+    "WORK EXPERIENCE",
+    "WORK HISTORY",
+    "EMPLOYMENT HISTORY",
+    "PROFESSIONAL HISTORY",
+    "CAREER HISTORY",
+    # Education
     "EDUCATION",
+    # Skills
     "SKILLS",
+    "CORE SKILLS",
+    "CORE COMPETENCIES",
+    "TECHNICAL SKILLS",
+    "SKILLS & TOOLS",
+    "TOP SKILLS",
+    "LANGUAGES",
+    "TECH STACK",
+    "TECHNOLOGIES",
+    "TOOLS",
+    "TECHNICAL PROFICIENCIES",
+    # Other
     "PUBLICATIONS",
     "BOOKS",
     "AWARDS",
     "WORK REFERENCES",
     "SOFTWARE PORTFOLIO",
+    # Accomplishments/Projects
+    "ACCOMPLISHMENTS",
+    "NOTABLE ACCOMPLISHMENTS",
+    "ACHIEVEMENTS",
+    "HIGHLIGHTS",
+    "PROJECTS",
+    "SELECTED PROJECTS",
+    "PROJECT EXPERIENCE",
+    # Challenges
+    "BUSINESS CHALLENGES SOLVED",
+    "BUSINESS CHALLENGES",
 }
 
 
@@ -86,7 +184,12 @@ def _is_heading(line: str) -> bool:
     t = re.sub(r"[^A-Za-z &/]+", "", (line or "").strip())
     if not t:
         return False
-    return t.upper() in _MAJOR_HEADINGS
+    up = t.upper()
+    if up in _MAJOR_HEADINGS:
+        return True
+    # Some DOCX resumes use "Skills:" or "Experience -" style headings.
+    up2 = up.strip().rstrip(":").strip()
+    return up2 in _MAJOR_HEADINGS
 
 
 def _slice_sections(text: str) -> Dict[str, List[str]]:
@@ -117,7 +220,23 @@ def _slice_sections(text: str) -> Dict[str, List[str]]:
     for line in lines:
         if _is_heading(line):
             flush()
-            current = line.strip().upper()
+            # Normalize to canonical keys for downstream extractors.
+            head = re.sub(r"[^A-Za-z &/]+", "", (line or "").strip()).upper().strip().rstrip(":").strip()
+            if head in ["WORK EXPERIENCE", "PROFESSIONAL EXPERIENCE"]:
+                head = "EXPERIENCE"
+            if head in ["WORK HISTORY", "EMPLOYMENT HISTORY", "PROFESSIONAL HISTORY", "CAREER HISTORY"]:
+                head = "EXPERIENCE"
+            if head in ["CORE SKILLS", "CORE COMPETENCIES", "TECHNICAL SKILLS", "SKILLS & TOOLS"]:
+                head = "SKILLS"
+            if head in ["TOP SKILLS", "LANGUAGES", "TECH STACK", "TECHNOLOGIES", "TOOLS", "TECHNICAL PROFICIENCIES"]:
+                head = "SKILLS"
+            if head in ["ACHIEVEMENTS", "HIGHLIGHTS", "NOTABLE ACCOMPLISHMENTS", "ACCOMPLISHMENTS"]:
+                head = "ACCOMPLISHMENTS"
+            if head in ["PROJECTS", "SELECTED PROJECTS", "PROJECT EXPERIENCE"]:
+                head = "ACCOMPLISHMENTS"
+            if head in ["BUSINESS CHALLENGES", "BUSINESS CHALLENGES SOLVED"]:
+                head = "BUSINESS_CHALLENGES"
+            current = head
             continue
         if current is not None:
             buf.append(line)
@@ -136,9 +255,9 @@ def extract_skills_from_sections(sections: Dict[str, List[str]]) -> List[str]:
     if not raw_lines:
         return []
 
-    # Join with spaces so wrapped skills like "ML\nEngineering" stay intact.
-    joined = " ".join(raw_lines)
-    joined = _normalize_text(joined)
+    # Many DOCX resumes list skills as bullets or short lines; PDFs often use commas.
+    # We'll support both.
+    joined = _normalize_text(" ".join([l.strip() for l in raw_lines if l and l.strip()]))
     # Force category markers to become explicit separators; PDF extraction often
     # drops commas/newlines and merges the last skill with the next category.
     category_markers = [
@@ -154,8 +273,14 @@ def extract_skills_from_sections(sections: Dict[str, List[str]]) -> List[str]:
     joined = re.sub(r"[•�]{2,}", " ", joined)
     joined = re.sub(r"\b[Ee]\s*\?\b", " ", joined)
 
-    # Split by commas; most resumes list skills comma-separated.
-    tokens = [t.strip(" ,;:\n\t") for t in joined.split(",")]
+    # Split by commas/semicolons first.
+    tokens = [t.strip(" ,;:\n\t") for t in re.split(r"[;,]", joined)]
+    # Also treat each original line as a potential token (bullets / one-skill-per-line).
+    for l in raw_lines:
+        s = _normalize_text(l).strip()
+        s = s.lstrip("-•* ").strip()
+        if s:
+            tokens.append(s)
 
     category_set = {m.upper() for m in category_markers}
 
@@ -195,6 +320,106 @@ def extract_skills_from_sections(sections: Dict[str, List[str]]) -> List[str]:
     return skills[:60]
 
 
+def extract_skills_from_lines(lines: List[str]) -> List[str]:
+    """
+    Fallback skills extractor for resumes without an explicit SKILLS section.
+    Looks for inline "Skills:" / "Technologies:" patterns and comma-separated tool lists.
+    """
+    out: List[str] = []
+    seen = set()
+
+    def add(tok: str) -> None:
+        t = (tok or "").strip().strip("•-* ").strip()
+        if not t or len(t) > 60:
+            return
+        k = t.lower()
+        if k in seen:
+            return
+        seen.add(k)
+        out.append(t)
+
+    inline_re = re.compile(r"^(skills|tools|technologies|tech stack|stack|languages)\s*[:\-]\s*(.+)$", re.I)
+    for l in lines:
+        m = inline_re.match((l or "").strip())
+        if not m:
+            continue
+        rhs = m.group(2)
+        for tok in re.split(r"[;,/]| {2,}", rhs):
+            if tok.strip():
+                add(tok)
+
+    return out[:60]
+
+
+def extract_business_challenges(sections: Dict[str, List[str]], all_lines: List[str]) -> List[str]:
+    """
+    Business challenges solved / problems tackled.
+    Prefer an explicit BUSINESS_CHALLENGES section if present; otherwise use bullets/lines
+    that look like problem statements from across the resume.
+    """
+    raw = sections.get("BUSINESS_CHALLENGES") or []
+    out: List[str] = []
+    seen = set()
+
+    def add(s: str) -> None:
+        s = (s or "").strip().lstrip("-•* ").strip()
+        if len(s) < 8:
+            return
+        if len(s) > 220:
+            return
+        k = s.lower()
+        if k in seen:
+            return
+        seen.add(k)
+        out.append(s)
+
+    for l in raw:
+        # Split bullets embedded in one line
+        if "•" in l:
+            for part in l.split("•"):
+                add(part)
+        else:
+            add(l)
+
+    if out:
+        return out[:15]
+
+    # Fallback: use "problems solved" bullets from anywhere.
+    bullets = [l for l in all_lines if _is_bullet_line(l)]
+    for b in bullets:
+        add(b)
+
+    if out:
+        return out[:15]
+
+    # Last resort: look for "challenge/problem" phrasing / outcome verbs.
+    for l in all_lines:
+        low = l.lower()
+        if any(
+            w in low
+            for w in [
+                "challenge",
+                "problem",
+                "turnaround",
+                "stalled",
+                "blocked",
+                "fix",
+                "reduce",
+                "improve",
+                "increase",
+                "optimize",
+                "scale",
+                "automate",
+                "accelerate",
+                "streamline",
+            ]
+        ):
+            add(l)
+        if len(out) >= 10:
+            break
+    return out[:15]
+
+
 @dataclass
 class _RoleSpan:
     title: str
@@ -210,11 +435,60 @@ def _parse_mm_yyyy(s: str) -> Optional[Tuple[int, int]]:
     return int(m.group(1)), int(m.group(2))
 
 
+_MONTHS = {
+    "jan": 1,
+    "january": 1,
+    "feb": 2,
+    "february": 2,
+    "mar": 3,
+    "march": 3,
+    "apr": 4,
+    "april": 4,
+    "may": 5,
+    "jun": 6,
+    "june": 6,
+    "jul": 7,
+    "july": 7,
+    "aug": 8,
+    "august": 8,
+    "sep": 9,
+    "sept": 9,
+    "september": 9,
+    "oct": 10,
+    "october": 10,
+    "nov": 11,
+    "november": 11,
+    "dec": 12,
+    "december": 12,
+}
+
+
+def _parse_month_year(s: str) -> Optional[Tuple[int, int]]:
+    """
+    Parse 'January 2025' / 'Jan 2025' -> (1, 2025).
+    """
+    m = re.match(r"^\s*([A-Za-z]{3,9})\s+(\d{4})\s*$", s)
+    if not m:
+        return None
+    mon = _MONTHS.get(m.group(1).strip().lower())
+    if not mon:
+        return None
+    return mon, int(m.group(2))
+
+
+def _parse_date_token(s: str) -> Optional[Tuple[int, int]]:
+    """
+    Parse either MM/YYYY or Month YYYY into (month, year).
+    """
+    s2 = (s or "").strip()
+    return _parse_mm_yyyy(s2) or _parse_month_year(s2)
+
+
 def _duration_str(start: str, end: str) -> str:
     """
     Convert MM/YYYY - (MM/YYYY|Present) to a human-ish duration string.
     """
-    s = _parse_mm_yyyy(start)
+    s = _parse_date_token(start)
     if not s:
         return ""
     em = end.strip().lower()
@@ -222,7 +496,7 @@ def _duration_str(start: str, end: str) -> str:
         today = date.today()
         e = (today.month, today.year)
     else:
-        e = _parse_mm_yyyy(end)
+        e = _parse_date_token(end)
         if not e:
             return ""
 
@@ -254,8 +528,9 @@ def extract_roles_and_tenure(sections: Dict[str, List[str]]) -> Dict[str, object
 
     # Oliver-Oct.pdf extraction sometimes replaces the dash with a null-ish separator.
     # Accept dash variants OR just whitespace between start/end.
+    date_token = r"(?:\d{2}/\d{4}|[A-Za-z]{3,9}\s+\d{4})"
     role_re = re.compile(
-        r"^(?P<title>.+?)\s+(?P<start>\d{2}/\d{4})\s*(?:-|–|—|to|\s)\s*(?P<end>(?:\d{2}/\d{4}|Present))\s*$",
+        rf"^(?P<title>.+?)\s+(?P<start>{date_token})\s*(?:-|–|—|to|\s)\s*(?P<end>(?:{date_token}|Present))(?:\s*\(.*\))?\s*$",
         re.I,
     )
 
@@ -297,10 +572,86 @@ def extract_roles_and_tenure_from_lines(lines: List[str]) -> Dict[str, object]:
     if not lines:
         return {"roles": [], "tenure": []}
 
+    date_token = r"(?:\d{2}/\d{4}|[A-Za-z]{3,9}\s+\d{4})"
     role_re = re.compile(
-        r"^(?P<title>.+?)\s+(?P<start>\d{2}/\d{4})\s*(?:-|–|—|to|\s)\s*(?P<end>(?:\d{2}/\d{4}|Present))\s*$",
+        rf"^(?P<title>.+?)\s+(?P<start>{date_token})\s*(?:-|–|—|to|\s)\s*(?P<end>(?:{date_token}|Present))(?:\s*\(.*\))?\s*$",
         re.I,
     )
+    date_line_re = re.compile(
+        rf"^(?P<start>{date_token})\s*(?:-|–|—|to)\s*(?P<end>(?:{date_token}|Present))(?:\s*\(.*\))?\s*$",
+        re.I,
+    )
+
+    def _strip_md_prefix(s: str) -> str:
+        return re.sub(r"^\s*#+\s*", "", (s or "").strip())
+
+    def _is_page_marker(s: str) -> bool:
+        low = (s or "").strip().lower()
+        return low.startswith("page ") and " of " in low
+
+    _duration_heading_re = re.compile(r"^\s*\d+\s+years?(?:\s+\d+\s+months?)?\s*$", re.I)
+
+    def _is_duration_heading(s: str) -> bool:
+        return bool(_duration_heading_re.match((s or "").strip()))
+
+    def _is_md_heading_line(s: str) -> bool:
+        return bool((s or "").lstrip().startswith("#"))
+
+    def _looks_like_title(s: str) -> bool:
+        low = (s or "").lower()
+        if not low:
+            return False
+        if any(t in low for t in COMMON_TITLES):
+            return True
+        return any(
+            k in low
+            for k in [
+                "engineer",
+                "architect",
+                "manager",
+                "director",
+                "lead",
+                "founder",
+                "scientist",
+                "facilitator",
+                "developer",
+                "consultant",
+                "administrator",
+                "officer",
+                "medic",
+                "integration",
+            ]
+        )
+
+    def _looks_like_company(s: str) -> bool:
+        cand = (s or "").strip()
+        if not cand or _is_page_marker(cand) or _is_duration_heading(cand):
+            return False
+        if cand.endswith(":"):
+            return False
+        if cand.strip().lower() in {"key contributions:", "key contribution:"}:
+            return False
+        if _is_heading(cand) or _looks_like_title(cand):
+            return False
+        if len(cand) > 60:
+            return False
+        low = cand.lower()
+        if low.startswith(("i ", "built ", "developed ", "designed ", "engineered ", "led ", "mentored ")):
+            return False
+        # Must have some alphabetic tokens
+        words = re.findall(r"[A-Za-z]+", cand)
+        if not words:
+            return False
+        if len(words) > 8:
+            return False
+        # Prefer title-case / acronym-heavy lines as "company-ish"
+        upperish = sum(1 for w in words if w[0].isupper())
+        if upperish >= max(1, len(words) // 2):
+            return True
+        # Allow common org suffixes
+        if any(x in cand for x in ["Inc", "LLC", "Ltd", "University", "Group", "Center", "Corps", "Army", "Navy"]):
+            return True
+        return False
 
     roles: List[_RoleSpan] = []
     for idx, line in enumerate(lines):
@@ -312,11 +663,99 @@ def extract_roles_and_tenure_from_lines(lines: List[str]) -> Dict[str, object]:
         end = m.group("end").strip()
         roles.append(_RoleSpan(title=title, start_mm_yyyy=start, end_mm_yyyy=end, line_idx=idx))
 
+    # LinkedIn PDF exports commonly put dates on their own line, e.g.:
+    #   "## RAIN"
+    #   "Principal Engineer and AI Architect (Founder)"
+    #   "January 2025 - Present (1 year)"
+    # Build additional roles by scanning for date lines and looking upward.
+    for idx, line in enumerate(lines):
+        m = date_line_re.match(line)
+        if not m:
+            continue
+        if idx - 1 < 0:
+            continue
+        prev1 = _strip_md_prefix(lines[idx - 1])
+        prev2 = _strip_md_prefix(lines[idx - 2]) if idx - 2 >= 0 else ""
+
+        # Heuristic: one of the previous lines is title, the other is company.
+        if _looks_like_title(prev1) and not _looks_like_title(prev2):
+            title = prev1
+            company_line = prev2
+        elif _looks_like_title(prev2) and not _looks_like_title(prev1):
+            title = prev2
+            company_line = prev1
+        else:
+            title = prev1
+            company_line = prev2
+
+        title = title.strip()
+        company_line = company_line.strip()
+        start = m.group("start").strip()
+        end = m.group("end").strip()
+        if title and start and end:
+            roles.append(_RoleSpan(title=title, start_mm_yyyy=start, end_mm_yyyy=end, line_idx=idx))
+
     tenure: List[Dict[str, str]] = []
     for r in roles:
         company = ""
-        if r.line_idx + 1 < len(lines):
-            nxt = lines[r.line_idx + 1]
+        # If we matched a date-only line (LinkedIn export style), company is usually ABOVE.
+        # Prefer the line two above the date (company heading) over the line after the date
+        # (which is usually a description sentence).
+        is_date_only = bool(date_line_re.match(lines[r.line_idx])) if 0 <= r.line_idx < len(lines) else False
+        if is_date_only:
+            # First pass: scan upward for a markdown-ish heading like "## PwC"
+            for j in range(r.line_idx - 1, max(-1, r.line_idx - 30), -1):
+                raw = (lines[j] or "").strip()
+                if not raw or _is_page_marker(raw) or _is_duration_heading(raw):
+                    continue
+                if _is_md_heading_line(raw):
+                    cand = _strip_md_prefix(raw)
+                    if cand and len(cand) <= 80:
+                        company = cand
+                        break
+            # Second pass: pick a short non-title line (e.g., "Optum") if no heading was found.
+            if not company:
+                best_cand = ""
+                best_score = -10_000
+                for j in range(r.line_idx - 1, max(-1, r.line_idx - 30), -1):
+                    raw = (lines[j] or "").strip()
+                    if not raw or _is_page_marker(raw) or _is_duration_heading(raw):
+                        continue
+                    # LinkedIn exports sometimes wrap "(via Randstad)" onto two lines;
+                    # avoid treating the closing line "Randstad)" as a company heading.
+                    if raw.endswith(")") and "(" not in raw and j - 1 >= 0 and "(via" in (lines[j - 1] or "").lower():
+                        continue
+                    cand = _strip_md_prefix(raw)
+                    if not _looks_like_company(cand):
+                        continue
+
+                    # Score candidates: prefer org-ish names over locations/date spans.
+                    score = 0
+                    dist = max(0, r.line_idx - j)
+                    # Prefer closer lines (usually the company is immediately above the title/date)
+                    score += max(0, 12 - dist)
+                    if "," in cand:
+                        score -= 2
+                    if re.search(r"\b(19|20)\d{2}\b", cand):
+                        score -= 3
+                    if re.search(r"\d", cand):
+                        score -= 1
+                    if len(cand) <= 28:
+                        score += 3
+                    if any(x in cand for x in ["Inc", "LLC", "Ltd", "University", "Group", "Center", "Corps", "Army", "Navy"]):
+                        score += 3
+                    if "metropolitan area" in cand.lower():
+                        score -= 3
+
+                    if score > best_score:
+                        best_score = score
+                        best_cand = cand
+
+                if best_cand:
+                    company = best_cand
+
+        if not company and r.line_idx + 1 < len(lines):
+            nxt = _strip_md_prefix(lines[r.line_idx + 1])
             if len(nxt) <= 90 and not _is_heading(nxt):
                 company = nxt
         dur = _duration_str(r.start_mm_yyyy, r.end_mm_yyyy)
@@ -417,13 +856,25 @@ def parse_resume(text: str) -> Dict[str, object]:
         roles_info = roles_info_all
     positions = extract_positions(lines)
     skills = extract_skills_from_sections(sections)
+    if not skills:
+        skills = extract_skills_from_lines(lines)
     accomplishments = extract_notable_accomplishments(sections) or pa["NotableAccomplishments"]
+    business_challenges = extract_business_challenges(sections, lines) or pa["ProblemsSolved"]
     tenure = roles_info.get("tenure") or []
     domains = extract_domains(text)
     seniority = infer_seniority_from_text(text)
+    # If we still have no key metrics, salvage metric-bearing accomplishment lines.
+    if not key_metrics and accomplishments:
+        metricish: List[str] = []
+        for a in accomplishments:
+            if re.search(r"(\$|%|\b\d[\d,]*\s*(?:k|m|b)\b|\b\d{2,}\b)", a, re.I):
+                metricish.append(a)
+        key_metrics = metricish[:10]
+
     return {
         "KeyMetrics": key_metrics,
         "ProblemsSolved": pa["ProblemsSolved"],
+        "BusinessChallengesSolved": business_challenges[:15],
         "NotableAccomplishments": accomplishments[:15],
         "Positions": positions,
         "Tenure": tenure,

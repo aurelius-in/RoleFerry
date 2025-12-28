@@ -1,17 +1,20 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import json
+import uuid
+from datetime import datetime, timezone
 
 from sqlalchemy import text as sql_text
 
 from ..db import get_engine
 from ..config import settings
-from ..clients.openai_client import get_openai_client, extract_json_from_text
+from ..clients.openai_client import get_openai_client, extract_json_from_text, _strip_fluff_openers
+from ..auth import require_current_user
+from ..storage import store
 
 router = APIRouter()
 engine = get_engine()
-DEMO_USER_ID = "demo-user"
 
 class Offer(BaseModel):
     id: str
@@ -21,12 +24,14 @@ class Offer(BaseModel):
     format: str  # 'text', 'link', 'video'
     url: Optional[str] = None
     video_url: Optional[str] = None
+    custom_tone: Optional[str] = None
     created_at: str
     user_mode: str = "job-seeker"  # 'job-seeker' or 'recruiter'
 
 class OfferCreationRequest(BaseModel):
     painpoint_matches: List[dict]
     tone: str
+    custom_tone: Optional[str] = None
     format: str
     user_mode: str = "job-seeker"
     context_research: Optional[Dict[str, Any]] = None
@@ -57,24 +62,26 @@ async def create_offer(request: OfferCreationRequest):
 
         # --- Deterministic fallback (previous behavior) -----------------
         def build_rule_based_offer() -> Offer:
+            offer_id = str(uuid.uuid4())
+            created_at = datetime.now(timezone.utc).isoformat()
             if request.user_mode == "job-seeker":
                 raw_label = base_match.get("painpoint_1", "Your Challenge")
                 label_words = str(raw_label).split(" ")[:3]
                 title = f"How I Can Solve {' '.join(label_words)}"
                 content = (
-                    f"I understand you're facing {str(base_match.get('painpoint_1', 'challenges')).lower()}. "
-                    f"In my previous role, I {str(base_match.get('solution_1', 'delivered results')).lower()}, "
-                    f"resulting in {str(base_match.get('metric_1', 'significant impact'))}. "
-                    "I'm confident I can bring similar results to your team."
+                    f"I noticed the challenges around {str(base_match.get('painpoint_1', 'the role')).lower()}. "
+                    f"In my previous work, I {str(base_match.get('solution_1', 'delivered results')).lower()}, "
+                    f"achieving {str(base_match.get('metric_1', 'significant impact'))}. "
+                    "I can bring similar results to your team."
                 )
             else:
                 raw_label = base_match.get("painpoint_1", "Your Role")
                 label_words = str(raw_label).split(" ")[:3]
                 title = f"Perfect Candidate for {' '.join(label_words)}"
                 content = (
-                    f"I have an exceptional candidate who has successfully {str(base_match.get('solution_1', 'achieved results')).lower()}, "
+                    f"I'm working with a candidate who successfully {str(base_match.get('solution_1', 'achieved results')).lower()}, "
                     f"achieving {str(base_match.get('metric_1', 'outstanding metrics'))}. "
-                    f"They would be an ideal fit for your {str(base_match.get('painpoint_1', 'challenges')).lower()} challenge."
+                    f"They are a strong fit for addressing {str(base_match.get('painpoint_1', 'this')).lower()}."
                 )
 
             # Adjust tone based on audience
@@ -88,12 +95,12 @@ async def create_offer(request: OfferCreationRequest):
                 content_prefixed = content
 
             return Offer(
-                id=f"offer_{len(request.painpoint_matches)}",
+                id=offer_id,
                 title=title,
                 content=content_prefixed,
                 tone=request.tone,
                 format=request.format,
-                created_at="2024-01-15T10:30:00Z",
+                created_at=created_at,
                 user_mode=request.user_mode,
             )
 
@@ -104,6 +111,7 @@ async def create_offer(request: OfferCreationRequest):
                 context: Dict[str, Any] = {
                     "user_mode": request.user_mode,
                     "tone": request.tone,
+                    "custom_tone": request.custom_tone,
                     "format": request.format,
                     "painpoint_match": base_match,
                     "context_research": request.context_research or {},
@@ -120,15 +128,16 @@ async def create_offer(request: OfferCreationRequest):
 
                 rule_fallback = build_rule_based_offer()
                 title = str(title_val or rule_fallback.title)
-                body = str(body_val or rule_fallback.content)
+                body = _strip_fluff_openers(str(body_val or rule_fallback.content))
 
                 offer = Offer(
-                    id=f"offer_{len(request.painpoint_matches)}",
+                    id=str(uuid.uuid4()),
                     title=title,
                     content=body,
                     tone=request.tone,
                     format=request.format,
-                    created_at="2024-01-15T10:30:00Z",
+                    custom_tone=request.custom_tone,
+                    created_at=datetime.now(timezone.utc).isoformat(),
                     user_mode=request.user_mode,
                 )
 
@@ -154,26 +163,47 @@ async def create_offer(request: OfferCreationRequest):
         raise HTTPException(status_code=500, detail=f"Failed to create offer: {str(e)}")
 
 @router.post("/save", response_model=OfferCreationResponse)
-async def save_offer(offer: Offer):
+async def save_offer(offer: Offer, http_request: Request):
     """
     Save an offer for a user.
     """
     try:
-        # Persist offer body & tone to the offer table for the demo user
-        async with engine.begin() as conn:
-            await conn.execute(
-                sql_text(
-                    """
-                    INSERT INTO offer (user_id, application_id, body, tone, length_preset, created_at)
-                    VALUES (:user_id, NULL, :body, :tone, NULL, now())
-                    """
-                ),
-                {
-                    "user_id": DEMO_USER_ID,
-                    "body": offer.content,
-                    "tone": offer.tone,
-                },
-            )
+        user = await require_current_user(http_request)
+        user_id = user.id
+
+        # DB-first (future webapp), fallback to in-memory if Postgres is unavailable.
+        try:
+            async with engine.begin() as conn:
+                res = await conn.execute(
+                    sql_text(
+                        """
+                        INSERT INTO offer (user_id, application_id, body, tone, length_preset, created_at, title, format, url, video_url, custom_tone, user_mode)
+                        VALUES (:user_id, NULL, :body, :tone, NULL, now(), :title, :format, :url, :video_url, :custom_tone, :user_mode)
+                        RETURNING id::text
+                        """
+                    ),
+                    {
+                        "user_id": user_id,
+                        "body": offer.content,
+                        "tone": offer.tone,
+                        "title": offer.title,
+                        "format": offer.format,
+                        "url": offer.url,
+                        "video_url": offer.video_url,
+                        "custom_tone": offer.custom_tone,
+                        "user_mode": offer.user_mode,
+                    },
+                )
+                row = res.first()
+                if row and getattr(row, "id", None):
+                    offer.id = str(row.id)
+        except Exception:
+            # In-memory demo persistence (per user)
+            store.demo_offer_library_by_user.setdefault(user_id, [])
+            existing_ids = {str(o.get("id")) for o in (store.demo_offer_library_by_user.get(user_id) or []) if isinstance(o, dict)}
+            if (not offer.id) or (str(offer.id) in existing_ids):
+                offer.id = str(uuid.uuid4())
+            store.demo_offer_library_by_user[user_id].insert(0, offer.model_dump() if hasattr(offer, "model_dump") else offer.dict())
 
         return OfferCreationResponse(
             success=True,
@@ -183,53 +213,52 @@ async def save_offer(offer: Offer):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save offer: {str(e)}")
 
-@router.get("/{user_id}", response_model=OffersListResponse)
-async def get_offers(user_id: str):
+@router.get("/me", response_model=OffersListResponse)
+async def get_offers_me(http_request: Request):
     """
-    Get all offers for a user.
+    Get all offers for the authenticated user.
     """
     try:
-        # For Week 9, fetch any stored offers for the demo user; fall back to mocks
-        async with engine.begin() as conn:
-            result = await conn.execute(
-                sql_text(
-                    """
-                    SELECT id, body, tone, created_at
-                    FROM offer
-                    WHERE user_id = :user_id
-                    ORDER BY created_at DESC
-                    """
-                ),
-                {"user_id": DEMO_USER_ID},
-            )
-            rows = result.fetchall()
+        user = await require_current_user(http_request)
+        user_id = user.id
 
         offers: List[Offer] = []
-        for row in rows:
-            offers.append(
-                Offer(
-                    id=str(row.id),
-                    title="Saved offer",
-                    content=row.body,
-                    tone=row.tone or "manager",
-                    format="text",
-                    created_at=row.created_at.isoformat() if getattr(row, "created_at", None) else "",
-                    user_mode="job-seeker",
-                )
-            )
 
-        if not offers:
-            offers = [
-                Offer(
-                    id="offer_1",
-                    title="How I Can Solve Your Engineering Challenges",
-                    content="I understand you're facing challenges with time-to-fill for engineering roles. In my previous role, I reduced TTF by 40% using ATS optimization, resulting in 40% reduction, 18 vs 30 days. I'm confident I can bring similar results to your team.",
-                    tone="manager",
-                    format="text",
-                    created_at="2024-01-15T10:30:00Z",
-                    user_mode="job-seeker",
+        # DB-first
+        try:
+            async with engine.begin() as conn:
+                result = await conn.execute(
+                    sql_text(
+                        """
+                        SELECT id::text as id, title, body, tone, created_at, format, url, video_url, custom_tone, user_mode
+                        FROM offer
+                        WHERE user_id = :user_id
+                        ORDER BY created_at DESC
+                        """
+                    ),
+                    {"user_id": user_id},
                 )
-            ]
+                rows = result.fetchall()
+            for row in rows:
+                offers.append(
+                    Offer(
+                        id=str(row.id),
+                        title=str(row.title or "Saved offer"),
+                        content=str(row.body or ""),
+                        tone=str(row.tone or "manager"),
+                        format=str(row.format or "text"),
+                        url=(str(row.url) if row.url else None),
+                        video_url=(str(row.video_url) if row.video_url else None),
+                        custom_tone=(str(row.custom_tone) if row.custom_tone else None),
+                        created_at=row.created_at.isoformat() if getattr(row, "created_at", None) else "",
+                        user_mode=str(row.user_mode or "job-seeker"),
+                    )
+                )
+        except Exception:
+            # In-memory fallback
+            for raw in (store.demo_offer_library_by_user.get(user_id) or []):
+                if isinstance(raw, dict):
+                    offers.append(Offer(**raw))
 
         return OffersListResponse(
             success=True,

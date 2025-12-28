@@ -230,6 +230,75 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
     return title, company
 
 
+def _looks_like_job_board_or_listing_url(url: str) -> bool:
+    """
+    Many "job board search" pages are not individual job descriptions.
+    Importing these will usually produce partial HTML and low-quality parses.
+    """
+    try:
+        u = urlparse(url)
+        host = (u.netloc or "").lower().replace("www.", "")
+        path = (u.path or "").lower()
+        qs = (u.query or "").lower()
+        # Common job board search/listing patterns (non-exhaustive).
+        if "indeed." in host and path.startswith("/jobs"):
+            return True
+        if "linkedin.com" in host and "/jobs/search" in path:
+            return True
+        if "wellfound.com" in host and path.startswith("/jobs"):
+            return True
+        if "otta.com" in host and "/jobs" in path:
+            return True
+        if "greenhouse.io" in host and ("/search" in path or "/jobs" in path) and "gh_jid" not in qs:
+            return True
+        if "lever.co" in host and ("?commit=" in qs or path.rstrip("/").endswith("/jobs")):
+            return True
+    except Exception:
+        return False
+    return False
+
+
+def _validate_extracted_job(
+    *,
+    url: Optional[str],
+    content: str,
+    title: str,
+    company: str,
+    required_skills: List[str],
+    pain_points: List[str],
+    success_metrics: List[str],
+) -> Optional[str]:
+    """
+    Return a human-friendly error message if the extracted job looks incomplete.
+    """
+    text = (content or "").strip()
+    if url and _looks_like_job_board_or_listing_url(url):
+        return "That looks like a job board/search page. Please open a specific job posting and paste that job’s URL (or paste the job description text)."
+
+    # Scrapes that only capture header/nav/auth content look like this.
+    low = text.lower()
+    if any(kw in low for kw in ["enable javascript", "sign in", "log in", "captcha"]) and len(text) < 1200:
+        return "Couldn’t extract a full job description from that page (likely blocked by login/captcha). Please paste the job description text instead."
+
+    # Minimum content threshold: below this is almost always partial.
+    if len(text) < 400:
+        return "Job description content looks too short/partial. Please use a specific job posting URL or paste the job description text."
+
+    # Title/company sanity
+    if not title or title.strip().lower() in ["job description", "jobs", "career", "careers"]:
+        return "Couldn’t confidently detect a job title from that page. Please use a specific job posting URL or paste the job description text."
+    if not company or company.strip().lower() in ["unknown", "careers", "jobs"]:
+        # Not fatal by itself, but combined with missing structure is.
+        if len(required_skills) < 1 and len(pain_points) < 1 and len(success_metrics) < 1:
+            return "Couldn’t confidently detect the company/job details from that page. Please use a specific job posting URL or paste the job description text."
+
+    # Structural signal: require at least a bit of useful extraction.
+    if len(required_skills) < 1 and len(pain_points) < 1 and len(success_metrics) < 1:
+        return "Couldn’t extract enough structured info (skills/pain points/metrics). Please paste the job description text or try a different job posting URL."
+
+    return None
+
+
 def _extract_key_lines(content: str, max_items: int, keywords: List[str]) -> List[str]:
     """
     Pull bullet-like lines or strong sentences that look meaningful.
@@ -237,6 +306,15 @@ def _extract_key_lines(content: str, max_items: int, keywords: List[str]) -> Lis
     """
     text = content or ""
     candidates: List[str] = []
+    
+    # Common patterns for salary/benefits/employment types that are NOT pain points.
+    # e.g. "$120k - $150k", "Full-time", "401k", "Benefits include"
+    ignore_patterns = [
+        r"\$\d+", r"\d+k\b", r"salary", r"compensation", r"benefits", r"401k", 
+        r"full-time", r"part-time", r"contract", r"per hour", r"per year"
+    ]
+    ignore_re = re.compile("|".join(ignore_patterns), re.I)
+
     for raw in text.splitlines():
         ln = raw.strip()
         if not ln:
@@ -244,6 +322,11 @@ def _extract_key_lines(content: str, max_items: int, keywords: List[str]) -> Lis
         ln = re.sub(r"^[\-\*\u2022]\s+", "", ln)  # remove leading bullets
         if len(ln) < 24:
             continue
+        
+        # Filter out compensation/employment details
+        if ignore_re.search(ln):
+            continue
+
         score = 0
         low = ln.lower()
         if any(k in low for k in keywords):
@@ -375,6 +458,19 @@ async def import_job_description(payload: JobImportRequest):
             except Exception:
                 # On any GPT failure, keep heuristic extraction.
                 pass
+
+        # Validate: do not create incomplete JDs (common when scraping a job board/search page).
+        validation_error = _validate_extracted_job(
+            url=url,
+            content=content,
+            title=title,
+            company=company,
+            required_skills=required_skills,
+            pain_points=pain_points,
+            success_metrics=success_metrics,
+        )
+        if validation_error:
+            raise HTTPException(status_code=400, detail=validation_error)
 
         # Persist job + a starter application row for demo user (best-effort).
         # For first-run demos, Postgres may be unavailable; in that case we still

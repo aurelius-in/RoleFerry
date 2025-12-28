@@ -5,6 +5,7 @@ import logging
 import json
 import hashlib
 import time
+import re
 
 import httpx
 
@@ -12,6 +13,72 @@ from ..config import settings
 
 
 logger = logging.getLogger(__name__)
+
+
+_BANNED_OPENER_PATTERNS = [
+    r"\bi hope (this message|you(’|')?re|you are|you're)\b",
+    r"\bhope (this message|you(’|')?re|you are|you're)\b",
+    r"\btrust you(’|')?re\b",
+    r"\btrust this (message|email)\b",
+    r"\bjust (wanted|reaching out) to\b.*\bintroduce myself\b",
+]
+
+
+def _strip_fluff_openers(text: str) -> str:
+    """
+    Remove common low-signal openers from the start of outreach copy.
+    We only strip when the phrase appears in the first ~2 non-empty lines / first ~280 chars.
+    """
+    if not text:
+        return text
+
+    s = str(text).replace("\r\n", "\n").replace("\r", "\n")
+    original = s
+
+    # Quick window check (avoid touching bodies where the phrase appears later in a quoted thread)
+    head = s[:280].lower()
+    if not any(re.search(p, head, flags=re.I) for p in _BANNED_OPENER_PATTERNS):
+        return original
+
+    lines = [ln for ln in s.split("\n")]
+
+    def is_blank(ln: str) -> bool:
+        return not (ln or "").strip()
+
+    # Trim leading blank lines
+    while lines and is_blank(lines[0]):
+        lines.pop(0)
+
+    # If first line is a greeting, check the next non-empty line for fluff.
+    greeting_re = re.compile(r"^\s*(hi|hello|hey)\b", re.I)
+    i0 = 0
+    if lines and greeting_re.match(lines[0] or ""):
+        # find next non-empty line
+        j = 1
+        while j < len(lines) and is_blank(lines[j]):
+            j += 1
+        if j < len(lines) and any(re.search(p, (lines[j] or ""), flags=re.I) for p in _BANNED_OPENER_PATTERNS):
+            lines.pop(j)
+            # also remove any extra blank line right after removing
+            while j < len(lines) and is_blank(lines[j]):
+                lines.pop(j)
+
+    # If the first non-empty line itself is fluff, drop it.
+    while lines:
+        first = (lines[0] or "").strip()
+        if not first:
+            lines.pop(0)
+            continue
+        if any(re.search(p, first, flags=re.I) for p in _BANNED_OPENER_PATTERNS):
+            lines.pop(0)
+            # remove following blank line(s)
+            while lines and is_blank(lines[0]):
+                lines.pop(0)
+            continue
+        break
+
+    out = "\n".join(lines).strip()
+    return out or original
 
 
 def extract_json_from_text(text: str) -> Dict[str, Any] | None:
@@ -233,12 +300,37 @@ class OpenAIClient:
                         note = f"http_error {last_status}"
                         if reason:
                             note += f" ({reason})"
-                        return self._stub_response(messages, note=note)
+                        return self._stub_response(messages, note=note, json_obj=stub_json)
         except Exception as e:  # pragma: no cover - defensive catch-all
             logger.exception("OpenAI chat completion failed", exc_info=e)
-            return self._stub_response(messages, note="exception")
+            return self._stub_response(messages, note="exception", json_obj=stub_json)
 
     # ---- Focused use-case helpers -------------------------------------
+
+    def analyze_deliverability(self, email_body: str, subject: str) -> Dict[str, Any]:
+        """
+        Analyze email copy for deliverability risks (spam triggers, tone, clarity).
+        """
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a deliverability expert. Analyze the provided email for inbox placement risk.\n\n"
+                    "Focus on:\n"
+                    "- Spam trigger words (urgent, free, cash, etc.)\n"
+                    "- Over-aggressive punctuation (!!!) or ALL CAPS\n"
+                    "- Tone (too salesy vs human/authentic)\n"
+                    "- Clarity and brevity\n\n"
+                    "Return ONLY JSON:\n"
+                    "- risk_score: 0-10 (0 is safe, 10 is guaranteed spam)\n"
+                    "- issues: array of strings (e.g. 'Subject line is too long')\n"
+                    "- fixes: array of strings (e.g. 'Shorten subject to < 50 chars')\n"
+                    "- safety_variant: a rewritten version that is safer for inbox placement\n"
+                ),
+            },
+            {"role": "user", "content": f"Subject: {subject}\n\nBody:\n{email_body}"},
+        ]
+        return self.run_chat_completion(messages, temperature=0.1, max_tokens=800)
 
     def summarize_resume(self, text: str) -> Dict[str, Any]:
         """
@@ -256,6 +348,7 @@ class OpenAIClient:
                     "Return ONLY a JSON object with these keys:\n"
                     "- positions: array of { company, title, start_date, end_date, current, description }\n"
                     "- key_metrics: array of { metric, value, context }\n"
+                    "- business_challenges: array of strings (business problems solved / outcomes driven)\n"
                     "- skills: array of strings\n"
                     "- accomplishments: array of strings\n"
                     "- tenure: array of { company, duration, role }\n"
@@ -279,6 +372,10 @@ class OpenAIClient:
                 {"metric": "Latency", "value": "40% reduction", "context": "via caching + query optimization"},
                 {"metric": "Costs", "value": "18% reduction", "context": "through infra right-sizing"},
             ],
+            "business_challenges": [
+                "Improved reliability and reduced incident volume for a core service",
+                "Reduced latency and infrastructure costs while maintaining SLAs",
+            ],
             "skills": ["Python", "SQL", "AWS", "Docker", "React"],
             "accomplishments": [
                 "Shipped a high-availability service used by internal teams weekly",
@@ -289,6 +386,7 @@ class OpenAIClient:
         return self.run_chat_completion(
             messages,
             temperature=0.1,
+            max_tokens=1400,
             stub_json=stub,
         )
 
@@ -301,6 +399,9 @@ class OpenAIClient:
                 "role": "system",
                 "content": (
                     "You are a job description parser. Extract structured fields from raw job posting text.\n\n"
+                    "Rules for 'pain_points':\n"
+                    "- Focus on business challenges, technical problems, or goals mentioned (e.g., 'reduce churn', 'scale infra').\n"
+                    "- Do NOT include salary, compensation, benefits, or employment type (e.g., '$150k', 'Full-time') as pain points.\n\n"
                     "Return ONLY a JSON object with keys:\n"
                     "- title: string\n"
                     "- company: string\n"
@@ -336,7 +437,11 @@ class OpenAIClient:
             {
                 "role": "system",
                 "content": (
-                    "You compare a job description and a resume. "
+                    "You compare a job description and a resume. Propose up to three alignments where the user's experience solves a business challenge.\n\n"
+                    "Rules:\n"
+                    "- jd_snippet: must be a business or technical challenge (NOT salary/benefits).\n"
+                    "- resume_snippet: how the user solved it.\n"
+                    "- metric: measurable impact.\n\n"
                     "Return ONLY JSON: pairs[ { jd_snippet, resume_snippet, metric } ], alignment_score (0-1)."
                 ),
             },
@@ -374,10 +479,15 @@ class OpenAIClient:
             {
                 "role": "system",
                 "content": (
-                    "You write concise, plain-language outreach emails. "
+                    "You write concise, plain-language outreach snippets. "
                     "Use the provided JSON context to personalize the message. "
                     "Respond ONLY as compact JSON with keys: "
-                    "title (short string) and content (email body string)."
+                    "title (short string) and content (offer snippet string).\n\n"
+                    "Hard constraints:\n"
+                    "- Do NOT include any names or greetings (e.g., 'Hi Briana', 'Briana, your role...').\n"
+                    "- Do NOT start with fluff like \"I hope you're doing well\" / \"I hope this message finds you well\".\n"
+                    "- The snippet must be a standalone paragraph or few sentences that can be inserted into a larger email template later.\n"
+                    "- Focus immediately on the value (offer, pain point, proof, or question).\n"
                 ),
             },
             {
@@ -407,7 +517,7 @@ class OpenAIClient:
         Returns ONLY JSON:
         - subject: string
         - body: string
-        - variants: array of { label, subject, body }
+        - variants: array of { label, intended_for, audience_tone, subject, body }
         - rationale: short string
         """
         messages = [
@@ -416,10 +526,34 @@ class OpenAIClient:
                 "content": (
                     "You are RoleFerry's outreach copilot. Draft a concise, human email with a strong opener, "
                     "one credibility proof, and a clear CTA. Keep it plain-language and specific.\n\n"
+                    "Style constraints:\n"
+                    "- Hard ban: do NOT use canned/opening clichés like: \"I hope this message finds you well\", "
+                    "\"I hope you're doing well\", \"I hope you are well\", \"I hope you had a great weekend\", "
+                    "\"trust you're well\", or any wellbeing/pleasantry opener.\n"
+                    "- After any greeting, sentence 1 must be value-first (offer/painpoint/proof/ask) — no throat-clearing.\n"
+                    "- Start with a modern, succinct opener that references something concrete from the context "
+                    "(role/company/pain point/news) or go straight to the point.\n"
+                    "- Keep greetings minimal (e.g., \"Hi {first_name},\" then 1–2 tight sentences).\n\n"
+                    "You MUST follow the requested tone/audience:\n"
+                    "- recruiter: ultra concise, logistics-forward, easy yes/no\n"
+                    "- manager: competent + collaborative, emphasizes team impact\n"
+                    "- exec: outcome/ROI + risk reduction, strategic framing\n"
+                    "- developer: technical specificity, concrete implementation details, no fluff\n"
+                    "- sales: crisp proof points, clear next step, confident but not pushy\n"
+                    "- startup: high-ownership, fast-moving, momentum and iteration\n"
+                    "- enterprise: process-aware, risk-aware, stakeholders + delivery predictability\n"
+                    "- custom: follow `custom_tone` exactly.\n\n"
+                    "Incorporate the Offer step if present:\n"
+                    "- If `offer_snippet` exists, rewrite it into ONE strong sentence and include it as a single bullet or short line.\n"
+                    "- Do NOT paste the whole offer content.\n"
+                    "- If `offer_url` exists, include a single line with a tone-appropriate intro (rewrite it, don't always use the same phrase).\n"
+                    "\nTemplate rules:\n"
+                    "- Preserve placeholders exactly (e.g., {{first_name}}, {{job_title}}, {{company_name}}, {{painpoint_1}}, {{solution_1}}, {{metric_1}}, {{offer_snippet}}, {{work_link}}).\n"
+                    "- Do NOT replace placeholders with actual names/companies.\n"
                     "Return ONLY a JSON object with keys:\n"
                     "- subject: string\n"
                     "- body: string\n"
-                    "- variants: array of { label, subject, body }\n"
+                    "- variants: array of { label, intended_for, audience_tone, subject, body }\n"
                     "- rationale: string\n"
                 ),
             },
@@ -435,31 +569,36 @@ class OpenAIClient:
         stub = {
             "subject": f"{role} at {company} — quick idea",
             "body": (
-                f"Hi {first_name},\n\n"
-                f"I noticed {company} is working through {pp}. I’ve helped teams solve similar problems by {sol} "
-                f"({metric}).\n\n"
-                f"If you’re open to it, I can share a 2–3 bullet plan tailored to {role}. "
-                f"Would a quick 10–15 minute chat this week be useful?\n\n"
+                "Hi {{first_name}},\n\n"
+                "Saw the {{job_title}} role at {{company_name}} and wanted to share one quick idea.\n\n"
+                "- One idea I’d bring: {{offer_snippet}}\n"
+                "- Relevant proof: {{solution_1}} ({{metric_1}})\n\n"
+                "Open to a quick 10–15 minute chat?\n\n"
+                "Please see my work here: {{work_link}}\n\n"
                 f"Best,\n[Your Name]\n"
             ),
             "variants": [
                 {
                     "label": "short_direct",
-                    "subject": f"{company}: idea for {role}",
+                    "intended_for": "Cold email; concise opener + fast CTA",
+                    "audience_tone": "recruiter",
+                    "subject": "{{company_name}}: idea for {{job_title}}",
                     "body": (
-                        f"Hi {first_name} — quick note.\n\n"
-                        f"{pp} stood out. I’ve tackled this by {sol} ({metric}). "
-                        f"Open to a quick chat?\n\nBest,\n[Your Name]\n"
+                        "Hi {{first_name}} — quick note.\n\n"
+                        "{{painpoint_1}} stood out. I’ve tackled this by {{solution_1}} ({{metric_1}}).\n\n"
+                        "Open to a quick chat?\n\nBest,\n[Your Name]\n"
                     ),
                 },
                 {
                     "label": "warm_context",
-                    "subject": f"Re: {role} @ {company}",
+                    "intended_for": "Warmish cold email; a bit more context and credibility",
+                    "audience_tone": "manager",
+                    "subject": "Re: {{job_title}} @ {{company_name}}",
                     "body": (
-                        f"Hi {first_name},\n\n"
-                        f"I saw the {role} opening and did a quick scan of {company}'s priorities. "
-                        f"{pp} seems central. I’ve delivered {metric} in similar situations by {sol}.\n\n"
-                        f"Happy to share specifics—want a 10–15 min chat?\n\nBest,\n[Your Name]\n"
+                        "Hi {{first_name}},\n\n"
+                        "I saw the {{job_title}} opening and did a quick scan of {{company_name}}’s priorities. "
+                        "{{painpoint_1}} seems central. I’ve delivered {{metric_1}} in similar situations by {{solution_1}}.\n\n"
+                        "Happy to share specifics—want a 10–15 min chat?\n\nBest,\n[Your Name]\n"
                     ),
                 },
             ][: 2 + (seed % 1)],

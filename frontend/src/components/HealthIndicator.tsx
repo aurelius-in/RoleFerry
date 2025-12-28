@@ -35,17 +35,20 @@ export default function HealthIndicator() {
     };
   }, [delay]);
 
-  const up = health?.status === "ok";
+  const status = (health?.status || "").toLowerCase();
+  // Treat "degraded" as up (API reachable) but not perfect.
+  const up = status === "ok" || status === "degraded";
+  const label = status === "degraded" ? "API degraded" : up ? "API" : "API down";
   const secondsAgo = health?.ts ? Math.max(0, Math.round((Date.now() - new Date(health.ts).getTime()) / 1000)) : null;
   return (
     <a href="/api/health" target="_blank" className="flex items-center gap-2 text-sm opacity-90">
       <span
         className={`inline-block w-2 h-2 rounded-full ${
-          up ? "bg-green-400" : "bg-red-400"
+          up ? (status === "degraded" ? "bg-yellow-400" : "bg-green-400") : "bg-red-400"
         }`}
-        aria-label={up ? "API healthy" : "API down"}
+        aria-label={up ? (status === "degraded" ? "API degraded" : "API healthy") : "API down"}
       />
-      <span>{up ? "API" : "API down"}</span>
+      <span>{label}</span>
       {health?.env ? <span>· {health.env}</span> : null}
       {health?.version ? <span>· v{health.version}</span> : null}
       {secondsAgo !== null ? <span>· {secondsAgo}s</span> : null}

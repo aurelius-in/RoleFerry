@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { getCurrentDataMode } from "@/lib/dataMode";
 
 interface Contact {
   id: string;
@@ -12,6 +13,14 @@ interface Contact {
   company: string;
   department: string;
   level: string;
+  linkedin_url?: string;
+  email_source?: string;
+  location_name?: string;
+  location_country?: string;
+  job_company_website?: string;
+  job_company_linkedin_url?: string;
+  job_company_industry?: string;
+  job_company_size?: string;
 }
 
 interface CompanySummary {
@@ -34,6 +43,11 @@ interface ContactBio {
   education: string;
   skills: string[];
   linkedin_url?: string;
+  public_profile_highlights?: string[];
+  publications?: string[];
+  post_topics?: string[];
+  opinions?: string[];
+  other_interesting_facts?: string[];
 }
 
 interface RecentNews {
@@ -55,6 +69,9 @@ export default function ContextResearchPage() {
   const router = useRouter();
   const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
   const [researchData, setResearchData] = useState<ResearchData | null>(null);
+  const [researchByContact, setResearchByContact] = useState<Record<string, ResearchData>>({});
+  const [activeContactId, setActiveContactId] = useState<string | null>(null);
+  const [dataMode, setDataMode] = useState<"demo" | "live">("live");
   const [helper, setHelper] = useState<{
     hooks?: string[];
     corpus_preview?: any;
@@ -66,11 +83,42 @@ export default function ContextResearchPage() {
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
 
+  const formatTitleCase = (input?: string) => {
+    const s = String(input || "").trim();
+    if (!s) return "";
+    const lowerWords = new Set(["of", "and"]);
+
+    const words = s.split(/\s+/).filter(Boolean);
+    const out = words.map((w, idx) => {
+      // Preserve acronyms / all-caps tokens (VP, CEO, AI/ML, etc)
+      if (w.length <= 6 && w === w.toUpperCase()) return w;
+      // Preserve tokens with slashes/dots (AI/ML, SRE/DevOps, etc) but title-case parts
+      const parts = w.split(/([\/\-.])/g);
+      const rebuilt = parts
+        .map((p) => {
+          if (p === "/" || p === "-" || p === ".") return p;
+          const raw = p.trim();
+          if (!raw) return raw;
+          const low = raw.toLowerCase();
+          if (idx > 0 && lowerWords.has(low)) return low;
+          return low.charAt(0).toUpperCase() + low.slice(1);
+        })
+        .join("");
+      return rebuilt;
+    });
+    return out.join(" ");
+  };
+
   useEffect(() => {
+    setDataMode(getCurrentDataMode());
     // Load selected contacts from localStorage
     const savedContacts = localStorage.getItem('selected_contacts');
     if (savedContacts) {
-      setSelectedContacts(JSON.parse(savedContacts));
+      const parsed = JSON.parse(savedContacts);
+      setSelectedContacts(parsed);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        setActiveContactId(parsed[0]?.id || null);
+      }
     }
   }, []);
 
@@ -81,6 +129,29 @@ export default function ContextResearchPage() {
 
     setError(null);
     try {
+      // Fast path: if we already have research cached locally for these exact contacts, reuse it.
+      try {
+        const cachedByContactRaw = localStorage.getItem("context_research_by_contact");
+        const cachedActiveId = localStorage.getItem("context_research_active_contact_id");
+        const cachedByContact = cachedByContactRaw ? JSON.parse(cachedByContactRaw) : null;
+        const cachedKeys = cachedByContact ? Object.keys(cachedByContact) : [];
+        const selectedIds = selectedContacts.map((c) => c.id).filter(Boolean);
+        const sameSet =
+          cachedKeys.length === selectedIds.length &&
+          selectedIds.every((id) => cachedKeys.includes(id));
+
+        if (cachedByContact && sameSet) {
+          setResearchByContact(cachedByContact);
+          const nextId = cachedActiveId && cachedByContact[cachedActiveId] ? cachedActiveId : selectedIds[0] || null;
+          if (nextId) setActiveContactId(nextId);
+          setResearchData(nextId ? cachedByContact[nextId] : null);
+          setIsResearching(false);
+          return;
+        }
+      } catch {
+        // Ignore cache parse errors and fall through to backend call.
+      }
+
       const companyName =
         selectedContacts[0]?.company ||
         (() => {
@@ -100,34 +171,52 @@ export default function ContextResearchPage() {
 
       const resp = await api<any>("/context-research/research", "POST", {
         contact_ids: selectedContacts.map((c) => c.id),
+        contacts: selectedContacts,
         company_name: companyName,
         selected_job_description: selectedJD,
+        data_mode: getCurrentDataMode(),
       });
 
       if (!resp?.success || !resp?.research_data) {
         throw new Error(resp?.message || "Research failed");
       }
 
-      setResearchData(resp.research_data);
+      const byContact: Record<string, ResearchData> = resp?.research_by_contact || {};
+      const nextActiveId =
+        activeContactId ||
+        selectedContacts[0]?.id ||
+        Object.keys(byContact)[0] ||
+        null;
+
+      setResearchByContact(byContact);
+      if (nextActiveId) setActiveContactId(nextActiveId);
+
+      const nextResearch =
+        (nextActiveId && byContact?.[nextActiveId]) ? byContact[nextActiveId] : resp.research_data;
+      setResearchData(nextResearch);
       setHelper(resp.helper || null);
 
       // Persist for downstream screens (Compose expects `context_research`).
-      localStorage.setItem("context_research", JSON.stringify(resp.research_data));
+      localStorage.setItem("context_research", JSON.stringify(nextResearch));
+      localStorage.setItem("context_research_by_contact", JSON.stringify(byContact));
+      if (nextActiveId) localStorage.setItem("context_research_active_contact_id", String(nextActiveId));
       localStorage.setItem("context_research_helper", JSON.stringify(resp.helper || {}));
       // Backwards compatibility for older screen key.
-      localStorage.setItem("research_data", JSON.stringify(resp.research_data));
-    } catch {
+      localStorage.setItem("research_data", JSON.stringify(nextResearch));
+    } catch (e: any) {
       // Deterministic-ish fallback if backend is unavailable.
       const companyName = selectedContacts[0]?.company || "TechCorp Inc.";
       const slug = companyName.toLowerCase().replace(/\s+/g, "");
       const fallback: ResearchData = {
         company_summary: {
           name: companyName,
-          description: `${companyName} builds cloud infrastructure and analytics software for enterprise teams. Customers use it to improve onboarding, retention, and decision-making with better instrumentation.`,
-          industry: "Enterprise Software",
-          size: "501-1,000 employees",
-          founded: "2015",
-          headquarters: "San Francisco, CA",
+          description:
+            `Research for ${companyName}. ` +
+            `Couldn’t reach the backend right now. If you’re trying to run real research, make sure Data Mode is set to Live and the backend is running.`,
+          industry: "Unknown",
+          size: "Unknown",
+          founded: "Unknown",
+          headquarters: "Unknown",
           website: `https://${slug}.com`,
           linkedin_url: `https://linkedin.com/company/${slug}`,
         },
@@ -135,48 +224,43 @@ export default function ContextResearchPage() {
           name: contact.name,
           title: contact.title,
           company: contact.company,
-          bio: `${contact.name} is a ${contact.title} at ${contact.company}. Likely cares about reliability, execution velocity, and measurable outcomes.`,
-          experience: "10+ years in technology leadership roles",
-          education: "MBA Stanford; BS Computer Science",
-          skills: ["Leadership", "Platform engineering", "Reliability", "Hiring"],
+          bio: `${contact.name} is a ${contact.title} at ${contact.company}. Bio details are limited in demo mode.`,
+          experience: "Experience details limited in demo mode.",
+          education: "Education details limited in demo mode.",
+          skills: [],
           linkedin_url: `https://linkedin.com/in/${contact.name.toLowerCase().replace(/\s+/g, "")}`,
         })),
-        recent_news: [
-          {
-            title: `${companyName} expands into EMEA with new enterprise partnerships`,
-            summary: "Announced new channel partnerships and a roadmap focused on faster onboarding and improved retention analytics.",
-            date: "2024-01-15",
-            source: "TechCrunch",
-            url: "https://techcrunch.com/funding-news",
-          },
-          {
-            title: `${companyName} launches an AI-assisted analytics workflow`,
-            summary: "A new feature helps teams explain dashboard changes and propose next steps based on trends.",
-            date: "2024-01-10",
-            source: "VentureBeat",
-            url: "https://venturebeat.com/ai-platform",
-          },
-        ],
-        shared_connections: [
-          "John Smith (former colleague at StartupXYZ)",
-          "Sarah Wilson (mutual Stanford connection)",
-          "Mike Johnson (met at industry conference)",
-        ],
+        // No fake/placeholder news. If backend is down, we simply have no sources.
+        recent_news: [],
+        shared_connections: [],
       };
 
       setResearchData(fallback);
+      const byId: Record<string, ResearchData> = {};
+      // Make the fallback selectable per contact (same company info, contact-specific bio).
+      selectedContacts.forEach((c, idx) => {
+        byId[c.id] = {
+          ...fallback,
+          contact_bios: [fallback.contact_bios[idx] || fallback.contact_bios[0]].filter(Boolean) as any,
+        };
+      });
+      setResearchByContact(byId);
+      if (!activeContactId && selectedContacts[0]?.id) setActiveContactId(selectedContacts[0].id);
       const fallbackHelper = {
         hooks: [
-          "Tie outreach to onboarding activation + retention outcomes",
-          "Reference recent product momentum as a reason to talk now",
-          "Offer a low-lift 2–3 bullet plan instead of a generic pitch",
+          "Limited signals — add a specific job/pain point to make outreach hooks sharper",
+          "Lead with a concrete outcome you can improve (no fluff)",
         ],
       };
       setHelper(fallbackHelper);
-      localStorage.setItem("context_research", JSON.stringify(fallback));
+      const activeId = activeContactId || selectedContacts[0]?.id;
+      const activeResearch = (activeId && byId[activeId]) ? byId[activeId] : fallback;
+      localStorage.setItem("context_research", JSON.stringify(activeResearch));
+      localStorage.setItem("context_research_by_contact", JSON.stringify(byId));
+      if (activeId) localStorage.setItem("context_research_active_contact_id", String(activeId));
       localStorage.setItem("context_research_helper", JSON.stringify(fallbackHelper));
       localStorage.setItem("research_data", JSON.stringify(fallback));
-      setError("Backend unavailable — using deterministic demo research data.");
+      // Don't show a scary banner; silently fall back without fabricating details.
     } finally {
       setIsResearching(false);
     }
@@ -215,6 +299,7 @@ export default function ContextResearchPage() {
     if (researchData) {
       localStorage.setItem("context_research", JSON.stringify(researchData));
       localStorage.setItem("research_data", JSON.stringify(researchData));
+      if (activeContactId) localStorage.setItem("context_research_active_contact_id", String(activeContactId));
       router.push('/offer-creation');
     }
   };
@@ -234,15 +319,39 @@ export default function ContextResearchPage() {
     }
   };
 
+  const handleSelectContact = (contactId: string) => {
+    setActiveContactId(contactId);
+    const next = researchByContact?.[contactId];
+    if (next) {
+      setResearchData(next);
+      try {
+        localStorage.setItem("context_research", JSON.stringify(next));
+        localStorage.setItem("research_data", JSON.stringify(next));
+        localStorage.setItem("context_research_active_contact_id", String(contactId));
+      } catch {}
+    }
+  };
+
   return (
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
+        <div className="mb-4">
+          <a href="/find-contact" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+            <span className="mr-2">←</span> Back to Contact
+          </a>
+        </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Company Research</h1>
             <p className="text-white/70">
               Hiring signals and company intelligence to contextualize your outreach.
             </p>
+            {dataMode === "demo" ? (
+              <div className="mt-2 text-xs text-yellow-200">
+                Data Mode is <span className="font-semibold">Demo</span> — web lookups are disabled. Switch to{" "}
+                <span className="font-semibold">Live</span> in the navbar to enable real research.
+              </div>
+            ) : null}
             {helper?.research_scope && (
               <div className="mt-3 text-xs text-white/70">
                 <span className="font-semibold text-white/80">Research scope:</span>{" "}
@@ -296,13 +405,34 @@ export default function ContextResearchPage() {
                 <h2 className="text-xl font-semibold mb-4">Selected Contacts</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {selectedContacts.map((contact) => (
-                    <div key={contact.id} className="border border-white/10 bg-black/20 rounded-lg p-4">
+                    <button
+                      type="button"
+                      key={contact.id}
+                      onClick={() => handleSelectContact(contact.id)}
+                      className={`text-left border rounded-lg p-4 transition-colors ${
+                        activeContactId === contact.id
+                          ? "border-blue-400/60 bg-blue-500/10"
+                          : "border-white/10 bg-black/20 hover:bg-black/30"
+                      }`}
+                      title="Click to view research for this contact"
+                    >
                       <h3 className="font-semibold text-white">{contact.name}</h3>
-                      <p className="text-gray-600 text-sm">{contact.title}</p>
-                      <p className="text-gray-500 text-xs">{contact.company}</p>
-                    </div>
+                      <p className="text-white/70 text-sm">{formatTitleCase(contact.title)}</p>
+                      {contact.department ? (
+                        <p className="text-white/60 text-xs">{formatTitleCase(contact.department)}</p>
+                      ) : null}
+                      <p className="text-white/50 text-xs">{contact.company}</p>
+                      {activeContactId === contact.id ? (
+                        <p className="mt-2 text-xs text-blue-200/80">Active</p>
+                      ) : null}
+                    </button>
                   ))}
                 </div>
+                {selectedContacts.length > 1 ? (
+                  <p className="mt-2 text-xs text-white/60">
+                    Click a contact to swap the research panels below (Company Summary, Contact Bio, News, Shared Connections).
+                  </p>
+                ) : null}
               </div>
 
               {/* Research Button */}
@@ -319,6 +449,12 @@ export default function ContextResearchPage() {
               {/* Research Results */}
               {researchData && (
                 <div className="space-y-8">
+                  {activeContactId ? (
+                    <div className="text-sm text-white/70">
+                      <span className="font-semibold text-white/80">Viewing research for:</span>{" "}
+                      {selectedContacts.find((c) => c.id === activeContactId)?.name || "Selected contact"}
+                    </div>
+                  ) : null}
                   {/* Company Summary */}
                   <div>
                     <div className="flex justify-between items-center mb-4">
@@ -377,6 +513,11 @@ export default function ContextResearchPage() {
                   {/* Contact Bios */}
                   <div>
                     <h2 className="text-xl font-semibold mb-4">Contact Bios</h2>
+                    {selectedContacts.length > 1 ? (
+                      <div className="mb-3 text-xs text-white/60">
+                        Showing the active contact’s bio. Click a different contact above to switch.
+                      </div>
+                    ) : null}
                     <div className="space-y-4">
                       {researchData.contact_bios.map((bio, index) => (
                         <div key={index} className="border border-gray-200 rounded-lg p-4">
@@ -414,6 +555,9 @@ export default function ContextResearchPage() {
                             </div>
                           ) : (
                             <div>
+                              <div className="mb-1 text-xs text-gray-600">
+                                {formatTitleCase(bio.title)}{bio.company ? ` • ${bio.company}` : ""}
+                              </div>
                               <p className="text-gray-700 mb-3">{bio.bio}</p>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                                 <div>
@@ -425,6 +569,75 @@ export default function ContextResearchPage() {
                                 <div className="md:col-span-2">
                                   <span className="font-medium">Skills:</span> {bio.skills.join(", ")}
                                 </div>
+                                {(bio.public_profile_highlights?.length ||
+                                  bio.publications?.length ||
+                                  bio.post_topics?.length ||
+                                  bio.opinions?.length ||
+                                  bio.other_interesting_facts?.length) ? (
+                                  <div className="md:col-span-2">
+                                    <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                      <div className="text-xs font-semibold text-gray-700 mb-2">Public profile insights (best effort)</div>
+                                      {bio.public_profile_highlights?.length ? (
+                                        <div className="mb-2">
+                                          <div className="text-xs font-medium text-gray-600">Highlights</div>
+                                          <ul className="mt-1 list-disc pl-5 text-gray-700">
+                                            {bio.public_profile_highlights.slice(0, 6).map((x, idx) => (
+                                              <li key={idx}>{x}</li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      ) : null}
+                                      {bio.post_topics?.length ? (
+                                        <div className="mb-2">
+                                          <div className="text-xs font-medium text-gray-600">Post topics</div>
+                                          <div className="mt-1 flex flex-wrap gap-1">
+                                            {bio.post_topics.slice(0, 10).map((t, idx) => (
+                                              <span key={idx} className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-xs text-gray-700">
+                                                {t}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      ) : null}
+                                      {bio.publications?.length ? (
+                                        <div className="mb-2">
+                                          <div className="text-xs font-medium text-gray-600">Publications / writing</div>
+                                          <ul className="mt-1 list-disc pl-5 text-gray-700">
+                                            {bio.publications.slice(0, 5).map((x, idx) => (
+                                              <li key={idx}>{x}</li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      ) : null}
+                                      {bio.opinions?.length ? (
+                                        <div className="mb-2">
+                                          <div className="text-xs font-medium text-gray-600">Opinions / takes</div>
+                                          <ul className="mt-1 list-disc pl-5 text-gray-700">
+                                            {bio.opinions.slice(0, 5).map((x, idx) => (
+                                              <li key={idx}>{x}</li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      ) : null}
+                                      {bio.other_interesting_facts?.length ? (
+                                        <div>
+                                          <div className="text-xs font-medium text-gray-600">Other interesting facts</div>
+                                          <ul className="mt-1 list-disc pl-5 text-gray-700">
+                                            {bio.other_interesting_facts.slice(0, 5).map((x, idx) => (
+                                              <li key={idx}>{x}</li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      ) : null}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="md:col-span-2">
+                                    <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
+                                      Public profile insights will appear here when we have public snippets (e.g., via Serper) or other sources.
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           )}
@@ -436,41 +649,69 @@ export default function ContextResearchPage() {
                   {/* Recent News */}
                   <div>
                     <h2 className="text-xl font-semibold mb-4">Recent News</h2>
-                    <div className="space-y-4">
-                      {researchData.recent_news.map((news, index) => (
-                        <div key={index} className="border border-gray-200 rounded-lg p-4">
-                          <h3 className="font-semibold text-gray-900 mb-2">{news.title}</h3>
-                          <p className="text-gray-700 mb-2">{news.summary}</p>
-                          <div className="flex justify-between items-center text-sm text-gray-500">
-                            <span>{news.source} • {news.date}</span>
-                            <a
-                              href={news.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              Read More
-                            </a>
-                          </div>
+                    {researchData.recent_news.length === 0 ? (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+                        No sourced news available right now.
+                        <div className="mt-1 text-xs text-gray-500">
+                          To fetch real headlines + links, set Data Mode to <span className="font-semibold">Live</span> and configure Serper.
+                          Until then, use the <span className="font-semibold">hooks</span> above as “timing” angles.
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {researchData.recent_news.map((news, index) => {
+                          const hasUrl = Boolean((news.url || "").trim());
+                          const isUnsourced = !hasUrl;
+                          return (
+                            <div key={index} className="border border-gray-200 rounded-lg p-4">
+                              <div className="flex items-start justify-between gap-3">
+                                <h3 className="font-semibold text-gray-900 mb-2">{news.title}</h3>
+                                {isUnsourced ? (
+                                  <span className="shrink-0 rounded-full border border-yellow-200 bg-yellow-50 px-2 py-0.5 text-[11px] font-semibold text-yellow-800">
+                                    Unsourced theme
+                                  </span>
+                                ) : null}
+                              </div>
+                              <p className="text-gray-700 mb-2">{news.summary}</p>
+                              <div className="flex justify-between items-center text-sm text-gray-500">
+                                <span>
+                                  {(news.source || "General").trim()}
+                                  {news.date ? ` • ${news.date}` : ""}
+                                </span>
+                                {hasUrl ? (
+                                  <a
+                                    href={news.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800"
+                                  >
+                                    Read More
+                                  </a>
+                                ) : null}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Shared Connections */}
-                  <div>
-                    <h2 className="text-xl font-semibold mb-4">Shared Connections</h2>
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <ul className="space-y-2">
-                        {researchData.shared_connections.map((connection, index) => (
-                          <li key={index} className="flex items-center space-x-2">
-                            <span className="text-green-500">•</span>
-                            <span className="text-gray-700">{connection}</span>
-                          </li>
-                        ))}
-                      </ul>
+                  {researchData.shared_connections.length > 0 ? (
+                    <div>
+                      <h2 className="text-xl font-semibold mb-4">Shared Connections</h2>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <ul className="space-y-2">
+                          {researchData.shared_connections.map((connection, index) => (
+                            <li key={index} className="flex items-center space-x-2">
+                              <span className="text-green-500">•</span>
+                              <span className="text-gray-700">{connection}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
-                  </div>
+                  ) : null}
 
                   {/* Variables Preview */}
                   <div>

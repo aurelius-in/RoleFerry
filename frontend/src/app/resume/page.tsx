@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 
@@ -34,12 +34,55 @@ export default function ResumePage() {
   const [isUploading, setIsUploading] = useState(false);
   const [extract, setExtract] = useState<ResumeExtract | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [cachedFilename, setCachedFilename] = useState<string | null>(null);
+
+  const clearResumeCache = () => {
+    // Resume + anything derived from resume (so you don't see stale matches)
+    localStorage.removeItem("resume_extract");
+    localStorage.removeItem("resume_extract_meta");
+    localStorage.removeItem("painpoint_matches");
+    localStorage.removeItem("painpoint_matches_by_job");
+    // Keep user-entered prefs/jobs unless explicitly resetting the whole demo.
+
+    setExtract(null);
+    setIsEditing(false);
+    setUploadError(null);
+    setCachedFilename(null);
+    // Allow re-uploading the same file immediately.
+    try {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch {}
+  };
+
+  useEffect(() => {
+    // Load cached resume extract (if any) so the UI reflects what's powering downstream steps.
+    try {
+      const raw = localStorage.getItem("resume_extract");
+      if (raw) setExtract(JSON.parse(raw));
+      const metaRaw = localStorage.getItem("resume_extract_meta");
+      if (metaRaw) {
+        const meta = JSON.parse(metaRaw);
+        if (meta?.filename) setCachedFilename(String(meta.filename));
+      }
+    } catch {
+      // If cache is corrupt, clear it silently.
+      try {
+        localStorage.removeItem("resume_extract");
+        localStorage.removeItem("resume_extract_meta");
+      } catch {}
+    }
+  }, []);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Prevent stale resume data from persisting after a new upload.
+    clearResumeCache();
+
     setIsUploading(true);
+    setUploadError(null);
 
     try {
       // Call the real backend upload endpoint via the Next.js /api rewrite.
@@ -52,113 +95,72 @@ export default function ResumePage() {
 
       if (res.ok) {
         const data = await res.json();
-        // Backend currently returns a mock extract shape; for Week 9/10 we keep
-        // using our front-end friendly mock while relying on the backend for
-        // persistence and rule-based parsing.
-        const mockExtract: ResumeExtract = {
-          positions: [
-            {
-              company: "TechCorp Inc.",
-              title: "Senior Software Engineer",
-              startDate: "2022-01",
-              endDate: "2024-12",
-              current: true,
-              description: "Led development of microservices architecture, reducing system latency by 40%"
-            },
-            {
-              company: "StartupXYZ",
-              title: "Full Stack Developer",
-              startDate: "2020-06",
-              endDate: "2021-12",
-              current: false,
-              description: "Built customer-facing web application serving 10K+ users"
-            }
-          ],
-          keyMetrics: [
-            {
-              metric: "System Performance",
-              value: "40% reduction",
-              context: "in latency through microservices optimization"
-            },
-            {
-              metric: "User Growth",
-              value: "10K+ users",
-              context: "served through customer-facing application"
-            },
-            {
-              metric: "Team Leadership",
-              value: "5 engineers",
-              context: "managed in cross-functional team"
-            }
-          ],
-          skills: ["Python", "JavaScript", "React", "Node.js", "AWS", "Docker", "PostgreSQL"],
-          businessChallenges: [
-            "Scaling customer-centric strategy across onboarding, expansion, and value realization efforts",
-            "Integrating two legacy CS orgs into a unified global operating model",
-            "Improving customer satisfaction for a $40M consulting firm",
-            "Driving adoption and ROI for a $250M+ SaaS provider"
-          ],
-          accomplishments: [
-            "Reduced system latency by 40% through microservices architecture",
-            "Led team of 5 engineers in cross-functional projects",
-            "Built scalable web application serving 10K+ users",
-            "Implemented CI/CD pipeline reducing deployment time by 60%"
-          ],
-          tenure: [
-            { company: "TechCorp Inc.", duration: "2 years", role: "Senior Software Engineer" },
-            { company: "StartupXYZ", duration: "1.5 years", role: "Full Stack Developer" }
-          ]
+        const backendExtract = data?.extract;
+        if (!backendExtract) {
+          setUploadError("Upload succeeded but the backend did not return an extract. Please try again.");
+          setExtract(null);
+          return;
+        }
+
+        const backendBusinessChallenges = backendExtract.business_challenges;
+        const mappedBusinessChallenges =
+          Array.isArray(backendBusinessChallenges) && backendBusinessChallenges.length
+            ? backendBusinessChallenges
+            : [];
+
+        const mapped: ResumeExtract = {
+          positions: (backendExtract.positions || []).map((p: any) => ({
+            company: p.company,
+            title: p.title,
+            startDate: p.start_date,
+            endDate: p.end_date,
+            current: p.current,
+            description: p.description,
+          })),
+          keyMetrics: (backendExtract.key_metrics || []).map((m: any) => ({
+            metric: m.metric,
+            value: m.value,
+            context: m.context,
+          })),
+          skills: backendExtract.skills || [],
+          businessChallenges: mappedBusinessChallenges,
+          accomplishments: backendExtract.accomplishments || [],
+          tenure: (backendExtract.tenure || []).map((t: any) => ({
+            company: t.company,
+            duration: t.duration,
+            role: t.role,
+          })),
         };
 
-        // Prefer backend extract if present and mappable, otherwise fall back
-        // to the existing mock extract.
-        const backendExtract = data?.extract;
-        if (backendExtract) {
-          try {
-            const backendBusinessChallenges = backendExtract.business_challenges;
-            const mappedBusinessChallenges =
-              Array.isArray(backendBusinessChallenges) && backendBusinessChallenges.length
-                ? backendBusinessChallenges
-                : [];
-
-            const mapped: ResumeExtract = {
-              positions: (backendExtract.positions || []).map((p: any) => ({
-                company: p.company,
-                title: p.title,
-                startDate: p.start_date,
-                endDate: p.end_date,
-                current: p.current,
-                description: p.description,
-              })),
-              keyMetrics: (backendExtract.key_metrics || []).map((m: any) => ({
-                metric: m.metric,
-                value: m.value,
-                context: m.context,
-              })),
-              skills: backendExtract.skills || [],
-              // Don't show canned demo bullets for a real uploaded resume.
-              businessChallenges: mappedBusinessChallenges,
-              accomplishments: backendExtract.accomplishments || mockExtract.accomplishments,
-              tenure: (backendExtract.tenure || []).map((t: any) => ({
-                company: t.company,
-                duration: t.duration,
-                role: t.role,
-              })),
-            };
-            setExtract(mapped);
-          } catch {
-            setExtract(mockExtract);
-          }
-        } else {
-          setExtract(mockExtract);
-        }
+        // Persist immediately so downstream steps (Gap Analysis / Match) use the new resume right away.
+        localStorage.setItem("resume_extract", JSON.stringify(mapped));
+        localStorage.setItem(
+          "resume_extract_meta",
+          JSON.stringify({ filename: file.name, updated_at: new Date().toISOString() })
+        );
+        setCachedFilename(file.name);
+        setExtract(mapped);
       } else {
+        // Show helpful server error text when available.
+        try {
+          const err = await res.json();
+          const detail = String(err?.detail || err?.message || "");
+          setUploadError(detail || `Upload failed (HTTP ${res.status}).`);
+        } catch {
+          setUploadError(`Upload failed (HTTP ${res.status}).`);
+        }
         setExtract(null);
       }
-    } catch {
+    } catch (e: any) {
+      const msg = String(e?.message || "");
+      setUploadError(msg || "Upload failed. Is the backend running?");
       setExtract(null);
     } finally {
       setIsUploading(false);
+      // Allow selecting the same file again to retry (onChange won't fire otherwise).
+      try {
+        event.target.value = "";
+      } catch {}
     }
   };
 
@@ -202,8 +204,8 @@ export default function ResumePage() {
   return (
     <div className="min-h-screen py-8">
       <div className="max-w-4xl mx-auto px-4 mb-4">
-        <a href="/foundry" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
-          <span className="mr-2">←</span> Back to Path
+        <a href="/job-preferences" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+          <span className="mr-2">←</span> Back to Job Prefs
         </a>
       </div>
       <div className="max-w-4xl mx-auto px-4">
@@ -214,6 +216,11 @@ export default function ResumePage() {
                   <p className="text-white/70">
                     Upload your resume or candidate profile to extract key information for personalized outreach.
                   </p>
+                  {cachedFilename ? (
+                    <div className="mt-2 text-xs text-white/50">
+                      Cached resume: <span className="text-white/70 font-semibold">{cachedFilename}</span>
+                    </div>
+                  ) : null}
                 </div>
                 <div className="bg-gray-900/70 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-white/10">
                   Step 3 of 12
@@ -231,10 +238,15 @@ export default function ResumePage() {
               <p className="text-white/70 mb-6">
                 Upload a PDF or DOCX file to extract your experience, skills, and accomplishments.
               </p>
+              {uploadError && (
+                <div className="mx-auto mb-4 max-w-xl rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100 text-left">
+                  {uploadError}
+                </div>
+              )}
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf,.docx"
+                accept=".pdf,.docx,.html,.htm"
                 onChange={handleFileUpload}
                 className="hidden"
               />
@@ -245,17 +257,35 @@ export default function ResumePage() {
               >
                 {isUploading ? "Processing..." : "Choose File"}
               </button>
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={clearResumeCache}
+                  className="text-xs text-white/60 hover:text-white underline underline-offset-4"
+                >
+                  Clear cached resume
+                </button>
+              </div>
             </div>
           ) : (
             <div className="space-y-8">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-semibold">Resume Extract</h2>
-                <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className="bg-white/10 text-white px-4 py-2 rounded-md hover:bg-white/15 transition-colors border border-white/10"
-                >
-                  {isEditing ? "Done Editing" : "Edit"}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={clearResumeCache}
+                    className="bg-white/5 text-white/80 px-3 py-2 rounded-md hover:bg-white/10 transition-colors border border-white/10 text-sm"
+                  >
+                    Clear cached resume
+                  </button>
+                  <button
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="bg-white/10 text-white px-4 py-2 rounded-md hover:bg-white/15 transition-colors border border-white/10"
+                  >
+                    {isEditing ? "Done Editing" : "Edit"}
+                  </button>
+                </div>
               </div>
 
               {/* Positions */}
@@ -334,6 +364,9 @@ export default function ResumePage() {
               {/* Key Metrics */}
               <div>
                 <h3 className="text-xl font-semibold mb-4">Key Metrics</h3>
+                {extract.keyMetrics.length === 0 ? (
+                  <div className="text-sm text-red-300 font-semibold">Missing details</div>
+                ) : null}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {extract.keyMetrics.map((metric, index) => (
                     <div key={index} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -382,6 +415,9 @@ export default function ResumePage() {
               {/* Business Challenges */}
               <div>
                 <h3 className="text-xl font-semibold mb-4">Business Challenges Solved</h3>
+                {extract.businessChallenges.length === 0 ? (
+                  <div className="text-sm text-red-300 font-semibold">Missing details</div>
+                ) : null}
                 <ul className="space-y-2">
                   {extract.businessChallenges.map((challenge, index) => (
                     <li key={index} className="flex items-start space-x-2">
@@ -412,6 +448,9 @@ export default function ResumePage() {
               {/* Skills */}
               <div>
                 <h3 className="text-xl font-semibold mb-4">Skills</h3>
+                {extract.skills.length === 0 ? (
+                  <div className="text-sm text-red-300 font-semibold">Missing details</div>
+                ) : null}
                 <div className="flex flex-wrap gap-2">
                   {extract.skills.map((skill, index) => (
                     <span
@@ -427,6 +466,9 @@ export default function ResumePage() {
               {/* Accomplishments */}
               <div>
                 <h3 className="text-xl font-semibold mb-4">Notable Accomplishments</h3>
+                {extract.accomplishments.length === 0 ? (
+                  <div className="text-sm text-red-300 font-semibold">Missing details</div>
+                ) : null}
                 <ul className="space-y-2">
                   {extract.accomplishments.map((accomplishment, index) => (
                     <li key={index} className="flex items-start space-x-2">
@@ -440,6 +482,9 @@ export default function ResumePage() {
               {/* Tenure */}
               <div>
                 <h3 className="text-xl font-semibold mb-4">Tenure Summary</h3>
+                {extract.tenure.length === 0 ? (
+                  <div className="text-sm text-red-300 font-semibold">Missing details</div>
+                ) : null}
                 <div className="space-y-2">
                   {extract.tenure.map((tenure, index) => (
                     <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100">

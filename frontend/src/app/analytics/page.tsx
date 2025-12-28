@@ -4,6 +4,15 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { DataMode, getCurrentDataMode, subscribeToDataModeChanges } from "@/lib/dataMode";
 
+type OutreachSend = {
+  id: string;
+  contact_email: string;
+  subject: string;
+  sent_at: string;
+  verification_status: string;
+  verification_score: number | null;
+};
+
 type OverviewResp = {
   total_sent: number;
   click_rate: number;
@@ -12,6 +21,7 @@ type OverviewResp = {
   by_status: Record<string, number>;
   verification_breakdown: Record<string, number>;
   verified_ratio: number;
+  recent_sends?: OutreachSend[];
 };
 
 const DEMO_ANALYTICS: OverviewResp = {
@@ -155,10 +165,49 @@ export default function Analytics() {
             <KpiCard label="Total Sent" value={data.total_sent.toLocaleString()} trend="▲ 0 this week" />
             <KpiCard label="Click Rate" value={`${data.click_rate.toFixed(1)}%`} trend="▲ vs. baseline" />
             <KpiCard label="Reply Rate" value={`${data.reply_rate.toFixed(1)}%`} trend="▲ vs. baseline" />
-            <KpiCard label="Roles Applied" value={data.roles_applied.toString()} trend="In active campaigns" />
-          </div>
+          <KpiCard label="Roles Applied" value={data.roles_applied.toString()} trend="In active campaigns" />
+        </div>
 
-          {/* Application status breakdown */}
+        {/* Recent Sends Section */}
+        {data.recent_sends && data.recent_sends.length > 0 && (
+          <section className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold">Recent Outreach</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs md:text-sm">
+                <thead className="bg-white/5">
+                  <tr>
+                    <th className="text-left p-2">To</th>
+                    <th className="text-left p-2">Subject</th>
+                    <th className="text-left p-2">Sent</th>
+                    <th className="text-left p-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.recent_sends.map((s) => (
+                    <tr key={s.id} className="odd:bg-white/0 even:bg-white/[.03] border-t border-white/5">
+                      <td className="p-2 font-mono">{s.contact_email}</td>
+                      <td className="p-2 truncate max-w-[200px]">{s.subject}</td>
+                      <td className="p-2 text-white/60">{new Date(s.sent_at).toLocaleDateString()}</td>
+                      <td className="p-2">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${
+                          s.verification_status === 'valid' ? 'bg-green-500/20 text-green-400' :
+                          s.verification_status === 'risky' ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-red-500/20 text-red-400'
+                        }`}>
+                          {s.verification_status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
+        {/* Application status breakdown */}
           <section className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold">Application Status</h2>

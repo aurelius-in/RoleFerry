@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import StarRating from "@/components/StarRating";
 
 interface Contact {
   id: string;
@@ -16,6 +17,13 @@ interface Contact {
   company: string;
   department: string;
   level: string;
+  email_source?: string;
+  location_name?: string;
+  location_country?: string;
+  job_company_website?: string;
+  job_company_linkedin_url?: string;
+  job_company_industry?: string;
+  job_company_size?: string;
 }
 
 interface VerificationBadge {
@@ -40,11 +48,35 @@ export default function FindContactPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [companyOptions, setCompanyOptions] = useState<string[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [verifyingEmails, setVerifyingEmails] = useState<string[]>([]);
   const [helper, setHelper] = useState<ContactSearchResponse["helper"] | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const formatTitleCase = (input?: string) => {
+    const s = String(input || "").trim();
+    if (!s) return "";
+    const lowerWords = new Set(["of", "and"]);
+    const words = s.split(/\s+/).filter(Boolean);
+    const out = words.map((w, idx) => {
+      if (w.length <= 6 && w === w.toUpperCase()) return w;
+      const parts = w.split(/([\/\-.])/g);
+      const rebuilt = parts
+        .map((p) => {
+          if (p === "/" || p === "-" || p === ".") return p;
+          const raw = p.trim();
+          if (!raw) return raw;
+          const low = raw.toLowerCase();
+          if (idx > 0 && lowerWords.has(low)) return low;
+          return low.charAt(0).toUpperCase() + low.slice(1);
+        })
+        .join("");
+      return rebuilt;
+    });
+    return out.join(" ");
+  };
 
   const isRealEmail = (email?: string) => {
     const e = String(email || "").trim().toLowerCase();
@@ -79,6 +111,43 @@ export default function FindContactPage() {
       } catch {
         localStorage.removeItem("found_contacts");
       }
+    }
+
+    // Carry over company names from previous steps (Job Descriptions + selected JD + selected contacts).
+    try {
+      const companies: string[] = [];
+      const jdsRaw = localStorage.getItem("job_descriptions");
+      if (jdsRaw) {
+        const jds = JSON.parse(jdsRaw);
+        if (Array.isArray(jds)) {
+          for (const jd of jds) {
+            const c = String(jd?.company || "").trim();
+            if (c) companies.push(c);
+          }
+        }
+      }
+      const selectedJdRaw = localStorage.getItem("selected_job_description");
+      if (selectedJdRaw) {
+        const jd = JSON.parse(selectedJdRaw);
+        const c = String(jd?.company || "").trim();
+        if (c) companies.push(c);
+      }
+      const selContactsRaw = localStorage.getItem("selected_contacts");
+      if (selContactsRaw) {
+        const sel = JSON.parse(selContactsRaw);
+        if (Array.isArray(sel)) {
+          for (const sc of sel) {
+            const c = String(sc?.company || "").trim();
+            if (c) companies.push(c);
+          }
+        }
+      }
+
+      const uniq = Array.from(new Set(companies.map((c) => c.trim()).filter(Boolean)));
+      uniq.sort((a, b) => a.localeCompare(b));
+      setCompanyOptions(uniq);
+    } catch {
+      // ignore
     }
   }, []);
 
@@ -183,11 +252,16 @@ export default function FindContactPage() {
   return (
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
+        <div className="mb-4">
+          <a href="/painpoint-match" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+            <span className="mr-2">←</span> Back to Match
+          </a>
+        </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Decision Makers</h1>
             <p className="text-white/70">
-              Select a contact and research their LinkedIn to personalize your outreach.
+              Select a contact and reach out via email (if available) or LinkedIn.
             </p>
           </div>
 
@@ -197,47 +271,34 @@ export default function FindContactPage() {
             </div>
           )}
 
-          {helper && (
-            <div className="mb-8 rounded-lg border border-white/10 bg-black/20 p-4">
-              <div className="text-sm font-bold text-white mb-2">GPT Helper: talking points</div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <div className="text-white/70 font-semibold mb-1">Openers</div>
-                  <ul className="list-disc list-inside text-white/70 space-y-1">
-                    {(helper.opener_suggestions || []).slice(0, 4).map((t, i) => (
-                      <li key={`op_${i}`}>{t}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div>
-                  <div className="text-white/70 font-semibold mb-1">Questions to ask</div>
-                  <ul className="list-disc list-inside text-white/70 space-y-1">
-                    {(helper.questions_to_ask || []).slice(0, 4).map((t, i) => (
-                      <li key={`q_${i}`}>{t}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-              {selectedContacts.length > 0 && helper.talking_points_by_contact && (
-                <div className="mt-3 text-sm text-white/70">
-                  <div className="font-semibold mb-1">Selected contact talking points</div>
-                  {selectedContacts.slice(0, 2).map((cid) => (
-                    <div key={cid} className="mt-2">
-                      <div className="text-white/80 font-semibold">{cid}</div>
-                      <ul className="list-disc list-inside space-y-1">
-                        {(helper.talking_points_by_contact?.[cid] || []).slice(0, 3).map((t, i) => (
-                          <li key={`${cid}_${i}`}>{t}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Search Section */}
           <div className="mb-8">
+            {companyOptions.length > 0 && (
+              <div className="mb-6">
+                <div className="text-xs font-semibold text-white/70 mb-3 uppercase tracking-wider">Quick Search: Companies from previous steps</div>
+                <div className="flex flex-wrap gap-2">
+                  {companyOptions.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery(c);
+                        setCompanyInput(c);
+                        // Trigger search automatically when clicking a quick-option? 
+                        // Let's keep it manual for consistency unless asked.
+                      }}
+                      className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                        searchQuery === c
+                          ? "brand-gradient text-black border-white/20 shadow-lg shadow-blue-500/20"
+                          : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white"
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="flex space-x-4">
               <input
                 type="text"
@@ -283,7 +344,7 @@ export default function FindContactPage() {
                       onClick={handleContinue}
                       className="px-4 py-2 rounded-md font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700"
                     >
-                      Continue (LinkedIn outreach)
+                      Continue (Email or LinkedIn outreach)
                     </button>
                   </div>
                   );
@@ -308,7 +369,7 @@ export default function FindContactPage() {
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <h3 className="font-semibold text-white">{contact.name}</h3>
-                          <p className="text-gray-600 text-sm">{contact.title}</p>
+                          <p className="text-gray-600 text-sm">{formatTitleCase(contact.title)}</p>
                           <p className="text-gray-500 text-xs">{contact.company}</p>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -341,6 +402,7 @@ export default function FindContactPage() {
                             <span className="text-sm text-gray-600">
                               {Math.round(contact.confidence * 100)}%
                             </span>
+                            <StarRating value={contact.confidence} scale="fraction" showNumeric={false} className="ml-1 text-[10px]" />
                           </div>
                         </div>
 

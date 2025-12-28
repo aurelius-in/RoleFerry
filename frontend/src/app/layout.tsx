@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
-import { FoundryProvider } from "@/context/FoundryContext";
 import Footer from "@/components/Footer";
 import { ToastProvider } from "@/components/ToastProvider";
 import { LoadingProvider } from "@/components/LoadingProvider";
@@ -38,16 +37,14 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 px-3 py-1 rounded bg-blue-600 text-white">Skip to content</a>
-        <FoundryProvider>
-          <LoadingProvider>
-            <ToastProvider>
-              <Navbar />
-              <div id="main">{children}</div>
-              <Footer />
-              <DemoDebugPanel />
-            </ToastProvider>
-          </LoadingProvider>
-        </FoundryProvider>
+        <LoadingProvider>
+          <ToastProvider>
+            <Navbar />
+            <div id="main">{children}</div>
+            <Footer />
+            <DemoDebugPanel />
+          </ToastProvider>
+        </LoadingProvider>
       </body>
     </html>
   );
