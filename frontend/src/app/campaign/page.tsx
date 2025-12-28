@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
+import StarRating from "@/components/StarRating";
 
 interface EmailStep {
   id: string;
@@ -24,21 +26,34 @@ interface Campaign {
 }
 
 interface DeliverabilityCheck {
-  spam_score: number;
-  dns_valid: boolean;
-  bounce_rate: number;
-  health_score: number;
-  warnings: string[];
+  overall_health_score: number;
+  summary?: string;
+  reports: Array<{
+    step_number: number;
+    health_score: number;
+    spam_risk: 'low' | 'medium' | 'high';
+    issues: string[];
+    warnings: string[];
+    subject_variants: string[];
+    copy_tweaks: string[];
+    improved_subject?: string | null;
+    improved_body?: string | null;
+  }>;
 }
 
 export default function CampaignPage() {
   const router = useRouter();
   const [mode, setMode] = useState<'job-seeker' | 'recruiter'>('job-seeker');
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [activeContactId, setActiveContactId] = useState<string | null>(null);
+  const [campaignByContact, setCampaignByContact] = useState<Record<string, Campaign>>({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [deliverabilityCheck, setDeliverabilityCheck] = useState<DeliverabilityCheck | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [composeHelper, setComposeHelper] = useState<any>(null);
+  const [previewWithValues, setPreviewWithValues] = useState(false);
+
+  const campaign: Campaign | null = activeContactId ? (campaignByContact[activeContactId] || null) : null;
 
   const applyVariables = (text: string, vars: Record<string, string>) => {
     let out = text;
@@ -49,6 +64,26 @@ export default function CampaignPage() {
     return out;
   };
 
+  const activeVarMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    try {
+      const composedRaw = localStorage.getItem("composed_email");
+      const composed = composedRaw ? JSON.parse(composedRaw) : null;
+      const vars = composed?.variables || [];
+      for (const v of vars) {
+        if (v?.name) map[String(v.name)] = String(v.value ?? "");
+      }
+    } catch {}
+
+    // Override with active contact info so preview is accurate per person.
+    const c = contacts.find((x: any) => String(x?.id || "") === String(activeContactId || ""));
+    const first = String(c?.name || "").trim().split(" ")[0] || "there";
+    if (first) map["{{first_name}}"] = first;
+    if (c?.company) map["{{company_name}}"] = String(c.company);
+
+    return map;
+  }, [activeContactId, contacts]);
+
   useEffect(() => {
     // Load mode from localStorage
     const stored = localStorage.getItem("rf_mode");
@@ -56,6 +91,15 @@ export default function CampaignPage() {
       setMode('recruiter');
     }
     
+    // Load contacts for per-contact editing
+    try {
+      const selected = JSON.parse(localStorage.getItem("selected_contacts") || "[]");
+      if (Array.isArray(selected)) {
+        setContacts(selected);
+        if (selected.length) setActiveContactId(String(selected[0]?.id || ""));
+      }
+    } catch {}
+
     // Load composed email from previous step
     const composedEmail = localStorage.getItem('composed_email');
     if (composedEmail) {
@@ -96,7 +140,7 @@ export default function CampaignPage() {
         }
       } catch {}
 
-      // Generate 3 emails based on composed email
+      // Generate 3 emails based on composed email (keep placeholders; no substitution)
       const emails: EmailStep[] = [
         {
           id: "email_1",
@@ -111,11 +155,12 @@ export default function CampaignPage() {
         {
           id: "email_2",
           step_number: 2,
-          subject: applyVariables(`Re: ${composedEmail.subject}`, variableMap),
-          body: applyVariables(
-            `Hi {{first_name}},\n\nJust following up on my previous message about the {{job_title}} role. I wanted to make sure you received it and see if you'd be open to a brief conversation.\n\nI'm confident my experience with {{painpoint_1}} would be valuable for your team.\n\nBest regards,\n[Your Name]`,
-            variableMap
-          ),
+          subject: `Re: ${composedEmail.subject}`,
+          body:
+            `Hi {{first_name}},\n\n`
+            + `Quick follow-up on my note about the {{job_title}} role at {{company_name}}.\n\n`
+            + `If helpful, I can share a 2–3 bullet plan for {{painpoint_1}}.\n\n`
+            + `Best,\n[Your Name]`,
           delay_days: 2,
           delay_hours: 0,
           stop_on_reply: true,
@@ -124,11 +169,11 @@ export default function CampaignPage() {
         {
           id: "email_3",
           step_number: 3,
-          subject: applyVariables(`Final follow-up - {{job_title}} at {{company_name}}`, variableMap),
-          body: applyVariables(
-            `Hi {{first_name}},\n\nI know you're busy, so I'll keep this brief. I'm still very interested in the {{job_title}} position and believe I could make an immediate impact.\n\nIf now isn't the right time, I completely understand. I'd appreciate being kept in mind for future opportunities.\n\nThanks for your time,\n[Your Name]`,
-            variableMap
-          ),
+          subject: `Final follow-up — {{job_title}} @ {{company_name}}`,
+          body:
+            `Hi {{first_name}},\n\n`
+            + `Last follow-up — happy to share specifics if it’s useful.\n\n`
+            + `Best,\n[Your Name]`,
           delay_days: 4,
           delay_hours: 0,
           stop_on_reply: true,
@@ -136,16 +181,29 @@ export default function CampaignPage() {
         }
       ];
 
-      const newCampaign: Campaign = {
-        id: "campaign_1",
-        name: `${mode === 'job-seeker' ? 'Job Application' : 'Candidate Pitch'} Campaign`,
-        status: 'draft',
-        emails,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      setCampaign(newCampaign);
+      const selectedContacts = (() => {
+        try {
+          const sel = JSON.parse(localStorage.getItem("selected_contacts") || "[]");
+          return Array.isArray(sel) ? sel : [];
+        } catch {
+          return [];
+        }
+      })();
+      const now = new Date().toISOString();
+      const byContact: Record<string, Campaign> = {};
+      for (const c of selectedContacts) {
+        const cid = String(c?.id || "");
+        if (!cid) continue;
+        byContact[cid] = {
+          id: `campaign_${cid}`,
+          name: `${mode === 'job-seeker' ? 'Job Application' : 'Candidate Pitch'} Campaign`,
+          status: 'draft',
+          emails: emails.map((e) => ({ ...e })),
+          created_at: now,
+          updated_at: now,
+        };
+      }
+      setCampaignByContact(byContact);
     } catch (err) {
       setError("Failed to generate campaign. Please try again.");
     } finally {
@@ -155,37 +213,56 @@ export default function CampaignPage() {
 
   const runDeliverabilityCheck = async () => {
     try {
-      // Simulate deliverability check
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      if (!campaign) return;
+      setError(null);
+      // Use backend GPT deliverability analyzer (with deterministic fallback)
+      const contacts = (() => {
+        try {
+          return JSON.parse(localStorage.getItem("selected_contacts") || "[]");
+        } catch {
+          return [];
+        }
+      })();
 
-      const check: DeliverabilityCheck = {
-        spam_score: 2.1,
-        dns_valid: true,
-        bounce_rate: 0.02,
-        health_score: 85,
-        warnings: [
-          "Consider reducing exclamation marks",
-          "Add more personalization to subject lines"
-        ]
-      };
+      const resp = await api<any>("/deliverability-launch/check", "POST", {
+        emails: campaign.emails.map((e) => ({
+          id: e.id,
+          step_number: e.step_number,
+          subject: applyVariables(e.subject, activeVarMap),
+          body: applyVariables(e.body, activeVarMap),
+          delay_days: e.delay_days,
+        })),
+        contacts,
+        user_mode: mode,
+      });
 
-      setDeliverabilityCheck(check);
+      if (!resp?.success) throw new Error(resp?.message || "Deliverability check failed");
+      setDeliverabilityCheck({
+        overall_health_score: Number(resp.overall_health_score ?? 0) || 0,
+        summary: resp.summary || "",
+        reports: Array.isArray(resp.reports) ? resp.reports : [],
+      });
     } catch (err) {
       setError("Failed to run deliverability check.");
     }
   };
 
   const updateEmailStep = (stepId: string, updates: Partial<EmailStep>) => {
-    if (campaign) {
-      const updatedEmails = campaign.emails.map(email => 
-        email.id === stepId ? { ...email, ...updates } : email
-      );
-      setCampaign({ ...campaign, emails: updatedEmails, updated_at: new Date().toISOString() });
-    }
+    if (!activeContactId) return;
+    setCampaignByContact((prev) => {
+      const cur = prev[activeContactId];
+      if (!cur) return prev;
+      const updatedEmails = cur.emails.map((email) => (email.id === stepId ? { ...email, ...updates } : email));
+      return { ...prev, [activeContactId]: { ...cur, emails: updatedEmails, updated_at: new Date().toISOString() } };
+    });
   };
 
   const handleContinue = () => {
     if (campaign) {
+      try {
+        localStorage.setItem('campaign_by_contact', JSON.stringify(campaignByContact));
+        if (activeContactId) localStorage.setItem('campaign_active_contact_id', String(activeContactId));
+      } catch {}
       localStorage.setItem('campaign_data', JSON.stringify(campaign));
       router.push('/deliverability-launch');
     }
@@ -207,9 +284,30 @@ export default function CampaignPage() {
     return 'text-red-600';
   };
 
+  const applyDeliverabilityFix = (stepNumber: number) => {
+    if (!campaign || !deliverabilityCheck) return;
+    const report = deliverabilityCheck.reports.find((r) => r.step_number === stepNumber);
+    if (!report) return;
+    const improvedSubject = String(report.improved_subject || "").trim();
+    const improvedBody = String(report.improved_body || "").trim();
+    if (!improvedSubject && !improvedBody) return;
+
+    const target = campaign.emails.find((e) => e.step_number === stepNumber);
+    if (!target) return;
+    updateEmailStep(target.id, {
+      subject: improvedSubject || target.subject,
+      body: improvedBody || target.body,
+    });
+  };
+
   return (
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
+        <div className="mb-4">
+          <a href="/compose" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+            <span className="mr-2">←</span> Back to Compose
+          </a>
+        </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Campaign</h1>
@@ -248,22 +346,94 @@ export default function CampaignPage() {
               </button>
             </div>
           ) : campaign ? (
-            <div className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Contacts column (wireframe-style) */}
+              <div className="lg:col-span-3">
+                <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                  <div className="text-sm font-bold text-white mb-3">Contacts</div>
+                  {contacts.length === 0 ? (
+                    <div className="text-sm text-white/60">No contacts selected.</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {contacts.map((c: any) => {
+                        const cid = String(c?.id || "");
+                        const active = cid && cid === String(activeContactId || "");
+                        const title = String(c?.title || "").trim();
+                        const company = String(c?.company || "").trim();
+                        return (
+                          <button
+                            key={cid || String(c?.email || Math.random())}
+                            type="button"
+                            onClick={() => {
+                              if (!cid) return;
+                              setActiveContactId(cid);
+                              setDeliverabilityCheck(null);
+                            }}
+                            className={`w-full text-left rounded-lg border p-3 transition-colors ${
+                              active
+                                ? "border-blue-400/60 bg-blue-500/10"
+                                : "border-white/10 bg-white/5 hover:bg-white/10"
+                            }`}
+                          >
+                            <div className="text-sm font-semibold text-white">{String(c?.name || "Contact")}</div>
+                            <div className="text-xs text-white/60">
+                              {(title ? title : "Decision maker") + (company ? ` • ${company}` : "")}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Main editor */}
+              <div className="lg:col-span-9 space-y-8">
               {composeHelper?.variants?.length > 0 && (
                 <div className="rounded-lg border border-white/10 bg-black/20 p-4">
-                  <div className="text-sm font-bold text-white mb-2">GPT Helper: variant ideas</div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    {composeHelper.variants.slice(0, 2).map((v: any) => (
-                      <div key={v.label} className="rounded-lg border border-white/10 bg-white/5 p-3">
-                        <div className="text-white/80 font-semibold mb-1">{v.label}</div>
-                        <div className="text-white/70 mb-2">{v.subject}</div>
-                        <div className="text-white/60 whitespace-pre-wrap line-clamp-5">{v.body}</div>
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="text-sm font-bold text-white">GPT Helper: variants (full)</div>
+                    {composeHelper?.rationale && (
+                      <div className="text-xs text-white/60">{composeHelper.rationale}</div>
+                    )}
+                  </div>
+                  <div className="space-y-3 text-sm">
+                    {composeHelper.variants.map((v: any, idx: number) => (
+                      <div key={`${v.label || "variant"}_${idx}`} className="rounded-lg border border-white/10 bg-white/5 p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="text-white/90 font-semibold">
+                              {v.label || `variant_${idx + 1}`}
+                              {v.audience_tone ? (
+                                <span className="ml-2 text-xs text-white/60">({v.audience_tone})</span>
+                              ) : null}
+                            </div>
+                            {v.intended_for ? (
+                              <div className="mt-1 text-xs text-white/60">{v.intended_for}</div>
+                            ) : null}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!campaign) return;
+                              const first = campaign.emails.find((e) => e.step_number === 1);
+                              if (!first) return;
+                              updateEmailStep(first.id, {
+                                subject: String(v.subject || first.subject),
+                                body: String(v.body || first.body),
+                              });
+                            }}
+                            className="shrink-0 px-3 py-2 rounded-md bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700"
+                            disabled={!campaign}
+                          >
+                            Use as Email 1
+                          </button>
+                        </div>
+                        <div className="mt-2 text-white/80">Subject: {v.subject}</div>
+                        <pre className="mt-2 whitespace-pre-wrap text-white/70">{String(v.body || "")}</pre>
                       </div>
                     ))}
                   </div>
-                  {composeHelper?.rationale && (
-                    <div className="mt-2 text-xs text-white/60">{composeHelper.rationale}</div>
-                  )}
                 </div>
               )}
 
@@ -288,42 +458,102 @@ export default function CampaignPage() {
                 </button>
               </div>
 
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-xs text-white/60">
+                  Select a contact on the left to edit their outreach (coming next in this rollout).
+                </div>
+                <label className="flex items-center gap-2 text-xs text-white/70">
+                  <input
+                    type="checkbox"
+                    checked={previewWithValues}
+                    onChange={(e) => setPreviewWithValues(e.target.checked)}
+                  />
+                  Preview with values
+                </label>
+              </div>
+
               {/* Deliverability Check Results */}
               {deliverabilityCheck && (
                 <div className="bg-black/20 border border-white/10 rounded-lg p-6">
                   <h3 className="text-lg font-semibold mb-4">Deliverability Check</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                    <div className="text-center">
-                      <div className={`text-2xl font-bold ${getHealthScoreColor(deliverabilityCheck.health_score)}`}>
-                        {deliverabilityCheck.health_score}%
-                      </div>
-                      <div className="text-sm text-gray-600">Health Score</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">{deliverabilityCheck.spam_score}</div>
-                      <div className="text-sm text-gray-600">Spam Score</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">{deliverabilityCheck.bounce_rate}%</div>
-                      <div className="text-sm text-gray-600">Bounce Rate</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">
-                        {deliverabilityCheck.dns_valid ? '✓' : '✗'}
-                      </div>
-                      <div className="text-sm text-gray-600">DNS Valid</div>
-                    </div>
-                  </div>
-                  {deliverabilityCheck.warnings.length > 0 && (
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
                     <div>
-                      <h4 className="font-medium text-gray-900 mb-2">Warnings:</h4>
-                      <ul className="list-disc list-inside text-sm text-gray-600">
-                        {deliverabilityCheck.warnings.map((warning, index) => (
-                          <li key={index}>{warning}</li>
-                        ))}
-                      </ul>
+                      <div className={`text-2xl font-bold ${getHealthScoreColor(deliverabilityCheck.overall_health_score)}`}>
+                        {deliverabilityCheck.overall_health_score}%
+                      </div>
+                      <div className="text-sm text-white/70">Overall health score</div>
+                      <div className="mt-1">
+                        <StarRating value={deliverabilityCheck.overall_health_score} scale="percent" showNumeric />
+                      </div>
                     </div>
-                  )}
+                    {deliverabilityCheck.summary ? (
+                      <div className="text-sm text-white/70 md:max-w-2xl">
+                        <span className="font-semibold text-white/80">Summary:</span> {deliverabilityCheck.summary}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {deliverabilityCheck.reports?.length ? (
+                    <div className="space-y-4">
+                      {deliverabilityCheck.reports.map((r) => (
+                        <div key={`rep_${r.step_number}`} className="rounded-lg border border-white/10 bg-black/20 p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="text-sm font-semibold text-white">
+                                Step {r.step_number} •{" "}
+                                <span className={getHealthScoreColor(r.health_score)}>{r.health_score}%</span>{" "}
+                                <span className="text-white/60">({r.spam_risk} risk)</span>
+                              </div>
+                              {(r.issues?.length || r.warnings?.length) ? (
+                                <ul className="mt-2 text-sm text-white/70 list-disc list-inside space-y-1">
+                                  {(r.issues || []).slice(0, 4).map((x, i) => (
+                                    <li key={`i_${r.step_number}_${i}`} className="text-red-200">{x}</li>
+                                  ))}
+                                  {(r.warnings || []).slice(0, 4).map((x, i) => (
+                                    <li key={`w_${r.step_number}_${i}`}>{x}</li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <div className="mt-2 text-sm text-white/70">No major issues detected.</div>
+                              )}
+
+                              {r.subject_variants?.length ? (
+                                <div className="mt-3 text-sm text-white/70">
+                                  <div className="font-semibold text-white/80 mb-1">Safer subject variants</div>
+                                  <ul className="list-disc list-inside space-y-1">
+                                    {r.subject_variants.slice(0, 3).map((s, i) => (
+                                      <li key={`sv_${r.step_number}_${i}`}>{s}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              ) : null}
+
+                              {r.copy_tweaks?.length ? (
+                                <div className="mt-3 text-sm text-white/70">
+                                  <div className="font-semibold text-white/80 mb-1">Copy tweaks</div>
+                                  <ul className="list-disc list-inside space-y-1">
+                                    {r.copy_tweaks.slice(0, 5).map((t, i) => (
+                                      <li key={`ct_${r.step_number}_${i}`}>{t}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              ) : null}
+                            </div>
+
+                            {(r.improved_subject || r.improved_body) ? (
+                              <button
+                                type="button"
+                                onClick={() => applyDeliverabilityFix(r.step_number)}
+                                className="shrink-0 px-3 py-2 rounded-md bg-green-600 text-white text-sm font-semibold hover:bg-green-700"
+                              >
+                                Apply fixes
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               )}
 
@@ -379,6 +609,18 @@ export default function CampaignPage() {
                           />
                         </div>
 
+                        {previewWithValues ? (
+                          <div className="rounded-md border border-white/10 bg-white/5 p-3">
+                            <div className="text-xs font-semibold text-white/80 mb-2">Preview (with values)</div>
+                            <div className="text-xs text-white/70 mb-2">
+                              Subject: {applyVariables(email.subject, activeVarMap)}
+                            </div>
+                            <pre className="whitespace-pre-wrap text-sm text-white/70">
+                              {applyVariables(email.body, activeVarMap)}
+                            </pre>
+                          </div>
+                        ) : null}
+
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -426,6 +668,7 @@ export default function CampaignPage() {
                 >
                   Continue to Launch
                 </button>
+              </div>
               </div>
             </div>
           ) : (

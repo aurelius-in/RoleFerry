@@ -20,7 +20,16 @@ def _normalize_db_url(url: str) -> str:
 
 def get_engine() -> AsyncEngine:
     url = _normalize_db_url(settings.database_url)
-    return create_async_engine(url, pool_pre_ping=True, future=True)
+    # Important for local dev: if Postgres isn't running (common on Windows without Docker),
+    # default connection attempts can hang for a long time and make endpoints appear "stuck".
+    # asyncpg supports `timeout` (seconds) via connect_args.
+    return create_async_engine(
+        url,
+        pool_pre_ping=True,
+        future=True,
+        connect_args={"timeout": float(os.getenv("DB_CONNECT_TIMEOUT_SECONDS", "2.0"))},
+        pool_timeout=float(os.getenv("DB_POOL_TIMEOUT_SECONDS", "2.0")),
+    )
 
 
 async def _exec_sql_files(engine: AsyncEngine, files: Iterable[str]) -> None:

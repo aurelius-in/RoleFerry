@@ -17,7 +17,7 @@ const STONES: StoneConfig[] = [
   { step: 1, tab: "job-preferences", label: "Job Preferences", icon: "🎯", href: "/job-preferences" },
   { step: 2, tab: "candidate-profile", label: "Your Resume", icon: "📄", href: "/resume" },
   { step: 3, tab: "job-descriptions", label: "Job Descriptions", icon: "📋", href: "/job-descriptions" },
-  { step: 4, tab: "job-tracker", label: "Job Tracker", icon: "📌", href: "/tracker" },
+  { step: 4, tab: "gap-analysis", label: "Gap Analysis", icon: "🧩", href: "/gap-analysis" },
   { step: 5, tab: "pain-point-match", label: "Pain Point Match", icon: "🔗", href: "/painpoint-match" },
   // Flow order: choose contacts first, then do contact-aware research.
   { step: 6, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
@@ -27,6 +27,7 @@ const STONES: StoneConfig[] = [
   { step: 9, tab: "campaign", label: "Campaign", icon: "📧", href: "/compose" },
   { step: 10, tab: "deliverability-launch", label: "Launch Campaign", icon: "🚀", href: "/deliverability-launch" },
   { step: 11, tab: "analytics", label: "Analytics", icon: "📊", href: "/analytics" },
+  { step: 12, tab: "job-tracker", label: "Job Tracker", icon: "📌", href: "/tracker" },
 ];
 
 const LEFT_FOOT_SRC = "/wireframes/assets/left-foot.gif";
@@ -44,6 +45,7 @@ const POSITIONS: Record<number, { top: number; left: number }> = {
   9: { top: 320, left: 20 },
   10: { top: 320, left: 210 },
   11: { top: 320, left: 400 },
+  12: { top: 320, left: 590 },
 };
 
 export default function Home() {
@@ -69,7 +71,7 @@ export default function Home() {
 
   const footstepsForStep = useMemo(() => {
     const m = new Map<number, string>();
-    for (let i = 1; i <= 11; i++) {
+    for (let i = 1; i <= 12; i++) {
       const isOdd = i % 2 === 1;
       m.set(i, isOdd ? LEFT_FOOT_SRC : RIGHT_FOOT_SRC);
     }

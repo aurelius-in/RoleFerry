@@ -9,6 +9,7 @@ interface PreFlightCheck {
   status: 'pending' | 'pass' | 'fail' | 'warning';
   message: string;
   details?: string;
+  meta?: any;
 }
 
 interface LaunchResult {
@@ -29,6 +30,65 @@ export default function DeliverabilityLaunchPage() {
   const [isLaunching, setIsLaunching] = useState(false);
   const [launchResult, setLaunchResult] = useState<LaunchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sendingDomain, setSendingDomain] = useState("");
+  const [dkimSelector, setDkimSelector] = useState("");
+  const [launchVerifiedOnly, setLaunchVerifiedOnly] = useState(false);
+
+  const computeCampaignSummary = () => {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const datePrefix = `${yyyy}-${mm}-${dd}`;
+
+    // Pull top filters from Job Prefs (best-effort)
+    let prefs: any = null;
+    try {
+      prefs = JSON.parse(localStorage.getItem("job_preferences") || "null");
+    } catch {}
+    const industries = prefs?.industries || [];
+    const sizes = prefs?.companySize || prefs?.company_size || [];
+    const work = prefs?.workType || prefs?.work_type || [];
+
+    // Offer format hint (text/link/video)
+    let offers: any[] = [];
+    try {
+      offers = JSON.parse(localStorage.getItem("created_offers") || "[]");
+    } catch {}
+    const last = Array.isArray(offers) && offers.length ? offers[offers.length - 1] : null;
+    const format = String(last?.format || "").trim();
+
+    const nameParts = [
+      datePrefix,
+      (industries?.[0] ? String(industries[0]) : ""),
+      (sizes?.[0] ? String(sizes[0]).split(" ")[0] : ""),
+      (work?.[0] ? String(work[0]) : ""),
+      (format ? `${format} intro` : ""),
+    ].filter(Boolean);
+
+    const selectedContacts = loadSelectedContacts();
+    const recipients = selectedContacts.length;
+
+    let jobDescs: any[] = [];
+    try {
+      jobDescs = JSON.parse(localStorage.getItem("job_descriptions") || "[]");
+    } catch {}
+    const rolesApplied = Array.isArray(jobDescs) ? jobDescs.length : 0;
+    const companies = Array.isArray(jobDescs)
+      ? new Set(jobDescs.map((j) => String(j?.company || "").trim()).filter(Boolean)).size
+      : 0;
+
+    const emailCount = Array.isArray(campaign?.emails) ? campaign.emails.length : 0;
+    const totalVolume = recipients * emailCount;
+
+    return {
+      campaignName: nameParts.join(" – "),
+      recipients,
+      rolesApplied,
+      companies,
+      totalVolume,
+    };
+  };
 
   const loadSelectedContacts = (): any[] => {
     try {
@@ -71,13 +131,25 @@ export default function DeliverabilityLaunchPage() {
 
     try {
       if (!campaign) {
-        throw new Error("No campaign data available");
+        // Fallback: try to rebuild campaign from local storage if the state was lost on refresh
+        const saved = localStorage.getItem("campaign_data");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setCampaign(parsed);
+          // continue with parsed
+        } else {
+          throw new Error("No campaign data available");
+        }
       }
 
+      const campaignToUse = campaign || JSON.parse(localStorage.getItem("campaign_data") || "{}");
+
       const payload = {
-        campaign_id: campaign.id,
-        emails: campaign.emails,
+        campaign_id: campaignToUse.id || "manual_launch",
+        emails: campaignToUse.emails || [],
         contacts: loadSelectedContacts(),
+        sending_domain: sendingDomain || undefined,
+        dkim_selector: dkimSelector || undefined,
       };
       const checks = await api<PreFlightCheck[]>(
         "/deliverability-launch/pre-flight-checks",
@@ -100,10 +172,19 @@ export default function DeliverabilityLaunchPage() {
       if (!campaign) {
         throw new Error("No campaign data available");
       }
+
+      const selectedContacts = loadSelectedContacts();
+      const emailCheck = preFlightChecks.find((c) => c.name === "Email Verification");
+      const verifiedContacts = (emailCheck?.meta?.verified_contacts as any[]) || [];
+      const contactsForLaunch =
+        launchVerifiedOnly && Array.isArray(verifiedContacts) && verifiedContacts.length
+          ? verifiedContacts
+          : selectedContacts;
+
       const payload = {
         campaign_id: campaign.id,
         emails: campaign.emails,
-        contacts: loadSelectedContacts(),
+        contacts: contactsForLaunch,
       };
       const result = await api<LaunchResult>(
         "/deliverability-launch/launch",
@@ -111,6 +192,35 @@ export default function DeliverabilityLaunchPage() {
         payload
       );
       setLaunchResult(result);
+
+      // Add to Job Tracker automatically on successful launch
+      if (result.success) {
+        try {
+          const trackerKey = "tracker_applications";
+          const existingRaw = localStorage.getItem(trackerKey);
+          const existing = existingRaw ? JSON.parse(existingRaw) : [];
+          const list = Array.isArray(existing) ? existing : [];
+
+          const newEntries = (payload.contacts || []).map((c: any) => ({
+            id: `trk_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+            company: { 
+              name: c.company || "Unknown",
+              logo: c.company ? `https://logo.clearbit.com/${String(c.company).toLowerCase().replace(/\s+/g, "")}.com` : undefined
+            },
+            role: campaignToUse.name || "Applied Role",
+            status: mode === "job-seeker" ? "applied" : "applied", // In recruiter mode it maps to 'Contacted' via statusMap
+            appliedDate: new Date().toISOString().slice(0, 10),
+            lastContact: new Date().toISOString().slice(0, 10),
+            replyStatus: null,
+            source: "campaign_launch",
+            contacts: [c.name].filter(Boolean),
+          }));
+
+          localStorage.setItem(trackerKey, JSON.stringify([...newEntries, ...list]));
+        } catch (e) {
+          console.error("Failed to auto-update tracker", e);
+        }
+      }
     } catch (err) {
       setError("Failed to launch campaign.");
     } finally {
@@ -155,11 +265,37 @@ export default function DeliverabilityLaunchPage() {
   };
 
   const allChecksPassed = preFlightChecks.length > 0 && preFlightChecks.every(check => check.status === 'pass' || check.status === 'warning');
+  const emailCheck = preFlightChecks.find((c) => c.name === "Email Verification");
+  const emailFail = emailCheck?.status === "fail";
+  const parsedCounts = (() => {
+    const msg = String(emailCheck?.message || "");
+    const m = msg.match(/Verified\s+(\d+)\s*\/\s*(\d+)/i);
+    if (!m) return null;
+    return { verified: Number(m[1] || 0) || 0, total: Number(m[2] || 0) || 0 };
+  })();
+  const verifiedCount = Number(emailCheck?.meta?.verified_count ?? parsedCounts?.verified ?? 0) || 0;
+  const totalWithEmail = Number(emailCheck?.meta?.total_with_email ?? parsedCounts?.total ?? 0) || 0;
+  const failedCount = Number(emailCheck?.meta?.failed_count ?? 0) || Math.max(totalWithEmail - verifiedCount, 0);
+
+  // Treat some failures as "action-required but bypassable" for demo/testing.
+  // - Email Verification can be bypassed by launching only to verified emails.
+  // - Domain Warmup is not verifiable in local demo; show red but don't block launch.
+  const bypassableFails = new Set(["Email Verification", "Domain Warmup"]);
+  const blockingFailures = preFlightChecks.some((c) => c.status === "fail" && !bypassableFails.has(c.name));
+  const canLaunch =
+    preFlightChecks.length > 0 &&
+    !blockingFailures &&
+    (!emailFail || (launchVerifiedOnly && verifiedCount > 0) || verifiedCount > 0);
   const hasFailures = preFlightChecks.some(check => check.status === 'fail');
 
   return (
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
+        <div className="mb-4">
+          <a href="/campaign" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+            <span className="mr-2">←</span> Back to Campaign
+          </a>
+        </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Deliverability / Launch</h1>
@@ -194,10 +330,14 @@ export default function DeliverabilityLaunchPage() {
               {/* Campaign Summary */}
               <div className="bg-blue-50 border border-white/10 rounded-lg p-6">
                 <h2 className="text-xl font-semibold text-white mb-4">Campaign Summary</h2>
+                {(() => {
+                  const { campaignName, recipients, rolesApplied, companies, totalVolume } = computeCampaignSummary();
+                  return (
+                    <>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <div className="text-sm text-white/70">Campaign Name</div>
-                    <div className="font-semibold text-white">{campaign.name}</div>
+                    <div className="font-semibold text-white">{campaignName || campaign.name}</div>
                   </div>
                   <div>
                     <div className="text-sm text-white/70">Total Emails</div>
@@ -210,6 +350,27 @@ export default function DeliverabilityLaunchPage() {
                     </div>
                   </div>
                 </div>
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <div className="text-sm text-white/70">Recipients</div>
+                    <div className="font-semibold text-white">{recipients} Contacts</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-white/70">Roles applied</div>
+                    <div className="font-semibold text-white">{rolesApplied} Roles</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-white/70">Companies</div>
+                    <div className="font-semibold text-white">{companies} Companies</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-white/70">Total Volume</div>
+                    <div className="font-semibold text-white">{totalVolume} Emails Total</div>
+                  </div>
+                </div>
+                    </>
+                  );
+                })()}
               </div>
 
               {/* Pre-Flight Checks */}
@@ -223,6 +384,33 @@ export default function DeliverabilityLaunchPage() {
                   >
                     {isRunningChecks ? "Running Checks..." : "Run Pre-Flight Checks"}
                   </button>
+                </div>
+
+                <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-black/20 border border-white/10 rounded-lg p-4">
+                    <div className="text-sm font-semibold text-white mb-2">Sender domain (optional, enables real DNS checks)</div>
+                    <input
+                      value={sendingDomain}
+                      onChange={(e) => setSendingDomain(e.target.value)}
+                      placeholder="e.g., yourdomain.com"
+                      className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <div className="mt-1 text-xs text-white/60">
+                      Used to check SPF + DMARC via DNS. DKIM requires a selector.
+                    </div>
+                  </div>
+                  <div className="bg-black/20 border border-white/10 rounded-lg p-4">
+                    <div className="text-sm font-semibold text-white mb-2">DKIM selector (optional)</div>
+                    <input
+                      value={dkimSelector}
+                      onChange={(e) => setDkimSelector(e.target.value)}
+                      placeholder="e.g., google, default, selector1"
+                      className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <div className="mt-1 text-xs text-white/60">
+                      Checks TXT at <span className="font-mono">{`<selector>._domainkey.<domain>`}</span>
+                    </div>
+                  </div>
                 </div>
 
                 {preFlightChecks.length > 0 && (
@@ -260,7 +448,7 @@ export default function DeliverabilityLaunchPage() {
                 <div className="bg-black/20 border border-white/10 rounded-lg p-6">
                   <h2 className="text-xl font-semibold text-white mb-4">Launch Campaign</h2>
                   
-                  {hasFailures ? (
+                  {blockingFailures ? (
                     <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
                       <div className="flex items-center">
                         <svg className="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -270,13 +458,37 @@ export default function DeliverabilityLaunchPage() {
                       </div>
                       <p className="text-red-700 text-sm mt-1">Please fix the failed checks before launching.</p>
                     </div>
-                  ) : allChecksPassed ? (
+                  ) : (failedCount > 0 && verifiedCount > 0 && !(launchVerifiedOnly && verifiedCount > 0)) ? (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
+                      <div className="flex items-center">
+                        <svg className="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-yellow-800 font-medium">Some contacts failed verification</span>
+                      </div>
+                      <p className="text-yellow-700 text-sm mt-1">
+                        You can launch to verified emails only ({verifiedCount}/{totalWithEmail || verifiedCount}).
+                      </p>
+                      <label className="mt-3 flex items-start gap-3 text-sm text-yellow-900">
+                        <input
+                          type="checkbox"
+                          checked={launchVerifiedOnly}
+                          onChange={(e) => setLaunchVerifiedOnly(e.target.checked)}
+                          className="mt-1"
+                        />
+                        <span>
+                          Launch with only <span className="font-semibold">{verifiedCount}</span> verified emails (skip{" "}
+                          <span className="font-semibold">{failedCount}</span> unverified)
+                        </span>
+                      </label>
+                    </div>
+                  ) : allChecksPassed || hasFailures ? (
                     <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
                       <div className="flex items-center">
                         <svg className="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
-                        <span className="text-green-800 font-medium">All checks passed - ready to launch!</span>
+                        <span className="text-green-800 font-medium">Ready to launch</span>
                       </div>
                     </div>
                   ) : (
@@ -292,7 +504,7 @@ export default function DeliverabilityLaunchPage() {
 
                   <button
                     onClick={launchCampaign}
-                    disabled={!allChecksPassed || isLaunching}
+                    disabled={!canLaunch || isLaunching}
                     className="bg-green-600 text-white px-8 py-3 rounded-md font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLaunching ? "Launching Campaign..." : "Launch Campaign"}

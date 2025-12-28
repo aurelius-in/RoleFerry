@@ -1,0 +1,26 @@
+{
+  "users": {
+    "10a6c4d2-e58d-4119-8106-299af332ad1e": {
+      "id": "10a6c4d2-e58d-4119-8106-299af332ad1e",
+      "email": "persist@example.com",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$eE+pdW6ttZbyvvc+x3iPsQ$cg6IMvImMcms0B347Qk40YhJpknY2Hh20f9Biu3PAOs",
+      "first_name": "Persist",
+      "last_name": "User",
+      "phone": "+1 555-0101",
+      "linkedin_url": null
+    },
+    "2aceb35b-9a7c-4a20-a52c-837192e49eb9": {
+      "id": "2aceb35b-9a7c-4a20-a52c-837192e49eb9",
+      "email": "oliveraellison@gmail.com",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$Z2wNQagVovSeM0aIEaKUcg$YrsTCr5DPdTwRCYwpBSu9W5Qz3FoD8Ktt+x6Y3NkfXM",
+      "first_name": "Oliver",
+      "last_name": "Ellison",
+      "phone": "540-500-3300",
+      "linkedin_url": "https://www.linkedin.com/in/oellison/"
+    }
+  },
+  "by_email": {
+    "persist@example.com": "10a6c4d2-e58d-4119-8106-299af332ad1e",
+    "oliveraellison@gmail.com": "2aceb35b-9a7c-4a20-a52c-837192e49eb9"
+  }
+}

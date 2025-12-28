@@ -4,6 +4,9 @@ from typing import List, Optional, Dict, Any
 import logging
 import json
 import io
+import os
+import re
+import html as html_lib
 
 from sqlalchemy import text as sql_text, bindparam
 from sqlalchemy.dialects.postgresql import JSONB
@@ -18,6 +21,7 @@ router = APIRouter()
 engine = get_engine()
 logger = logging.getLogger(__name__)
 DEMO_USER_ID = "demo-user"
+_ENABLE_DB_WRITES = os.getenv("ROLEFERRY_ENABLE_DB_WRITES", "false").lower() == "true"
 
 class Position(BaseModel):
     company: str
@@ -40,9 +44,31 @@ class Tenure(BaseModel):
 class ResumeExtract(BaseModel):
     positions: List[Position]
     key_metrics: List[KeyMetric]
+    business_challenges: List[str] = []
     skills: List[str]
     accomplishments: List[str]
     tenure: List[Tenure]
+
+
+def _metric_from_line(s: str) -> KeyMetric:
+    """
+    Convert a best-effort metric line into {metric,value,context}.
+    Keeps it deterministic and avoids inventing new facts.
+    """
+    t = str(s or "").strip().lstrip("-•* ").strip()
+    if not t:
+        return KeyMetric(metric="", value="", context="")
+
+    # Find a likely "value" token first (%, $, k/m/b)
+    m = re.search(r"(\$\s*\d[\d,]*(?:\.\d+)?\s*(?:[kKmMbB])?\+?|\b\d+%|\b\d[\d,]*(?:\.\d+)?\s*(?:k|m|b)\+?\b)", t, re.I)
+    if not m:
+        return KeyMetric(metric=t[:120], value="", context="")
+    val = m.group(1).strip()
+    before = t[: m.start()].strip(" :-—")
+    after = t[m.end() :].strip(" :-—")
+    metric = before[:80] if before else t[:80]
+    ctx = after[:140] if after else ""
+    return KeyMetric(metric=metric[:120], value=val[:40], context=ctx[:160])
 
 class ResumeExtractResponse(BaseModel):
     success: bool
@@ -56,8 +82,8 @@ async def upload_resume(file: UploadFile = File(...)):
     """
     try:
         # Validate file type
-        if not file.filename.lower().endswith((".pdf", ".docx", ".txt")):
-            raise HTTPException(status_code=400, detail="Only PDF, DOCX and TXT files are supported")
+        if not file.filename.lower().endswith((".pdf", ".docx", ".txt", ".html", ".htm")):
+            raise HTTPException(status_code=400, detail="Only PDF, DOCX, TXT, and HTML files are supported")
 
         # Read file contents and extract text. We prefer true PDF/DOCX parsing;
         # if we can't extract meaningful text, we return an explicit error rather
@@ -99,12 +125,45 @@ async def upload_resume(file: UploadFile = File(...)):
                             parts.append(txt)
             return "\n".join(parts).strip()
 
+        def extract_text_from_html(data: bytes) -> str:
+            """
+            Best-effort HTML -> text extraction (no external deps).
+            Removes scripts/styles, converts common block tags to newlines, strips remaining tags,
+            and decodes HTML entities.
+            """
+            try:
+                s = data.decode("utf-8", errors="ignore")
+            except Exception:
+                s = ""
+            if not s.strip():
+                return ""
+            # Remove script/style blocks
+            s = re.sub(r"(?is)<script[^>]*>.*?</script>", " ", s)
+            s = re.sub(r"(?is)<style[^>]*>.*?</style>", " ", s)
+            # Replace common separators with newlines
+            s = re.sub(r"(?i)<br\\s*/?>", "\n", s)
+            s = re.sub(r"(?i)</p\\s*>", "\n", s)
+            s = re.sub(r"(?i)</div\\s*>", "\n", s)
+            s = re.sub(r"(?i)</li\\s*>", "\n", s)
+            s = re.sub(r"(?i)</tr\\s*>", "\n", s)
+            s = re.sub(r"(?i)</h[1-6]\\s*>", "\n", s)
+            # Strip tags
+            s = re.sub(r"(?is)<[^>]+>", " ", s)
+            # Decode entities
+            s = html_lib.unescape(s)
+            # Normalize whitespace
+            s = re.sub(r"[ \\t\\r\\f\\v]+", " ", s)
+            s = re.sub(r"\\n\\s*\\n\\s*\\n+", "\n\n", s)
+            return s.strip()
+
         filename = (file.filename or "").lower()
         raw_text = ""
         if filename.endswith(".pdf"):
             raw_text = extract_text_from_pdf(contents)
         elif filename.endswith(".docx"):
             raw_text = extract_text_from_docx(contents)
+        elif filename.endswith((".html", ".htm")):
+            raw_text = extract_text_from_html(contents)
         else:
             try:
                 raw_text = contents.decode("utf-8", errors="ignore")
@@ -126,27 +185,28 @@ async def upload_resume(file: UploadFile = File(...)):
         store.demo_latest_resume_text = raw_text or ""
 
         # Persist to the RESUME table as raw text + parsed JSON for a demo user (best-effort).
-        # For first-run demos, Postgres may be unavailable; we still return a usable response.
-        try:
-            stmt = (
-                sql_text(
-                    """
-                    INSERT INTO resume (user_id, raw_text, parsed_json)
-                    VALUES (:user_id, :raw_text, :parsed)
-                    """
-                ).bindparams(bindparam("parsed", type_=JSONB))
-            )
-            async with engine.begin() as conn:
-                await conn.execute(
-                    stmt,
-                    {
-                        "user_id": DEMO_USER_ID,
-                        "raw_text": raw_text,
-                        "parsed": parsed,
-                    },
+        # For local dev it’s common to run without Postgres; DB writes are OFF by default.
+        if _ENABLE_DB_WRITES:
+            try:
+                stmt = (
+                    sql_text(
+                        """
+                        INSERT INTO resume (user_id, raw_text, parsed_json)
+                        VALUES (:user_id, :raw_text, :parsed)
+                        """
+                    ).bindparams(bindparam("parsed", type_=JSONB))
                 )
-        except Exception:
-            pass
+                async with engine.begin() as conn:
+                    await conn.execute(
+                        stmt,
+                        {
+                            "user_id": DEMO_USER_ID,
+                            "raw_text": raw_text,
+                            "parsed": parsed,
+                        },
+                    )
+            except Exception:
+                pass
 
         # Build a ResumeExtract for the UI. Prefer GPT-backed parsing when configured.
         # We no longer fall back to canned demo resume content here; if GPT fails,
@@ -163,11 +223,18 @@ async def upload_resume(file: UploadFile = File(...)):
 
                 data = extract_json_from_text(content_str) or {}
                 if isinstance(data, dict) and data:
-                    positions_raw = data.get("positions") or []
+                    positions_raw = data.get("positions") or data.get("work_experience") or []
                     tenure_raw = data.get("tenure") or []
-                    key_metrics_raw = data.get("key_metrics") or []
+                    key_metrics_raw = data.get("key_metrics") or data.get("keyMetrics") or []
                     accomplishments_raw = data.get("accomplishments") or []
                     skills_raw = data.get("skills") or []
+                    business_challenges_raw = (
+                        data.get("business_challenges")
+                        or data.get("businessChallenges")
+                        or data.get("business_challenges_solved")
+                        or data.get("problems_solved")
+                        or []
+                    )
 
                     positions: List[Position] = []
                     for p in positions_raw:
@@ -213,10 +280,12 @@ async def upload_resume(file: UploadFile = File(...)):
 
                     accomplishments = [str(a) for a in accomplishments_raw]
                     skills = [str(s) for s in skills_raw]
+                    business_challenges = [str(b) for b in business_challenges_raw]
 
                     extract_obj = ResumeExtract(
                         positions=positions,
                         key_metrics=key_metrics,
+                        business_challenges=business_challenges,
                         skills=skills,
                         accomplishments=accomplishments,
                         tenure=tenure,
@@ -227,8 +296,29 @@ async def upload_resume(file: UploadFile = File(...)):
 
         # If GPT succeeded but missed fields, backfill from rule-based parsing
         if extract_obj is not None:
+            if not extract_obj.key_metrics:
+                km_raw = parsed.get("KeyMetrics") or parsed.get("key_metrics") or []
+                key_metrics: List[KeyMetric] = []
+                for m in km_raw[:12] if isinstance(km_raw, list) else []:
+                    if isinstance(m, dict):
+                        key_metrics.append(
+                            KeyMetric(
+                                metric=str(m.get("metric") or m.get("Metric") or ""),
+                                value=str(m.get("value") or m.get("Value") or ""),
+                                context=str(m.get("context") or m.get("Context") or ""),
+                            )
+                        )
+                    else:
+                        km = _metric_from_line(str(m))
+                        if km.metric:
+                            key_metrics.append(km)
+                extract_obj.key_metrics = key_metrics[:10]
             if not extract_obj.skills:
                 extract_obj.skills = [str(s) for s in (parsed.get("Skills") or [])]
+            if not extract_obj.business_challenges:
+                extract_obj.business_challenges = [
+                    str(x) for x in (parsed.get("BusinessChallengesSolved") or parsed.get("ProblemsSolved") or [])
+                ]
             if not extract_obj.accomplishments:
                 extract_obj.accomplishments = [str(a) for a in (parsed.get("NotableAccomplishments") or [])]
             if not extract_obj.tenure:
@@ -243,12 +333,20 @@ async def upload_resume(file: UploadFile = File(...)):
                         for t in tenure_raw
                         if isinstance(t, dict)
                     ]
+            # If we still couldn't compute tenure, derive a minimal tenure list from positions.
+            if not extract_obj.tenure and extract_obj.positions:
+                extract_obj.tenure = [
+                    Tenure(company=p.company, duration="", role=p.title)
+                    for p in extract_obj.positions[:10]
+                    if (p.company or p.title)
+                ]
 
         if extract_obj is None:
             # Rule-based fallback derived from the parsed resume (best-effort).
             # This should still reflect the uploaded resume text, not canned demo data.
             positions: List[Position] = []
-            for p in (parsed.get("WorkExperience") or parsed.get("positions") or [])[:6]:
+            # NOTE: parse_resume() returns "Positions" (capital-P). Keep other keys for backwards compat.
+            for p in (parsed.get("WorkExperience") or parsed.get("Positions") or parsed.get("positions") or [])[:6]:
                 if isinstance(p, dict):
                     positions.append(
                         Position(
@@ -272,9 +370,14 @@ async def upload_resume(file: UploadFile = File(...)):
                         )
                     )
                 else:
-                    key_metrics.append(KeyMetric(metric=str(m), value="", context=""))
+                    km = _metric_from_line(str(m))
+                    if km.metric:
+                        key_metrics.append(km)
 
             skills = [str(s) for s in (parsed.get("Skills") or parsed.get("skills") or [])][:40]
+            business_challenges = [
+                str(x) for x in (parsed.get("BusinessChallengesSolved") or parsed.get("ProblemsSolved") or [])
+            ][:15]
             accomplishments = [str(a) for a in (parsed.get("NotableAccomplishments") or parsed.get("accomplishments") or [])][:25]
             tenure: List[Tenure] = []
             for t in (parsed.get("Tenure") or parsed.get("tenure") or [])[:10]:
@@ -290,6 +393,7 @@ async def upload_resume(file: UploadFile = File(...)):
             extract_obj = ResumeExtract(
                 positions=positions,
                 key_metrics=key_metrics,
+                business_challenges=business_challenges,
                 skills=skills,
                 accomplishments=accomplishments,
                 tenure=tenure,
@@ -300,7 +404,10 @@ async def upload_resume(file: UploadFile = File(...)):
             message="Resume parsed successfully",
             extract=extract_obj,
         )
-    except Exception as e:
+    except HTTPException:
+        # Preserve specific status codes/messages (e.g., unreadable/scanned PDFs)
+        raise
+    except Exception:
         logger.exception("Error parsing resume")
         raise HTTPException(status_code=500, detail="Failed to parse resume")
 

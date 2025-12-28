@@ -58,6 +58,13 @@ class Settings(BaseModel):
     )  # 'openai' | 'stub' | future providers
     preferred_email_verifier: str = Field(default=os.getenv("PREFERRED_EMAIL_VERIFIER", "neverbounce"))
 
+    # Auth (JWT stored in httpOnly cookie)
+    jwt_secret: str = Field(default=os.getenv("ROLEFERRY_JWT_SECRET", "dev-insecure-change-me"))
+    jwt_exp_minutes: int = Field(default=int(os.getenv("ROLEFERRY_JWT_EXP_MINUTES", "43200")))  # 30 days
+    auth_cookie_name: str = Field(default=os.getenv("ROLEFERRY_AUTH_COOKIE", "rf_session"))
+    auth_cookie_secure: bool = Field(default=os.getenv("ROLEFERRY_AUTH_COOKIE_SECURE", "false").lower() == "true")
+    auth_cookie_samesite: str = Field(default=os.getenv("ROLEFERRY_AUTH_COOKIE_SAMESITE", "lax"))
+
     # Offer Decks / Clay-Clone
     gamma_api_key: str | None = Field(default=os.getenv("GAMMA_API_KEY"))
     gamma_webhook_url: str | None = Field(default=os.getenv("GAMMA_WEBHOOK_URL"))

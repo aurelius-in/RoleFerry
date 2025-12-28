@@ -118,17 +118,52 @@ export default function DemoDebugPanel() {
             onClick={() => {
               try {
                 const legacyPainpointKey = ["pin", "point_matches"].join("");
-                localStorage.removeItem("roleferry-progress");
-                localStorage.removeItem("job_descriptions");
-                localStorage.removeItem("resume_extract");
-                localStorage.removeItem("painpoint_matches");
-                localStorage.removeItem(legacyPainpointKey);
-                localStorage.removeItem("pain_point_matches");
-                localStorage.removeItem("selected_contacts");
-                localStorage.removeItem("research_data");
-                localStorage.removeItem("created_offers");
+                const keysToClear = [
+                  // progress / flow
+                  "roleferry-progress",
+
+                  // resume + jobs + matching
+                  "resume_extract",
+                  "job_preferences",
+                  "job_preferences_helper",
+                  "job_recommendations",
+                  "job_descriptions",
+                  "selected_job_description",
+                  "selected_job_description_id",
+                  "painpoint_matches",
+                  "painpoint_matches_by_job",
+                  legacyPainpointKey,
+                  "pain_point_matches",
+
+                  // contacts + research
+                  "found_contacts",
+                  "selected_contacts",
+                  "context_research",
+                  "context_research_by_contact",
+                  "context_research_active_contact_id",
+                  "context_research_helper",
+                  "research_data",
+
+                  // offer + compose
+                  "offer_draft",
+                  "created_offers",
+                  "composed_email",
+                  "compose_helper",
+
+                  // campaign
+                  "campaign_data",
+                  "campaign_by_contact",
+                  "campaign_active_contact_id",
+
+                  // tracker
+                  "tracker_applications",
+                ];
+                for (const k of keysToClear) localStorage.removeItem(k);
               } catch {}
-              alert("Cleared local demo state (localStorage).");
+              alert("Cleared local demo state (localStorage). Reloading to start fresh...");
+              try {
+                window.location.assign("/");
+              } catch {}
             }}
             className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10"
           >

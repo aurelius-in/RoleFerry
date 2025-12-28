@@ -5,13 +5,16 @@ const EVENT_NAME = "dataModeChanged";
 
 export function getCurrentDataMode(): DataMode {
   if (typeof window === "undefined") {
-    return "demo";
+    // Default to live in server-rendered contexts so API-backed demos "just work"
+    // without requiring the operator to toggle Demo/Live.
+    return "live";
   }
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    return stored === "live" ? "live" : "demo";
+    // Default to live unless the user explicitly chose demo.
+    return stored === "demo" ? "demo" : "live";
   } catch {
-    return "demo";
+    return "live";
   }
 }
 

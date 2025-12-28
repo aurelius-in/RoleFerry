@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 
@@ -26,6 +26,7 @@ interface Offer {
   format: 'text' | 'link' | 'video';
   url?: string;
   video_url?: string;
+  custom_tone?: string;
   created_at: string;
 }
 
@@ -37,6 +38,7 @@ interface BackendOffer {
   format: string;
   url?: string | null;
   video_url?: string | null;
+  custom_tone?: string | null;
   created_at: string;
   user_mode: string;
 }
@@ -49,6 +51,7 @@ interface OfferCreationResponse {
 
 export default function OfferCreationPage() {
   const router = useRouter();
+  const videoInputRef = useRef<HTMLInputElement | null>(null);
   const [mode, setMode] = useState<'job-seeker' | 'recruiter'>('job-seeker');
   const [painPointMatches, setPainPointMatches] = useState<PainPointMatch[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -59,7 +62,32 @@ export default function OfferCreationPage() {
   const [offerTitle, setOfferTitle] = useState("");
   const [customTone, setCustomTone] = useState("");
   const [optionalLink, setOptionalLink] = useState("");
+  const [videoFileName, setVideoFileName] = useState<string>("");
+  const [videoObjectUrl, setVideoObjectUrl] = useState<string>("");
+  const [isVideoDragOver, setIsVideoDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const displayMetric = (raw: string) => {
+    const s = String(raw || "").trim();
+    if (!s) return null;
+    // Hide obviously-wrong "metrics" like phone numbers / random ids.
+    const digitsOnly = s.replace(/[^\d]/g, "");
+    if (digitsOnly.length >= 9 && digitsOnly.length <= 12 && /^[\d\-\s()+.]+$/.test(s)) {
+      return null;
+    }
+    // Hide tokens that look like unhelpful ids
+    if (/^\d{8,}$/.test(s)) return null;
+    return s;
+  };
+
+  const persistOffer = async (o: Offer) => {
+    const resp = await api<OfferCreationResponse>("/offer-creation/save", "POST", {
+      ...o,
+      user_mode: mode,
+      video_url: o.video_url || undefined,
+    });
+    return resp?.offer || o;
+  };
 
   useEffect(() => {
     // Load mode from localStorage
@@ -109,6 +137,45 @@ export default function OfferCreationPage() {
     return () => window.removeEventListener('modeChanged', handleModeChange as EventListener);
   }, []);
 
+  useEffect(() => {
+    // Load saved offers for this logged-in user (server-backed when available).
+    (async () => {
+      try {
+        const resp = await api<{ success: boolean; offers: Offer[] }>("/offer-creation/me", "GET");
+        if (resp?.success && Array.isArray(resp.offers)) {
+          setOffers(resp.offers);
+        }
+      } catch {
+        // Non-blocking: keep empty/offline library if backend can't be reached.
+      }
+    })();
+  }, []);
+
+  const handleVideoSelected = (file: File | null) => {
+    if (!file) return;
+    if (!String(file.type || "").startsWith("video/")) {
+      setError("Please select a valid video file.");
+      return;
+    }
+    // Keep demo-friendly: avoid giant uploads / memory pressure.
+    const maxMb = 80;
+    const sizeMb = file.size / (1024 * 1024);
+    if (sizeMb > maxMb) {
+      setError(`That video is ${Math.round(sizeMb)}MB. Please upload a video under ${maxMb}MB for the demo.`);
+      return;
+    }
+
+    setError(null);
+    setVideoFileName(file.name);
+    try {
+      if (videoObjectUrl) URL.revokeObjectURL(videoObjectUrl);
+    } catch {}
+    const nextUrl = URL.createObjectURL(file);
+    setVideoObjectUrl(nextUrl);
+    // If they upload a video, treat the offer as a video format by default.
+    setSelectedFormat("video");
+  };
+
   const generateOffer = async () => {
     if (painPointMatches.length === 0) return;
     
@@ -119,6 +186,7 @@ export default function OfferCreationPage() {
       const payload = {
         painpoint_matches: [painPointMatches[0]],
         tone: selectedTone,
+        custom_tone: selectedTone === "custom" ? customTone : undefined,
         format: selectedFormat,
         user_mode: mode,
         context_research: JSON.parse(localStorage.getItem("context_research") || "{}"),
@@ -134,9 +202,17 @@ export default function OfferCreationPage() {
           format: o.format as Offer["format"],
           url: o.url || undefined,
           video_url: o.video_url || undefined,
+          custom_tone: (o as any)?.custom_tone || undefined,
           created_at: o.created_at,
         };
-        setOffers(prev => [...prev, mapped]);
+        // Auto-save to the user's library so demos don't need a separate "Save" action.
+        try {
+          const saved = await persistOffer(mapped);
+          setOffers(prev => [saved as any, ...prev.filter(p => p.id !== (saved as any)?.id)]);
+        } catch {
+          // If save fails, still show it locally so the workflow can continue.
+          setOffers(prev => [mapped, ...prev.filter(p => p.id !== mapped.id)]);
+        }
         setOfferTitle(mapped.title);
         setOfferContent(mapped.content);
       }
@@ -156,19 +232,22 @@ export default function OfferCreationPage() {
         tone: selectedTone,
         format: selectedFormat,
         url: optionalLink,
+        video_url: videoObjectUrl || undefined,
+        custom_tone: selectedTone === "custom" ? customTone : undefined,
         created_at: new Date().toISOString(),
       };
 
       try {
-        await api<OfferCreationResponse>("/offer-creation/save", "POST", {
-          ...newOffer,
-          user_mode: mode,
-          video_url: undefined,
-        });
-        setOffers(prev => [...prev, newOffer]);
+        const saved = await persistOffer(newOffer);
+        setOffers(prev => [saved as any, ...prev.filter(p => p.id !== (saved as any)?.id)]);
         setOfferTitle("");
         setOfferContent("");
         setOptionalLink("");
+        setVideoFileName("");
+        try {
+          if (videoObjectUrl) URL.revokeObjectURL(videoObjectUrl);
+        } catch {}
+        setVideoObjectUrl("");
       } catch (e: any) {
         setError("Failed to save offer. Please try again.");
       }
@@ -213,8 +292,8 @@ export default function OfferCreationPage() {
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-7xl mx-auto px-4 mb-4">
         <div className="flex justify-between items-center">
-          <a href="/foundry" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
-            <span className="mr-2">←</span> Back to Path
+          <a href="/context-research" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+            <span className="mr-2">←</span> Back to Research
           </a>
           <div className="bg-gray-900/70 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-white/10">
             Step 9 of 12
@@ -307,7 +386,12 @@ export default function OfferCreationPage() {
                   <div className="bg-blue-50 border border-white/10 rounded-lg p-4">
                      <h3 className="text-sm font-semibold text-white uppercase tracking-wide mb-2">Target Opportunity</h3>
                      <p className="text-white/90 font-medium mb-1">Challenge: {painPointMatches[0].painpoint_1}</p>
-                     <p className="text-white/70 text-sm">Proposed Solution: {painPointMatches[0].solution_1} ({painPointMatches[0].metric_1})</p>
+                     <p className="text-white/70 text-sm">
+                       Proposed solution: {painPointMatches[0].solution_1}
+                       {displayMetric(painPointMatches[0].metric_1) ? (
+                         <span className="text-white/60">{" "}— {displayMetric(painPointMatches[0].metric_1)}</span>
+                       ) : null}
+                     </p>
                   </div>
 
                   {/* Tone Selection */}
@@ -374,22 +458,105 @@ export default function OfferCreationPage() {
 
                     <div className="space-y-6">
                       <div>
-                        <h3 className="font-medium text-gray-900 mb-2">Optional Link</h3>
+                        <h3 className="font-medium text-gray-900 mb-2">Portfolio/Work Link (URL)</h3>
                         <input
                           type="url"
                           value={optionalLink}
                           onChange={(e) => setOptionalLink(e.target.value)}
-                          placeholder="https://your-portfolio.com/project-x"
+                          placeholder="http://My_Portfolio_or_Examples_of_My_Work.com"
                           className="w-full border border-gray-300 rounded-md px-3 py-2"
                         />
+                        <div className="mt-1 text-xs text-gray-500">
+                          Optional. Add your portfolio, LinkedIn, GitHub, or a case study page.
+                        </div>
                       </div>
 
                       <div>
                         <h3 className="font-medium text-white mb-2">Upload Video (Optional)</h3>
-                        <div className="border-2 border-dashed border-white/20 bg-black/20 rounded-lg p-6 text-center hover:bg-white/5 transition-colors cursor-pointer">
+                        <input
+                          ref={videoInputRef}
+                          type="file"
+                          accept="video/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0] || null;
+                            handleVideoSelected(f);
+                          }}
+                        />
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => videoInputRef.current?.click()}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              videoInputRef.current?.click();
+                            }
+                          }}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setIsVideoDragOver(true);
+                          }}
+                          onDragLeave={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setIsVideoDragOver(false);
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setIsVideoDragOver(false);
+                            const f = e.dataTransfer.files?.[0] || null;
+                            handleVideoSelected(f);
+                          }}
+                          className={
+                            "border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer outline-none " +
+                            (isVideoDragOver
+                              ? "border-blue-400 bg-blue-500/10"
+                              : "border-white/20 bg-black/20 hover:bg-white/5")
+                          }
+                        >
                           <span className="text-2xl block mb-2">📹</span>
-                          <p className="text-sm text-white/70">Click or drag to upload a short intro video</p>
+                          <p className="text-sm text-white/70">
+                            Click or drag to upload a short intro video
+                          </p>
+                          {videoFileName ? (
+                            <div className="mt-3 text-xs text-white/80">
+                              Selected: <span className="font-semibold">{videoFileName}</span>
+                            </div>
+                          ) : null}
                         </div>
+                        {videoObjectUrl ? (
+                          <div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3">
+                            <div className="flex items-center justify-between gap-3 mb-2">
+                              <div className="text-xs font-semibold text-white/80">Preview</div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  try {
+                                    if (videoObjectUrl) URL.revokeObjectURL(videoObjectUrl);
+                                  } catch {}
+                                  setVideoObjectUrl("");
+                                  setVideoFileName("");
+                                  // revert format if they remove video
+                                  if (selectedFormat === "video") setSelectedFormat("text");
+                                }}
+                                className="text-xs text-white/70 hover:text-white"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                            <video
+                              src={videoObjectUrl}
+                              controls
+                              className="w-full rounded-md bg-black"
+                            />
+                            <div className="mt-2 text-[11px] text-white/50">
+                              Demo note: this video is stored locally in your browser session (not uploaded to the server).
+                            </div>
+                          </div>
+                        ) : null}
                       </div>
 
                       <div className="pt-4 border-t border-white/10">
@@ -401,13 +568,9 @@ export default function OfferCreationPage() {
                           >
                             {isGenerating ? "✨ Generating with AI..." : "✨ Generate AI Offer"}
                           </button>
-                          <button
-                            onClick={handleSaveOffer}
-                            disabled={!offerContent}
-                            className="w-full bg-white/10 border border-white/15 text-white px-6 py-3 rounded-md font-medium hover:bg-white/15 transition-colors disabled:opacity-50"
-                          >
-                            Save to Library
-                          </button>
+                          <div className="text-xs text-white/60 text-center">
+                            Offers are auto-saved to your library when generated.
+                          </div>
                         </div>
                       </div>
                     </div>

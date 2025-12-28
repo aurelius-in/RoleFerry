@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import StarRating from "@/components/StarRating";
 
 const JARGON_PHRASES = [
   "fast-paced environment",
@@ -73,6 +74,7 @@ type JobRecommendation = {
   company: string;
   source: string;
   url: string;
+  link_type?: "job_posting" | "job_board_search" | "career_search" | string;
   rationale: string;
   score?: number;
   created_at?: string;
@@ -91,6 +93,7 @@ export default function JobDescriptionsPage() {
   const [importText, setImportText] = useState("");
   const [importType, setImportType] = useState<'url' | 'text'>('url');
   const [sortBy, setSortBy] = useState<'date' | 'grade'>('date');
+  const [trackerNotice, setTrackerNotice] = useState<string | null>(null);
   const suggestedUrl =
     "https://www.google.com/about/careers/applications/jobs/results/?employment_type=FULL_TIME&degree=MASTERS&skills=software%2C%20architecture%2C%20ai";
 
@@ -203,15 +206,46 @@ export default function JobDescriptionsPage() {
   const handleContinue = () => {
     if (jobDescriptions.length > 0) {
       localStorage.setItem('job_descriptions', JSON.stringify(jobDescriptions));
-      router.push('/painpoint-match');
+      router.push('/gap-analysis');
+    }
+  };
+
+  const addToTracker = (jd: JobDescription) => {
+    try {
+      const key = "tracker_applications";
+      const raw = localStorage.getItem(key);
+      const prev = raw ? JSON.parse(raw) : [];
+      const list = Array.isArray(prev) ? prev : [];
+
+      const id = `trk_${Date.now()}`;
+      const nextItem = {
+        id,
+        company: {
+          name: jd.company,
+          logo: jd.company ? `https://logo.clearbit.com/${jd.company.toLowerCase().replace(/\\s+/g, "")}.com` : undefined,
+        },
+        role: jd.title,
+        status: "saved",
+        appliedDate: new Date().toISOString().slice(0, 10),
+        lastContact: new Date().toISOString().slice(0, 10),
+        replyStatus: null,
+        source: jd.url || "job_descriptions",
+      };
+
+      localStorage.setItem(key, JSON.stringify([nextItem, ...list]));
+      setTrackerNotice(`Added to Job Tracker: ${jd.title} @ ${jd.company}`);
+      window.setTimeout(() => setTrackerNotice(null), 2500);
+    } catch {
+      setTrackerNotice("Couldn’t add to Job Tracker.");
+      window.setTimeout(() => setTrackerNotice(null), 2500);
     }
   };
 
   return (
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4 mb-4">
-        <a href="/foundry" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
-          <span className="mr-2">←</span> Back to Path
+        <a href="/resume" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+          <span className="mr-2">←</span> Back to Resume
         </a>
       </div>
       <div className="max-w-6xl mx-auto px-4">
@@ -228,13 +262,19 @@ export default function JobDescriptionsPage() {
             </div>
           </div>
 
+          {trackerNotice && (
+            <div className="mb-6 rounded-lg border border-blue-400/20 bg-blue-500/10 p-4 text-sm text-blue-100">
+              {trackerNotice}
+            </div>
+          )}
+
           {recommendations.length > 0 && (
             <div className="mb-6 rounded-lg border border-white/10 bg-black/20 p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-sm font-bold text-white">Recommended job pages</div>
                   <div className="text-xs text-white/60">
-                    From your Job Preferences — click one to populate the URL field.
+                    From your Job Preferences — each item is labeled as a job board search vs a company careers search vs a specific posting.
                   </div>
                 </div>
                 <button
@@ -251,27 +291,55 @@ export default function JobDescriptionsPage() {
 
               <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                 {recommendations.slice(0, 8).map((r) => (
-                  <button
+                  <a
                     key={r.id}
-                    type="button"
-                    onClick={() => {
-                      setImportType("url");
-                      setImportUrl(r.url);
-                    }}
+                    href={r.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-left rounded-md border border-white/10 bg-white/5 p-3 hover:bg-white/10 transition-colors"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="text-sm font-semibold text-white">{r.label}</div>
-                        <div className="text-xs text-white/60">{r.company}</div>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <div className="text-xs text-white/60">{r.company}</div>
+                          <span className="inline-flex items-center rounded-full border border-white/10 bg-black/30 px-2 py-0.5 text-[10px] font-semibold text-white/70">
+                            {r.link_type === "job_posting"
+                              ? "Job posting"
+                              : r.link_type === "job_board_search"
+                                ? "Job board search"
+                                : "Career-site search"}
+                          </span>
+                        </div>
                       </div>
                       {typeof r.score === "number" && (
-                        <div className="text-xs font-semibold text-white/70">{r.score}/100</div>
+                        <div className="text-right">
+                          <div className="text-xs font-semibold text-white/70">{r.score}/100</div>
+                          <div className="mt-1">
+                            <StarRating value={r.score} scale="percent" showNumeric={false} className="text-[10px]" />
+                          </div>
+                        </div>
                       )}
                     </div>
                     <div className="mt-1 text-xs text-white/70">{r.rationale}</div>
-                    <div className="mt-2 text-xs text-blue-300 underline">Use this URL</div>
-                  </button>
+                    <div className="mt-2 flex items-center justify-between gap-3">
+                      <div className="text-xs text-blue-300 underline">
+                        {r.link_type === "job_posting" ? "Open job posting" : "Open search page"} (new tab)
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setImportType("url");
+                          setImportUrl(r.url);
+                        }}
+                        className="shrink-0 px-3 py-1.5 rounded-md bg-white/10 border border-white/10 text-white text-xs font-semibold hover:bg-white/15"
+                      >
+                        Use link in field
+                      </button>
+                    </div>
+                  </a>
                 ))}
               </div>
             </div>
@@ -428,6 +496,13 @@ export default function JobDescriptionsPage() {
                         <option value="Ideal">3. Ideal Future Position</option>
                       </select>
                       <button
+                        type="button"
+                        onClick={() => addToTracker(jd)}
+                        className="text-white/80 hover:text-white text-sm underline"
+                      >
+                        Add to Job Tracker
+                      </button>
+                      <button
                         onClick={() => handleDelete(jd.id)}
                         className="text-red-600 hover:text-red-800 text-sm"
                       >
@@ -516,7 +591,7 @@ export default function JobDescriptionsPage() {
                 onClick={handleContinue}
                 className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
               >
-                Continue to Match
+                Continue to Gap Analysis
               </button>
             </div>
           )}

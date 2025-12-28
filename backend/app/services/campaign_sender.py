@@ -10,7 +10,6 @@ from .email_verifier import verify_email_async
 
 
 engine = get_engine()
-DEMO_USER_ID = "demo-user"
 
 
 async def record_outreach_send(
@@ -18,16 +17,12 @@ async def record_outreach_send(
     contact_email: str,
     subject: str,
     body: str,
+    user_id: str = "demo-user",
     variant: str | None = None,
 ) -> None:
     """
     Week 11 helper: record a single outreach "send" both in Postgres and
-    in the in-memory message store that powers analytics, including a
-    verification snapshot using NeverBounce/MillionVerifier (mocked when
-    ROLEFERRY_MOCK_MODE is enabled).
-
-    Actual email delivery is still mocked; this function is the single place
-    to plug in a real transactional provider later.
+    in the in-memory message store that powers analytics...
     """
     # Verify email before recording send (mocked in dev/mock_mode)
     verification = await verify_email_async(contact_email)
@@ -44,7 +39,7 @@ async def record_outreach_send(
                 """
             ),
             {
-                "user_id": DEMO_USER_ID,
+                "user_id": user_id,
                 "campaign_id": campaign_id,
                 "contact_email": contact_email,
                 "subject": subject,

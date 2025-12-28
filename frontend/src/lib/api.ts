@@ -29,6 +29,7 @@ export async function api<T>(path: string, method: HttpMethod = "GET", body?: un
       headers: { "Content-Type": "application/json" },
       body: body ? JSON.stringify(body) : undefined,
       cache: "no-store",
+      credentials: "include",
     });
 
     if (!res.ok) {

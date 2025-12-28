@@ -2,18 +2,37 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { api } from "@/lib/api";
 import HealthIndicator from "./HealthIndicator";
 import DataModal from "./DataModal";
 import ToolsModal from "./ToolsModal";
 import { DataMode, getCurrentDataMode, setCurrentDataMode } from "@/lib/dataMode";
 
 export default function Navbar() {
+  const router = useRouter();
   const [dataOpen, setDataOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  
+  useEffect(() => {
+    const saved = localStorage.getItem("rf_user");
+    if (saved) {
+      try { setUser(JSON.parse(saved)); } catch {}
+    }
+  }, []);
+
+  async function logout() {
+    try {
+      await api("/auth/logout", "POST");
+      localStorage.removeItem("rf_user");
+      router.push("/login");
+      router.refresh();
+    } catch {}
+  }
   const [toolsOpen, setToolsOpen] = useState(false);
   const pathname = usePathname();
-  const hideOnHome = pathname === "/"; // homepage must match approved wireframe
-  if (hideOnHome) return null;
+  const hideOnAuth = pathname === "/login";
+  if (hideOnAuth) return null;
 
   return (
     <header suppressHydrationWarning className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/20 backdrop-blur">
@@ -66,22 +85,44 @@ export default function Navbar() {
         </div>
 
         {/* Second row: primary + utility nav directly under the logo (very compact) */}
-        <nav className="mt-2 flex items-center gap-0 overflow-x-auto whitespace-nowrap pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <NavPill href="/job-preferences" pathname={pathname}>Job Prefs</NavPill>
-          <NavPill href="/resume" pathname={pathname}>Resume</NavPill>
-          <NavPill href="/job-descriptions" pathname={pathname}>Jobs</NavPill>
-          <NavPill href="/painpoint-match" pathname={pathname}>Match</NavPill>
-          <NavPill href="/find-contact" pathname={pathname}>Contact</NavPill>
-          <NavPill href="/context-research" pathname={pathname}>Research</NavPill>
-          <NavPill href="/offer-creation" pathname={pathname}>Offer</NavPill>
-          <NavPill href="/compose" pathname={pathname}>Compose</NavPill>
-          <NavPill href="/campaign" pathname={pathname}>Campaign</NavPill>
-          <NavPill href="/deliverability-launch" pathname={pathname}>Launch</NavPill>
-          <span className="mx-1 h-4 w-px bg-white/10" />
-          <NavPill href="/" pathname={pathname} kind="utility">Dashboard</NavPill>
-          <NavPill href="/analytics" pathname={pathname} kind="utility">Analytics</NavPill>
-          <NavPill href="/settings" pathname={pathname} kind="utility">Settings</NavPill>
-          <NavPill href="/help" pathname={pathname} kind="utility">Help</NavPill>
+        <nav className="mt-2 flex items-center justify-between gap-3 pb-1">
+          {/* Left: Dashboard + workflow steps (scrollable) */}
+          <div className="flex items-center min-w-0 overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <NavPill href="/" pathname={pathname} kind="utility" size="md">Dashboard</NavPill>
+            <span className="mx-2 h-4 w-px bg-white/15" />
+
+            <NavPill href="/job-preferences" pathname={pathname}>Job Prefs</NavPill>
+            <NavPill href="/resume" pathname={pathname}>Resume</NavPill>
+            <NavPill href="/job-descriptions" pathname={pathname}>Jobs</NavPill>
+            <NavPill href="/gap-analysis" pathname={pathname}>Gaps</NavPill>
+            <NavPill href="/painpoint-match" pathname={pathname}>Match</NavPill>
+            <NavPill href="/find-contact" pathname={pathname}>Contact</NavPill>
+            <NavPill href="/context-research" pathname={pathname}>Research</NavPill>
+            <NavPill href="/offer-creation" pathname={pathname}>Offer</NavPill>
+            <NavPill href="/compose" pathname={pathname}>Compose</NavPill>
+            <NavPill href="/campaign" pathname={pathname}>Campaign</NavPill>
+            <NavPill href="/deliverability-launch" pathname={pathname}>Launch</NavPill>
+            <span className="mx-2 h-4 w-px bg-white/10" />
+            <NavPill href="/analytics" pathname={pathname} kind="utility">Analytics</NavPill>
+            <NavPill href="/tracker" pathname={pathname} kind="utility">Tracker</NavPill>
+          </div>
+
+          {/* Right: utilities that should NOT look like steps */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {user && (
+              <div className="flex items-center gap-2 mr-2">
+                <span className="text-[10px] text-white/50">Hi, {user.first_name}</span>
+                <button 
+                  onClick={logout}
+                  className="text-[10px] font-bold text-red-400/80 hover:text-red-300 uppercase tracking-wider"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+            <NavPill href="/settings" pathname={pathname} kind="utility" size="md">Settings</NavPill>
+            <NavPill href="/help" pathname={pathname} kind="utility" size="md">Help</NavPill>
+          </div>
         </nav>
 
         <DataModal open={dataOpen} onClose={() => setDataOpen(false)} />
@@ -96,15 +137,20 @@ function NavPill({
   pathname,
   children,
   kind = "primary",
+  size = "sm",
 }: {
   href: string;
   pathname: string | null;
   children: React.ReactNode;
   kind?: "primary" | "utility";
+  size?: "sm" | "md";
 }) {
   const active = pathname === href || (href !== "/" && pathname?.startsWith(href));
-  const base =
-    "inline-flex items-center justify-center rounded-full border px-1.5 py-0.5 text-[10px] font-semibold tracking-normal transition-colors select-none leading-4";
+  const base = "inline-flex items-center justify-center rounded-full border font-semibold tracking-normal transition-colors select-none";
+  const sizing =
+    size === "md"
+      ? "px-2.5 py-1 text-[11px] leading-4"
+      : "px-1.5 py-0.5 text-[10px] leading-4";
   const inactive =
     kind === "utility"
       ? "bg-white/5 text-white/80 border-white/10 hover:bg-white/10 hover:text-white"
@@ -115,7 +161,7 @@ function NavPill({
       : "brand-gradient text-black border-white/10 shadow-sm shadow-black/20";
 
   return (
-    <Link href={href} className={`${base} ${active ? activeCls : inactive}`}>
+    <Link href={href} className={`${base} ${sizing} ${active ? activeCls : inactive}`}>
       {children}
     </Link>
   );

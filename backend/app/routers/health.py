@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from datetime import datetime, timezone
 import os
+import asyncio
 
 from prometheus_client import Counter, generate_latest
 from redis import Redis
@@ -24,21 +25,28 @@ async def healthcheck():
     requests_total.inc()
 
     # DB health
-    db_status = "unknown"
+    # In local dev it's common to run without Postgres/Redis (especially on Windows).
+    # Avoid hanging health checks by default; enable active probes via env flags.
+    db_status = "skipped"
     migrations_applied: list[str] = []
-    engine = get_engine()
-    try:
-        async with engine.begin() as conn:
-            await conn.execute(sql_text("SELECT 1"))
+    if os.getenv("ROLEFERRY_HEALTHCHECK_DB", "false").lower() == "true":
+        engine = get_engine()
+        try:
+            async def _db_ping() -> None:
+                async with engine.begin() as conn:
+                    await conn.execute(sql_text("SELECT 1"))
+
+            # Protect against long connect timeouts when Postgres isn't running.
+            await asyncio.wait_for(_db_ping(), timeout=1.0)
             db_status = "ok"
             # Best-effort: reflect applied migrations from the migrations directory listing
             # (schema_migrations table would be more robust in a future iteration).
-    except Exception:
-        db_status = "error"
+        except Exception:
+            db_status = "error"
 
     # Redis health
-    redis_status = "disabled"
-    if settings.redis_url:
+    redis_status = "skipped"
+    if settings.redis_url and os.getenv("ROLEFERRY_HEALTHCHECK_REDIS", "false").lower() == "true":
         try:
             r = Redis.from_url(settings.redis_url, socket_connect_timeout=0.2)
             r.ping()

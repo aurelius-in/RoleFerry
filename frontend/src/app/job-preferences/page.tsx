@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import StarRating from "@/components/StarRating";
 
 interface JobPreferences {
   values: string[];
@@ -51,6 +52,7 @@ type JobRecommendation = {
   company: string;
   source: string;
   url: string;
+  link_type?: "job_posting" | "job_board_search" | "career_search" | string;
   rationale: string;
   score?: number;
   created_at?: string;
@@ -83,6 +85,10 @@ const ROLE_CATEGORIES = [
   "Education & Training",
   "Legal & Support & Administration",
   "Life Sciences",
+  "Sales",
+  "Marketing",
+  "People Ops & Recruiting",
+  "Coaching & Mentorship",
 ];
 
 const LOCATION_PREFERENCES = ["In-Person", "Hybrid", "Remote"];
@@ -134,6 +140,10 @@ const INDUSTRIES = [
   "Social Impact",
   "Venture Capital",
   "VR & AR",
+  "Agriculture",
+  "Restaurant Service",
+  "Hospitality",
+  "Other",
 ];
 
 const JOB_SEARCH_STATUS = [
@@ -218,20 +228,7 @@ export default function JobPreferencesPage() {
   const [recsError, setRecsError] = useState<string | null>(null);
 
   const [skillSearch, setSkillSearch] = useState("");
-  const [availableSkills] = useState([
-    "Adobe Illustrator",
-    "Business Analytics",
-    "Excel/Numbers/Sheets",
-    "Git",
-    "HTML/CSS",
-    "Java",
-    "MailChimp",
-    "MATLAB",
-    "Operations Research",
-    "Python",
-    "SEO",
-    "Zendesk",
-  ]);
+  const [availableSkills, setAvailableSkills] = useState<string[]>([]);
 
   useEffect(() => {
     const stored = localStorage.getItem("rf_mode");
@@ -273,6 +270,31 @@ export default function JobPreferencesPage() {
         }
       } catch {
         // If backend is unavailable, continue with local-only state
+      }
+    })();
+
+    (async () => {
+      // Load skills from backend so the search UI feels "real" and comprehensive.
+      // Fallback to a small seed list if the API isn't reachable.
+      try {
+        const resp = await api<{ skills: string[] }>("/job-preferences/options/skills", "GET");
+        const list = Array.isArray(resp?.skills) ? resp.skills.map((s) => String(s).trim()).filter(Boolean) : [];
+        setAvailableSkills(Array.from(new Set(list)));
+      } catch {
+        setAvailableSkills([
+          "Python",
+          "JavaScript",
+          "TypeScript",
+          "SQL",
+          "React",
+          "Next.js",
+          "Product Management",
+          "SEO",
+          "Sales",
+          "Recruiting",
+          "Coaching",
+          "Mentorship",
+        ]);
       }
     })();
 
@@ -371,10 +393,16 @@ export default function JobPreferencesPage() {
   const filteredSkills = availableSkills.filter((skill) =>
     skill.toLowerCase().includes(skillSearch.toLowerCase())
   );
+  const visibleSkills = filteredSkills.slice(0, 48);
 
   return (
     <div className="min-h-screen py-8">
       <div className="max-w-4xl mx-auto px-4">
+        <div className="mb-4">
+          <a href="/" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+            <span className="mr-2">←</span> Back to Dashboard
+          </a>
+        </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">
@@ -565,7 +593,7 @@ export default function JobPreferencesPage() {
             {/* Skills */}
             <div>
               <h2 className="text-xl font-semibold mb-4">
-                What skills do you have or enjoy working with?
+                What skills do you have or enjoy working with? (Optional)
               </h2>
               <p className="text-gray-600 mb-4">
                 Heart a skill to indicate that you'd prefer roles that utilize that
@@ -581,7 +609,7 @@ export default function JobPreferencesPage() {
                 />
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {filteredSkills.map((skill) => (
+                {visibleSkills.map((skill) => (
                   <label
                     key={skill}
                     className="flex items-center space-x-2 cursor-pointer"
@@ -596,6 +624,11 @@ export default function JobPreferencesPage() {
                   </label>
                 ))}
               </div>
+              {filteredSkills.length > visibleSkills.length && (
+                <div className="mt-3 text-xs text-white/60">
+                  Showing {visibleSkills.length} of {filteredSkills.length} matching skills. Narrow the search to see others.
+                </div>
+              )}
             </div>
 
             {/* Minimum Salary */}
@@ -677,7 +710,7 @@ export default function JobPreferencesPage() {
 
           {recsError && (
             <div className="mt-6 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">
-              Couldn’t generate job matches: {recsError}
+              Couldn’t find relevant boards: {recsError}
             </div>
           )}
 
@@ -687,7 +720,19 @@ export default function JobPreferencesPage() {
                 <div>
                   <div className="text-sm font-bold text-white">Recommended job pages</div>
                   <div className="text-xs text-white/60">
-                    Based on your selections — click one on the Jobs step to import listings.
+                    Based on:{" "}
+                    {[
+                      preferences.roleCategories?.slice(0, 2).join(", "),
+                      preferences.industries?.slice(0, 2).join(", "),
+                      preferences.workType?.slice(0, 2).join(", "),
+                      preferences.companySize?.slice(0, 1).join(", "),
+                      preferences.state ? `State: ${preferences.state}` : "",
+                      preferences.skills?.slice(0, 3).join(", "),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || "your selections"}
+                    {" — "}
+                    click one on the Jobs step to import listings.
                   </div>
                 </div>
                 <button
@@ -705,10 +750,24 @@ export default function JobPreferencesPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="text-sm font-semibold text-white">{r.label}</div>
-                        <div className="text-xs text-white/60">{r.company}</div>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <div className="text-xs text-white/60">{r.company}</div>
+                          <span className="inline-flex items-center rounded-full border border-white/10 bg-black/30 px-2 py-0.5 text-[10px] font-semibold text-white/70">
+                            {r.link_type === "job_posting"
+                              ? "Job posting"
+                              : r.link_type === "job_board_search"
+                                ? "Job board search"
+                                : "Career-site search"}
+                          </span>
+                        </div>
                       </div>
                       {typeof r.score === "number" && (
-                        <div className="text-xs font-semibold text-white/70">{r.score}/100</div>
+                        <div className="text-right">
+                          <div className="text-xs font-semibold text-white/70">{r.score}/100</div>
+                          <div className="mt-1">
+                            <StarRating value={r.score} scale="percent" showNumeric={false} className="text-[10px]" />
+                          </div>
+                        </div>
                       )}
                     </div>
                     <div className="mt-2 text-xs text-white/70">{r.rationale}</div>
@@ -719,7 +778,7 @@ export default function JobPreferencesPage() {
                         rel="noopener noreferrer"
                         className="text-xs text-blue-300 underline hover:text-blue-200"
                       >
-                        Open job page
+                        {r.link_type === "job_posting" ? "Open job posting" : "Open search page"}
                       </a>
                     </div>
                   </div>
@@ -741,7 +800,7 @@ export default function JobPreferencesPage() {
                 disabled={isGeneratingRecs}
                 className="bg-white/10 text-white px-6 py-3 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10 disabled:opacity-50"
               >
-                {isGeneratingRecs ? "Generating…" : "Generate job matches"}
+                {isGeneratingRecs ? "Finding boards…" : "Find Relevant Job Boards"}
               </button>
               <button
                 onClick={handleSave}

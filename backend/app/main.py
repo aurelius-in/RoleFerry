@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 
 from .routers import (
+    auth,
     health,
     ijps,
     jobs,
@@ -19,6 +20,7 @@ from .routers import (
     livepages,
     personas,
     job_preferences,
+    gap_analysis,
     resume,
     job_descriptions,
     pain_point_match,
@@ -61,6 +63,24 @@ def create_app() -> FastAPI:
         response = await call_next(request)
         return response
 
+    # Auth gate (backend-side). Frontend also redirects, but this prevents unauthenticated API access.
+    # Keep health + auth endpoints public.
+    @app.middleware("http")
+    async def auth_gate(request: Request, call_next):
+        path = request.url.path or "/"
+        if request.method == "OPTIONS":
+            return await call_next(request)
+        if path.startswith("/health") or path.startswith("/auth") or path.startswith("/docs") or path.startswith("/openapi.json"):
+            return await call_next(request)
+
+        from .config import settings as _settings
+        token = request.cookies.get(_settings.auth_cookie_name)
+        if not token:
+            from starlette.responses import JSONResponse
+            return JSONResponse({"detail": "Not authenticated"}, status_code=401)
+
+        return await call_next(request)
+
     # Simple per-IP rate limit (very basic, in-memory). Disabled in dev.
     from starlette.responses import JSONResponse
     rate_counts: dict[str, int] = {}
@@ -88,6 +108,7 @@ def create_app() -> FastAPI:
 
     # Core/health
     app.include_router(health.router)
+    app.include_router(auth.router, prefix="/auth", tags=["auth"])
 
     # Domain routers
     app.include_router(ijps.router, prefix="/ijps", tags=["ijps"]) 
@@ -107,6 +128,7 @@ def create_app() -> FastAPI:
     app.include_router(livepages.router, tags=["livepages"])
     app.include_router(personas.router, tags=["personas"])
     app.include_router(job_preferences.router, prefix="/job-preferences", tags=["job-preferences"])
+    app.include_router(gap_analysis.router, prefix="/gap-analysis", tags=["gap-analysis"])
     app.include_router(resume.router, prefix="/resume", tags=["resume"])
     app.include_router(job_descriptions.router, prefix="/job-descriptions", tags=["job-descriptions"])
     app.include_router(pain_point_match.router, prefix="/painpoint-match", tags=["painpoint-match"])
