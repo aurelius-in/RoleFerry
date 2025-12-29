@@ -102,9 +102,13 @@ def create_app() -> FastAPI:
     # Best-effort migrations on startup (idempotent SQL files)
     try:
         from .db import run_migrations_blocking
+        import logging
+        logging.info("Starting database migrations...")
         run_migrations_blocking()
-    except Exception:
-        pass
+        logging.info("Database migrations complete.")
+    except Exception as e:
+        import logging
+        logging.error(f"Migration error: {str(e)}")
 
     # Core/health
     app.include_router(health.router)
