@@ -27,8 +27,8 @@ def get_engine() -> AsyncEngine:
         url,
         pool_pre_ping=True,
         future=True,
-        connect_args={"timeout": float(os.getenv("DB_CONNECT_TIMEOUT_SECONDS", "2.0"))},
-        pool_timeout=float(os.getenv("DB_POOL_TIMEOUT_SECONDS", "2.0")),
+        connect_args={"timeout": float(os.getenv("DB_CONNECT_TIMEOUT_SECONDS", "10.0"))},
+        pool_timeout=float(os.getenv("DB_POOL_TIMEOUT_SECONDS", "10.0")),
     )
 
 
