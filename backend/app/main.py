@@ -70,7 +70,7 @@ def create_app() -> FastAPI:
         path = request.url.path or "/"
         if request.method == "OPTIONS":
             return await call_next(request)
-        if path.startswith("/health") or path.startswith("/auth") or path.startswith("/docs") or path.startswith("/openapi.json"):
+        if path == "/" or path == "/ping" or path.startswith("/health") or path.startswith("/auth") or path.startswith("/docs") or path.startswith("/openapi.json"):
             return await call_next(request)
 
         from .config import settings as _settings
