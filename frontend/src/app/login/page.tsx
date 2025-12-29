@@ -80,8 +80,8 @@ export default function LoginPage() {
       <div className="mx-auto max-w-lg px-4">
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="flex flex-col items-center text-center mb-8">
-            <Image src="/roleferry_trans.png" alt="RoleFerry" width={320} height={100} className="h-20 w-auto" priority />
-            <Image src="/wordmark.png" alt="RoleFerry" width={400} height={90} className="h-14 w-auto mt-2" priority />
+            <Image src="/rf_logo.png" alt="RoleFerry" width={320} height={100} className="h-20 w-auto" priority />
+            <Image src="/rf_wordmark.png" alt="RoleFerry" width={400} height={90} className="h-14 w-auto mt-2" priority />
             <div className="mt-6 text-sm text-white/70">Relationship-first outreach engine</div>
           </div>
 

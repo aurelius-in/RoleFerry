@@ -135,7 +135,7 @@ export default function Home() {
 
         <div className="keypad-header">
           <div className="branding-section">
-            <img src="/wordmark.png" alt="RoleFerry" className="wordmark-logo" />
+            <img src="/rf_wordmark.png" alt="RoleFerry" className="wordmark-logo" />
             <img src="/ani-sm.gif" alt="RoleFerry Animation" className="animated-logo" />
           </div>
           <h1 className="keypad-title">The Path to Your Next Role</h1>

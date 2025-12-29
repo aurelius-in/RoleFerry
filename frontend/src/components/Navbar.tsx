@@ -42,7 +42,7 @@ export default function Navbar() {
           {/* Left: logo + wordmark */}
           <Link href="/" className="flex items-center gap-2">
           <Image
-            src="/roleferry_trans.png"
+            src="/rf_logo.png"
             alt="RoleFerry"
             width={190}
             height={52}
@@ -50,7 +50,7 @@ export default function Navbar() {
             className="h-9 w-auto sm:h-10"
           />
           <Image
-            src="/wordmark.png"
+            src="/rf_wordmark.png"
             alt="RoleFerry"
             width={210}
             height={44}
