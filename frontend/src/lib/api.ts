@@ -3,12 +3,18 @@ import { getMockResponse } from "./mocks";
 
 export async function api<T>(path: string, method: HttpMethod = "GET", body?: unknown): Promise<T> {
   const isServer = typeof window === "undefined";
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+  
   let url: string;
   if (isServer) {
-    const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
-    url = path.startsWith("/") ? `${base}${path}` : `${base}/${path}`;
+    url = path.startsWith("/") ? `${baseUrl}${path}` : `${baseUrl}/${path}`;
   } else {
-    url = path.startsWith("/") ? `/api${path}` : `/api/${path}`;
+    // If we have an absolute URL, use it directly. Otherwise fallback to /api proxy.
+    if (baseUrl.startsWith("http")) {
+      url = path.startsWith("/") ? `${baseUrl}${path}` : `${baseUrl}/${path}`;
+    } else {
+      url = path.startsWith("/") ? `/api${path}` : `/api/${path}`;
+    }
   }
 
   // Client-side mock behavior:
