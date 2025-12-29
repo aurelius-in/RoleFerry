@@ -110,19 +110,33 @@ export default function LoginPage() {
             {mode === "register" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-white/70 mb-1">First name</label>
-                  <input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-white/20" />
+                  <label htmlFor="firstName" className="block text-xs text-white/70 mb-1">First name</label>
+                  <input 
+                    id="firstName"
+                    name="firstName"
+                    value={firstName} 
+                    onChange={(e) => setFirstName(e.target.value)} 
+                    className="w-full rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-white/20" 
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs text-white/70 mb-1">Last name</label>
-                  <input value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-white/20" />
+                  <label htmlFor="lastName" className="block text-xs text-white/70 mb-1">Last name</label>
+                  <input 
+                    id="lastName"
+                    name="lastName"
+                    value={lastName} 
+                    onChange={(e) => setLastName(e.target.value)} 
+                    className="w-full rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-white/20" 
+                  />
                 </div>
               </div>
             ) : null}
 
             <div>
-              <label className="block text-xs text-white/70 mb-1">Email</label>
+              <label htmlFor="email" className="block text-xs text-white/70 mb-1">Email</label>
               <input
+                id="email"
+                name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 type="email"
@@ -134,20 +148,34 @@ export default function LoginPage() {
             {mode === "register" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-white/70 mb-1">Phone</label>
-                  <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-white/20" />
+                  <label htmlFor="phone" className="block text-xs text-white/70 mb-1">Phone</label>
+                  <input 
+                    id="phone"
+                    name="phone"
+                    value={phone} 
+                    onChange={(e) => setPhone(e.target.value)} 
+                    className="w-full rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-white/20" 
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs text-white/70 mb-1">LinkedIn URL (optional)</label>
-                  <input value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} className="w-full rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-white/20" />
+                  <label htmlFor="linkedinUrl" className="block text-xs text-white/70 mb-1">LinkedIn URL (optional)</label>
+                  <input 
+                    id="linkedinUrl"
+                    name="linkedinUrl"
+                    value={linkedinUrl} 
+                    onChange={(e) => setLinkedinUrl(e.target.value)} 
+                    className="w-full rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-white/20" 
+                  />
                 </div>
               </div>
             ) : null}
 
             <div>
-              <label className="block text-xs text-white/70 mb-1">Password</label>
+              <label htmlFor="password" className="block text-xs text-white/70 mb-1">Password</label>
               <div className="relative">
                 <input
+                  id="password"
+                  name="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   type={showPw1 ? "text" : "password"}
@@ -167,9 +195,11 @@ export default function LoginPage() {
 
             {mode === "register" ? (
               <div>
-                <label className="block text-xs text-white/70 mb-1">Verify password</label>
+                <label htmlFor="passwordVerify" className="block text-xs text-white/70 mb-1">Verify password</label>
                 <div className="relative">
                   <input
+                    id="passwordVerify"
+                    name="passwordVerify"
                     value={password2}
                     onChange={(e) => setPassword2(e.target.value)}
                     type={showPw2 ? "text" : "password"}
