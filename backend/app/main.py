@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from .config import settings
 
 from .routers import (
@@ -48,7 +49,21 @@ from .routers import (
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="RoleFerry API", version="0.1.0")
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        # Best-effort migrations on startup (idempotent SQL files)
+        try:
+            from .db import run_migrations
+            import logging
+            logging.info("Starting database migrations...")
+            await run_migrations()
+            logging.info("Database migrations complete.")
+        except Exception as e:
+            import logging
+            logging.error(f"Migration error: {str(e)}")
+        yield
+
+    app = FastAPI(title="RoleFerry API", version="0.1.0", lifespan=lifespan)
 
     app.add_middleware(
         CORSMiddleware,
@@ -109,17 +124,6 @@ def create_app() -> FastAPI:
             }, 
             status_code=500
         )
-
-    # Best-effort migrations on startup (idempotent SQL files)
-    try:
-        from .db import run_migrations_blocking
-        import logging
-        logging.info("Starting database migrations...")
-        run_migrations_blocking()
-        logging.info("Database migrations complete.")
-    except Exception as e:
-        import logging
-        logging.error(f"Migration error: {str(e)}")
 
     # Core/health
     app.include_router(health.router)

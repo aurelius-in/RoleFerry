@@ -59,12 +59,3 @@ async def run_migrations() -> None:
     await _exec_sql_files(engine, files)
 
 
-def run_migrations_blocking() -> None:
-    try:
-        asyncio.run(run_migrations())
-    except RuntimeError:
-        # If already running in an event loop, schedule and wait
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(run_migrations())
-
-
