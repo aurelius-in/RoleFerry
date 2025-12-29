@@ -22,4 +22,5 @@ argon2-cffi==23.1.0
 # File text extraction (resume/job docs)
 pypdf==6.0.0
 python-docx==1.2.0
+python-multipart==0.0.12
 
