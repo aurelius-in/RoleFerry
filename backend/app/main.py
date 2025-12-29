@@ -97,7 +97,18 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(Exception)
     async def json_error_handler(request: Request, exc: Exception):
-        return JSONResponse({"error": str(exc)}, status_code=500)
+        import logging
+        import traceback
+        logging.error(f"Unhandled error: {str(exc)}")
+        logging.error(traceback.format_exc())
+        return JSONResponse(
+            {
+                "error": str(exc),
+                "detail": "Internal Server Error",
+                "path": request.url.path
+            }, 
+            status_code=500
+        )
 
     # Best-effort migrations on startup (idempotent SQL files)
     try:
