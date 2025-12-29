@@ -10,10 +10,14 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   async rewrites() {
+    // Railway provides NEXT_PUBLIC_API_URL during the build/runtime.
+    // If not found, it defaults to the local dev backend.
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
+    console.log(`[Config] Proxying /api to ${backendUrl}`);
     return [
       {
         source: "/api/:path*",
-        destination: "http://127.0.0.1:8001/:path*",
+        destination: `${backendUrl}/:path*`,
       },
     ];
   },

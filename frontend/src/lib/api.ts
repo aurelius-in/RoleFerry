@@ -3,18 +3,18 @@ import { getMockResponse } from "./mocks";
 
 export async function api<T>(path: string, method: HttpMethod = "GET", body?: unknown): Promise<T> {
   const isServer = typeof window === "undefined";
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
   
   let url: string;
   if (isServer) {
-    url = path.startsWith("/") ? `${baseUrl}${path}` : `${baseUrl}/${path}`;
+    // Server-side (SSR): Use the absolute URL from env
+    const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+    url = path.startsWith("/") ? `${base}${path}` : `${base}/${path}`;
   } else {
-    // If we have an absolute URL, use it directly. Otherwise fallback to /api proxy.
-    if (baseUrl.startsWith("http")) {
-      url = path.startsWith("/") ? `${baseUrl}${path}` : `${baseUrl}/${path}`;
-    } else {
-      url = path.startsWith("/") ? `/api${path}` : `/api/${path}`;
-    }
+    // Client-side: ALWAYS use the /api prefix.
+    // This hits the Next.js rewrite proxy (defined in next.config.ts).
+    // It solves CORS and ensures cookies are sent correctly.
+    url = path.startsWith("/") ? `/api${path}` : `/api/${path}`;
+    console.log(`[API] Client request to: ${url}`);
   }
 
   // Client-side mock behavior:
