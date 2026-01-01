@@ -222,24 +222,80 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
     # Company: common narrative openings like "Kochava is hiring..." / "Kochava provides..."
     # This is very common for pasted JDs where the first line contains the company name.
     if not company and lines:
-        top_blob = " ".join(lines[:20])
-        # Capture a single-token brand/company (handles Kochava, Stripe, Workday, etc.)
-        m = re.search(
+        _COMPANY_STOPWORDS = {
+            # Common UI / section words
+            "applied",
+            "grade",
+            "role",
+            "add",
+            "delete",
+            "business",
+            "challenges",
+            "required",
+            "skills",
+            "success",
+            "metrics",
+            "jargon",
+            # Common non-company descriptors
+            "remote",
+            "hybrid",
+            "onsite",
+            "on-site",
+            "full-time",
+            "part-time",
+            "contract",
+            # Title-ish words we never want as a company
+            "engineer",
+            "engineering",
+            "director",
+            "manager",
+            "lead",
+            "principal",
+            "staff",
+        }
+
+        top_blob = " ".join(lines[:80])
+
+        # Find candidates of the form "X is ..." / "X provides ..." / "X began ..."
+        # and pick the best (prefer domain-looking tokens like Lamatic.ai).
+        cand_matches = re.findall(
             r"\b([A-Z][A-Za-z0-9&.\-]{1,60})\s+(?:is\s+hiring|is\s+recruiting|is\s+seeking|provides|is\s+an|is\s+a|began)\b",
             top_blob,
             flags=re.I,
         )
-        cand = (m.group(1).strip() if m else "")
-        if not cand:
-            # Fallback: first token on first line, but only if it repeats (avoids "Remote ...")
-            m2 = re.match(r"^([A-Z][A-Za-z0-9&.\-]{1,60})\b", lines[0])
-            cand = (m2.group(1).strip() if m2 else "")
 
-        if cand:
-            # Require at least 2 mentions in the first chunk to reduce false positives.
-            mentions = sum(1 for ln in lines[:60] if cand.lower() in ln.lower())
-            if mentions >= 2 and cand.lower() not in {"remote", "hybrid", "onsite", "on-site"}:
-                company = cand
+        def _mentions(token: str) -> int:
+            t = token.lower()
+            return sum(1 for ln in lines[:120] if t in ln.lower())
+
+        def _score(token: str) -> int:
+            t = token.strip()
+            low = t.lower()
+            if not t:
+                return -10_000
+            if low in _COMPANY_STOPWORDS:
+                return -10_000
+            # Strong preference for domain-like names (Lamatic.ai, example.io)
+            looks_like_domain = bool(re.search(r"\.[a-z]{2,10}$", low)) or bool(re.search(r"\.[a-z]{2,10}\b", low))
+            score = 0
+            score += 80 if looks_like_domain else 0
+            score += min(40, _mentions(t) * 10)  # repeat-count signal
+            # Penalize tokens that are very likely titles/sections
+            if any(k in low for k in ["engineer", "engineering", "director", "manager"]):
+                score -= 40
+            return score
+
+        best = ""
+        best_score = -10_000
+        for raw in cand_matches:
+            t = (raw or "").strip().strip(",.;:-")
+            sc = _score(t)
+            if sc > best_score:
+                best_score = sc
+                best = t
+
+        if best and best_score > 0:
+            company = best
 
     def _company_from_url(u: str) -> str:
         try:
