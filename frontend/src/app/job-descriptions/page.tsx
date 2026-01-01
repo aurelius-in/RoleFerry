@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import StarRating from "@/components/StarRating";
@@ -94,6 +94,8 @@ export default function JobDescriptionsPage() {
   const [importType, setImportType] = useState<'url' | 'text'>('url');
   const [sortBy, setSortBy] = useState<'date' | 'grade'>('date');
   const [trackerNotice, setTrackerNotice] = useState<string | null>(null);
+  const [trackerPulseId, setTrackerPulseId] = useState<string | null>(null);
+  const trackerPulseTimer = useRef<number | null>(null);
   const suggestedUrl =
     "https://www.google.com/about/careers/applications/jobs/results/?employment_type=FULL_TIME&degree=MASTERS&skills=software%2C%20architecture%2C%20ai";
 
@@ -124,6 +126,12 @@ export default function JobDescriptionsPage() {
     } catch {
       // ignore malformed recs cache
     }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (trackerPulseTimer.current) window.clearTimeout(trackerPulseTimer.current);
+    };
   }, []);
 
   const handleImport = async () => {
@@ -235,6 +243,11 @@ export default function JobDescriptionsPage() {
       localStorage.setItem(key, JSON.stringify([nextItem, ...list]));
       setTrackerNotice(`Added to Job Tracker: ${jd.title} @ ${jd.company}`);
       window.setTimeout(() => setTrackerNotice(null), 2500);
+
+      // Instant feedback right where the click happened
+      setTrackerPulseId(jd.id);
+      if (trackerPulseTimer.current) window.clearTimeout(trackerPulseTimer.current);
+      trackerPulseTimer.current = window.setTimeout(() => setTrackerPulseId(null), 900);
     } catch {
       setTrackerNotice("Couldn’t add to Job Tracker.");
       window.setTimeout(() => setTrackerNotice(null), 2500);
@@ -501,6 +514,11 @@ export default function JobDescriptionsPage() {
                         className="text-white/80 hover:text-white text-sm underline"
                       >
                         Add to Job Tracker
+                        {trackerPulseId === jd.id ? (
+                          <span className="ml-1 inline-flex items-center text-green-300" aria-label="Added">
+                            ✅
+                          </span>
+                        ) : null}
                       </button>
                       <button
                         onClick={() => handleDelete(jd.id)}
