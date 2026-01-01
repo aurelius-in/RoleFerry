@@ -162,6 +162,35 @@ async def _db_create_user(payload: Dict[str, Any]) -> Dict[str, Any]:
         return dict(row._mapping)
 
 
+async def _db_update_user(user_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Update a subset of user fields and return the latest row.
+
+    NOTE: We keep this intentionally narrow for demo stability.
+    """
+    engine = get_engine()
+    async with engine.begin() as conn:
+        res = await conn.execute(
+            sql_text(
+                """
+                UPDATE user_account
+                SET
+                  first_name = COALESCE(:first_name, first_name),
+                  last_name = COALESCE(:last_name, last_name),
+                  phone = COALESCE(:phone, phone),
+                  linkedin_url = COALESCE(:linkedin_url, linkedin_url)
+                WHERE id = :id::uuid
+                RETURNING id::text, email, password_hash, first_name, last_name, phone, linkedin_url
+                """
+            ),
+            {"id": user_id, **payload},
+        )
+        row = res.first()
+        if not row:
+            raise HTTPException(status_code=404, detail="User not found.")
+        return dict(row._mapping)
+
+
 def _mem_get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
     _ensure_demo_users_loaded()
     users_by_email = getattr(store, "demo_users_by_email", {})
@@ -195,6 +224,21 @@ def _mem_create_user(payload: Dict[str, Any]) -> Dict[str, Any]:
     }
     users[uid] = record
     users_by_email[str(payload.get("email") or "").lower()] = uid
+    _persist_demo_users()
+    return record
+
+
+def _mem_update_user(user_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    _ensure_demo_users_loaded()
+    users = getattr(store, "demo_users", {}) or {}
+    record = users.get(user_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="User not found.")
+    for k in ["first_name", "last_name", "phone", "linkedin_url"]:
+        if k in payload and payload[k] is not None:
+            record[k] = payload[k]
+    users[user_id] = record
+    store.demo_users = users
     _persist_demo_users()
     return record
 
@@ -241,6 +285,35 @@ async def create_user(email: str, password: str, first_name: str, last_name: str
         row = await _db_create_user(payload)
     except Exception:
         row = _mem_create_user(payload)
+
+    return AuthUser(
+        id=str(row["id"]),
+        email=str(row["email"]),
+        first_name=str(row["first_name"]),
+        last_name=str(row["last_name"]),
+        phone=str(row["phone"]),
+        linkedin_url=(str(row["linkedin_url"]).strip() if row.get("linkedin_url") else None),
+    )
+
+
+async def update_user(
+    user_id: str,
+    *,
+    first_name: str | None = None,
+    last_name: str | None = None,
+    phone: str | None = None,
+    linkedin_url: str | None = None,
+) -> AuthUser:
+    payload: Dict[str, Any] = {
+        "first_name": (first_name.strip() if isinstance(first_name, str) else None),
+        "last_name": (last_name.strip() if isinstance(last_name, str) else None),
+        "phone": (phone.strip() if isinstance(phone, str) else None),
+        "linkedin_url": ((linkedin_url or "").strip() or None) if isinstance(linkedin_url, str) else None,
+    }
+    try:
+        row = await _db_update_user(user_id, payload)
+    except Exception:
+        row = _mem_update_user(user_id, payload)
 
     return AuthUser(
         id=str(row["id"]),

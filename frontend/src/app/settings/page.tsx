@@ -18,16 +18,40 @@ export default function Settings() {
   const [sub, setSub] = useState<SubscriptionStatus | null>(null);
   const [subMessage, setSubMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState<"upgrade" | "cancel" | null>(null);
+  const [profile, setProfile] = useState<any | null>(null);
+  const [profileMsg, setProfileMsg] = useState<string | null>(null);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [linkedinUrl, setLinkedinUrl] = useState("");
 
   useEffect(() => {
     (async () => {
       try {
+        // Load local user immediately for snappy UI
+        try {
+          const saved = localStorage.getItem("rf_user");
+          if (saved) {
+            const u = JSON.parse(saved);
+            setProfile(u);
+            setLinkedinUrl(String(u?.linkedin_url || ""));
+          }
+        } catch {}
+
         const [settingsData, subscriptionData] = await Promise.all([
           api("/settings", "GET"),
           api<SubscriptionStatus>("/subscription/status", "GET"),
         ]);
         setS(settingsData);
         setSub(subscriptionData);
+
+        // Refresh from backend so it reflects DB truth
+        try {
+          const me = await api<any>("/auth/me", "GET");
+          if (me?.user) {
+            setProfile(me.user);
+            setLinkedinUrl(String(me.user?.linkedin_url || ""));
+            localStorage.setItem("rf_user", JSON.stringify(me.user));
+          }
+        } catch {}
       } catch (e: any) {
         setErr(String(e?.message || e));
       }
@@ -63,6 +87,26 @@ export default function Settings() {
     }
   };
 
+  const saveProfile = async () => {
+    setProfileMsg(null);
+    setProfileSaving(true);
+    try {
+      const res = await api<any>("/auth/me", "PATCH", {
+        linkedin_url: linkedinUrl || null,
+      });
+      if (res?.user) {
+        setProfile(res.user);
+        localStorage.setItem("rf_user", JSON.stringify(res.user));
+      }
+      setProfileMsg("Saved.");
+    } catch (e: any) {
+      setProfileMsg(String(e?.message || "Failed to save profile"));
+    } finally {
+      setProfileSaving(false);
+      setTimeout(() => setProfileMsg(null), 2500);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-16">
       <div className="absolute inset-0 bg-black/60" />
@@ -76,6 +120,36 @@ export default function Settings() {
         {err ? <div className="text-xs opacity-80 break-all">{err}</div> : null}
         {s ? (
           <>
+            <div className="rounded-lg p-4 bg-white/5 border border-white/10 space-y-2 text-sm">
+              <div className="font-medium">Your profile</div>
+              <div className="text-xs opacity-70">
+                {profile?.email ? `Signed in as ${profile.email}` : "Signed in"}
+              </div>
+              <div className="mt-2">
+                <label htmlFor="linkedinUrl" className="block text-xs opacity-70 mb-1">
+                  LinkedIn URL (optional)
+                </label>
+                <input
+                  id="linkedinUrl"
+                  name="linkedinUrl"
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  placeholder="https://linkedin.com/in/your-handle"
+                  className="w-full rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-white/20"
+                />
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    onClick={saveProfile}
+                    disabled={profileSaving}
+                    className="px-3 py-2 rounded bg-white/10 border border-white/20 text-xs"
+                  >
+                    {profileSaving ? "Saving..." : "Save profile"}
+                  </button>
+                  {profileMsg ? <div className="text-xs opacity-80">{profileMsg}</div> : null}
+                </div>
+              </div>
+            </div>
+
             <div className="rounded-lg p-4 bg-white/5 border border-white/10 space-y-2 text-sm">
               <div>Environment: {s.environment}</div>
               <div>MV Threshold: {s.mv_threshold}</div>
