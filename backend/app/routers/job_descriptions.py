@@ -204,30 +204,101 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
     company = ""
 
     lines = [ln.strip() for ln in (content or "").splitlines() if ln.strip()]
+
     # Title: first non-empty line is often usable after HTML-to-text.
     if lines:
         title = lines[0][:120]
 
-    # Company: explicit "Company:" wins.
-    for ln in lines[:40]:
-        if ln.lower().startswith("company:"):
-            company = (ln.split(":", 1)[1].strip() or "")[:120]
+    # Company: explicit markers win.
+    for ln in lines[:60]:
+        low = ln.lower()
+        for key in ("company:", "employer:", "organization:", "organisation:", "about us:", "about:"):
+            if low.startswith(key):
+                company = (ln.split(":", 1)[1].strip() or "")[:120]
+                break
+        if company:
             break
 
-    # URL-based fallback
+    def _company_from_url(u: str) -> str:
+        try:
+            parsed = urlparse(u)
+            host = (parsed.netloc or "").lower().split(":")[0].replace("www.", "")
+            path = (parsed.path or "").strip("/")
+            segs = [s for s in path.split("/") if s]
+
+            # ATS patterns where company is a path segment
+            if "boards.greenhouse.io" in host and segs:
+                return segs[0]
+            if "jobs.lever.co" in host and segs:
+                return segs[0]
+            if "careers.smartrecruiters.com" in host and segs:
+                return segs[0]
+            if "myworkdayjobs.com" in host and segs:
+                # /en-US/COMPANY/job/... or /COMPANY/job/...
+                for s in segs:
+                    if s.lower() in {"en-us", "en", "jobs"}:
+                        continue
+                    # first "company-like" segment
+                    if len(s) >= 2 and re.match(r"^[A-Za-z0-9\\-_.]+$", s):
+                        return s
+            if "google.com" in host:
+                return "Google"
+
+            # Generic domain fallback: prefer the registrable-ish domain label
+            labels = [p for p in host.split(".") if p]
+            if len(labels) >= 3:
+                # careers.microsoft.com -> microsoft
+                return labels[-2]
+            if len(labels) == 2:
+                return labels[0]
+        except Exception:
+            return ""
+        return ""
+
+    # URL-based fallback (improved). Prefer URL patterns before title splitting,
+    # because titles frequently contain "Careers" / "Jobs" which are not companies.
     if url and not company:
-        host = urlparse(url).netloc.lower()
-        host = host.replace("www.", "")
-        if "google.com" in host:
-            company = "Google"
-        elif host:
-            company = host.split(":")[0].split(".")[0].capitalize()
+        cand = _company_from_url(url)
+        if cand and cand.lower() not in {"careers", "jobs", "job", "openings"}:
+            company = cand
+
+    # Title patterns like "Role - Company", "Role | Company", "Role @ Company"
+    if title and not company:
+        parts = re.split(r"\s+(?:\|\s+|-\s+|—\s+|@\s+)", title)
+        if len(parts) >= 2:
+            tail = parts[-1].strip()
+            # Filter out common non-company tails
+            bad_tail = {"remote", "hybrid", "onsite", "on-site", "full-time", "part-time", "contract", "careers", "jobs", "job", "openings"}
+            if tail and tail.lower() not in bad_tail and len(tail) <= 80:
+                # Avoid "United States" / locations
+                if not re.search(r"\b(united states|usa|canada|uk|london|new york|seattle|san francisco)\b", tail, flags=re.I):
+                    company = tail
+
+    # Content patterns: "At Company, ..." near the top.
+    if not company:
+        top = " ".join(lines[:12])
+        m = re.search(r"\b(?:at|join)\s+([A-Z][A-Za-z0-9&.,\-]+(?:\s+[A-Z][A-Za-z0-9&.,\-]+){0,4})\b", top)
+        if m:
+            cand = m.group(1).strip().strip(",.;:-")
+            # Guard against generic words
+            if cand and cand.lower() not in {"we", "our team", "the company"} and len(cand) <= 80:
+                company = cand
+
+    def _pretty_company(s: str) -> str:
+        s = (s or "").strip().strip("-—|@")
+        s = re.sub(r"[_\-]+", " ", s).strip()
+        if not s:
+            return s
+        # Preserve short all-caps brands (IBM, SAP). Otherwise title-case words.
+        if len(s) <= 6 and s.upper() == s and s.isalpha():
+            return s
+        return " ".join([w[:1].upper() + w[1:] if w else w for w in s.split()])
 
     if not title:
         title = "Job Description"
     if not company:
         company = "Unknown"
-    return title, company
+    return title, _pretty_company(company)
 
 
 def _looks_like_job_board_or_listing_url(url: str) -> bool:

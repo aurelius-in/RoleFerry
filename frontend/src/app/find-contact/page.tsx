@@ -149,7 +149,15 @@ export default function FindContactPage() {
         }
       }
 
-      const uniq = Array.from(new Set(companies.map((c) => c.trim()).filter(Boolean)));
+      const uniq = Array.from(
+        new Set(
+          companies
+            .map((c) => c.trim())
+            .filter(Boolean)
+            // Avoid junk placeholder values bubbling into the UI
+            .filter((c) => c.toLowerCase() !== "unknown")
+        )
+      );
       uniq.sort((a, b) => a.localeCompare(b));
       setCompanyOptions(uniq);
     } catch {
@@ -184,8 +192,13 @@ export default function FindContactPage() {
 
       if (isNotFound) {
         const company = searchQuery.trim();
-        const mkLinkedIn = (title: string) =>
-          `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(`${title} ${company}`)}`;
+
+        // LinkedIn's internal people search often shows empty results unless you're logged in.
+        // For demos, use a Google query that finds LinkedIn profiles reliably.
+        const mkPeopleSearch = (title: string) =>
+          `https://www.google.com/search?q=${encodeURIComponent(
+            `site:linkedin.com/in "${title}" ${company}`
+          )}`;
 
         const fallback: Contact[] = [
           {
@@ -193,7 +206,7 @@ export default function FindContactPage() {
             name: "Target: VP of Engineering",
             title: "VP of Engineering",
             email: "unknown@example.com",
-            linkedin_url: mkLinkedIn("VP of Engineering"),
+            linkedin_url: mkPeopleSearch("VP of Engineering"),
             confidence: 0.45,
             verification_status: "unknown",
             company,
@@ -205,7 +218,7 @@ export default function FindContactPage() {
             name: "Target: Director of Engineering",
             title: "Director of Engineering",
             email: "unknown@example.com",
-            linkedin_url: mkLinkedIn("Director of Engineering"),
+            linkedin_url: mkPeopleSearch("Director of Engineering"),
             confidence: 0.45,
             verification_status: "unknown",
             company,
@@ -217,7 +230,7 @@ export default function FindContactPage() {
             name: "Target: Head of Talent Acquisition",
             title: "Head of Talent Acquisition",
             email: "unknown@example.com",
-            linkedin_url: mkLinkedIn("Head of Talent Acquisition"),
+            linkedin_url: mkPeopleSearch("Head of Talent Acquisition"),
             confidence: 0.45,
             verification_status: "unknown",
             company,
@@ -229,7 +242,7 @@ export default function FindContactPage() {
             name: "Target: Recruiting Manager",
             title: "Recruiting Manager",
             email: "unknown@example.com",
-            linkedin_url: mkLinkedIn("Recruiting Manager"),
+            linkedin_url: mkPeopleSearch("Recruiting Manager"),
             confidence: 0.4,
             verification_status: "unknown",
             company,
@@ -241,7 +254,7 @@ export default function FindContactPage() {
             name: "Target: CTO / Technical Founder",
             title: "CTO",
             email: "unknown@example.com",
-            linkedin_url: mkLinkedIn("CTO"),
+            linkedin_url: mkPeopleSearch("CTO"),
             confidence: 0.4,
             verification_status: "unknown",
             company,
@@ -581,7 +594,7 @@ export default function FindContactPage() {
                           className="text-blue-600 hover:text-blue-800 text-sm"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          Open LinkedIn search
+                          Open profile search
                         </a>
                       ) : null}
                     </div>
