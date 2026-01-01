@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -41,21 +40,22 @@ export default function Navbar() {
         <div className="flex items-center justify-between gap-3">
           {/* Left: logo + wordmark */}
           <Link href="/" className="flex items-center gap-2">
-          <Image
+          <img
             src="/rf_logo.png"
             alt="RoleFerry"
-            width={190}
-            height={52}
-            priority
             className="h-9 w-auto sm:h-10"
+            onError={(e) => {
+              // Fallback for any asset-caching weirdness
+              try { (e.currentTarget as HTMLImageElement).src = "/roleferry-med.gif"; } catch {}
+            }}
           />
-          <Image
+          <img
             src="/rf_wordmark.png"
             alt="RoleFerry"
-            width={210}
-            height={44}
-            priority
             className="h-7 w-auto sm:h-8"
+            onError={(e) => {
+              try { (e.currentTarget as HTMLImageElement).src = "/role_ferry_white.png"; } catch {}
+            }}
           />
           </Link>
 

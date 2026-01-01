@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -80,8 +79,23 @@ export default function LoginPage() {
       <div className="mx-auto max-w-lg px-4">
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="flex flex-col items-center text-center mb-8">
-            <img src="/rf_logo.png" alt="RoleFerry Logo" className="h-20 w-auto opacity-100" />
-            <img src="/rf_wordmark.png" alt="RoleFerry Wordmark" className="h-14 w-auto mt-2 opacity-100" />
+            <img
+              src="/rf_logo.png"
+              alt="RoleFerry Logo"
+              className="h-20 w-auto opacity-100"
+              onError={(e) => {
+                // If the CDN/build missed the file, show a known-good fallback
+                try { (e.currentTarget as HTMLImageElement).src = "/roleferry-med.gif"; } catch {}
+              }}
+            />
+            <img
+              src="/rf_wordmark.png"
+              alt="RoleFerry Wordmark"
+              className="h-14 w-auto mt-2 opacity-100"
+              onError={(e) => {
+                try { (e.currentTarget as HTMLImageElement).src = "/role_ferry_white.png"; } catch {}
+              }}
+            />
             <div className="mt-6 text-sm text-white/70">Relationship-first outreach engine</div>
           </div>
 
