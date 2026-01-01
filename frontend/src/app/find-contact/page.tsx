@@ -54,6 +54,12 @@ export default function FindContactPage() {
   const [verifyingEmails, setVerifyingEmails] = useState<string[]>([]);
   const [helper, setHelper] = useState<ContactSearchResponse["helper"] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [suggested, setSuggested] = useState<Contact[]>([]);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualName, setManualName] = useState("");
+  const [manualTitle, setManualTitle] = useState("");
+  const [manualLinkedIn, setManualLinkedIn] = useState("");
+  const [manualEmail, setManualEmail] = useState("");
 
   const formatTitleCase = (input?: string) => {
     const s = String(input || "").trim();
@@ -159,6 +165,8 @@ export default function FindContactPage() {
     // Clear any previously cached results so we don't show stale demo contacts on failure.
     setContacts([]);
     setSelectedContacts([]);
+    setSuggested([]);
+    setHelper(null);
 
     try {
       const res = await api<ContactSearchResponse>("/find-contact/search", "POST", {
@@ -171,7 +179,78 @@ export default function FindContactPage() {
     } catch (e: any) {
       const msg = String(e?.message || "");
       // Surface the backend error so users know they need to configure PDL or refine the query.
-      setError(msg.includes("404") ? "No decision makers found for that company. Try a more specific company name." : msg || "Search failed.");
+      const isNotFound = msg.includes("404") || msg.toLowerCase().includes("no decision makers");
+      setError(isNotFound ? "No decision makers found for that company. Try a more specific company name, or use the suggested targets below." : msg || "Search failed.");
+
+      if (isNotFound) {
+        const company = searchQuery.trim();
+        const mkLinkedIn = (title: string) =>
+          `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(`${title} ${company}`)}`;
+
+        const fallback: Contact[] = [
+          {
+            id: `suggested_vp_eng_${Date.now()}`,
+            name: "Target: VP of Engineering",
+            title: "VP of Engineering",
+            email: "unknown@example.com",
+            linkedin_url: mkLinkedIn("VP of Engineering"),
+            confidence: 0.45,
+            verification_status: "unknown",
+            company,
+            department: "Engineering",
+            level: "VP",
+          },
+          {
+            id: `suggested_dir_eng_${Date.now() + 1}`,
+            name: "Target: Director of Engineering",
+            title: "Director of Engineering",
+            email: "unknown@example.com",
+            linkedin_url: mkLinkedIn("Director of Engineering"),
+            confidence: 0.45,
+            verification_status: "unknown",
+            company,
+            department: "Engineering",
+            level: "Director",
+          },
+          {
+            id: `suggested_head_ta_${Date.now() + 2}`,
+            name: "Target: Head of Talent Acquisition",
+            title: "Head of Talent Acquisition",
+            email: "unknown@example.com",
+            linkedin_url: mkLinkedIn("Head of Talent Acquisition"),
+            confidence: 0.45,
+            verification_status: "unknown",
+            company,
+            department: "HR",
+            level: "Head",
+          },
+          {
+            id: `suggested_talent_mgr_${Date.now() + 3}`,
+            name: "Target: Recruiting Manager",
+            title: "Recruiting Manager",
+            email: "unknown@example.com",
+            linkedin_url: mkLinkedIn("Recruiting Manager"),
+            confidence: 0.4,
+            verification_status: "unknown",
+            company,
+            department: "HR",
+            level: "Manager",
+          },
+          {
+            id: `suggested_cto_${Date.now() + 4}`,
+            name: "Target: CTO / Technical Founder",
+            title: "CTO",
+            email: "unknown@example.com",
+            linkedin_url: mkLinkedIn("CTO"),
+            confidence: 0.4,
+            verification_status: "unknown",
+            company,
+            department: "Engineering",
+            level: "C-Level",
+          },
+        ];
+        setSuggested(fallback);
+      }
       try {
         localStorage.removeItem("found_contacts");
       } catch {}
@@ -283,7 +362,6 @@ export default function FindContactPage() {
                       type="button"
                       onClick={() => {
                         setSearchQuery(c);
-                        setCompanyInput(c);
                         // Trigger search automatically when clicking a quick-option? 
                         // Let's keep it manual for consistency unless asked.
                       }}
@@ -457,6 +535,72 @@ export default function FindContactPage() {
             </div>
           )}
 
+          {/* Suggested targets (fallback when no contacts are found) */}
+          {contacts.length === 0 && suggested.length > 0 && !isSearching && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-semibold text-white">Suggested targets</h2>
+                  <p className="text-white/70 text-sm">
+                    These are role targets with LinkedIn search links. Add a real person manually if you have one.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setManualOpen(true)}
+                  className="px-4 py-2 rounded-md font-medium transition-colors bg-white/10 border border-white/20 text-white hover:bg-white/15"
+                >
+                  Add manually
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {suggested.map((contact) => {
+                  const isSelected = selectedContacts.includes(contact.id);
+                  return (
+                    <div
+                      key={contact.id}
+                      className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                        isSelected ? "border-blue-500 bg-blue-50" : "border-white/10 hover:border-white/20 bg-black/20"
+                      }`}
+                      onClick={() => handleContactSelect(contact.id)}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-white">{contact.name}</h3>
+                          <p className="text-gray-600 text-sm">{formatTitleCase(contact.title)}</p>
+                          <p className="text-gray-500 text-xs">{contact.company}</p>
+                        </div>
+                        {isSelected && <span className="text-blue-600">✓</span>}
+                      </div>
+                      {contact.linkedin_url ? (
+                        <a
+                          href={contact.linkedin_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Open LinkedIn search
+                        </a>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={handleContinue}
+                  disabled={selectedContacts.length === 0}
+                  className="px-4 py-2 rounded-md font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Continue (Email or LinkedIn outreach)
+                </button>
+              </div>
+            </div>
+          )}
+
           {contacts.length === 0 && !isSearching && (
             <div className="text-center py-12">
               <div className="mb-6">
@@ -472,6 +616,105 @@ export default function FindContactPage() {
           )}
         </div>
       </div>
+
+      {/* Manual add modal */}
+      {manualOpen && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+          <div className="rounded-lg border border-white/10 bg-slate-950/90 backdrop-blur max-w-lg w-full p-6 text-slate-100 shadow-2xl shadow-black/30">
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <h2 className="text-lg font-semibold">Add a decision maker manually</h2>
+              <button className="text-white/70 hover:text-white" onClick={() => setManualOpen(false)}>
+                Close
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-white/70 mb-1" htmlFor="manualName">Name</label>
+                <input
+                  id="manualName"
+                  name="manualName"
+                  value={manualName}
+                  onChange={(e) => setManualName(e.target.value)}
+                  placeholder="Jane Doe"
+                  className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-white/70 mb-1" htmlFor="manualTitle">Title</label>
+                <input
+                  id="manualTitle"
+                  name="manualTitle"
+                  value={manualTitle}
+                  onChange={(e) => setManualTitle(e.target.value)}
+                  placeholder="Director of Engineering"
+                  className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs text-white/70 mb-1" htmlFor="manualLinkedIn">LinkedIn URL (optional)</label>
+                <input
+                  id="manualLinkedIn"
+                  name="manualLinkedIn"
+                  value={manualLinkedIn}
+                  onChange={(e) => setManualLinkedIn(e.target.value)}
+                  placeholder="https://linkedin.com/in/..."
+                  className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs text-white/70 mb-1" htmlFor="manualEmail">Email (optional)</label>
+                <input
+                  id="manualEmail"
+                  name="manualEmail"
+                  value={manualEmail}
+                  onChange={(e) => setManualEmail(e.target.value)}
+                  placeholder="name@company.com"
+                  className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                className="px-4 py-2 rounded-md bg-white/10 border border-white/20 text-white hover:bg-white/15"
+                onClick={() => setManualOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                onClick={() => {
+                  const company = searchQuery.trim() || "Company";
+                  const id = `manual_${Date.now()}`;
+                  const c: Contact = {
+                    id,
+                    name: manualName.trim() || "Decision maker",
+                    title: manualTitle.trim() || "Decision Maker",
+                    email: (manualEmail.trim() || "unknown@example.com"),
+                    linkedin_url: manualLinkedIn.trim() || undefined,
+                    confidence: 0.7,
+                    verification_status: "unknown",
+                    verification_score: undefined,
+                    company,
+                    department: "General",
+                    level: "Director",
+                  };
+                  setContacts([c]);
+                  setSelectedContacts([id]);
+                  setSuggested([]);
+                  setManualOpen(false);
+                  setManualName("");
+                  setManualTitle("");
+                  setManualLinkedIn("");
+                  setManualEmail("");
+                  localStorage.setItem("found_contacts", JSON.stringify([c]));
+                }}
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Verification Modal */}
       {showVerificationModal && (
