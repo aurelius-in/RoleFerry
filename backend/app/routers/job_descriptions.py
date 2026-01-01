@@ -219,6 +219,28 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
         if company:
             break
 
+    # Company: common narrative openings like "Kochava is hiring..." / "Kochava provides..."
+    # This is very common for pasted JDs where the first line contains the company name.
+    if not company and lines:
+        top_blob = " ".join(lines[:20])
+        # Capture a single-token brand/company (handles Kochava, Stripe, Workday, etc.)
+        m = re.search(
+            r"\b([A-Z][A-Za-z0-9&.\-]{1,60})\s+(?:is\s+hiring|is\s+recruiting|is\s+seeking|provides|is\s+an|is\s+a|began)\b",
+            top_blob,
+            flags=re.I,
+        )
+        cand = (m.group(1).strip() if m else "")
+        if not cand:
+            # Fallback: first token on first line, but only if it repeats (avoids "Remote ...")
+            m2 = re.match(r"^([A-Z][A-Za-z0-9&.\-]{1,60})\b", lines[0])
+            cand = (m2.group(1).strip() if m2 else "")
+
+        if cand:
+            # Require at least 2 mentions in the first chunk to reduce false positives.
+            mentions = sum(1 for ln in lines[:60] if cand.lower() in ln.lower())
+            if mentions >= 2 and cand.lower() not in {"remote", "hybrid", "onsite", "on-site"}:
+                company = cand
+
     def _company_from_url(u: str) -> str:
         try:
             parsed = urlparse(u)
