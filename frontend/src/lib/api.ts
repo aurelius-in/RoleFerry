@@ -10,18 +10,10 @@ export async function api<T>(path: string, method: HttpMethod = "GET", body?: un
     const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
     url = path.startsWith("/") ? `${base}${path}` : `${base}/${path}`;
   } else {
-    // Client-side:
-    // Prefer calling the backend directly via NEXT_PUBLIC_API_URL (Railway prod).
-    // If not set (local dev), fall back to /api which can be rewritten/proxied.
-    const base = (process.env.NEXT_PUBLIC_API_URL || "").trim();
-    if (base.startsWith("http")) {
-      const cleanPath = path.startsWith("/") ? path : `/${path}`;
-      url = `${base}${cleanPath}`;
-      console.log(`[API] Client request to backend: ${url}`);
-    } else {
-      url = path.startsWith("/") ? `/api${path}` : `/api/${path}`;
-      console.log(`[API] Client request via proxy: ${url}`);
-    }
+    // Client-side: ALWAYS use the /api prefix so auth cookies are same-origin (middleware expects it).
+    // The proxy destination is configured in next.config.ts (with a safe prod fallback).
+    url = path.startsWith("/") ? `/api${path}` : `/api/${path}`;
+    console.log(`[API] Client request via proxy: ${url}`);
   }
 
   // Client-side mock behavior:
