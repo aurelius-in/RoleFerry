@@ -55,6 +55,28 @@ export default function CampaignPage() {
 
   const campaign: Campaign | null = activeContactId ? (campaignByContact[activeContactId] || null) : null;
 
+  const signatureBlock = () => {
+    try {
+      const u = JSON.parse(localStorage.getItem("rf_user") || "null");
+      const fn = String(u?.first_name || "").trim();
+      const ln = String(u?.last_name || "").trim();
+      const nm = `${fn} ${ln}`.trim();
+      const phone = String(u?.phone || "").trim();
+      const li = String(u?.linkedin_url || "").trim();
+      return [nm || "[Your Name]", phone, li].filter(Boolean).join("\n");
+    } catch {
+      return "[Your Name]";
+    }
+  };
+
+  const sign = (body: string) => {
+    const s = String(body || "").trimEnd();
+    const sig = signatureBlock();
+    // Avoid duplicating signature if user pasted it into templates
+    if (sig && s.toLowerCase().includes(sig.toLowerCase())) return s;
+    return `${s}\n\nBest,\n${sig}`.trim() + "\n";
+  };
+
   const applyVariables = (text: string, vars: Record<string, string>) => {
     let out = text;
     for (const [k, v] of Object.entries(vars)) {
@@ -116,18 +138,18 @@ export default function CampaignPage() {
       return [
         {
           subject: "Re: {{job_title}} @ {{company_name}}",
-          body:
+          body: sign(
             `Hi {{first_name}},\n\n` +
-            `Quick follow-up — is there a better person to route this to for the {{job_title}} role?\n\n` +
-            `If helpful, I can share a 2–3 bullet plan for {{painpoint_1}}.\n\n` +
-            `Best,\n[Your Name]`,
+              `Quick follow-up — is there a better person to route this to for the {{job_title}} role?\n\n` +
+              `If helpful, I can share a 2–3 bullet plan for {{painpoint_1}}.`
+          ),
         },
         {
           subject: "Last follow-up — {{job_title}}",
-          body:
+          body: sign(
             `Hi {{first_name}},\n\n` +
-            `Last follow-up. If the role is no longer active, no worries — I’m happy to be considered for similar roles.\n\n` +
-            `Best,\n[Your Name]`,
+              `Last follow-up. If the role is no longer active, no worries — I’m happy to be considered for similar roles.`
+          ),
         },
       ];
     }
@@ -135,18 +157,18 @@ export default function CampaignPage() {
       return [
         {
           subject: "Re: {{company_name}} — {{painpoint_1}} idea",
-          body:
+          body: sign(
             `Hi {{first_name}},\n\n` +
-            `Following up with one concrete angle: {{offer_snippet}}\n\n` +
-            `If it’s useful, I can send a 2–3 bullet plan with expected impact and risks.\n\n` +
-            `Best,\n[Your Name]`,
+              `Following up with one concrete angle: {{offer_snippet}}\n\n` +
+              `If it’s useful, I can send a 2–3 bullet plan with expected impact and risks.`
+          ),
         },
         {
           subject: "Last follow-up — quick question",
-          body:
+          body: sign(
             `Hi {{first_name}},\n\n` +
-            `Should I send a short 3-bullet plan, or is there someone on your team I should connect with instead?\n\n` +
-            `Best,\n[Your Name]`,
+              `Should I send a short 3-bullet plan, or is there someone on your team I should connect with instead?`
+          ),
         },
       ];
     }
@@ -154,18 +176,18 @@ export default function CampaignPage() {
       return [
         {
           subject: "Re: {{job_title}} — implementation detail",
-          body:
+          body: sign(
             `Hi {{first_name}},\n\n` +
-            `Quick follow-up with a concrete approach: {{offer_snippet}}\n\n` +
-            `Happy to share a small implementation outline (tradeoffs + expected impact).\n\n` +
-            `Best,\n[Your Name]`,
+              `Quick follow-up with a concrete approach: {{offer_snippet}}\n\n` +
+              `Happy to share a small implementation outline (tradeoffs + expected impact).`
+          ),
         },
         {
           subject: "Last follow-up — {{job_title}}",
-          body:
+          body: sign(
             `Hi {{first_name}},\n\n` +
-            `Last follow-up. If it’s helpful, I can send a short technical plan + one metric I’d aim to move.\n\n` +
-            `Best,\n[Your Name]`,
+              `Last follow-up. If it’s helpful, I can send a short technical plan + one metric I’d aim to move.`
+          ),
         },
       ];
     }
@@ -173,18 +195,18 @@ export default function CampaignPage() {
     return [
       {
         subject: "Re: {{job_title}} @ {{company_name}}",
-        body:
+        body: sign(
           `Hi {{first_name}},\n\n` +
-          `Quick follow-up on my note about the {{job_title}} role at {{company_name}}.\n\n` +
-          `If helpful, I can share a 2–3 bullet plan for {{painpoint_1}}.\n\n` +
-          `Best,\n[Your Name]`,
+            `Quick follow-up on my note about the {{job_title}} role at {{company_name}}.\n\n` +
+            `If helpful, I can share a 2–3 bullet plan for {{painpoint_1}}.`
+        ),
       },
       {
         subject: "Final follow-up — {{job_title}} @ {{company_name}}",
-        body:
+        body: sign(
           `Hi {{first_name}},\n\n` +
-          `Last follow-up — happy to share specifics if it’s useful.\n\n` +
-          `Best,\n[Your Name]`,
+            `Last follow-up — happy to share specifics if it’s useful.`
+        ),
       },
     ];
   };
@@ -240,6 +262,20 @@ export default function CampaignPage() {
     if (helperRaw) {
       try { setComposeHelper(JSON.parse(helperRaw)); } catch {}
     }
+
+    // Ensure rf_user exists so follow-up emails don't show "[Your Name]" after refresh.
+    (async () => {
+      try {
+        const existing = localStorage.getItem("rf_user");
+        if (existing) return;
+        const me = await api<any>("/auth/me", "GET");
+        if (me?.success && me?.user) {
+          localStorage.setItem("rf_user", JSON.stringify(me.user));
+        }
+      } catch {
+        // ignore
+      }
+    })();
 
     // Load previously generated per-contact campaigns if present (so switching contacts changes content immediately)
     try {
