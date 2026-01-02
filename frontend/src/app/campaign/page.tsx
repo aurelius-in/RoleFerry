@@ -52,6 +52,7 @@ export default function CampaignPage() {
   const [error, setError] = useState<string | null>(null);
   const [composeHelper, setComposeHelper] = useState<any>(null);
   const [previewWithValues, setPreviewWithValues] = useState(true);
+  const [buildStamp, setBuildStamp] = useState<string>("");
 
   const campaign: Campaign | null = activeContactId ? (campaignByContact[activeContactId] || null) : null;
 
@@ -239,6 +240,9 @@ export default function CampaignPage() {
   }, [activeContactId, contacts]);
 
   useEffect(() => {
+    // Ensure preview-with-values is ON by default (users can still toggle it off manually).
+    setPreviewWithValues(true);
+
     // Load mode from localStorage
     const stored = localStorage.getItem("rf_mode");
     if (stored === 'recruiter') {
@@ -309,6 +313,21 @@ export default function CampaignPage() {
     
     window.addEventListener('modeChanged', handleModeChange as EventListener);
     return () => window.removeEventListener('modeChanged', handleModeChange as EventListener);
+  }, []);
+
+  useEffect(() => {
+    // Build stamp (debug): confirms whether Railway is serving the latest frontend build.
+    try {
+      fetch("/__debug", { cache: "no-store" as any })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => {
+          const sha = String(j?.railwayGitCommitSha || "").trim();
+          const short = sha ? sha.slice(0, 7) : "";
+          const ts = String(j?.timestamp || "").trim();
+          setBuildStamp(short ? `build ${short}${ts ? ` • ${ts}` : ""}` : (ts ? `build • ${ts}` : ""));
+        })
+        .catch(() => {});
+    } catch {}
   }, []);
 
   const generateCampaign = async (composedEmail: any) => {
@@ -508,6 +527,11 @@ export default function CampaignPage() {
                 : 'Your 3-email sequence to pitch the candidate.'
               }
             </p>
+            {buildStamp ? (
+              <div className="mt-2 text-[11px] text-white/40 font-mono">
+                {buildStamp} • previewWithValues: {String(previewWithValues)}
+              </div>
+            ) : null}
           </div>
 
           {isGenerating ? (
