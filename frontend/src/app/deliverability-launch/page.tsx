@@ -238,6 +238,7 @@ export default function DeliverabilityLaunchPage() {
         contacts: loadSelectedContacts(),
         sending_domain: sendingDomain || undefined,
         dkim_selector: dkimSelector || undefined,
+        warmup_plan: warmupPlan,
       };
       const checks = await api<PreFlightCheck[]>(
         "/deliverability-launch/pre-flight-checks",
@@ -273,6 +274,7 @@ export default function DeliverabilityLaunchPage() {
         campaign_id: campaign.id,
         emails: campaign.emails,
         contacts: contactsForLaunch,
+        warmup_plan: warmupPlan,
       };
       const result = await api<LaunchResult>(
         "/deliverability-launch/launch",
