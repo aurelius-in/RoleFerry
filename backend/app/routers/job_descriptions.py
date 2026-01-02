@@ -746,18 +746,61 @@ def _extract_key_lines(content: str, max_items: int, keywords: List[str]) -> Lis
         if re.search(r"\d|%|\$", ln):
             score += 1
         if score > 0:
-            candidates.append((score, ln[:200]))  # type: ignore[list-item]
+            # Keep the full line here; we'll normalize/shorten later without cutting mid-sentence.
+            candidates.append((score, ln))  # type: ignore[list-item]
 
     # Sort by score desc, then keep stable order-ish by first appearance.
     # We already collected in order; stable sort preserves that for ties.
     candidates_sorted = sorted(candidates, key=lambda t: t[0], reverse=True)  # type: ignore[index]
+    def _to_max_words_no_mid_sentence(s: str, max_words: int = 35) -> str:
+        """
+        Return <= max_words words, never cutting mid-sentence.
+        If the first sentence is too long, fall back to a short clause and end with a period.
+        """
+        raw = " ".join(str(s or "").split()).strip()
+        if not raw:
+            return raw
+        words = raw.split()
+        if len(words) <= max_words and raw[-1] in ".!?":
+            return raw
+        if len(words) <= max_words:
+            # Add punctuation if missing.
+            return raw + ("." if raw[-1] not in ".!?" else "")
+
+        # Prefer sentence boundaries
+        sentences = re.split(r"(?<=[.!?])\s+", raw)
+        built: List[str] = []
+        wc = 0
+        for sent in sentences:
+            sent = sent.strip()
+            if not sent:
+                continue
+            sw = sent.split()
+            if wc + len(sw) > max_words:
+                break
+            built.append(sent)
+            wc += len(sw)
+            if wc >= max_words:
+                break
+        if built:
+            out_s = " ".join(built).strip()
+            return out_s if out_s[-1] in ".!?" else out_s + "."
+
+        # No usable sentence boundary: take first clause (comma/semicolon/dash), then ensure <= max_words.
+        clause = re.split(r"[;,–—-]\s+", raw)[0].strip()
+        cw = clause.split()
+        if len(cw) > max_words:
+            clause = " ".join(cw[:max_words]).strip()
+        return clause + ("." if clause and clause[-1] not in ".!?" else "")
+
     out: List[str] = []
     seen = set()
     for score, ln in candidates_sorted:  # type: ignore[misc]
-        if ln in seen:
+        norm = _to_max_words_no_mid_sentence(str(ln), max_words=35)
+        if not norm or norm in seen:
             continue
-        out.append(ln)
-        seen.add(ln)
+        out.append(norm)
+        seen.add(norm)
         if len(out) >= max_items:
             break
     return out
@@ -840,7 +883,7 @@ async def import_job_description(payload: JobImportRequest):
                 required_skills = required_skills[:18]
 
         # Additional structured fields (best-effort; UI can display these)
-        salary_range = _extract_salary_range(content)
+        salary_range = _extract_salary_range(content) or "Salary not provided"
         location = _extract_location_hint(content)
         work_mode = _infer_work_mode_from_text(content)
         employment_type = _infer_employment_type_from_text(content)
@@ -867,6 +910,13 @@ async def import_job_description(payload: JobImportRequest):
             max_items=3,
             keywords=["kpi", "metric", "measured", "increase", "reduce", "improve", "impact", "deliver"],
         )
+
+        # Per UX request: always include salary visibility in the card output.
+        # (Not a "metric" per se, but users want it in the Success Metrics section.)
+        if salary_range:
+            salary_line = f"Salary: {salary_range}".strip()
+            success_metrics = [salary_line] + [m for m in success_metrics if m and m != salary_line]
+            success_metrics = success_metrics[:4]
 
         parsed_json: Dict[str, Any] = {
             "pain_points": pain_points,
