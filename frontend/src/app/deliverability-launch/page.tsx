@@ -42,6 +42,8 @@ interface WarmupPlan {
   rescue_from_spam: boolean;
 }
 
+type OutreachChannel = "email" | "linkedin";
+
 export default function DeliverabilityLaunchPage() {
   const router = useRouter();
   const [mode, setMode] = useState<'job-seeker' | 'recruiter'>('job-seeker');
@@ -54,6 +56,9 @@ export default function DeliverabilityLaunchPage() {
   const [sendingDomain, setSendingDomain] = useState("");
   const [dkimSelector, setDkimSelector] = useState("");
   const [launchVerifiedOnly, setLaunchVerifiedOnly] = useState(false);
+  const [channel, setChannel] = useState<OutreachChannel>("email");
+  const [linkedinNotesByContact, setLinkedinNotesByContact] = useState<Record<string, string>>({});
+  const [linkedinNotice, setLinkedinNotice] = useState<string | null>(null);
 
   const [warmupUserKey, setWarmupUserKey] = useState<string>("anon");
   const [warmupPlan, setWarmupPlan] = useState<WarmupPlan>({
@@ -68,6 +73,151 @@ export default function DeliverabilityLaunchPage() {
     rescue_from_spam: true,
   });
   const [warmupNotice, setWarmupNotice] = useState<string | null>(null);
+
+  const persistChannel = (next: OutreachChannel) => {
+    setChannel(next);
+    try {
+      localStorage.setItem("launch_channel", next);
+    } catch {}
+  };
+
+  const readLinkedinNotes = () => {
+    try {
+      const raw = localStorage.getItem("linkedin_notes_by_contact");
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  };
+
+  const persistLinkedinNotes = (by: Record<string, string>) => {
+    try {
+      localStorage.setItem("linkedin_notes_by_contact", JSON.stringify(by || {}));
+    } catch {}
+  };
+
+  const readResearchForContact = (cid: string) => {
+    const id = String(cid || "").trim();
+    if (!id) return null;
+    try {
+      const rawBy = localStorage.getItem("context_research_by_contact");
+      const by = rawBy ? JSON.parse(rawBy) : null;
+      const hit = by && typeof by === "object" ? (by[id] || null) : null;
+      if (hit) return hit;
+    } catch {}
+    try {
+      const rawHist = localStorage.getItem("context_research_history");
+      const hist = rawHist ? JSON.parse(rawHist) : [];
+      if (Array.isArray(hist)) {
+        const h = hist.find((x: any) => String(x?.contact?.id || "") === id);
+        if (h?.research) return h.research;
+      }
+    } catch {}
+    return null;
+  };
+
+  const readPainpoint = () => {
+    // Best-effort pull (matches by selected job id first, else fallback).
+    try {
+      const selectedJobId = String(localStorage.getItem("selected_job_description_id") || "").trim();
+      const byJobRaw = localStorage.getItem("painpoint_matches_by_job");
+      if (selectedJobId && byJobRaw) {
+        const byJob = JSON.parse(byJobRaw) as Record<string, any[]>;
+        const m = byJob?.[selectedJobId]?.[0];
+        if (m?.painpoint_1) return String(m.painpoint_1);
+      }
+    } catch {}
+    try {
+      const m0 = (JSON.parse(localStorage.getItem("painpoint_matches") || "[]") || [])[0];
+      if (m0?.painpoint_1) return String(m0.painpoint_1);
+    } catch {}
+    return "";
+  };
+
+  const readOfferSnippet = () => {
+    // Prefer compose variables (edited), else fall back to last created offer.
+    try {
+      const vars = JSON.parse(localStorage.getItem("compose_variables") || "[]");
+      if (Array.isArray(vars)) {
+        const v = vars.find((x: any) => String(x?.name || "") === "{{offer_snippet}}");
+        const val = String(v?.value || "").trim();
+        if (val) return val;
+      }
+    } catch {}
+    try {
+      const composed = JSON.parse(localStorage.getItem("composed_email") || "null");
+      const vars = composed?.variables || [];
+      if (Array.isArray(vars)) {
+        const v = vars.find((x: any) => String(x?.name || "") === "{{offer_snippet}}");
+        const val = String(v?.value || "").trim();
+        if (val) return val;
+      }
+    } catch {}
+    try {
+      const offers = JSON.parse(localStorage.getItem("created_offers") || "[]");
+      const last = Array.isArray(offers) && offers.length ? offers[offers.length - 1] : null;
+      const raw = String(last?.content || "").replace(/\s+/g, " ").trim();
+      if (!raw) return "";
+      return raw.length > 180 ? raw.slice(0, 180).trim() + "…" : raw;
+    } catch {}
+    return "";
+  };
+
+  const buildLinkedinNote = (c: any) => {
+    // LinkedIn connection request notes have a tight limit (commonly ~300 chars). Keep it crisp.
+    const name = String(c?.name || "").trim();
+    const first = name ? name.split(" ")[0] : "there";
+    const company = String(c?.company || "").trim();
+    const jd = (() => {
+      try { return JSON.parse(localStorage.getItem("selected_job_description") || "null"); } catch { return null; }
+    })();
+    const jobTitle = String(jd?.title || "a role").trim();
+    const pain = readPainpoint();
+    const offer = readOfferSnippet();
+    const r = readResearchForContact(String(c?.id || "")) || {};
+    const hook = String(r?.recent_news?.[0]?.summary || "").replace(/\s+/g, " ").trim();
+
+    // Prefer: personal + 1 line value + tiny CTA
+    const pieces: string[] = [];
+    pieces.push(`Hi ${first} —`);
+    if (company) pieces.push(`I’m exploring ${jobTitle} at ${company}.`);
+    else pieces.push(`I’m exploring ${jobTitle}.`);
+
+    const valueLine =
+      offer
+        ? `I have a quick idea: ${offer}`
+        : pain
+          ? `Quick thought on ${pain}.`
+          : "";
+    if (valueLine) pieces.push(valueLine);
+    if (hook && hook.length >= 40) {
+      // Only include if it’s short enough to be meaningful in a note.
+      const shortHook = hook.length > 90 ? hook.slice(0, 90).trim() + "…" : hook;
+      pieces.push(`Also saw: ${shortHook}`);
+    }
+    pieces.push("Open to connect?");
+
+    let note = pieces.join(" ").replace(/\s+/g, " ").trim();
+    // Hard cap to keep under LinkedIn note limits.
+    const max = 280;
+    if (note.length > max) note = note.slice(0, max - 1).trimEnd() + "…";
+    return note;
+  };
+
+  const generateLinkedinNotes = () => {
+    const contacts = loadSelectedContacts();
+    const by: Record<string, string> = {};
+    for (const c of contacts) {
+      const cid = String(c?.id || "").trim();
+      if (!cid) continue;
+      by[cid] = buildLinkedinNote(c);
+    }
+    setLinkedinNotesByContact(by);
+    persistLinkedinNotes(by);
+    setLinkedinNotice(`Generated ${Object.keys(by).length} LinkedIn note(s).`);
+    window.setTimeout(() => setLinkedinNotice(null), 2200);
+  };
 
   const computeCampaignSummary = () => {
     const d = new Date();
@@ -151,6 +301,16 @@ export default function DeliverabilityLaunchPage() {
       setCampaign(JSON.parse(campaignData));
     }
 
+    // Load channel + previously generated LinkedIn notes
+    try {
+      const ch = String(localStorage.getItem("launch_channel") || "").trim();
+      if (ch === "linkedin" || ch === "email") setChannel(ch as OutreachChannel);
+    } catch {}
+    try {
+      const notes = readLinkedinNotes();
+      setLinkedinNotesByContact(notes);
+    } catch {}
+
     // Load warmup plan (per user)
     try {
       const u = JSON.parse(localStorage.getItem("rf_user") || "null");
@@ -214,6 +374,13 @@ export default function DeliverabilityLaunchPage() {
   }, [warmupPlan]);
 
   const runPreFlightChecks = async () => {
+    if (channel === "linkedin") {
+      // For LinkedIn outreach we don't run email deliverability checks.
+      setPreFlightChecks([]);
+      setError(null);
+      generateLinkedinNotes();
+      return;
+    }
     setIsRunningChecks(true);
     setError(null);
 
@@ -254,6 +421,17 @@ export default function DeliverabilityLaunchPage() {
   };
 
   const launchCampaign = async () => {
+    if (channel === "linkedin") {
+      // No automated sending. This page provides copy-ready notes; user sends on LinkedIn.
+      setLaunchResult({
+        success: true,
+        message: "LinkedIn mode: copy your notes and send them as connection request notes in LinkedIn.",
+        campaign_id: "linkedin_manual",
+        emails_sent: 0,
+        scheduled_emails: 0,
+      });
+      return;
+    }
     setIsLaunching(true);
     setError(null);
 
@@ -463,7 +641,161 @@ export default function DeliverabilityLaunchPage() {
                 })()}
               </div>
 
+              {/* Outreach Channel */}
+              <div className="bg-black/20 border border-white/10 rounded-lg p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl font-semibold text-white">Channel</h2>
+                    <p className="mt-1 text-sm text-white/70">
+                      Choose how you’ll reach out. Email uses pre-flight checks; LinkedIn generates short connection request notes (no warm-up needed).
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => persistChannel("email")}
+                      className={`px-3 py-2 rounded-md text-sm font-semibold border transition-colors ${
+                        channel === "email"
+                          ? "brand-gradient text-black border-white/10"
+                          : "bg-white/5 text-white/80 border-white/10 hover:bg-white/10"
+                      }`}
+                    >
+                      Email
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => persistChannel("linkedin")}
+                      className={`px-3 py-2 rounded-md text-sm font-semibold border transition-colors ${
+                        channel === "linkedin"
+                          ? "brand-gradient text-black border-white/10"
+                          : "bg-white/5 text-white/80 border-white/10 hover:bg-white/10"
+                      }`}
+                    >
+                      LinkedIn “Add a note”
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* LinkedIn notes (manual send) */}
+              {channel === "linkedin" ? (
+                <div className="bg-black/20 border border-white/10 rounded-lg p-6">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h2 className="text-xl font-semibold text-white">LinkedIn connection request notes</h2>
+                      <p className="mt-1 text-sm text-white/70">
+                        These are short, copy-ready notes for connection requests. They use your existing job context, offer, and saved research (when available).
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={generateLinkedinNotes}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors"
+                    >
+                      Generate notes
+                    </button>
+                  </div>
+
+                  {linkedinNotice ? (
+                    <div className="mt-3 rounded-md border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                      {linkedinNotice}
+                    </div>
+                  ) : null}
+
+                  <div className="mt-4 space-y-3">
+                    {loadSelectedContacts().map((c: any) => {
+                      const cid = String(c?.id || "").trim();
+                      const note = cid ? String(linkedinNotesByContact?.[cid] || "") : "";
+                      const len = note.length;
+                      const hasLinkedin = Boolean(String(c?.linkedin_url || "").trim());
+                      return (
+                        <div key={`li_${cid}`} className="rounded-lg border border-white/10 bg-white/5 p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="text-sm font-semibold text-white">{String(c?.name || "Contact")}</div>
+                              <div className="text-xs text-white/60">
+                                {String(c?.title || "Decision maker")}
+                                {c?.company ? ` • ${String(c.company)}` : ""}
+                              </div>
+                              {hasLinkedin ? (
+                                <a
+                                  href={String(c.linkedin_url)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-block mt-1 text-xs text-blue-300 underline hover:text-blue-200"
+                                >
+                                  Open LinkedIn profile
+                                </a>
+                              ) : (
+                                <div className="mt-1 text-xs text-yellow-200/80">
+                                  Missing LinkedIn URL — run Find Contact again or add `linkedin_url` to this contact.
+                                </div>
+                              )}
+                            </div>
+                            <div className="shrink-0 text-[11px] text-white/60">
+                              {len}/280
+                            </div>
+                          </div>
+
+                          <div className="mt-3 grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
+                            <div className="md:col-span-10">
+                              <textarea
+                                value={note}
+                                onChange={(e) => {
+                                  const v = e.target.value.slice(0, 280);
+                                  const next = { ...(linkedinNotesByContact || {}) };
+                                  if (cid) next[cid] = v;
+                                  setLinkedinNotesByContact(next);
+                                  persistLinkedinNotes(next);
+                                }}
+                                placeholder="Click “Generate notes” to fill this."
+                                className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500 h-24"
+                              />
+                            </div>
+                            <div className="md:col-span-2 flex md:flex-col gap-2">
+                              <button
+                                type="button"
+                                disabled={!note}
+                                onClick={async () => {
+                                  try {
+                                    await navigator.clipboard.writeText(note);
+                                    setLinkedinNotice("Copied note to clipboard.");
+                                    window.setTimeout(() => setLinkedinNotice(null), 1600);
+                                  } catch {}
+                                }}
+                                className="w-full bg-white text-black px-3 py-2 rounded-md text-xs font-bold hover:bg-white/90 disabled:opacity-50"
+                              >
+                                Copy
+                              </button>
+                              <button
+                                type="button"
+                                disabled={!cid}
+                                onClick={() => {
+                                  if (!cid) return;
+                                  const next = { ...(linkedinNotesByContact || {}) };
+                                  next[cid] = buildLinkedinNote(c);
+                                  setLinkedinNotesByContact(next);
+                                  persistLinkedinNotes(next);
+                                }}
+                                className="w-full bg-white/5 text-white px-3 py-2 rounded-md text-xs font-bold border border-white/10 hover:bg-white/10 disabled:opacity-50"
+                              >
+                                Refresh
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-4 rounded-md border border-white/10 bg-black/30 p-3 text-xs text-white/70">
+                    Tip: keep notes short and specific. If LinkedIn rejects a note, trim it (280 chars max here).
+                  </div>
+                </div>
+              ) : null}
+
               {/* Email warm-up (what most outreach tools include) */}
+              {channel === "email" ? (
               <div className="bg-black/20 border border-white/10 rounded-lg p-6">
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -639,8 +971,10 @@ export default function DeliverabilityLaunchPage() {
                   </div>
                 ) : null}
               </div>
+              ) : null}
 
               {/* Pre-Flight Checks */}
+              {channel === "email" ? (
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-white">Pre-Flight Checks</h2>
@@ -709,9 +1043,11 @@ export default function DeliverabilityLaunchPage() {
                   </div>
                 )}
               </div>
+              ) : null}
 
               {/* Launch Section */}
-              {preFlightChecks.length > 0 && (
+              {channel === "email" ? (
+              preFlightChecks.length > 0 && (
                 <div className="bg-black/20 border border-white/10 rounded-lg p-6">
                   <h2 className="text-xl font-semibold text-white mb-4">Launch Campaign</h2>
                   
@@ -776,6 +1112,30 @@ export default function DeliverabilityLaunchPage() {
                   >
                     {isLaunching ? "Launching Campaign..." : "Launch Campaign"}
                   </button>
+                </div>
+              )
+              ) : (
+                <div className="bg-black/20 border border-white/10 rounded-lg p-6">
+                  <h2 className="text-xl font-semibold text-white mb-2">Send on LinkedIn</h2>
+                  <p className="text-sm text-white/70 mb-4">
+                    LinkedIn mode is manual send. Generate/copy your notes above and send them as connection request notes.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={generateLinkedinNotes}
+                      className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
+                    >
+                      Regenerate notes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => router.push("/tracker")}
+                      className="bg-white text-black px-6 py-3 rounded-md font-medium hover:bg-white/90 transition-colors"
+                    >
+                      Go to Tracker →
+                    </button>
+                  </div>
                 </div>
               )}
 
