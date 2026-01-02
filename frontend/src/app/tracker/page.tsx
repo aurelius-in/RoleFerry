@@ -72,17 +72,13 @@ const mockApplications = [
 export default function TrackerPage() {
   const [view, setView] = useState<'board' | 'table'>('board');
   const [mode, setMode] = useState<TrackerMode>('jobseeker');
-  const [dataMode, setDataMode] = useState<DataMode>('demo');
+  const [dataMode, setDataMode] = useState<DataMode>(() => getCurrentDataMode());
   const [applications, setApplications] = useState<TrackerApp[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showInsights, setShowInsights] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
-  useEffect(() => {
-    const initial = getCurrentDataMode();
-    setDataMode(initial);
-    const unsubscribe = subscribeToDataModeChanges(setDataMode);
-    return unsubscribe;
-  }, []);
+  useEffect(() => subscribeToDataModeChanges(setDataMode), []);
 
   useEffect(() => {
     if (dataMode === 'demo') {
@@ -91,6 +87,7 @@ export default function TrackerPage() {
         const parsed = raw ? JSON.parse(raw) : null;
         if (Array.isArray(parsed) && parsed.length) {
           setApplications(parsed);
+          setHasLoaded(true);
           return;
         }
       } catch {}
@@ -102,6 +99,7 @@ export default function TrackerPage() {
         lastContact: String(a.lastContact || todayISO()),
       })) as TrackerApp[];
       setApplications(seeded);
+      setHasLoaded(true);
     } else {
       // Live mode - for now we still use local storage as primary UI state
       // but in a real app we would fetch from /api/applications
@@ -110,6 +108,7 @@ export default function TrackerPage() {
         const parsed = raw ? JSON.parse(raw) : [];
         setApplications(Array.isArray(parsed) ? parsed : []);
       } catch {}
+      setHasLoaded(true);
     }
   }, [dataMode]);
 
@@ -146,9 +145,10 @@ export default function TrackerPage() {
 
   useEffect(() => {
     try {
+      if (!hasLoaded) return;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(applications));
     } catch {}
-  }, [applications]);
+  }, [applications, hasLoaded]);
 
   const columns = mode === 'jobseeker'
     ? ['Saved', 'Applied', 'Interviewing', 'Offer', 'Rejected']
