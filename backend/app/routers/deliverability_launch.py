@@ -39,6 +39,8 @@ class CampaignLaunchRequest(BaseModel):
     # Optional: sender domain info for real DNS checks (SPF/DMARC; DKIM requires selector).
     sending_domain: Optional[str] = None
     dkim_selector: Optional[str] = None
+    # Optional: warm-up plan passed from the UI (best-effort; used for a practical warm-up readiness check).
+    warmup_plan: Optional[Dict[str, Any]] = None
 
 
 class DeliverabilityEmail(BaseModel):
@@ -360,9 +362,78 @@ async def run_pre_flight_checks(request: CampaignLaunchRequest):
         )
         checks.append(warmup_check)
 
-        warmup_check.status = "fail"
-        warmup_check.message = "NOT READY — warmup status not verifiable in local demo"
-        warmup_check.details = "Warmup depends on your sending provider. We can add a warmup integration later (e.g., Instantly/Smartlead)."
+        # Warm-up readiness (best-effort):
+        # - We can't truly verify provider warm-up network activity without an integration.
+        # - But we *can* reflect the user's warm-up plan and provide actionable guidance.
+        try:
+            plan = request.warmup_plan or {}
+            enabled = bool(plan.get("enabled"))
+            provider = str(plan.get("provider") or "none").strip().lower()
+            started_at = str(plan.get("started_at") or "").strip()
+            ramp_days = int(plan.get("ramp_days") or 14)
+            start_per_day = int(plan.get("start_emails_per_day") or 8)
+            target_per_day = int(plan.get("target_emails_per_day") or 35)
+
+            if not enabled:
+                warmup_check.status = "warning"
+                warmup_check.message = "Warm-up is OFF"
+                warmup_check.details = (
+                    "Recommendation: enable warm-up and connect a provider (Warmbox/Mailreach/Lemwarm/WarmupInbox/Instantly). "
+                    "If you must launch now, keep volume low and use very clean copy."
+                )
+            elif provider in {"none", "", "diy"}:
+                warmup_check.status = "warning"
+                warmup_check.message = "Warm-up enabled, but no provider selected"
+                warmup_check.details = (
+                    f"Your plan is {start_per_day}/day → {target_per_day}/day over {ramp_days} days. "
+                    "Select a warm-up provider for best results; DIY warm-up is slower and harder to track."
+                )
+            else:
+                # Days since start (if started_at is parseable)
+                days_elapsed = None
+                try:
+                    from datetime import datetime, timezone
+
+                    dt = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
+                    days_elapsed = max(0, int((datetime.now(timezone.utc) - dt).total_seconds() // 86400))
+                except Exception:
+                    days_elapsed = None
+
+                # Heuristic gating:
+                # - <3 days: not warmed (warning)
+                # - 3..(ramp_days-1): in progress (warning)
+                # - >= ramp_days: ready (pass)
+                if days_elapsed is None:
+                    warmup_check.status = "warning"
+                    warmup_check.message = f"Warm-up enabled via {provider} (status unverified)"
+                    warmup_check.details = (
+                        f"Plan: {start_per_day}/day → {target_per_day}/day over {ramp_days} days. "
+                        "RoleFerry can’t verify provider activity yet; confirm warm-up progress in your provider dashboard."
+                    )
+                elif days_elapsed >= max(7, ramp_days):
+                    warmup_check.status = "pass"
+                    warmup_check.message = f"Warm-up likely ready (Day {days_elapsed} of {ramp_days})"
+                    warmup_check.details = (
+                        f"Provider: {provider}. Plan: {start_per_day}/day → {target_per_day}/day over {ramp_days} days. "
+                        "Still confirm inbox placement in provider dashboard before scaling volume."
+                    )
+                elif days_elapsed >= 3:
+                    warmup_check.status = "warning"
+                    warmup_check.message = f"Warm-up in progress (Day {days_elapsed} of {ramp_days})"
+                    warmup_check.details = (
+                        f"Provider: {provider}. Consider launching to a small, highly-verified subset while warm-up ramps."
+                    )
+                else:
+                    warmup_check.status = "warning"
+                    warmup_check.message = f"Warm-up just started (Day {days_elapsed} of {ramp_days})"
+                    warmup_check.details = (
+                        f"Provider: {provider}. Recommendation: wait a few days before sending to larger lists; "
+                        "keep early volume small and copy very clean."
+                    )
+        except Exception:
+            warmup_check.status = "warning"
+            warmup_check.message = "Warm-up status unavailable"
+            warmup_check.details = "Enable warm-up in the UI and select a provider for best results."
         
         # 6. GPT Deliverability Helper (explanations + copy tweaks)
         # Keep deterministic results if GPT is not configured.
@@ -811,6 +882,8 @@ async def launch_campaign(request: CampaignLaunchRequest, http_request: Request)
         
         return result
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception("Error launching campaign")
         raise HTTPException(status_code=500, detail="Failed to launch campaign")

@@ -51,9 +51,31 @@ export default function CampaignPage() {
   const [deliverabilityCheck, setDeliverabilityCheck] = useState<DeliverabilityCheck | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [composeHelper, setComposeHelper] = useState<any>(null);
-  const [previewWithValues, setPreviewWithValues] = useState(false);
+  const [previewWithValues, setPreviewWithValues] = useState(true);
 
   const campaign: Campaign | null = activeContactId ? (campaignByContact[activeContactId] || null) : null;
+
+  const signatureBlock = () => {
+    try {
+      const u = JSON.parse(localStorage.getItem("rf_user") || "null");
+      const fn = String(u?.first_name || "").trim();
+      const ln = String(u?.last_name || "").trim();
+      const nm = `${fn} ${ln}`.trim();
+      const phone = String(u?.phone || "").trim();
+      const li = String(u?.linkedin_url || "").trim();
+      return [nm || "[Your Name]", phone, li].filter(Boolean).join("\n");
+    } catch {
+      return "[Your Name]";
+    }
+  };
+
+  const sign = (body: string) => {
+    const s = String(body || "").trimEnd();
+    const sig = signatureBlock();
+    // Avoid duplicating signature if user pasted it into templates
+    if (sig && s.toLowerCase().includes(sig.toLowerCase())) return s;
+    return `${s}\n\nBest,\n${sig}`.trim() + "\n";
+  };
 
   const applyVariables = (text: string, vars: Record<string, string>) => {
     let out = text;
@@ -62,6 +84,131 @@ export default function CampaignPage() {
       out = out.split(k).join(v ?? "");
     }
     return out;
+  };
+
+  const loadResearchForContact = (cid: string | null) => {
+    if (!cid) return null;
+    try {
+      const raw = localStorage.getItem("context_research_by_contact");
+      const by = raw ? JSON.parse(raw) : null;
+      const entry = by && typeof by === "object" ? (by[String(cid)] || null) : null;
+      return entry || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const inferPersona = (c: any): "recruiter" | "exec" | "manager" | "developer" | "sales" => {
+    const title = String(c?.title || "").toLowerCase();
+    const dept = String(c?.department || "").toLowerCase();
+    const level = String(c?.level || "").toLowerCase();
+
+    if (title.includes("recruit") || title.includes("talent") || dept.includes("recruit") || dept.includes("hr")) return "recruiter";
+    if (title.includes("sales") || title.includes("account executive") || title.includes("rev") || dept.includes("sales")) return "sales";
+    if (level.includes("c-") || title.includes("chief") || title.includes("cto") || title.includes("ceo") || title.includes("cfo")) return "exec";
+    if (title.includes("vp") || title.includes("head of") || title.includes("director")) return "exec";
+    if (title.includes("engineer") || title.includes("developer") || title.includes("sre") || title.includes("devops") || dept.includes("engineering")) return "developer";
+    return "manager";
+  };
+
+  const pickComposeVariant = (persona: string): { subject?: string; body?: string } | null => {
+    // Prefer helper variants (generated in Compose) that match the persona tone.
+    const variants = (composeHelper?.variants || []) as any[];
+    if (!Array.isArray(variants) || variants.length === 0) return null;
+
+    const norm = (s: any) => String(s || "").toLowerCase();
+    const scored = variants.map((v) => {
+      const label = norm(v?.label);
+      const audience = norm(v?.audience_tone);
+      let score = 0;
+      if (audience && audience.includes(persona)) score += 5;
+      if (persona === "recruiter" && (label.includes("short") || label.includes("direct"))) score += 2;
+      if (persona === "exec" && (label.includes("exec") || label.includes("roi") || label.includes("outcome"))) score += 2;
+      if (persona === "developer" && (label.includes("dev") || label.includes("tech"))) score += 2;
+      return { v, score };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    const best = scored[0]?.v;
+    if (!best) return null;
+    return { subject: best.subject, body: best.body };
+  };
+
+  const buildFollowUps = (persona: string) => {
+    if (persona === "recruiter") {
+      return [
+        {
+          subject: "Re: {{job_title}} @ {{company_name}}",
+          body: sign(
+            `Hi {{first_name}},\n\n` +
+              `Quick follow-up — is there a better person to route this to for the {{job_title}} role?\n\n` +
+              `If helpful, I can share a 2–3 bullet plan for {{painpoint_1}}.`
+          ),
+        },
+        {
+          subject: "Last follow-up — {{job_title}}",
+          body: sign(
+            `Hi {{first_name}},\n\n` +
+              `Last follow-up. If the role is no longer active, no worries — I’m happy to be considered for similar roles.`
+          ),
+        },
+      ];
+    }
+    if (persona === "exec") {
+      return [
+        {
+          subject: "Re: {{company_name}} — {{painpoint_1}} idea",
+          body: sign(
+            `Hi {{first_name}},\n\n` +
+              `Following up with one concrete angle: {{offer_snippet}}\n\n` +
+              `If it’s useful, I can send a 2–3 bullet plan with expected impact and risks.`
+          ),
+        },
+        {
+          subject: "Last follow-up — quick question",
+          body: sign(
+            `Hi {{first_name}},\n\n` +
+              `Should I send a short 3-bullet plan, or is there someone on your team I should connect with instead?`
+          ),
+        },
+      ];
+    }
+    if (persona === "developer") {
+      return [
+        {
+          subject: "Re: {{job_title}} — implementation detail",
+          body: sign(
+            `Hi {{first_name}},\n\n` +
+              `Quick follow-up with a concrete approach: {{offer_snippet}}\n\n` +
+              `Happy to share a small implementation outline (tradeoffs + expected impact).`
+          ),
+        },
+        {
+          subject: "Last follow-up — {{job_title}}",
+          body: sign(
+            `Hi {{first_name}},\n\n` +
+              `Last follow-up. If it’s helpful, I can send a short technical plan + one metric I’d aim to move.`
+          ),
+        },
+      ];
+    }
+    // manager/sales default
+    return [
+      {
+        subject: "Re: {{job_title}} @ {{company_name}}",
+        body: sign(
+          `Hi {{first_name}},\n\n` +
+            `Quick follow-up on my note about the {{job_title}} role at {{company_name}}.\n\n` +
+            `If helpful, I can share a 2–3 bullet plan for {{painpoint_1}}.`
+        ),
+      },
+      {
+        subject: "Final follow-up — {{job_title}} @ {{company_name}}",
+        body: sign(
+          `Hi {{first_name}},\n\n` +
+            `Last follow-up — happy to share specifics if it’s useful.`
+        ),
+      },
+    ];
   };
 
   const activeVarMap = useMemo(() => {
@@ -80,6 +227,13 @@ export default function CampaignPage() {
     const first = String(c?.name || "").trim().split(" ")[0] || "there";
     if (first) map["{{first_name}}"] = first;
     if (c?.company) map["{{company_name}}"] = String(c.company);
+    if (c?.title) map["{{contact_title}}"] = String(c.title);
+
+    // Pull per-contact research so selecting a contact actually changes the context.
+    const r = loadResearchForContact(activeContactId);
+    if (r?.company_summary?.description) map["{{company_summary}}"] = String(r.company_summary.description);
+    if (r?.recent_news?.[0]?.summary) map["{{recent_news}}"] = String(r.recent_news[0].summary);
+    if (r?.contact_bios?.[0]?.bio) map["{{contact_bio}}"] = String(r.contact_bios[0].bio);
 
     return map;
   }, [activeContactId, contacts]);
@@ -96,22 +250,57 @@ export default function CampaignPage() {
       const selected = JSON.parse(localStorage.getItem("selected_contacts") || "[]");
       if (Array.isArray(selected)) {
         setContacts(selected);
-        if (selected.length) setActiveContactId(String(selected[0]?.id || ""));
+        // Restore last active contact if we have one
+        const savedActive = String(localStorage.getItem("campaign_active_contact_id") || "").trim();
+        const fallbackId = selected?.[0]?.id ? String(selected[0].id) : "";
+        setActiveContactId((savedActive && selected.some((c: any) => String(c?.id || "") === savedActive)) ? savedActive : (fallbackId || null));
       }
     } catch {}
-
-    // Load composed email from previous step
-    const composedEmail = localStorage.getItem('composed_email');
-    if (composedEmail) {
-      const emailData = JSON.parse(composedEmail);
-      generateCampaign(emailData);
-    }
 
     // Load helper suggestions from Compose
     const helperRaw = localStorage.getItem("compose_helper");
     if (helperRaw) {
       try { setComposeHelper(JSON.parse(helperRaw)); } catch {}
     }
+
+    // Ensure rf_user exists so follow-up emails don't show "[Your Name]" after refresh.
+    (async () => {
+      try {
+        const existing = localStorage.getItem("rf_user");
+        if (existing) return;
+        const me = await api<any>("/auth/me", "GET");
+        if (me?.success && me?.user) {
+          localStorage.setItem("rf_user", JSON.stringify(me.user));
+        }
+      } catch {
+        // ignore
+      }
+    })();
+
+    // Load previously generated per-contact campaigns if present (so switching contacts changes content immediately)
+    try {
+      const byRaw = localStorage.getItem("campaign_by_contact");
+      const by = byRaw ? JSON.parse(byRaw) : null;
+      if (by && typeof by === "object") {
+        setCampaignByContact(by);
+      }
+    } catch {}
+    
+    // Load composed email from previous step and generate a per-contact campaign set if needed
+    try {
+      const composedEmail = localStorage.getItem('composed_email');
+      if (composedEmail) {
+        const emailData = JSON.parse(composedEmail);
+        // If we don't already have saved per-contact campaigns, generate them.
+        const existing = (() => {
+          try { return JSON.parse(localStorage.getItem("campaign_by_contact") || "null"); } catch { return null; }
+        })();
+        const hasExisting = existing && typeof existing === "object" && Object.keys(existing).length > 0;
+        if (!hasExisting) {
+          generateCampaign(emailData);
+        }
+      }
+    } catch {}
     
     // Listen for mode changes
     const handleModeChange = (event: CustomEvent) => {
@@ -140,47 +329,6 @@ export default function CampaignPage() {
         }
       } catch {}
 
-      // Generate 3 emails based on composed email (keep placeholders; no substitution)
-      const emails: EmailStep[] = [
-        {
-          id: "email_1",
-          step_number: 1,
-          subject: composedEmail.subject,
-          body: composedEmail.body,
-          delay_days: 0,
-          delay_hours: 0,
-          stop_on_reply: true,
-          variables: {}
-        },
-        {
-          id: "email_2",
-          step_number: 2,
-          subject: `Re: ${composedEmail.subject}`,
-          body:
-            `Hi {{first_name}},\n\n`
-            + `Quick follow-up on my note about the {{job_title}} role at {{company_name}}.\n\n`
-            + `If helpful, I can share a 2–3 bullet plan for {{painpoint_1}}.\n\n`
-            + `Best,\n[Your Name]`,
-          delay_days: 2,
-          delay_hours: 0,
-          stop_on_reply: true,
-          variables: {}
-        },
-        {
-          id: "email_3",
-          step_number: 3,
-          subject: `Final follow-up — {{job_title}} @ {{company_name}}`,
-          body:
-            `Hi {{first_name}},\n\n`
-            + `Last follow-up — happy to share specifics if it’s useful.\n\n`
-            + `Best,\n[Your Name]`,
-          delay_days: 4,
-          delay_hours: 0,
-          stop_on_reply: true,
-          variables: {}
-        }
-      ];
-
       const selectedContacts = (() => {
         try {
           const sel = JSON.parse(localStorage.getItem("selected_contacts") || "[]");
@@ -194,9 +342,49 @@ export default function CampaignPage() {
       for (const c of selectedContacts) {
         const cid = String(c?.id || "");
         if (!cid) continue;
+        const persona = inferPersona(c);
+        const v = pickComposeVariant(persona);
+        const followUps = buildFollowUps(persona);
+
+        const email1Subject = String(v?.subject || composedEmail.subject || "").trim() || "{{job_title}} at {{company_name}} — quick idea";
+        const email1Body = String(v?.body || composedEmail.body || "").trim() || composedEmail.body;
+
+        const emails: EmailStep[] = [
+          {
+            id: `email_1_${cid}`,
+            step_number: 1,
+            subject: email1Subject,
+            body: email1Body,
+            delay_days: 0,
+            delay_hours: 0,
+            stop_on_reply: true,
+            variables: {},
+          },
+          {
+            id: `email_2_${cid}`,
+            step_number: 2,
+            subject: followUps[0].subject,
+            body: followUps[0].body,
+            delay_days: 2,
+            delay_hours: 0,
+            stop_on_reply: true,
+            variables: {},
+          },
+          {
+            id: `email_3_${cid}`,
+            step_number: 3,
+            subject: followUps[1].subject,
+            body: followUps[1].body,
+            delay_days: 4,
+            delay_hours: 0,
+            stop_on_reply: true,
+            variables: {},
+          },
+        ];
+
         byContact[cid] = {
           id: `campaign_${cid}`,
-          name: `${mode === 'job-seeker' ? 'Job Application' : 'Candidate Pitch'} Campaign`,
+          name: `${mode === 'job-seeker' ? 'Job Application' : 'Candidate Pitch'} Campaign • ${String(c?.name || "").split(" ")[0] || "Contact"}`,
           status: 'draft',
           emails: emails.map((e) => ({ ...e })),
           created_at: now,
@@ -204,6 +392,9 @@ export default function CampaignPage() {
         };
       }
       setCampaignByContact(byContact);
+      try {
+        localStorage.setItem("campaign_by_contact", JSON.stringify(byContact));
+      } catch {}
     } catch (err) {
       setError("Failed to generate campaign. Please try again.");
     } finally {
@@ -460,7 +651,7 @@ export default function CampaignPage() {
 
               <div className="flex items-center justify-between gap-3">
                 <div className="text-xs text-white/60">
-                  Select a contact on the left to edit their outreach (coming next in this rollout).
+                  Selecting a contact switches to their sequence (subjects/follow-ups vary by persona, and previews use that contact’s research).
                 </div>
                 <label className="flex items-center gap-2 text-xs text-white/70">
                   <input

@@ -21,6 +21,27 @@ interface LaunchResult {
   errors?: string[];
 }
 
+type WarmupProvider =
+  | "warmbox"
+  | "mailreach"
+  | "lemwarm"
+  | "warmupinbox"
+  | "instantly"
+  | "diy"
+  | "none";
+
+interface WarmupPlan {
+  enabled: boolean;
+  provider: WarmupProvider;
+  started_at: string; // ISO date
+  start_emails_per_day: number;
+  target_emails_per_day: number;
+  ramp_days: number;
+  weekdays_only: boolean;
+  reply_rate_pct: number; // simulated replies in warmup network
+  rescue_from_spam: boolean;
+}
+
 export default function DeliverabilityLaunchPage() {
   const router = useRouter();
   const [mode, setMode] = useState<'job-seeker' | 'recruiter'>('job-seeker');
@@ -33,6 +54,20 @@ export default function DeliverabilityLaunchPage() {
   const [sendingDomain, setSendingDomain] = useState("");
   const [dkimSelector, setDkimSelector] = useState("");
   const [launchVerifiedOnly, setLaunchVerifiedOnly] = useState(false);
+
+  const [warmupUserKey, setWarmupUserKey] = useState<string>("anon");
+  const [warmupPlan, setWarmupPlan] = useState<WarmupPlan>({
+    enabled: false,
+    provider: "none",
+    started_at: new Date().toISOString(),
+    start_emails_per_day: 8,
+    target_emails_per_day: 35,
+    ramp_days: 14,
+    weekdays_only: true,
+    reply_rate_pct: 35,
+    rescue_from_spam: true,
+  });
+  const [warmupNotice, setWarmupNotice] = useState<string | null>(null);
 
   const computeCampaignSummary = () => {
     const d = new Date();
@@ -115,6 +150,21 @@ export default function DeliverabilityLaunchPage() {
     if (campaignData) {
       setCampaign(JSON.parse(campaignData));
     }
+
+    // Load warmup plan (per user)
+    try {
+      const u = JSON.parse(localStorage.getItem("rf_user") || "null");
+      const uid = String(u?.id || "anon");
+      setWarmupUserKey(uid);
+      const key = `warmup_plan:${uid}`;
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+          setWarmupPlan((prev) => ({ ...prev, ...(parsed as any) }));
+        }
+      }
+    } catch {}
     
     // Listen for mode changes
     const handleModeChange = (event: CustomEvent) => {
@@ -124,6 +174,44 @@ export default function DeliverabilityLaunchPage() {
     window.addEventListener('modeChanged', handleModeChange as EventListener);
     return () => window.removeEventListener('modeChanged', handleModeChange as EventListener);
   }, []);
+
+  useEffect(() => {
+    // Persist warmup plan (per user)
+    try {
+      const key = `warmup_plan:${warmupUserKey || "anon"}`;
+      localStorage.setItem(key, JSON.stringify(warmupPlan));
+    } catch {}
+  }, [warmupPlan, warmupUserKey]);
+
+  const warmupSchedule = useMemo(() => {
+    // Basic linear ramp schedule (like most warmup tools show), for demo UX.
+    const start = Math.max(1, Number(warmupPlan.start_emails_per_day || 1));
+    const target = Math.max(start, Number(warmupPlan.target_emails_per_day || start));
+    const days = Math.max(7, Math.min(30, Number(warmupPlan.ramp_days || 14)));
+    const out: Array<{ day: number; date: string; emails: number }> = [];
+    const d0 = new Date(warmupPlan.started_at || new Date().toISOString());
+
+    const step = (target - start) / Math.max(days - 1, 1);
+    let cur = start;
+    let i = 0;
+    while (out.length < days && i < 80) {
+      const dt = new Date(d0);
+      dt.setDate(d0.getDate() + i);
+      const dow = dt.getDay(); // 0 Sun .. 6 Sat
+      const isWeekend = dow === 0 || dow === 6;
+      const include = warmupPlan.weekdays_only ? !isWeekend : true;
+      if (include) {
+        out.push({
+          day: out.length + 1,
+          date: dt.toISOString().slice(0, 10),
+          emails: Math.round(cur),
+        });
+        cur += step;
+      }
+      i += 1;
+    }
+    return out;
+  }, [warmupPlan]);
 
   const runPreFlightChecks = async () => {
     setIsRunningChecks(true);
@@ -150,6 +238,7 @@ export default function DeliverabilityLaunchPage() {
         contacts: loadSelectedContacts(),
         sending_domain: sendingDomain || undefined,
         dkim_selector: dkimSelector || undefined,
+        warmup_plan: warmupPlan,
       };
       const checks = await api<PreFlightCheck[]>(
         "/deliverability-launch/pre-flight-checks",
@@ -185,6 +274,7 @@ export default function DeliverabilityLaunchPage() {
         campaign_id: campaign.id,
         emails: campaign.emails,
         contacts: contactsForLaunch,
+        warmup_plan: warmupPlan,
       };
       const result = await api<LaunchResult>(
         "/deliverability-launch/launch",
@@ -371,6 +461,183 @@ export default function DeliverabilityLaunchPage() {
                     </>
                   );
                 })()}
+              </div>
+
+              {/* Email warm-up (what most outreach tools include) */}
+              <div className="bg-black/20 border border-white/10 rounded-lg p-6">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-xl font-semibold text-white">Email Warm-up</h2>
+                    <p className="mt-1 text-sm text-white/70">
+                      Warm-up gradually builds sender reputation by sending low-volume emails that get opens/replies (usually via a warm-up network).
+                      Most teams run this for <span className="font-semibold text-white/80">10–21 days</span> before launching to real contacts.
+                    </p>
+                  </div>
+                  <label className="flex items-center gap-2 text-xs text-white/70">
+                    <input
+                      type="checkbox"
+                      checked={warmupPlan.enabled}
+                      onChange={(e) => {
+                        const next = e.target.checked;
+                        setWarmupPlan((p) => ({ ...p, enabled: next, started_at: next ? new Date().toISOString() : p.started_at }));
+                        setWarmupNotice(next ? "Warm-up enabled (plan saved)." : "Warm-up disabled (plan saved).");
+                        window.setTimeout(() => setWarmupNotice(null), 2200);
+                      }}
+                    />
+                    Enable warm-up
+                  </label>
+                </div>
+
+                {warmupNotice ? (
+                  <div className="mt-3 rounded-md border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                    {warmupNotice}
+                  </div>
+                ) : null}
+
+                <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div className="lg:col-span-2 rounded-lg border border-white/10 bg-white/5 p-4">
+                    <div className="text-sm font-semibold text-white mb-2">Choose a warm-up method</div>
+                    <div className="text-xs text-white/60 mb-3">
+                      RoleFerry doesn’t run a warm-up network itself (most apps plug into a provider). Pick one, then follow their connection steps.
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {[
+                        { id: "warmbox", label: "Warmbox", hint: "AI warm-up, opens/replies, spam rescue", url: "https://www.warmbox.ai/" },
+                        { id: "mailreach", label: "Mailreach", hint: "Warm-up + deliverability monitoring", url: "https://mailreach.co/" },
+                        { id: "lemwarm", label: "Lemwarm (Lemlist)", hint: "Warm-up network (Lemlist ecosystem)", url: "https://www.lemlist.com/lemwarm" },
+                        { id: "warmupinbox", label: "Warmup Inbox", hint: "Large warm-up inbox network", url: "https://www.warmupinbox.com/" },
+                        { id: "instantly", label: "Instantly Warmup", hint: "Warm-up inside Instantly", url: "https://instantly.ai/" },
+                        { id: "diy", label: "DIY", hint: "Manual warm-up (harder; slower)", url: "https://support.google.com/a/answer/174124?hl=en" },
+                      ].map((p) => {
+                        const active = warmupPlan.provider === (p.id as WarmupProvider);
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => setWarmupPlan((prev) => ({ ...prev, provider: p.id as WarmupProvider }))}
+                            className={`text-left rounded-md border p-3 transition-colors ${
+                              active ? "border-blue-400/60 bg-blue-500/10" : "border-white/10 bg-black/20 hover:bg-black/30"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="text-sm font-semibold text-white">{p.label}</div>
+                              {active ? <div className="text-xs text-blue-200/80">Selected</div> : null}
+                            </div>
+                            <div className="mt-1 text-xs text-white/60">{p.hint}</div>
+                            <div className="mt-2 text-xs">
+                              <a
+                                href={p.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-blue-300 underline hover:text-blue-200"
+                              >
+                                Open setup (new tab)
+                              </a>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+                    <div className="text-sm font-semibold text-white mb-2">Ramp settings</div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="text-xs text-white/60 mb-1">Start/day</div>
+                        <input
+                          type="number"
+                          min={1}
+                          max={50}
+                          value={warmupPlan.start_emails_per_day}
+                          onChange={(e) => setWarmupPlan((p) => ({ ...p, start_emails_per_day: Math.max(1, parseInt(e.target.value) || 1) }))}
+                          className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none"
+                        />
+                      </div>
+                      <div>
+                        <div className="text-xs text-white/60 mb-1">Target/day</div>
+                        <input
+                          type="number"
+                          min={1}
+                          max={120}
+                          value={warmupPlan.target_emails_per_day}
+                          onChange={(e) => setWarmupPlan((p) => ({ ...p, target_emails_per_day: Math.max(1, parseInt(e.target.value) || 1) }))}
+                          className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none"
+                        />
+                      </div>
+                      <div>
+                        <div className="text-xs text-white/60 mb-1">Ramp days</div>
+                        <input
+                          type="number"
+                          min={7}
+                          max={30}
+                          value={warmupPlan.ramp_days}
+                          onChange={(e) => setWarmupPlan((p) => ({ ...p, ramp_days: Math.max(7, Math.min(30, parseInt(e.target.value) || 14)) }))}
+                          className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none"
+                        />
+                      </div>
+                      <div>
+                        <div className="text-xs text-white/60 mb-1">Reply rate %</div>
+                        <input
+                          type="number"
+                          min={0}
+                          max={80}
+                          value={warmupPlan.reply_rate_pct}
+                          onChange={(e) => setWarmupPlan((p) => ({ ...p, reply_rate_pct: Math.max(0, Math.min(80, parseInt(e.target.value) || 0)) }))}
+                          className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-3 space-y-2 text-xs text-white/70">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={warmupPlan.weekdays_only}
+                          onChange={(e) => setWarmupPlan((p) => ({ ...p, weekdays_only: e.target.checked }))}
+                        />
+                        Weekdays only
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={warmupPlan.rescue_from_spam}
+                          onChange={(e) => setWarmupPlan((p) => ({ ...p, rescue_from_spam: e.target.checked }))}
+                        />
+                        Enable “rescue from spam” behavior (if provider supports it)
+                      </label>
+                    </div>
+
+                    <div className="mt-3 rounded-md border border-white/10 bg-black/20 p-3 text-xs text-white/70">
+                      <div className="font-semibold text-white/80 mb-1">Best practice</div>
+                      Keep real sending separate while warming up (or send very low volume), avoid heavy links, and increase slowly.
+                    </div>
+                  </div>
+                </div>
+
+                {warmupPlan.enabled ? (
+                  <div className="mt-4 rounded-lg border border-white/10 bg-black/20 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-semibold text-white">Warm-up schedule preview</div>
+                        <div className="text-xs text-white/60">
+                          This is the ramp RoleFerry will assume you’re following when deciding if Launch is “too early”.
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+                      {warmupSchedule.slice(0, 12).map((d) => (
+                        <div key={`wu_${d.day}`} className="rounded-md border border-white/10 bg-white/5 p-2">
+                          <div className="text-white/80 font-semibold">Day {d.day}</div>
+                          <div className="text-white/60">{d.date}</div>
+                          <div className="mt-1 text-white">{d.emails} emails/day</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               {/* Pre-Flight Checks */}

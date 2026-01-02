@@ -21,11 +21,11 @@ const STONES: StoneConfig[] = [
   { step: 5, tab: "pain-point-match", label: "Pain Point Match", icon: "🔗", href: "/painpoint-match" },
   // Flow order: choose contacts first, then do contact-aware research.
   { step: 6, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
-  { step: 7, tab: "company-research", label: "Company Research", icon: "🔍", href: "/context-research" },
+  { step: 7, tab: "background-research", label: "Background Research", icon: "🔍", href: "/context-research" },
   { step: 8, tab: "offer-creation", label: "Offer Creation", icon: "💼", href: "/offer-creation" },
   // Week 10: Compose is the first screen in building the campaign sequence.
   { step: 9, tab: "campaign", label: "Campaign", icon: "📧", href: "/compose" },
-  { step: 10, tab: "deliverability-launch", label: "Launch Campaign", icon: "🚀", href: "/deliverability-launch" },
+  { step: 10, tab: "deliverability-launch", label: "Warm-up + Launch", icon: "🚀", href: "/deliverability-launch" },
   { step: 11, tab: "analytics", label: "Analytics", icon: "📊", href: "/analytics" },
   { step: 12, tab: "job-tracker", label: "Job Tracker", icon: "📌", href: "/tracker" },
 ];

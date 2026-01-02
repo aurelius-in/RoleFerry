@@ -78,6 +78,9 @@ class ResearchData(BaseModel):
     contact_bios: List[ContactBio]
     recent_news: List[RecentNews]
     shared_connections: List[str]
+    # Report-style view (dynamic sections; omit low-signal headings)
+    background_report_title: Optional[str] = None
+    background_report_sections: Optional[List[Dict[str, Any]]] = None
 
 class ResearchRequest(BaseModel):
     contact_ids: List[str]
@@ -220,30 +223,51 @@ async def conduct_research(request: ResearchRequest):
         data_mode = str(request.data_mode or "").strip().lower() or "demo"
         want_live = data_mode == "live"
 
-        # Web snippets via Serper (best effort)
+        # Web snippets via Serper (best effort). We keep a small query budget so this stays fast.
+        # We gather a richer corpus and let GPT decide which headings have enough signal.
         serper_hits: List[Dict[str, Any]] = []
-        if want_live and settings.serper_api_key:
-            try:
-                serper_hits = serper_web_search(f"{scope_target} company", num=6)
-            except Exception:
-                serper_hits = []
-
-        # Per-contact web snippets (best effort) for "public profile insights".
         contact_serper_hits: Dict[str, List[Dict[str, Any]]] = {}
+        company_serper_by_topic: Dict[str, List[Dict[str, Any]]] = {}
+        contact_serper_by_topic: Dict[str, Dict[str, List[Dict[str, Any]]]] = {}
+
+        def _serper(q: str, *, num: int = 6) -> List[Dict[str, Any]]:
+            try:
+                return serper_web_search(q, num=num) or []
+            except Exception:
+                return []
+
         if want_live and settings.serper_api_key:
+            # Company: multiple facets
+            company_queries = {
+                "overview": f"{scope_target} company overview what they do",
+                "news": f"{scope_target} recent news",
+                "funding": f"{scope_target} funding investors valuation",
+                "product": f"{scope_target} product launch partnership",
+                "hiring": f"{scope_target} hiring growth layoffs",
+            }
+            serper_hits = _serper(company_queries["overview"], num=6)
+            for k, q in company_queries.items():
+                company_serper_by_topic[k] = _serper(q, num=5)
+
+            # Contacts: per-contact facets (keep bounded)
             for c in contacts:
-                try:
-                    q_parts = [str(c.name or "").strip(), str(c.company or company).strip()]
-                    if c.linkedin_url:
-                        q_parts.append(str(c.linkedin_url).strip())
-                    # Bias toward public writing/topics
-                    q_parts.append("LinkedIn posts articles")
-                    q = " ".join([p for p in q_parts if p]).strip()
-                    if not q:
-                        continue
-                    contact_serper_hits[c.id] = serper_web_search(q, num=4) or []
-                except Exception:
-                    contact_serper_hits[c.id] = []
+                nm = str(c.name or "").strip()
+                co = str(c.company or company).strip()
+                if not nm:
+                    continue
+                # one general query + 2 topic queries (posts/writing + talks/interviews)
+                q_general = f"{nm} {co} {c.title or ''}".strip()
+                q_posts = f"{nm} {co} posts articles blog LinkedIn"
+                q_talks = f"{nm} {co} podcast interview conference talk"
+                hits_general = _serper(q_general, num=5)
+                hits_posts = _serper(q_posts, num=5)
+                hits_talks = _serper(q_talks, num=5)
+                contact_serper_hits[c.id] = hits_general
+                contact_serper_by_topic[c.id] = {
+                    "general": hits_general,
+                    "posts": hits_posts,
+                    "talks": hits_talks,
+                }
 
         # PDL company enrichment (best effort, but OFF by default due to cost)
         pdl_company: Dict[str, Any] = {}
@@ -278,6 +302,8 @@ async def conduct_research(request: ResearchRequest):
             "pdl_company_enrich": pdl_company,
             "serper_hits": serper_hits,
             "contact_serper_hits": contact_serper_hits,
+            "company_serper_by_topic": company_serper_by_topic,
+            "contact_serper_by_topic": contact_serper_by_topic,
             "website": website_guess or "",
             "linkedin_company": linkedin_guess or "",
             "shared_connections_raw": [],
@@ -493,6 +519,17 @@ async def conduct_research(request: ResearchRequest):
                 ],
                 "recent_news": contact_news,
                 "shared_connections": [],
+                "background_report_title": "Contact Background Report",
+                "background_report_sections": [
+                    {
+                        "heading": "Outreach personalization angles",
+                        "body": (
+                            "Lead with one concrete outcome you can improve in 2–3 weeks, and tie it to a measurable KPI. "
+                            "Offer a short, low-risk mini-plan (2–3 bullets) aligned to the contact’s role and team."
+                        ),
+                        "sources": [],
+                    }
+                ],
                 "hooks": [
                     "Open with a specific outcome you can improve in 2–3 weeks",
                     "Reference a relevant initiative/news item as timing",
@@ -544,6 +581,33 @@ async def conduct_research(request: ResearchRequest):
                     "- The company_summary.description should be 2–4 sentences and outreach-useful (what they do + why it matters + likely priorities).\n"
                     "- contact_bios.bio should be 1–2 sentences tailored to the contact's title/department.\n"
                     "- hooks should be 4–8 punchy, concrete outreach angles (no fluff), grounded in the job pain_points / success_metrics if present.\n\n"
+                    "Contact Background Report (dynamic sections):\n"
+                    "- Build a report titled 'Contact Background Report' for each contact, containing ~20 possible headings.\n"
+                    "- Only INCLUDE a heading if you have at least ~2 sentences of useful, outreach-relevant info for it.\n"
+                    "- Use ONLY facts/snippets from the provided corpus when serper is present.\n"
+                    "- If serper is missing, you may write general, clearly non-claiming themes, but do not pretend they are sourced.\n"
+                    "- Avoid sensitive personal data; keep it outreach-safe.\n\n"
+                    "Candidate headings to consider (omit if empty/low-signal):\n"
+                    "1) Role summary (what they own)\n"
+                    "2) Current priorities / initiatives (from public snippets)\n"
+                    "3) Team / org context\n"
+                    "4) Recent posts or articles (topics + tone)\n"
+                    "5) Interviews / talks / podcasts\n"
+                    "6) Publications / writing\n"
+                    "7) Public opinions / hot takes (only if explicitly present)\n"
+                    "8) Career highlights\n"
+                    "9) Past companies / domain experience\n"
+                    "10) Hiring / team growth signals\n"
+                    "11) Tools/stack they mention\n"
+                    "12) Communities / affiliations\n"
+                    "13) Awards / recognition\n"
+                    "14) Conferences / events\n"
+                    "15) Company news relevant to them\n"
+                    "16) Product / market moves\n"
+                    "17) Company culture / values signals\n"
+                    "18) Risks / constraints (compliance, security, etc.)\n"
+                    "19) Outreach personalization angles\n"
+                    "20) Other notable bits\n\n"
                     "Return ONLY a JSON object with keys:\n"
                     "- research_by_contact: object keyed by contact id.\n"
                     "  Each value must be an object with keys:\n"
@@ -552,6 +616,8 @@ async def conduct_research(request: ResearchRequest):
                     "      public_profile_highlights, publications, post_topics, opinions, other_interesting_facts }\n"
                     "  - recent_news: array of { title, summary, date, source, url }\n"
                     "  - shared_connections: array of strings\n"
+                    "  - background_report_title: string\n"
+                    "  - background_report_sections: array of { heading: string, body: string, sources: array of { title, url } }\n"
                     "- hooks: array of short talking points for outreach\n"
                 ),
             },
@@ -575,6 +641,10 @@ async def conduct_research(request: ResearchRequest):
             bios = entry.get("contact_bios") or []
             news = entry.get("recent_news") or []
             connections = entry.get("shared_connections") or []
+            report_title = str(entry.get("background_report_title") or "Contact Background Report").strip() or "Contact Background Report"
+            report_sections = entry.get("background_report_sections") or []
+            if not isinstance(report_sections, list):
+                report_sections = []
 
             # If we have no Serper sources and the model returned no "recent_news",
             # generate a few safe, unsourced timing themes so the UI isn't empty.
@@ -667,6 +737,8 @@ async def conduct_research(request: ResearchRequest):
                 ],
                 # Never surface fake shared connections.
                 shared_connections=[],
+                background_report_title=report_title,
+                background_report_sections=report_sections[:24],
             )
 
         # Back-compat: also return a single research_data (first contact).

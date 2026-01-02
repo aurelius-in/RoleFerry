@@ -29,6 +29,18 @@ interface EmailTemplate {
 
 type AudienceTone = EmailTemplate["tone"];
 
+interface Offer {
+  id: string;
+  title: string;
+  content: string;
+  tone?: AudienceTone | string;
+  format?: string;
+  url?: string;
+  video_url?: string;
+  custom_tone?: string;
+  created_at?: string;
+}
+
 interface ComposeResponse {
   success: boolean;
   message: string;
@@ -56,6 +68,11 @@ export default function ComposePage() {
   const [previewWithValues, setPreviewWithValues] = useState(true);
   const [variableOverrides, setVariableOverrides] = useState<Record<string, string>>({});
 
+  // Offer Library (from Offer step)
+  const [offerLibrary, setOfferLibrary] = useState<Offer[]>([]);
+  const [activeOfferId, setActiveOfferId] = useState<string | null>(null);
+  const [offerNotice, setOfferNotice] = useState<string | null>(null);
+
   // Legacy key support (built dynamically to avoid keeping old terminology in code/UI).
   const legacyPainpointKey = ["pin", "point_matches"].join("");
   const legacyPainpointField = (n: number) => `${["pin", "point_"].join("")}${n}`;
@@ -72,6 +89,70 @@ export default function ComposePage() {
     const cut = s.lastIndexOf(" ", maxLen);
     const idx = cut > 60 ? cut : maxLen;
     return s.slice(0, idx).trim() + "…";
+  };
+
+  const readCreatedOffers = (): Offer[] => {
+    try {
+      const raw = JSON.parse(localStorage.getItem("created_offers") || "[]");
+      return Array.isArray(raw) ? (raw as Offer[]) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const persistCreatedOffers = (offers: Offer[]) => {
+    try {
+      localStorage.setItem("created_offers", JSON.stringify(offers || []));
+    } catch {}
+  };
+
+  const setActiveOffer = (offer: Offer) => {
+    if (!offer?.id) return;
+
+    // Keep state/UI in sync
+    setActiveOfferId(String(offer.id));
+    try {
+      localStorage.setItem("compose_selected_offer_id", String(offer.id));
+    } catch {}
+
+    // Make this offer the "latest" so backend Compose (and our variable builder) uses it.
+    setOfferLibrary((prev) => {
+      const list = (prev && prev.length ? prev : readCreatedOffers()) || [];
+      const next = list.filter((o) => String(o?.id) !== String(offer.id));
+      next.push(offer);
+      persistCreatedOffers(next);
+      return next;
+    });
+
+    const t = String(offer.tone || "").trim();
+    const ct = String((offer as any)?.custom_tone || "").trim();
+    const snippet = cleanOfferSnippet(String(offer.content || ""), 260);
+
+    if (t) {
+      setOfferTone(t as AudienceTone);
+      if (!toneOverrideEnabled) setSelectedTone(t as AudienceTone);
+    }
+    if (ct) setCustomTone(ct);
+
+    // Set the primary offer line used in the email.
+    if (snippet) {
+      setOfferSnippetOverride(snippet);
+    }
+
+    // Keep variable placeholders aligned (so Preview-with-values and backend see consistent values).
+    setVariableOverrides((prev) => {
+      const next = { ...(prev || {}) };
+      next["{{offer_title}}"] = String(offer.title || "");
+      // Only set work_link if the user hasn't overridden it yet.
+      if (!Object.prototype.hasOwnProperty.call(next, "{{work_link}}")) {
+        const url = String((offer as any)?.url || "").trim();
+        if (url) next["{{work_link}}"] = url;
+      }
+      return next;
+    });
+
+    setOfferNotice(`Using offer: ${String(offer.title || "").trim() || "Selected offer"}`);
+    window.setTimeout(() => setOfferNotice(null), 2200);
   };
 
   const looksLikeBadMetric = (raw: string) => {
@@ -277,20 +358,15 @@ export default function ComposePage() {
       setMode('recruiter');
     }
 
-    // Default tone to the most recently created offer (if present)
+    // Load offer library + select active offer (persisted), defaulting to most recent.
     try {
-      const offers = JSON.parse(localStorage.getItem("created_offers") || "[]");
-      const last = Array.isArray(offers) && offers.length ? offers[offers.length - 1] : null;
-      const t = String(last?.tone || "").trim();
-      const ct = String(last?.custom_tone || "").trim();
-      const content = String(last?.content || "").trim();
-      const snippet = cleanOfferSnippet(content, 260);
-      if (t) {
-        setOfferTone(t as AudienceTone);
-        setSelectedTone(t as AudienceTone);
+      const offers = readCreatedOffers();
+      setOfferLibrary(offers);
+      const storedActiveId = String(localStorage.getItem("compose_selected_offer_id") || "").trim();
+      const active = (storedActiveId && offers.find((o) => String(o?.id) === storedActiveId)) || (offers.length ? offers[offers.length - 1] : null);
+      if (active) {
+        setActiveOffer(active);
       }
-      if (ct) setCustomTone(ct);
-      if (snippet) setOfferSnippetOverride(snippet);
     } catch {}
 
     // Also support an offer draft (if the user generated/typed an offer but didn't save it into created_offers).
@@ -506,6 +582,101 @@ export default function ComposePage() {
             </p>
           </div>
 
+          {offerNotice ? (
+            <div className="mb-6 rounded-md border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+              {offerNotice}
+            </div>
+          ) : null}
+
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Left: Offer Library */}
+            <div className="lg:w-[360px] shrink-0">
+              <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-bold text-white">Offer Library</div>
+                    <div className="text-xs text-white/60">
+                      Select the offer you want to use. This sets the active offer for later steps.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => router.push("/offer-creation")}
+                    className="text-xs underline text-white/70 hover:text-white"
+                  >
+                    Create/Edit →
+                  </button>
+                </div>
+
+                {offerLibrary.length === 0 ? (
+                  <div className="mt-3 text-sm text-white/60">
+                    No saved offers yet. Go back to Offer Creation and generate 2–3 options.
+                  </div>
+                ) : (
+                  <div className="mt-3 space-y-2 max-h-[520px] overflow-auto pr-1">
+                    {offerLibrary
+                      .slice()
+                      .reverse()
+                      .slice(0, 12)
+                      .map((o) => {
+                        const isActive = String(o.id) === String(activeOfferId || "");
+                        const tone = String(o.tone || "").trim();
+                        const title = String(o.title || "").trim();
+                        const snippet = cleanOfferSnippet(String(o.content || ""), 140);
+                        return (
+                          <div
+                            key={String(o.id)}
+                            className={`rounded-md border p-3 transition-colors ${
+                              isActive ? "border-blue-400/60 bg-blue-500/10" : "border-white/10 bg-white/5 hover:bg-white/10"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <div className="text-sm font-semibold text-white truncate">
+                                  {title || "Untitled offer"}
+                                </div>
+                                <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-white/60">
+                                  {tone ? (
+                                    <span className="px-2 py-0.5 rounded-full border border-white/10 bg-black/30 text-white/70">
+                                      {tone}
+                                    </span>
+                                  ) : null}
+                                  {o.url ? (
+                                    <span className="px-2 py-0.5 rounded-full border border-white/10 bg-black/30 text-white/70">
+                                      has link
+                                    </span>
+                                  ) : null}
+                                  {isActive ? <span className="text-blue-200/80">Active</span> : null}
+                                </div>
+                                {snippet ? (
+                                  <div className="mt-2 text-xs text-white/70 whitespace-pre-wrap">
+                                    {snippet}
+                                  </div>
+                                ) : null}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setActiveOffer(o)}
+                                className={`shrink-0 px-3 py-1.5 rounded-md text-xs font-semibold border transition-colors ${
+                                  isActive
+                                    ? "bg-white/10 border-white/10 text-white/80"
+                                    : "bg-blue-600 border-blue-600 text-white hover:bg-blue-700"
+                                }`}
+                              >
+                                {isActive ? "Using" : "Use"}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Compose */}
+            <div className="flex-1 min-w-0">
+
           {/* Offer payload (editable) */}
           <div className="mb-8 rounded-lg border border-white/10 bg-black/20 p-4">
             <div className="flex items-start justify-between gap-3">
@@ -516,6 +687,7 @@ export default function ComposePage() {
                   {offerTone === "custom" && customTone ? (
                     <span className="text-white/60"> — {customTone}</span>
                   ) : null}
+                  {activeOfferId ? <span className="text-white/40"> • active offer selected</span> : null}
                 </div>
               </div>
               <button
@@ -807,6 +979,8 @@ export default function ComposePage() {
               </div>
             </div>
           )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

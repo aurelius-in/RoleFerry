@@ -84,6 +84,101 @@ def _tokenize(s: str) -> List[str]:
     return [t for t in (s or "").lower().replace("/", " ").replace("-", " ").split() if t]
 
 
+def _company_size_bucket(company_sizes: List[str]) -> str:
+    """
+    Map selected company size strings into a coarse bucket: small/mid/large/any.
+    """
+    if not company_sizes:
+        return "any"
+    s = " ".join([str(x).lower() for x in company_sizes if str(x).strip()])
+    if any(tok in s for tok in ["1-10", "11-50", "51-200"]):
+        return "small"
+    if any(tok in s for tok in ["201-500", "501-1,000", "501-1000"]):
+        return "mid"
+    if any(tok in s for tok in ["1,001-5,000", "1001-5000", "5,001-10,000", "5001-10000", "10,001+", "10001+"]):
+        return "large"
+    return "any"
+
+
+def _infer_company_size_bucket(company: str, content: str | None) -> str:
+    """
+    Best-effort company size inference:
+    - Known big-tech list
+    - Very light text sniffing for "employees"
+    """
+    c = (company or "").strip().lower()
+    big = {
+        "google",
+        "alphabet",
+        "microsoft",
+        "amazon",
+        "meta",
+        "facebook",
+        "apple",
+        "netflix",
+        "salesforce",
+        "oracle",
+        "ibm",
+        "intel",
+    }
+    if c in big:
+        return "large"
+
+    txt = (content or "")
+    # Simple patterns like "10,001+ employees" / "1,001-5,000 employees"
+    import re
+    m = re.search(r"(\d{1,3}(?:,\d{3})\+?)\s+employees", txt, flags=re.I)
+    if m:
+        raw = str(m.group(1)).replace(",", "")
+        try:
+            if raw.endswith("+"):
+                n = int(raw[:-1])
+            else:
+                n = int(raw)
+            if n >= 1001:
+                return "large"
+            if n >= 201:
+                return "mid"
+            return "small"
+        except Exception:
+            pass
+    return "any"
+
+
+def _infer_work_mode(content: str | None) -> str:
+    """
+    remote | hybrid | onsite | unknown
+    """
+    t = (content or "").lower()
+    if not t.strip():
+        return "unknown"
+    if any(k in t for k in ["remote", "work from home", "wfh"]):
+        return "remote"
+    if "hybrid" in t:
+        return "hybrid"
+    if any(k in t for k in ["on-site", "onsite", "in-person", "in person"]):
+        return "onsite"
+    return "unknown"
+
+
+def _infer_employment_type(content: str | None) -> str:
+    """
+    full-time | part-time | contract | internship | unknown
+    """
+    t = (content or "").lower()
+    if not t.strip():
+        return "unknown"
+    if "intern" in t:
+        return "internship"
+    if any(k in t for k in ["contract", "contractor", "1099"]):
+        return "contract"
+    if "part-time" in t or "part time" in t:
+        return "part-time"
+    if "full-time" in t or "full time" in t:
+        return "full-time"
+    return "unknown"
+
+
 def _deterministic_rank(preferences: GapAnalysisPreferences, resume: ResumeExtract, jobs: List[GapJobDescription]) -> List[GapAnalysisItem]:
     pref_skills = {s.lower() for s in _norm_list(preferences.skills)}
     resume_skills = {s.lower() for s in _norm_list(resume.skills)}
@@ -122,8 +217,48 @@ def _deterministic_rank(preferences: GapAnalysisPreferences, resume: ResumeExtra
             recommendation = "skip"
 
         pref_gaps: List[str] = []
+
+        # --- Preference alignment gaps (non-skill) -----------------------------
+        # Company size mismatch (only when user explicitly chose a bucket)
+        desired_bucket = _company_size_bucket(preferences.company_size or [])
+        if desired_bucket != "any":
+            inferred_bucket = _infer_company_size_bucket(j.company, j.content)
+            if inferred_bucket != "any" and inferred_bucket != desired_bucket:
+                pref_gaps.append(
+                    f"Company size preference mismatch: you selected {desired_bucket} companies, but {j.company} appears {inferred_bucket}."
+                )
+
+        # Work mode mismatch (remote/hybrid/onsite)
+        pref_work = " ".join([x.lower() for x in (preferences.work_type or preferences.location_preferences or [])])
+        job_work = _infer_work_mode(j.content)
+        if "remote" in pref_work and "in-person" not in pref_work and "hybrid" not in pref_work:
+            # remote-only
+            if job_work in {"onsite", "hybrid"}:
+                pref_gaps.append(f"Work preference mismatch: you selected Remote, but this job looks {job_work} (based on the job text).")
+        if ("in-person" in pref_work or "in person" in pref_work) and "remote" not in pref_work:
+            if job_work == "remote":
+                pref_gaps.append("Work preference mismatch: you selected In-Person, but this job looks remote (based on the job text).")
+
+        # Employment type mismatch (full-time/part-time/contract/internship)
+        pref_types = {x.lower() for x in _norm_list(preferences.role_type)}
+        job_type = _infer_employment_type(j.content)
+        if pref_types:
+            # Normalize to our labels
+            wanted = set()
+            for t in pref_types:
+                if "full" in t:
+                    wanted.add("full-time")
+                elif "part" in t:
+                    wanted.add("part-time")
+                elif "contract" in t:
+                    wanted.add("contract")
+                elif "intern" in t:
+                    wanted.add("internship")
+            if wanted and job_type != "unknown" and job_type not in wanted:
+                pref_gaps.append(f"Role type preference mismatch: you selected {', '.join(sorted(wanted))}, but this job looks {job_type}.")
+
         if preferences.minimum_salary:
-            pref_gaps.append("Salary not checked (no salary data in JD).")
+            pref_gaps.append("Salary preference not checked yet (no salary data parsed from this JD).")
 
         ranked.append(
             GapAnalysisItem(

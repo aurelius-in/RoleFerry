@@ -113,8 +113,27 @@ export default function GapAnalysisPage() {
     setError(null);
     setIsAnalyzing(true);
     try {
+      // IMPORTANT: backend expects snake_case keys (GapAnalysisPreferences).
+      // Our localStorage shape is camelCase, so map it here.
+      const prefsPayload = preferences
+        ? {
+            values: preferences.values || [],
+            role_categories: preferences.roleCategories || [],
+            location_preferences: preferences.locationPreferences || [],
+            work_type: preferences.workType || [],
+            role_type: preferences.roleType || [],
+            company_size: preferences.companySize || [],
+            industries: preferences.industries || [],
+            skills: preferences.skills || [],
+            minimum_salary: preferences.minimumSalary || "",
+            job_search_status: preferences.jobSearchStatus || "",
+            state: preferences.state || null,
+            user_mode: "job-seeker",
+          }
+        : null;
+
       const resp = await api<GapAnalysisResponse>("/gap-analysis/analyze", "POST", {
-        preferences,
+        preferences: prefsPayload,
         resume_extract: resumeExtract,
         job_descriptions: jobDescriptions,
       });
@@ -219,7 +238,7 @@ export default function GapAnalysisPage() {
 
                   {r.matched_skills?.length ? (
                     <div className="mt-3">
-                      <div className="text-xs font-semibold text-white/70 mb-1">Matched skills</div>
+                      <div className="text-xs font-semibold text-white/70 mb-1">Skillset matches</div>
                       <div className="flex flex-wrap gap-2">
                         {r.matched_skills.slice(0, 10).map((s) => (
                           <span key={s} className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80 text-xs">
@@ -232,7 +251,7 @@ export default function GapAnalysisPage() {
 
                   {r.missing_skills?.length ? (
                     <div className="mt-3">
-                      <div className="text-xs font-semibold text-white/70 mb-1">Missing skills (from JD)</div>
+                      <div className="text-xs font-semibold text-white/70 mb-1">Skillset gaps (missing skills)</div>
                       <div className="flex flex-wrap gap-2">
                         {r.missing_skills.slice(0, 10).map((s) => (
                           <span key={s} className="px-2 py-1 rounded-full border border-red-500/20 bg-red-500/10 text-red-200 text-xs">
@@ -245,7 +264,7 @@ export default function GapAnalysisPage() {
 
                   {(r.preference_gaps || []).length ? (
                     <div className="mt-3 text-sm text-white/70">
-                      <div className="text-xs font-semibold text-white/70 mb-1">Preference gaps</div>
+                      <div className="text-xs font-semibold text-white/70 mb-1">Preference alignment gaps</div>
                       <ul className="list-disc list-inside space-y-1">
                         {r.preference_gaps.slice(0, 3).map((g, i) => (
                           <li key={`pg_${i}`}>{g}</li>

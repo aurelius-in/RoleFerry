@@ -30,6 +30,14 @@ class JobDescription(BaseModel):
     pain_points: List[str]
     required_skills: List[str]
     success_metrics: List[str]
+    # Optional enrichments (best-effort)
+    location: Optional[str] = None
+    work_mode: Optional[str] = None
+    employment_type: Optional[str] = None
+    salary_range: Optional[str] = None
+    responsibilities: Optional[List[str]] = None
+    requirements: Optional[List[str]] = None
+    benefits: Optional[List[str]] = None
     parsed_at: str
 
 class JobDescriptionResponse(BaseModel):
@@ -141,7 +149,6 @@ _KNOWN_SKILLS: List[str] = [
     "JavaScript",
     "TypeScript",
     "Java",
-    "Go",
     "Golang",
     "C++",
     "C#",
@@ -174,7 +181,206 @@ _KNOWN_SKILLS: List[str] = [
     "LLM",
     "Machine Learning",
     "Deep Learning",
+    # Common platform / growth / customer roles
+    "SaaS",
+    "Customer Success",
+    "Account Management",
+    "Growth",
+    "Growth Marketing",
+    "Performance Marketing",
+    "Experimentation",
+    "A/B Testing",
+    # APIs / Web / Infra
+    "API",
+    "APIs",
+    "REST",
+    "GraphQL",
+    # Web3 / crypto
+    "Web3",
+    "NFT",
+    "Smart Contracts",
+    "Solidity",
+    # Tools
+    "Salesforce",
+    "Excel",
+    "PowerPoint",
+    "Word",
 ]
+
+
+def _extract_requirement_skill_phrases(text: str) -> List[str]:
+    """
+    If the JD contains a "requirements/qualifications" section, extract a few
+    high-signal skill phrases. This is intentionally heuristic + conservative.
+    """
+    lines = [ln.strip() for ln in (text or "").splitlines() if ln.strip()]
+    if not lines:
+        return []
+
+    # Find a requirements-ish header.
+    header_re = re.compile(
+        r"^(we(?:'|’)d\s+love\s+you\s+to\s+bring|requirements|qualifications|experience/skills\s+required|what\s+you(?:'|’)ll\s+bring|you\s+have)\b",
+        re.I,
+    )
+    stop_re = re.compile(r"^(bonus\s+points|nice\s+to\s+have|preferred|benefits|compensation|location|about\s+us)\b", re.I)
+    start = -1
+    for i, ln in enumerate(lines[:200]):
+        if header_re.search(ln):
+            start = i + 1
+            break
+    if start < 0:
+        return []
+
+    chunk: List[str] = []
+    for ln in lines[start : start + 40]:
+        if stop_re.search(ln):
+            break
+        # Capture bullet-ish lines, or short requirement lines.
+        cleaned = ln.lstrip("•-* ").strip()
+        if len(cleaned) < 6:
+            continue
+        chunk.append(cleaned[:160])
+        if len(chunk) >= 14:
+            break
+
+    if not chunk:
+        return []
+
+    blob = " \n ".join(chunk)
+    # Start with known skill matches, then add a few simple phrases.
+    skills = _extract_skills(blob)
+
+    # Add a couple phrase-y skills if present.
+    phrase_patterns = [
+        ("computer science", "Computer science"),
+        ("product experimentation", "Product experimentation"),
+        ("performance marketing", "Performance marketing"),
+        ("customer-facing", "Customer-facing experience"),
+        ("stakeholder", "Stakeholder management"),
+        ("crm", "CRM"),
+    ]
+    low = blob.lower()
+    for needle, label in phrase_patterns:
+        if needle in low:
+            skills.append(label)
+
+    # De-dupe while preserving order
+    out: List[str] = []
+    seen = set()
+    for s in skills:
+        k = s.strip().lower()
+        if not k or k in seen:
+            continue
+        seen.add(k)
+        out.append(s.strip())
+    return out[:12]
+
+
+def _infer_work_mode_from_text(text: str) -> str:
+    t = (text or "").lower()
+    if not t.strip():
+        return "unknown"
+    if any(k in t for k in ["fully remote", "remote (", "remote)", "work from home", "wfh", "hiring remotely"]):
+        return "remote"
+    if "hybrid" in t:
+        return "hybrid"
+    if any(k in t for k in ["in-office", "in office", "in-person", "in person", "on-site", "onsite"]):
+        return "onsite"
+    return "unknown"
+
+
+def _infer_employment_type_from_text(text: str) -> str:
+    t = (text or "").lower()
+    if not t.strip():
+        return "unknown"
+    if "intern" in t:
+        return "internship"
+    if "contract" in t or "contractor" in t or "1099" in t:
+        return "contract"
+    if "part time" in t or "part-time" in t:
+        return "part-time"
+    if "full time" in t or "full-time" in t:
+        return "full-time"
+    return "unknown"
+
+
+def _extract_salary_range(text: str) -> Optional[str]:
+    s = text or ""
+    if not s.strip():
+        return None
+    # Common patterns: "$180k – $210k", "$180,000/year - $210,000/year", "$110,000 - $150,000"
+    patterns = [
+        r"(\$\s?\d{2,3}\s?k\s*[–\-]\s*\$\s?\d{2,3}\s?k)",
+        r"(\$\s?\d{2,3}(?:,\d{3})\s*(?:/year|per year)?\s*[–\-]\s*\$\s?\d{2,3}(?:,\d{3})\s*(?:/year|per year)?)",
+        r"(salary\s+range:\s*\$\s?\d[\d,]+.*?\$\s?\d[\d,]+)",
+    ]
+    for pat in patterns:
+        m = re.search(pat, s, flags=re.I)
+        if m:
+            out = str(m.group(1)).strip()
+            out = re.sub(r"\s+", " ", out)
+            return out[:80]
+    return None
+
+
+def _extract_location_hint(text: str) -> Optional[str]:
+    lines = [ln.strip() for ln in (text or "").splitlines() if ln.strip()]
+    if not lines:
+        return None
+    # Look for explicit Location / Job Location blocks
+    for i, ln in enumerate(lines[:120]):
+        low = ln.lower()
+        if low in {"location", "job location"} or low.startswith("location:"):
+            # Try same line after colon
+            if ":" in ln:
+                v = ln.split(":", 1)[1].strip()
+                if v:
+                    return v[:80]
+            # Otherwise take next non-empty line(s)
+            if i + 1 < len(lines):
+                v = lines[i + 1].strip()
+                if v and len(v) <= 80:
+                    return v
+        if low.startswith("remote") and "united states" in low:
+            # "Remote (United States)"
+            return "Remote (United States)"
+    return None
+
+
+def _extract_section_lines(text: str, header_patterns: List[str], *, max_lines: int = 10) -> List[str]:
+    """
+    Best-effort extraction of bullet-ish lines after a section header.
+    """
+    lines = [ln.strip() for ln in (text or "").splitlines() if ln.strip()]
+    if not lines:
+        return []
+    header_re = re.compile(r"^(?:" + "|".join(header_patterns) + r")\b", re.I)
+    stop_re = re.compile(
+        r"^(?:salary|salary range|perks|benefits|bonus points|nice to have|location|about us|about the job|corporate values|equal opportunity)\b",
+        re.I,
+    )
+    start = -1
+    for i, ln in enumerate(lines[:240]):
+        if header_re.search(ln):
+            start = i + 1
+            break
+    if start < 0:
+        return []
+    out: List[str] = []
+    for ln in lines[start : start + 60]:
+        if stop_re.search(ln):
+            break
+        s = ln.lstrip("•-* ").strip()
+        if len(s) < 6:
+            continue
+        # Skip obvious UI noise
+        low = s.lower()
+        if any(bad in low for bad in ["apply now", "save", "posted:", "recruiter recently active", "actively hiring"]):
+            continue
+        out.append(s[:200])
+        if len(out) >= max_lines:
+            break
+    return out
 
 
 def _extract_skills(text: str) -> List[str]:
@@ -205,8 +411,44 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
 
     lines = [ln.strip() for ln in (content or "").splitlines() if ln.strip()]
 
-    # Title: first non-empty line is often usable after HTML-to-text.
-    if lines:
+    def _looks_like_real_title(ln: str) -> bool:
+        s = (ln or "").strip()
+        if not s or len(s) < 4:
+            return False
+        low = s.lower()
+        # Avoid common section headers and obvious non-titles
+        if any(low.startswith(h) for h in ["about us", "about the role", "benefits", "location", "requirements", "qualifications"]):
+            return False
+        if any(bad in low for bad in ["grade this role", "add to job tracker", "business challenges", "required skills", "success metrics", "jd jargon"]):
+            return False
+        if re.search(r"\bis\s+hiring\b", low):
+            return False
+        # Prefer lines with role-like tokens, but allow others
+        role_tokens = ["engineer", "manager", "director", "analyst", "specialist", "designer", "recruiter", "coach", "lead", "developer"]
+        if any(t in low for t in role_tokens):
+            return True
+        # Otherwise accept if it looks like a concise title-case line (no long sentences)
+        if len(s.split()) <= 12 and s[0].isupper() and not s.endswith("."):
+            return True
+        return False
+
+    def _has_role_token(ln: str) -> bool:
+        low = (ln or "").lower()
+        role_tokens = ["engineer", "manager", "director", "analyst", "specialist", "designer", "recruiter", "coach", "lead", "developer", "success", "growth"]
+        return any(t in low for t in role_tokens)
+
+    # Title: pass 1 – prefer lines that contain role tokens (avoids title=company).
+    for ln in lines[:20]:
+        if _has_role_token(ln) and _looks_like_real_title(ln):
+            title = ln[:120]
+            break
+    # Title: pass 2 – any acceptable title-like line.
+    if not title:
+        for ln in lines[:20]:
+            if _looks_like_real_title(ln):
+                title = ln[:120]
+                break
+    if not title and lines:
         title = lines[0][:120]
 
     # Company: explicit markers win.
@@ -252,6 +494,17 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
             "lead",
             "principal",
             "staff",
+            # Generic words that sometimes get mis-detected (e.g. "This is...")
+            "this",
+            "we",
+            "our",
+            "you",
+            "us",
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
         }
 
         top_blob = " ".join(lines[:80])
@@ -259,7 +512,10 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
         # Find candidates of the form "X is ..." / "X provides ..." / "X began ..."
         # and pick the best (prefer domain-looking tokens like Lamatic.ai).
         cand_matches = re.findall(
-            r"\b([A-Z][A-Za-z0-9&.\-]{1,60})\s+(?:is\s+hiring|is\s+recruiting|is\s+seeking|provides|is\s+an|is\s+a|began)\b",
+            r"\b([A-Z][A-Za-z0-9&.\-]{1,60})\s+(?:"
+            r"is\s+hiring|is\s+recruiting|is\s+seeking|provides|began|"
+            r"is\s+(?:an|a|the|one\s+of)"
+            r")\b",
             top_blob,
             flags=re.I,
         )
@@ -294,8 +550,15 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 best_score = sc
                 best = t
 
-        if best and best_score > 0:
-            company = best
+        # Require stronger evidence than "some token appeared once".
+        # - Accept domain-like brands immediately (Lamatic.ai)
+        # - Otherwise require multiple mentions and a meaningful score
+        if best:
+            low_best = best.lower()
+            looks_like_domain = bool(re.search(r"\.[a-z]{2,10}$", low_best)) or bool(re.search(r"\.[a-z]{2,10}\b", low_best))
+            mention_ct = _mentions(best)
+            if looks_like_domain or (mention_ct >= 2 and best_score >= 20):
+                company = best
 
     def _company_from_url(u: str) -> str:
         try:
@@ -483,18 +746,61 @@ def _extract_key_lines(content: str, max_items: int, keywords: List[str]) -> Lis
         if re.search(r"\d|%|\$", ln):
             score += 1
         if score > 0:
-            candidates.append((score, ln[:200]))  # type: ignore[list-item]
+            # Keep the full line here; we'll normalize/shorten later without cutting mid-sentence.
+            candidates.append((score, ln))  # type: ignore[list-item]
 
     # Sort by score desc, then keep stable order-ish by first appearance.
     # We already collected in order; stable sort preserves that for ties.
     candidates_sorted = sorted(candidates, key=lambda t: t[0], reverse=True)  # type: ignore[index]
+    def _to_max_words_no_mid_sentence(s: str, max_words: int = 35) -> str:
+        """
+        Return <= max_words words, never cutting mid-sentence.
+        If the first sentence is too long, fall back to a short clause and end with a period.
+        """
+        raw = " ".join(str(s or "").split()).strip()
+        if not raw:
+            return raw
+        words = raw.split()
+        if len(words) <= max_words and raw[-1] in ".!?":
+            return raw
+        if len(words) <= max_words:
+            # Add punctuation if missing.
+            return raw + ("." if raw[-1] not in ".!?" else "")
+
+        # Prefer sentence boundaries
+        sentences = re.split(r"(?<=[.!?])\s+", raw)
+        built: List[str] = []
+        wc = 0
+        for sent in sentences:
+            sent = sent.strip()
+            if not sent:
+                continue
+            sw = sent.split()
+            if wc + len(sw) > max_words:
+                break
+            built.append(sent)
+            wc += len(sw)
+            if wc >= max_words:
+                break
+        if built:
+            out_s = " ".join(built).strip()
+            return out_s if out_s[-1] in ".!?" else out_s + "."
+
+        # No usable sentence boundary: take first clause (comma/semicolon/dash), then ensure <= max_words.
+        clause = re.split(r"[;,–—-]\s+", raw)[0].strip()
+        cw = clause.split()
+        if len(cw) > max_words:
+            clause = " ".join(cw[:max_words]).strip()
+        return clause + ("." if clause and clause[-1] not in ".!?" else "")
+
     out: List[str] = []
     seen = set()
     for score, ln in candidates_sorted:  # type: ignore[misc]
-        if ln in seen:
+        norm = _to_max_words_no_mid_sentence(str(ln), max_words=35)
+        if not norm or norm in seen:
             continue
-        out.append(ln)
-        seen.add(ln)
+        out.append(norm)
+        seen.add(norm)
         if len(out) >= max_items:
             break
     return out
@@ -563,6 +869,35 @@ async def import_job_description(payload: JobImportRequest):
         # --- Heuristic parsing (non-LLM fallback) ----------------------
         title, company = _best_effort_title_company(content, url)
         required_skills: List[str] = _extract_skills(content)
+        if not required_skills:
+            required_skills = _extract_requirement_skill_phrases(content)
+        else:
+            # Enrich with any requirement-section signals (deduped)
+            extra = _extract_requirement_skill_phrases(content)
+            if extra:
+                seen = {s.lower() for s in required_skills}
+                for s in extra:
+                    if s.lower() not in seen:
+                        required_skills.append(s)
+                        seen.add(s.lower())
+                required_skills = required_skills[:18]
+
+        # Additional structured fields (best-effort; UI can display these)
+        salary_range = _extract_salary_range(content) or "Salary not provided"
+        location = _extract_location_hint(content)
+        work_mode = _infer_work_mode_from_text(content)
+        employment_type = _infer_employment_type_from_text(content)
+        responsibilities = _extract_section_lines(
+            content,
+            ["responsibilities", "you'll be empowered to", "you will", "what you'll do", "what you’ll do"],
+            max_lines=10,
+        )
+        requirements = _extract_section_lines(
+            content,
+            ["requirements", "qualifications", "we'd love you to bring", "we’d love you to bring", "experience/skills required"],
+            max_lines=10,
+        )
+        benefits = _extract_section_lines(content, ["benefits", "perks", "what we offer"], max_lines=10)
         # We cannot truly infer "pain points" without an LLM, but we can extract
         # meaningful lines as a practical non-mock fallback.
         pain_points: List[str] = _extract_key_lines(
@@ -576,10 +911,24 @@ async def import_job_description(payload: JobImportRequest):
             keywords=["kpi", "metric", "measured", "increase", "reduce", "improve", "impact", "deliver"],
         )
 
+        # Per UX request: always include salary visibility in the card output.
+        # (Not a "metric" per se, but users want it in the Success Metrics section.)
+        if salary_range:
+            salary_line = f"Salary: {salary_range}".strip()
+            success_metrics = [salary_line] + [m for m in success_metrics if m and m != salary_line]
+            success_metrics = success_metrics[:4]
+
         parsed_json: Dict[str, Any] = {
             "pain_points": pain_points,
             "required_skills": required_skills,
             "success_metrics": success_metrics,
+            "salary_range": salary_range,
+            "location": location,
+            "work_mode": work_mode,
+            "employment_type": employment_type,
+            "responsibilities": responsibilities,
+            "requirements": requirements,
+            "benefits": benefits,
         }
 
         # --- Optional GPT-backed parsing via OpenAIClient ---------------
@@ -599,10 +948,27 @@ async def import_job_description(payload: JobImportRequest):
                     pain_points = [str(p) for p in (data.get("pain_points") or pain_points)]
                     required_skills = [str(s) for s in (data.get("required_skills") or required_skills)]
                     success_metrics = [str(m) for m in (data.get("success_metrics") or success_metrics)]
+
+                    # Optional richer fields (best-effort)
+                    salary_range = str(data.get("salary_range") or salary_range or "") or salary_range
+                    location = str(data.get("location") or location or "") or location
+                    work_mode = str(data.get("work_mode") or work_mode or "") or work_mode
+                    employment_type = str(data.get("employment_type") or employment_type or "") or employment_type
+                    responsibilities = [str(x) for x in (data.get("responsibilities") or responsibilities or [])]
+                    requirements = [str(x) for x in (data.get("requirements") or requirements or [])]
+                    benefits = [str(x) for x in (data.get("benefits") or benefits or [])]
+
                     parsed_json = {
                         "pain_points": pain_points,
                         "required_skills": required_skills,
                         "success_metrics": success_metrics,
+                        "salary_range": salary_range,
+                        "location": location,
+                        "work_mode": work_mode,
+                        "employment_type": employment_type,
+                        "responsibilities": responsibilities,
+                        "requirements": requirements,
+                        "benefits": benefits,
                     }
             except Exception:
                 # On any GPT failure, keep heuristic extraction.
@@ -689,6 +1055,13 @@ async def import_job_description(payload: JobImportRequest):
             pain_points=pain_points,
             required_skills=required_skills,
             success_metrics=success_metrics,
+            location=location,
+            work_mode=work_mode,
+            employment_type=employment_type,
+            salary_range=salary_range,
+            responsibilities=responsibilities or None,
+            requirements=requirements or None,
+            benefits=benefits or None,
             parsed_at=parsed_at,
         )
 

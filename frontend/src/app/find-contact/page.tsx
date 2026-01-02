@@ -61,6 +61,11 @@ export default function FindContactPage() {
   const [manualLinkedIn, setManualLinkedIn] = useState("");
   const [manualEmail, setManualEmail] = useState("");
 
+  // Persisted "saved verified contacts" across multiple company searches.
+  const [savedVerified, setSavedVerified] = useState<Contact[]>([]);
+  const [saveNotice, setSaveNotice] = useState<string | null>(null);
+  const [userKey, setUserKey] = useState<string>("anon");
+
   const formatTitleCase = (input?: string) => {
     const s = String(input || "").trim();
     if (!s) return "";
@@ -92,7 +97,53 @@ export default function FindContactPage() {
     return true;
   };
 
+  const getSavedKey = (uid: string) => `rf_saved_verified_contacts:${uid || "anon"}`;
+
+  const contactIdentity = (c: Contact) => {
+    const email = String(c.email || "").trim().toLowerCase();
+    if (email && isRealEmail(email)) return `email:${email}`;
+    const li = String(c.linkedin_url || "").trim().toLowerCase();
+    if (li) return `li:${li}`;
+    return `name:${String(c.name || "").trim().toLowerCase()}|title:${String(c.title || "").trim().toLowerCase()}|co:${String(c.company || "").trim().toLowerCase()}`;
+  };
+
+  const mergeSaved = (incoming: Contact[]) => {
+    setSavedVerified((prev) => {
+      const next: Contact[] = [...(prev || [])];
+      const seen = new Set(next.map(contactIdentity));
+      for (const c of incoming || []) {
+        const key = contactIdentity(c);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        next.push(c);
+      }
+      // Stable-ish sorting: group by company then name
+      next.sort((a, b) => {
+        const ca = String(a.company || "").toLowerCase();
+        const cb = String(b.company || "").toLowerCase();
+        if (ca !== cb) return ca.localeCompare(cb);
+        return String(a.name || "").toLowerCase().localeCompare(String(b.name || "").toLowerCase());
+      });
+      try {
+        localStorage.setItem(getSavedKey(userKey), JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
   useEffect(() => {
+    // Identify user for per-user persistence
+    try {
+      const u = JSON.parse(localStorage.getItem("rf_user") || "null");
+      const uid = String(u?.id || "anon");
+      setUserKey(uid);
+      const raw = localStorage.getItem(getSavedKey(uid));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setSavedVerified(parsed);
+      }
+    } catch {}
+
     // Load any existing contacts from localStorage
     const savedContacts = localStorage.getItem('found_contacts');
     if (savedContacts) {
@@ -296,6 +347,25 @@ export default function FindContactPage() {
         localStorage.setItem("found_contacts", JSON.stringify(next));
         return next;
       });
+
+      // Auto-save valid verified contacts so they persist across company searches.
+      const validVerified: Contact[] = (verified || [])
+        .filter((c: any) => {
+          const status = String(c?.verification_status || "").toLowerCase();
+          const score = Number(c?.verification_score || 0);
+          const email = String(c?.email || "");
+          return status === "valid" && score >= 80 && isRealEmail(email);
+        })
+        .map((c: any) => c as Contact);
+
+      if (validVerified.length) {
+        mergeSaved(validVerified);
+        setSaveNotice(`Saved ${validVerified.length} verified contact${validVerified.length === 1 ? "" : "s"} (Valid).`);
+        window.setTimeout(() => setSaveNotice(null), 2500);
+      } else {
+        setSaveNotice("No new Valid contacts to save from this verification run.");
+        window.setTimeout(() => setSaveNotice(null), 2500);
+      }
     } catch {
       // keep UX usable even if verify fails
     } finally {
@@ -313,9 +383,12 @@ export default function FindContactPage() {
   };
 
   const handleContinue = () => {
-    if (selectedContacts.length > 0) {
-      const selectedContactData = contacts.filter(c => selectedContacts.includes(c.id));
-      localStorage.setItem('selected_contacts', JSON.stringify(selectedContactData));
+    // Prefer the saved verified list (multi-company workflow) if present.
+    const chosen = (savedVerified && savedVerified.length > 0)
+      ? savedVerified
+      : contacts.filter(c => selectedContacts.includes(c.id));
+    if (chosen.length > 0) {
+      localStorage.setItem('selected_contacts', JSON.stringify(chosen));
       router.push('/context-research');
     }
   };
@@ -363,6 +436,96 @@ export default function FindContactPage() {
             </div>
           )}
 
+          {saveNotice && (
+            <div className="mb-6 rounded-md border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+              {saveNotice}
+            </div>
+          )}
+
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Left column: saved verified contacts */}
+            <div className="lg:w-[360px] shrink-0">
+              <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-bold text-white">Saved verified contacts</div>
+                    <div className="text-xs text-white/60">
+                      Saved when you click Verify (Valid only). These carry across multiple company searches.
+                    </div>
+                  </div>
+                  {savedVerified.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSavedVerified([]);
+                        try { localStorage.removeItem(getSavedKey(userKey)); } catch {}
+                      }}
+                      className="text-xs underline text-white/70 hover:text-white"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                {savedVerified.length === 0 ? (
+                  <div className="mt-3 text-sm text-white/60">
+                    No saved contacts yet. Search a company → select contacts → Verify emails.
+                  </div>
+                ) : (
+                  <div className="mt-3 space-y-2 max-h-[420px] overflow-auto pr-1">
+                    {savedVerified.map((c) => {
+                      const badge = getVerificationBadge(c.verification_status, c.verification_score);
+                      return (
+                        <div key={contactIdentity(c)} className="rounded-md border border-white/10 bg-white/5 p-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="text-sm font-semibold text-white truncate">{c.name}</div>
+                              <div className="text-xs text-white/70 truncate">{formatTitleCase(c.title)}</div>
+                              <div className="text-[11px] text-white/50 truncate">{c.company}</div>
+                              {isRealEmail(c.email) ? (
+                                <div className="mt-1 text-[11px] font-mono text-white/70 break-all">{c.email}</div>
+                              ) : null}
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getBadgeColor(badge.color)}`}>
+                                {badge.icon} {badge.label}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSavedVerified((prev) => {
+                                    const next = (prev || []).filter((x) => contactIdentity(x) !== contactIdentity(c));
+                                    try { localStorage.setItem(getSavedKey(userKey), JSON.stringify(next)); } catch {}
+                                    return next;
+                                  });
+                                }}
+                                className="text-[11px] underline text-white/60 hover:text-white"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div className="mt-3 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleContinue}
+                    disabled={(savedVerified?.length || 0) === 0 && selectedContacts.length === 0}
+                    className="px-4 py-2 rounded-md font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    Continue to Research ({savedVerified.length > 0 ? `${savedVerified.length} saved` : `${selectedContacts.length} selected`})
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right column: search + results */}
+            <div className="flex-1 min-w-0">
           {/* Search Section */}
           <div className="mb-8">
             {companyOptions.length > 0 && (
@@ -627,6 +790,9 @@ export default function FindContactPage() {
               </p>
             </div>
           )}
+
+            </div>
+          </div>
         </div>
       </div>
 

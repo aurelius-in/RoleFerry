@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from ..config import settings
-from ..auth import create_user, authenticate, create_access_token, require_current_user
+from ..auth import create_user, authenticate, create_access_token, require_current_user, update_user
 
 
 router = APIRouter()
@@ -37,6 +37,13 @@ class AuthResponse(BaseModel):
     success: bool
     message: str
     user: Optional[UserProfile] = None
+
+
+class UpdateMeRequest(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = None
+    linkedin_url: Optional[str] = None
 
 
 @router.post("/register", response_model=AuthResponse)
@@ -128,3 +135,25 @@ async def me(request: Request):
     )
 
 
+@router.patch("/me", response_model=AuthResponse)
+async def update_me(payload: UpdateMeRequest, request: Request):
+    user = await require_current_user(request)
+    updated = await update_user(
+        user.id,
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        phone=payload.phone,
+        linkedin_url=payload.linkedin_url,
+    )
+    return AuthResponse(
+        success=True,
+        message="Profile updated",
+        user=UserProfile(
+            id=updated.id,
+            email=updated.email,
+            first_name=updated.first_name,
+            last_name=updated.last_name,
+            phone=updated.phone,
+            linkedin_url=updated.linkedin_url,
+        ),
+    )
