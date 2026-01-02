@@ -63,6 +63,12 @@ interface ResearchData {
   contact_bios: ContactBio[];
   recent_news: RecentNews[];
   shared_connections: string[];
+  background_report_title?: string | null;
+  background_report_sections?: Array<{
+    heading: string;
+    body: string;
+    sources?: Array<{ title: string; url: string }>;
+  }> | null;
 }
 
 export default function ContextResearchPage() {
@@ -455,6 +461,32 @@ export default function ContextResearchPage() {
                       {selectedContacts.find((c) => c.id === activeContactId)?.name || "Selected contact"}
                     </div>
                   ) : null}
+                  {/* Contact Background Report (dynamic sections; omit low-signal) */}
+                  {Array.isArray(researchData.background_report_sections) &&
+                  researchData.background_report_sections.length > 0 ? (
+                    <div>
+                      <h2 className="text-xl font-semibold mb-4">
+                        {researchData.background_report_title || "Contact Background Report"}
+                      </h2>
+                      <div className="space-y-4">
+                        {researchData.background_report_sections
+                          .filter((s) => {
+                            const body = String(s?.body || "").trim();
+                            // Hide anything shorter than ~2 sentences.
+                            const sentenceCount = (body.match(/[.!?](\s|$)/g) || []).length;
+                            return body.length >= 120 && sentenceCount >= 2;
+                          })
+                          .slice(0, 20)
+                          .map((s, idx) => (
+                            <div key={`sec_${idx}`} className="border border-gray-200 rounded-lg p-4">
+                              <div className="text-sm font-semibold text-gray-900">{s.heading}</div>
+                              <div className="mt-2 text-sm text-gray-700 whitespace-pre-wrap">{s.body}</div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  ) : null}
+
                   {/* Company Summary */}
                   <div>
                     <div className="flex justify-between items-center mb-4">
