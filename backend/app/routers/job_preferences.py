@@ -12,6 +12,8 @@ from sqlalchemy.dialects.postgresql import JSONB
 from ..db import get_engine
 from ..clients.openai_client import get_openai_client, extract_json_from_text
 from ..storage import store
+from ..services.serper_client import serper_web_search
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 
 router = APIRouter()
@@ -59,6 +61,13 @@ class JobRecommendationsResponse(BaseModel):
     message: str
     recommendations: List[JobRecommendation]
 
+
+class GreenhouseBoardsResponse(BaseModel):
+    success: bool
+    message: str
+    query: str
+    results: List[Dict[str, Any]]
+
 DEMO_USER_ID = "demo-user"
 
 
@@ -75,6 +84,81 @@ def _keywords_from_preferences(p: JobPreferences) -> str:
     s = " ".join([str(x).strip() for x in parts if str(x).strip()])
     s = " ".join(s.split())
     return s[:160] if s else "software engineering"
+
+
+def _board_query(p: JobPreferences, *, max_len: int = 70) -> str:
+    """
+    Build a search query that job boards can handle.
+
+    Many boards (LinkedIn, WTTJ, etc.) degrade badly if we stuff in role_categories + industries + skills.
+    """
+    parts: List[str] = []
+    role_kw = _role_keyword_from_categories(p.role_categories or [])
+    if role_kw:
+        parts.append(role_kw)
+
+    # Add at most 2 skills (first two), since users often select many.
+    skills = [str(s).strip() for s in (p.skills or []) if str(s).strip()]
+    for s in skills[:2]:
+        parts.append(s)
+
+    # Add at most 1 industry hint (first) to keep results relevant but broad.
+    industries = [str(x).strip() for x in (p.industries or []) if str(x).strip()]
+    if industries:
+        parts.append(industries[0])
+
+    q = " ".join([x for x in parts if x]).strip()
+    if not q:
+        q = _keywords_from_preferences(p)
+    return " ".join(q.split())[: max(20, int(max_len))]
+
+
+def _linkedin_url(p: JobPreferences) -> str:
+    """
+    LinkedIn Jobs search URL (robust + not overly granular).
+    """
+    q = quote_plus(_board_query(p, max_len=60))
+    # LinkedIn often performs better with a broad location than "United States, California"
+    # (and the UI already has state filtering elsewhere).
+    loc_hint = "United States"
+    if p.state and str(p.state).strip():
+        loc_hint = f"United States"
+    lc = quote_plus(loc_hint)
+
+    # Optional remote filter if user selected Remote.
+    work = [str(x).lower() for x in (p.work_type or p.location_preferences or []) if str(x).strip()]
+    is_remote = any("remote" in x for x in work)
+    extra = "&f_WT=2" if is_remote else ""
+
+    return f"https://www.linkedin.com/jobs/search/?keywords={q}&location={lc}{extra}"
+
+
+def _sanitize_url(url: str, p: JobPreferences, source: str = "") -> str:
+    """
+    Normalize fragile URLs produced by the LLM into stable, demo-friendly links.
+    """
+    u = (url or "").strip()
+    if not u:
+        return u
+
+    low = u.lower()
+
+    # 1) Welcome to the Jungle: avoid region subdomains + use a stable search param.
+    if "welcometothejungle.com" in low:
+        q = quote_plus(_board_query(p, max_len=60))
+        # Use the generic /en/ portal. (WTTJ is not US-specific; this is the safest stable entrypoint.)
+        return f"https://www.welcometothejungle.com/en/jobs?query={q}"
+
+    # 2) LinkedIn: strip overly specific params like currentJobId, and rebuild with our short query.
+    if "linkedin.com/jobs/search" in low:
+        return _linkedin_url(p)
+
+    # 3) Greenhouse meta-search: don't send users to Google; route to our in-app board finder page.
+    if "google.com/search" in low and "boards.greenhouse.io" in low:
+        q = quote_plus(_board_query(p, max_len=60))
+        return f"/job-boards/greenhouse?q={q}"
+
+    return u
 
 
 def _role_keyword_from_categories(role_categories: List[str]) -> str:
@@ -180,6 +264,10 @@ def _classify_job_link(url: str, source: str = "") -> str:
     if not u:
         return "career_search"
 
+    # In-app board finders (we treat these as job board search pages)
+    if u.startswith("/job-boards/"):
+        return "job_board_search"
+
     # Strong indicators of a specific posting
     posting_markers = [
         "/jobs/view/",
@@ -206,6 +294,8 @@ def _classify_job_link(url: str, source: str = "") -> str:
         "remoteok",
         "greenhouse",  # meta-search
         "hitmarker",
+        "dice",
+        "idealist",
     }
     if s in board_sources:
         return "job_board_search"
@@ -233,6 +323,8 @@ def _source_display_name(source: str) -> str:
         "amazon_jobs": "Amazon Jobs",
         "netflix_jobs": "Netflix Jobs",
         "hitmarker": "Hitmarker",
+        "dice": "Dice",
+        "idealist": "Idealist",
     }.get(s, source or "Jobs")
 
 
@@ -241,6 +333,12 @@ def _normalize_recommendation(rec: JobRecommendation, p: JobPreferences) -> JobR
     Enforce "label matches link" consistency:
     - If it's a board/search page, label it as search and avoid implying a single specific job posting.
     """
+    # First: sanitize fragile URLs (LLM can generate overly-specific or broken ones).
+    try:
+        rec.url = _sanitize_url(rec.url, p, rec.source)
+    except Exception:
+        pass
+
     link_type = _classify_job_link(rec.url, rec.source)
     rec.link_type = link_type
 
@@ -291,7 +389,7 @@ def _company_size_bucket(company_sizes: List[str]) -> str:
 
 def _deterministic_recommendations(p: JobPreferences) -> List[JobRecommendation]:
     created_at = _now_iso_z()
-    keywords = _keywords_from_preferences(p)
+    keywords = _board_query(p, max_len=70)
     loc = _location_hint(p)
     size_bucket = _company_size_bucket(p.company_size or [])
 
@@ -331,7 +429,7 @@ def _deterministic_recommendations(p: JobPreferences) -> List[JobRecommendation]
             label="LinkedIn Jobs (search)",
             company="Various",
             source="linkedin_jobs",
-            url=f"https://www.linkedin.com/jobs/search/?keywords={q}&location={lc}",
+            url=_linkedin_url(p),
             link_type="job_board_search",
             rationale="Great breadth; strong for filtering by location, remote, and seniority.",
             score=78,
@@ -442,16 +540,48 @@ def _deterministic_recommendations(p: JobPreferences) -> List[JobRecommendation]
     recs.append(
         JobRecommendation(
             id="greenhouse-search",
-            label="Greenhouse boards (meta-search)",
+            label="Greenhouse boards (in-app search)",
             company="Various",
             source="greenhouse",
-            url=f"https://www.google.com/search?q=site:boards.greenhouse.io+{q}",
+            url=f"/job-boards/greenhouse?q={q}",
             link_type="job_board_search",
-            rationale="Uses Google to search across thousands of company boards hosted on Greenhouse (common ATS).",
+            rationale="Find relevant company job boards hosted on Greenhouse, without leaving RoleFerry.",
             score=66,
             created_at=created_at,
         )
     )
+
+    # Role-specialized mainstream boards (lightweight and stable)
+    role_kw = _role_keyword_from_categories(p.role_categories or [])
+    low_role = (role_kw or "").lower()
+    if "software" in low_role or "engineer" in low_role:
+        extra_sources.append(
+            JobRecommendation(
+                id="dice",
+                label="Dice (tech jobs) (search)",
+                company="Various",
+                source="dice",
+                url=f"https://www.dice.com/jobs?q={quote_plus(_board_query(p, max_len=50))}&location={quote_plus('United States')}",
+                link_type="job_board_search",
+                rationale="Tech-focused job board; useful when your target is engineering roles.",
+                score=62,
+                created_at=created_at,
+            )
+        )
+    if any(k in " ".join([x.lower() for x in (p.role_categories or [])]) for k in ["coaching", "mentorship", "education", "training", "social impact"]):
+        extra_sources.append(
+            JobRecommendation(
+                id="idealist",
+                label="Idealist (mission-driven roles) (search)",
+                company="Various",
+                source="idealist",
+                url=f"https://www.idealist.org/en/jobs?q={quote_plus(_board_query(p, max_len=50))}",
+                link_type="job_board_search",
+                rationale="Good for coaching/training and mission-driven org roles when you selected those categories.",
+                score=60,
+                created_at=created_at,
+            )
+        )
 
     # Big-company career sites ONLY if user selected mid/large or left size unspecified.
     if size_bucket in ["large", "mid", "any"]:
@@ -541,7 +671,7 @@ async def generate_job_recommendations(preferences: JobPreferences):
                         "  - If url is a specific job posting detail page, label should be the specific job title.\n"
                         "- You MUST respect company_size. If user selected small companies (<=200), avoid big-tech career sites (Google/Amazon/Microsoft/etc) and prefer startup boards + ATS meta-search.\n"
                         "- If user selected large companies (1000+), include some big-company career sites.\n"
-                        "- IMPORTANT: For ATS search (Greenhouse, Lever, Workday), do NOT invent a search URL like 'boards.greenhouse.io/search'. Instead, use a Google site search URL like 'https://www.google.com/search?q=site:boards.greenhouse.io+YOUR_QUERY'.\n"
+                        "- IMPORTANT: For ATS meta-search (Greenhouse boards), do NOT output a Google link. Use the in-app route '/job-boards/greenhouse?q=YOUR_QUERY' so RoleFerry can show results.\n"
                         "- For Indeed, keep the query broad (one primary role phrase + optionally one skill). Avoid stuffing many keywords into q=.\n"
                         "- Keep rationales 1 sentence.\n"
                         "- score: 0-100.\n"
@@ -631,6 +761,45 @@ async def generate_job_recommendations(preferences: JobPreferences):
     except Exception:
         logger.exception("Error generating recommendations")
         raise HTTPException(status_code=500, detail="Failed to generate recommendations")
+
+
+@router.get("/greenhouse-boards", response_model=GreenhouseBoardsResponse)
+async def greenhouse_boards(q: str = ""):
+    """
+    In-app helper: find relevant Greenhouse-hosted job boards using SERPER (if configured).
+
+    We do NOT send the user to Google; we return a curated list of likely boards.
+    """
+    query = " ".join(str(q or "").split()).strip()
+    if not query:
+        raise HTTPException(status_code=400, detail="q is required")
+
+    # This uses Serper's Google Search API (requires SERPER_API_KEY). If not present, return a helpful message.
+    results = serper_web_search(f"site:boards.greenhouse.io {query}", num=8, gl="us", hl="en")
+
+    # Filter out junk / non-board hits
+    cleaned: List[Dict[str, Any]] = []
+    for r in results or []:
+        url = str(r.get("url") or "").strip()
+        if not url:
+            continue
+        low = url.lower()
+        if "boards.greenhouse.io" not in low:
+            continue
+        # Prefer company board roots and job pages; skip generic embed assets
+        if any(bad in low for bad in ["/embed/", "greenhouse.io/embed", "boards.greenhouse.io/embed"]):
+            continue
+        cleaned.append({"title": r.get("title"), "url": url, "snippet": r.get("snippet")})
+
+    if not cleaned:
+        msg = (
+            "No Greenhouse boards found. "
+            "If this keeps happening, set SERPER_API_KEY on the backend to enable in-app board search."
+        )
+    else:
+        msg = f"Found {len(cleaned)} Greenhouse board results"
+
+    return GreenhouseBoardsResponse(success=True, message=msg, query=query, results=cleaned)
 
 
 @router.post("/save", response_model=JobPreferencesResponse)
