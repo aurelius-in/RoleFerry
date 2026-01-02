@@ -11,287 +11,152 @@
 
 ---
 
+## 🚀 Try RoleFerry
+
+- **Website**: https://roleferry.com
+- **Beta release target**: **Feb 14, 2026 (Valentine’s Day)**
+- **Beta pricing window**: **Free until Mar 14, 2026** (see Pricing)
+
+---
+
 ## 🎯 Mission
 
-**Transform job applications from black-hole submissions into direct conversations with decision-makers through intelligent automation and managed infrastructure.**
-
-> When a candidate clicks **Apply**, RoleFerry instantly **finds the right insider contact**, **drafts + sends** an optimized outreach sequence from RoleFerry's warmed infrastructure, and **tracks the pipeline** to hired—no tab‑hopping.
+**Transform job applications from black-hole submissions into direct conversations with decision-makers through an end-to-end workflow: preferences → proof → targeting → outreach → launch.**
 
 ---
 
-## ✨ Key Features
+## ✨ What RoleFerry Does (in plain English)
 
-### 🎯 **10-Tab Workflow System**
-- **Job Preferences/ICP**: Dynamic labeling (Job Seeker vs Recruiter modes)
-- **Resume/Candidate Profile**: AI-powered parsing and data extraction
-- **Job Descriptions**: URL import and pain point analysis
-- **Pain Point Match**: Solution-to-challenge alignment scoring
-- **Find Contact**: Contact discovery with email verification
-- **Context Research**: Auto-pulled company and contact summaries
-- **Offer Creation**: Audience-adaptive tone (Recruiter/Manager/Exec)
-- **Compose**: Variable substitution with jargon clarity detection
-- **Campaign**: 3-email auto-generation with deliverability checks
-- **Deliverability/Launch**: Pre-flight checks and send execution
+RoleFerry is a **workflow app** for job seekers (and recruiter mode) that helps you:
 
-### 🤖 **AI-Powered Intelligence**
-- Match scores (0-100) with detailed breakdown (experience, skills, industry)
-- Personalized job recommendations based on Intent & Job Preferences (IJP)
-- AI-powered email drafting with variable substitution
-- Resume extraction for personalized content generation
-- Jargon detection and plain-English explanations
-
-### 🔍 **Insider Connection Intelligence**
-- Auto-discover hiring managers and recruiters at target companies
-- Multi-provider enrichment waterfall (Apollo → Clay → Clearbit)
-- Email verification (NeverBounce + MillionVerifier)
-- LinkedIn profile discovery with confidence scoring
-
-### 📧 **Managed Deliverability**
-- 100+ pre-warmed sending domains (RoleFerry infrastructure)
-- Real-time health scoring per mailbox
-- Automatic domain rotation and throttling
-- Custom tracking domains (CTD) for link safety
-- No open-tracker pixels by default (privacy-first)
-- Pre-flight checks (spam score, DNS validation, bounce tracking)
-
-### 📊 **Advanced Analytics**
-- Alignment score correlation with reply rates
-- Cost per qualified lead tracking
-- Conversion funnel analysis
-- Campaign performance metrics
-- A/B testing and variant analysis
-
-### 🤝 **Copilot (Orion-Style)**
-- Context-aware AI assistant (persistent right rail)
-- Explains match rationale
-- Drafts emails on command
-- Surfaces insider connections
-- Job search strategy coaching
-
-### 👥 **Dual Mode Architecture**
-- **Job Seeker Mode**: Find jobs, apply, track interviews
-- **Recruiter Mode**: Source candidates, manage outreach, track placements
-- Dynamic UI labels and workflow adaptation
+- **Turn a job description into a targeted message** (with the right angle, not generic fluff)
+- **Find the right insider contact** (recruiter/hiring manager) and route them into your pipeline
+- **Generate and refine outreach sequences** with variable safety + clarity checks
+- **Run deliverability “pre-flight” checks** before you send
+- **Track what happened** so the workflow stays repeatable
 
 ---
 
-## 🏗️ Architecture
+## 🎯 12-Tab Workflow
 
-### Frontend (Next.js 15 + React 19 + Tailwind CSS 4)
-- **Modern Stack**: TypeScript, React Server Components, App Router
-- **10-Tab Workflow**: Job Preferences, Resume, Job Descriptions, Pain Point Match, Find Contact, Context Research, Offer Creation, Compose, Campaign, Deliverability/Launch
-- **Utility Tabs**: Dashboard, Analytics, Settings, Help
-- **Components**: Copilot Panel, Job Cards, Kanban Board, Persona Builder, IJP Wizard, Mode Toggle
-- **Responsive**: Mobile-first design, dark + light themes
+RoleFerry is organized as a **12-tab journey** (matching the in-app navigation):
 
-### Backend (FastAPI + Python 3.11+)
-- **APIs**: 100+ endpoints across 35+ routers
-- **10-Tab Workflow APIs**: Complete backend support for all workflow tabs
-- **Integrations**: Apollo, Clay, SendGrid, Stripe, Anthropic, Apify, NeverBounce, MillionVerifier
-- **AI Services**: Jargon detection, email verification, content generation
-- **Database**: PostgreSQL (with migrations)
-- **Queue**: Celery + Redis (background jobs)
-- **Caching**: Redis (match scores, enrichment data)
+- **Dashboard**
+- **Job Prefs (ICP)**
+- **Resume**
+- **Jobs (Job Descriptions)**
+- **Gaps (Gap Analysis)**
+- **Match (Pain Point Match)**
+- **Contact (Find Contact)**
+- **Research (Context Research)**
+- **Offer (Offer Creation)**
+- **Compose**
+- **Campaign**
+- **Launch (Deliverability / Launch)**
 
-### Infrastructure (AWS + Terraform)
-- **Compute**: ECS Fargate (API + Workers)
-- **Database**: RDS PostgreSQL with read replicas
-- **Cache**: ElastiCache Redis
-- **Storage**: S3 (resumes, exports)
-- **Email**: SendGrid + AWS SES (fallback)
-- **Monitoring**: Datadog APM, CloudWatch
+Utilities like **Analytics**, **Tracker**, **Settings**, and **Help** support the workflow but aren’t treated as “steps”.
 
 ---
 
-## 🚀 Quick Start
+## 🏗️ Architecture (Current)
 
-### Prerequisites
-- Node.js 20+
-- Python 3.11+
-- PostgreSQL 14+
-- Redis 7+
-- Docker & Docker Compose (optional)
+### Frontend
+- **Next.js 15 + React 19 + TypeScript**
+- **Tailwind CSS 4**
+- App Router, modern layout/navigation, demo vs live data modes
 
-### 1. Clone Repository
-```bash
-git clone https://github.com/aurelius-in/RoleFerry.git
-cd RoleFerry
-```
+### Backend
+- **FastAPI** + **Pydantic v2**
+- **PostgreSQL** (SQL migrations in `backend/app/migrations/`)
+- **SQLAlchemy**
+- **Redis** (cache/state where needed)
+- **OpenAI-backed LLM mode** + deterministic/stub mode for safe demos
+- **Prometheus metrics** (`prometheus-client`)
 
-### 2. Backend Setup
-```bash
-cd backend
-cp ../.env.example .env  # Configure API keys
-pip install -r requirements.txt
-python -m app  # Runs migrations + starts FastAPI on :8000
-```
-
-### 3. Frontend Setup
-```bash
-cd frontend
-npm install
-npm run dev  # Starts Next.js on :3000
-```
-
-### 4. Access Application
-- **Frontend**: http://localhost:3000
-- **API Docs**: http://localhost:8000/docs
-- **Demo**: Open `docs/index.html` in browser (no server needed)
+### Deployment
+- **Primary beta path**: Dockerized services deployed on **Railway**
+- **Reference docs**: AWS/Terraform materials exist in-repo, but Railway is the primary beta flow today
 
 ---
 
-## 📚 Documentation
+## 📚 Documentation (current entrypoints)
 
-Comprehensive enterprise-grade documentation (100+ documents, 40,000+ lines):
+The documentation set is large and evolving. The most useful starting points right now:
 
-### Strategic Planning (11 docs)
-- [Executive Summary](docs/01-strategic/executive-summary.md)
-- [Product Vision](docs/01-strategic/product-vision.md)
-- [Product Roadmap](docs/01-strategic/product-roadmap.md)
-- [Exit Strategy](docs/01-strategic/exit-strategy.md)
-- [Vision, Mission & Values](docs/01-strategic/vision-mission-values.md)
-
-### Requirements (12 docs)
-- [Functional Requirements](docs/02-requirements/functional-requirements.md)
-- [User Stories](docs/02-requirements/user-stories.md) (50+ stories)
-- [Use Cases](docs/02-requirements/use-cases.md) (30+ cases)
-- [IJP Wizard Flow](docs/02-requirements/user-flows.md)
-
-### Architecture (12 docs - RM-ODP 3-Layer)
-- [System Architecture](docs/03-architecture/) (Conceptual, Logical, Implementable)
-- [Data Architecture](docs/03-architecture/) (ER diagrams, schemas)
-- [Security Architecture](docs/03-architecture/) (Auth, encryption, compliance)
-- [Integration Architecture](docs/03-architecture/) (API contracts, webhooks)
-
-### Technical (20 docs)
-- [API Specification](docs/04-technical/api-specification.md)
-- [Database Schema](docs/04-technical/database-schema.md)
-- [Email Infrastructure Guide](docs/04-technical/email-infrastructure-guide.md)
-- [Performance Optimization](docs/04-technical/performance-optimization.md)
-- [CI/CD Pipeline](docs/04-technical/cicd-pipeline.md)
-
-### UX Design (9 docs)
-- [Design System](docs/05-ux-design/design-system.md)
-- [UI Specifications](docs/05-ux-design/ui-specifications.md)
-- [User Journey Maps](docs/05-ux-design/user-journey-maps.md)
-- [Onboarding Flow](docs/05-ux-design/onboarding-flow.md)
-- [Accessibility Guide](docs/05-ux-design/accessibility-guide.md) (WCAG 2.1 AA)
-
-### Operations (17 docs)
-- [Deployment Guide](docs/06-operations/deployment-guide.md)
-- [Monitoring & Alerting](docs/06-operations/monitoring-alerting.md)
-- [Incident Response](docs/06-operations/incident-response-plan.md)
-- [Disaster Recovery](docs/06-operations/disaster-recovery-plan.md)
-- [Scaling Guide](docs/06-operations/scaling-guide.md)
-
-### Compliance (7 docs)
-- [GDPR Compliance](docs/07-compliance/gdpr-compliance-guide.md)
-- [Privacy Policy](docs/07-compliance/privacy-policy.md)
-- [Terms of Service](docs/07-compliance/terms-of-service.md)
-- [Acceptable Use Policy](docs/07-compliance/acceptable-use-policy.md)
-
-### Business (23 docs)
-- [Go-to-Market Plan](docs/08-business/go-to-market-plan.md)
-- [Pricing Strategy](docs/08-business/pricing-strategy.md)
-- [Competitive Analysis](docs/08-business/competitive-analysis.md)
-- [Fundraising Deck Outline](docs/08-business/fundraising-deck-outline.md)
-- [Unit Economics](docs/08-business/unit-economics.md)
+- **Docs homepage**: `docs/home.html`
+- **Docs index**: `docs/README.md`
+- **Docs navigation map**: `docs/NAVIGATION.md`
+- **LLM-connected demo runbook**: `DEMO_RUNBOOK.md`
+- **Developer quickstart**: `DEVELOPMENT.md`
+- **Deployment reference**: `DEPLOYMENT.md`
 
 ---
 
-## 🎨 Product Differentiators
+## 🎨 Product Differentiators (and who only does part of it)
 
-### vs. LinkedIn Recruiter
-- ✅ **95% cheaper** ($1,788/year vs. $8,000/seat)
-- ✅ **Email-first** (15%+ reply rate vs. 3-5% InMail)
-- ✅ **Managed deliverability** (we handle warmed domains)
+RoleFerry’s core differentiator is **workflow integration**: it turns “a pile of tools” into a repeatable pipeline.
 
-### vs. Simplify/Huntr (Job Trackers)
-- ✅ **Active, not passive** (auto-finds contacts, sends emails)
-- ✅ **AI-powered** (match scoring, draft generation)
-- ✅ **Complete automation** (apply → contact → send in one click)
+### Partial competitors (examples)
+- **Job tracking only**: Teal, Huntr, Simplify  
+  Great trackers, but they don’t complete insider discovery → research → outreach → launch checks.
+- **Resume/ATS optimization only**: Jobscan  
+  Improves materials, but doesn’t execute outbound outreach or pipeline tracking.
+- **Enrichment only**: Apollo, Clay, Clearbit  
+  Great data, but not a job-search workflow with copy + campaign launch controls.
+- **Sequencing only**: Instantly, Smartlead, Lemlist  
+  Great for sends, but they don’t build the job-side context (JDs → angles → offer → copy).
+- **Warmup/deliverability only**: Mailreach, Warmbox, Lemwarm  
+  Solves deliverability primitives, not the end-to-end job workflow.
+- **Copilot-only assistants**: Orion-style copilots  
+  Helpful drafting aids, but not a full workflow system with launch checks + tracking.
 
-### vs. Apollo (Sales Tool)
-- ✅ **Recruiting-specific** UX (not sales-focused)
-- ✅ **Managed infrastructure** (you don't need your own domains)
-- ✅ **AI drafting** built-in (not just templates)
-
-### vs. Clay (Enrichment)
-- ✅ **End-to-end workflow** (not just enrichment)
-- ✅ **Job search optimized** (persona filters for hiring managers)
-- ✅ **Affordable for individuals** ($49/mo vs. $349/mo)
-
----
-
-## 🔧 Technology Stack
-
-**Frontend:**
-- Next.js 15 (React 19, TypeScript)
-- Tailwind CSS 4 (utility-first styling)
-- React Query (state management)
-- Framer Motion (animations)
-
-**Backend:**
-- FastAPI (Python async framework)
-- PostgreSQL (relational database)
-- Redis (caching + queues)
-- Celery (background jobs)
-- SQLAlchemy (ORM)
-
-**AI/ML:**
-- Anthropic Claude Sonnet (long-context drafting)
-- OpenAI GPT-4 (fallback)
-- Custom match scoring algorithm
-
-**Integrations:**
-- Apollo + Clay (contact enrichment)
-- SendGrid + AWS SES (email delivery)
-- NeverBounce + MillionVerifier (email verification)
-- Stripe (payments)
-- Clearbit (company data)
-
-**Infrastructure:**
-- AWS (ECS, RDS, ElastiCache, S3, CloudFront)
-- Terraform (infrastructure as code)
-- GitHub Actions (CI/CD)
-- Datadog (monitoring + APM)
+### Concrete “RoleFerry” examples
+- **From a JD URL → outbound-ready campaign**:
+  import JD → gap analysis → pain-point match → find contact → research → offer → compose → campaign → launch checks
+- **From “I want these roles” → consistent weekly output**:
+  define Job Prefs/ICP → shortlist targets → generate message angles → run sequences → track outcomes → iterate
 
 ---
 
-## 📊 Performance
+## 📈 Pricing (Beta + Post-Beta)
 
-- **API Latency**: P95 <500ms
-- **Match Score**: <100ms (cached)
-- **Enrichment**: <30s (Apollo + Clay waterfall)
-- **Email Send**: <5min (queued, throttled)
-- **Page Load**: <2s (FCP)
+### Beta
+- **Free** through **Mar 14, 2026**
+
+### After beta (effective Mar 15, 2026)
+- **Core App**: **$99/month**
+- **Usage**: **$1 per lead** (e.g., per verified/enriched contact you push through the campaign workflow)
+
+### Workflow-aligned upsells (not random add-ons)
+- **Live coaching + app**: weekly reviews of Job Prefs, positioning, offers, and outreach
+- **Deliverability add-on**: domains/DNS/sending posture support for high-volume outreach
+- **Recruiter/teams**: collaboration + reporting (pricing varies)
+
+> Example: 200 leads/month → $99 + $200 = **$299/month**
+
+---
+
+## 📊 Performance (how we think about it)
+
+- **Fast UX by default**: Next.js static output where possible + app-router layouts
+- **Caching where it matters**: Redis-backed hot paths and repeated computations
+- **Safe sending**: pre-flight checks + throttling guidance to reduce deliverability risk
 
 ---
 
 ## 🔐 Security & Compliance
 
-- **GDPR Compliant**: 90-day data retention, self-service deletion
-- **SOC 2 Type II**: Audit-ready (policies + procedures documented)
-- **CAN-SPAM**: Auto opt-out, no open tracking by default
-- **Encryption**: At-rest (AES-256), in-transit (TLS 1.3)
-- **Authentication**: JWT-based, refresh tokens, MFA support
-
----
-
-## 📈 Pricing
-
-| Plan | Price | Features |
-|------|-------|----------|
-| **Free** | $0 | 10 applications/month, basic matching |
-| **Pro** | $49/mo | Unlimited applications, AI Copilot, 500 enrichment credits, LivePages |
-| **Teams** | $149/seat | All Pro features, personas, team collaboration, priority support |
-| **Enterprise** | Custom | White-label, API access, SLA, dedicated support |
+- **GDPR Compliant**: retention + deletion flows
+- **CAN-SPAM**: opt-out support, no open tracking by default
+- **Encryption**: in-transit TLS, at-rest encryption where supported
+- **Authentication**: JWT-based sessions
 
 ---
 
 ## 🤝 Contributing
 
-See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for development guidelines.
+- Contribution guidelines: `docs/CONTRIBUTING.md`
+- Local dev: `DEVELOPMENT.md`
 
 ---
 
@@ -300,12 +165,6 @@ See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for development guidelines.
 Copyright © 2025 Reliable AI Network, Inc. All rights reserved.
 
 See [LICENSE](LICENSE) for details.
-
----
-
-## 🙏 Acknowledgments
-
-RoleFerry is inspired by best practices from leading platforms in job search, recruiting, and sales automation. We've blended UI patterns from industry leaders with our unique differentiators: click-to-contact intelligence, Author + Sequencer, and deliverability handled by our own domains.
 
 ---
 
@@ -321,3 +180,4 @@ RoleFerry is inspired by best practices from leading platforms in job search, re
 <p align="center">
   <strong>Smooth crossing in rough seas.</strong> 🌊⛴️
 </p>
+
