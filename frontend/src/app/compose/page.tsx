@@ -406,9 +406,14 @@ export default function ComposePage() {
       }
     } catch (err: any) {
       const msg = String(err?.message || err || "").trim();
-      // If auth expired/missing, take the user back to login.
+      // If auth expired/missing, do NOT bounce the user out mid-flow.
+      // Show a clear error and let them decide to log in again.
       if (msg.includes(" 401 ") || msg.includes("Not authenticated")) {
-        router.push("/login");
+        setError("Your session looks expired. Please refresh the page or log in again, then retry Generate Email.");
+        // Always keep a usable local draft even if the backend call fails.
+        try {
+          setEmailTemplate((prev) => prev || buildFallback());
+        } catch {}
         return;
       }
       // Always show a usable variable-based template (even if backend is down)
