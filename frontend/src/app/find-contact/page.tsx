@@ -65,6 +65,7 @@ export default function FindContactPage() {
   const [savedVerified, setSavedVerified] = useState<Contact[]>([]);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
   const [userKey, setUserKey] = useState<string>("anon");
+  const [buildStamp, setBuildStamp] = useState<string>("");
 
   const formatTitleCase = (input?: string) => {
     const s = String(input || "").trim();
@@ -132,6 +133,20 @@ export default function FindContactPage() {
   };
 
   useEffect(() => {
+    // Build stamp (debug): helps confirm whether Railway is serving the latest frontend build.
+    // If this page doesn't show a build stamp at all, you're on an older deployment.
+    try {
+      fetch("/__debug", { cache: "no-store" as any })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => {
+          const sha = String(j?.railwayGitCommitSha || "").trim();
+          const short = sha ? sha.slice(0, 7) : "";
+          const ts = String(j?.timestamp || "").trim();
+          setBuildStamp(short ? `build ${short}${ts ? ` • ${ts}` : ""}` : (ts ? `build • ${ts}` : ""));
+        })
+        .catch(() => {});
+    } catch {}
+
     // Identify user for per-user persistence
     try {
       const u = JSON.parse(localStorage.getItem("rf_user") || "null");
@@ -428,6 +443,9 @@ export default function FindContactPage() {
             <p className="text-white/70">
               Select a contact and reach out via email (if available) or LinkedIn.
             </p>
+            {buildStamp ? (
+              <div className="mt-2 text-[11px] text-white/40 font-mono">{buildStamp}</div>
+            ) : null}
           </div>
 
           {error && (
