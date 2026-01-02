@@ -49,6 +49,17 @@ interface OfferCreationResponse {
   offer?: BackendOffer;
 }
 
+interface Contact {
+  id: string;
+  name: string;
+  title?: string;
+  company?: string;
+  department?: string;
+  level?: string;
+  email?: string;
+  linkedin_url?: string;
+}
+
 export default function OfferCreationPage() {
   const router = useRouter();
   const videoInputRef = useRef<HTMLInputElement | null>(null);
@@ -66,6 +77,9 @@ export default function OfferCreationPage() {
   const [videoObjectUrl, setVideoObjectUrl] = useState<string>("");
   const [isVideoDragOver, setIsVideoDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
+  const [researchHistory, setResearchHistory] = useState<Array<{ contact: Contact; research: any; researched_at: string }>>([]);
+  const [activeContactId, setActiveContactId] = useState<string | null>(null);
 
   const readActiveResearch = () => {
     try {
@@ -92,6 +106,59 @@ export default function OfferCreationPage() {
     } catch {
       return {};
     }
+  };
+
+  const readResearchHistory = () => {
+    try {
+      const raw = localStorage.getItem("context_research_history");
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const setActiveContact = (contactId: string) => {
+    const cid = String(contactId || "").trim();
+    if (!cid) return;
+    setActiveContactId(cid);
+    try {
+      localStorage.setItem("context_research_active_contact_id", cid);
+    } catch {}
+
+    // Ensure `context_research` reflects the selected contact (downstream screens read this too).
+    try {
+      const rawBy = localStorage.getItem("context_research_by_contact");
+      const by = rawBy ? JSON.parse(rawBy) : null;
+      const hit = by && typeof by === "object" ? (by[cid] || null) : null;
+      if (hit) {
+        localStorage.setItem("context_research", JSON.stringify(hit));
+        localStorage.setItem("research_data", JSON.stringify(hit));
+      } else {
+        const hist = readResearchHistory();
+        const h = Array.isArray(hist) ? hist.find((x: any) => String(x?.contact?.id || "") === cid) : null;
+        if (h?.research) {
+          localStorage.setItem("context_research", JSON.stringify(h.research));
+          localStorage.setItem("research_data", JSON.stringify(h.research));
+        }
+      }
+    } catch {}
+
+    // Keep selected_contacts aligned so downstream variable builders that use selected_contacts[0]
+    // stay consistent with the chosen contact.
+    try {
+      const raw = localStorage.getItem("selected_contacts");
+      const list = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(list) && list.length) {
+        const idx = list.findIndex((c: any) => String(c?.id || "") === cid);
+        if (idx >= 0) {
+          const chosen = list[idx];
+          const rest = list.filter((_: any, i: number) => i !== idx);
+          localStorage.setItem("selected_contacts", JSON.stringify([chosen, ...rest]));
+          setSelectedContacts([chosen, ...rest]);
+        }
+      }
+    } catch {}
   };
 
   const displayMetric = (raw: string) => {
@@ -162,6 +229,23 @@ export default function OfferCreationPage() {
     
     window.addEventListener('modeChanged', handleModeChange as EventListener);
     return () => window.removeEventListener('modeChanged', handleModeChange as EventListener);
+  }, []);
+
+  useEffect(() => {
+    // Load selected contacts + research history so user can select who this offer is targeting.
+    try {
+      const scRaw = localStorage.getItem("selected_contacts");
+      const sc = scRaw ? JSON.parse(scRaw) : [];
+      if (Array.isArray(sc)) setSelectedContacts(sc);
+    } catch {}
+    try {
+      const hist = readResearchHistory();
+      setResearchHistory(hist);
+    } catch {}
+    try {
+      const active = String(localStorage.getItem("context_research_active_contact_id") || "").trim();
+      if (active) setActiveContactId(active);
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -409,6 +493,91 @@ export default function OfferCreationPage() {
                 </div>
               ) : (
                 <div className="space-y-8">
+                  {/* Target contact selector (uses persisted research history) */}
+                  <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-bold text-white/90">Target contact</div>
+                        <div className="text-xs text-white/60">
+                          Select who this offer is written for. We’ll use their saved research for personalization.
+                        </div>
+                      </div>
+                      <a
+                        href="/context-research"
+                        className="text-xs font-semibold text-blue-200/90 hover:text-blue-100 underline underline-offset-2"
+                        title="Go back to research more contacts"
+                      >
+                        Research more →
+                      </a>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
+                      <div className="md:col-span-6">
+                        <label className="block text-[11px] font-semibold text-white/70 mb-1">Researched contacts</label>
+                        <select
+                          value={activeContactId || ""}
+                          onChange={(e) => setActiveContact(e.target.value)}
+                          className="w-full rounded-md border border-white/10 bg-black/30 text-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="" disabled>
+                            {researchHistory.length ? "Select a researched contact…" : "No researched contacts yet"}
+                          </option>
+                          {researchHistory.map((h) => (
+                            <option key={`opt_${h?.contact?.id}`} value={String(h?.contact?.id || "")}>
+                              {String(h?.contact?.name || "Contact")}
+                              {h?.contact?.title ? ` — ${String(h.contact.title)}` : ""}
+                              {h?.contact?.company ? ` @ ${String(h.contact.company)}` : ""}
+                            </option>
+                          ))}
+                        </select>
+                        {!researchHistory.length ? (
+                          <div className="mt-2 text-xs text-white/60">
+                            Run research on the Research step to build your list, then come back here to choose who you’re targeting.
+                          </div>
+                        ) : null}
+                      </div>
+
+                      <div className="md:col-span-6">
+                        <label className="block text-[11px] font-semibold text-white/70 mb-1">Quick pick</label>
+                        <div className="flex flex-wrap gap-2">
+                          {researchHistory.slice(0, 6).map((h) => {
+                            const id = String(h?.contact?.id || "");
+                            const active = String(activeContactId || "") === id;
+                            return (
+                              <button
+                                type="button"
+                                key={`pill_${id}`}
+                                onClick={() => setActiveContact(id)}
+                                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-colors ${
+                                  active
+                                    ? "brand-gradient text-black border-white/10"
+                                    : "bg-white/5 text-white/80 border-white/10 hover:bg-white/10"
+                                }`}
+                                title="Set this contact as the target"
+                              >
+                                {String(h?.contact?.name || "Contact").split(" ")[0]}
+                              </button>
+                            );
+                          })}
+                          {researchHistory.length === 0 && selectedContacts.length > 0 ? (
+                            <div className="text-xs text-white/60">
+                              Tip: research at least one contact first, then you can select them here.
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+
+                    {activeContactId ? (
+                      <div className="mt-3 text-xs text-white/70">
+                        <span className="font-semibold text-white/80">Active:</span>{" "}
+                        {selectedContacts.find((c) => String(c?.id) === String(activeContactId))?.name ||
+                          researchHistory.find((h) => String(h?.contact?.id) === String(activeContactId))?.contact?.name ||
+                          "Selected contact"}
+                      </div>
+                    ) : null}
+                  </div>
+
                   {/* Pain Point Match Summary Card */}
                   <div className="bg-blue-50 border border-white/10 rounded-lg p-4">
                      <h3 className="text-sm font-semibold text-white uppercase tracking-wide mb-2">Target Opportunity</h3>

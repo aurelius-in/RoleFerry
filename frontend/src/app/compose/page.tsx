@@ -229,7 +229,18 @@ export default function ComposePage() {
       }
     } catch {}
 
-    const firstContact = selectedContacts?.[0] || {};
+    // Prefer the active contact (selected in Research/Offer) so variables align with the chosen research target.
+    // Guard localStorage for Next.js prerender (server-side).
+    let activeContactId = "";
+    try {
+      if (typeof window !== "undefined") {
+        activeContactId = String(localStorage.getItem("context_research_active_contact_id") || "").trim();
+      }
+    } catch {}
+    const firstContact =
+      (activeContactId ? selectedContacts.find((c) => String((c as any)?.id || "") === activeContactId) : null) ||
+      selectedContacts?.[0] ||
+      {};
     const firstNameRaw = String(firstContact?.name || "").trim();
     const firstName = firstNameRaw ? firstNameRaw.split(" ")[0] : "there";
 
