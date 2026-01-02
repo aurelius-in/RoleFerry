@@ -651,9 +651,9 @@ export default function ComposePage() {
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Compose</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Compose (Email 1)</h1>
             <p className="text-white/70">
-              Turn your Offer into a polished email. You can edit the key offer line and optional work link before generating.
+              Craft the primary message (Email 1). The next step, <span className="font-semibold text-white/80">Campaign</span>, generates follow-ups (Emails 2–3) per contact.
             </p>
             {buildStamp ? (
               <div className="mt-2 text-[11px] text-white/40 font-mono">

@@ -612,7 +612,7 @@ export default function CampaignPage() {
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Campaign</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Campaign (Sequence)</h1>
             <p className="text-white/70">
               {mode === 'job-seeker' 
                 ? 'Your 3-email outreach sequence to land the job.'
@@ -719,6 +719,33 @@ export default function CampaignPage() {
 
               {/* Main editor */}
               <div className="lg:col-span-9 space-y-8">
+              {/* Email 1 source (Compose) */}
+              <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-bold text-white">Email 1 comes from Compose</div>
+                    <div className="text-xs text-white/60 mt-1">
+                      Compose is for crafting the primary message. Campaign is for sequencing (follow-ups, timing, and per-contact personalization).
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      try {
+                        if (activeContactId) {
+                          localStorage.setItem("context_research_active_contact_id", String(activeContactId));
+                          localStorage.setItem("campaign_active_contact_id", String(activeContactId));
+                        }
+                      } catch {}
+                      router.push("/compose");
+                    }}
+                    className="shrink-0 px-3 py-2 rounded-md bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700"
+                  >
+                    Edit Email 1 in Compose →
+                  </button>
+                </div>
+              </div>
+
               {composeHelper?.variants?.length > 0 && (
                 <div className="rounded-lg border border-white/10 bg-black/20 p-4">
                   <div className="flex items-start justify-between gap-3 mb-2">
