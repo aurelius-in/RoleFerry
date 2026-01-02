@@ -67,6 +67,7 @@ export default function ComposePage() {
   const [error, setError] = useState<string | null>(null);
   const [previewWithValues, setPreviewWithValues] = useState(true);
   const [variableOverrides, setVariableOverrides] = useState<Record<string, string>>({});
+  const [buildStamp, setBuildStamp] = useState<string>("");
 
   // Offer Library (from Offer step)
   const [offerLibrary, setOfferLibrary] = useState<Offer[]>([]);
@@ -369,6 +370,26 @@ export default function ComposePage() {
       }
     } catch {}
 
+    // If localStorage is empty (or user navigated directly), try to hydrate from backend.
+    // This keeps the Offer Library usable even after refreshes or when the user skips "Continue".
+    (async () => {
+      try {
+        const current = readCreatedOffers();
+        if (Array.isArray(current) && current.length > 0) return;
+        const resp = await api<any>("/offer-creation/me", "GET");
+        const serverOffers = (resp && Array.isArray(resp.offers)) ? (resp.offers as Offer[]) : [];
+        if (serverOffers.length) {
+          setOfferLibrary(serverOffers);
+          persistCreatedOffers(serverOffers);
+          const storedActiveId = String(localStorage.getItem("compose_selected_offer_id") || "").trim();
+          const active = (storedActiveId && serverOffers.find((o) => String(o?.id) === storedActiveId)) || serverOffers[serverOffers.length - 1];
+          if (active) setActiveOffer(active);
+        }
+      } catch {
+        // ignore
+      }
+    })();
+
     // Also support an offer draft (if the user generated/typed an offer but didn't save it into created_offers).
     try {
       const draft = JSON.parse(localStorage.getItem("offer_draft") || "null");
@@ -390,6 +411,21 @@ export default function ComposePage() {
     
     window.addEventListener('modeChanged', handleModeChange as EventListener);
     return () => window.removeEventListener('modeChanged', handleModeChange as EventListener);
+  }, []);
+
+  useEffect(() => {
+    // Build stamp (debug): confirms whether Railway is serving the latest frontend build.
+    try {
+      fetch("/__debug", { cache: "no-store" as any })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => {
+          const sha = String(j?.railwayGitCommitSha || "").trim();
+          const short = sha ? sha.slice(0, 7) : "";
+          const ts = String(j?.timestamp || "").trim();
+          setBuildStamp(short ? `build ${short}${ts ? ` • ${ts}` : ""}` : (ts ? `build • ${ts}` : ""));
+        })
+        .catch(() => {});
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -580,6 +616,11 @@ export default function ComposePage() {
             <p className="text-white/70">
               Turn your Offer into a polished email. You can edit the key offer line and optional work link before generating.
             </p>
+            {buildStamp ? (
+              <div className="mt-2 text-[11px] text-white/40 font-mono">
+                {buildStamp} • offers found: {offerLibrary.length}
+              </div>
+            ) : null}
           </div>
 
           {offerNotice ? (
