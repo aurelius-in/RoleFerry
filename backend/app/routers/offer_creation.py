@@ -210,6 +210,8 @@ async def save_offer(offer: Offer, http_request: Request):
             message="Offer saved successfully",
             offer=offer,
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save offer: {str(e)}")
 
@@ -265,6 +267,8 @@ async def get_offers_me(http_request: Request):
             message="Offers retrieved successfully",
             offers=offers,
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get offers: {str(e)}")
 

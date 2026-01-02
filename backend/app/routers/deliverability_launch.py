@@ -811,6 +811,8 @@ async def launch_campaign(request: CampaignLaunchRequest, http_request: Request)
         
         return result
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception("Error launching campaign")
         raise HTTPException(status_code=500, detail="Failed to launch campaign")
