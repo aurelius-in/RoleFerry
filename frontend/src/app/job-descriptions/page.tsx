@@ -38,6 +38,13 @@ interface JobDescription {
   painPoints: string[];
   requiredSkills: string[];
   successMetrics: string[];
+  location?: string;
+  workMode?: string;
+  employmentType?: string;
+  salaryRange?: string;
+  responsibilities?: string[];
+  requirements?: string[];
+  benefits?: string[];
   jdJargon: string[];
   grade?: 'Shoo-in' | 'Stretch' | 'Ideal';
   parsedAt: string;
@@ -52,6 +59,13 @@ interface BackendJobDescription {
   pain_points: string[];
   required_skills: string[];
   success_metrics: string[];
+  location?: string | null;
+  work_mode?: string | null;
+  employment_type?: string | null;
+  salary_range?: string | null;
+  responsibilities?: string[] | null;
+  requirements?: string[] | null;
+  benefits?: string[] | null;
   parsed_at: string;
 }
 
@@ -162,6 +176,13 @@ export default function JobDescriptionsPage() {
           painPoints: jd.pain_points || [],
           requiredSkills: jd.required_skills || [],
           successMetrics: jd.success_metrics || [],
+          location: jd.location || undefined,
+          workMode: jd.work_mode || undefined,
+          employmentType: jd.employment_type || undefined,
+          salaryRange: jd.salary_range || undefined,
+          responsibilities: (jd.responsibilities || undefined) as any,
+          requirements: (jd.requirements || undefined) as any,
+          benefits: (jd.benefits || undefined) as any,
           jdJargon: extractJargon(jd.content || ""),
           grade: undefined,
           parsedAt: jd.parsed_at || new Date().toISOString(),
@@ -481,6 +502,30 @@ export default function JobDescriptionsPage() {
                     <div>
                       <h3 className="text-xl font-semibold text-white">{jd.title}</h3>
                       <p className="text-white/70">{jd.company}</p>
+                      {(jd.salaryRange || jd.location || jd.workMode || jd.employmentType) && (
+                        <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+                          {jd.salaryRange ? (
+                            <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
+                              {jd.salaryRange}
+                            </span>
+                          ) : null}
+                          {jd.location ? (
+                            <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
+                              {jd.location}
+                            </span>
+                          ) : null}
+                          {jd.workMode ? (
+                            <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
+                              {jd.workMode}
+                            </span>
+                          ) : null}
+                          {jd.employmentType ? (
+                            <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
+                              {jd.employmentType}
+                            </span>
+                          ) : null}
+                        </div>
+                      )}
                       {jd.url && (
                         <a 
                           href={jd.url} 
@@ -569,6 +614,33 @@ export default function JobDescriptionsPage() {
                           </li>
                         ))}
                       </ul>
+                    </div>
+
+                    {/* Requirements / Benefits (best-effort) */}
+                    <div>
+                      <h4 className="font-semibold text-white mb-3">Requirements & Benefits</h4>
+                      {(jd.requirements && jd.requirements.length > 0) ? (
+                        <div className="mb-3">
+                          <div className="text-xs font-semibold text-white/70 mb-1">Requirements</div>
+                          <ul className="space-y-1">
+                            {jd.requirements.slice(0, 4).map((r, i) => (
+                              <li key={`req_${i}`} className="text-sm text-white/80">• {r}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-white/50 mb-2">No requirements extracted yet.</div>
+                      )}
+                      {(jd.benefits && jd.benefits.length > 0) ? (
+                        <div>
+                          <div className="text-xs font-semibold text-white/70 mb-1">Benefits</div>
+                          <ul className="space-y-1">
+                            {jd.benefits.slice(0, 4).map((b, i) => (
+                              <li key={`ben_${i}`} className="text-sm text-white/80">• {b}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
                     </div>
 
                     {/* JD Jargon */}

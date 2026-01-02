@@ -392,21 +392,41 @@ class OpenAIClient:
 
     def extract_job_structure(self, text: str) -> Dict[str, Any]:
         """
-        Parse a job description into pain_points, required_skills, success_metrics.
+        Parse a job description into structured fields.
         """
         messages = [
             {
                 "role": "system",
                 "content": (
-                    "You are a job description parser. Extract structured fields from raw job posting text.\n\n"
-                    "Rules for 'pain_points':\n"
-                    "- Focus on business challenges, technical problems, or goals mentioned (e.g., 'reduce churn', 'scale infra').\n"
-                    "- Do NOT include salary, compensation, benefits, or employment type (e.g., '$150k', 'Full-time') as pain points.\n\n"
-                    "Return ONLY a JSON object with keys:\n"
+                    "You are RoleFerry's job description parser. Extract accurate structured fields from messy job posting text.\n\n"
+                    "The input may include job-board UI noise like: 'Actively Hiring', 'Apply Now', 'Save', 'Posted 1 week ago', salaries, locations, etc.\n"
+                    "Ignore UI noise and focus on the actual job content.\n\n"
+                    "Hard requirements:\n"
+                    "- Do NOT fabricate facts. Only extract what is clearly present.\n"
+                    "- title MUST be the role title (e.g., 'Strategic Customer Success Manager'), NOT the company name.\n"
+                    "- company MUST be the company name (e.g., 'SentiLink'), NOT a generic word like 'This'/'We'/'Remote'.\n"
+                    "- If uncertain, return empty string for that field.\n\n"
+                    "Rules for pain_points (business challenges):\n"
+                    "- Focus on business/technical goals, problems, or challenges.\n"
+                    "- DO NOT include compensation/salary/benefits/employment type/location as pain points.\n\n"
+                    "Rules for success_metrics:\n"
+                    "- Prefer measurable outcomes or KPI-style expectations.\n"
+                    "- If none are explicitly stated, return 1-3 short outcome statements derived from responsibilities (not marketing fluff).\n\n"
+                    "Rules for required_skills:\n"
+                    "- Include concrete skills/tools/technologies (e.g., 'Salesforce', 'APIs', 'SQL', 'Customer success').\n"
+                    "- Avoid accidental matches like the word 'go' from 'go live' (only include 'Go' if clearly referring to the programming language).\n\n"
+                    "Return ONLY JSON with these keys:\n"
                     "- title: string\n"
                     "- company: string\n"
+                    "- location: string (e.g., 'United States', 'San Francisco, CA')\n"
+                    "- work_mode: string (remote|hybrid|onsite|unknown)\n"
+                    "- employment_type: string (full-time|part-time|contract|internship|unknown)\n"
+                    "- salary_range: string (as written)\n"
                     "- pain_points: array of strings\n"
+                    "- responsibilities: array of strings\n"
+                    "- requirements: array of strings\n"
                     "- required_skills: array of strings\n"
+                    "- benefits: array of strings\n"
                     "- success_metrics: array of strings\n"
                 ),
             },
@@ -418,15 +438,28 @@ class OpenAIClient:
         stub = {
             "title": titles[seed % len(titles)],
             "company": companies[(seed // 7) % len(companies)],
+            "location": "United States",
+            "work_mode": "remote",
+            "employment_type": "full-time",
+            "salary_range": "$150,000 - $190,000",
             "pain_points": [
                 "Improve onboarding activation and reduce drop-off",
                 "Reduce churn by improving time-to-value",
                 "Increase visibility into funnel metrics and attribution",
             ],
+            "responsibilities": [
+                "Own onboarding and activation initiatives end-to-end",
+                "Partner cross-functionally with Product and Engineering",
+            ],
+            "requirements": [
+                "3+ years in a relevant role",
+                "Strong stakeholder management",
+            ],
             "required_skills": ["SQL", "Experimentation", "Stakeholder management", "Analytics", "Roadmapping"],
+            "benefits": ["Remote-friendly", "Health insurance", "401(k)"],
             "success_metrics": ["+15% activation", "-10% churn", "Shorter cycle time for releases"],
         }
-        return self.run_chat_completion(messages, temperature=0.1, stub_json=stub)
+        return self.run_chat_completion(messages, temperature=0.1, max_tokens=1200, stub_json=stub)
 
     def generate_pain_point_map(self, jd_blob: str, resume_blob: str) -> Dict[str, Any]:
         """
