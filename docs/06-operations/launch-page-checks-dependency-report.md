@@ -141,6 +141,52 @@ If you send through a platform like Smartlead/Instantly:
 
 ---
 
+## 5) Analytics (Live mode) — Why it fails, and how to fix it
+
+### 5.1 Symptom
+
+On the Analytics page in **Live (API)** mode, you may see:
+
+- “We couldn’t load live metrics… /analytics/overview…”
+
+### 5.2 What’s actually happening
+
+RoleFerry’s Live analytics calls:
+
+- `GET /analytics/overview`
+
+Key dependencies:
+
+- **Authentication**: `GET /analytics/overview` requires a valid logged-in session (auth cookie).
+- **Backend reachability**: The frontend calls the backend via the **`/api` proxy** (Next.js rewrite). In production this is *not* `localhost`.
+- **Database schema** (optional but recommended): analytics reads from Postgres tables such as `application` and `outreach`. If migrations didn’t run or DB is unreachable, metrics may error or remain empty.
+
+### 5.3 Operator instructions (what to do)
+
+**Step A — Confirm you’re authenticated**
+
+- If `GET /api/analytics/overview` returns **401**, log out and log in again.
+
+**Step B — Confirm frontend is proxying to the correct backend**
+
+- Ensure the frontend environment variable `NEXT_PUBLIC_API_URL` points to your backend service URL.
+- The frontend must be able to reach the backend from the deployed URL via `/api/*`.
+
+**Step C — Confirm the backend endpoint is healthy**
+
+- Check `/health` and backend deploy logs for exceptions.
+
+**Step D — Confirm DB/migrations**
+
+- If backend logs show missing tables (e.g., `relation "outreach" does not exist`), redeploy backend so startup migrations apply successfully.
+
+### 5.4 What RoleFerry cannot do without additional integration
+
+- **True live open/click tracking** requires a sending provider + tracking pixels/links + provider events.
+- **True bounce/spam complaint history** requires provider webhooks + storage (see Section 3).
+
+---
+
 **Document Owner**: RoleFerry Engineering  
 **Date**: January 2026
 

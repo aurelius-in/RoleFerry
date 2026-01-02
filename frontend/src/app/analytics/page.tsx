@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { DataMode, getCurrentDataMode, subscribeToDataModeChanges } from "@/lib/dataMode";
+import { DataMode, getCurrentDataMode, setCurrentDataMode, subscribeToDataModeChanges } from "@/lib/dataMode";
 
 type OutreachSend = {
   id: string;
@@ -48,7 +48,15 @@ const DEMO_ANALYTICS: OverviewResp = {
 export default function Analytics() {
   const [mode, setMode] = useState<DataMode>("demo");
   const [data, setData] = useState<OverviewResp | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<
+    | null
+    | {
+        headline: string;
+        details: string;
+        status?: number;
+        endpoint?: string;
+      }
+  >(null);
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiExplanation, setAiExplanation] = useState<any | null>(null);
@@ -70,9 +78,44 @@ export default function Analytics() {
       setData(resp);
     } catch (e: any) {
       console.error(e);
-      setError(
-        "We tried to reach the live analytics API but hit a problem. Make sure the backend is running on http://localhost:8000 and that /analytics/overview is reachable."
-      );
+      const msg = String(e?.message || e || "");
+      const m = msg.match(/API\s+\w+\s+(\S+)\s+failed:\s+(\d+)\s+([\s\S]*)$/i);
+      const endpoint = m?.[1] ? String(m[1]) : "/api/analytics/overview";
+      const status = m?.[2] ? Number(m[2]) : undefined;
+      const body = (m?.[3] ? String(m[3]) : msg).trim();
+
+      if (status === 401) {
+        setError({
+          headline: "We couldn’t load live metrics (not authenticated).",
+          details:
+            "Your session cookie wasn’t accepted by the backend. Log in again, then refresh this page. "
+            + "Live analytics requires an authenticated session.",
+          status,
+          endpoint,
+        });
+      } else if (status === 500) {
+        setError({
+          headline: "We couldn’t load live metrics (backend error).",
+          details:
+            "The backend returned a 500 for the analytics endpoint. Check your Railway backend logs for the exception. "
+            + "Common causes: missing migrations/tables, DB not reachable, or auth middleware issues.\n\n"
+            + `Endpoint: ${endpoint}\n\n` +
+            (body ? `Response: ${body.slice(0, 600)}` : ""),
+          status,
+          endpoint,
+        });
+      } else {
+        setError({
+          headline: "We couldn’t load live metrics.",
+          details:
+            "RoleFerry calls the backend via the frontend `/api` proxy. If you’re deployed (Railway), this is NOT localhost. "
+            + "Make sure the backend service is deployed and reachable, and that your frontend proxy (`NEXT_PUBLIC_API_URL`) points to it.\n\n"
+            + `Endpoint: ${endpoint}\n\n` +
+            (body ? `Response: ${body.slice(0, 600)}` : ""),
+          status,
+          endpoint,
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -144,12 +187,31 @@ export default function Analytics() {
 
       {mode === "live" && error ? (
         <div className="rounded-lg p-4 bg-red-900/40 border border-red-500/60 space-y-2 text-sm">
-          <div className="font-semibold">We couldn’t load live metrics.</div>
-          <div className="text-xs opacity-90">
-            {error}
-          </div>
-          <div className="text-xs opacity-80">
-            Check that the FastAPI server is running, then refresh. You can always switch back to Demo mode from the top-right toggle.
+          <div className="font-semibold">{error.headline}</div>
+          {typeof error.status === "number" ? (
+            <div className="text-[11px] opacity-80">
+              Status: <span className="font-mono">{error.status}</span>
+              {error.endpoint ? (
+                <span className="ml-2">Endpoint: <span className="font-mono">{error.endpoint}</span></span>
+              ) : null}
+            </div>
+          ) : null}
+          <div className="text-xs opacity-90 whitespace-pre-wrap">{error.details}</div>
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="rounded-md border border-white/15 bg-black/30 px-3 py-2 text-xs font-semibold text-white hover:bg-black/40"
+            >
+              Refresh
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrentDataMode("demo")}
+              className="rounded-md border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/15"
+            >
+              Switch to Demo mode
+            </button>
           </div>
         </div>
       ) : null}
