@@ -265,6 +265,12 @@ export default function JobDescriptionsPage() {
       setTrackerNotice(`Added to Job Tracker: ${jd.title} @ ${jd.company}`);
       window.setTimeout(() => setTrackerNotice(null), 2500);
 
+      // Notify other screens (Tracker) in the same SPA session.
+      // (The native "storage" event won't fire in the same tab that writes localStorage.)
+      try {
+        window.dispatchEvent(new CustomEvent("trackerUpdated", { detail: nextItem }));
+      } catch {}
+
       // Instant feedback right where the click happened
       setTrackerPulseId(jd.id);
       if (trackerPulseTimer.current) window.clearTimeout(trackerPulseTimer.current);

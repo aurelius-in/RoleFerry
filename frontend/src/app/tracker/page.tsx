@@ -75,6 +75,7 @@ export default function TrackerPage() {
   const [dataMode, setDataMode] = useState<DataMode>('demo');
   const [applications, setApplications] = useState<TrackerApp[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showInsights, setShowInsights] = useState(false);
 
   useEffect(() => {
     const initial = getCurrentDataMode();
@@ -111,6 +112,37 @@ export default function TrackerPage() {
       } catch {}
     }
   }, [dataMode]);
+
+  // Keep tracker in sync when other screens add items (Jobs page) without requiring refresh.
+  useEffect(() => {
+    const syncFromStorage = () => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (Array.isArray(parsed)) {
+          setApplications(parsed as any);
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    const onTrackerUpdated = () => syncFromStorage();
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) syncFromStorage();
+    };
+
+    try {
+      window.addEventListener("trackerUpdated", onTrackerUpdated as EventListener);
+      window.addEventListener("storage", onStorage);
+    } catch {}
+    return () => {
+      try {
+        window.removeEventListener("trackerUpdated", onTrackerUpdated as EventListener);
+        window.removeEventListener("storage", onStorage);
+      } catch {}
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -393,9 +425,97 @@ export default function TrackerPage() {
 
         {/* Insights Section */}
         <div className="mt-8">
-          <button className="px-6 py-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors font-semibold">
-            Show Insights & Analytics
+          <button
+            type="button"
+            onClick={() => setShowInsights((v) => !v)}
+            className="px-6 py-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors font-semibold"
+          >
+            {showInsights ? "Hide Insights & Analytics" : "Show Insights & Analytics"}
           </button>
+
+          {showInsights && (
+            <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-lg font-bold text-white">Insights & Analytics</div>
+                  <div className="text-sm text-white/60">
+                    Based on your tracker items (local). Switch to Analytics for campaign-level metrics.
+                  </div>
+                </div>
+                <a
+                  href="/analytics"
+                  className="text-xs underline text-blue-300 hover:text-blue-200"
+                >
+                  Open Analytics →
+                </a>
+              </div>
+
+              {(() => {
+                const total = applications.length;
+                const byStatus: Record<string, number> = {};
+                let replied = 0;
+                let interviewing = 0;
+                let offers = 0;
+                let avgAgeDays = 0;
+                let ageCount = 0;
+                for (const a of applications) {
+                  const st = String(a.status || "saved");
+                  byStatus[st] = (byStatus[st] || 0) + 1;
+                  if (a.replyStatus) replied += 1;
+                  if (st === "interviewing") interviewing += 1;
+                  if (st === "offer") offers += 1;
+                  try {
+                    const d = new Date(String(a.appliedDate || "")).getTime();
+                    if (!Number.isNaN(d)) {
+                      const days = Math.max(0, Math.round((Date.now() - d) / (1000 * 60 * 60 * 24)));
+                      avgAgeDays += days;
+                      ageCount += 1;
+                    }
+                  } catch {}
+                }
+                const avgDays = ageCount ? Math.round(avgAgeDays / ageCount) : 0;
+
+                return (
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+                      <div className="text-xs text-white/60">Total applications</div>
+                      <div className="mt-1 text-2xl font-bold text-white">{total}</div>
+                      <div className="mt-1 text-xs text-white/50">Avg age: {avgDays} days</div>
+                    </div>
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+                      <div className="text-xs text-white/60">Replies</div>
+                      <div className="mt-1 text-2xl font-bold text-white">{replied}</div>
+                      <div className="mt-1 text-xs text-white/50">
+                        Reply signal from your tracker cards
+                      </div>
+                    </div>
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+                      <div className="text-xs text-white/60">Interviewing</div>
+                      <div className="mt-1 text-2xl font-bold text-white">{interviewing}</div>
+                      <div className="mt-1 text-xs text-white/50">Pipeline momentum</div>
+                    </div>
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+                      <div className="text-xs text-white/60">Offers</div>
+                      <div className="mt-1 text-2xl font-bold text-white">{offers}</div>
+                      <div className="mt-1 text-xs text-white/50">Win indicator</div>
+                    </div>
+
+                    <div className="md:col-span-4 rounded-lg border border-white/10 bg-white/5 p-4">
+                      <div className="text-sm font-semibold text-white mb-2">By status</div>
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+                        {Object.entries(byStatus).map(([k, v]) => (
+                          <div key={k} className="rounded-md border border-white/10 bg-black/20 p-2">
+                            <div className="text-white/70 uppercase tracking-wide">{k}</div>
+                            <div className="text-white font-bold">{v}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
       </div>
     </div>
