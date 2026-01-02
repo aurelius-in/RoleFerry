@@ -174,7 +174,99 @@ _KNOWN_SKILLS: List[str] = [
     "LLM",
     "Machine Learning",
     "Deep Learning",
+    # Common platform / growth / customer roles
+    "SaaS",
+    "Customer Success",
+    "Account Management",
+    "Growth",
+    "Growth Marketing",
+    "Performance Marketing",
+    "Experimentation",
+    "A/B Testing",
+    # APIs / Web / Infra
+    "API",
+    "APIs",
+    "REST",
+    "GraphQL",
+    # Web3 / crypto
+    "Web3",
+    "NFT",
+    "Smart Contracts",
+    "Solidity",
+    # Tools
+    "Salesforce",
+    "Excel",
+    "PowerPoint",
+    "Word",
 ]
+
+
+def _extract_requirement_skill_phrases(text: str) -> List[str]:
+    """
+    If the JD contains a "requirements/qualifications" section, extract a few
+    high-signal skill phrases. This is intentionally heuristic + conservative.
+    """
+    lines = [ln.strip() for ln in (text or "").splitlines() if ln.strip()]
+    if not lines:
+        return []
+
+    # Find a requirements-ish header.
+    header_re = re.compile(
+        r"^(we(?:'|’)d\s+love\s+you\s+to\s+bring|requirements|qualifications|experience/skills\s+required|what\s+you(?:'|’)ll\s+bring|you\s+have)\b",
+        re.I,
+    )
+    stop_re = re.compile(r"^(bonus\s+points|nice\s+to\s+have|preferred|benefits|compensation|location|about\s+us)\b", re.I)
+    start = -1
+    for i, ln in enumerate(lines[:200]):
+        if header_re.search(ln):
+            start = i + 1
+            break
+    if start < 0:
+        return []
+
+    chunk: List[str] = []
+    for ln in lines[start : start + 40]:
+        if stop_re.search(ln):
+            break
+        # Capture bullet-ish lines, or short requirement lines.
+        cleaned = ln.lstrip("•-* ").strip()
+        if len(cleaned) < 6:
+            continue
+        chunk.append(cleaned[:160])
+        if len(chunk) >= 14:
+            break
+
+    if not chunk:
+        return []
+
+    blob = " \n ".join(chunk)
+    # Start with known skill matches, then add a few simple phrases.
+    skills = _extract_skills(blob)
+
+    # Add a couple phrase-y skills if present.
+    phrase_patterns = [
+        ("computer science", "Computer science"),
+        ("product experimentation", "Product experimentation"),
+        ("performance marketing", "Performance marketing"),
+        ("customer-facing", "Customer-facing experience"),
+        ("stakeholder", "Stakeholder management"),
+        ("crm", "CRM"),
+    ]
+    low = blob.lower()
+    for needle, label in phrase_patterns:
+        if needle in low:
+            skills.append(label)
+
+    # De-dupe while preserving order
+    out: List[str] = []
+    seen = set()
+    for s in skills:
+        k = s.strip().lower()
+        if not k or k in seen:
+            continue
+        seen.add(k)
+        out.append(s.strip())
+    return out[:12]
 
 
 def _extract_skills(text: str) -> List[str]:
@@ -205,8 +297,33 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
 
     lines = [ln.strip() for ln in (content or "").splitlines() if ln.strip()]
 
-    # Title: first non-empty line is often usable after HTML-to-text.
-    if lines:
+    def _looks_like_real_title(ln: str) -> bool:
+        s = (ln or "").strip()
+        if not s or len(s) < 4:
+            return False
+        low = s.lower()
+        # Avoid common section headers and obvious non-titles
+        if any(low.startswith(h) for h in ["about us", "about the role", "benefits", "location", "requirements", "qualifications"]):
+            return False
+        if any(bad in low for bad in ["grade this role", "add to job tracker", "business challenges", "required skills", "success metrics", "jd jargon"]):
+            return False
+        if re.search(r"\bis\s+hiring\b", low):
+            return False
+        # Prefer lines with role-like tokens, but allow others
+        role_tokens = ["engineer", "manager", "director", "analyst", "specialist", "designer", "recruiter", "coach", "lead", "developer"]
+        if any(t in low for t in role_tokens):
+            return True
+        # Otherwise accept if it looks like a concise title-case line (no long sentences)
+        if len(s.split()) <= 12 and s[0].isupper() and not s.endswith("."):
+            return True
+        return False
+
+    # Title: scan first lines for a real job title (avoid "X is hiring a").
+    for ln in lines[:12]:
+        if _looks_like_real_title(ln):
+            title = ln[:120]
+            break
+    if not title and lines:
         title = lines[0][:120]
 
     # Company: explicit markers win.
@@ -252,6 +369,17 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
             "lead",
             "principal",
             "staff",
+            # Generic words that sometimes get mis-detected (e.g. "This is...")
+            "this",
+            "we",
+            "our",
+            "you",
+            "us",
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
         }
 
         top_blob = " ".join(lines[:80])
@@ -259,7 +387,10 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
         # Find candidates of the form "X is ..." / "X provides ..." / "X began ..."
         # and pick the best (prefer domain-looking tokens like Lamatic.ai).
         cand_matches = re.findall(
-            r"\b([A-Z][A-Za-z0-9&.\-]{1,60})\s+(?:is\s+hiring|is\s+recruiting|is\s+seeking|provides|is\s+an|is\s+a|began)\b",
+            r"\b([A-Z][A-Za-z0-9&.\-]{1,60})\s+(?:"
+            r"is\s+hiring|is\s+recruiting|is\s+seeking|provides|began|"
+            r"is\s+(?:an|a|the|one\s+of)"
+            r")\b",
             top_blob,
             flags=re.I,
         )
@@ -294,8 +425,15 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 best_score = sc
                 best = t
 
-        if best and best_score > 0:
-            company = best
+        # Require stronger evidence than "some token appeared once".
+        # - Accept domain-like brands immediately (Lamatic.ai)
+        # - Otherwise require multiple mentions and a meaningful score
+        if best:
+            low_best = best.lower()
+            looks_like_domain = bool(re.search(r"\.[a-z]{2,10}$", low_best)) or bool(re.search(r"\.[a-z]{2,10}\b", low_best))
+            mention_ct = _mentions(best)
+            if looks_like_domain or (mention_ct >= 2 and best_score >= 20):
+                company = best
 
     def _company_from_url(u: str) -> str:
         try:
@@ -563,6 +701,18 @@ async def import_job_description(payload: JobImportRequest):
         # --- Heuristic parsing (non-LLM fallback) ----------------------
         title, company = _best_effort_title_company(content, url)
         required_skills: List[str] = _extract_skills(content)
+        if not required_skills:
+            required_skills = _extract_requirement_skill_phrases(content)
+        else:
+            # Enrich with any requirement-section signals (deduped)
+            extra = _extract_requirement_skill_phrases(content)
+            if extra:
+                seen = {s.lower() for s in required_skills}
+                for s in extra:
+                    if s.lower() not in seen:
+                        required_skills.append(s)
+                        seen.add(s.lower())
+                required_skills = required_skills[:18]
         # We cannot truly infer "pain points" without an LLM, but we can extract
         # meaningful lines as a practical non-mock fallback.
         pain_points: List[str] = _extract_key_lines(
