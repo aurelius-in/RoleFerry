@@ -25,7 +25,7 @@ const STONES: StoneConfig[] = [
   { step: 8, tab: "offer-creation", label: "Offer Creation", icon: "💼", href: "/offer-creation" },
   // Week 10: Compose is the first screen in building the campaign sequence.
   { step: 9, tab: "campaign", label: "Campaign", icon: "📧", href: "/compose" },
-  { step: 10, tab: "deliverability-launch", label: "Launch Campaign", icon: "🚀", href: "/deliverability-launch" },
+  { step: 10, tab: "deliverability-launch", label: "Warm-up + Launch", icon: "🚀", href: "/deliverability-launch" },
   { step: 11, tab: "analytics", label: "Analytics", icon: "📊", href: "/analytics" },
   { step: 12, tab: "job-tracker", label: "Job Tracker", icon: "📌", href: "/tracker" },
 ];
