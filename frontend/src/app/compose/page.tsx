@@ -78,6 +78,34 @@ export default function ComposePage() {
   const legacyPainpointKey = ["pin", "point_matches"].join("");
   const legacyPainpointField = (n: number) => `${["pin", "point_"].join("")}${n}`;
 
+  const readActiveResearch = () => {
+    // Prefer per-contact research for the currently active contact, then fall back to the last selected blob.
+    try {
+      const activeId = String(localStorage.getItem("context_research_active_contact_id") || "").trim();
+      if (activeId) {
+        try {
+          const rawBy = localStorage.getItem("context_research_by_contact");
+          const by = rawBy ? JSON.parse(rawBy) : null;
+          const hit = by && typeof by === "object" ? (by[activeId] || null) : null;
+          if (hit) return hit;
+        } catch {}
+        try {
+          const rawHist = localStorage.getItem("context_research_history");
+          const hist = rawHist ? JSON.parse(rawHist) : [];
+          if (Array.isArray(hist)) {
+            const h = hist.find((x: any) => String(x?.contact?.id || "") === activeId);
+            if (h?.research) return h.research;
+          }
+        } catch {}
+      }
+    } catch {}
+    try {
+      return JSON.parse(localStorage.getItem("context_research") || "{}");
+    } catch {
+      return {};
+    }
+  };
+
   const cleanOfferSnippet = (raw: string, maxLen: number = 260) => {
     let s = String(raw || "").replace(/\s+/g, " ").trim();
     if (!s) return "";
@@ -178,7 +206,7 @@ export default function ComposePage() {
       selectedContacts = JSON.parse(localStorage.getItem("selected_contacts") || "[]");
     } catch {}
     try {
-      research = JSON.parse(localStorage.getItem("context_research") || "{}");
+      research = readActiveResearch();
     } catch {}
     try {
       selectedJD = JSON.parse(localStorage.getItem("selected_job_description") || "null");
@@ -494,7 +522,7 @@ export default function ComposePage() {
             );
           })(),
         context_data: {
-          context_research: JSON.parse(localStorage.getItem("context_research") || "{}"),
+          context_research: readActiveResearch(),
           selected_job_description: JSON.parse(localStorage.getItem("selected_job_description") || "null"),
           selected_contacts: JSON.parse(localStorage.getItem("selected_contacts") || "[]"),
           created_offers: JSON.parse(localStorage.getItem("created_offers") || "[]"),

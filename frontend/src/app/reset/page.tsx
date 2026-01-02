@@ -30,6 +30,7 @@ function clearRoleFerryDemoState() {
       "context_research_by_contact",
       "context_research_active_contact_id",
       "context_research_helper",
+      "context_research_history",
       "research_data",
 
       // offer + compose

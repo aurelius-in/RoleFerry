@@ -67,6 +67,33 @@ export default function OfferCreationPage() {
   const [isVideoDragOver, setIsVideoDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const readActiveResearch = () => {
+    try {
+      const activeId = String(localStorage.getItem("context_research_active_contact_id") || "").trim();
+      if (activeId) {
+        try {
+          const rawBy = localStorage.getItem("context_research_by_contact");
+          const by = rawBy ? JSON.parse(rawBy) : null;
+          const hit = by && typeof by === "object" ? (by[activeId] || null) : null;
+          if (hit) return hit;
+        } catch {}
+        try {
+          const rawHist = localStorage.getItem("context_research_history");
+          const hist = rawHist ? JSON.parse(rawHist) : [];
+          if (Array.isArray(hist)) {
+            const h = hist.find((x: any) => String(x?.contact?.id || "") === activeId);
+            if (h?.research) return h.research;
+          }
+        } catch {}
+      }
+    } catch {}
+    try {
+      return JSON.parse(localStorage.getItem("context_research") || "{}");
+    } catch {
+      return {};
+    }
+  };
+
   const displayMetric = (raw: string) => {
     const s = String(raw || "").trim();
     if (!s) return null;
@@ -189,7 +216,7 @@ export default function OfferCreationPage() {
         custom_tone: selectedTone === "custom" ? customTone : undefined,
         format: selectedFormat,
         user_mode: mode,
-        context_research: JSON.parse(localStorage.getItem("context_research") || "{}"),
+        context_research: readActiveResearch(),
       };
       const resp = await api<OfferCreationResponse>("/offer-creation/create", "POST", payload);
       const o = resp.offer;
