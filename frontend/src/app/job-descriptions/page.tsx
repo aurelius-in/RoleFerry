@@ -597,6 +597,12 @@ export default function JobDescriptionsPage() {
                     {/* Required Skills */}
                     <div>
                       <h4 className="font-semibold text-white mb-3">Required Skills</h4>
+                      <div className="mb-3">
+                        <div className="text-xs font-semibold text-white/70 mb-1">Salary</div>
+                        <div className="text-sm text-white/80">
+                          {jd.salaryRange ? jd.salaryRange : "Salary not provided"}
+                        </div>
+                      </div>
                       <div className="flex flex-wrap gap-2">
                         {jd.requiredSkills.map((skill, index) => (
                           <span

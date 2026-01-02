@@ -507,6 +507,42 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
             "or",
         }
 
+        # Indeed-style / job-board header: company often appears as a standalone line near the top
+        # right after a title-like line and before rating/location/salary blocks.
+        if not company:
+            for ln in lines[:12]:
+                s = (ln or "").strip()
+                low = s.lower()
+                if not s or len(s) > 80:
+                    continue
+                if low in _COMPANY_STOPWORDS:
+                    continue
+                if any(bad in low for bad in ["out of 5 stars", "profile insights", "job details", "full job description"]):
+                    continue
+                # Skip obvious location/address/salary lines
+                if re.search(r"\$\s?\d", s) or re.search(r"\b\d{5}\b", s):
+                    continue
+                if re.search(r"\b(?:drive|dr|street|st|avenue|ave|road|rd|boulevard|blvd|lane|ln|way|court|ct)\b", low):
+                    continue
+                # Avoid picking the title line itself
+                if title and s.lower() == title.lower():
+                    continue
+                # A reasonable company line is usually 1-6 words and titlecased.
+                if 1 <= len(s.split()) <= 6 and s[0].isupper() and not s.endswith(".") and not _has_role_token(s):
+                    company = s[:120]
+                    break
+
+        # Company: patterns like "for Optima Tax Relief, LLC (“Optima”)"
+        if not company and lines:
+            m = re.search(
+                r"\bfor\s+([A-Z][A-Za-z0-9&.,'\- ]{2,80}?)(?:\s*\(|\s*[,–—-]\s*|\s+\b(?:LLC|Inc\.?|Ltd\.?|Corporation|Corp\.?)\b)",
+                top_blob,
+            )
+            if m:
+                cand = (m.group(1) or "").strip().strip(",")
+                if cand and cand.lower() not in _COMPANY_STOPWORDS:
+                    company = cand[:120]
+
         top_blob = " ".join(lines[:80])
 
         # Find candidates of the form "X is ..." / "X provides ..." / "X began ..."
@@ -722,8 +758,27 @@ def _extract_key_lines(content: str, max_items: int, keywords: List[str]) -> Lis
     # Common patterns for salary/benefits/employment types that are NOT pain points.
     # e.g. "$120k - $150k", "Full-time", "401k", "Benefits include"
     ignore_patterns = [
-        r"\$\d+", r"\d+k\b", r"salary", r"compensation", r"benefits", r"401k", 
-        r"full-time", r"part-time", r"contract", r"per hour", r"per year"
+        # Compensation / employment / benefits
+        r"\$\d+",
+        r"\d+k\b",
+        r"salary",
+        r"compensation",
+        r"benefits",
+        r"401k",
+        r"full-time",
+        r"part-time",
+        r"contract",
+        r"per hour",
+        r"per year",
+        # Location / address / job board UI noise (Indeed etc.)
+        r"\bjob\s+address\b",
+        r"\bestimated\s+commute\b",
+        r"\bprofile\s+insights\b",
+        r"\bjob\s+details\b",
+        r"\bresponded\s+to\s+\d{1,3}%\b",
+        r"\bout\s+of\s+5\s+stars\b",
+        r"\b\d{1,5}\s+[A-Za-z0-9 .'\-]+(?:drive|dr|street|st|avenue|ave|road|rd|boulevard|blvd|lane|ln|way|court|ct)\b",
+        r"\b[A-Za-z .'\-]+,\s*[A-Z]{2}\s*\d{5}\b",
     ]
     ignore_re = re.compile("|".join(ignore_patterns), re.I)
 
@@ -911,12 +966,8 @@ async def import_job_description(payload: JobImportRequest):
             keywords=["kpi", "metric", "measured", "increase", "reduce", "improve", "impact", "deliver"],
         )
 
-        # Per UX request: always include salary visibility in the card output.
-        # (Not a "metric" per se, but users want it in the Success Metrics section.)
-        if salary_range:
-            salary_line = f"Salary: {salary_range}".strip()
-            success_metrics = [salary_line] + [m for m in success_metrics if m and m != salary_line]
-            success_metrics = success_metrics[:4]
+        # Salary is returned as its own field (salary_range) and should be displayed separately in the UI
+        # (not mixed into Success Metrics).
 
         parsed_json: Dict[str, Any] = {
             "pain_points": pain_points,
