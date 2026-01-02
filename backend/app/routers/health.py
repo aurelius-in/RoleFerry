@@ -111,6 +111,8 @@ async def llm_healthcheck():
         "model": settings.openai_model,
         # Extra diagnostics (do NOT expose secrets)
         "env_has_RoleFerryKey": bool(os.getenv("RoleFerryKey")),
+        "env_has_ROLEFERRYKEY": bool(os.getenv("ROLEFERRYKEY")),
+        "env_has_ROLEFERRY_KEY": bool(os.getenv("ROLEFERRY_KEY")),
         "env_has_OPENAI_API_KEY": bool(os.getenv("OPENAI_API_KEY")),
     }
 

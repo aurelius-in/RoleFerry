@@ -467,12 +467,22 @@ async def run_pre_flight_checks(request: CampaignLaunchRequest):
 
             # If OpenAI isn't configured, don't pretend it's an error — explain what to fix.
             if not client.should_use_real_llm:
+                # Railway note: env var names are case-sensitive, so RoleFerryKey vs ROLEFERRYKEY matters.
+                env_hint = (
+                    f"(env OPENAI_API_KEY={bool(os.getenv('OPENAI_API_KEY'))}, "
+                    f"RoleFerryKey={bool(os.getenv('RoleFerryKey'))}, "
+                    f"ROLEFERRYKEY={bool(os.getenv('ROLEFERRYKEY'))}, "
+                    f"ROLEFERRY_KEY={bool(os.getenv('ROLEFERRY_KEY'))}, "
+                    f"LLM_MODE={str(os.getenv('LLM_MODE') or '')})"
+                )
                 helper_details = (
                     "GPT is not active for deliverability helper.\n\n"
                     "To enable:\n"
-                    "- Set OPENAI_API_KEY (or RoleFerryKey) in backend/.env\n"
+                    "- In Railway → Backend service → Variables, set OPENAI_API_KEY (recommended)\n"
+                    "  (aliases also supported: RoleFerryKey / ROLEFERRYKEY / ROLEFERRY_KEY)\n"
                     "- Set LLM_MODE=openai\n"
-                    "- Restart the backend server\n\n"
+                    "- Redeploy the backend service\n\n"
+                    f"Diagnostics: {env_hint}\n\n"
                     "Deterministic suggestions:\n"
                     f"{stub_json.get('summary','')}\n\n"
                     "Copy tweaks:\n- " + "\n- ".join(stub_json.get("copy_tweaks") or []) + "\n\n"
@@ -482,7 +492,7 @@ async def run_pre_flight_checks(request: CampaignLaunchRequest):
                     PreFlightCheck(
                         name="GPT Deliverability Helper",
                         status="warning",
-                        message="GPT not configured; showing deterministic suggestions",
+                        message="AI helper disabled; showing deterministic suggestions",
                         details=helper_details[:2000],
                     )
                 )
