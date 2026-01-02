@@ -143,11 +143,11 @@ def _sanitize_url(url: str, p: JobPreferences, source: str = "") -> str:
 
     low = u.lower()
 
-    # 1) Welcome to the Jungle: avoid region subdomains + use a stable search param.
-    if "welcometothejungle.com" in low:
-        q = quote_plus(_board_query(p, max_len=60))
-        # Use the generic /en/ portal. (WTTJ is not US-specific; this is the safest stable entrypoint.)
-        return f"https://www.welcometothejungle.com/en/jobs?query={q}"
+    # 1) Otta / Welcome to the Jungle: normalize to the current stable entrypoint.
+    # Otta rebranded/migrated; older deep links (otta.com, uk.welcometothejungle.com, etc.)
+    # can be brittle or region-specific. Use the app entrypoint requested for the demo.
+    if "otta.com" in low or "welcometothejungle.com" in low:
+        return "https://app.welcometothejungle.com/"
 
     # 2) LinkedIn: strip overly specific params like currentJobId, and rebuild with our short query.
     if "linkedin.com/jobs/search" in low:
@@ -301,7 +301,18 @@ def _classify_job_link(url: str, source: str = "") -> str:
         return "job_board_search"
 
     # Domain-based heuristics
-    if any(d in u for d in ["linkedin.com/jobs/search", "indeed.com/jobs", "wellfound.com/jobs", "otta.com/jobs", "remoteok.com/remote-"]):
+    if any(
+        d in u
+        for d in [
+            "linkedin.com/jobs/search",
+            "indeed.com/jobs",
+            "wellfound.com/jobs",
+            "otta.com/jobs",
+            "welcometothejungle.com",
+            "app.welcometothejungle.com",
+            "remoteok.com/remote-",
+        ]
+    ):
         return "job_board_search"
 
     return "career_search"
@@ -471,7 +482,7 @@ def _deterministic_recommendations(p: JobPreferences) -> List[JobRecommendation]
                 label="Otta (search)",
                 company="Various",
                 source="otta",
-                url=f"https://otta.com/jobs?search={q}",
+                url="https://app.welcometothejungle.com/",
                 link_type="job_board_search",
                 rationale="Curated roles; useful for startup/mid-size searches.",
                 score=66,
