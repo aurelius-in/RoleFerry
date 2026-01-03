@@ -1,6 +1,6 @@
 # Documentation License
 
-**Copyright © 2025 RoleFerry Inc. All rights reserved.**
+**Copyright © 2025–2026 RoleFerry Inc. All rights reserved.**
 
 ## Proprietary and Confidential
 

@@ -162,7 +162,7 @@ RoleFerry’s core differentiator is **workflow integration**: it turns “a pil
 
 ## 📄 License
 
-Copyright © 2025 Reliable AI Network, Inc. All rights reserved.
+Copyright © 2025–2026 Reliable AI Network, Inc. All rights reserved.
 
 See [LICENSE](LICENSE) for details.
 
