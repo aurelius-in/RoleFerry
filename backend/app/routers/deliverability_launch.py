@@ -5,6 +5,7 @@ import asyncio
 import logging
 import json
 import re
+import os
 
 from ..services.email_verifier import verify_email_async
 from ..services.jargon_detector import jargon_detector

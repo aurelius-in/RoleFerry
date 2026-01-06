@@ -23,7 +23,7 @@ export default function Footer() {
           Debug
         </button>
       </div>
-      <div>Forge your first conversation. © 2025 Reliable AI Network, Inc.</div>
+      <div>Forge your first conversation. © 2025–2026 Reliable AI Network, Inc.</div>
     </footer>
   );
 }

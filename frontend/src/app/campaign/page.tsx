@@ -53,8 +53,72 @@ export default function CampaignPage() {
   const [composeHelper, setComposeHelper] = useState<any>(null);
   const [previewWithValues, setPreviewWithValues] = useState(true);
   const [buildStamp, setBuildStamp] = useState<string>("");
+  const [researchHistory, setResearchHistory] = useState<Array<{ contact: any; research: any; researched_at: string }>>([]);
 
   const campaign: Campaign | null = activeContactId ? (campaignByContact[activeContactId] || null) : null;
+
+  const readResearchHistory = () => {
+    try {
+      const raw = localStorage.getItem("context_research_history");
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const mergeContacts = (selected: any[], history: any[]) => {
+    const out: any[] = [];
+    const seen = new Set<string>();
+
+    const add = (c: any) => {
+      const id = String(c?.id || "").trim();
+      if (!id) return;
+      if (seen.has(id)) return;
+      seen.add(id);
+      out.push(c);
+    };
+
+    for (const c of Array.isArray(selected) ? selected : []) add(c);
+    for (const h of Array.isArray(history) ? history : []) add(h?.contact);
+    return out;
+  };
+
+  const campaignSeed = (composedEmail: any, contactList: any[]) => {
+    // Used to decide if we should auto-regenerate after the user changes Offer/Compose.
+    try {
+      const subj = String(composedEmail?.subject || "").trim();
+      const body = String(composedEmail?.body || "").trim();
+      const offerId = String(localStorage.getItem("compose_selected_offer_id") || "").trim();
+      const jobId = String(localStorage.getItem("selected_job_description_id") || "").trim();
+      const contactIds = (Array.isArray(contactList) ? contactList : []).map((c) => String(c?.id || "")).filter(Boolean).sort();
+      return JSON.stringify({ subj, body, offerId, jobId, contactIds });
+    } catch {
+      return "";
+    }
+  };
+
+  const setActiveContact = (cid: string) => {
+    const id = String(cid || "").trim();
+    if (!id) return;
+    setActiveContactId(id);
+    setDeliverabilityCheck(null);
+    try {
+      localStorage.setItem("campaign_active_contact_id", id);
+      // Keep research/offer/compose aligned to the same "active contact" concept.
+      localStorage.setItem("context_research_active_contact_id", id);
+    } catch {}
+    // Best-effort: also update `context_research` so downstream steps (Offer/Compose) stay consistent.
+    try {
+      const rawBy = localStorage.getItem("context_research_by_contact");
+      const by = rawBy ? JSON.parse(rawBy) : null;
+      const hit = by && typeof by === "object" ? (by[id] || null) : null;
+      if (hit) {
+        localStorage.setItem("context_research", JSON.stringify(hit));
+        localStorage.setItem("research_data", JSON.stringify(hit));
+      }
+    } catch {}
+  };
 
   const signatureBlock = () => {
     try {
@@ -249,16 +313,25 @@ export default function CampaignPage() {
       setMode('recruiter');
     }
     
-    // Load contacts for per-contact editing
+    // Load contacts for per-contact editing.
+    // Prefer `selected_contacts`, but also include any persisted researched contacts so users can
+    // generate sequences for previously researched people (even across sessions).
     try {
       const selected = JSON.parse(localStorage.getItem("selected_contacts") || "[]");
-      if (Array.isArray(selected)) {
-        setContacts(selected);
-        // Restore last active contact if we have one
-        const savedActive = String(localStorage.getItem("campaign_active_contact_id") || "").trim();
-        const fallbackId = selected?.[0]?.id ? String(selected[0].id) : "";
-        setActiveContactId((savedActive && selected.some((c: any) => String(c?.id || "") === savedActive)) ? savedActive : (fallbackId || null));
-      }
+      const hist = readResearchHistory();
+      setResearchHistory(hist);
+      const merged = mergeContacts(Array.isArray(selected) ? selected : [], hist);
+      setContacts(merged);
+
+      // Keep localStorage selected_contacts aligned so Launch sees the same contact set.
+      try {
+        if (merged.length) localStorage.setItem("selected_contacts", JSON.stringify(merged));
+      } catch {}
+
+      // Restore last active contact if we have one
+      const savedActive = String(localStorage.getItem("campaign_active_contact_id") || "").trim();
+      const fallbackId = merged?.[0]?.id ? String(merged[0].id) : "";
+      setActiveContactId((savedActive && merged.some((c: any) => String(c?.id || "") === savedActive)) ? savedActive : (fallbackId || null));
     } catch {}
 
     // Load helper suggestions from Compose
@@ -295,13 +368,32 @@ export default function CampaignPage() {
       const composedEmail = localStorage.getItem('composed_email');
       if (composedEmail) {
         const emailData = JSON.parse(composedEmail);
-        // If we don't already have saved per-contact campaigns, generate them.
+        const list = (() => {
+          try {
+            const selected = JSON.parse(localStorage.getItem("selected_contacts") || "[]");
+            const hist = readResearchHistory();
+            return mergeContacts(Array.isArray(selected) ? selected : [], hist);
+          } catch {
+            return [];
+          }
+        })();
+        // If we don't already have saved per-contact campaigns (or the seed changed), generate them.
         const existing = (() => {
           try { return JSON.parse(localStorage.getItem("campaign_by_contact") || "null"); } catch { return null; }
         })();
         const hasExisting = existing && typeof existing === "object" && Object.keys(existing).length > 0;
-        if (!hasExisting) {
-          generateCampaign(emailData);
+        const existingKeys = hasExisting ? Object.keys(existing) : [];
+        const missing = list.filter((c: any) => c?.id && !existingKeys.includes(String(c.id))).length > 0;
+
+        const seed = campaignSeed(emailData, list);
+        const prevSeed = String(localStorage.getItem("campaign_seed") || "");
+        const seedChanged = seed && seed !== prevSeed;
+
+        if (!hasExisting || missing || seedChanged) {
+          generateCampaign(emailData, list);
+          try {
+            if (seed) localStorage.setItem("campaign_seed", seed);
+          } catch {}
         }
       }
     } catch {}
@@ -330,13 +422,13 @@ export default function CampaignPage() {
     } catch {}
   }, []);
 
-  const generateCampaign = async (composedEmail: any) => {
+  const generateCampaign = async (composedEmail: any, contactList?: any[]) => {
     setIsGenerating(true);
     setError(null);
 
     try {
-      // Simulate API call to generate 3-email campaign
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Keep this snappy (this page is already "the editor").
+      await new Promise(resolve => setTimeout(resolve, 250));
 
       // Pull variable values from the composed email (if present) so the campaign preview
       // feels realistic instead of showing raw {{placeholders}}.
@@ -348,7 +440,7 @@ export default function CampaignPage() {
         }
       } catch {}
 
-      const selectedContacts = (() => {
+      const selectedContacts = Array.isArray(contactList) ? contactList : (() => {
         try {
           const sel = JSON.parse(localStorage.getItem("selected_contacts") || "[]");
           return Array.isArray(sel) ? sel : [];
@@ -520,7 +612,7 @@ export default function CampaignPage() {
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Campaign</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Campaign (Sequence)</h1>
             <p className="text-white/70">
               {mode === 'job-seeker' 
                 ? 'Your 3-email outreach sequence to land the job.'
@@ -565,7 +657,26 @@ export default function CampaignPage() {
               {/* Contacts column (wireframe-style) */}
               <div className="lg:col-span-3">
                 <div className="rounded-lg border border-white/10 bg-black/20 p-4">
-                  <div className="text-sm font-bold text-white mb-3">Contacts</div>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div className="text-sm font-bold text-white">Contacts</div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        try {
+                          const composedRaw = localStorage.getItem("composed_email");
+                          if (!composedRaw) return;
+                          const emailData = JSON.parse(composedRaw);
+                          generateCampaign(emailData, contacts);
+                          const seed = campaignSeed(emailData, contacts);
+                          if (seed) localStorage.setItem("campaign_seed", seed);
+                        } catch {}
+                      }}
+                      className="text-[11px] underline text-white/70 hover:text-white"
+                      title="Regenerate sequences for all contacts using the latest Compose draft"
+                    >
+                      Regenerate
+                    </button>
+                  </div>
                   {contacts.length === 0 ? (
                     <div className="text-sm text-white/60">No contacts selected.</div>
                   ) : (
@@ -581,8 +692,7 @@ export default function CampaignPage() {
                             type="button"
                             onClick={() => {
                               if (!cid) return;
-                              setActiveContactId(cid);
-                              setDeliverabilityCheck(null);
+                              setActiveContact(cid);
                             }}
                             className={`w-full text-left rounded-lg border p-3 transition-colors ${
                               active
@@ -594,6 +704,11 @@ export default function CampaignPage() {
                             <div className="text-xs text-white/60">
                               {(title ? title : "Decision maker") + (company ? ` • ${company}` : "")}
                             </div>
+                            {campaignByContact?.[cid] ? (
+                              <div className="mt-1 text-[10px] text-emerald-200/80">Sequence ready</div>
+                            ) : (
+                              <div className="mt-1 text-[10px] text-white/40">Not generated yet</div>
+                            )}
                           </button>
                         );
                       })}
@@ -604,6 +719,33 @@ export default function CampaignPage() {
 
               {/* Main editor */}
               <div className="lg:col-span-9 space-y-8">
+              {/* Email 1 source (Compose) */}
+              <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-bold text-white">Email 1 comes from Compose</div>
+                    <div className="text-xs text-white/60 mt-1">
+                      Compose is for crafting the primary message. Campaign is for sequencing (follow-ups, timing, and per-contact personalization).
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      try {
+                        if (activeContactId) {
+                          localStorage.setItem("context_research_active_contact_id", String(activeContactId));
+                          localStorage.setItem("campaign_active_contact_id", String(activeContactId));
+                        }
+                      } catch {}
+                      router.push("/compose");
+                    }}
+                    className="shrink-0 px-3 py-2 rounded-md bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700"
+                  >
+                    Edit Email 1 in Compose →
+                  </button>
+                </div>
+              </div>
+
               {composeHelper?.variants?.length > 0 && (
                 <div className="rounded-lg border border-white/10 bg-black/20 p-4">
                   <div className="flex items-start justify-between gap-3 mb-2">

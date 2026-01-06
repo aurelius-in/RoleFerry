@@ -77,6 +77,9 @@ export default function ContextResearchPage() {
   const [researchData, setResearchData] = useState<ResearchData | null>(null);
   const [researchByContact, setResearchByContact] = useState<Record<string, ResearchData>>({});
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
+  const [researchHistory, setResearchHistory] = useState<
+    Array<{ contact: Contact; research: ResearchData; researched_at: string }>
+  >([]);
   const [dataMode, setDataMode] = useState<"demo" | "live">("live");
   const [helper, setHelper] = useState<{
     hooks?: string[];
@@ -88,6 +91,48 @@ export default function ContextResearchPage() {
   const [error, setError] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+
+  const RESEARCH_HISTORY_KEY = "context_research_history";
+
+  const loadResearchHistory = () => {
+    try {
+      const raw = localStorage.getItem(RESEARCH_HISTORY_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const persistResearchHistory = (items: Array<{ contact: Contact; research: ResearchData; researched_at: string }>) => {
+    try {
+      localStorage.setItem(RESEARCH_HISTORY_KEY, JSON.stringify(items || []));
+    } catch {}
+  };
+
+  const upsertResearchHistory = (byContact: Record<string, ResearchData>, contacts: Contact[]) => {
+    const now = new Date().toISOString();
+    setResearchHistory((prev) => {
+      const map = new Map<string, { contact: Contact; research: ResearchData; researched_at: string }>();
+      for (const it of Array.isArray(prev) ? prev : []) {
+        if (it?.contact?.id) map.set(String(it.contact.id), it);
+      }
+      for (const c of contacts || []) {
+        const id = String(c?.id || "").trim();
+        if (!id) continue;
+        const r = byContact?.[id];
+        if (!r) continue;
+        map.set(id, {
+          contact: c,
+          research: r,
+          researched_at: now,
+        });
+      }
+      const next = Array.from(map.values()).sort((a, b) => String(b.researched_at).localeCompare(String(a.researched_at)));
+      persistResearchHistory(next);
+      return next;
+    });
+  };
 
   const formatTitleCase = (input?: string) => {
     const s = String(input || "").trim();
@@ -117,6 +162,7 @@ export default function ContextResearchPage() {
 
   useEffect(() => {
     setDataMode(getCurrentDataMode());
+    setResearchHistory(loadResearchHistory());
     // Load selected contacts from localStorage
     const savedContacts = localStorage.getItem('selected_contacts');
     if (savedContacts) {
@@ -209,6 +255,10 @@ export default function ContextResearchPage() {
       localStorage.setItem("context_research_helper", JSON.stringify(resp.helper || {}));
       // Backwards compatibility for older screen key.
       localStorage.setItem("research_data", JSON.stringify(nextResearch));
+
+      // Persist a growing list of researched contacts (across runs), so research isn’t overwritten
+      // when users come back and research a different person.
+      upsertResearchHistory(byContact, selectedContacts);
     } catch (e: any) {
       // Deterministic-ish fallback if backend is unavailable.
       const companyName = selectedContacts[0]?.company || "TechCorp Inc.";
@@ -267,6 +317,8 @@ export default function ContextResearchPage() {
       localStorage.setItem("context_research_helper", JSON.stringify(fallbackHelper));
       localStorage.setItem("research_data", JSON.stringify(fallback));
       // Don't show a scary banner; silently fall back without fabricating details.
+
+      upsertResearchHistory(byId, selectedContacts);
     } finally {
       setIsResearching(false);
     }
@@ -328,14 +380,15 @@ export default function ContextResearchPage() {
   const handleSelectContact = (contactId: string) => {
     setActiveContactId(contactId);
     const next = researchByContact?.[contactId];
-    if (next) {
-      setResearchData(next);
-      try {
-        localStorage.setItem("context_research", JSON.stringify(next));
-        localStorage.setItem("research_data", JSON.stringify(next));
-        localStorage.setItem("context_research_active_contact_id", String(contactId));
-      } catch {}
-    }
+    const fromHistory = researchHistory.find((h) => String(h?.contact?.id) === String(contactId));
+    const chosen = next || fromHistory?.research || null;
+    if (!chosen) return;
+    setResearchData(chosen);
+    try {
+      localStorage.setItem("context_research", JSON.stringify(chosen));
+      localStorage.setItem("research_data", JSON.stringify(chosen));
+      localStorage.setItem("context_research_active_contact_id", String(contactId));
+    } catch {}
   };
 
   return (
@@ -406,39 +459,89 @@ export default function ContextResearchPage() {
             </div>
           ) : (
             <div className="space-y-8">
-              {/* Selected Contacts */}
+              {/* Contacts (Selected + Researched history) */}
               <div>
-                <h2 className="text-xl font-semibold mb-4">Selected Contacts</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {selectedContacts.map((contact) => (
-                    <button
-                      type="button"
-                      key={contact.id}
-                      onClick={() => handleSelectContact(contact.id)}
-                      className={`text-left border rounded-lg p-4 transition-colors ${
-                        activeContactId === contact.id
-                          ? "border-blue-400/60 bg-blue-500/10"
-                          : "border-white/10 bg-black/20 hover:bg-black/30"
-                      }`}
-                      title="Click to view research for this contact"
-                    >
-                      <h3 className="font-semibold text-white">{contact.name}</h3>
-                      <p className="text-white/70 text-sm">{formatTitleCase(contact.title)}</p>
-                      {contact.department ? (
-                        <p className="text-white/60 text-xs">{formatTitleCase(contact.department)}</p>
+                <h2 className="text-xl font-semibold mb-4">Contacts</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                  {/* Left: researched contacts (persisted across runs) */}
+                  <div className="lg:col-span-4">
+                    <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-bold text-white/90">Researched</div>
+                        <div className="text-[10px] text-white/50">{researchHistory.length}</div>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        {researchHistory.length === 0 ? (
+                          <div className="text-xs text-white/60">
+                            No saved research yet. Click <span className="font-semibold text-white">Start Research</span> to build a list.
+                          </div>
+                        ) : (
+                          researchHistory.slice(0, 30).map((h) => {
+                            const id = String(h?.contact?.id || "");
+                            const active = activeContactId === id;
+                            const when = String(h?.researched_at || "").slice(0, 19).replace("T", " ");
+                            return (
+                              <button
+                                type="button"
+                                key={`hist_${id}`}
+                                onClick={() => handleSelectContact(id)}
+                                className={`w-full text-left rounded-md border px-3 py-2 transition-colors ${
+                                  active ? "border-blue-400/60 bg-blue-500/10" : "border-white/10 bg-black/10 hover:bg-black/20"
+                                }`}
+                                title="Click to load saved research"
+                              >
+                                <div className="text-sm font-semibold text-white truncate">{h.contact?.name || "Contact"}</div>
+                                <div className="text-[10px] text-white/50 truncate">
+                                  {h.contact?.company ? `${h.contact.company} • ` : ""}{when || "Saved"}
+                                </div>
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: selected contacts (this run) */}
+                  <div className="lg:col-span-8">
+                    <div className="rounded-lg border border-white/10 bg-black/10 p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-bold text-white/90">Selected (this run)</div>
+                        <div className="text-[10px] text-white/50">{selectedContacts.length}</div>
+                      </div>
+                      <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {selectedContacts.map((contact) => (
+                          <button
+                            type="button"
+                            key={contact.id}
+                            onClick={() => handleSelectContact(contact.id)}
+                            className={`text-left border rounded-lg p-4 transition-colors ${
+                              activeContactId === contact.id
+                                ? "border-blue-400/60 bg-blue-500/10"
+                                : "border-white/10 bg-black/20 hover:bg-black/30"
+                            }`}
+                            title="Click to view research for this contact"
+                          >
+                            <h3 className="font-semibold text-white">{contact.name}</h3>
+                            <p className="text-white/70 text-sm">{formatTitleCase(contact.title)}</p>
+                            {contact.department ? (
+                              <p className="text-white/60 text-xs">{formatTitleCase(contact.department)}</p>
+                            ) : null}
+                            <p className="text-white/50 text-xs">{contact.company}</p>
+                            {activeContactId === contact.id ? (
+                              <p className="mt-2 text-xs text-blue-200/80">Active</p>
+                            ) : null}
+                          </button>
+                        ))}
+                      </div>
+                      {selectedContacts.length > 1 ? (
+                        <p className="mt-2 text-xs text-white/60">
+                          Click a contact to swap the research panels below (Company Summary, Contact Bio, News, Shared Connections).
+                        </p>
                       ) : null}
-                      <p className="text-white/50 text-xs">{contact.company}</p>
-                      {activeContactId === contact.id ? (
-                        <p className="mt-2 text-xs text-blue-200/80">Active</p>
-                      ) : null}
-                    </button>
-                  ))}
+                    </div>
+                  </div>
                 </div>
-                {selectedContacts.length > 1 ? (
-                  <p className="mt-2 text-xs text-white/60">
-                    Click a contact to swap the research panels below (Company Summary, Contact Bio, News, Shared Connections).
-                  </p>
-                ) : null}
               </div>
 
               {/* Research Button */}
@@ -458,7 +561,9 @@ export default function ContextResearchPage() {
                   {activeContactId ? (
                     <div className="text-sm text-white/70">
                       <span className="font-semibold text-white/80">Viewing research for:</span>{" "}
-                      {selectedContacts.find((c) => c.id === activeContactId)?.name || "Selected contact"}
+                      {selectedContacts.find((c) => c.id === activeContactId)?.name ||
+                        researchHistory.find((h) => String(h?.contact?.id) === String(activeContactId))?.contact?.name ||
+                        "Selected contact"}
                     </div>
                   ) : null}
                   {/* Contact Background Report (dynamic sections; omit low-signal) */}

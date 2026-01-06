@@ -78,6 +78,34 @@ export default function ComposePage() {
   const legacyPainpointKey = ["pin", "point_matches"].join("");
   const legacyPainpointField = (n: number) => `${["pin", "point_"].join("")}${n}`;
 
+  const readActiveResearch = () => {
+    // Prefer per-contact research for the currently active contact, then fall back to the last selected blob.
+    try {
+      const activeId = String(localStorage.getItem("context_research_active_contact_id") || "").trim();
+      if (activeId) {
+        try {
+          const rawBy = localStorage.getItem("context_research_by_contact");
+          const by = rawBy ? JSON.parse(rawBy) : null;
+          const hit = by && typeof by === "object" ? (by[activeId] || null) : null;
+          if (hit) return hit;
+        } catch {}
+        try {
+          const rawHist = localStorage.getItem("context_research_history");
+          const hist = rawHist ? JSON.parse(rawHist) : [];
+          if (Array.isArray(hist)) {
+            const h = hist.find((x: any) => String(x?.contact?.id || "") === activeId);
+            if (h?.research) return h.research;
+          }
+        } catch {}
+      }
+    } catch {}
+    try {
+      return JSON.parse(localStorage.getItem("context_research") || "{}");
+    } catch {
+      return {};
+    }
+  };
+
   const cleanOfferSnippet = (raw: string, maxLen: number = 260) => {
     let s = String(raw || "").replace(/\s+/g, " ").trim();
     if (!s) return "";
@@ -178,7 +206,7 @@ export default function ComposePage() {
       selectedContacts = JSON.parse(localStorage.getItem("selected_contacts") || "[]");
     } catch {}
     try {
-      research = JSON.parse(localStorage.getItem("context_research") || "{}");
+      research = readActiveResearch();
     } catch {}
     try {
       selectedJD = JSON.parse(localStorage.getItem("selected_job_description") || "null");
@@ -201,7 +229,18 @@ export default function ComposePage() {
       }
     } catch {}
 
-    const firstContact = selectedContacts?.[0] || {};
+    // Prefer the active contact (selected in Research/Offer) so variables align with the chosen research target.
+    // Guard localStorage for Next.js prerender (server-side).
+    let activeContactId = "";
+    try {
+      if (typeof window !== "undefined") {
+        activeContactId = String(localStorage.getItem("context_research_active_contact_id") || "").trim();
+      }
+    } catch {}
+    const firstContact =
+      (activeContactId ? selectedContacts.find((c) => String((c as any)?.id || "") === activeContactId) : null) ||
+      selectedContacts?.[0] ||
+      {};
     const firstNameRaw = String(firstContact?.name || "").trim();
     const firstName = firstNameRaw ? firstNameRaw.split(" ")[0] : "there";
 
@@ -494,7 +533,7 @@ export default function ComposePage() {
             );
           })(),
         context_data: {
-          context_research: JSON.parse(localStorage.getItem("context_research") || "{}"),
+          context_research: readActiveResearch(),
           selected_job_description: JSON.parse(localStorage.getItem("selected_job_description") || "null"),
           selected_contacts: JSON.parse(localStorage.getItem("selected_contacts") || "[]"),
           created_offers: JSON.parse(localStorage.getItem("created_offers") || "[]"),
@@ -612,9 +651,9 @@ export default function ComposePage() {
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Compose</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Compose (Email 1)</h1>
             <p className="text-white/70">
-              Turn your Offer into a polished email. You can edit the key offer line and optional work link before generating.
+              Craft the primary message (Email 1). The next step, <span className="font-semibold text-white/80">Campaign</span>, generates follow-ups (Emails 2–3) per contact.
             </p>
             {buildStamp ? (
               <div className="mt-2 text-[11px] text-white/40 font-mono">
