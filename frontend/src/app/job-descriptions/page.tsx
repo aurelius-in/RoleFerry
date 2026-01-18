@@ -253,7 +253,11 @@ export default function JobDescriptionsPage() {
     const value =
       field === "title" ? jd.title :
       field === "company" ? jd.company :
-      (jd.salaryRange || "");
+      (
+        (jd.salaryRange || "").toLowerCase().includes("salary not provided")
+          ? ""
+          : (jd.salaryRange || "")
+      );
     setEditMeta({ id: jd.id, field, value });
   };
 
@@ -725,9 +729,20 @@ export default function JobDescriptionsPage() {
                           <input
                             value={editMeta.value}
                             onChange={(e) => setEditMeta({ ...editMeta, value: e.target.value })}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                saveEdit();
+                              }
+                              if (e.key === "Escape") {
+                                e.preventDefault();
+                                setEditMeta(null);
+                              }
+                            }}
                             placeholder="e.g., $120,000 - $150,000 (or leave blank)"
                             className="mt-2 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
                             aria-label="Edit salary"
+                            autoFocus
                           />
                         ) : (
                           <div className="text-sm text-white/80">
