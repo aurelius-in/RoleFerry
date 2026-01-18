@@ -189,7 +189,16 @@ def _is_heading(line: str) -> bool:
         return True
     # Some DOCX resumes use "Skills:" or "Experience -" style headings.
     up2 = up.strip().rstrip(":").strip()
-    return up2 in _MAJOR_HEADINGS
+    if up2 in _MAJOR_HEADINGS:
+        return True
+    # Heuristic headings: allow compound headings that contain the keyword,
+    # e.g. "Technical Recruiter Skills and Software".
+    # Keep this conservative to avoid treating normal sentences as headings.
+    if len(up2) <= 80:
+        for kw in ("SKILLS", "EXPERIENCE", "EDUCATION", "CERTIFICATION", "ACCOMPLISHMENT"):
+            if re.search(rf"\b{kw}\b", up2):
+                return True
+    return False
 
 
 def _slice_sections(text: str) -> Dict[str, List[str]]:
@@ -230,6 +239,9 @@ def _slice_sections(text: str) -> Dict[str, List[str]]:
                 head = "SKILLS"
             if head in ["TOP SKILLS", "LANGUAGES", "TECH STACK", "TECHNOLOGIES", "TOOLS", "TECHNICAL PROFICIENCIES"]:
                 head = "SKILLS"
+            # Some resumes use headings like "Technical Recruiter Skills and Software".
+            if "SKILL" in head:
+                head = "SKILLS"
             if head in ["ACHIEVEMENTS", "HIGHLIGHTS", "NOTABLE ACCOMPLISHMENTS", "ACCOMPLISHMENTS"]:
                 head = "ACCOMPLISHMENTS"
             if head in ["PROJECTS", "SELECTED PROJECTS", "PROJECT EXPERIENCE"]:
@@ -258,6 +270,10 @@ def extract_skills_from_sections(sections: Dict[str, List[str]]) -> List[str]:
     # Many DOCX resumes list skills as bullets or short lines; PDFs often use commas.
     # We'll support both.
     joined = _normalize_text(" ".join([l.strip() for l in raw_lines if l and l.strip()]))
+    # Some DOCX/PDF extractions turn pipe separators into a literal " I ".
+    # Only do this normalization inside the SKILLS section to avoid mangling sentences elsewhere.
+    if "|" in joined:
+        joined = re.sub(r"\sI\s", " | ", joined)
     # Force category markers to become explicit separators; PDF extraction often
     # drops commas/newlines and merges the last skill with the next category.
     category_markers = [
@@ -273,14 +289,21 @@ def extract_skills_from_sections(sections: Dict[str, List[str]]) -> List[str]:
     joined = re.sub(r"[•�]{2,}", " ", joined)
     joined = re.sub(r"\b[Ee]\s*\?\b", " ", joined)
 
-    # Split by commas/semicolons first.
-    tokens = [t.strip(" ,;:\n\t") for t in re.split(r"[;,]", joined)]
+    # Split by common separators (commas/semicolons/pipes).
+    tokens = [t.strip(" ,;:|\n\t") for t in re.split(r"[;,\|]", joined)]
     # Also treat each original line as a potential token (bullets / one-skill-per-line).
     for l in raw_lines:
         s = _normalize_text(l).strip()
         s = s.lstrip("-•* ").strip()
         if s:
-            tokens.append(s)
+            # Common in recruiting resumes: "ATS | CRM | Workday | ..."
+            if "|" in s:
+                for part in s.split("|"):
+                    pt = part.strip(" ,;:|\n\t")
+                    if pt:
+                        tokens.append(pt)
+            else:
+                tokens.append(s)
 
     category_set = {m.upper() for m in category_markers}
 
@@ -344,7 +367,7 @@ def extract_skills_from_lines(lines: List[str]) -> List[str]:
         if not m:
             continue
         rhs = m.group(2)
-        for tok in re.split(r"[;,/]| {2,}", rhs):
+        for tok in re.split(r"[;,/|]| {2,}", rhs):
             if tok.strip():
                 add(tok)
 
@@ -781,18 +804,45 @@ def extract_notable_accomplishments(sections: Dict[str, List[str]]) -> List[str]
     lines = [_normalize_text(l).strip() for l in exp if l and l.strip()]
     role_header_re = re.compile(r"\d{2}/\d{4}\s*(?:-|–|—|\s)\s*(?:\d{2}/\d{4}|Present)\s*$", re.I)
     two_dates_re = re.compile(r"\b\d{2}/\d{4}\b.*\b\d{2}/\d{4}\b")
+    month_name = r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
+    month_year_re = re.compile(rf"\b{month_name}\s+\d{{4}}\b", re.I)
+    month_year_range_re = re.compile(rf"\b{month_name}\s+\d{{4}}\s*(?:-|–|—|to)\s*(?:{month_name}\s+\d{{4}}|Present)\b", re.I)
+    year_range_re = re.compile(r"\b(19|20)\d{2}\b\s*(?:-|–|—|to)\s*\b(19|20)\d{2}\b", re.I)
 
     verbs = re.compile(r"\b(architect|built|ship|shipped|delivered|designed|led|implemented|improved|reduced|increased|optimized|deployed|integrated|created|developed|launched)\b", re.I)
     has_metric = re.compile(r"(\d+%|\b\d{1,3}[kKmM]\+?\b|\b\d{2,}\b)")
 
     acc: List[str] = []
     seen = set()
+
+    def _looks_like_tenure_line(s: str) -> bool:
+        """
+        Filter out tenure/date header lines like:
+        - "May 2021 – December 2022"
+        - "December 2022 - Present"
+        - "Some Company — Location   May 2021 – December 2022"
+        """
+        t = (s or "").strip()
+        if not t:
+            return False
+        # Pure date spans
+        if month_year_range_re.search(t):
+            return True
+        if year_range_re.search(t) and not verbs.search(t):
+            return True
+        # Company/location line that includes a month-year somewhere (very common in DOCX resumes)
+        if month_year_re.search(t) and re.search(r"(?:-|–|—|to)\s*(?:Present|"+month_name+r"\s+\d{4}|\d{4})\b", t, re.I):
+            return True
+        return False
+
     for l in lines:
         if len(l) < 18 or len(l) > 180:
             continue
         if _is_heading(l):
             continue
         if role_header_re.search(l) or two_dates_re.search(l):
+            continue
+        if _looks_like_tenure_line(l):
             continue
         # Skip obvious company/location lines
         if l.lower().endswith(" remote") or l.lower().endswith(" va") or l.lower().endswith(" tx"):
@@ -810,21 +860,123 @@ def extract_notable_accomplishments(sections: Dict[str, List[str]]) -> List[str]
 
 
 def extract_positions(lines: List[str]) -> List[Dict[str, str]]:
-    positions: List[Dict[str, str]] = []
-    for l in lines:
-        if any(t in l.lower() for t in COMMON_TITLES):
-            # naive position parsing
+    positions: List[Dict[str, object]] = []
+    lines = [_normalize_text(l).strip() for l in lines if l and l.strip()]
+
+    title_tokens = COMMON_TITLES + ["recruiter", "coach", "account", "sales", "architect"]
+    def _has_title_token(s: str) -> bool:
+        low = (s or "").lower()
+        for tok in title_tokens:
+            if re.search(rf"\b{re.escape(tok)}\b", low):
+                return True
+        return False
+
+    # DOCX resumes often use: "Company — Location   Month YYYY - Present" on one line,
+    # then the title on the next line.
+    month_name = r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
+    company_date_re = re.compile(
+        rf"^(?P<company>.+?)\s+(?P<start>{month_name}\s+\d{{4}})\s*(?:-|–|—|to)\s*(?P<end>{month_name}\s+\d{{4}}|Present)\s*$",
+        re.I,
+    )
+
+    i = 0
+    while i < len(lines):
+        l = lines[i]
+        m = company_date_re.match(l)
+        if m:
+            company = (m.group("company") or "").strip().strip(" -–—\t")
+            start = (m.group("start") or "").strip()
+            end = (m.group("end") or "").strip()
+            current = end.lower() == "present"
+
+            # Title is often within the next few lines. Prefer a line that looks like a role title
+            # over a narrative sentence.
+            title = ""
+            title_idx = None
+            for j in range(i + 1, min(len(lines), i + 5)):
+                cand = (lines[j] or "").strip()
+                if not cand or _is_heading(cand):
+                    break
+                if _has_title_token(cand) and len(cand.split()) <= 12:
+                    title = cand
+                    title_idx = j
+                    break
+            # Fallback: first non-heading line after company/date.
+            if title_idx is None:
+                for j in range(i + 1, len(lines)):
+                    cand = (lines[j] or "").strip()
+                    if not cand:
+                        continue
+                    if _is_heading(cand):
+                        break
+                    title = cand
+                    title_idx = j
+                    break
+
+            # Capture a short description (1-3 lines) until the next company/date span.
+            desc_lines: List[str] = []
+            # Include lines between company/date and title (often a company blurb),
+            # then a couple lines after the title.
+            k = (title_idx + 1) if title_idx is not None else (i + 1)
+            if title_idx is not None:
+                for mid in range(i + 1, title_idx):
+                    cand = (lines[mid] or "").strip()
+                    if not cand or _is_heading(cand):
+                        break
+                    desc_lines.append(cand.strip(" -•\t"))
+            while k < len(lines) and len(desc_lines) < 3:
+                cand = (lines[k] or "").strip()
+                if not cand:
+                    k += 1
+                    continue
+                if _is_heading(cand) or company_date_re.match(cand):
+                    break
+                # Avoid capturing a new title-only line as "description" if it looks like a role title.
+                if _has_title_token(cand) and len(cand.split()) <= 12:
+                    break
+                desc_lines.append(cand.strip(" -•\t"))
+                k += 1
+
+            positions.append(
+                {
+                    "title": title[:80],
+                    "company": company[:80],
+                    "start_date": start,
+                    "end_date": "" if current else end,
+                    "current": current,
+                    "description": " ".join(desc_lines).strip()[:240],
+                }
+            )
+            i = k
+            continue
+
+        # Fallback: naive position parsing from lines that mention common titles
+        if _has_title_token(l) and not _is_heading(l):
+            # Avoid misclassifying summary sentences as positions.
+            # Require it to look like a short title line.
+            if len(l.split()) > 12:
+                i += 1
+                continue
+            if "," in l or "." in l:
+                i += 1
+                continue
             parts = re.split(r"\s+at\s+|\s+-\s+|,\s*", l)
             if len(parts) >= 1:
-                positions.append({
-                    "title": parts[0][:80],
-                    "company": parts[1][:80] if len(parts) > 1 else "",
-                    "start_date": None,
-                    "end_date": None,
-                })
+                positions.append(
+                    {
+                        "title": (parts[0] or "")[:80],
+                        "company": (parts[1] if len(parts) > 1 else "")[:80],
+                        "start_date": None,
+                        "end_date": None,
+                        "current": False,
+                        "description": "",
+                    }
+                )
+        i += 1
+
     # de-dup by title+company order preserved
     seen = set()
-    unique: List[Dict[str, str]] = []
+    unique: List[Dict[str, object]] = []
     for p in positions:
         key = (p.get("title"), p.get("company"))
         if key not in seen:
