@@ -80,7 +80,7 @@ export default function Navbar() {
             >
               {/* Hamburger icon */}
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>
-            </Link>
+              image.png            </Link>
           </div>
         </div>
 
@@ -93,6 +93,7 @@ export default function Navbar() {
 
             <NavPill href="/job-preferences" pathname={pathname}>Job Prefs</NavPill>
             <NavPill href="/resume" pathname={pathname}>Resume</NavPill>
+            <NavPill href="/personality" pathname={pathname}>Personality</NavPill>
             <NavPill href="/job-descriptions" pathname={pathname}>Jobs</NavPill>
             <NavPill href="/gap-analysis" pathname={pathname}>Gaps</NavPill>
             <NavPill href="/painpoint-match" pathname={pathname}>Match</NavPill>

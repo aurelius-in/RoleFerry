@@ -202,7 +202,7 @@ export default function ResumePage() {
   const handleSave = () => {
     if (extract) {
       localStorage.setItem('resume_extract', JSON.stringify(extract));
-      router.push('/job-descriptions');
+      router.push('/personality');
     }
   };
 
@@ -258,7 +258,7 @@ export default function ResumePage() {
                   ) : null}
                 </div>
                 <div className="bg-gray-900/70 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-white/10">
-                  Step 3 of 12
+                  Step 2 of 12
                 </div>
               </div>
 

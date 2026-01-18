@@ -329,8 +329,8 @@ export default function JobDescriptionsPage() {
   return (
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4 mb-4">
-        <a href="/resume" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
-          <span className="mr-2">←</span> Back to Resume
+        <a href="/personality" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+          <span className="mr-2">←</span> Back to Personality
         </a>
       </div>
       <div className="max-w-6xl mx-auto px-4">
@@ -343,7 +343,7 @@ export default function JobDescriptionsPage() {
               </p>
             </div>
             <div className="bg-gray-900/70 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-white/10">
-              Step 2 of 12
+              Step 4 of 12
             </div>
           </div>
 
