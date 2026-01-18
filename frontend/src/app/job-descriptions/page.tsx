@@ -557,7 +557,7 @@ export default function JobDescriptionsPage() {
                               <button
                                 type="button"
                                 onClick={() => startEdit(jd, "title")}
-                                className="shrink-0 text-xs underline text-white/70 hover:text-white"
+                                className="shrink-0 inline-flex items-center rounded-full border border-orange-400/30 bg-orange-500/15 px-2 py-0.5 text-[11px] font-semibold text-orange-200 hover:bg-orange-500/20 hover:text-orange-100"
                               >
                                 Edit title
                               </button>
@@ -593,7 +593,7 @@ export default function JobDescriptionsPage() {
                               <button
                                 type="button"
                                 onClick={() => startEdit(jd, "company")}
-                                className="text-xs underline text-white/70 hover:text-white"
+                                className="inline-flex items-center rounded-full border border-orange-400/30 bg-orange-500/15 px-2 py-0.5 text-[11px] font-semibold text-orange-200 hover:bg-orange-500/20 hover:text-orange-100"
                               >
                                 Edit company
                               </button>
@@ -714,7 +714,7 @@ export default function JobDescriptionsPage() {
                             <button
                               type="button"
                               onClick={() => startEdit(jd, "salaryRange")}
-                              className="text-[11px] underline text-white/70 hover:text-white"
+                              className="inline-flex items-center rounded-full border border-orange-400/30 bg-orange-500/15 px-2 py-0.5 text-[11px] font-semibold text-orange-200 hover:bg-orange-500/20 hover:text-orange-100"
                             >
                               Edit salary
                             </button>
