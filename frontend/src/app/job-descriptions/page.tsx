@@ -99,6 +99,11 @@ export default function JobDescriptionsPage() {
   // React hydration mismatches (which can break click interactions).
   const [hasMounted, setHasMounted] = useState(false);
   const [jobDescriptions, setJobDescriptions] = useState<JobDescription[]>([]);
+  const [editMeta, setEditMeta] = useState<{
+    id: string;
+    field: "title" | "company" | "salaryRange";
+    value: string;
+  } | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importUrl, setImportUrl] = useState("");
@@ -132,6 +137,13 @@ export default function JobDescriptionsPage() {
       // ignore malformed cache
     }
   }, []);
+
+  const persistJobDescriptions = (next: JobDescription[]) => {
+    setJobDescriptions(next);
+    try {
+      localStorage.setItem("job_descriptions", JSON.stringify(next));
+    } catch {}
+  };
 
   useEffect(() => {
     return () => {
@@ -188,9 +200,7 @@ export default function JobDescriptionsPage() {
             if (idx >= 0) next[idx] = { ...next[idx], ...m };
             else next.push(m);
           }
-          if (typeof window !== "undefined") {
-            localStorage.setItem("job_descriptions", JSON.stringify(next));
-          }
+          if (typeof window !== "undefined") localStorage.setItem("job_descriptions", JSON.stringify(next));
           return next;
         });
       }
@@ -206,13 +216,22 @@ export default function JobDescriptionsPage() {
   };
 
   const handleDelete = (id: string) => {
-    setJobDescriptions(prev => prev.filter(jd => jd.id !== id));
+    setJobDescriptions(prev => {
+      const next = prev.filter(jd => jd.id !== id);
+      try { localStorage.setItem("job_descriptions", JSON.stringify(next)); } catch {}
+      return next;
+    });
+    setEditMeta((cur) => (cur?.id === id ? null : cur));
   };
 
   const handleGradeChange = (id: string, grade: string) => {
-    setJobDescriptions(prev => prev.map(jd => 
-      jd.id === id ? { ...jd, grade: grade as JobDescription['grade'] } : jd
-    ));
+    setJobDescriptions(prev => {
+      const next = prev.map(jd =>
+        jd.id === id ? { ...jd, grade: grade as JobDescription['grade'] } : jd
+      );
+      try { localStorage.setItem("job_descriptions", JSON.stringify(next)); } catch {}
+      return next;
+    });
   };
 
   const sortedJobDescriptions = [...jobDescriptions].sort((a, b) => {
@@ -228,6 +247,37 @@ export default function JobDescriptionsPage() {
       localStorage.setItem('job_descriptions', JSON.stringify(jobDescriptions));
       router.push('/gap-analysis');
     }
+  };
+
+  const startEdit = (jd: JobDescription, field: "title" | "company" | "salaryRange") => {
+    const value =
+      field === "title" ? jd.title :
+      field === "company" ? jd.company :
+      (jd.salaryRange || "");
+    setEditMeta({ id: jd.id, field, value });
+  };
+
+  const saveEdit = () => {
+    if (!editMeta) return;
+    const { id, field } = editMeta;
+    const raw = String(editMeta.value || "");
+    const value = raw.trim();
+    // Basic validation: title/company should not be blank
+    if ((field === "title" || field === "company") && !value) return;
+
+    setJobDescriptions((prev) => {
+      const next = prev.map((jd) => {
+        if (jd.id !== id) return jd;
+        if (field === "title") return { ...jd, title: value };
+        if (field === "company") return { ...jd, company: value };
+        // salaryRange: allow empty (means "not provided")
+        return { ...jd, salaryRange: value || "Salary not provided" };
+      });
+      try { localStorage.setItem("job_descriptions", JSON.stringify(next)); } catch {}
+      return next;
+    });
+
+    setEditMeta(null);
   };
 
   const addToTracker = (jd: JobDescription) => {
@@ -459,8 +509,81 @@ export default function JobDescriptionsPage() {
                 <div key={jd.id} className="rounded-lg border border-white/10 bg-black/20 p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-xl font-semibold text-white">{jd.title}</h3>
-                      <p className="text-white/70">{jd.company}</p>
+                      <div className="flex items-start gap-3">
+                        <div className="min-w-0">
+                          {editMeta?.id === jd.id && editMeta.field === "title" ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                value={editMeta.value}
+                                onChange={(e) => setEditMeta({ ...editMeta, value: e.target.value })}
+                                className="w-full max-w-xl rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
+                                aria-label="Edit title"
+                              />
+                              <button
+                                type="button"
+                                onClick={saveEdit}
+                                className="shrink-0 rounded-md bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditMeta(null)}
+                                className="shrink-0 rounded-md bg-white/10 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/15"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-xl font-semibold text-white break-words">{jd.title}</h3>
+                              <button
+                                type="button"
+                                onClick={() => startEdit(jd, "title")}
+                                className="shrink-0 text-xs underline text-white/70 hover:text-white"
+                              >
+                                Edit title
+                              </button>
+                            </div>
+                          )}
+
+                          {editMeta?.id === jd.id && editMeta.field === "company" ? (
+                            <div className="mt-1 flex items-center gap-2">
+                              <input
+                                value={editMeta.value}
+                                onChange={(e) => setEditMeta({ ...editMeta, value: e.target.value })}
+                                className="w-full max-w-md rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
+                                aria-label="Edit company"
+                              />
+                              <button
+                                type="button"
+                                onClick={saveEdit}
+                                className="shrink-0 rounded-md bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditMeta(null)}
+                                className="shrink-0 rounded-md bg-white/10 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/15"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="mt-1 flex items-center gap-2">
+                              <p className="text-white/70 break-words">{jd.company}</p>
+                              <button
+                                type="button"
+                                onClick={() => startEdit(jd, "company")}
+                                className="text-xs underline text-white/70 hover:text-white"
+                              >
+                                Edit company
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                       {(jd.salaryRange || jd.location || jd.workMode || jd.employmentType) && (
                         <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
                           {jd.salaryRange ? (
@@ -551,10 +674,49 @@ export default function JobDescriptionsPage() {
                     <div>
                       <h4 className="font-semibold text-white mb-3">Required Skills</h4>
                       <div className="mb-3">
-                        <div className="text-xs font-semibold text-white/70 mb-1">Salary</div>
-                        <div className="text-sm text-white/80">
-                          {jd.salaryRange ? jd.salaryRange : "Salary not provided"}
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="text-xs font-semibold text-white/70 mb-1">Salary</div>
+                          {editMeta?.id === jd.id && editMeta.field === "salaryRange" ? (
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={saveEdit}
+                                className="rounded-md bg-blue-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-blue-700"
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditMeta(null)}
+                                className="rounded-md bg-white/10 px-2 py-1 text-[11px] font-semibold text-white/80 hover:bg-white/15"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => startEdit(jd, "salaryRange")}
+                              className="text-[11px] underline text-white/70 hover:text-white"
+                            >
+                              Edit salary
+                            </button>
+                          )}
                         </div>
+
+                        {editMeta?.id === jd.id && editMeta.field === "salaryRange" ? (
+                          <input
+                            value={editMeta.value}
+                            onChange={(e) => setEditMeta({ ...editMeta, value: e.target.value })}
+                            placeholder="e.g., $120,000 - $150,000 (or leave blank)"
+                            className="mt-2 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
+                            aria-label="Edit salary"
+                          />
+                        ) : (
+                          <div className="text-sm text-white/80">
+                            {jd.salaryRange ? jd.salaryRange : "Salary not provided"}
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {jd.requiredSkills.map((skill, index) => (
