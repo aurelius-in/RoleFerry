@@ -502,6 +502,63 @@ export default function PersonalityPage() {
     } catch {}
   };
 
+  const renderLikert = (opts: {
+    questionId: string;
+    value: Choice | null;
+    leftLabel: string;
+    rightLabel: string;
+    onPick: (c: Choice) => void;
+    size?: "sm" | "md";
+  }) => {
+    const size = opts.size ?? "sm";
+    const pillBase =
+      size === "md"
+        ? "h-11 px-3 rounded-full text-[12px] font-extrabold"
+        : "h-9 px-3 rounded-full text-[11px] font-bold";
+
+    const Btn = (p: { choice: Choice; label: string }) => (
+      <button
+        key={`${opts.questionId}_${p.choice}`}
+        type="button"
+        onClick={() => opts.onPick(p.choice)}
+        aria-pressed={opts.value === p.choice}
+        className={`${pillBase} border transition-colors ${
+          opts.value === p.choice
+            ? "border-orange-400/40 bg-orange-500/25 text-white"
+            : "border-white/10 bg-black/20 text-white/70 hover:bg-white/10"
+        }`}
+      >
+        {p.label}
+      </button>
+    );
+
+    return (
+      <div className="mt-3 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <div className="text-xs text-white/60">
+          <div className="font-semibold text-white/80">Option A</div>
+          <div className="mt-0.5">{opts.leftLabel}</div>
+        </div>
+
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Btn choice={-2} label="Very like me" />
+            <Btn choice={-1} label="Somewhat like me" />
+          </div>
+          <Btn choice={0} label="It depends" />
+          <div className="flex items-center gap-2">
+            <Btn choice={1} label="Somewhat like me" />
+            <Btn choice={2} label="Very like me" />
+          </div>
+        </div>
+
+        <div className="text-xs text-white/60 md:text-right">
+          <div className="font-semibold text-white/80">Option B</div>
+          <div className="mt-0.5">{opts.rightLabel}</div>
+        </div>
+      </div>
+    );
+  };
+
   useEffect(() => {
     if (activeTest !== "temperaments") return;
     // Keep step pointer sane (e.g. after reset or stored state load)
@@ -679,35 +736,14 @@ export default function PersonalityPage() {
                         <div className="mt-4">
                           <div className="text-base md:text-lg font-extrabold text-white">{q.prompt}</div>
 
-                          <div className="mt-3 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-4">
-                            <div className="rounded-lg border border-white/10 bg-black/25 p-3">
-                              <div className="text-[11px] text-white/60 mb-1">Leaning left</div>
-                              <div className="text-sm font-semibold text-white">{q.leftLabel}</div>
-                            </div>
-
-                            <div className="flex items-center justify-center gap-2">
-                              {([-2, -1, 0, 1, 2] as Choice[]).map((c) => (
-                                <button
-                                  key={`${q.id}_${c}`}
-                                  type="button"
-                                  onClick={() => answerAndAdvance(c)}
-                                  aria-pressed={v === c}
-                                  className={`h-11 w-11 rounded-full border text-sm font-extrabold transition-colors ${
-                                    v === c
-                                      ? "border-orange-400/40 bg-orange-500/25 text-white"
-                                      : "border-white/10 bg-black/20 text-white/70 hover:bg-white/10"
-                                  }`}
-                                >
-                                  {c === 0 ? "0" : c > 0 ? `+${c}` : String(c)}
-                                </button>
-                              ))}
-                            </div>
-
-                            <div className="rounded-lg border border-white/10 bg-black/25 p-3 md:text-right">
-                              <div className="text-[11px] text-white/60 mb-1">Leaning right</div>
-                              <div className="text-sm font-semibold text-white">{q.rightLabel}</div>
-                            </div>
-                          </div>
+                          {renderLikert({
+                            questionId: q.id,
+                            value: v,
+                            leftLabel: q.leftLabel,
+                            rightLabel: q.rightLabel,
+                            onPick: answerAndAdvance,
+                            size: "md",
+                          })}
 
                           <div className="mt-4 flex items-center justify-between gap-2">
                             <button
@@ -719,7 +755,7 @@ export default function PersonalityPage() {
                               ← Back
                             </button>
                             <div className="text-[11px] text-white/60">
-                              Tip: if unsure, tap <span className="font-semibold text-white/80">0</span>.
+                              Tip: if unsure, choose <span className="font-semibold text-white/80">It depends</span>.
                             </div>
                             <button
                               type="button"
@@ -767,27 +803,14 @@ export default function PersonalityPage() {
                 return (
                   <div key={q.id} className="rounded-lg border border-white/10 bg-black/20 p-4">
                     <div className="text-sm font-semibold text-white">{q.prompt}</div>
-                    <div className="mt-3 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-3">
-                      <div className="text-xs text-white/60">{q.leftLabel}</div>
-                      <div className="flex items-center justify-center gap-2">
-                        {([-2, -1, 0, 1, 2] as Choice[]).map((c) => (
-                          <button
-                            key={`${q.id}_${c}`}
-                            type="button"
-                            onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: c }))}
-                            aria-pressed={v === c}
-                            className={`h-9 w-9 rounded-full border text-xs font-bold transition-colors ${
-                              v === c
-                                ? "border-orange-400/40 bg-orange-500/25 text-white"
-                                : "border-white/10 bg-black/20 text-white/70 hover:bg-white/10"
-                            }`}
-                          >
-                            {c === 0 ? "0" : c > 0 ? `+${c}` : String(c)}
-                          </button>
-                        ))}
-                      </div>
-                      <div className="text-xs text-white/60 md:text-right">{q.rightLabel}</div>
-                    </div>
+                    {renderLikert({
+                      questionId: q.id,
+                      value: v,
+                      leftLabel: q.leftLabel,
+                      rightLabel: q.rightLabel,
+                      onPick: (c) => setAnswers((prev) => ({ ...prev, [q.id]: c })),
+                      size: "sm",
+                    })}
                   </div>
                 );
               })
@@ -797,8 +820,8 @@ export default function PersonalityPage() {
           <div className="mt-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="text-xs text-white/60">
               {activeTest === "temperaments"
-                ? "Tip: use the extremes (±2) only when it’s strongly true for you."
-                : "Tip: if you’re unsure, choose 0."}
+                ? "Tip: choose “It depends” if you’re unsure."
+                : "Tip: choose “It depends” if you’re unsure."}
             </div>
             <div className="flex items-center gap-2">
               <button
