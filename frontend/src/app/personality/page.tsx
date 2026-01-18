@@ -117,6 +117,13 @@ const TEMPERAMENT_COLORS: Record<TemperamentId, { border: string; bg: string; te
   Rational: { border: "border-blue-400/30", bg: "bg-blue-500/15", text: "text-blue-200", icon: "💡" },
 };
 
+const TEMPERAMENT_BLURBS: Record<TemperamentId, string> = {
+  Artisan: "Tactical, adaptable doers. “Do what works.”",
+  Guardian: "Steady, reliable builders. “Do what’s right.”",
+  Idealist: "People-first, values-led guides. “Lead with values.”",
+  Rational: "Systems, strategy, and deep problem-solving. “Solve systems.”",
+};
+
 // Keirsey-style labels + common 4-letter shorthand people recognize online.
 // We keep this lightweight and job-focused (no copied descriptions).
 const TEMPERAMENT_SUBTYPES: Record<TemperamentId, Array<{ label: string; code: string; job_angle: string }>> = {
@@ -237,6 +244,15 @@ function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
+function temperamentFromScores(comm: number, act: number): TemperamentId {
+  let temperament: TemperamentId = "Guardian";
+  if (comm < 0 && act < 0) temperament = "Artisan";
+  if (comm < 0 && act >= 0) temperament = "Guardian";
+  if (comm >= 0 && act >= 0) temperament = "Idealist";
+  if (comm >= 0 && act < 0) temperament = "Rational";
+  return temperament;
+}
+
 function computeTemperamentResult(answers: Record<string, Choice>): TemperamentResult {
   const scores: Record<TemperamentAxis, number> = { communication: 0, action: 0 };
   for (const q of TEMPERAMENT_QUESTIONS) {
@@ -253,11 +269,7 @@ function computeTemperamentResult(answers: Record<string, Choice>): TemperamentR
   // concrete+cooperative => Guardian
   // abstract+cooperative => Idealist
   // abstract+utilitarian => Rational
-  let temperament: TemperamentId = "Guardian";
-  if (comm < 0 && act < 0) temperament = "Artisan";
-  if (comm < 0 && act >= 0) temperament = "Guardian";
-  if (comm >= 0 && act >= 0) temperament = "Idealist";
-  if (comm >= 0 && act < 0) temperament = "Rational";
+  const temperament = temperamentFromScores(comm, act);
 
   const summary =
     temperament === "Artisan"
@@ -371,6 +383,7 @@ export default function PersonalityPage() {
 
   const [temperamentAnswers, setTemperamentAnswers] = useState<Record<string, Choice>>({});
   const [temperamentResult, setTemperamentResult] = useState<TemperamentResult | null>(null);
+  const [tStep, setTStep] = useState<number>(0);
 
   const [answers, setAnswers] = useState<Record<string, Choice>>({});
   const [result, setResult] = useState<PersonalityResult | null>(null);
@@ -397,6 +410,71 @@ export default function PersonalityPage() {
   const tAnsweredCount = useMemo(() => Object.keys(temperamentAnswers).length, [temperamentAnswers]);
   const tIsComplete = tAnsweredCount === TEMPERAMENT_QUESTIONS.length;
 
+  const tLive = useMemo(() => {
+    let comm = 0;
+    let act = 0;
+    let commAnswered = 0;
+    let actAnswered = 0;
+
+    for (const q of TEMPERAMENT_QUESTIONS) {
+      const v = temperamentAnswers[q.id];
+      if (typeof v !== "number") continue;
+      if (q.axis === "communication") {
+        comm += Number(v);
+        commAnswered += 1;
+      } else {
+        act += Number(v);
+        actAnswered += 1;
+      }
+    }
+
+    const totalComm = TEMPERAMENT_QUESTIONS.filter((q) => q.axis === "communication").length;
+    const totalAct = TEMPERAMENT_QUESTIONS.filter((q) => q.axis === "action").length;
+    const remComm = totalComm - commAnswered;
+    const remAct = totalAct - actAnswered;
+
+    const minComm = comm - 2 * remComm;
+    const maxComm = comm + 2 * remComm;
+    const minAct = act - 2 * remAct;
+    const maxAct = act + 2 * remAct;
+
+    const canConcrete = minComm < 0;
+    const canAbstract = maxComm >= 0;
+    const canUtilitarian = minAct < 0;
+    const canCooperative = maxAct >= 0;
+
+    const possible: Record<TemperamentId, boolean> = {
+      Artisan: canConcrete && canUtilitarian,
+      Guardian: canConcrete && canCooperative,
+      Idealist: canAbstract && canCooperative,
+      Rational: canAbstract && canUtilitarian,
+    };
+
+    const remainingPossible = (Object.keys(possible) as TemperamentId[]).filter((k) => possible[k]);
+    const guess = temperamentFromScores(comm, act);
+
+    // Confidence heuristic: how strongly we’re pushed into the quadrant given what’s still possible.
+    // This is NOT a scientific probability—just UX feedback for “how narrowed down are we?”
+    const commMarginToFlip = Math.min(Math.abs(minComm), Math.abs(maxComm));
+    const actMarginToFlip = Math.min(Math.abs(minAct), Math.abs(maxAct));
+    const narrowedPct = clamp(Math.round(((TEMPERAMENT_QUESTIONS.length - (remComm + remAct)) / TEMPERAMENT_QUESTIONS.length) * 100), 0, 100);
+    const eliminations = 4 - remainingPossible.length;
+
+    return {
+      comm,
+      act,
+      remComm,
+      remAct,
+      possible,
+      remainingPossible,
+      guess,
+      eliminations,
+      narrowedPct,
+      commMarginToFlip,
+      actMarginToFlip,
+    };
+  }, [temperamentAnswers]);
+
   const onSubmit = () => {
     if (!isComplete) return;
     const next = computeResult(answers);
@@ -414,6 +492,79 @@ export default function PersonalityPage() {
       localStorage.setItem(TEMPERAMENT_STORAGE_KEY, JSON.stringify(next));
     } catch {}
   };
+
+  const resetTemperaments = () => {
+    setTemperamentAnswers({});
+    setTemperamentResult(null);
+    setTStep(0);
+    try {
+      localStorage.removeItem(TEMPERAMENT_STORAGE_KEY);
+    } catch {}
+  };
+
+  const renderLikert = (opts: {
+    questionId: string;
+    value: Choice | null;
+    leftLabel: string;
+    rightLabel: string;
+    onPick: (c: Choice) => void;
+    size?: "sm" | "md";
+  }) => {
+    const size = opts.size ?? "sm";
+    const pillBase =
+      size === "md"
+        ? "h-11 px-3 rounded-full text-[12px] font-extrabold"
+        : "h-9 px-3 rounded-full text-[11px] font-bold";
+
+    const Btn = (p: { choice: Choice; label: string }) => (
+      <button
+        key={`${opts.questionId}_${p.choice}`}
+        type="button"
+        onClick={() => opts.onPick(p.choice)}
+        aria-pressed={opts.value === p.choice}
+        className={`${pillBase} border transition-colors ${
+          opts.value === p.choice
+            ? "border-orange-400/40 bg-orange-500/25 text-white"
+            : "border-white/10 bg-black/20 text-white/70 hover:bg-white/10"
+        }`}
+      >
+        {p.label}
+      </button>
+    );
+
+    return (
+      <div className="mt-2 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <div className="text-white/90">
+          <div className={`${size === "md" ? "text-lg" : "text-base"} font-extrabold leading-snug`}>{opts.leftLabel}</div>
+          <div className="mt-0.5 text-[11px] text-white/60">Lean this direction</div>
+        </div>
+
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Btn choice={-2} label="Very like me" />
+            <Btn choice={-1} label="Somewhat like me" />
+          </div>
+          <Btn choice={0} label="It depends" />
+          <div className="flex items-center gap-2">
+            <Btn choice={1} label="Somewhat like me" />
+            <Btn choice={2} label="Very like me" />
+          </div>
+        </div>
+
+        <div className="text-white/90 md:text-right">
+          <div className={`${size === "md" ? "text-lg" : "text-base"} font-extrabold leading-snug`}>{opts.rightLabel}</div>
+          <div className="mt-0.5 text-[11px] text-white/60">Lean this direction</div>
+        </div>
+      </div>
+    );
+  };
+
+  useEffect(() => {
+    if (activeTest !== "temperaments") return;
+    // Keep step pointer sane (e.g. after reset or stored state load)
+    const next = clamp(tStep, 0, TEMPERAMENT_QUESTIONS.length - 1);
+    if (next !== tStep) setTStep(next);
+  }, [activeTest, tStep]);
 
   return (
     <div className="min-h-screen py-8 text-slate-100">
@@ -478,51 +629,212 @@ export default function PersonalityPage() {
             </div>
           </div>
 
-          <div className="space-y-4">
-            {(activeTest === "temperaments" ? TEMPERAMENT_QUESTIONS : QUESTIONS).map((q: any) => {
-              const v = (activeTest === "temperaments" ? temperamentAnswers : answers)[q.id] ?? null;
-              const setFn = activeTest === "temperaments" ? setTemperamentAnswers : setAnswers;
-              return (
-                <div key={q.id} className="rounded-lg border border-white/10 bg-black/20 p-4">
-                  <div className="text-sm font-semibold text-white">{q.prompt}</div>
-                  <div className="mt-3 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-3">
-                    <div className="text-xs text-white/60">{q.leftLabel}</div>
-                    <div className="flex items-center justify-center gap-2">
-                      {([-2, -1, 0, 1, 2] as Choice[]).map((c) => (
-                        <button
-                          key={`${q.id}_${c}`}
-                          type="button"
-                          onClick={() => setFn((prev: any) => ({ ...prev, [q.id]: c }))}
-                          aria-pressed={v === c}
-                          className={`h-9 w-9 rounded-full border text-xs font-bold transition-colors ${
-                            v === c
-                              ? "border-orange-400/40 bg-orange-500/25 text-white"
-                              : "border-white/10 bg-black/20 text-white/70 hover:bg-white/10"
-                          }`}
-                        >
-                          {c === 0 ? "0" : c > 0 ? `+${c}` : String(c)}
-                        </button>
-                      ))}
+          <div className="space-y-3">
+            {activeTest === "temperaments" ? (
+              <div className="rounded-lg border border-white/10 bg-black/20 p-5">
+                {/* Big icon tiles stay visible and “narrow down” in real-time */}
+                <div className="flex items-start justify-between gap-3 flex-col md:flex-row md:items-center">
+                  <div>
+                    <div className="text-sm font-bold text-white">4 Temperaments Type Finder</div>
+                    <div className="mt-1 text-xs text-white/60">
+                      Answer a few questions and watch the likely types narrow down (process of elimination).
                     </div>
-                    <div className="text-xs text-white/60 md:text-right">{q.rightLabel}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[11px] text-white/70">
+                      Possible types: <span className="font-extrabold text-white/85">{tLive.remainingPossible.length}</span> / 4
+                    </div>
+                    <div className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[11px] text-white/70">
+                      Eliminated: <span className="font-extrabold text-white/85">{tLive.eliminations}</span>
+                    </div>
                   </div>
                 </div>
-              );
-            })}
+
+                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {(["Artisan", "Guardian", "Idealist", "Rational"] as TemperamentId[]).map((tid) => {
+                    const possible = tLive.possible[tid];
+                    const isLead = tLive.guess === tid && tAnsweredCount > 0;
+                    return (
+                      <div
+                        key={tid}
+                        className={`rounded-xl border p-4 transition-all ${TEMPERAMENT_COLORS[tid].border} ${TEMPERAMENT_COLORS[tid].bg} ${
+                          isLead ? "ring-2 ring-white/20" : ""
+                        }`}
+                        style={{ opacity: possible ? 1 : 0.25 }}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className={`text-xs font-extrabold ${TEMPERAMENT_COLORS[tid].text}`}>{tid}</div>
+                            <div className="mt-1 text-[11px] text-white/70 line-clamp-2">{TEMPERAMENT_BLURBS[tid]}</div>
+                          </div>
+                          <div className="shrink-0">
+                            <div className="text-3xl leading-none" aria-hidden="true">
+                              {TEMPERAMENT_COLORS[tid].icon}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex items-center justify-between gap-2">
+                          <span className="text-[10px] text-white/60">Status</span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold border ${
+                              possible ? "border-white/10 bg-black/25 text-white/80" : "border-white/10 bg-black/20 text-white/50"
+                            }`}
+                          >
+                            {possible ? (isLead ? "Leading" : "Still possible") : "Eliminated"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Question wizard */}
+                {!temperamentResult && (
+                  <div className="mt-5 rounded-lg border border-white/10 bg-white/5 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-xs font-semibold text-white/70">
+                        Question {Math.min(tStep + 1, TEMPERAMENT_QUESTIONS.length)} / {TEMPERAMENT_QUESTIONS.length}
+                      </div>
+                      <div className="text-[11px] text-white/60">
+                        Current guess:{" "}
+                        <span className={`font-extrabold ${TEMPERAMENT_COLORS[tLive.guess].text}`}>
+                          {tAnsweredCount === 0 ? "—" : tLive.guess}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 h-2 w-full rounded-full bg-white/10 overflow-hidden">
+                      <div
+                        className="h-full brand-gradient"
+                        style={{ width: `${(tAnsweredCount / TEMPERAMENT_QUESTIONS.length) * 100}%` }}
+                      />
+                    </div>
+
+                    {(() => {
+                      const q = TEMPERAMENT_QUESTIONS[tStep];
+                      const v = temperamentAnswers[q.id] ?? null;
+
+                      const answerAndAdvance = (c: Choice) => {
+                        setTemperamentAnswers((prev) => ({ ...prev, [q.id]: c }));
+                        const isLast = tStep >= TEMPERAMENT_QUESTIONS.length - 1;
+                        if (isLast) {
+                          // Submit on the next tick to ensure state is applied
+                          setTimeout(() => {
+                            const nextAnswers = { ...temperamentAnswers, [q.id]: c };
+                            const next = computeTemperamentResult(nextAnswers);
+                            setTemperamentResult(next);
+                            try {
+                              localStorage.setItem(TEMPERAMENT_STORAGE_KEY, JSON.stringify(next));
+                            } catch {}
+                          }, 0);
+                          return;
+                        }
+                        setTStep((s) => clamp(s + 1, 0, TEMPERAMENT_QUESTIONS.length - 1));
+                      };
+
+                      return (
+                        <div className="mt-3">
+                          <div className="text-base md:text-lg font-extrabold text-white">{q.prompt}</div>
+
+                          {renderLikert({
+                            questionId: q.id,
+                            value: v,
+                            leftLabel: q.leftLabel,
+                            rightLabel: q.rightLabel,
+                            onPick: answerAndAdvance,
+                            size: "md",
+                          })}
+
+                          <div className="mt-4 flex items-center justify-between gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setTStep((s) => clamp(s - 1, 0, TEMPERAMENT_QUESTIONS.length - 1))}
+                              disabled={tStep === 0}
+                              className="bg-white/10 text-white px-4 py-2 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10 disabled:opacity-40"
+                            >
+                              ← Back
+                            </button>
+                            <div className="text-[11px] text-white/60">
+                              Tip: if unsure, choose <span className="font-semibold text-white/80">It depends</span>.
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setTStep((s) => clamp(s + 1, 0, TEMPERAMENT_QUESTIONS.length - 1))}
+                              className="bg-white/10 text-white px-4 py-2 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
+                            >
+                              Skip →
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {temperamentResult && (
+                  <div className="mt-5 rounded-lg border border-white/10 bg-black/20 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-semibold text-white/60">Your temperament</div>
+                        <div className="mt-1 flex items-center gap-3">
+                          <div className="text-4xl leading-none" aria-hidden="true">
+                            {TEMPERAMENT_COLORS[temperamentResult.temperament].icon}
+                          </div>
+                          <div>
+                            <div className="text-2xl font-extrabold text-white">{temperamentResult.temperament}</div>
+                            <div className="text-xs text-white/60">{TEMPERAMENT_BLURBS[temperamentResult.temperament]}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={resetTemperaments}
+                        className="bg-white/10 text-white px-4 py-2 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
+                      >
+                        Retake
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              QUESTIONS.map((q) => {
+                const v = answers[q.id] ?? null;
+                return (
+                  <div key={q.id} className="rounded-lg border border-white/10 bg-black/15 overflow-hidden">
+                    {/* Prompt header (distinct from the options) */}
+                    <div className="px-4 py-3 bg-white/5 border-b border-white/10">
+                      <div className="text-sm font-semibold text-white/85">{q.prompt}</div>
+                    </div>
+                    {/* Options area */}
+                    <div className="px-4 pb-3">
+                      {renderLikert({
+                        questionId: q.id,
+                        value: v,
+                        leftLabel: q.leftLabel,
+                        rightLabel: q.rightLabel,
+                        onPick: (c) => setAnswers((prev) => ({ ...prev, [q.id]: c })),
+                        size: "sm",
+                      })}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
 
           <div className="mt-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="text-xs text-white/60">
-              Tip: if you’re unsure, choose <span className="font-semibold text-white/80">0</span>.
+              {activeTest === "temperaments"
+                ? "Tip: choose “It depends” if you’re unsure."
+                : "Tip: choose “It depends” if you’re unsure."}
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => {
                   if (activeTest === "temperaments") {
-                    setTemperamentAnswers({});
-                    setTemperamentResult(null);
-                    try { localStorage.removeItem(TEMPERAMENT_STORAGE_KEY); } catch {}
+                    resetTemperaments();
                   } else {
                     setAnswers({});
                     setResult(null);
