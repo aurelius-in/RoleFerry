@@ -532,6 +532,8 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                     company = s[:120]
                     break
 
+        top_blob = " ".join(lines[:80])
+
         # Company: patterns like "for Optima Tax Relief, LLC (“Optima”)"
         if not company and lines:
             m = re.search(
@@ -542,8 +544,6 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 cand = (m.group(1) or "").strip().strip(",")
                 if cand and cand.lower() not in _COMPANY_STOPWORDS:
                     company = cand[:120]
-
-        top_blob = " ".join(lines[:80])
 
         # Find candidates of the form "X is ..." / "X provides ..." / "X began ..."
         # and pick the best (prefer domain-looking tokens like Lamatic.ai).
@@ -654,7 +654,7 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
     # Content patterns: "At Company, ..." near the top.
     if not company:
         top = " ".join(lines[:12])
-        m = re.search(r"\b(?:at|join)\s+([A-Z][A-Za-z0-9&.,\-]+(?:\s+[A-Z][A-Za-z0-9&.,\-]+){0,4})\b", top)
+        m = re.search(r"\b(?:at|join)\s+([A-Z][A-Za-z0-9&.,\-’']+(?:\s+[A-Z][A-Za-z0-9&.,\-’']+){0,4})\b", top)
         if m:
             cand = m.group(1).strip().strip(",.;:-")
             # Guard against generic words

@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import StarRating from "@/components/StarRating";
 
 const JARGON_PHRASES = [
   "fast-paced environment",
@@ -100,7 +99,6 @@ export default function JobDescriptionsPage() {
   // React hydration mismatches (which can break click interactions).
   const [hasMounted, setHasMounted] = useState(false);
   const [jobDescriptions, setJobDescriptions] = useState<JobDescription[]>([]);
-  const [recommendations, setRecommendations] = useState<JobRecommendation[]>([]);
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importUrl, setImportUrl] = useState("");
@@ -132,13 +130,6 @@ export default function JobDescriptionsPage() {
       }
     } catch {
       // ignore malformed cache
-    }
-
-    try {
-      const recs = localStorage.getItem("job_recommendations");
-      if (recs) setRecommendations(JSON.parse(recs));
-    } catch {
-      // ignore malformed recs cache
     }
   }, []);
 
@@ -308,82 +299,44 @@ export default function JobDescriptionsPage() {
             </div>
           )}
 
-          {recommendations.length > 0 && (
-            <div className="mb-6 rounded-lg border border-white/10 bg-black/20 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-sm font-bold text-white">Recommended job pages</div>
-                  <div className="text-xs text-white/60">
-                    From your Job Preferences — each item is labeled as a job board search vs a company careers search vs a specific posting.
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    localStorage.removeItem("job_recommendations");
-                    setRecommendations([]);
-                  }}
-                  className="text-xs underline text-white/70 hover:text-white"
-                >
-                  Clear
-                </button>
+          <div className="mb-6 rounded-lg border border-white/10 bg-black/20 p-4">
+            <div className="text-sm font-bold text-white">Websites to find job descriptions (pick any)</div>
+            <div className="mt-1 text-xs text-white/60">
+              Simple list of sites — no AI search, no scoring. Open a site, find a posting, then paste the URL or job text below.
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="rounded-md border border-white/10 bg-white/5 p-4">
+                <div className="text-xs font-semibold text-white/70 mb-2">General job boards</div>
+                <ul className="space-y-1 text-sm">
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.linkedin.com/jobs/" target="_blank" rel="noopener noreferrer">LinkedIn Jobs</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.indeed.com/" target="_blank" rel="noopener noreferrer">Indeed</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.google.com/search?q=jobs" target="_blank" rel="noopener noreferrer">Google Jobs</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.builtin.com/jobs" target="_blank" rel="noopener noreferrer">Built In</a></li>
+                </ul>
               </div>
 
-              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                {recommendations.slice(0, 8).map((r) => (
-                  <a
-                    key={r.id}
-                    href={r.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-left rounded-md border border-white/10 bg-white/5 p-3 hover:bg-white/10 transition-colors"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-sm font-semibold text-white">{r.label}</div>
-                        <div className="mt-1 flex flex-wrap items-center gap-2">
-                          <div className="text-xs text-white/60">{r.company}</div>
-                          <span className="inline-flex items-center rounded-full border border-white/10 bg-black/30 px-2 py-0.5 text-[10px] font-semibold text-white/70">
-                            {r.link_type === "job_posting"
-                              ? "Job posting"
-                              : r.link_type === "job_board_search"
-                                ? "Job board search"
-                                : "Career-site search"}
-                          </span>
-                        </div>
-                      </div>
-                      {typeof r.score === "number" && (
-                        <div className="text-right">
-                          <div className="text-xs font-semibold text-white/70">{r.score}/100</div>
-                          <div className="mt-1">
-                            <StarRating value={r.score} scale="percent" showNumeric={false} className="text-[10px]" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="mt-1 text-xs text-white/70">{r.rationale}</div>
-                    <div className="mt-2 flex items-center justify-between gap-3">
-                      <div className="text-xs text-blue-300 underline">
-                        {r.link_type === "job_posting" ? "Open job posting" : "Open search page"} (new tab)
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setImportType("url");
-                          setImportUrl(r.url);
-                        }}
-                        className="shrink-0 px-3 py-1.5 rounded-md bg-white/10 border border-white/10 text-white text-xs font-semibold hover:bg-white/15"
-                      >
-                        Use link in field
-                      </button>
-                    </div>
-                  </a>
-                ))}
+              <div className="rounded-md border border-white/10 bg-white/5 p-4">
+                <div className="text-xs font-semibold text-white/70 mb-2">Startups & remote</div>
+                <ul className="space-y-1 text-sm">
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://wellfound.com/jobs" target="_blank" rel="noopener noreferrer">Wellfound (AngelList Talent)</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.ycombinator.com/jobs" target="_blank" rel="noopener noreferrer">Work at a Startup (YC)</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://remoteok.com/" target="_blank" rel="noopener noreferrer">Remote OK</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://app.welcometothejungle.com/" target="_blank" rel="noopener noreferrer">Welcome to the Jungle (formerly Otta)</a></li>
+                </ul>
+              </div>
+
+              <div className="rounded-md border border-white/10 bg-white/5 p-4 md:col-span-2">
+                <div className="text-xs font-semibold text-white/70 mb-2">Company ATS boards</div>
+                <div className="text-xs text-white/60 mb-2">If you’re on a company careers site, look for the ATS-hosted listings:</div>
+                <ul className="space-y-1 text-sm md:columns-2">
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://boards.greenhouse.io/" target="_blank" rel="noopener noreferrer">Greenhouse boards</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://jobs.lever.co/" target="_blank" rel="noopener noreferrer">Lever jobs</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://myworkdayjobs.com/" target="_blank" rel="noopener noreferrer">Workday jobs</a></li>
+                </ul>
               </div>
             </div>
-          )}
+          </div>
 
           <div className="mb-6 flex justify-between items-center">
             <div className="flex-1">

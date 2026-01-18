@@ -37,6 +37,41 @@ export default function ResumePage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [cachedFilename, setCachedFilename] = useState<string | null>(null);
 
+  const totalYearsExperience = (() => {
+    if (!extract?.positions?.length) return null;
+
+    const parseDate = (s: string): Date | null => {
+      const t = String(s || "").trim();
+      if (!t) return null;
+      // Common formats: YYYY-MM, YYYY/MM, YYYY
+      const m = t.match(/^(\d{4})(?:[-/](\d{1,2}))?/);
+      if (!m) return null;
+      const year = Number(m[1]);
+      const month = m[2] ? Math.max(1, Math.min(12, Number(m[2]))) : 1;
+      if (!year || year < 1950 || year > 2100) return null;
+      return new Date(Date.UTC(year, month - 1, 1));
+    };
+
+    let minStart: number | null = null;
+    let maxEnd: number | null = null;
+
+    for (const p of extract.positions) {
+      const start = parseDate(p.startDate);
+      const end = p.current ? new Date() : parseDate(p.endDate);
+      if (!start || !end) continue;
+      const s = start.getTime();
+      const e = end.getTime();
+      if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) continue;
+      if (minStart === null || s < minStart) minStart = s;
+      if (maxEnd === null || e > maxEnd) maxEnd = e;
+    }
+
+    if (minStart === null || maxEnd === null) return null;
+    const years = (maxEnd - minStart) / (1000 * 60 * 60 * 24 * 365.25);
+    if (!Number.isFinite(years) || years <= 0) return null;
+    return Math.round(years * 10) / 10;
+  })();
+
   const clearResumeCache = () => {
     // Resume + anything derived from resume (so you don't see stale matches)
     localStorage.removeItem("resume_extract");
@@ -495,6 +530,35 @@ export default function ResumePage() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                <div className="text-sm font-bold text-white mb-2">Available Variables from this Step</div>
+                <div className="text-xs text-white/60 mb-3">
+                  These variables are now available for downstream steps (Compose/Campaign):
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
+                    resume.key_metrics[]
+                  </code>
+                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
+                    resume.business_challenges[]
+                  </code>
+                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
+                    resume.accomplishments[]
+                  </code>
+                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
+                    resume.total_years_experience{totalYearsExperience !== null ? `=${totalYearsExperience}` : ""}
+                  </code>
+                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
+                    resume.positions[]
+                  </code>
+                </div>
+                {totalYearsExperience === null ? (
+                  <div className="mt-2 text-[11px] text-white/50">
+                    Note: total years is best-effort (derived from position dates). If your resume dates are missing/irregular, it may show as unavailable.
+                  </div>
+                ) : null}
               </div>
 
               <div className="flex justify-end space-x-4">
