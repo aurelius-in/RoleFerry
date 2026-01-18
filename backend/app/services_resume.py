@@ -175,6 +175,9 @@ def _normalize_text(s: str) -> str:
     # Remove common PDF null separators and normalize whitespace.
     s = (s or "").replace("\x00", " ").replace("\u0000", " ")
     s = s.replace("\u2013", "-").replace("\u2014", "-")
+    # DOCX/PDF extraction sometimes replaces punctuation with U+FFFD (�).
+    # Be conservative: only normalize when it's used as a separator between words.
+    s = re.sub(r"\s*�\s*", " - ", s)
     # Collapse repeated spaces but keep newlines for section logic.
     s = re.sub(r"[ \t]+", " ", s)
     return s
@@ -676,12 +679,63 @@ def extract_roles_and_tenure_from_lines(lines: List[str]) -> Dict[str, object]:
             return True
         return False
 
+    # DOCX resumes often put company + date range on the SAME line, and the title on the next line:
+    #   "Moody's Analytics - New York, NY   May 2021 – December 2022"
+    #   "In-house Technical Recruiter"
+    month_name = r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
+    company_date_re = re.compile(
+        rf"^(?P<company>.+?)\s+(?P<start>{month_name}\s+\d{{4}})\s*(?:-|–|—|to)\s*(?P<end>{month_name}\s+\d{{4}}|Present)\s*$",
+        re.I,
+    )
+
     roles: List[_RoleSpan] = []
+
+    tenure_direct: List[Dict[str, str]] = []
+    company_date_idxs = set()
     for idx, line in enumerate(lines):
+        m = company_date_re.match(line)
+        if not m:
+            continue
+        company_date_idxs.add(idx)
+        raw_company = (m.group("company") or "").strip().strip(" -–—\t")
+        start = (m.group("start") or "").strip()
+        end = (m.group("end") or "").strip()
+
+        # Title is usually within the next 1-3 lines
+        title = ""
+        for j in range(idx + 1, min(len(lines), idx + 6)):
+            cand = _strip_md_prefix(lines[j]).strip()
+            if not cand:
+                continue
+            if _is_heading(cand) or company_date_re.match(cand) or date_line_re.match(cand):
+                break
+            if _looks_like_title(cand) and len(cand.split()) <= 12:
+                title = cand
+                break
+            if not title:
+                title = cand
+
+        # Clean company: strip location suffix after " - " when present
+        company = re.split(r"\s+[-–—]\s+", raw_company, maxsplit=1)[0].strip()
+
+        if not title:
+            continue
+
+        roles.append(_RoleSpan(title=title, start_mm_yyyy=start, end_mm_yyyy=end, line_idx=idx))
+        dur = _duration_str(start, end)
+        tenure_direct.append({"company": company, "duration": dur, "role": title})
+
+    # Role lines of the form "Title   Jan 2020 - Present" (NOT company/date lines)
+    for idx, line in enumerate(lines):
+        if idx in company_date_idxs:
+            continue
         m = role_re.match(line)
         if not m:
             continue
         title = m.group("title").strip()
+        # Avoid treating company/location headings as role titles
+        if not _looks_like_title(title) or len(title.split()) > 12:
+            continue
         start = m.group("start").strip()
         end = m.group("end").strip()
         roles.append(_RoleSpan(title=title, start_mm_yyyy=start, end_mm_yyyy=end, line_idx=idx))
@@ -784,6 +838,19 @@ def extract_roles_and_tenure_from_lines(lines: List[str]) -> Dict[str, object]:
         dur = _duration_str(r.start_mm_yyyy, r.end_mm_yyyy)
         tenure.append({"company": company, "duration": dur, "role": r.title})
 
+    # Prefer DOCX-style tenure if it looks more complete (Dave's resume format).
+    if len(tenure_direct) >= 2:
+        # De-dupe by (company, role, duration) while preserving order
+        seen2 = set()
+        out2: List[Dict[str, str]] = []
+        for t in tenure_direct:
+            key = (t.get("company") or "", t.get("role") or "", t.get("duration") or "")
+            if key in seen2:
+                continue
+            seen2.add(key)
+            out2.append(t)
+        tenure = out2[:20]
+
     return {
         "roles": [{"title": r.title, "start": r.start_mm_yyyy, "end": r.end_mm_yyyy} for r in roles],
         "tenure": tenure[:20],
@@ -885,6 +952,8 @@ def extract_positions(lines: List[str]) -> List[Dict[str, str]]:
         m = company_date_re.match(l)
         if m:
             company = (m.group("company") or "").strip().strip(" -–—\t")
+            # Strip location suffix for display/variables (keep the raw company line in description context)
+            company = re.split(r"\s+[-–—]\s+", company, maxsplit=1)[0].strip()
             start = (m.group("start") or "").strip()
             end = (m.group("end") or "").strip()
             current = end.lower() == "present"
@@ -1013,6 +1082,28 @@ def parse_resume(text: str) -> Dict[str, object]:
     accomplishments = extract_notable_accomplishments(sections) or pa["NotableAccomplishments"]
     business_challenges = extract_business_challenges(sections, lines) or pa["ProblemsSolved"]
     tenure = roles_info.get("tenure") or []
+
+    # Prefer tenure derived from extracted positions when we have date spans.
+    # This handles DOCX formats like Dave's where company+date is on one line and title is on the next.
+    tenure_from_positions: List[Dict[str, str]] = []
+    try:
+        for p in positions[:12] if isinstance(positions, list) else []:
+            if not isinstance(p, dict):
+                continue
+            title = str(p.get("title") or "").strip()
+            company = str(p.get("company") or "").strip()
+            start = str(p.get("start_date") or "").strip()
+            end = str(p.get("end_date") or "").strip()
+            current = bool(p.get("current") or False)
+            if not title or not company or not start:
+                continue
+            end_token = "Present" if current or not end else end
+            dur = _duration_str(start, end_token)
+            tenure_from_positions.append({"company": company, "duration": dur, "role": title})
+        if len(tenure_from_positions) >= 2:
+            tenure = tenure_from_positions[:20]
+    except Exception:
+        pass
     domains = extract_domains(text)
     seniority = infer_seniority_from_text(text)
     # If we still have no key metrics, salvage metric-bearing accomplishment lines.
