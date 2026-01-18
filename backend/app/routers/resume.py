@@ -296,6 +296,58 @@ async def upload_resume(file: UploadFile = File(...)):
 
         # If GPT succeeded but missed fields, backfill from rule-based parsing
         if extract_obj is not None:
+            # If GPT produced weak/garbled positions (common on some DOCX formats),
+            # replace with the rule-based positions/tenure derived from the same resume text.
+            try:
+                bad_positions = False
+                if not extract_obj.positions:
+                    bad_positions = True
+                else:
+                    # Heuristic: if most titles/companies are empty or look like long sentences, treat as bad.
+                    bad = 0
+                    for p in extract_obj.positions[:8]:
+                        title = (p.title or "").strip()
+                        company = (p.company or "").strip()
+                        if not title or not company:
+                            bad += 1
+                            continue
+                        if len(title.split()) > 12:
+                            bad += 1
+                    if bad >= max(2, len(extract_obj.positions[:8]) // 2):
+                        bad_positions = True
+
+                if bad_positions:
+                    pos_raw = parsed.get("Positions") or []
+                    positions: List[Position] = []
+                    for p in pos_raw[:10] if isinstance(pos_raw, list) else []:
+                        if isinstance(p, dict):
+                            positions.append(
+                                Position(
+                                    company=str(p.get("company") or p.get("Company") or ""),
+                                    title=str(p.get("title") or p.get("Title") or ""),
+                                    start_date=str(p.get("start_date") or p.get("StartDate") or ""),
+                                    end_date=str(p.get("end_date") or p.get("EndDate") or ""),
+                                    current=bool(p.get("current") or False),
+                                    description=str(p.get("description") or p.get("Description") or ""),
+                                )
+                            )
+                    if positions:
+                        extract_obj.positions = positions[:8]
+
+                    tenure_raw = parsed.get("Tenure") or []
+                    if isinstance(tenure_raw, list) and tenure_raw:
+                        extract_obj.tenure = [
+                            Tenure(
+                                company=str(t.get("company") or ""),
+                                duration=str(t.get("duration") or ""),
+                                role=str(t.get("role") or ""),
+                            )
+                            for t in tenure_raw
+                            if isinstance(t, dict)
+                        ][:12]
+            except Exception:
+                pass
+
             if not extract_obj.key_metrics:
                 km_raw = parsed.get("KeyMetrics") or parsed.get("key_metrics") or []
                 key_metrics: List[KeyMetric] = []
