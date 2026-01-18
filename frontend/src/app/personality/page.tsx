@@ -649,8 +649,8 @@ export default function PersonalityPage() {
 
         <div className="flex items-center justify-center gap-2 flex-wrap">
           <div className="flex items-center gap-2">
-            <Btn choice={-2} label="Very like me" />
-            <Btn choice={-1} label="Somewhat like me" />
+            <Btn choice={-2} label="Very unlike me" />
+            <Btn choice={-1} label="Somewhat unlike me" />
           </div>
           <Btn choice={0} label="It depends" />
           <div className="flex items-center gap-2">
