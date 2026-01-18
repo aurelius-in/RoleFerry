@@ -533,10 +533,10 @@ export default function PersonalityPage() {
     );
 
     return (
-      <div className="mt-3 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-3">
-        <div className="text-xs text-white/60">
-          <div className="font-semibold text-white/80">Option A</div>
-          <div className="mt-0.5">{opts.leftLabel}</div>
+      <div className="mt-2 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <div className="text-white/90">
+          <div className={`${size === "md" ? "text-lg" : "text-base"} font-extrabold leading-snug`}>{opts.leftLabel}</div>
+          <div className="mt-0.5 text-[11px] text-white/60">Lean this direction</div>
         </div>
 
         <div className="flex items-center justify-center gap-2 flex-wrap">
@@ -551,9 +551,9 @@ export default function PersonalityPage() {
           </div>
         </div>
 
-        <div className="text-xs text-white/60 md:text-right">
-          <div className="font-semibold text-white/80">Option B</div>
-          <div className="mt-0.5">{opts.rightLabel}</div>
+        <div className="text-white/90 md:text-right">
+          <div className={`${size === "md" ? "text-lg" : "text-base"} font-extrabold leading-snug`}>{opts.rightLabel}</div>
+          <div className="mt-0.5 text-[11px] text-white/60">Lean this direction</div>
         </div>
       </div>
     );
@@ -629,7 +629,7 @@ export default function PersonalityPage() {
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {activeTest === "temperaments" ? (
               <div className="rounded-lg border border-white/10 bg-black/20 p-5">
                 {/* Big icon tiles stay visible and “narrow down” in real-time */}
@@ -733,7 +733,7 @@ export default function PersonalityPage() {
                       };
 
                       return (
-                        <div className="mt-4">
+                        <div className="mt-3">
                           <div className="text-base md:text-lg font-extrabold text-white">{q.prompt}</div>
 
                           {renderLikert({
@@ -801,16 +801,22 @@ export default function PersonalityPage() {
               QUESTIONS.map((q) => {
                 const v = answers[q.id] ?? null;
                 return (
-                  <div key={q.id} className="rounded-lg border border-white/10 bg-black/20 p-4">
-                    <div className="text-sm font-semibold text-white">{q.prompt}</div>
-                    {renderLikert({
-                      questionId: q.id,
-                      value: v,
-                      leftLabel: q.leftLabel,
-                      rightLabel: q.rightLabel,
-                      onPick: (c) => setAnswers((prev) => ({ ...prev, [q.id]: c })),
-                      size: "sm",
-                    })}
+                  <div key={q.id} className="rounded-lg border border-white/10 bg-black/15 overflow-hidden">
+                    {/* Prompt header (distinct from the options) */}
+                    <div className="px-4 py-3 bg-white/5 border-b border-white/10">
+                      <div className="text-sm font-semibold text-white/85">{q.prompt}</div>
+                    </div>
+                    {/* Options area */}
+                    <div className="px-4 pb-3">
+                      {renderLikert({
+                        questionId: q.id,
+                        value: v,
+                        leftLabel: q.leftLabel,
+                        rightLabel: q.rightLabel,
+                        onPick: (c) => setAnswers((prev) => ({ ...prev, [q.id]: c })),
+                        size: "sm",
+                      })}
+                    </div>
                   </div>
                 );
               })
