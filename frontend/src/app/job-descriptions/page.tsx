@@ -300,9 +300,9 @@ export default function JobDescriptionsPage() {
           )}
 
           <div className="mb-6 rounded-lg border border-white/10 bg-black/20 p-4">
-            <div className="text-sm font-bold text-white">Websites to find job descriptions (pick any)</div>
+            <div className="text-sm font-bold text-white">Websites to find job descriptions</div>
             <div className="mt-1 text-xs text-white/60">
-              Simple list of sites — no AI search, no scoring. Open a site, find a posting, then paste the URL or job text below.
+              Open a site, find a posting, then paste the URL or job text below.
             </div>
 
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
