@@ -6,6 +6,47 @@ import { api } from "@/lib/api";
 
 type Mode = "login" | "register";
 
+function humanizeAuthError(err: unknown, mode: Mode): string {
+  const raw = err instanceof Error ? err.message : String(err);
+
+  // Common case: our api() throws: `API POST /api/auth/login failed: 401 {"detail":"Invalid email or password."}`
+  const tailMatch = raw.match(/failed:\s*\d+\s*([\s\S]+)$/);
+  const tail = tailMatch ? tailMatch[1].trim() : "";
+  let detail = "";
+
+  if (tail) {
+    try {
+      const parsed = JSON.parse(tail);
+      if (typeof parsed?.detail === "string") detail = parsed.detail;
+      else if (typeof parsed?.message === "string") detail = parsed.message;
+    } catch {
+      // ignore non-JSON tails
+      detail = "";
+    }
+  }
+
+  const msg = (detail || raw || "").toLowerCase();
+
+  // Wrong creds: always be human, never show API noise.
+  if (msg.includes("invalid email or password") || msg.includes("unauthorized") || /\b401\b/.test(msg)) {
+    return "Password or email is incorrect. Try again.";
+  }
+
+  if (msg.includes("passwords do not match")) return "Passwords do not match. Try again.";
+  if (msg.includes("email is required")) return "Email is required.";
+  if (msg.includes("password is required")) return "Password is required.";
+
+  // Registration errors: prefer backend detail if available.
+  if (mode === "register" && detail) return detail;
+
+  // Network / backend down
+  if (msg.includes("failed to fetch") || msg.includes("networkerror") || msg.includes("network error")) {
+    return "We couldn’t reach the server. Please try again.";
+  }
+
+  return "Something went wrong. Please try again.";
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("login");
@@ -58,7 +99,7 @@ export default function LoginPage() {
 
       router.push("/job-preferences");
     } catch (e: any) {
-      setError(String(e?.message || e));
+      setError(humanizeAuthError(e, mode));
     } finally {
       setLoading(false);
     }
