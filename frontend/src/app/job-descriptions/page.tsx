@@ -253,7 +253,11 @@ export default function JobDescriptionsPage() {
     const value =
       field === "title" ? jd.title :
       field === "company" ? jd.company :
-      (jd.salaryRange || "");
+      (
+        (jd.salaryRange || "").toLowerCase().includes("salary not provided")
+          ? ""
+          : (jd.salaryRange || "")
+      );
     setEditMeta({ id: jd.id, field, value });
   };
 
@@ -355,14 +359,19 @@ export default function JobDescriptionsPage() {
               Open a site, find a posting, then paste the URL or job text below.
             </div>
 
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="rounded-md border border-white/10 bg-white/5 p-4">
                 <div className="text-xs font-semibold text-white/70 mb-2">General job boards</div>
                 <ul className="space-y-1 text-sm">
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.linkedin.com/jobs/" target="_blank" rel="noopener noreferrer">LinkedIn Jobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.indeed.com/" target="_blank" rel="noopener noreferrer">Indeed</a></li>
-                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.google.com/search?q=jobs" target="_blank" rel="noopener noreferrer">Google Jobs</a></li>
-                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.builtin.com/jobs" target="_blank" rel="noopener noreferrer">Built In</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.glassdoor.com/Job/index.htm" target="_blank" rel="noopener noreferrer">Glassdoor</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.ziprecruiter.com/" target="_blank" rel="noopener noreferrer">ZipRecruiter</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.monster.com/jobs/" target="_blank" rel="noopener noreferrer">Monster</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.careerbuilder.com/" target="_blank" rel="noopener noreferrer">CareerBuilder</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.simplyhired.com/" target="_blank" rel="noopener noreferrer">SimplyHired</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.themuse.com/jobs" target="_blank" rel="noopener noreferrer">The Muse</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.usajobs.gov/" target="_blank" rel="noopener noreferrer">USAJOBS (US Government)</a></li>
                 </ul>
               </div>
 
@@ -372,17 +381,29 @@ export default function JobDescriptionsPage() {
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://wellfound.com/jobs" target="_blank" rel="noopener noreferrer">Wellfound (AngelList Talent)</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.ycombinator.com/jobs" target="_blank" rel="noopener noreferrer">Work at a Startup (YC)</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://remoteok.com/" target="_blank" rel="noopener noreferrer">Remote OK</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://weworkremotely.com/" target="_blank" rel="noopener noreferrer">We Work Remotely</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://remotive.com/" target="_blank" rel="noopener noreferrer">Remotive</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://remote.co/remote-jobs/" target="_blank" rel="noopener noreferrer">Remote.co</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.workingnomads.com/jobs" target="_blank" rel="noopener noreferrer">Working Nomads</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://himalayas.app/jobs" target="_blank" rel="noopener noreferrer">Himalayas</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.flexjobs.com/" target="_blank" rel="noopener noreferrer">FlexJobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://app.welcometothejungle.com/" target="_blank" rel="noopener noreferrer">Welcome to the Jungle (formerly Otta)</a></li>
                 </ul>
               </div>
 
-              <div className="rounded-md border border-white/10 bg-white/5 p-4 md:col-span-2">
-                <div className="text-xs font-semibold text-white/70 mb-2">Company ATS boards</div>
-                <div className="text-xs text-white/60 mb-2">If you’re on a company careers site, look for the ATS-hosted listings:</div>
-                <ul className="space-y-1 text-sm md:columns-2">
-                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://boards.greenhouse.io/" target="_blank" rel="noopener noreferrer">Greenhouse boards</a></li>
-                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://jobs.lever.co/" target="_blank" rel="noopener noreferrer">Lever jobs</a></li>
-                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://myworkdayjobs.com/" target="_blank" rel="noopener noreferrer">Workday jobs</a></li>
+              <div className="rounded-md border border-white/10 bg-white/5 p-4">
+                <div className="text-xs font-semibold text-white/70 mb-2">Tech jobs</div>
+                <ul className="space-y-1 text-sm">
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.google.com/search?q=jobs" target="_blank" rel="noopener noreferrer">Google Jobs</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.builtin.com/jobs" target="_blank" rel="noopener noreferrer">Built In (Tech)</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.dice.com/" target="_blank" rel="noopener noreferrer">Dice</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://careers.google.com/" target="_blank" rel="noopener noreferrer">Google Careers</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://jobs.careers.microsoft.com/" target="_blank" rel="noopener noreferrer">Microsoft Careers</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.amazon.jobs/" target="_blank" rel="noopener noreferrer">Amazon Jobs</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://jobs.apple.com/" target="_blank" rel="noopener noreferrer">Apple Jobs</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.metacareers.com/" target="_blank" rel="noopener noreferrer">Meta Careers</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://jobs.netflix.com/" target="_blank" rel="noopener noreferrer">Netflix Jobs</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.shopify.com/careers" target="_blank" rel="noopener noreferrer">Shopify Careers</a></li>
                 </ul>
               </div>
             </div>
@@ -540,7 +561,7 @@ export default function JobDescriptionsPage() {
                               <button
                                 type="button"
                                 onClick={() => startEdit(jd, "title")}
-                                className="shrink-0 text-xs underline text-white/70 hover:text-white"
+                                className="shrink-0 inline-flex items-center rounded-full border border-orange-400/30 bg-orange-500/15 px-2 py-0.5 text-[11px] font-semibold text-orange-200 hover:bg-orange-500/20 hover:text-orange-100"
                               >
                                 Edit title
                               </button>
@@ -576,7 +597,7 @@ export default function JobDescriptionsPage() {
                               <button
                                 type="button"
                                 onClick={() => startEdit(jd, "company")}
-                                className="text-xs underline text-white/70 hover:text-white"
+                                className="inline-flex items-center rounded-full border border-orange-400/30 bg-orange-500/15 px-2 py-0.5 text-[11px] font-semibold text-orange-200 hover:bg-orange-500/20 hover:text-orange-100"
                               >
                                 Edit company
                               </button>
@@ -697,7 +718,7 @@ export default function JobDescriptionsPage() {
                             <button
                               type="button"
                               onClick={() => startEdit(jd, "salaryRange")}
-                              className="text-[11px] underline text-white/70 hover:text-white"
+                              className="inline-flex items-center rounded-full border border-orange-400/30 bg-orange-500/15 px-2 py-0.5 text-[11px] font-semibold text-orange-200 hover:bg-orange-500/20 hover:text-orange-100"
                             >
                               Edit salary
                             </button>
@@ -708,9 +729,20 @@ export default function JobDescriptionsPage() {
                           <input
                             value={editMeta.value}
                             onChange={(e) => setEditMeta({ ...editMeta, value: e.target.value })}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                saveEdit();
+                              }
+                              if (e.key === "Escape") {
+                                e.preventDefault();
+                                setEditMeta(null);
+                              }
+                            }}
                             placeholder="e.g., $120,000 - $150,000 (or leave blank)"
                             className="mt-2 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
                             aria-label="Edit salary"
+                            autoFocus
                           />
                         ) : (
                           <div className="text-sm text-white/80">
