@@ -16,17 +16,17 @@ type StoneConfig = {
 const STONES: StoneConfig[] = [
   { step: 1, tab: "job-preferences", label: "Job Preferences", icon: "🎯", href: "/job-preferences" },
   { step: 2, tab: "candidate-profile", label: "Your Resume", icon: "📄", href: "/resume" },
-  { step: 3, tab: "job-descriptions", label: "Job Descriptions", icon: "📋", href: "/job-descriptions" },
-  { step: 4, tab: "gap-analysis", label: "Gap Analysis", icon: "🧩", href: "/gap-analysis" },
-  { step: 5, tab: "pain-point-match", label: "Pain Point Match", icon: "🔗", href: "/painpoint-match" },
+  { step: 3, tab: "personality", label: "Personality", icon: "🧠", href: "/personality" },
+  { step: 4, tab: "job-descriptions", label: "Job Descriptions", icon: "📋", href: "/job-descriptions" },
+  { step: 5, tab: "gap-analysis", label: "Gap Analysis", icon: "🧩", href: "/gap-analysis" },
+  { step: 6, tab: "pain-point-match", label: "Pain Point Match", icon: "🔗", href: "/painpoint-match" },
   // Flow order: choose contacts first, then do contact-aware research.
-  { step: 6, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
-  { step: 7, tab: "background-research", label: "Background Research", icon: "🔍", href: "/context-research" },
-  { step: 8, tab: "offer-creation", label: "Offer Creation", icon: "💼", href: "/offer-creation" },
+  { step: 7, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
+  { step: 8, tab: "background-research", label: "Background Research", icon: "🔍", href: "/context-research" },
+  { step: 9, tab: "offer-creation", label: "Offer Creation", icon: "💼", href: "/offer-creation" },
   // Week 10: Compose is the first screen in building the campaign sequence.
-  { step: 9, tab: "campaign", label: "Campaign", icon: "📧", href: "/compose" },
-  { step: 10, tab: "deliverability-launch", label: "Warm-up + Launch", icon: "🚀", href: "/deliverability-launch" },
-  { step: 11, tab: "analytics", label: "Analytics", icon: "📊", href: "/analytics" },
+  { step: 10, tab: "campaign", label: "Campaign", icon: "📧", href: "/compose" },
+  { step: 11, tab: "deliverability-launch", label: "Warm-up + Launch", icon: "🚀", href: "/deliverability-launch" },
   { step: 12, tab: "job-tracker", label: "Job Tracker", icon: "📌", href: "/tracker" },
 ];
 
@@ -60,7 +60,16 @@ export default function Home() {
     if (saved) {
       try {
         const arr: number[] = JSON.parse(saved);
-        setCompleted(new Set(arr));
+        // Backwards-compat: previously step 3 was Job Descriptions and step 11 was Analytics.
+        // We inserted Personality at step 3 and removed Analytics from the 12-step keypad,
+        // so we shift old steps (3..10) forward by 1 and drop step 11.
+        const remapped: number[] = [];
+        for (const n of arr || []) {
+          if (n === 11) continue; // old Analytics
+          if (n >= 3 && n <= 10) remapped.push(n + 1);
+          else remapped.push(n);
+        }
+        setCompleted(new Set(remapped));
       } catch {
         // ignore
       }
@@ -124,6 +133,22 @@ export default function Home() {
 
       <Link href="/settings" className="settings-link" aria-label="Settings">
         ⚙️
+      </Link>
+      <Link
+        href="/analytics"
+        className="settings-link"
+        aria-label="Analytics"
+        style={{
+          right: "5.5rem",
+          width: "auto",
+          height: "auto",
+          borderRadius: 12,
+          padding: "0.75rem 0.9rem",
+          fontSize: "0.9rem",
+          gap: "0.35rem",
+        }}
+      >
+        📊 <span style={{ fontWeight: 700 }}>Analytics</span>
       </Link>
 
       <div className="keypad-container">
