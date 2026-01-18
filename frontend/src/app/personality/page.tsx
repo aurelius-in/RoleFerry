@@ -463,10 +463,43 @@ export default function PersonalityPage() {
   const [answers, setAnswers] = useState<Record<string, Choice>>({});
   const [result, setResult] = useState<PersonalityResult | null>(null);
 
+  const normalizePersonalityResult = (raw: any): PersonalityResult | null => {
+    if (!raw || typeof raw !== "object") return null;
+
+    // Backward-compat: older saved results might not have action_steps (or might use older code schemes).
+    const action_steps: Array<{ title: string; bullets: string[] }> = Array.isArray(raw.action_steps)
+      ? raw.action_steps
+          .filter((s: any) => s && typeof s === "object" && typeof s.title === "string" && Array.isArray(s.bullets))
+          .map((s: any) => ({ title: String(s.title), bullets: s.bullets.map((b: any) => String(b)) }))
+      : [];
+
+    const norm: PersonalityResult = {
+      version: typeof raw.version === "string" ? raw.version : "rf_jobfit_unknown",
+      completed_at: typeof raw.completed_at === "string" ? raw.completed_at : new Date().toISOString(),
+      scores: (raw.scores && typeof raw.scores === "object") ? raw.scores : { energy: 0, info: 0, decisions: 0, structure: 0 },
+      profile_code: typeof raw.profile_code === "string" ? raw.profile_code : "????",
+      summary: typeof raw.summary === "string" ? raw.summary : "",
+      strengths: Array.isArray(raw.strengths) ? raw.strengths.map((s: any) => String(s)).slice(0, 12) : [],
+      role_environments: Array.isArray(raw.role_environments) ? raw.role_environments.map((s: any) => String(s)).slice(0, 12) : [],
+      suggested_roles: Array.isArray(raw.suggested_roles) ? raw.suggested_roles.map((s: any) => String(s)).slice(0, 20) : [],
+      action_steps,
+    };
+
+    return norm;
+  };
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setResult(JSON.parse(raw));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const normalized = normalizePersonalityResult(parsed);
+        if (normalized) {
+          setResult(normalized);
+          // Self-heal localStorage so future renders don’t crash on older shapes
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized)); } catch {}
+        }
+      }
     } catch {
       // ignore
     }
