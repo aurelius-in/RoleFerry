@@ -20,11 +20,12 @@ type PersonalityResult = {
   version: string;
   completed_at: string;
   scores: Record<AxisId, number>; // negative => left-leaning, positive => right-leaning
-  profile_code: string; // internal shorthand (NOT MBTI)
+  profile_code: string; // 4-letter shorthand (unofficial): I/E S/N T/F J/P
   summary: string;
   strengths: string[];
   role_environments: string[];
   suggested_roles: string[];
+  action_steps: Array<{ title: string; bullets: string[] }>;
 };
 
 type TemperamentId = "Artisan" | "Guardian" | "Idealist" | "Rational";
@@ -153,88 +154,89 @@ const TEMPERAMENT_SUBTYPES: Record<TemperamentId, Array<{ label: string; code: s
   ],
 };
 
+// Job Fit questions: written in role-oriented, job-search-task language (unofficial/condensed).
 const QUESTIONS: Question[] = [
   {
     id: "q1",
     axis: "energy",
     prompt: "In a new role, you recharge most by…",
-    leftLabel: "Working independently",
-    rightLabel: "Collaborating with people",
+    leftLabel: "Deep focus work (independent)",
+    rightLabel: "Live collaboration (with people)",
   },
   {
     id: "q2",
     axis: "energy",
-    prompt: "For outreach and networking, you prefer…",
-    leftLabel: "Small, targeted conversations",
-    rightLabel: "High-volume networking and events",
+    prompt: "For networking (job search), your best channel is…",
+    leftLabel: "Small, targeted 1:1 conversations",
+    rightLabel: "High-volume networking + events",
   },
   {
     id: "q3",
     axis: "info",
-    prompt: "When learning a new domain, you prefer…",
+    prompt: "When learning a new domain for a target role, you prefer…",
     leftLabel: "Concrete examples + checklists",
     rightLabel: "Big-picture concepts + patterns",
   },
   {
     id: "q4",
     axis: "info",
-    prompt: "When evaluating a job post, you focus more on…",
-    leftLabel: "Specific requirements",
-    rightLabel: "The mission and impact",
+    prompt: "When choosing roles to apply to, you focus more on…",
+    leftLabel: "Specific requirements + scope",
+    rightLabel: "Mission + strategic impact",
   },
   {
     id: "q5",
     axis: "decisions",
-    prompt: "In tough decisions, you tend to prioritize…",
-    leftLabel: "Fairness and logic",
-    rightLabel: "People and harmony",
+    prompt: "In career decisions, you’re most persuaded by…",
+    leftLabel: "Logic + evidence",
+    rightLabel: "People + values alignment",
   },
   {
     id: "q6",
     axis: "decisions",
-    prompt: "Feedback that motivates you most is…",
-    leftLabel: "Clear and direct",
-    rightLabel: "Supportive and encouraging",
+    prompt: "Interview feedback that helps you improve fastest is…",
+    leftLabel: "Clear, direct, actionable",
+    rightLabel: "Supportive, encouraging, relational",
   },
   {
     id: "q7",
     axis: "structure",
-    prompt: "Your ideal workday is…",
+    prompt: "Your ideal workday (and job-search routine) is…",
     leftLabel: "Planned and predictable",
     rightLabel: "Flexible and adaptive",
   },
   {
     id: "q8",
     axis: "structure",
-    prompt: "When projects change midstream, you…",
-    leftLabel: "Prefer stability and scope control",
+    prompt: "When priorities change midstream, you…",
+    leftLabel: "Prefer stability + scope control",
     rightLabel: "Enjoy iterating quickly",
   },
   {
     id: "q9",
     axis: "energy",
-    prompt: "The kind of work you naturally seek is…",
-    leftLabel: "Deep focus work",
-    rightLabel: "Relationship-building work",
+    prompt: "In your target role, your “best work” looks like…",
+    leftLabel: "Deep focus + individual ownership",
+    rightLabel: "Influence + relationship building",
   },
   {
     id: "q10",
     axis: "info",
-    prompt: "When you’re stuck, you’re more likely to…",
+    prompt: "When you’re stuck (at work or in your job search), you…",
     leftLabel: "Look for proven playbooks",
     rightLabel: "Invent a new approach",
   },
   {
     id: "q11",
     axis: "decisions",
-    prompt: "You feel most confident when…",
+    prompt: "You feel confident saying “yes” to a role when…",
     leftLabel: "The data supports the choice",
-    rightLabel: "The team supports the choice",
+    rightLabel: "The people + culture feel right",
   },
   {
     id: "q12",
     axis: "structure",
-    prompt: "In a new job, you’d rather…",
+    prompt: "In a new role, you’d rather…",
     leftLabel: "Own a defined scope",
     rightLabel: "Explore different responsibilities",
   },
@@ -326,47 +328,119 @@ function computeResult(answers: Record<string, Choice>): PersonalityResult {
     structure: clamp(scores.structure, -10, 10),
   };
 
-  const e = norm.energy >= 0 ? "P" : "F";      // People vs Focus
-  const i = norm.info >= 0 ? "V" : "D";        // Vision vs Detail
-  const d = norm.decisions >= 0 ? "H" : "L";   // Heart vs Logic
-  const s = norm.structure >= 0 ? "A" : "S";   // Adaptive vs Structured
+  // Unofficial 4-letter shorthand many people recognize (NOT an official instrument):
+  // energy: I (independent) vs E (collaborative)
+  // info: S (concrete) vs N (big-picture)
+  // decisions: T (logic) vs F (values/people)
+  // structure: J (planned) vs P (adaptive)
+  const IE = norm.energy >= 0 ? "E" : "I";
+  const SN = norm.info >= 0 ? "N" : "S";
+  const TF = norm.decisions >= 0 ? "F" : "T";
+  const JP = norm.structure >= 0 ? "P" : "J";
 
-  const profileCode = `${e}${i}${d}${s}`;
+  const profileCode = `${IE}${SN}${TF}${JP}`;
 
   const summaryParts: string[] = [];
-  summaryParts.push(e === "P" ? "People-forward" : "Focus-forward");
-  summaryParts.push(i === "V" ? "Vision-oriented" : "Detail-oriented");
-  summaryParts.push(d === "H" ? "Empathy-led" : "Logic-led");
-  summaryParts.push(s === "A" ? "Adaptive" : "Structured");
+  summaryParts.push(IE === "E" ? "Collaboration-charged" : "Focus-charged");
+  summaryParts.push(SN === "N" ? "Big-picture" : "Concrete/details");
+  summaryParts.push(TF === "F" ? "Values + people" : "Logic + evidence");
+  summaryParts.push(JP === "P" ? "Adaptive" : "Planned");
 
   const strengths: string[] = [];
-  if (e === "P") strengths.push("Relationship building", "Stakeholder alignment");
+  if (IE === "E") strengths.push("Relationship building", "Stakeholder alignment");
   else strengths.push("Deep work and execution", "Independent problem solving");
-  if (i === "V") strengths.push("Pattern recognition", "Strategic framing");
+  if (SN === "N") strengths.push("Pattern recognition", "Strategic framing");
   else strengths.push("Precision and follow-through", "Requirements clarity");
-  if (d === "H") strengths.push("Empathy and communication", "Team cohesion");
+  if (TF === "F") strengths.push("Empathy and communication", "Team cohesion");
   else strengths.push("Analytical decisions", "Clear prioritization");
-  if (s === "A") strengths.push("Agility in ambiguity", "Iterative improvement");
+  if (JP === "P") strengths.push("Agility in ambiguity", "Iterative improvement");
   else strengths.push("Planning and reliability", "Process discipline");
 
   const roleEnvs: string[] = [];
-  if (s === "A") roleEnvs.push("Fast-moving teams", "0→1 or high-change environments");
+  if (JP === "P") roleEnvs.push("Fast-moving teams", "0→1 or high-change environments");
   else roleEnvs.push("Stable teams", "Clear scope and predictable execution");
-  if (e === "P") roleEnvs.push("Cross-functional collaboration", "Customer-facing work");
+  if (IE === "E") roleEnvs.push("Cross-functional collaboration", "Customer-facing work");
   else roleEnvs.push("Maker time", "Hands-on delivery roles");
 
   const suggestedRoles: string[] = [];
-  if (e === "P" && i === "V") suggestedRoles.push("Customer Success", "Solutions Consulting", "Product (Discovery)");
-  if (e === "P" && i === "D") suggestedRoles.push("Recruiting", "Account Management", "Implementation Specialist");
-  if (e === "F" && i === "V") suggestedRoles.push("Product Strategy", "Data/Insights", "Architecture / Systems");
-  if (e === "F" && i === "D") suggestedRoles.push("Engineering", "QA / Test", "Operations / Analytics");
+  if (IE === "E" && SN === "N") suggestedRoles.push("Customer Success", "Solutions Consulting", "Product (Discovery)");
+  if (IE === "E" && SN === "S") suggestedRoles.push("Recruiting", "Account Management", "Implementation Specialist");
+  if (IE === "I" && SN === "N") suggestedRoles.push("Product Strategy", "Data/Insights", "Architecture / Systems");
+  if (IE === "I" && SN === "S") suggestedRoles.push("Engineering", "QA / Test", "Operations / Analytics");
   // Make sure we always have something reasonable
   if (suggestedRoles.length < 6) {
     suggestedRoles.push("Program Management", "Operations");
   }
 
+  // Job-fit action steps (deterministic, role-oriented). We tailor guidance per axis.
+  const action_steps: Array<{ title: string; bullets: string[] }> = [];
+
+  action_steps.push({
+    title: "Networking & outreach (how to do it without draining yourself)",
+    bullets:
+      IE === "I"
+        ? [
+            "Default to 1:1: send 5 targeted messages/week (not 50 blasts).",
+            "Use a 10–12 minute chat script: role → pain point → one metric → small ask.",
+            "Batch outreach into 2 short blocks/week; protect recovery time after.",
+          ]
+        : [
+            "Use momentum: 2–3 networking touchpoints/week (events, communities, referrals).",
+            "Ask for introductions and “warm” group conversations where you can build energy.",
+            "Follow-up system: same-day follow-up + a 7-day reminder so relationships compound.",
+          ],
+  });
+
+  action_steps.push({
+    title: "How to choose roles (what to filter for)",
+    bullets:
+      SN === "S"
+        ? [
+            "Prioritize roles with clear scope, explicit responsibilities, and concrete success metrics.",
+            "Build a checklist: must-have skills, nice-to-have skills, and proof you can show for each.",
+            "Use role fit over hype: pick roles you can explain with examples fast.",
+          ]
+        : [
+            "Prioritize roles with mission clarity, strategic mandate, and room to shape direction.",
+            "Write a 3-line “why this role matters” narrative for each target company.",
+            "Lead with patterns: show how your past work generalizes to their problem space.",
+          ],
+  });
+
+  action_steps.push({
+    title: "Interview style (how to answer under pressure)",
+    bullets:
+      TF === "T"
+        ? [
+            "Anchor answers in evidence: data → decision → tradeoff → result.",
+            "Prewrite 6 STAR stories with numbers and constraints; reuse across interviews.",
+            "In behavioral rounds, add one line about collaboration so you don’t read as cold.",
+          ]
+        : [
+            "Anchor answers in outcomes for people: stakeholder → conflict → alignment → result.",
+            "Prepare 6 stories that show influence, empathy, and how you resolve tension.",
+            "In technical rounds, add one concrete metric so you don’t read as vague.",
+          ],
+  });
+
+  action_steps.push({
+    title: "Planning your weekly job-search routine",
+    bullets:
+      JP === "J"
+        ? [
+            "Pick 5 weekly moves and schedule them (applications, outreach, prep, follow-ups, learning).",
+            "Keep a tracker with due dates; you win by consistency.",
+            "Set a strict cutoff so perfectionism doesn’t slow shipping.",
+          ]
+        : [
+            "Use flexible structure: 3 ‘anchor blocks’ per week, then adapt based on responses.",
+            "Keep a short daily “next best action” list (max 3 items).",
+            "Add one weekly review so flexibility doesn’t become drift.",
+          ],
+  });
+
   return {
-    version: "rf_personality_v1",
+    version: "rf_jobfit_v2",
     completed_at: new Date().toISOString(),
     scores: norm,
     profile_code: profileCode,
@@ -374,6 +448,7 @@ function computeResult(answers: Record<string, Choice>): PersonalityResult {
     strengths: Array.from(new Set(strengths)).slice(0, 8),
     role_environments: Array.from(new Set(roleEnvs)).slice(0, 6),
     suggested_roles: Array.from(new Set(suggestedRoles)).slice(0, 10),
+    action_steps,
   };
 }
 
@@ -593,7 +668,7 @@ export default function PersonalityPage() {
               <div>
                 <div className="text-sm font-bold text-white">Choose a test</div>
                 <div className="mt-1 text-xs text-white/60">
-                  These are RoleFerry’s condensed, job-focused assessments (not official Myers-Briggs).
+                  These are RoleFerry’s condensed, job-focused assessments (unofficial).
                 </div>
               </div>
               <div className="inline-flex rounded-full border border-white/10 bg-black/25 p-1">
@@ -997,34 +1072,56 @@ export default function PersonalityPage() {
             <div className="mt-8 rounded-lg border border-white/10 bg-black/20 p-5">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <div className="text-sm font-bold text-white">Your profile</div>
-                  <div className="mt-1 text-xs text-white/60">{result.summary}</div>
+                  <div className="text-sm font-bold text-white">Job Fit Playbook</div>
+                  <div className="mt-1 text-xs text-white/60">
+                    Role-oriented guidance based on your answers. (The 4-letter code is common shorthand, not an official instrument.)
+                  </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs font-semibold text-white/70">Code</div>
+                  <div className="text-xs font-semibold text-white/70">Type code</div>
                   <div className="text-lg font-extrabold text-white">{result.profile_code}</div>
                 </div>
               </div>
 
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <div className="text-xs font-semibold text-white/70 mb-2">Strengths</div>
-                  <ul className="space-y-1 text-sm text-white/80">
-                    {result.strengths.map((s) => <li key={s}>• {s}</li>)}
-                  </ul>
-                </div>
-                <div>
+              <div className="mt-3 text-xs text-white/60">
+                Summary: <span className="text-white/80 font-semibold">{result.summary}</span>
+                {temperamentResult ? (
+                  <>
+                    {" "}
+                    · Temperament context:{" "}
+                    <span className={`font-extrabold ${TEMPERAMENT_COLORS[temperamentResult.temperament].text}`}>
+                      {temperamentResult.temperament}
+                    </span>
+                  </>
+                ) : null}
+              </div>
+
+              <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="rounded-lg border border-white/10 bg-black/20 p-4">
                   <div className="text-xs font-semibold text-white/70 mb-2">Best-fit environments</div>
                   <ul className="space-y-1 text-sm text-white/80">
                     {result.role_environments.map((s) => <li key={s}>• {s}</li>)}
                   </ul>
                 </div>
-                <div>
+                <div className="rounded-lg border border-white/10 bg-black/20 p-4">
                   <div className="text-xs font-semibold text-white/70 mb-2">Suggested role directions</div>
                   <ul className="space-y-1 text-sm text-white/80">
                     {result.suggested_roles.slice(0, 8).map((s) => <li key={s}>• {s}</li>)}
                   </ul>
                 </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {result.action_steps.map((s) => (
+                  <div key={s.title} className="rounded-lg border border-white/10 bg-white/5 p-4">
+                    <div className="text-sm font-extrabold text-white">{s.title}</div>
+                    <ul className="mt-2 space-y-1 text-sm text-white/80">
+                      {s.bullets.map((b) => (
+                        <li key={b}>• {b}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
               </div>
 
               <div className="mt-5 rounded-lg border border-white/10 bg-black/20 p-4">
@@ -1034,13 +1131,13 @@ export default function PersonalityPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    personality.profile_code={result.profile_code}
+                    personality.type_code={result.profile_code}
                   </code>
                   <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
                     personality.summary
                   </code>
                   <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    personality.strengths[]
+                    personality.action_steps[]
                   </code>
                   <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
                     personality.role_environments[]
