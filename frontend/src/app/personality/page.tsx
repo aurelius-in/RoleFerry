@@ -321,11 +321,27 @@ function computeResult(answers: Record<string, Choice>): PersonalityResult {
     scores[q.axis] += Number(answers[q.id] ?? 0);
   }
 
+  const computed = computeJobFitFromScores(scores);
+
+  return {
+    version: "rf_jobfit_v2",
+    completed_at: new Date().toISOString(),
+    scores: computed.scores,
+    profile_code: computed.profile_code,
+    summary: computed.summary,
+    strengths: computed.strengths,
+    role_environments: computed.role_environments,
+    suggested_roles: computed.suggested_roles,
+    action_steps: computed.action_steps,
+  };
+}
+
+function computeJobFitFromScores(scores: Record<AxisId, number>): PersonalityResult {
   const norm = {
-    energy: clamp(scores.energy, -10, 10),
-    info: clamp(scores.info, -10, 10),
-    decisions: clamp(scores.decisions, -10, 10),
-    structure: clamp(scores.structure, -10, 10),
+    energy: clamp(Number(scores.energy ?? 0), -10, 10),
+    info: clamp(Number(scores.info ?? 0), -10, 10),
+    decisions: clamp(Number(scores.decisions ?? 0), -10, 10),
+    structure: clamp(Number(scores.structure ?? 0), -10, 10),
   };
 
   // Unofficial 4-letter shorthand many people recognize (NOT an official instrument):
@@ -367,14 +383,11 @@ function computeResult(answers: Record<string, Choice>): PersonalityResult {
   if (IE === "E" && SN === "S") suggestedRoles.push("Recruiting", "Account Management", "Implementation Specialist");
   if (IE === "I" && SN === "N") suggestedRoles.push("Product Strategy", "Data/Insights", "Architecture / Systems");
   if (IE === "I" && SN === "S") suggestedRoles.push("Engineering", "QA / Test", "Operations / Analytics");
-  // Make sure we always have something reasonable
   if (suggestedRoles.length < 6) {
     suggestedRoles.push("Program Management", "Operations");
   }
 
-  // Job-fit action steps (deterministic, role-oriented). We tailor guidance per axis.
   const action_steps: Array<{ title: string; bullets: string[] }> = [];
-
   action_steps.push({
     title: "Networking & outreach (how to do it without draining yourself)",
     bullets:
@@ -390,7 +403,6 @@ function computeResult(answers: Record<string, Choice>): PersonalityResult {
             "Follow-up system: same-day follow-up + a 7-day reminder so relationships compound.",
           ],
   });
-
   action_steps.push({
     title: "How to choose roles (what to filter for)",
     bullets:
@@ -406,7 +418,6 @@ function computeResult(answers: Record<string, Choice>): PersonalityResult {
             "Lead with patterns: show how your past work generalizes to their problem space.",
           ],
   });
-
   action_steps.push({
     title: "Interview style (how to answer under pressure)",
     bullets:
@@ -422,7 +433,6 @@ function computeResult(answers: Record<string, Choice>): PersonalityResult {
             "In technical rounds, add one concrete metric so you don’t read as vague.",
           ],
   });
-
   action_steps.push({
     title: "Planning your weekly job-search routine",
     bullets:
@@ -466,26 +476,31 @@ export default function PersonalityPage() {
   const normalizePersonalityResult = (raw: any): PersonalityResult | null => {
     if (!raw || typeof raw !== "object") return null;
 
-    // Backward-compat: older saved results might not have action_steps (or might use older code schemes).
-    const action_steps: Array<{ title: string; bullets: string[] }> = Array.isArray(raw.action_steps)
+    const baseScores =
+      raw.scores && typeof raw.scores === "object"
+        ? (raw.scores as Record<string, any>)
+        : { energy: 0, info: 0, decisions: 0, structure: 0 };
+
+    const computed = computeJobFitFromScores({
+      energy: Number(baseScores.energy ?? 0),
+      info: Number(baseScores.info ?? 0),
+      decisions: Number(baseScores.decisions ?? 0),
+      structure: Number(baseScores.structure ?? 0),
+    });
+
+    // If older objects had action_steps, keep them only if non-empty + valid; otherwise use computed.
+    const existingSteps: Array<{ title: string; bullets: string[] }> = Array.isArray(raw.action_steps)
       ? raw.action_steps
           .filter((s: any) => s && typeof s === "object" && typeof s.title === "string" && Array.isArray(s.bullets))
           .map((s: any) => ({ title: String(s.title), bullets: s.bullets.map((b: any) => String(b)) }))
       : [];
 
-    const norm: PersonalityResult = {
-      version: typeof raw.version === "string" ? raw.version : "rf_jobfit_unknown",
-      completed_at: typeof raw.completed_at === "string" ? raw.completed_at : new Date().toISOString(),
-      scores: (raw.scores && typeof raw.scores === "object") ? raw.scores : { energy: 0, info: 0, decisions: 0, structure: 0 },
-      profile_code: typeof raw.profile_code === "string" ? raw.profile_code : "????",
-      summary: typeof raw.summary === "string" ? raw.summary : "",
-      strengths: Array.isArray(raw.strengths) ? raw.strengths.map((s: any) => String(s)).slice(0, 12) : [],
-      role_environments: Array.isArray(raw.role_environments) ? raw.role_environments.map((s: any) => String(s)).slice(0, 12) : [],
-      suggested_roles: Array.isArray(raw.suggested_roles) ? raw.suggested_roles.map((s: any) => String(s)).slice(0, 20) : [],
-      action_steps,
+    return {
+      ...computed,
+      version: typeof raw.version === "string" ? raw.version : computed.version,
+      completed_at: typeof raw.completed_at === "string" ? raw.completed_at : computed.completed_at,
+      action_steps: existingSteps.length > 0 ? existingSteps : computed.action_steps,
     };
-
-    return norm;
   };
 
   useEffect(() => {
@@ -607,6 +622,15 @@ export default function PersonalityPage() {
     setTStep(0);
     try {
       localStorage.removeItem(TEMPERAMENT_STORAGE_KEY);
+    } catch {}
+  };
+
+  const resetAll = () => {
+    resetTemperaments();
+    setAnswers({});
+    setResult(null);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
     } catch {}
   };
 
@@ -941,13 +965,7 @@ export default function PersonalityPage() {
               <button
                 type="button"
                 onClick={() => {
-                  if (activeTest === "temperaments") {
-                    resetTemperaments();
-                  } else {
-                    setAnswers({});
-                    setResult(null);
-                    try { localStorage.removeItem(STORAGE_KEY); } catch {}
-                  }
+                  resetAll();
                 }}
                 className="bg-white/10 text-white px-4 py-2 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
               >
