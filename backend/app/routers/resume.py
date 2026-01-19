@@ -23,6 +23,38 @@ logger = logging.getLogger(__name__)
 DEMO_USER_ID = "demo-user"
 _ENABLE_DB_WRITES = os.getenv("ROLEFERRY_ENABLE_DB_WRITES", "false").lower() == "true"
 
+
+def _looks_like_resume_has_metrics(text: str) -> bool:
+    t = (text or "").lower()
+    return bool(re.search(r"(\$|%|\b\d{1,3}\s*%|\b\d[\d,]*\s*(?:k|m|b)\+?\b|\b\d+\s*(?:million|billion)\b)", t, re.I))
+
+
+def _looks_like_resume_has_experience(text: str) -> bool:
+    t = (text or "").lower()
+    return any(h in t for h in ["experience", "work history", "employment history", "professional experience"])
+
+
+def _should_retry_resume_llm(raw_text: str, data: Dict[str, Any]) -> bool:
+    """
+    Decide whether to do a second LLM pass. We keep this conservative to avoid extra cost/latency.
+    """
+    if not isinstance(data, dict) or not data:
+        return True
+    pos = data.get("positions") or data.get("work_experience") or []
+    skills = data.get("skills") or []
+    kms = data.get("key_metrics") or data.get("keyMetrics") or []
+
+    # If the resume clearly has experience and positions are missing, retry.
+    if _looks_like_resume_has_experience(raw_text) and (not isinstance(pos, list) or len(pos) < 2):
+        return True
+    # If the resume has metrics and key_metrics is empty, retry.
+    if _looks_like_resume_has_metrics(raw_text) and (not isinstance(kms, list) or len(kms) < 2):
+        return True
+    # If skills list is suspiciously tiny, retry.
+    if not isinstance(skills, list) or len(skills) < 6:
+        return True
+    return False
+
 class Position(BaseModel):
     company: str
     title: str
@@ -41,6 +73,14 @@ class Tenure(BaseModel):
     duration: str
     role: str
 
+class EducationItem(BaseModel):
+    school: str
+    degree: str
+    field: str = ""
+    start_year: str = ""
+    end_year: str = ""
+    notes: str = ""
+
 class ResumeExtract(BaseModel):
     positions: List[Position]
     key_metrics: List[KeyMetric]
@@ -48,6 +88,7 @@ class ResumeExtract(BaseModel):
     skills: List[str]
     accomplishments: List[str]
     tenure: List[Tenure]
+    education: List[EducationItem] = []
 
 
 def _metric_from_line(s: str) -> KeyMetric:
@@ -72,6 +113,153 @@ def _metric_from_line(s: str) -> KeyMetric:
     ctx = after[:140] if after else ""
     return KeyMetric(metric=metric[:120], value=val[:40], context=ctx[:160])
 
+def _normalize_skill_tokens(skills: List[Any]) -> List[str]:
+    """
+    Clean skills from either deterministic or LLM output:
+    - strip category labels like 'Languages:'
+    - split embedded labels like 'Tools: Docker' -> Docker
+    - split comma/pipe lists
+    - drop obviously non-skill headings
+    """
+    if not isinstance(skills, list):
+        return []
+    out: List[str] = []
+    seen = set()
+    stop = {"languages", "frameworks", "libraries", "tools", "databases", "hosting", "operating systems", "skills"}
+
+    def add(tok: str) -> None:
+        t = (tok or "").strip().strip("•-* ").strip()
+        if not t:
+            return
+        # Drop proficiency suffixes
+        t = re.sub(r"\s*\([^)]*(?:professional|bilingual|fluent|beginner|intermediate|advanced)[^)]*\)\s*$", "", t, flags=re.I).strip()
+        if not t:
+            return
+        low = t.lower()
+        if low in stop or low.endswith(":"):
+            return
+        if len(t) > 60:
+            return
+        k = low
+        if k in seen:
+            return
+        seen.add(k)
+        out.append(t)
+
+    for s in skills:
+        if s is None:
+            continue
+        txt = str(s).strip()
+        if not txt:
+            continue
+        # Split pipe/comma lists
+        parts = []
+        if "|" in txt:
+            parts = [p.strip() for p in txt.split("|") if p.strip()]
+        elif "," in txt and len(txt) <= 80:
+            parts = [p.strip() for p in txt.split(",") if p.strip()]
+        else:
+            parts = [txt]
+        for p in parts:
+            # Strip leading category label
+            m = re.match(r"^(?:languages?|frameworks?|libraries?|tools?|databases?|hosting|operating systems?|skills?)\b[^:]{0,40}:\s*(.+)$", p, flags=re.I)
+            if m:
+                add(m.group(1))
+                continue
+            # Embedded label: "X Tools: Docker" => Docker (and maybe keep X if it's a real skill)
+            if ":" in p:
+                rhs = p.split(":", 1)[1].strip()
+                if rhs:
+                    add(rhs)
+                    continue
+            add(p)
+    return out[:80]
+
+
+def _filter_llm_key_metrics(raw_text: str, key_metrics: List[KeyMetric]) -> List[KeyMetric]:
+    """
+    Keep only key metrics that are supported by explicit evidence in the resume text.
+    This prevents the LLM from "helpfully" inventing numbers.
+    """
+    if not key_metrics:
+        return []
+    t = str(raw_text or "")
+    t_low = t.lower()
+    # Collect digit-like tokens found in the resume.
+    numeric_tokens = set(re.findall(r"\d[\d,]*(?:\.\d+)?", t))
+    out: List[KeyMetric] = []
+    for km in key_metrics:
+        metric = (km.metric or "").strip()
+        value = (km.value or "").strip()
+        context = (km.context or "").strip()
+        if not (metric or value or context):
+            continue
+        # If value contains digits, require evidence in the resume text.
+        vdigits = re.findall(r"\d[\d,]*(?:\.\d+)?", value)
+        if vdigits:
+            ok = False
+            for v in vdigits:
+                if v not in numeric_tokens:
+                    continue
+                # Require a standalone match for small integers to avoid accidental acceptance (e.g., years/dates).
+                try:
+                    v_int = int(v.replace(",", ""))
+                except Exception:
+                    v_int = None
+                pattern = rf"\b{re.escape(v)}\b"
+                m = re.search(pattern, t)
+                if not m:
+                    # If it's a large number (>= 1000), substring match is acceptable
+                    if v_int is not None and v_int >= 1000 and v in t:
+                        ok = True
+                        break
+                    continue
+                # For smaller numbers, require a nearby keyword from metric/context.
+                if v_int is not None and v_int < 1000:
+                    window = t_low[max(0, m.start() - 60) : min(len(t_low), m.end() + 60)]
+                    keywords = []
+                    for w in re.findall(r"[a-z]{4,}", f"{metric} {context}".lower()):
+                        if w not in {"with", "from", "that", "this", "into", "over", "used", "work", "role", "year", "years", "month", "months"}:
+                            keywords.append(w)
+                    if keywords and not any(k in window for k in keywords[:10]):
+                        continue
+                ok = True
+                break
+            if not ok:
+                continue
+        out.append(KeyMetric(metric=metric[:120], value=value[:40], context=context[:160]))
+        if len(out) >= 12:
+            break
+    return out[:10]
+
+
+def _filter_non_experience_positions(positions: List[Position]) -> List[Position]:
+    """
+    Remove items that look like education/training being misclassified as positions.
+    """
+    out: List[Position] = []
+    for p in positions or []:
+        title = (p.title or "").lower()
+        company = (p.company or "").lower()
+        if any(k in title for k in ["course", "curriculum", "immersive", "bootcamp", "boot camp", "certificate", "certification", "training"]):
+            continue
+        if any(k in company for k in ["university", "college", "school", "academy"]):
+            continue
+        out.append(p)
+    return out
+
+
+def _filter_non_experience_tenure(tenure: List[Tenure]) -> List[Tenure]:
+    out: List[Tenure] = []
+    for t in tenure or []:
+        comp = (t.company or "").lower()
+        role = (t.role or "").lower()
+        if any(k in comp for k in ["university", "college", "school", "academy"]):
+            continue
+        if any(k in role for k in ["course", "curriculum", "bootcamp", "boot camp", "certificate", "certification", "training"]):
+            continue
+        out.append(t)
+    return out
 class ResumeExtractResponse(BaseModel):
     success: bool
     message: str
@@ -224,6 +412,43 @@ async def upload_resume(file: UploadFile = File(...)):
                 content_str = str(msg.get("content") or "")
 
                 data = extract_json_from_text(content_str) or {}
+                # If the model output is missing key fields, do one targeted retry.
+                if _should_retry_resume_llm(raw_text, data):
+                    try:
+                        retry_messages = [
+                            {
+                                "role": "system",
+                                "content": (
+                                    "You are RoleFerry's resume parser. Your previous output was incomplete.\n"
+                                    "Re-extract the resume into the REQUIRED JSON schema.\n\n"
+                                    "Hard requirements:\n"
+                                    "- Return ONLY a JSON object.\n"
+                                    "- Do NOT invent facts.\n"
+                                    "- Ensure positions covers the full work history with dates when present.\n"
+                                    "- Ensure key_metrics includes measurable impacts if any numbers/percent/$ appear.\n"
+                                    "- Ensure skills contains only real skills (no locations, degrees, awards/certs, headings, proficiency tags).\n\n"
+                                    "Schema:\n"
+                                    "{\n"
+                                    '  \"positions\": [{\"company\":\"\",\"title\":\"\",\"start_date\":\"YYYY-MM|YYYY\",\"end_date\":\"YYYY-MM|YYYY\",\"current\":false,\"description\":\"\"}],\n'
+                                    '  \"key_metrics\": [{\"metric\":\"\",\"value\":\"\",\"context\":\"\"}],\n'
+                                    '  \"business_challenges\": [\"\"],\n'
+                                    '  \"skills\": [\"\"],\n'
+                                    '  \"accomplishments\": [\"\"],\n'
+                                    '  \"tenure\": [{\"company\":\"\",\"duration\":\"\",\"role\":\"\"}]\n'
+                                    "}\n"
+                                ),
+                            },
+                            {"role": "user", "content": raw_text},
+                        ]
+                        raw2 = client.run_chat_completion(retry_messages, temperature=0.0, max_tokens=1600, stub_json={})
+                        choices2 = raw2.get("choices") or []
+                        msg2 = (choices2[0].get("message") if choices2 else {}) or {}
+                        content_str2 = str(msg2.get("content") or "")
+                        data2 = extract_json_from_text(content_str2) or {}
+                        if isinstance(data2, dict) and data2:
+                            data = data2
+                    except Exception:
+                        pass
                 if isinstance(data, dict) and data:
                     positions_raw = data.get("positions") or data.get("work_experience") or []
                     tenure_raw = data.get("tenure") or []
@@ -279,10 +504,25 @@ async def upload_resume(file: UploadFile = File(...)):
                             key_metrics.append(
                                 KeyMetric(metric=str(m), value="", context="")
                             )
+                    key_metrics = _filter_llm_key_metrics(raw_text, key_metrics)
 
                     accomplishments = [str(a) for a in accomplishments_raw]
-                    skills = [str(s) for s in skills_raw]
+                    skills = _normalize_skill_tokens([str(s) for s in skills_raw])
                     business_challenges = [str(b) for b in business_challenges_raw]
+                    education_raw = data.get("education") or []
+                    education: List[EducationItem] = []
+                    for e in education_raw if isinstance(education_raw, list) else []:
+                        if isinstance(e, dict):
+                            education.append(
+                                EducationItem(
+                                    school=str(e.get("school") or ""),
+                                    degree=str(e.get("degree") or ""),
+                                    field=str(e.get("field") or ""),
+                                    start_year=str(e.get("start_year") or ""),
+                                    end_year=str(e.get("end_year") or ""),
+                                    notes=str(e.get("notes") or ""),
+                                )
+                            )
 
                     extract_obj = ResumeExtract(
                         positions=positions,
@@ -291,6 +531,7 @@ async def upload_resume(file: UploadFile = File(...)):
                         skills=skills,
                         accomplishments=accomplishments,
                         tenure=tenure,
+                        education=education,
                     )
             except Exception:
                 # On any GPT failure, we'll fall back to the rule-based parser output below.
@@ -334,7 +575,7 @@ async def upload_resume(file: UploadFile = File(...)):
                                 )
                             )
                     if positions:
-                        extract_obj.positions = positions[:8]
+                        extract_obj.positions = _filter_non_experience_positions(positions)[:8]
 
                     tenure_raw = parsed.get("Tenure") or []
                     if isinstance(tenure_raw, list) and tenure_raw:
@@ -367,8 +608,31 @@ async def upload_resume(file: UploadFile = File(...)):
                         if km.metric:
                             key_metrics.append(km)
                 extract_obj.key_metrics = key_metrics[:10]
+            else:
+                # Even if LLM provided metrics, filter out unsupported/invented numbers.
+                filtered = _filter_llm_key_metrics(raw_text, list(extract_obj.key_metrics or []))
+                if filtered:
+                    extract_obj.key_metrics = filtered[:10]
+                else:
+                    # Prefer deterministic if LLM metrics were not supported by evidence.
+                    km_raw = parsed.get("KeyMetrics") or parsed.get("key_metrics") or []
+                    key_metrics: List[KeyMetric] = []
+                    for m in km_raw[:12] if isinstance(km_raw, list) else []:
+                        if isinstance(m, dict):
+                            key_metrics.append(
+                                KeyMetric(
+                                    metric=str(m.get("metric") or m.get("Metric") or ""),
+                                    value=str(m.get("value") or m.get("Value") or ""),
+                                    context=str(m.get("context") or m.get("Context") or ""),
+                                )
+                            )
+                        else:
+                            km = _metric_from_line(str(m))
+                            if km.metric:
+                                key_metrics.append(km)
+                    extract_obj.key_metrics = key_metrics[:10]
             if not extract_obj.skills:
-                extract_obj.skills = [str(s) for s in (parsed.get("Skills") or [])]
+                extract_obj.skills = _normalize_skill_tokens([str(s) for s in (parsed.get("Skills") or [])])
             if not extract_obj.business_challenges:
                 extract_obj.business_challenges = [
                     str(x) for x in (parsed.get("BusinessChallengesSolved") or parsed.get("ProblemsSolved") or [])
@@ -387,6 +651,21 @@ async def upload_resume(file: UploadFile = File(...)):
                         for t in tenure_raw
                         if isinstance(t, dict)
                     ]
+            if not extract_obj.education:
+                edu_raw = parsed.get("Education") or []
+                if isinstance(edu_raw, list):
+                    extract_obj.education = [
+                        EducationItem(
+                            school=str(e.get("school") or ""),
+                            degree=str(e.get("degree") or ""),
+                            field=str(e.get("field") or ""),
+                            start_year=str(e.get("start_year") or ""),
+                            end_year=str(e.get("end_year") or ""),
+                            notes=str(e.get("notes") or ""),
+                        )
+                        for e in edu_raw
+                        if isinstance(e, dict)
+                    ][:10]
             # If we still couldn't compute tenure, derive a minimal tenure list from positions.
             if not extract_obj.tenure and extract_obj.positions:
                 extract_obj.tenure = [
@@ -394,6 +673,13 @@ async def upload_resume(file: UploadFile = File(...)):
                     for p in extract_obj.positions[:10]
                     if (p.company or p.title)
                 ]
+
+            # Always filter out education/training misclassified as experience (from either GPT or deterministic backfill).
+            try:
+                extract_obj.positions = _filter_non_experience_positions(list(extract_obj.positions or []))
+                extract_obj.tenure = _filter_non_experience_tenure(list(extract_obj.tenure or []))
+            except Exception:
+                pass
 
         if extract_obj is None:
             # Rule-based fallback derived from the parsed resume (best-effort).
@@ -428,7 +714,7 @@ async def upload_resume(file: UploadFile = File(...)):
                     if km.metric:
                         key_metrics.append(km)
 
-            skills = [str(s) for s in (parsed.get("Skills") or parsed.get("skills") or [])][:40]
+            skills = _normalize_skill_tokens([str(s) for s in (parsed.get("Skills") or parsed.get("skills") or [])])
             business_challenges = [
                 str(x) for x in (parsed.get("BusinessChallengesSolved") or parsed.get("ProblemsSolved") or [])
             ][:15]
@@ -444,6 +730,20 @@ async def upload_resume(file: UploadFile = File(...)):
                         )
                     )
 
+            education: List[EducationItem] = []
+            for e in (parsed.get("Education") or [])[:10]:
+                if isinstance(e, dict):
+                    education.append(
+                        EducationItem(
+                            school=str(e.get("school") or ""),
+                            degree=str(e.get("degree") or ""),
+                            field=str(e.get("field") or ""),
+                            start_year=str(e.get("start_year") or ""),
+                            end_year=str(e.get("end_year") or ""),
+                            notes=str(e.get("notes") or ""),
+                        )
+                    )
+
             extract_obj = ResumeExtract(
                 positions=positions,
                 key_metrics=key_metrics,
@@ -451,7 +751,14 @@ async def upload_resume(file: UploadFile = File(...)):
                 skills=skills,
                 accomplishments=accomplishments,
                 tenure=tenure,
+                education=education,
             )
+            # Filter out education/training misclassified as experience.
+            try:
+                extract_obj.positions = _filter_non_experience_positions(list(extract_obj.positions or []))
+                extract_obj.tenure = _filter_non_experience_tenure(list(extract_obj.tenure or []))
+            except Exception:
+                pass
 
         return ResumeExtractResponse(
             success=True,

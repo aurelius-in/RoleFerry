@@ -343,15 +343,41 @@ class OpenAIClient:
             {
                 "role": "system",
                 "content": (
-                    "You are a resume parsing assistant. Extract structured information from raw resume text. "
-                    "Do not invent facts.\n\n"
+                    "You are RoleFerry's resume parser. Extract accurate structured fields from messy resume text.\n\n"
+                    "Hard requirements:\n"
+                    "- Do NOT fabricate facts.\n"
+                    "- Prefer precision over completeness.\n"
+                    "- Return ONLY a JSON object (no markdown, no prose).\n\n"
+                    "Positions/work experience:\n"
+                    "- Extract every role in work history (including multiple roles at the same company).\n"
+                    "- company and title must be short strings (not paragraphs).\n"
+                    "- start_date/end_date must be normalized to YYYY-MM when month is known, otherwise YYYY.\n"
+                    "- current must be true only when the resume clearly indicates Present/Current.\n"
+                    "- description should be 1–2 sentences (<= 240 chars) summarizing scope + impact, based only on the resume.\n\n"
+                    "Key metrics:\n"
+                    "- Extract measurable impacts (%, $, scale like 60M+, 6K+, cost savings, latency reductions, etc.).\n"
+                    "- If the resume contains any explicit numeric impact, return at least 3 key_metrics.\n"
+                    "- If the resume does NOT contain explicit numeric impact, still return 3–6 key_metrics as QUALITATIVE outcomes:\n"
+                    "  - Use value=\"\" (empty string) for qualitative items.\n"
+                    "  - metric should name the outcome/KPI (e.g., 'Deployment speed', 'Reliability', 'Search discoverability').\n"
+                    "  - context should cite the resume evidence in a short phrase.\n"
+                    "- Each key_metrics item: metric (what), value (number/amount), context (short).\n\n"
+                    "Skills:\n"
+                    "- Return ONLY real skills: tools, languages, frameworks, cloud/platforms, methodologies.\n"
+                    "- Exclude locations, personal tags, titles, education degrees, section headings, awards, certifications, and proficiency text like '(Full Professional)'.\n"
+                    "- Normalize synonyms/casing (e.g., 'REACT.js' -> 'React', 'node.js' -> 'Node.js', 'Pytorch' -> 'PyTorch').\n"
+                    "- Keep skills as short tokens (2–30 chars when possible).\n\n"
+                    "Education:\n"
+                    "- Extract education entries (degrees/courses) from the resume.\n"
+                    "- Return normalized start_year/end_year when present.\n\n"
                     "Return ONLY a JSON object with these keys:\n"
                     "- positions: array of { company, title, start_date, end_date, current, description }\n"
                     "- key_metrics: array of { metric, value, context }\n"
-                    "- business_challenges: array of strings (business problems solved / outcomes driven)\n"
+                    "- business_challenges: array of strings (infer from responsibilities/accomplishments when not explicitly labeled; stay grounded in the resume)\n"
                     "- skills: array of strings\n"
                     "- accomplishments: array of strings\n"
                     "- tenure: array of { company, duration, role }\n"
+                    "- education: array of { school, degree, field, start_year, end_year, notes }\n"
                 ),
             },
             {"role": "user", "content": text},
@@ -382,6 +408,7 @@ class OpenAIClient:
                 "Improved observability with dashboards + alerts",
             ],
             "tenure": [{"company": "TechCorp", "duration": "2 years", "role": "Senior Software Engineer"}],
+            "education": [{"school": "Example University", "degree": "BS", "field": "Computer Science", "start_year": "2018", "end_year": "2022", "notes": ""}],
         }
         return self.run_chat_completion(
             messages,
@@ -422,6 +449,9 @@ class OpenAIClient:
                     "Rules for required_skills:\n"
                     "- Include concrete skills/tools/technologies (e.g., 'Salesforce', 'APIs', 'SQL', 'Customer success').\n"
                     "- Avoid accidental matches like the word 'go' from 'go live' (only include 'Go' if clearly referring to the programming language).\n\n"
+                    "Skills normalization:\n"
+                    "- Normalize casing/synonyms (e.g., 'node js' -> 'Node.js', 'reactjs' -> 'React').\n"
+                    "- Do not include proficiency levels or duplicates.\n\n"
                     "Return ONLY JSON with these keys:\n"
                     "- title: string\n"
                     "- company: string\n"

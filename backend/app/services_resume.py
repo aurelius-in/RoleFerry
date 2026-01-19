@@ -76,6 +76,24 @@ def extract_key_metrics(lines: List[str]) -> List[str]:
         r"\b\d{2,}\s+(?:users?|customers?|pipelines?|models?|microservices?|agents?|workflows?|teams?|projects?|days?|weeks?|months?)\b",
         re.I,
     )
+    # Some resumes use spelled-out small numbers ("built two visuals"). Capture a small, safe subset.
+    small_num_words = {
+        "one": 1,
+        "two": 2,
+        "three": 3,
+        "four": 4,
+        "five": 5,
+        "six": 6,
+        "seven": 7,
+        "eight": 8,
+        "nine": 9,
+        "ten": 10,
+    }
+    # Allow an optional adjective between the number and the noun (e.g., "two graphic visuals").
+    has_small_spelled_count = re.compile(
+        r"\b(one|two|three|four|five|six|seven|eight|nine|ten)\s+(?:[A-Za-z]+\s+)?(?:apps?|visuals?|mockups?|dashboards?|systems?|pipelines?|services?|features?|endpoints?|pages?|components?)\b",
+        re.I,
+    )
     looks_like_year = re.compile(r"\b(19|20)\d{2}\b")
     looks_like_year_range = re.compile(r"\b(19|20)\d{2}\b\s*[-–—]\s*\b(19|20)\d{2}\b")
     looks_like_phone = re.compile(r"\b\d{3}[- )]\d{3}[- ]\d{4}\b")
@@ -206,7 +224,11 @@ def extract_key_metrics(lines: List[str]) -> List[str]:
             continue
 
         # require a strong metric marker OR a count metric + a verb
-        if not (has_strong_metric.search(l) or (has_count_metric.search(l) and verbs.search(l))):
+        if not (
+            has_strong_metric.search(l)
+            or (has_count_metric.search(l) and verbs.search(l))
+            or (has_small_spelled_count.search(l) and verbs.search(l))
+        ):
             continue
         # If it's a strong metric (%, $, etc), also require an action verb so it's understandable.
         if has_strong_metric.search(l) and not verbs.search(l):
@@ -237,7 +259,58 @@ def extract_key_metrics(lines: List[str]) -> List[str]:
         out.append(cleaned)
         if len(out) >= 12:
             break
-    return out[:10]
+    if out:
+        return out[:10]
+
+    # --- Qualitative fallback -------------------------------------------------
+    # If no explicit numeric metrics exist, pull a few "impact-style" bullets/sentences.
+    # These will map to KeyMetric with empty value (UI should handle).
+    verbs = re.compile(
+        r"\b("
+        r"automate|automated|automating|"
+        r"build|built|building|"
+        r"create|created|creating|"
+        r"deliver|delivered|delivering|"
+        r"design|designed|designing|"
+        r"improve|improved|improving|"
+        r"optimize|optimized|optimizing|"
+        r"reorganize|reorganized|reorganizing|"
+        r"streamline|streamlined|streamlining|"
+        r"integrate|integrated|integrating|"
+        r"maintain|maintained|maintaining|"
+        r"own|owned|owning|"
+        r"lead|led|leading|"
+        r"ship|shipped|shipping"
+        r")\b",
+        re.I,
+    )
+    qualitative: List[str] = []
+    for raw in merged_lines:
+        l = (raw or "").strip().lstrip("-•* ").strip()
+        if len(l) < 18 or len(l) > 220:
+            continue
+        low = l.lower()
+        if "linkedin.com" in low or "mailto:" in low or "@" in low:
+            continue
+        if _is_heading(l):
+            continue
+        # Avoid pure stack lines
+        if low.startswith("stack:"):
+            continue
+        if verbs.search(l):
+            qualitative.append(l)
+        if len(qualitative) >= 8:
+            break
+    # De-dupe and return
+    seen2 = set()
+    out2: List[str] = []
+    for q in qualitative:
+        k = q.lower()
+        if k in seen2:
+            continue
+        seen2.add(k)
+        out2.append(q)
+    return out2[:6]
 
 
 def extract_problems_and_accomplishments(lines: List[str]) -> Dict[str, List[str]]:
@@ -1325,6 +1398,13 @@ def extract_positions(lines: List[str], sections: Dict[str, List[str]] | None = 
         re.I,
     )
 
+    # Pipe-delimited role lines (common in DOCX project/experience sections):
+    #   "Full Stack Web Development Intern | Remote | Sept 2021 - Present | Live Site | GitHub"
+    pipe_role_re = re.compile(
+        rf"^(?P<title>[^|]{{3,120}}?)\s*\|\s*(?P<middle>[^|]{{2,120}}?)\s*\|\s*(?P<start>{month_name}\s+\d{{4}})\s*(?:-|–|—|to)\s*(?P<end>{month_name}\s+\d{{4}}|Present)\b",
+        re.I,
+    )
+
     def _looks_like_company_line(s: str) -> bool:
         cand = (s or "").strip()
         if not cand:
@@ -1410,6 +1490,11 @@ def extract_positions(lines: List[str], sections: Dict[str, List[str]] | None = 
                 if not title and prevs:
                     title = prevs[0]
                     title_idx = 0
+                # DOCX templates often embed company/location with pipes in the title line; keep only the role title.
+                if "|" in title:
+                    parts = [p.strip() for p in title.split("|") if p.strip()]
+                    if parts:
+                        title = parts[0]
 
                 company = ""
                 if title_idx is not None:
@@ -1453,6 +1538,16 @@ def extract_positions(lines: List[str], sections: Dict[str, List[str]] | None = 
             end = (m.group("end") or "").strip()
             current = end.lower() == "present"
             company = ""
+            # DOCX templates sometimes embed company/location in the title line:
+            #   "Product Development Engineer | Cembre, Edison, NJ | Oct 2019 - Mar 2020"
+            if "|" in title:
+                parts = [p.strip() for p in title.split("|") if p.strip()]
+                if parts:
+                    title = parts[0]
+                if len(parts) >= 2 and not company:
+                    cand_company = parts[1].split(",")[0].strip()
+                    if cand_company and _looks_like_company_line(cand_company):
+                        company = cand_company
             if i + 1 < len(exp) and _looks_like_company_line(exp[i + 1]):
                 company = exp[i + 1].strip()
             # Description: gather a few lines until next role line or heading
@@ -1535,6 +1630,11 @@ def extract_positions(lines: List[str], sections: Dict[str, List[str]] | None = 
             if not title and prevs:
                 title = prevs[0]
                 title_idx = 0
+            # DOCX templates often embed company/location with pipes in the title line; keep only the role title.
+            if "|" in title:
+                parts = [p.strip() for p in title.split("|") if p.strip()]
+                if parts:
+                    title = parts[0]
 
             company = ""
             if title_idx is not None:
@@ -1572,6 +1672,51 @@ def extract_positions(lines: List[str], sections: Dict[str, List[str]] | None = 
                 {
                     "title": (title or "")[:80],
                     "company": (company or "")[:80],
+                    "start_date": start,
+                    "end_date": "" if current else end,
+                    "current": current,
+                    "description": " ".join(desc_lines).strip()[:240],
+                }
+            )
+            i = k
+            continue
+
+        # Pipe-delimited role line: infer company from previous line (often the project/org name).
+        m_pipe = pipe_role_re.match(l)
+        if m_pipe and _has_title_token(m_pipe.group("title") or ""):
+            title = (m_pipe.group("title") or "").strip()
+            start = (m_pipe.group("start") or "").strip()
+            end = (m_pipe.group("end") or "").strip()
+            current = end.lower() == "present"
+            # Company: prefer the middle segment's first comma-separated token (often "Company, City, ST"),
+            # otherwise use previous non-heading line as company/project name.
+            company = ""
+            middle = (m_pipe.group("middle") or "").strip()
+            if middle:
+                company = middle.split(",")[0].strip()
+            for j in range(i - 1, max(-1, i - 6), -1):
+                cand = (lines[j] or "").strip()
+                if not cand or _is_heading(cand):
+                    continue
+                if _looks_like_company_line(cand) and not _has_title_token(cand):
+                    company = cand
+                    break
+            # Description: take a couple bullets/lines following until blank/next heading/next role.
+            desc_lines: List[str] = []
+            k = i + 1
+            while k < len(lines) and len(desc_lines) < 4:
+                cand = (lines[k] or "").strip()
+                if not cand:
+                    k += 1
+                    continue
+                if _is_heading(cand) or company_date_re.match(cand) or title_date_re.match(cand) or linkedin_date_re.match(cand) or pipe_role_re.match(cand):
+                    break
+                desc_lines.append(cand.strip(" -•\t"))
+                k += 1
+            positions.append(
+                {
+                    "title": title[:80],
+                    "company": company[:80],
                     "start_date": start,
                     "end_date": "" if current else end,
                     "current": current,
@@ -1659,6 +1804,14 @@ def extract_positions(lines: List[str], sections: Dict[str, List[str]] | None = 
             end = (m2.group("end") or "").strip()
             current = end.lower() == "present"
             company = ""
+            if "|" in title:
+                parts = [p.strip() for p in title.split("|") if p.strip()]
+                if parts:
+                    title = parts[0]
+                if len(parts) >= 2 and not company:
+                    cand_company = parts[1].split(",")[0].strip()
+                    if cand_company and _looks_like_company_line(cand_company):
+                        company = cand_company
             if i + 1 < len(lines) and _looks_like_company_line(lines[i + 1]):
                 company = lines[i + 1].strip()
             # short description lines after company
@@ -1728,6 +1881,122 @@ def extract_positions(lines: List[str], sections: Dict[str, List[str]] | None = 
     return unique[:10]
 
 
+def extract_education(sections: Dict[str, List[str]], all_lines: List[str]) -> List[Dict[str, str]]:
+    """
+    Best-effort education extraction.
+    Returns list of {school, degree, field, start_year, end_year, notes}.
+    """
+    raw = sections.get("EDUCATION") or []
+    lines = [_normalize_text(l).strip() for l in raw if l and l.strip()]
+    if not lines:
+        # Fallback: look for lines that contain degree keywords.
+        candidates = []
+        deg_re = re.compile(r"\b(b\.s\.|bs|bachelor|m\.s\.|ms|master|mba|phd|doctorate)\b", re.I)
+        for l in all_lines:
+            if deg_re.search(l):
+                candidates.append(_normalize_text(l).strip())
+        lines = candidates[:20]
+    if not lines:
+        return []
+
+    out: List[Dict[str, str]] = []
+    seen = set()
+    year_range = re.compile(r"\b(?:19|20)\d{2}\b\s*(?:-|–|—|to)\s*\b(?:19|20)\d{2}\b", re.I)
+    single_year = re.compile(r"\b(?:19|20)\d{2}\b")
+    # Also support month-year spans like "May 2020 - Nov 2021"
+    month_name = r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
+    month_year_span = re.compile(rf"\b{month_name}\s+\d{{4}}\b\s*(?:-|–|—|to)\s*\b{month_name}\s+\d{{4}}\b", re.I)
+    degree_kw = re.compile(r"\b(b\.s\.|bs|bachelor|m\.s\.|ms|master|mba|phd|doctorate|associate)\b", re.I)
+    for l in lines:
+        t = (l or "").strip().lstrip("-•* ").strip()
+        if not t or len(t) > 240:
+            continue
+        # Ignore obvious non-education noise
+        if _is_heading(t):
+            continue
+        low = t.lower()
+        if any(x in low for x in ["certification", "honor", "award"]):
+            continue
+        # Keep only lines that have a degree keyword or a year span (avoid skill-like noise)
+        if not (degree_kw.search(t) or year_range.search(t) or month_year_span.search(t)):
+            continue
+
+        school = ""
+        degree = ""
+        field = ""
+        start_year = ""
+        end_year = ""
+        notes = ""
+
+        # Extract year span if present
+        if month_year_span.search(t):
+            yrs = single_year.findall(t)
+            if len(yrs) >= 2:
+                start_year, end_year = yrs[0], yrs[1]
+        elif year_range.search(t):
+            yrs = single_year.findall(t)
+            if len(yrs) >= 2:
+                start_year, end_year = yrs[0], yrs[1]
+        else:
+            yrs = single_year.findall(t)
+            if yrs:
+                end_year = yrs[-1]
+
+        # Heuristic split examples:
+        # - "B.S. Electrical Engineering, TCNJ, Ewing NJ 2014 - 2019"
+        # - "Lambda School, Full Stack Web Development May 2020 - Nov 2021"
+        parts = [p.strip() for p in re.split(r"[|•]", t) if p.strip()]
+        core = parts[0] if parts else t
+        # Remove years from core for parsing
+        core_wo_years = single_year.sub("", core).strip(" ,;-")
+        # Remove month names left behind from month-year spans
+        core_wo_years = re.sub(rf"\b{month_name}\b", "", core_wo_years, flags=re.I).strip(" ,;-")
+        # Split by commas
+        comma_parts = [p.strip() for p in core_wo_years.split(",") if p.strip()]
+        if comma_parts:
+            # If first part looks like a degree, treat it as degree+field
+            if re.search(r"\b(b\.s\.|bs|bachelor|m\.s\.|ms|master|mba|phd|doctorate)\b", comma_parts[0], re.I):
+                degree = comma_parts[0]
+                if len(comma_parts) >= 2:
+                    school = comma_parts[1]
+                if len(comma_parts) >= 3:
+                    notes = ", ".join(comma_parts[2:])
+            else:
+                # Otherwise treat first as school
+                school = comma_parts[0]
+                if len(comma_parts) >= 2:
+                    degree = comma_parts[1]
+                if len(comma_parts) >= 3:
+                    notes = ", ".join(comma_parts[2:])
+        # Normalize obvious school tokens
+        if school and re.search(r"\b(school|university|college|institute)\b", school, re.I) is None:
+            # Accept short acronyms like "TCNJ"
+            if len(school.split()) > 6:
+                school = school[:120]
+        # Extract field if degree line contains "in X"
+        mfield = re.search(r"\b(?:in|of)\s+([A-Za-z][A-Za-z &/]+)$", degree, re.I)
+        if mfield:
+            field = mfield.group(1).strip()
+
+        key = (school + "|" + degree + "|" + (start_year or "") + "|" + (end_year or "")).lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(
+            {
+                "school": school[:120],
+                "degree": degree[:120],
+                "field": field[:120],
+                "start_year": start_year,
+                "end_year": end_year,
+                "notes": notes[:180],
+            }
+        )
+        if len(out) >= 6:
+            break
+    return out
+
+
 def extract_domains(text: str) -> List[str]:
     domains = []
     keywords = ["product", "growth", "platform", "data", "ml", "ai", "b2b", "b2c", "enterprise", "saas"]
@@ -1762,6 +2031,7 @@ def parse_resume(text: str) -> Dict[str, object]:
     accomplishments = extract_notable_accomplishments(sections) or pa["NotableAccomplishments"]
     business_challenges = extract_business_challenges(sections, lines) or pa["ProblemsSolved"]
     tenure = roles_info.get("tenure") or []
+    education = extract_education(sections, lines)
 
     # Prefer tenure derived from extracted positions when we have date spans.
     # This handles DOCX formats like Dave's where company+date is on one line and title is on the next.
@@ -1802,6 +2072,7 @@ def parse_resume(text: str) -> Dict[str, object]:
         "Positions": positions,
         "Tenure": tenure,
         "Skills": skills,
+        "Education": education,
         "Domains": domains,
         "Seniority": seniority,
     }
