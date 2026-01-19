@@ -185,8 +185,21 @@ _KNOWN_SKILLS: List[str] = [
     "Kafka",
     # AI/ML
     "LLM",
+    "LLMs",
+    "AI",
+    "AI Agents",
+    "Agentic",
+    "AI/ML",
+    "ML",
     "Machine Learning",
     "Deep Learning",
+    "Process Automation",
+    "Automation",
+    "BPaaS",
+    "BPS",
+    "KYC",
+    "Data modeling",
+    "Ontology",
     # Mobile / Android
     "Android",
     "Jetpack Compose",
@@ -363,6 +376,12 @@ def _extract_salary_range(text: str) -> Optional[str]:
         r"(\$\s?\d{2,3}\s?k\s*[–\-]\s*\$\s?\d{2,3}\s?k)",
         r"(\$\s?\d{2,3}\s?[kK]\s*/\s?yr\s*[–\-]\s*\$\s?\d{2,3}\s?[kK]\s*/\s?yr)",
         r"(\$\s?\d{2,3}(?:,\d{3})\s*(?:/year|per year)?\s*[–\-]\s*\$\s?\d{2,3}(?:,\d{3})\s*(?:/year|per year)?)",
+        # "Derived Salary: $207562 - $345938/Year" (no commas, 6 digits)
+        r"(derived\s+salary:\s*\$\s?\d{3,6}(?:,\d{3})?\s*[–\-]\s*\$\s?\d{3,6}(?:,\d{3})?\s*/\s*(?:year|yr))",
+        # "$207,562 - 345,938 / Year" (second value sometimes missing $)
+        r"(\$\s?\d{3,6}(?:,\d{3})?\s*[–\-]\s*\d{3,6}(?:,\d{3})?\s*/\s*(?:year|yr))",
+        # "$207562 - $345938/Year" (no label)
+        r"(\$\s?\d{3,6}(?:,\d{3})?\s*[–\-]\s*\$\s?\d{3,6}(?:,\d{3})?\s*/\s*(?:year|yr))",
         r"(\b\d{2,3}(?:,\d{3})\s*[–\-]\s*\d{2,3}(?:,\d{3})\s*(?:usd)?\s*/\s*year\b)",
         r"(salary\s+range:\s*\$\s?\d[\d,]+.*?\$\s?\d[\d,]+)",
     ]
@@ -509,6 +528,11 @@ def _extract_skills(text: str) -> List[str]:
     for skill in _KNOWN_SKILLS:
         needle = skill.lower()
         # Very light boundary matching; works well enough for common skill tokens.
+        # Special-case: "C" matches lots of non-skill text (e.g., "C-level").
+        if needle == "c":
+            if re.search(r"(^|[^a-z0-9])c([^a-z0-9]|$)", hay) and not re.search(r"\bc\s*[-–—]\s*level\b", hay):
+                found.append(skill)
+            continue
         if re.search(rf"(^|[^a-z0-9]){re.escape(needle)}([^a-z0-9]|$)", hay):
             found.append(skill)
     # De-dupe while preserving order
@@ -568,6 +592,15 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
         if not s or len(s) < 4:
             return False
         low = s.lower()
+        # Never treat a sentence as the title (common failure: responsibility lines).
+        if s.endswith("."):
+            return False
+        # Reject multi-sentence lines (e.g., "... platforms. A") which are never real titles.
+        if "." in s and not re.search(r"\b(?:sr|jr|dr)\.\b", low):
+            return False
+        # "You will ..." / "We are ..." are almost always body copy, not the title.
+        if low.startswith(("you will ", "we are ", "we're ", "we’re ")):
+            return False
         # Avoid common section headers and obvious non-titles
         if any(low.startswith(h) for h in ["about us", "about the role", "benefits", "location", "requirements", "qualifications"]):
             return False
@@ -580,7 +613,8 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
         if "get ai-powered advice" in low or "premium" in low:
             return False
         # Prefer lines with role-like tokens, but allow others
-        role_tokens = ["engineer", "manager", "director", "analyst", "specialist", "designer", "recruiter", "coach", "lead", "developer"]
+        # NOTE: avoid treating "lead ..." imperative sentences as titles by not using bare "lead" here.
+        role_tokens = ["engineer", "architect", "manager", "director", "analyst", "specialist", "designer", "recruiter", "coach", "developer", "product manager", "solutions architect", "sales engineer"]
         if any(t in low for t in role_tokens):
             return True
         # Otherwise accept if it looks like a concise title-case line (no long sentences)
@@ -590,10 +624,21 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
 
     def _has_role_token(ln: str) -> bool:
         low = (ln or "").lower()
-        role_tokens = ["engineer", "manager", "director", "analyst", "specialist", "designer", "recruiter", "coach", "lead", "developer", "success", "growth"]
-        return any(t in low for t in role_tokens)
+        # Require a real title noun. "lead" alone is too ambiguous (often an imperative verb).
+        role_tokens = ["engineer", "architect", "manager", "director", "analyst", "specialist", "designer", "recruiter", "coach", "developer", "product manager", "solutions architect", "sales engineer"]
+        if any(t in low for t in role_tokens):
+            return True
+        # Allow "lead" only when paired with a title noun (e.g., "Tech Lead Engineer")
+        if "lead" in low and any(t in low for t in ["engineer", "architect", "manager", "developer", "product"]):
+            return True
+        return False
 
     # Title: pass 1 – prefer lines that contain role tokens (avoids title=company).
+    # Extra pass 0 – prefer explicit "Role - ..." titles in the first few lines.
+    for ln in lines[:8]:
+        if " - " in ln and _has_role_token(ln) and _looks_like_real_title(ln):
+            title = ln[:120]
+            break
     for ln in lines[:20]:
         if _has_role_token(ln) and _looks_like_real_title(ln):
             title = ln[:120]
@@ -606,6 +651,13 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 break
     if not title and lines:
         title = lines[0][:120]
+
+    # If we ended up with an obviously too-long title, try to recover a better one.
+    if title and (len(title) > 90 or len(title.split()) > 14):
+        for ln in lines[:40]:
+            if _has_role_token(ln) and _looks_like_real_title(ln) and len(ln) <= 90:
+                title = ln[:120]
+                break
 
     # Company: explicit markers win.
     for ln in lines[:60]:
@@ -634,6 +686,16 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
             "success",
             "metrics",
             "jargon",
+            "apply",
+            "quick",
+            "upload",
+            "resume",
+            "login",
+            "log",
+            "in",
+            "have",
+            "account",
+            "description",
             # Common non-company descriptors
             "remote",
             "hybrid",
@@ -675,6 +737,11 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                     continue
                 if "linkedin" in low:
                     continue
+                # Job board UI / CTA noise that often appears near the top
+                if any(x in low for x in ["quick apply", "apply on employer site", "upload resume", "have an account", "log in"]):
+                    continue
+                if low in {"apply", "save"}:
+                    continue
                 if any(bad in low for bad in ["out of 5 stars", "profile insights", "job details", "full job description"]):
                     continue
                 # Skip obvious location/address/salary lines
@@ -700,6 +767,9 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                     if not _looks_like_company_header_line(cand):
                         continue
                     if _has_role_token(cand):
+                        continue
+                    low = cand.lower()
+                    if any(x in low for x in ["quick apply", "apply", "upload resume", "log in"]):
                         continue
                     company = cand[:120]
                     # Attach "(part of ...)" style follow-up line if present.
@@ -802,6 +872,10 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                     best_phrase = ph
             if best_phrase:
                 company = best_phrase[:120]
+
+        # If company is still a CTA-ish phrase, drop it.
+        if company and any(x in company.lower() for x in ["quick apply", "apply on employer site", "upload resume", "log in"]):
+            company = ""
 
     def _company_from_url(u: str) -> str:
         try:
@@ -1178,6 +1252,13 @@ async def import_job_description(payload: JobImportRequest):
             [
                 "requirements",
                 "qualifications",
+                "skills & qualifications",
+                "skills and qualifications",
+                "skills & experience",
+                "subject matter knowledge",
+                "subject matter knowledge & experience",
+                "subject matter knowledge and experience",
+                "required skills",
                 "we'd love you to bring",
                 "we’d love you to bring",
                 "experience/skills required",
@@ -1195,6 +1276,50 @@ async def import_job_description(payload: JobImportRequest):
             ["benefits", "perks", "what we offer", "work/life balance", "mentorship", "career growth", "inclusive team culture", "diverse experiences"],
             max_lines=10,
         )
+        # If there isn't an explicit benefits section, capture top-of-JD perk-like lines.
+        # (Common in startup posts: "Remote 1st", "Equity", "Series A", etc.)
+        if not benefits:
+            perk_lines: List[str] = []
+            for ln in [x.strip() for x in (content or "").splitlines()][:120]:
+                low = ln.lower().strip()
+                if not low:
+                    continue
+                if any(h in low for h in ["key responsibilities", "responsibilities", "skills & qualifications", "skills and qualifications", "basic qualifications", "preferred qualifications", "job description"]):
+                    break
+                if re.search(r"\$\s?\d", ln) or "salary" in low:
+                    continue
+                if "location" in low and ("," in low or "remote" in low):
+                    # location is shown elsewhere
+                    continue
+                if any(k in low for k in ["remote 1st", "remote-first", "remote first", "equity", "series a", "us or canada"]):
+                    s = ln.strip("•-* ").strip()
+                    if 6 <= len(s) <= 120 and s.lower() not in {x.lower() for x in perk_lines}:
+                        perk_lines.append(s[:200])
+                if len(perk_lines) >= 6:
+                    break
+            benefits = perk_lines[:10]
+
+        # If still empty, detect embedded benefits paragraphs (common in big-company posts).
+        if not benefits:
+            t = (content or "").lower()
+            if any(k in t for k in ["medical", "dental", "vision", "401k", "paid time off", "life and ad&d", "short and long term disability", "employee assistance"]):
+                benefit_phrases = [
+                    ("medical", "Medical insurance"),
+                    ("dental", "Dental insurance"),
+                    ("vision", "Vision insurance"),
+                    ("401k", "401k (with company match when offered)"),
+                    ("paid time off", "Paid time off (PTO)"),
+                    ("life and ad&d", "Life and AD&D insurance"),
+                    ("short and long term disability", "Short/long-term disability coverage"),
+                    ("employee assistance", "Employee assistance program"),
+                    ("health savings account", "Health Savings Account (HSA)"),
+                    ("flexible spending", "Flexible Spending Account (FSA)"),
+                ]
+                out: List[str] = []
+                for key, label in benefit_phrases:
+                    if key in t and label.lower() not in {x.lower() for x in out}:
+                        out.append(label)
+                benefits = out[:10]
         # We cannot truly infer "pain points" without an LLM, but we can extract
         # meaningful lines as a practical non-mock fallback.
         pain_points: List[str] = _extract_key_lines(
@@ -1210,6 +1335,35 @@ async def import_job_description(payload: JobImportRequest):
             max_items=3,
             keywords=["metric", "measured", "reliability", "deliver", "improve", "reduce", "increase", "impact"],
         )
+
+        # De-dupe across sections: avoid repeating the same paragraph/bullet in multiple columns.
+        # If there is overlap, keep it in Success Metrics (more appropriate for responsibilities-style lines).
+        try:
+            def _norm(s: str) -> str:
+                # Normalize punctuation/whitespace so minor variations don't bypass dedupe.
+                t = (s or "").strip().lower()
+                t = re.sub(r"[•\u2022]", " ", t)
+                t = re.sub(r"[^\w\s]", " ", t)
+                t = re.sub(r"\s+", " ", t).strip()
+                return t
+
+            sm_set = {_norm(s) for s in success_metrics if s and s.strip()}
+            pain_points = [p for p in pain_points if _norm(p or "") not in sm_set]
+            # Also de-dupe within each list while preserving order.
+            def _dedup(xs: List[str]) -> List[str]:
+                seen = set()
+                out: List[str] = []
+                for x in xs:
+                    k = _norm(x or "")
+                    if not k or k in seen:
+                        continue
+                    seen.add(k)
+                    out.append((x or "").strip())
+                return out
+            pain_points = _dedup(pain_points)[:3]
+            success_metrics = _dedup(success_metrics)[:3]
+        except Exception:
+            pass
 
         # Salary is returned as its own field (salary_range) and should be displayed separately in the UI
         # (not mixed into Success Metrics).
