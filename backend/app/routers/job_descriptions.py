@@ -149,6 +149,7 @@ _KNOWN_SKILLS: List[str] = [
     "JavaScript",
     "TypeScript",
     "Java",
+    "Kotlin",
     "Golang",
     "C++",
     "C#",
@@ -159,6 +160,7 @@ _KNOWN_SKILLS: List[str] = [
     "React",
     "Next.js",
     "Node.js",
+    "NodeJS",
     "Express",
     "Django",
     "Flask",
@@ -181,6 +183,23 @@ _KNOWN_SKILLS: List[str] = [
     "LLM",
     "Machine Learning",
     "Deep Learning",
+    # Mobile / Android
+    "Android",
+    "Jetpack Compose",
+    "Jetpack Navigation",
+    "Kotlin Coroutines",
+    "Coroutines",
+    "Kotlin Flow",
+    "Flow",
+    "Dagger",
+    "Dagger 2",
+    "MVVM",
+    "Clean Architecture",
+    "Room",
+    "JUnit",
+    "Canvas",
+    "Custom Views",
+    "Background Services",
     # Common platform / growth / customer roles
     "SaaS",
     "Customer Success",
@@ -280,6 +299,9 @@ def _infer_work_mode_from_text(text: str) -> str:
     t = (text or "").lower()
     if not t.strip():
         return "unknown"
+    # Some JDs explicitly say they're distributed/no office; treat as remote even if the page has "On-site" UI noise.
+    if any(k in t for k in ["100% distributed", "100 percent distributed", "no office", "distributed setting", "remote-first", "remote first", "asynchronous culture"]):
+        return "remote"
     if any(k in t for k in ["fully remote", "remote (", "remote)", "work from home", "wfh", "hiring remotely"]):
         return "remote"
     if "hybrid" in t:
@@ -311,7 +333,9 @@ def _extract_salary_range(text: str) -> Optional[str]:
     # Common patterns: "$180k – $210k", "$180,000/year - $210,000/year", "$110,000 - $150,000"
     patterns = [
         r"(\$\s?\d{2,3}\s?k\s*[–\-]\s*\$\s?\d{2,3}\s?k)",
+        r"(\$\s?\d{2,3}\s?[kK]\s*/\s?yr\s*[–\-]\s*\$\s?\d{2,3}\s?[kK]\s*/\s?yr)",
         r"(\$\s?\d{2,3}(?:,\d{3})\s*(?:/year|per year)?\s*[–\-]\s*\$\s?\d{2,3}(?:,\d{3})\s*(?:/year|per year)?)",
+        r"(\b\d{2,3}(?:,\d{3})\s*[–\-]\s*\d{2,3}(?:,\d{3})\s*(?:usd)?\s*/\s*year\b)",
         r"(salary\s+range:\s*\$\s?\d[\d,]+.*?\$\s?\d[\d,]+)",
     ]
     for pat in patterns:
@@ -375,7 +399,22 @@ def _extract_section_lines(text: str, header_patterns: List[str], *, max_lines: 
             continue
         # Skip obvious UI noise
         low = s.lower()
-        if any(bad in low for bad in ["apply now", "save", "posted:", "recruiter recently active", "actively hiring"]):
+        if any(bad in low for bad in [
+            "apply now",
+            "save",
+            "posted:",
+            "recruiter recently active",
+            "actively hiring",
+            "get 50% off",
+            "premium",
+            "reactivate premium",
+            "cancel anytime",
+            "meet the hiring team",
+            "people you can reach out to",
+            "show match details",
+            "help me stand out",
+            "message",
+        ]):
             continue
         out.append(s[:200])
         if len(out) >= max_lines:
@@ -411,6 +450,25 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
 
     lines = [ln.strip() for ln in (content or "").splitlines() if ln.strip()]
 
+    # LinkedIn paste: "About the company" -> next line is often the company name.
+    # This is more reliable than "top lines" which can contain UI noise like "Responses managed off LinkedIn".
+    for i, ln in enumerate(lines[:220]):
+        if ln.strip().lower() == "about the company":
+            for j in range(i + 1, min(len(lines), i + 10)):
+                cand = (lines[j] or "").strip()
+                low = cand.lower()
+                if not cand:
+                    continue
+                if any(bad in low for bad in ["followers", "follow", "employees", "on linkedin", "software development"]):
+                    continue
+                if re.search(r"\d", cand) and "speechify" not in low:
+                    # skip pure numeric counts like followers/employee counts
+                    continue
+                company = cand[:120]
+                break
+        if company:
+            break
+
     def _looks_like_real_title(ln: str) -> bool:
         s = (ln or "").strip()
         if not s or len(s) < 4:
@@ -422,6 +480,10 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
         if any(bad in low for bad in ["grade this role", "add to job tracker", "business challenges", "required skills", "success metrics", "jd jargon"]):
             return False
         if re.search(r"\bis\s+hiring\b", low):
+            return False
+        if "responses managed off linkedin" in low:
+            return False
+        if "get ai-powered advice" in low or "premium" in low:
             return False
         # Prefer lines with role-like tokens, but allow others
         role_tokens = ["engineer", "manager", "director", "analyst", "specialist", "designer", "recruiter", "coach", "lead", "developer"]
@@ -517,10 +579,14 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                     continue
                 if low in _COMPANY_STOPWORDS:
                     continue
+                if "linkedin" in low:
+                    continue
                 if any(bad in low for bad in ["out of 5 stars", "profile insights", "job details", "full job description"]):
                     continue
                 # Skip obvious location/address/salary lines
                 if re.search(r"\$\s?\d", s) or re.search(r"\b\d{5}\b", s):
+                    continue
+                if "·" in s:
                     continue
                 if re.search(r"\b(?:drive|dr|street|st|avenue|ave|road|rd|boulevard|blvd|lane|ln|way|court|ct)\b", low):
                     continue
@@ -770,6 +836,20 @@ def _extract_key_lines(content: str, max_items: int, keywords: List[str]) -> Lis
         r"contract",
         r"per hour",
         r"per year",
+        # LinkedIn UI noise / upsells
+        r"\bget\s+ai-powered\b",
+        r"\bpremium\b",
+        r"\bget\s+\d{1,3}%\s+off\b",
+        r"\bshow\s+match\s+details\b",
+        r"\bhelp\s+me\s+stand\s+out\b",
+        r"\breactivate\s+premium\b",
+        r"\bcancel\s+anytime\b",
+        r"\bpeople\s+you\s+can\s+reach\s+out\s+to\b",
+        r"\bmeet\s+the\s+hiring\s+team\b",
+        r"\bmessage\b",
+        r"\bapply\b",
+        r"\bsave\b",
+        r"\bresponses\s+managed\s+off\s+linkedin\b",
         # Location / address / job board UI noise (Indeed etc.)
         r"\bjob\s+address\b",
         r"\bestimated\s+commute\b",
@@ -949,7 +1029,17 @@ async def import_job_description(payload: JobImportRequest):
         )
         requirements = _extract_section_lines(
             content,
-            ["requirements", "qualifications", "we'd love you to bring", "we’d love you to bring", "experience/skills required"],
+            [
+                "requirements",
+                "qualifications",
+                "we'd love you to bring",
+                "we’d love you to bring",
+                "experience/skills required",
+                "an ideal candidate should have",
+                "ideal candidate should have",
+                "ideal candidate",
+                "bonus",
+            ],
             max_lines=10,
         )
         benefits = _extract_section_lines(content, ["benefits", "perks", "what we offer"], max_lines=10)
@@ -958,12 +1048,15 @@ async def import_job_description(payload: JobImportRequest):
         pain_points: List[str] = _extract_key_lines(
             content,
             max_items=3,
-            keywords=["challenge", "problem", "improve", "reduce", "increase", "help", "responsible", "you will"],
+            keywords=["challenge", "problem", "need", "support", "scale", "grow", "reliability"],
         )
+
+        # Prefer "success metrics" from responsibilities if available (avoids culture/mission paragraphs).
+        success_source = "\n".join(responsibilities) if responsibilities else content
         success_metrics: List[str] = _extract_key_lines(
-            content,
+            success_source,
             max_items=3,
-            keywords=["kpi", "metric", "measured", "increase", "reduce", "improve", "impact", "deliver"],
+            keywords=["metric", "measured", "reliability", "deliver", "improve", "reduce", "increase", "impact"],
         )
 
         # Salary is returned as its own field (salary_range) and should be displayed separately in the UI
