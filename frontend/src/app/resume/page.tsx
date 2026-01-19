@@ -326,6 +326,9 @@ export default function ResumePage() {
               {/* Positions */}
               <div>
                 <h3 className="text-xl font-semibold mb-4">Work Experience</h3>
+                {extract.positions.length === 0 ? (
+                  <div className="text-sm text-red-300 font-semibold">Missing details</div>
+                ) : null}
                 <div className="space-y-4">
                   {extract.positions.map((position, index) => (
                     <div key={index} className="border border-white/10 bg-black/20 rounded-lg p-4">
@@ -537,22 +540,81 @@ export default function ResumePage() {
                 <div className="text-xs text-white/60 mb-3">
                   These variables are now available for downstream steps (Compose/Campaign):
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    {"{{resume.key_metrics[]}}"}
-                  </code>
-                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    {"{{resume.business_challenges[]}}"}
-                  </code>
-                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    {"{{resume.accomplishments[]}}"}
-                  </code>
-                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    {"{{resume.total_years_experience}}"}{totalYearsExperience !== null ? `=${totalYearsExperience}` : ""}
-                  </code>
-                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    {"{{resume.positions[]}}"}
-                  </code>
+                <div className="text-[12px] text-white/80">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-white/60">Scalar:</span>
+                    <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
+                      {"{{resume.total_years_experience}}"}
+                      {totalYearsExperience !== null ? ` = ${totalYearsExperience}` : " = (unavailable)"}
+                    </code>
+                  </div>
+                </div>
+
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full border-collapse text-[11px]">
+                    <thead>
+                      <tr className="text-left text-white/70">
+                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-nowrap">
+                          {"{{resume.key_metrics[]}}"}
+                        </th>
+                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-nowrap">
+                          {"{{resume.business_challenges[]}}"}
+                        </th>
+                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-nowrap">
+                          {"{{resume.accomplishments[]}}"}
+                        </th>
+                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-nowrap">
+                          {"{{resume.positions[]}}"}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-white/80">
+                      {Array.from(
+                        {
+                          length: Math.max(
+                            extract.keyMetrics.length,
+                            extract.businessChallenges.length,
+                            extract.accomplishments.length,
+                            extract.positions.length
+                          ),
+                        },
+                        (_, i) => i
+                      ).map((i) => {
+                        const km = extract.keyMetrics[i];
+                        const bc = extract.businessChallenges[i];
+                        const ac = extract.accomplishments[i];
+                        const pos = extract.positions[i];
+
+                        const kmText = km
+                          ? [km.metric, km.value, km.context].filter(Boolean).join(" — ")
+                          : "";
+                        const posText = pos
+                          ? `${pos.title || ""}${pos.company ? ` @ ${pos.company}` : ""}${
+                              pos.startDate || pos.endDate || pos.current
+                                ? ` (${pos.startDate || ""} - ${pos.current ? "Present" : pos.endDate || ""})`
+                                : ""
+                            }${pos.description ? `: ${pos.description}` : ""}`
+                          : "";
+
+                        return (
+                          <tr key={i} className="align-top">
+                            <td className="border border-white/10 px-2 py-2 min-w-[220px]">
+                              {kmText || <span className="text-white/30">—</span>}
+                            </td>
+                            <td className="border border-white/10 px-2 py-2 min-w-[220px]">
+                              {bc || <span className="text-white/30">—</span>}
+                            </td>
+                            <td className="border border-white/10 px-2 py-2 min-w-[220px]">
+                              {ac || <span className="text-white/30">—</span>}
+                            </td>
+                            <td className="border border-white/10 px-2 py-2 min-w-[260px]">
+                              {posText || <span className="text-white/30">—</span>}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
                 {totalYearsExperience === null ? (
                   <div className="mt-2 text-[11px] text-white/50">
