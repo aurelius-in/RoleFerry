@@ -67,6 +67,8 @@ def _metric_from_line(s: str) -> KeyMetric:
     before = t[: m.start()].strip(" :-—")
     after = t[m.end() :].strip(" :-—")
     metric = before[:80] if before else t[:80]
+    # Common pattern: "... by 50%". Don't leave a dangling "by" in the metric field.
+    metric = re.sub(r"\bby\s*$", "", metric.strip(), flags=re.I).strip()
     ctx = after[:140] if after else ""
     return KeyMetric(metric=metric[:120], value=val[:40], context=ctx[:160])
 
