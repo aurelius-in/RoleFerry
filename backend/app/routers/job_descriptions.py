@@ -1211,6 +1211,27 @@ async def import_job_description(payload: JobImportRequest):
             keywords=["metric", "measured", "reliability", "deliver", "improve", "reduce", "increase", "impact"],
         )
 
+        # De-dupe across sections: avoid repeating the same paragraph/bullet in multiple columns.
+        # If there is overlap, keep it in Success Metrics (more appropriate for responsibilities-style lines).
+        try:
+            sm_set = {s.strip().lower() for s in success_metrics if s and s.strip()}
+            pain_points = [p for p in pain_points if (p or "").strip().lower() not in sm_set]
+            # Also de-dupe within each list while preserving order.
+            def _dedup(xs: List[str]) -> List[str]:
+                seen = set()
+                out: List[str] = []
+                for x in xs:
+                    k = (x or "").strip().lower()
+                    if not k or k in seen:
+                        continue
+                    seen.add(k)
+                    out.append((x or "").strip())
+                return out
+            pain_points = _dedup(pain_points)[:3]
+            success_metrics = _dedup(success_metrics)[:3]
+        except Exception:
+            pass
+
         # Salary is returned as its own field (salary_range) and should be displayed separately in the UI
         # (not mixed into Success Metrics).
 
