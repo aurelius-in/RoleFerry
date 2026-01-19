@@ -56,6 +56,29 @@ class JobImportRequest(BaseModel):
     text: Optional[str] = None
 
 
+def _should_retry_jd_llm(content: str, data: Dict[str, Any], *, title: str, company: str) -> bool:
+    """
+    Conservative second-pass trigger to avoid extra cost/latency unless clearly needed.
+    """
+    if not isinstance(data, dict) or not data:
+        return True
+    required_skills = data.get("required_skills") or []
+    pain_points = data.get("pain_points") or []
+    success_metrics = data.get("success_metrics") or []
+    # If model failed title/company extraction but we have plausible heuristics, retry.
+    if (not str(data.get("title") or "").strip() and title) or (not str(data.get("company") or "").strip() and company):
+        return True
+    # If JD is long but extraction is tiny/empty, retry.
+    if len((content or "").strip()) > 1200:
+        if not isinstance(required_skills, list) or len(required_skills) < 5:
+            return True
+        if not isinstance(pain_points, list) or len(pain_points) < 2:
+            return True
+        if not isinstance(success_metrics, list) or len(success_metrics) < 2:
+            return True
+    return False
+
+
 def _html_to_text(raw_html: str) -> str:
     """
     Very lightweight HTML-to-text. Good enough for job descriptions / listings.
@@ -1581,6 +1604,49 @@ async def import_job_description(payload: JobImportRequest):
                 content_str = str(msg.get("content") or "")
 
                 data = extract_json_from_text(content_str) or {}
+                # If the model output is missing key fields, do one targeted retry.
+                if _should_retry_jd_llm(content, data, title=title, company=company):
+                    try:
+                        retry_messages = [
+                            {
+                                "role": "system",
+                                "content": (
+                                    "You are RoleFerry's job description parser. Your previous output was incomplete.\n"
+                                    "Re-extract the job description into the REQUIRED JSON schema.\n\n"
+                                    "Hard requirements:\n"
+                                    "- Return ONLY a JSON object.\n"
+                                    "- Do NOT invent facts.\n"
+                                    "- Ignore job-board UI noise.\n"
+                                    "- Ensure required_skills lists concrete skills/tools/technologies (no fluff, no duplicates).\n\n"
+                                    "Schema:\n"
+                                    "{\n"
+                                    '  \"title\": \"\",\n'
+                                    '  \"company\": \"\",\n'
+                                    '  \"location\": \"\",\n'
+                                    '  \"work_mode\": \"remote|hybrid|onsite|unknown\",\n'
+                                    '  \"employment_type\": \"full-time|part-time|contract|internship|unknown\",\n'
+                                    '  \"salary_range\": \"Salary not provided|<as written>\",\n'
+                                    '  \"pain_points\": [\"\"],\n'
+                                    '  \"responsibilities\": [\"\"],\n'
+                                    '  \"requirements\": [\"\"],\n'
+                                    '  \"required_skills\": [\"\"],\n'
+                                    '  \"benefits\": [\"\"],\n'
+                                    '  \"success_metrics\": [\"\"],\n'
+                                    "}\n"
+                                    "IMPORTANT: success_metrics items must be complete sentences <= 35 words.\n"
+                                ),
+                            },
+                            {"role": "user", "content": content},
+                        ]
+                        raw2 = client.run_chat_completion(retry_messages, temperature=0.0, max_tokens=1400, stub_json={})
+                        choices2 = raw2.get("choices") or []
+                        msg2 = (choices2[0].get("message") if choices2 else {}) or {}
+                        content_str2 = str(msg2.get("content") or "")
+                        data2 = extract_json_from_text(content_str2) or {}
+                        if isinstance(data2, dict) and data2:
+                            data = data2
+                    except Exception:
+                        pass
                 if isinstance(data, dict) and data:
                     # Let GPT override title/company when provided
                     title = str(data.get("title") or title)

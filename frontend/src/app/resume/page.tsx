@@ -26,6 +26,14 @@ interface ResumeExtract {
     duration: string;
     role: string;
   }>;
+  education: Array<{
+    school: string;
+    degree: string;
+    field?: string;
+    startYear?: string;
+    endYear?: string;
+    notes?: string;
+  }>;
 }
 
 export default function ResumePage() {
@@ -164,6 +172,14 @@ export default function ResumePage() {
             company: t.company,
             duration: t.duration,
             role: t.role,
+          })),
+          education: (backendExtract.education || []).map((e: any) => ({
+            school: e.school,
+            degree: e.degree,
+            field: e.field,
+            startYear: e.start_year,
+            endYear: e.end_year,
+            notes: e.notes,
           })),
         };
 
@@ -441,8 +457,12 @@ export default function ResumePage() {
                       ) : (
                         <div>
                           <h4 className="font-semibold text-blue-900">{metric.metric}</h4>
-                          <p className="text-2xl font-bold text-blue-600">{metric.value}</p>
-                          <p className="text-sm text-blue-700">{metric.context}</p>
+                          {metric.value ? (
+                            <p className="text-2xl font-bold text-blue-600">{metric.value}</p>
+                          ) : (
+                            <p className="text-sm font-semibold text-blue-700">Qualitative outcome</p>
+                          )}
+                          {metric.context ? <p className="text-sm text-blue-700">{metric.context}</p> : null}
                         </div>
                       )}
                     </div>
@@ -535,6 +555,33 @@ export default function ResumePage() {
                 </div>
               </div>
 
+              {/* Education */}
+              <div>
+                <h3 className="text-xl font-semibold mb-4">Education</h3>
+                {extract.education.length === 0 ? (
+                  <div className="text-sm text-red-300 font-semibold">Missing details</div>
+                ) : null}
+                <div className="space-y-3">
+                  {extract.education.map((edu, index) => (
+                    <div key={index} className="border border-white/10 bg-black/20 rounded-lg p-4">
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="min-w-0">
+                          <div className="font-semibold text-white">
+                            {edu.degree}
+                            {edu.field ? `, ${edu.field}` : ""}
+                          </div>
+                          <div className="text-white/70">{edu.school}</div>
+                          {edu.notes ? <div className="mt-1 text-white/60 text-sm">{edu.notes}</div> : null}
+                        </div>
+                        <div className="text-sm text-white/60 whitespace-nowrap">
+                          {edu.startYear || edu.endYear ? `${edu.startYear || ""}${edu.startYear && edu.endYear ? " - " : ""}${edu.endYear || ""}` : ""}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="rounded-lg border border-white/10 bg-black/20 p-4">
                 <div className="text-sm font-bold text-white mb-2">Available Variables from this Step</div>
                 <div className="text-xs text-white/60 mb-3">
@@ -566,6 +613,9 @@ export default function ResumePage() {
                         <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-nowrap">
                           {"{{resume.positions[]}}"}
                         </th>
+                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-nowrap">
+                          {"{{resume.education[]}}"}
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="text-white/80">
@@ -575,7 +625,8 @@ export default function ResumePage() {
                             extract.keyMetrics.length,
                             extract.businessChallenges.length,
                             extract.accomplishments.length,
-                            extract.positions.length
+                            extract.positions.length,
+                            extract.education.length
                           ),
                         },
                         (_, i) => i
@@ -584,6 +635,7 @@ export default function ResumePage() {
                         const bc = extract.businessChallenges[i];
                         const ac = extract.accomplishments[i];
                         const pos = extract.positions[i];
+                        const edu = extract.education[i];
 
                         const kmText = km
                           ? [km.metric, km.value, km.context].filter(Boolean).join(" — ")
@@ -594,6 +646,11 @@ export default function ResumePage() {
                                 ? ` (${pos.startDate || ""} - ${pos.current ? "Present" : pos.endDate || ""})`
                                 : ""
                             }${pos.description ? `: ${pos.description}` : ""}`
+                          : "";
+                        const eduText = edu
+                          ? `${edu.degree || ""}${edu.field ? `, ${edu.field}` : ""}${edu.school ? ` @ ${edu.school}` : ""}${
+                              edu.startYear || edu.endYear ? ` (${edu.startYear || ""}${edu.startYear && edu.endYear ? " - " : ""}${edu.endYear || ""})` : ""
+                            }${edu.notes ? `: ${edu.notes}` : ""}`
                           : "";
 
                         return (
@@ -609,6 +666,9 @@ export default function ResumePage() {
                             </td>
                             <td className="border border-white/10 px-2 py-2 min-w-[260px]">
                               {posText || <span className="text-white/30">—</span>}
+                            </td>
+                            <td className="border border-white/10 px-2 py-2 min-w-[260px]">
+                              {eduText || <span className="text-white/30">—</span>}
                             </td>
                           </tr>
                         );
