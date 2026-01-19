@@ -70,6 +70,9 @@ def _html_to_text(raw_html: str) -> str:
     # Strip remaining tags
     s = re.sub(r"(?is)<[^>]+>", " ", s)
     s = html_lib.unescape(s)
+    # Some sites embed literal backslash-n sequences in text blobs (e.g., "\\nAbout...").
+    # Convert those to real newlines so we don't render "\n" in the UI and section parsing works.
+    s = s.replace("\\n", "\n")
     # Normalize whitespace
     s = s.replace("\r", "\n")
     s = re.sub(r"\n{3,}", "\n\n", s)
@@ -389,6 +392,11 @@ def _extract_salary_range(text: str) -> Optional[str]:
         r"(\$\s?\d{3,6}(?:,\d{3})?\s*[–\-]\s*\$\s?\d{3,6}(?:,\d{3})?\s*/\s*(?:year|yr))",
         r"(\b\d{2,3}(?:,\d{3})\s*[–\-]\s*\d{2,3}(?:,\d{3})\s*(?:usd)?\s*/\s*year\b)",
         r"(salary\s+range:\s*\$\s?\d[\d,]+.*?\$\s?\d[\d,]+)",
+        # USAJobs often formats as:
+        # Salary
+        # $99,325 to - $190,804 per year
+        r"(\$\s?\d[\d,]+\s*to\s*[-–—]?\s*\$\s?\d[\d,]+\s*per\s+year)",
+        r"(salary\s*\n\s*\$\s?\d[\d,]+\s*to\s*[-–—]?\s*\$\s?\d[\d,]+\s*per\s+year)",
     ]
     for pat in patterns:
         m = re.search(pat, s, flags=re.I)
@@ -426,6 +434,24 @@ def _extract_location_hint(text: str) -> Optional[str]:
         if low.startswith("remote") and "united states" in low:
             # "Remote (United States)"
             return "Remote (United States)"
+
+    # USAJobs-style "Location" block often appears later:
+    # Location
+    # 1 vacancy in the following location:
+    # New York, NY
+    for i, ln in enumerate(lines[:260]):
+        low = ln.lower().strip()
+        if low == "location":
+            for j in range(i + 1, min(len(lines), i + 10)):
+                cand = lines[j].strip()
+                if not cand:
+                    continue
+                if "vacancy" in cand.lower():
+                    continue
+                m_city = re.search(r"\b([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*,\s*[A-Z]{2})\b", cand)
+                if m_city and len(m_city.group(1)) <= 40:
+                    return m_city.group(1)
+            break
     return None
 
 
@@ -522,11 +548,33 @@ def _extract_explicit_skills_block(text: str) -> List[str]:
         low = ln.lower().strip()
         if not low:
             continue
-        if any(k in low for k in ["+ show more", "do you have experience", "job details", "full job description", "profile insights"]):
+        # Stop when we hit UI boundaries or the next section of the JD.
+        if any(k in low for k in [
+            "+ show more",
+            "do you have experience",
+            "job details",
+            "full job description",
+            "profile insights",
+            "about the job",
+            "about you",
+            "what you'll be doing",
+            "what you’ll be doing",
+            "requirements",
+            "benefits",
+            "our tech",
+            "about the company",
+        ]):
             break
         # short-ish skills, not paragraphs
         s = ln.strip("•-* ").strip()
         if len(s) < 3 or len(s) > 60:
+            continue
+        # Exclude obvious locations (e.g., "San Francisco, CA") from being treated as skills.
+        if re.search(r"\b[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*,\s*[A-Z]{2}\b", s):
+            continue
+        # Exclude role titles from explicit skills blocks.
+        if any(tok in low for tok in ["engineer", "developer", "architect", "manager", "director", "analyst", "designer"]):
+            # Allow specific tech tokens like "Engineering" aren't in our skill list anyway; keep conservative.
             continue
         # skip obvious UI-ish tokens
         if any(bad in low for bad in ["premium", "apply", "save", "clicked apply"]):
@@ -578,6 +626,23 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
     company = ""
 
     lines = [ln.strip() for ln in (content or "").splitlines() if ln.strip()]
+
+    # USAJobs summary pattern:
+    # "The U.S. Court of International Trade located in New York, New York is recruiting for the position of Programmer/Project Lead."
+    if lines:
+        blob = " ".join(lines[:40])
+        m = re.search(
+            r"\bThe\s+(.+?)\s+located\s+in\s+.+?\s+is\s+recruiting\s+for\s+the\s+position\s+of\s+(.+?)(?:\.\s|$)",
+            blob,
+            flags=re.I,
+        )
+        if m:
+            cand_company = (m.group(1) or "").strip().strip(",.;:-")
+            cand_title = (m.group(2) or "").strip().strip(",.;:-")
+            if cand_company and len(cand_company) <= 120 and cand_company.lower() not in {"the public"}:
+                company = cand_company[:120]
+            if cand_title and len(cand_title) <= 120:
+                title = cand_title[:120]
 
     def _looks_like_company_header_line(s: str) -> bool:
         cand = (s or "").strip()
@@ -649,6 +714,8 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
             return False
         # Avoid common section headers and obvious non-titles
         if any(low.startswith(h) for h in ["about us", "about the role", "benefits", "location", "requirements", "qualifications"]):
+            return False
+        if low in {"required documents", "how to apply", "summary", "this job is open to", "duties", "additional information"}:
             return False
         if any(bad in low for bad in ["grade this role", "add to job tracker", "business challenges", "required skills", "success metrics", "jd jargon"]):
             return False
@@ -776,6 +843,7 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
             "as",
             "today",
             "viewed",
+            "interview",
         }
 
         # Indeed-style / job-board header: company often appears as a standalone line near the top
@@ -793,6 +861,8 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                     continue
                 if low in _COMPANY_STOPWORDS:
                     continue
+                if low == "the interview":
+                    continue
                 if "linkedin" in low:
                     continue
                 # Job board UI / CTA noise that often appears near the top
@@ -801,6 +871,8 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 if low in {"apply", "save"}:
                     continue
                 if any(bad in low for bad in ["out of 5 stars", "profile insights", "job details", "full job description"]):
+                    continue
+                if low in {"required documents", "how to apply", "summary"}:
                     continue
                 # Skip obvious location/address/salary lines
                 if re.search(r"\$\s?\d", s) or re.search(r"\b\d{5}\b", s):
@@ -937,6 +1009,11 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
         if company and any(x in company.lower() for x in ["quick apply", "apply on employer site", "upload resume", "log in"]):
             company = ""
 
+    # If title includes " at {company}", strip it (we display company separately).
+    if title and company and company.lower() != "unknown":
+        title = re.sub(rf"\s+at\s+{re.escape(company)}\b.*$", "", title, flags=re.I).strip()
+        title = re.sub(r"\s{2,}", " ", title).strip()
+
     def _company_from_url(u: str) -> str:
         try:
             parsed = urlparse(u)
@@ -951,6 +1028,17 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 return segs[0]
             if "careers.smartrecruiters.com" in host and segs:
                 return segs[0]
+            if "ycombinator.com" in host and len(segs) >= 2:
+                # /companies/<company>/jobs/<job-id>
+                if segs[0].lower() == "companies":
+                    return segs[1]
+            if "remoteok.com" in host and segs:
+                # /remote-jobs/remote-...-<company>-<id>
+                # e.g. remote-staff-embedded-systems-engineer-inspiren-1129620
+                last = segs[-1]
+                m = re.search(r"-([a-z0-9][a-z0-9\\-]+)-\\d+$", last, flags=re.I)
+                if m:
+                    return m.group(1)
             if "myworkdayjobs.com" in host and segs:
                 # /en-US/COMPANY/job/... or /COMPANY/job/...
                 for s in segs:
@@ -1331,6 +1419,14 @@ async def import_job_description(payload: JobImportRequest):
             max_lines=10,
             stop_patterns=["what you will need", "what you will need:", "basic qualifications", "preferred qualifications", "what would be nice to have", "what we offer", "benefits", "about"],
         )
+        # USAJobs uses "Duties" instead of responsibilities. If we don't have responsibilities yet, try that.
+        if not responsibilities:
+            responsibilities = _extract_section_lines(
+                content,
+                ["duties"],
+                max_lines=10,
+                stop_patterns=["requirements", "qualifications", "education", "additional information", "benefits", "how to apply", "required documents", "overview"],
+            )
         requirements = _extract_section_lines(
             content,
             [
@@ -1350,6 +1446,7 @@ async def import_job_description(payload: JobImportRequest):
                 "we’d love you to bring",
                 "experience/skills required",
                 "an ideal candidate should have",
+                "the ideal candidate",
                 "ideal candidate should have",
                 "ideal candidate",
                 "bonus",
@@ -1363,7 +1460,7 @@ async def import_job_description(payload: JobImportRequest):
             content,
             ["benefits", "perks", "what we offer", "work/life balance", "mentorship", "career growth", "inclusive team culture", "diverse experiences"],
             max_lines=10,
-            stop_patterns=["about", "equal opportunity", "job id", "employment type", "posted", "client-provided", "all communication", "guidehouse will", "if you have visited"],
+            stop_patterns=["the ideal candidate", "ideal candidate", "requirements", "qualifications", "about", "equal opportunity", "job id", "employment type", "posted", "client-provided", "all communication", "guidehouse will", "if you have visited"],
         )
         # If there isn't an explicit benefits section, capture top-of-JD perk-like lines.
         # (Common in startup posts: "Remote 1st", "Equity", "Series A", etc.)

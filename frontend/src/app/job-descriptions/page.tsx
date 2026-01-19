@@ -723,12 +723,12 @@ export default function JobDescriptionsPage() {
                       </ul>
                     </div>
 
-                    {/* Required Skills */}
+                    {/* Salary + Required Skills */}
                     <div>
-                      <h4 className="font-semibold text-white mb-3">Required Skills</h4>
+                      <h4 className="font-semibold text-white mb-3">Salary</h4>
                       <div className="mb-3">
                         <div className="flex items-center justify-between gap-3">
-                          <div className="text-xs font-semibold text-white/70 mb-1">Salary</div>
+                          <div className="text-xs font-semibold text-white/70 mb-1">Range</div>
                           {editMeta?.id === jd.id && editMeta.field === "salaryRange" ? (
                             <div className="flex items-center gap-2">
                               <button
@@ -782,6 +782,8 @@ export default function JobDescriptionsPage() {
                           </div>
                         )}
                       </div>
+                      <div className="h-px w-full bg-white/10 my-3" />
+                      <h4 className="font-semibold text-white mb-3">Required Skills</h4>
                       <div className="flex flex-wrap gap-2">
                         {jd.requiredSkills.map((skill, index) => (
                           <span
