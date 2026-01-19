@@ -840,6 +840,7 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
             "as",
             "today",
             "viewed",
+            "interview",
         }
 
         # Indeed-style / job-board header: company often appears as a standalone line near the top
@@ -856,6 +857,8 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 if "company logo" in low:
                     continue
                 if low in _COMPANY_STOPWORDS:
+                    continue
+                if low == "the interview":
                     continue
                 if "linkedin" in low:
                     continue
@@ -1017,6 +1020,10 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 return segs[0]
             if "careers.smartrecruiters.com" in host and segs:
                 return segs[0]
+            if "ycombinator.com" in host and len(segs) >= 2:
+                # /companies/<company>/jobs/<job-id>
+                if segs[0].lower() == "companies":
+                    return segs[1]
             if "myworkdayjobs.com" in host and segs:
                 # /en-US/COMPANY/job/... or /COMPANY/job/...
                 for s in segs:
