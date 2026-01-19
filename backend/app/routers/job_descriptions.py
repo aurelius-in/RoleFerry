@@ -545,11 +545,33 @@ def _extract_explicit_skills_block(text: str) -> List[str]:
         low = ln.lower().strip()
         if not low:
             continue
-        if any(k in low for k in ["+ show more", "do you have experience", "job details", "full job description", "profile insights"]):
+        # Stop when we hit UI boundaries or the next section of the JD.
+        if any(k in low for k in [
+            "+ show more",
+            "do you have experience",
+            "job details",
+            "full job description",
+            "profile insights",
+            "about the job",
+            "about you",
+            "what you'll be doing",
+            "what you’ll be doing",
+            "requirements",
+            "benefits",
+            "our tech",
+            "about the company",
+        ]):
             break
         # short-ish skills, not paragraphs
         s = ln.strip("•-* ").strip()
         if len(s) < 3 or len(s) > 60:
+            continue
+        # Exclude obvious locations (e.g., "San Francisco, CA") from being treated as skills.
+        if re.search(r"\b[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*,\s*[A-Z]{2}\b", s):
+            continue
+        # Exclude role titles from explicit skills blocks.
+        if any(tok in low for tok in ["engineer", "developer", "architect", "manager", "director", "analyst", "designer"]):
+            # Allow specific tech tokens like "Engineering" aren't in our skill list anyway; keep conservative.
             continue
         # skip obvious UI-ish tokens
         if any(bad in low for bad in ["premium", "apply", "save", "clicked apply"]):
