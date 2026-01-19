@@ -389,6 +389,11 @@ def _extract_salary_range(text: str) -> Optional[str]:
         r"(\$\s?\d{3,6}(?:,\d{3})?\s*[–\-]\s*\$\s?\d{3,6}(?:,\d{3})?\s*/\s*(?:year|yr))",
         r"(\b\d{2,3}(?:,\d{3})\s*[–\-]\s*\d{2,3}(?:,\d{3})\s*(?:usd)?\s*/\s*year\b)",
         r"(salary\s+range:\s*\$\s?\d[\d,]+.*?\$\s?\d[\d,]+)",
+        # USAJobs often formats as:
+        # Salary
+        # $99,325 to - $190,804 per year
+        r"(\$\s?\d[\d,]+\s*to\s*[-–—]?\s*\$\s?\d[\d,]+\s*per\s+year)",
+        r"(salary\s*\n\s*\$\s?\d[\d,]+\s*to\s*[-–—]?\s*\$\s?\d[\d,]+\s*per\s+year)",
     ]
     for pat in patterns:
         m = re.search(pat, s, flags=re.I)
@@ -426,6 +431,24 @@ def _extract_location_hint(text: str) -> Optional[str]:
         if low.startswith("remote") and "united states" in low:
             # "Remote (United States)"
             return "Remote (United States)"
+
+    # USAJobs-style "Location" block often appears later:
+    # Location
+    # 1 vacancy in the following location:
+    # New York, NY
+    for i, ln in enumerate(lines[:260]):
+        low = ln.lower().strip()
+        if low == "location":
+            for j in range(i + 1, min(len(lines), i + 10)):
+                cand = lines[j].strip()
+                if not cand:
+                    continue
+                if "vacancy" in cand.lower():
+                    continue
+                m_city = re.search(r"\b([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*,\s*[A-Z]{2})\b", cand)
+                if m_city and len(m_city.group(1)) <= 40:
+                    return m_city.group(1)
+            break
     return None
 
 
@@ -579,6 +602,23 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
 
     lines = [ln.strip() for ln in (content or "").splitlines() if ln.strip()]
 
+    # USAJobs summary pattern:
+    # "The U.S. Court of International Trade located in New York, New York is recruiting for the position of Programmer/Project Lead."
+    if lines:
+        blob = " ".join(lines[:40])
+        m = re.search(
+            r"\bThe\s+(.+?)\s+located\s+in\s+.+?\s+is\s+recruiting\s+for\s+the\s+position\s+of\s+(.+?)(?:\.\s|$)",
+            blob,
+            flags=re.I,
+        )
+        if m:
+            cand_company = (m.group(1) or "").strip().strip(",.;:-")
+            cand_title = (m.group(2) or "").strip().strip(",.;:-")
+            if cand_company and len(cand_company) <= 120 and cand_company.lower() not in {"the public"}:
+                company = cand_company[:120]
+            if cand_title and len(cand_title) <= 120:
+                title = cand_title[:120]
+
     def _looks_like_company_header_line(s: str) -> bool:
         cand = (s or "").strip()
         if not cand:
@@ -649,6 +689,8 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
             return False
         # Avoid common section headers and obvious non-titles
         if any(low.startswith(h) for h in ["about us", "about the role", "benefits", "location", "requirements", "qualifications"]):
+            return False
+        if low in {"required documents", "how to apply", "summary", "this job is open to", "duties", "additional information"}:
             return False
         if any(bad in low for bad in ["grade this role", "add to job tracker", "business challenges", "required skills", "success metrics", "jd jargon"]):
             return False
@@ -801,6 +843,8 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 if low in {"apply", "save"}:
                     continue
                 if any(bad in low for bad in ["out of 5 stars", "profile insights", "job details", "full job description"]):
+                    continue
+                if low in {"required documents", "how to apply", "summary"}:
                     continue
                 # Skip obvious location/address/salary lines
                 if re.search(r"\$\s?\d", s) or re.search(r"\b\d{5}\b", s):
@@ -1331,6 +1375,14 @@ async def import_job_description(payload: JobImportRequest):
             max_lines=10,
             stop_patterns=["what you will need", "what you will need:", "basic qualifications", "preferred qualifications", "what would be nice to have", "what we offer", "benefits", "about"],
         )
+        # USAJobs uses "Duties" instead of responsibilities. If we don't have responsibilities yet, try that.
+        if not responsibilities:
+            responsibilities = _extract_section_lines(
+                content,
+                ["duties"],
+                max_lines=10,
+                stop_patterns=["requirements", "qualifications", "education", "additional information", "benefits", "how to apply", "required documents", "overview"],
+            )
         requirements = _extract_section_lines(
             content,
             [
