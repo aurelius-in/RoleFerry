@@ -834,20 +834,7 @@ export default function JobDescriptionsPage() {
                       ) : null}
                     </div>
 
-                    {/* JD Jargon */}
-                    {jd.jdJargon.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold text-white mb-3">JD Jargon</h4>
-                        <ul className="space-y-2">
-                          {jd.jdJargon.map((jargon, index) => (
-                            <li key={index} className="flex items-start space-x-2">
-                              <span className="text-purple-500 mt-1">•</span>
-                              <span className="text-sm text-white/70 italic">{jargon}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    {/* JD Jargon intentionally removed (low-signal for job seekers) */}
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-white/10">
