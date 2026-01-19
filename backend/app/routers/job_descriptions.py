@@ -70,6 +70,9 @@ def _html_to_text(raw_html: str) -> str:
     # Strip remaining tags
     s = re.sub(r"(?is)<[^>]+>", " ", s)
     s = html_lib.unescape(s)
+    # Some sites embed literal backslash-n sequences in text blobs (e.g., "\\nAbout...").
+    # Convert those to real newlines so we don't render "\n" in the UI and section parsing works.
+    s = s.replace("\\n", "\n")
     # Normalize whitespace
     s = s.replace("\r", "\n")
     s = re.sub(r"\n{3,}", "\n\n", s)
@@ -1006,6 +1009,11 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
         if company and any(x in company.lower() for x in ["quick apply", "apply on employer site", "upload resume", "log in"]):
             company = ""
 
+    # If title includes " at {company}", strip it (we display company separately).
+    if title and company and company.lower() != "unknown":
+        title = re.sub(rf"\s+at\s+{re.escape(company)}\b.*$", "", title, flags=re.I).strip()
+        title = re.sub(r"\s{2,}", " ", title).strip()
+
     def _company_from_url(u: str) -> str:
         try:
             parsed = urlparse(u)
@@ -1024,6 +1032,13 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 # /companies/<company>/jobs/<job-id>
                 if segs[0].lower() == "companies":
                     return segs[1]
+            if "remoteok.com" in host and segs:
+                # /remote-jobs/remote-...-<company>-<id>
+                # e.g. remote-staff-embedded-systems-engineer-inspiren-1129620
+                last = segs[-1]
+                m = re.search(r"-([a-z0-9][a-z0-9\\-]+)-\\d+$", last, flags=re.I)
+                if m:
+                    return m.group(1)
             if "myworkdayjobs.com" in host and segs:
                 # /en-US/COMPANY/job/... or /COMPANY/job/...
                 for s in segs:
