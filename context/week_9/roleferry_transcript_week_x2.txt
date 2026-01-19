@@ -1,0 +1,845 @@
+
+Roleferry Meeting
+Now is the Roleferry meeting, and we are going to be discussing Roleferry updates.
+And things that we want to make better.
+And this transcript will be used for fixing this app so that it is better and maybe we can make a useful app that people can use, to find jobs.
+In a difficult job market. So we’ll be discussing that.
+And that is the plan. And I’ll let John Dave know that I’m in the meeting.
+All righty then.
+Your call has been for.
+Just waiting for Dave to join.
+Boom.
+We’re going to pause here, wait for Dave.
+Oh, hi there. Hey, how are you? How are you doing, man? Doing good. Don’t need Miss Rita, I think.
+Rita, I think that’s right. Right away.
+No, I don’t need it. I’m trying to get rid of it. Hold on. Right away.
+I’m using my monitor, so how do I get rid of this? Can you hear me? Yeah, I can hear you. Can you hear me well? Yeah. Is this my Rita I came up?
+I don’t know who’s Rita. Let’s close it. I don’t want it in the meeting. We don’t need it. I’m transcribing a different way, so I don’t know why it just automatically joined the meeting, but hold on. Let me get rid of it here. All right. Let me figure it out. All right.
+What are you building in the background? You’re like a freaking nuclear war, like a nuclear warhead right now.
+Build a roll fairing, man. It’s high-tech stuff.
+Yeah. The ultimate job machine.
+We’re going to take off right now.
+This whole thing is the email construction methodology.
+Yeah. All right So go ahead.
+Take off bro.
+So yeah, I mean, I think we’re on a roll yesterday, man. We’re on a roll. Yeah, I apologize about that.
+My wife wanted to be supportive to her mom, so she’s like,
+“Stop what you’re doing. We’re going to the hospital.” So we had to so my wife’s uncle died yesterday, 4:00 AM in the morning this morning.
+So he had schizophrenia, and he was kind of a difficult to deal with. But I guess there’s going to be funerals this week, so anyways, I wasn’t close with him. I never knew him when he’s like a normal person, only when he was like acting out and being kind of rude. Not his fault, of course.
+But I didn’t really get close to him because I only knew him as like a severely mentally ill person. So I didn’t affect him emotionally other than my wife is upset and my sweet daughters are crying for some reason. I guess they had some tender moments with him. But yeah,
+that’s what that was Anyways, moving on Can we share? Let’s see. Sharing
+your screen or either way. I mean, I have both open. So we were doing the side-by-side yesterday. Did you see the changes I made yet?
+No. There’s your—yeah. Why don’t you share your screen? Yeah, sure. All right. Let me go to home. Okay. Now I’m starting from the dashboard here, and I’ll share.
+Let’s see.
+All right Cool. Can you see me now? Okay. You got the bubble. Yeah. I see it. Okay. So I logged in. No problem there. Logs me right in. It’s got all the previous selections. If the bottom here, it’s not going to generate job boards anymore, right?
+It’s just going to save and continue. I can clear this cache, and I can—what are you talking about using a personality thing we were talking about? Yeah. It didn’t implement that. But we can do that. So let’s talk a little bit about how we want the personality test to be and where we want it to be. And then we’ll do that. But yeah. That’d be good.
+Anyways, let me grab one of these resumes. Probably do my resume. I’ve got my resume version and I’ve got my enhanced fee version. It’s a little better. So we’ll do that. Let it parse. It pretty much instantaneous. It’s real fast. It’s good.
+And then at the bottom is you can see we have the available variables now.
+Okay. So we can save and continue. And then here on the next screen, we have the job descriptions. So we have general job boards, we have startups and remote job boards, and we have the company ATS board.
+That’s how you decided to do it I think that’s good. General job boards, LinkedIn job,
+Google built-in, startup remote, well-found,
+or just startup remote. Okay. Welcome to the jungle, formerly OTA. Yeah. What did you also put in some other ones like? Yeah. Give me some more.
+That’s how you use for these job, right? Job breaks really good. So how do you spell that?
+Is it bright like B-R-I-D-H-T or job right like R-I-T? W-R-I-T or job R-I-D-H-T?
+So you don’t use—it’s really like job right, job right, like two words, job right. With R-I-T-E like the casual spelling or like? R-I-G-H. Okay. So like the right job. Okay. So J-O-B-R-I-G-H-T, job right. Okay. So we’ll add that job board to the job description screen. R-I-G-H-T. Yeah. And then it’s dot AI. Oh, so it’s job R-I-G-H-T dot AI.
+Yeah. Okay.
+Cool.
+So you got that. Well-found is good. Built-in is good.
+Do we even want to put in a simplified jobs? Sure. Why not? Maybe somebody likes that one.
+How do you spell it S-I-M-P-L-I-F-Y dot jobs. Okay. Simplify dot jobs.
+Yeah. Okay.
+All right So we can also just ask AI to add some more job boards.
+Right now I just plugged those in. It can scrub and find some more for us. We don’t have to do our own research there. So maybe we can just say, “Add maybe three more general job boards, three more startups and remote job boards, and three more company ATS job boards.” Just fill it out a little bit more.
+Unless you have some more. I mean, I know you’re the expert on this. So if you have more that you would like to add,
+let me know Yeah. I’m curious about protecting some of this, though.
+Yeah. We can do that Okay. We’ll lock it up. So you got to log in. Yeah. So you log in. Yeah. I think that makes sense because a lot of the stuff we’re working on, it is intellectual property. Okay.
+All right. So I’ll leave an instruction for the AI to make it so they can’t log in without their login credentials.
+Yeah. It’s not a problem. You said you were able to go around just by putting the URL?
+Yeah. I mean, I feel like it makes sense to do that. Yeah. Yeah. No, it does. So we’ll just say if they try to access any of the pages with just the URL and not logging in, then it will
+take them to the login page, and they’ll be forced to log in before accessing anything. That’s an easy fix. No problem.
+Okay. Yeah. I think it makes sense to really do that. No, you’re right.
+It’s one of those things I’m a little too casual about. Most people would be a little more careful than me. I’m not super worried about security stuff because I’ve never had to deal with it, but it’s probably just me being childish.
+Yeah. But I mean, it’s good That’s why we’re two people thinking about these things. It’s not my strongest area, security is kind of my weakest area.
+And I grew up in a town where nobody locks their doors.
+Never had to deal with the criminals. I know we’re dealing with the whole world full of criminals, so we probably should be careful. Yeah. People are trying to steal the shit, I think. Yeah.
+Well, yeah. Okay. So I think we added those job boards. I think those job boards are good.
+So we go ahead and click one of them and see what happens. So do you want me to click one of the ones up here? Yeah. See what happens. Never been to lever jobs before. Let’s see what that’s about. I don’t know what that is. So lever.co. And then let’s see. I don’t even see.
+Yeah. I don’t even know Is this even a good one?
+I don’t even know where. I don’t really want to get a demo. I want to find jobs.
+Yeah. Okay. It’s resources, hiring, and recruiting resources.
+Yeah. We just come from, bro. Browse a topic. And automation.
+You can’t even find jobs. Okay. So I’m going to make a note here.
+The levered jobs—wait, this is if your company size—oh, I see what this is. If you’re on a company careers site, look for the ATS hosted listings. So these are levered jobs. It’s a company that finds jobs. It’s different than just a job board. Yeah. I don’t think we want that. So we just want job boards.
+Yeah. Take that out It’s going to be company-specific. Yeah. Yeah.
+Okay. So we don’t need levered jobs. Link on there. We can remove that from the job descriptions. But let’s try another. Kind of curious what greenhouse boards is.
+Greenhouse is another—these are all ATS platforms that a company uses to host their job. Gotcha. Okay. So remove the whole company ATS board section. We don’t want that. We want the general job boards, the startups and remote job boards, and maybe technical job boards. Okay. Cool. Yeah. Because I think that we’ll probably have a disproportionate number of app users that are techie.
+Yeah. So yeah, we’ll have those three categories. Probably just do three columns because these are not taking up much room here. So we’ll do three column, three cards, side by side, general job boards, startups and remote job boards, and tech job boards. Three columns. Then we need maybe seven or eight in each. Yeah. If that many exist. Your attention be in the tech job boards. Okay. Same with Google jobs, probably Indeed.
+Okay.
+Probably in the general dice would be in the technical. Okay. Dice.
+Dice.com will be in the technical.
+My website.
+Fucking shit.
+Dude,
+I have a question for you here, right? So you want to share? I’ve bought an SSL certificate. My website. But it hasn’t uploaded for some reason.
+Do you know where that is I mean, I don’t know why your SSL certificate isn’t uploading now. But I mean,
+I could help you troubleshoot it Maybe after this.
+It’s really annoying.
+Because I just bought an SSL certificate, but now I don’t know how to install it. Okay.
+I could try to help you with that after the welfare thing.
+What website are you trying to access your personal one? I’m just trying to access my own website.
+Anyway Is there only something with these websites? Only something. Yeah.
+Yeah. That’s the thing about technology. It’s complicated. So there’s always a million different ways to get snagged. Once you get all the snags worked out, it’s like, makes your life way faster and way better. But
+there’s a million snags along the way that kind of slow you down before they can speed you up. That’s the hard part. The nice thing about AI is it’s one of the few technologies when you implemented it. There’s fewer snags, and there’s a lot of—there’s way more ways it’s helping you than slowing you down. So that’s nice. But before AI, it was like every little tool you build is like tons of work to get it to work right. And then do you remember having to wait for a computer to turn on and then wait for the app to load and all the slow computers from the early days? And it’s like, yeah, once you get the computer running, it makes your life more efficient. But you got to add two hours to your workday just to deal with the damn thing. And so yeah, technology is finally getting to the point where it’s worth it. I mean, it’s always been worth it, but definitely a lot of headaches.
+And well, I can’t access my own website. Right now. So I can’t access the section where I talked about job boards. That’s fine. You send me an email or whatever. We can move on to something else. Let’s go ahead and try one of these. So we’re going to try built-in now. Let’s see what happens. Okay. Cool. Actually, I see some job boards here.
+And I can type in a keyword like—I don’t know. I guess I’m interested in AI architects. That’s—they changed my job title to see what is it. Software architect two, which is better for my resume because it’s more technical and that’s cool. So I’m no longer a solutions architect because I asked GPT. I was like, “Is this a good thing?” And they’re like, “Yeah, because solutions architect is sort of general and it doesn’t scream technology. It’s kind of customer-facing.” So it’s good to kind of bolster your software architecture.
+Seniority with that So anyways, I’ll do it just for this purpose of getting your app to work. So I’ve got this whole job description. Built-in is a good one. So far from what I’m seeing. And so we’ll copy—I’m not sure what just happened. Okay. Anyways, I’m trying to copy and paste this thing.
+You’re going to get the—you’re going to get a whole bunch of shit in there though. Yeah. That’s fine. It’s supposed to be filtering the shit we don’t want.
+And then if it doesn’t, we need to teach it too. So we got paste text.
+Okay. Import parsing.
+And then let’s see what happens. There it is.
+What I’m curious is I like to compare how it comes out when I take the URL and I do the same website and see how similar—notice there’s always differences, but let’s take a look. Okay.
+It’s a lot better.
+Well, this is a weird heading. Which one was which? Do you remember?
+Yeah. A solutions as a solutions architect was the paste text. Okay. And then the URL gives it this weird ass title.
+No, no, no. Opposite way. Oh, okay. So the URL is the better one with this up here? Yeah. Yeah. Well, that’s kind of encouraging. I want the URL to work because nobody wants to drag and drop text. That’s a pain.
+It’s fine if that’s your only option, but it’s much better to put a URL. It’s much more efficient. So cool.
+And then so I’ll leave the better one. I’ll delete this. And then we’ll go to another job here. Let’s find Capital One. What’s that? Try a different job board too. Yeah, you’re right. You’re helping me get out of here then. All right. So we’ve got going up. Well-found is a good one.
+Yeah.
+Okay. And then we got a job title. Let’s just say artificial intelligence engineer. We’ve got remote. I’m going to do a search.
+Oops. I’m not sure what that’s about, but I guess they didn’t have anything under those categories.
+Let’s try engineering manager, remote, based on how a lot of remote work these days or what? I’m not sure what’s going on with this. That’s so strange.
+Let’s try something that they definitely have and put a location where they definitely have one.
+Yeah. It just didn’t have anything for remote for this thing. I guess. That’s so crazy. That’s such a remote career. I don’t understand that. I don’t remember them moving away from it. I don’t know. Maybe there’s a bug. So we’ve got software engineer.
+It’s not really my pay grade, but we’re just testing the app right now.
+So we’ll just copy and paste all this crap. And put it in here.
+Under paste text.
+Like I said, I like to compare the URL. So first of all, let me get a good look. So okay, so software engineer at Anvil. It got the company name right. Okay, not bad.
+And the next thing is I’m going to use the URL and see if I still get it.
+Boom.
+Oh, import failed. I didn’t like that URL.
+What’s it not like I don’t know. It’s saying import failed API post.
+Failed to fetch URL content. No HTML returned. Okay.
+Fair enough It’s a site not made with HTML. How does that happen? I mean, there’s PHP sites and stuff. I don’t know.
+I mean, I know it doesn’t work all the time. Sorry Full stack engineer.
+It’s always given both options. Sometimes URL works better. Sometimes you got to drag some text. I mean, it’s not that inconvenient.
+Not a perfect solution, but it’s fine. Okay. And then full stack in Boston. There’s pay grades kind of low, but it’s company names coming in. Which is good. Oh, Boston? Is it the name of the company?
+I don’t know Is that good? I don’t think it is. It might be kind of a funny company name.
+I don’t know Looks like the name of the company is Harmony. All right. So it’s getting the company name wrong. For example, when I—this is for the transcript. So I copied a job from Harmony from the well-found.com site, and I copied everything from the screen, and it put Boston as the job company instead of the company name, which was Harmony.
+So that means sometimes it’s scraping wrong and putting things in the wrong place. So we want to make sure that when it puts the company name in there, it actually puts the company name in there. It doesn’t put something else.
+Okay. So I’ve got enough here. I added drop tracker. This wasn’t working before. Let me see if it’s actually doing that.
+All right And I can go to tracker.
+Yeah. Wait. Is it right here Oh, it did. Okay. So saved, applied. Cool. It’s actually—that’s working. Okay. Cool. Show insights and analytics. That part’s working. It says total applicants. Total applications. Where is it grading? I’m sorry. What?
+The grading.
+The positions.
+Easy interview ideal stretch, the grading.
+Yeah. I don’t know. What should it have? Tell the AI what it should have. So go back to the UI, UX. Wireframes. Oh, the wireframes? Okay. Yeah. You look at the job tracker. Well, I should say, well, yeah, you could look at it two places. The job tracker has high, medium,
+low But in the job description section, if you put a particular job in there, we can sort it by grade. Got it.
+So we want to—so there should be a gap grade, a gap match, or what would it be? There’s gaps. How does the—no. It wouldn’t be gap. Gap analysis score and match analysis score, right? Because we want it—no. This is something I want people to self-report if they like this. Oh, okay. So rate. So it’d be stars.
+It’d be a self-reported rating. Do they believe this is a structural? Do they believe this is a job that’s very easy for them to get a job at because it’s very hard to do previously? Or is this an ideal which is a little more than a stretch but is really what they want? So okay. What do you think about this? Good idea or bad? So the word rate is at the bottom corner of one of each of these little jobs here on the job tracker screen that you drag around? So the word rate and then there’s a little stars that you can click on like when you’re on Amazon and you want to rate something. And it’s got up to five and they can give it a rating. So each time a job comes in, they can give it a little rating. And then it can be sorting by those ratings. So whenever they rate it and they rate it a five-star, it’ll move that job to the top of their applied list.
+Okay. We get three stars instead of five?
+I mean, we could of course, but it’s kind of—everybody knows what five stars is.
+And everybody knows that categories. Huh?
+The thing is there’s only three categories. There’s easy to interview, a stretch, and ideal. Okay. Then we shouldn’t use stars. We should use something else. So the rating. So it’s got to make sense. At first glance, right? So what are they rating? You say they’re rating the difficulty or? They’re rating their self-reported fit. That’s a self-reported fit. What does Netflix have? Netflix has a little thing. That you put next to a show that you liked?
+Right So I’m trying to think of what do they use that makes sense to everybody. Is everybody watches Netflix, right? Or has?
+Yeah. I mean, if you just go to the UI/UX, you put a low, medium, and high. Yeah. The low, medium, and high. But what does it mean?
+Well, in that sense, then it should be what we did. I’m not sure why it didn’t show. I just think it would be nice to know what it means. I need to know. I don’t even know what it means. So the user wouldn’t, unless we tell them. What does high referring to? Is it high what? Yeah. I don’t like high, honestly. Yeah. So what do we put in what does it mean? What are we trying to communicate with this rating thing at the bottom?
+I guess I can show you the document I use. This is a document I use. Sure. Go ahead. Share.
+In my career coaching kind of practice. Okay.
+So okay. I’m going to share—hold on.
+Gmail. This is what I use all the time.
+And let me know when you’re sharing.
+Yeah. I’m trying to pull up.
+Let’s see.
+It’s your best positions. That’s what it is.
+So you have your easiest interview. Sharon.
+Remember that was the thing we did? Mm-hmm.
+And you have your stretch position. So if you spell Shura.
+Yeah. Exactly. Yeah. Because we thought it was Shu. Yeah.
+And yeah. So you have your easiest interview position, which is the skills you’re doing now. It should be a Shu in. It should be they’re reporting the person is reporting that this should be the position that I would get an interview at. No issue. And it’s a Shu in. And the second one is they’re reporting. So it’s a difficulty rating. So it’s not a quality rating. It’s a difficulty. So we want difficult, easy, medium.
+Okay. No hard. Hard is difficult. Hard. Sure.
+So hard is fine. So we’ll do hard because it’s shorter and easier to fit in a thing. And so we’ll do hard. Easy. And
+mid.
+Easy, medium, and hard.
+Yeah. I think so. Yeah. Because the words—video game. Yeah. Like a video game. And it kind of is kind of a game. It’s a process where you’re trying to accomplish a thing. And then things that you’re trying to accomplish have difficulties.
+Yeah. I think easy, medium, hard says the whole story. And you don’t need to add an extra word in there to say what they’re doing. That’s probably better. Because if you say high, medium, low, what the hell is that? Nobody knows.
+So easy, medium, hard is like, “Oh, yeah. I think I know what that means.” It means how hard is this job to get.
+Yeah. Okay.
+Yeah. And I want it to be self-reported. Yeah. And then when you roll over the little difficulty button or whatever, it’ll have a little pop-out that says how what is the difficulty that you expect when looking for when applying for this job? How what is the what is your imagined or expected difficulty? For her getting this job. Because some jobs are harder to get than others.
+Psychologically, this is very important piece too. Because we want to elicit or extract from them what they believe self-reported is easy, medium, and hard. And then we can compare it to, “Okay. What is it really?” Is it actually that hard? You know what I mean? Because we want to get you want to get their response first. And what they believe is easy, medium, and hard. Yeah. Then we can say, “Okay. That’s here’s the actual gap.” Or, “Here’s what I actually think.” If someone knew because there’s a lot of psychology that goes involved in this.
+Someone’s an animator. Let’s say they’re an animator. And they’re been doing animation for a number of years on video games and such. And then they’re like, “I want to work for Nintendo. I want to work for Nintendo as being one of their lead animators.” It’s like, “Okay. I hear you. But it’s not going to happen.” That’s I want them to say first, “This is what I think should be good.” And then to readjust their opinion to be like, “Well, these are the actual people that are getting the lead animator role for the newest Nintendo Mario game.” You know what I mean? Yeah.
+So there’s that aspect of things. That’s what I learned in career coaching a lot too. A lot of people just be like, “I want the best thing that can ever happen.” Like, “Okay. Good. Thank you for sharing.” But it also helps them assess if they’re getting these interviews at these hard-to-get jobs using our app. It tells them like, “Oh, this shit works good.” And if they’re only getting the easy jobs, it’s like, “Did I even need this app?” So yeah. Okay.
+Okay. Cool. So there’ll be a little button that says difficulty. But it’s grayed out. And then they have to click on it. And then there’ll be a little pop-out that says how difficult do you think this job will be to get, compared to the jobs. We’ll have AI word it a little better than what I just said. And then they can select from a drop-down or a toggle. Maybe they click it and it changes each time they click it. Instead of a drop-down, it could be toggle to hard, toggle to easy. And they just keep clicking it until it’s makes sense. And then they can that will be the rating for that job. And then there you go. That’s doable. Okay. We got another option. Oh, yeah. Cool. Let me share.
+Yeah. I mean, I can also do it on once you do it on your end, then I can try it on my end to see if it works on both sides. Do what? Oh, my end.
+It should work the same. But I’m saying when I log into Roll Ferry.
+Already logged into Roll Ferry. So let me log in, right?
+Yeah. What I’m saying, it should work just as well when you do it than when I do it.
+I agree. But I’m not sure what you’re asking me to do. Are you saying I should share? Or do you want to share and log in?
+I can log in I can just log in to see if it’s going to be the same thing. Just to do what you just did. Yeah. You want to share while you do that? Yeah. Yeah. I’ll share. Yeah.
+So yeah. We can if you want, we could try to get through all the screens today. And then we got the transcription to help us keep track of what we talk about. And implement everything. So all righty. I see your—what is this? There you go.
+There’s the app Trying my password here.
+I don’t see your screen.
+Can you see it Yeah. I guess you shared just the window, maybe. Oh. Where are we going? Now I see it.
+Are you having trouble logging in Maybe you got the password wrong. Yeah. I think I got the password wrong.
+All right. I think I want to change that error message because it looks a little like too technical. So make a more human-friendly error message if they have trouble with their username or password. It shouldn’t have brackets and code-looking stuff, API post, and that kind of stuff. It should say in a human-readable sentence like,
+“Password or email is not correct.” And instead of API post, curly bracket, this and that.
+Nobody wants to see that It doesn’t look professional.
+All right I’m just for the transcripts.
+Yeah.
+All right I’m going to click I have like 30 resumes of users to make sure it gets all the different sections filled out. It works pretty well with all of them.
+But we should keep testing and try to find more examples of it not doing good because we want our customers to have a good—I noticed there’s no skills there.
+But are you missing skills in your resume?
+Let me see here which one I put in there. I think I have skills in it. Yeah?
+This one. Send me your resume. And I’ll—or is that the one you emailed me already? It’s got skills.
+All right Is that the email? Is that the resume you already sent me?
+I can send you the resume I sent you. I just put it in actually. Yeah. Send me that. And then I’ll tell AI to look at it and figure out how to find the skills on there. So our customers don’t deal with—they’re not finding skills.
+When there are skills listed.
+Check out this skills. In this resume.
+There you go.
+Yeah. We’re going to have to keep running resumes through it until we stop finding resumes that have missing sections. Well, they shouldn’t be.
+Yeah. I told it to say instead of error or just leaving it blank, to say if there’s details missing. So there are going to be—there are going to be resumes that are just not very complete. And that’s okay. We’ll just let them know there’s details missing. But we don’t want it to say that if there’s a whole skill section and there’s a bunch of skills listed.
+Yeah.
+Yeah.
+Yeah. I found it before, but now I can’t find it here. This is crazy.
+So I’m going to use this. Right here.
+All right That is sent. All right. Now we’re at Roll Ferry.
+Sent to email This is what’s coming up. Work experience innovative. Full-cycle end-to-end.
+This is the work experience.
+It’s not an accurate representation of what the work experience is.
+Okay.
+So it’s not doing a very good job with your resume in general?
+Yeah. It’s not doing a good job with parsing out the work experience section.
+Key metrics doesn’t look bad. I don’t understand this 5% in purple.
+I don’t understand this 100% in purple.
+Why are these percentages coming out of nowhere from? Let me see if I can fix this right now. This might be a quick fix.
+You keep looking for stuff that it’s not finding and keep talking about it. And then it’ll be in the transcript, and we can make sure that everything gets addressed.
+Make sense At least we got the variable variables.
+Sometimes fast available variables.
+So yeah. You said that yesterday. It’s really difficult.
+This is funny. This is something I just saw on LinkedIn.
+It says, “Who are we? CEOs. What do we want? AI. What do we want AI to do? We have no idea.” When do we want it? Right now.
+Yeah. I’ve experienced that in my various—it opt-in, they were like that. They were not clear on what they wanted done.
+They just knew that they wanted AI. And I’m like, “Okay.
+Sure.” Why not?
+That’s funny because it’s so accurate.
+Hey, keep looking at the output from your resume so it addresses everything the first go.
+All right Let’s do that.
+The available variables.
+They’re not in the brackets. I don’t know if that makes a difference, but I would think it does.
+The brackets, the two brackets on each side, it’s usually two brackets on each side and then resume, key metrics, two brackets on each side, resume, business challenges.
+Right now it just has—it doesn’t even have the right type of bracket. From what I understand. All right. Can you quickly list all the issues that you see with your resume parsing? And I’ll pop it into the AI, and we’ll see.
+Yeah. I mean, you can just see my screen. Yeah. But I’m on a different screen. I’m trying to feed the AI what it needs. Just tell me real quick. It’s also going to look at our transcript.
+I’ll also screenshot your screen. Hold on.
+Just right over here. On the vertical. Yeah. The available variables. But that’s a different thing. But sure. Let me go to—okay.
+All right And then explain the issue with the available variables so that we can address it.
+Yeah.
+Oh, it’s exactly the same way there. That’s why I made a mistake. That makes sense.
+So simply put, the way that I typically write variables in when I’m writing them out is what that particular type of bracket and there’s two on each side.
+I don’t know if—I don’t think this is the right format of this thing that I’m saying.
+Can you scroll up to the 100% purple thing? Oh, the purple thing? Yeah. Yeah. I don’t understand this either.
+Maintain the 100% transparency. Why is that purple?
+Okay.
+Called and screened over 300 tests monthly. Leveraging 35%.
+Can you be clear about how it should be better so that the AI can have some constructive criticism to work with?
+Versus just expressing that it’s not right because it needs to know. I’m having trouble finding the words so.
+So first of all I think for the key metrics of it, it should write two sentences 17 to 25 words.
+I know that in writing,
+in using clay and everything, I know it’s not like it needs very, very specific guidance. So the guidance I’m going to give is for each key metric, output only two sentences 17 to 25 words.
+And not use percentages and purple color.
+Just output only the metric that relates directly to the statement above. All right.
+So for example,
+if the statement is, let’s say,
+“Cold called and screened over 300 candidates monthly,
+“ that’s the two sentences that are 17 to 25 words. The key metric under that would be 35% faster time to fill for hard-to-source roles.
+So you have a statement and then a metric that follows the statement. Great. All right. So I’m going to go ahead and feed it what you just said.
+And have a look at your resume. And see what it can do.
+So if the statement is managed 40 open positions and the metric is filled 5 positions a month,
+okay, I’m going to work for a minute.
+Something I didn’t feel like this might be a quick fix, so we should just go ahead and do that and see if we can get that to parse better. Because I’ve already spent a lot of time trying to get these resumes to parse well, so. I want to be able to put a check on this box and I should at least parse yours well. I mean, your co-founder of this thing, so. I can’t even parse yours right. That seems like a fail. I want to make sure we can get past this one.
+Yeah. So that’s the key metrics. This is challenges is good, actually. Seems like the key metrics is the one that is a little bit faulty.
+Okay.
+And you’re summary notable accomplishments shouldn’t have the dates of tenure.
+All right Notable accomplishments shouldn’t have the dates.
+All right.
+I’m just working experience section and I’m not I don’t know what it’s doing. It looks like it’s adding any value. Yeah, it’s supposed to actually list jobs.
+Yeah.
+Yeah, so that’s that.
+Jobs looks better. Website to find job descriptions. That’s much better than they can copy and paste it. I’m going to copy and paste some jobs myself and see how that’s working. Okay, yeah, go ahead.
+While I’m doing this, I’m fixing your resume parsing so you can try it again and see if you can get it to parse better.
+Because that’s pretty bad. If there’s skills and it’s not finding them and then your job history is not showing up properly, that’s not a good thing.
+It needs to we need to be able to work with different types of resumes, especially at least the very least the ones that we are already used for ourselves.
+Yeah, especially if I’m doing resume writing or something. Should be able to parse the resumes that I get back as I use a particular format.
+It should be able to it should be able to parse just about everybody’s resume unless they’re just missing a lot of stuff.
+Yeah.
+When this call time limit ends, do you want to jump into our the call that we have scheduled for later, but in early, like now?
+Makes sense Yeah, maybe use the same link. I think we can’t use this link again. No? I’m not sure. I’m not sure how it works, but it’s just telling me the time is going to run out. So I’m guessing that this meeting has the free tier of this Skype or whatever we’re using here, Google Meet. It’s not going to let us log back in and use this anymore. I don’t know. Maybe it will. But the easier way, since we already have a meeting scheduled for later, we’ll just jump into it early, like right now, and then continue our meeting in there. That’s cool.
+Copy first Pretty cool.
+Maybe built-in is made for HTML. I’m not really sure. Why built-in works so well.
+Yeah, I don’t know But that’s to be expected. There’s going to be some sites that work better. And that’s just why I have the I would have removed the URL thing if it never worked because sometimes it works beautifully. So I left it there. And then other times, paste text works better. So I just figured leave both and it’s like a minor hiccup that people can deal with.
+I mean, we’re making their job easier even if they have to scrape a few websites.
+It’s not nothing that’s going to piss them off too badly. They’re going to be like, “Ah, screw this up.” I can’t drag my cursor across the screen and click copy and yeah, the main functionality is really the ability to apply to a job through an email instead of through a job board.
+It’s a pretty easy way.
+Yeah, I stopped applying for jobs for sure. I haven’t filled out an application. The whole last time, I got the current job I have. I didn’t fill out a single application.
+Until I’d already been hired. And then they said, “Go ahead and fill out the application.” And then I filled it out. It’s like it’s just part of our process in order for you to get hired. You have to fill it out. But I’ve already gone through all the screening and they’d already written me an offer letter. And then they’re like, “Okay, to make it official, you have to apply.” And then I applied. But yeah. Filling out a ton of applications on LinkedIn did absolutely nothing for me. I got back some shitty emails like a few half-assed interviews, like a 100%. I got a lot of promises from a lot of recruiters, man. That’s fucking people. They’re so bullshit.
+So many calls from so many people making me promises that I never heard from again.
+I’m like, “I have a strong resume. If you can’t find me a single interview, then you are not a talented recruiter.” And you shouldn’t be calling everybody up, making all these promises. Like, “What do you want from me?” Love a recruiter. And I don’t know what the Indian folks are taking off the top, but they’ve got to be taking something because there’s a couple of jobs where I got the same job recruiter offer or whatever. From the same job role and everything. But the Indians were offering me like $20,000 less a year.
+And I’m like, “I don’t
+I’m not accepting any roles for that low.” So it was more than 20 sometimes. It was like $30,000 less a year. I’m like, “Yeah, I’m not.” I think I saw that same role for like $30,000 more a year. Like, “Why are you even?” Yeah, it turns out they get you the job and they keep $30,000 a year of your money.
+Yeah, the Indians really got some shitty shit going on. Yeah. I mean, I don’t want to generalize, but yeah.
+Don’t you have enough people in their country? They got like billions of people, can’t they harass them? Why do they got to call me in my country and harass me?
+You know what I’m saying I got to harass me. Harass. You got enough suckers over there, man. Why do you got to call me up?
+For all your own people, man. Yeah.
+Yeah, they can understand you better than I can.
+They got sex and I can’t hear I can’t understand half of what you’re saying to me.
+Yeah, they got sex and some of them do.
+Yeah.
+Yeah, find your company.
+Okay.
+The company name is literally I can’t find your company. Nice. That’s a good name for a company, which I want to name my company then.
+What am I?
+Who What’s your name and company? I can’t find your company. What is the name? I can’t find it.
+Dave March, president of Confused Corp.
+Okay, so I tried built-in and all right.
+It’s working better paste test. Okay.
+Is there an edit field there, by the way?
+When you go down There should be an edit field under company name so they can type it in if that’s the situation. Yeah, especially since it’s fucking it up so often.
+Okay, so let’s go to I’m going to create your roles over here, by the way. Oh, yeah, yeah.
+Yeah, but it’s not a specific about difficulty. The dropdown is not working?
+But it has something. Oh, we have that already. Okay, ideal future position. Yeah, but these are two different things. We’re talking about two different metrics, right? Ideal future position and shoe in, it could be both of those things at the same time. Those aren’t mutually exclusive, so that doesn’t work. Shoe in refers to how easy it is to get it. Stretch is kind of good, right? Stretch tells you that it’s like kind of hard to get, right?
+Yeah. So maybe instead of easy and hard, we should do but ideal doesn’t relate to that list because ideal is like how much you want it, right? Ideal could be easy job to get or a hard job to get. It could still be ideal.
+That’s true.
+There you are.
+Can you hear me now Yeah.
+I know I had to admit you. I was pretty sure you’re the one invited.
+Yeah, I don’t know That other one you made.
+All right Well, anyhow, where were we? Okay, so we were talking about the yeah. What screen?
+Yeah, so but it already exists on the job screen.
+And you can mark it, but it has maybe the wrong three options. We can go with either easy, hard, and medium, like we talked about, or we can go with shoe in and stretch.
+I don’t know Both of those things, shoe in and stretch, may not be as obvious to everybody.
+Yeah, I think easy might be better. Easy and hard. Stretch is also kind of like I know what it means, because I’ve heard that word in context, but not everybody has.
+I know what a stretch goal is right? But I don’t think everybody knows what a stretch goal is.
+Stretch goal, I think I don’t like the word medium. To be honest with you.
+So I think easy, stretch, and then hard. Okay. Sure.
+I feel like hard and stretch are kind of the same thing, but I’m fine with that. I think hard and stretch are the same thing. Kind of.
+Well, the hard should be harder than the stretch.
+Okay. Well, we’ll do with that. Let’s go ahead and do easy, stretch, and hard. So on the job screen, they can rate it there. And there’s that dropdown that already exists. But instead of the dropdown, instead of shoe in and the other one was ideal, because ideal doesn’t relate to how easy the job is to get,
+when they roll over there should be a little explainer pop out, I think. Yeah, that’d be nice. How easy do you think this job will be to get?
+Or how job how easy do you think this job is for people to get? Or
+how difficult of a job is this to get? Something that’s worded better and kind of generic. And then there should be a similar thing. So when you rate it and you add the job tracker, that rating of difficulty should be on the card for each job that’s added to those columns on the job tracker screen.
+Easy, stretch, and hard. And there should be an opportunity if they haven’t already marked it. There should be a little word difficulty and a little box but instead of a dropdown, have it be like a toggle button that it changes the word on the button depending on what they click. And they can also change colors. So hard can be red, stretch can be orange, or yellow. Maybe yellow. And then easy could be green. Right? Does that make sense? And then depending on what they how many times they click it, they can just keep going around in that loop until they settle on a thing that makes sense to them. So like, okay, yeah, I think this is like a hard job to get. So I’m going to keep clicking until it says hard. And if I click it one more time, it goes back to easy. So I’m going to just keep clicking this button until I agree with what it says there. And that’ll work. And for the we can just leave the dropdown as is, except for the words in there. So for the dropdown for the jobs page, the dropdown is still going to be there. But we’re going to change shoe in to easy, and we’re going to change ideal to hard. And then leave stretch as an option. Click can you click the dropdown so I can see it real quick?
+Rather. Also, the way that this is written, whatever kind of text, I don’t like how you can’t see it without scrolling over it.
+Yeah, I think we should change that to a toggle button too. So on the jobs page, instead of the dropdown with the different positions that dropdowns are really weird for sharing for some reason. Has to do with the rate the rate of the frame rate or something. So when you try to share with a dropdown, it doesn’t show the dropdown a lot of times. And that’s really kind of frustrating when you’re trying to do a presentation. So make it a toggle button. Same with so both on the job screen and on the job tracker screen. You toggle through the job difficulties. It’s default position will be difficulties, the word difficulty, and it’s gray. And then once you click it, that’s when you start clicking through either hard stretch or easy. Right? And then you could rate it there, and you can also whatever rating you put there will get carried over to the job tracker screen. But if they haven’t selected or if they want to change the difficulty, they can do it to that job on the job tracker screen. And then as it moves through the different columns, it’s going to keep that difficulty rating.
+And that’s all I have to say about that.
+I also like your idea when you talked about after it’s said and done, it’s really good for us when they get the job. And they said that it was hard, but they self-reported this position to be really hard. But to get and we got it for them. That’s what’s good. I need some way to qualify if this shit was of value. And that’s one way to do it. I got some hard jobs. I never would have gotten this job without Roll Ferry.
+Yeah. So it’s easy to take shit for granted when it works out for you. You’re like, “Oh, yeah, that shit was easy.” But could you have done it without these tools?
+I don’t think I’d be at my current job if I hadn’t had AI and some coaching from you and a plan to do what I did. Because it was like a process. And I really had to learn to use GPT. Help me through those interviews. Having it live, guiding me through what to say, that was really helpful.
+It helps that these company were really pro-AI use too, right? So they even told me during the take-home interview, they’re like, “Go ahead and use AI.” I’m like, “Oh, cool.” And then I brought them back. That’s really cool architecture document. And then I was able to walk them through it because I had AI kind of answering all their questions in the background while I was speaking the words. So it was just kind of this neat process. But anyways, yeah, man, it’s easy to take shit for granted when it works out, but we really got to give credit to the where credit is due because stuff is actually kind of complicated and hard even if it seems easy because you get comfortable. I think we’re going to have a generation coming up that’s going to be even more spoiled than us where everything comes easily to them and there’s like, “Life’s easy, man.” It’s like, “Yeah, because you have AI doing all your shit, man.” AI is doing all the hard stuff in the background. All you got to do is just kind of wake up in the morning and then just figure out what you want and then you’ll get it. I think that’s our future.
+I mean,
+that’s the reason why I kind of wanted to go into doing IP on protecting our intellectual property because it’s like, “Yeah, these skills are out there.” I mean, these tools are out there, but you don’t have the skill. And using them. And that’s why you got to get someone like us.
+True.
+Yeah. And right away I’ll implement it so that you can’t access Roll Ferry without your username and password created. And that way, at least we know who’s scraping our site because they’ve created something with their email and stuff.
+Yeah.
+All right So in a minute here, I’m going to push the changes to GitHub into the app. It’s nice having this app online, right, where we can actually interact with the real thing.
+And make real-time changes. Right now, I’m having it work on your resume parsing to try to improve that because I wanted to see if we can quickly implement that. And I think that would be good kind of satisfying to see that work better. It’s like a it’s a difficult task because it’s a bit complicated. Okay. So there’s done. So let me go ahead. You can’t update it yet. I actually have to go through and I have to go into GitHub real quick and then approve it and. So log back in. Yeah. In a second. Not quite yet. Give me a few more seconds here.
+I have to approve the pull request.
+All right Merge pull request. Confirm the merge.
+Then I have to wait for the server to update. It takes a second. Didn’t take that long, but it takes a second. Maybe like two or three minutes. Be specific.
+This is website columns, columns.
+Railway So I’m using railway to host it. Really cheaply.
+It’s like cheap like GPT’s cheap. You could charge very little.
+Building it there’s this thing. It’s really actually kind of funny, Albert. So GPT is starting to do ads now for the free. Version. Really?
+And the funniest thing is they said they’re not going to use your search history for the ads.
+Explicitly said, “Robert, don’t worry. We’re not going to use any of your search history for any of the ads that you’re sending.” But targeted ads are kind of better.
+I don’t want to look at a bunch of tampon commercials.
+The one thing that would make it super relevant, you’re not going to do. Yeah. Well, people are weird about that shit. They’re like, “You’re invading my privacy.” It does feel a little weird. Yes, it’s better ads, but it feels weird when they’re like, “They know too much. Were you listening to my conversation right now?” Imagine you’re using the free tier and you’re asking questions about, I don’t know, geos or something. It’s like, “By the way, geos are on sale today.” And you’re like, “Oh, fuck you, man.”
+Told you about my private geo concerns and now you’re trying to sell me geos? This is bullshit. I don’t know.
+I don’t know.
+But they’re doing ads now for the free and for the $8 a month package. You’re not going to get ads in the $20 a month package. Okay.
+I’m using the $200 a month package, so. All right. Wow. Well, I don’t know what it costs. It might not be that much. But it’s I’m using it for a lot of work stuff. I upload like a ton of documents in there and have it do like all my work. So yeah.
+All my meetings are transcribed. Like this one, but all my meetings at work. I’m using it for like real-time conversation assistance. So I never sound dumb at work. They’re like, “By the way, Oliver, what do you think about this thing?” And I’m like, “Well, you see, sir, I have a great idea. We should do this.” And it’s like, “I always have something to say.” Which I’ve learned to take for granted just because it’s come to me like but honestly, I would have plenty of moments where I sounded kind of dumb and confused because I’ve kind of this ADHD thing where I don’t really pay attention half the time. So it’s kind of hard. But man, it really helps.
+It really helps so much.
+I’m well-liked at work because I’m always got some smart shit to say. Thanks to AI.
+It’s like, “Have you seen the movie Roxanne?” The old movie with Steve Martin.
+Where he’s got like a long-ass nose.
+Anyways. So he’s got this there’s this young guy. He’s like handsome. And he likes this girl Hannah. What’s her name? Darryl Hannah.
+And back when she was like cute and young and stuff. Anyways, he likes this girl. But he’s really bad with words. So he gets his friend, this guy with this really long nose who’s played by Steve Martin, who’s wearing this fake nose for the movie. And he gets Steve Martin to do all his talking for him. And woo this woman. But so he writes the love notes. All this stuff. And it’s based on a classic play. But it’s like a modern version. Anyway, so he’s sitting there with headphones on or a little ear thing. This is back in the early ‘90s. So the technology wasn’t great. But he had a little ear thing in his ear. Telling him everything he needs to say so that he can woo this woman because he’s not good with words because he’s kind of a dumb jock type. But then Steve Martin is there with all these eloquent romantic things to say to her. And she’s totally in love with the person she thinks that he is based on how he talks. But as soon as his little thing bugs out in his ear, and he can’t hear Steve Martin talking anymore, he starts saying all this crass stupid stuff because he’s a total idiot. And she’s like, “What? What’s your problem?” And she slams the door in his face.
+So that’s how I feel like at work if I didn’t have ever have any AI to help me talk. I would just be like this dumb person that would hang up on.
+But I mean, I don’t know. It’s more of a self-esteem thing. But I think it’s fine. So what are we doing here? We have yeah, Roxanne. It’s a classic, man. It’s funny. It’s a comedy for sure.
+So what are we doing here Oh, yeah. So I was updating the app. So go ahead and I guess log back in. Yeah, I should be all try to parse your resume again. I think that’s the thing we want to test.
+All right I’m going to log out and log back in.
+Hopefully, everything hopefully it parses it a lot better now.
+Even if it’s not 100% better, hopefully it’s 90% better. And then we can figure out what else it’s doing wrong.
+That’s kind of a big part. If it can’t even parse your resume, it’s kind of not that useful, right?
+Should at least start with what the work you’ve already done on yourself.
+I’m going to tell AI.
+Hey, go ahead. And make it so when you log in, you have to log in to view the website. But also, if they use the wrong username or password, it doesn’t show this API post thing with brackets. It uses human language. It says password or username is incorrect. Try again. Instead of brackets and API post and whatever it says now. And also gatekeep the entire website until they’ve logged in. So no one who isn’t logged in should be able to view any of the pages just direct access with the URL.
+There you go. Talking to that AI. Making it fix shit.
+So you’re going to clear the cache. And see if we fixed what it needed to fix.
+Use the same resume, of course, so we can test it.
+Have you ever read the book Snow? What is it called? Snow Crash?
+Snow Crash Yeah. I think that’s the name. Sounds like I’ve read the book. Neal Stephenson. So all these people at work or a couple of guys at work recommended this book.
+Because he said he’s always talking to Grok, like having conversations in his car with Grok and stuff. And then there’s this book written back in 1992. Okay, so now it’s actually is that that’s the same resume you parsed?
+And it’s correctly parsing your resume now as far as work experience goes?
+Job title Go ahead. Senior? Go ahead. Company name? And overview of the company. Good. We fixed that issue. How about the skills? Does it have skills now?
+It still has the weird 100% in purple you didn’t like, right?
+It’s still in there, but let me do 100%, right?
+Do you have skills Oh, here you go. Those are your skills.
+X-ray search Yeah.
+So you have all the it’s brilliant search. Some people call it X-ray search where I just put both in there. Cool. All right.
+Notable accomplishments, tenure summary. Notable accomplishments doesn’t have the tenure summary inside of it, which is a good thing. Okay. There you go. Before I had the dates, the tenure dates within the notable accomplishments. Yeah, we told it to change that. I just used the transcript with you now. What you talked about.
+And you said you were talking about the available variables. How are they looking?
+Yeah. I mean, that’s not the correct formatting that I like.
+I like the formatting where you have the brackets on the left side and not those ones, the ones that have a little squiggly line.
+The little squiggly line ones.
+Do you understand why the brackets are where they are?
+I don’t understand why the brackets are over there. So that’s because there’s lists there.
+List So in software, I know most people don’t know this because they’re not software developers, right? It’s just one of the jobs you can have. I happen to have that job, so I know what those are. So whenever you have a variable, like a variable used in code, right, you have a variable that could just be like one number. But when it’s a list of numbers, there’s brackets. So if I create a variable that’s a whole list of things, I have to put brackets after it or the code won’t know that I’m talking about a list. Whereas resume total years experience is just one number. So that variable is going to be like resume.totalyearsexperience equals and it’ll be one number. But resume.keymetrics bracket equals and then I have to put a bracket and then a whole list of things. Right? So all that means is that it’s a list. So the variable isn’t one value. It’s a list of values. Separated by commas inside those brackets.
+It’s a way to communicate to the code that we’re talking about a list and not a single value.
+That’s why that’s where it is.
+Which I don’t know We can leave it. We can take it away, but it’s just a UI thing. But I think it tells someone like me what’s going on.
+And it also reminds the code. I mean, I understand the explanation.
+But let’s say in the compose message, you say how the brackets are here. This is what I was talking about. I see the two curly brackets. Okay, fine. So change the so what page were we on before? We were on the was that the Java page? Resume page. So on the resume page at the bottom, it has an available variables. But there is square brackets at the end versus the curly brackets around them. And since these variables are being used to compose emails, we want curly brackets around them. If we want, we can keep the square brackets at the end to indicate that this is a list of things. But we definitely want curly brackets around them. Since we’re talking about email drafting. Now go to the other page you’re at. So also,
+be sure Mr. AI that all of the variables that we created for the resume are going to show up later in those future composition pages like compose and offer. Because if they don’t, what we’re really doing with them in the first place? So we need those variables to be carried over, and they need to be used to compose the email even if AI is going to rewrite that email and make it better. It still needs to have those variables initially to feed the context. So yeah, be sure that all variables from previous screens are being carried over into future steps to optimize the final composition to be as useful and well-informed as possible.
+All right So I have another update we’re going to test. Let me hold on. I still have to. Resume looks a lot better. That’s good. Well, I’m glad something’s working. All right. Let’s go to I’m pushing this last change. It’s going to have to do with the login stuff.
+Oh, yeah. I think we should protect our IP on this. I agree. So let’s see if it worked. Oh, it’s not quite ready. You’re going to have to wait like two or three minutes for the change to take, and then you’re going to log out, log back in. You go ahead and deliberately type your password wrong. It doesn’t have the lockout thing where if you type it wrong three times, so you can just type it wrong three times if you want. And then it shouldn’t show that stupid API thing anymore. But give it a couple of minutes to update because it’s still uploading this thing. Yeah, it says building. So it’s building. Excuse me. Excuse me. So it’s been building for about 30 seconds so far. Waiting for it to build. Once it’s finished building, you should be able to do that. Check it.
+Yeah. And then just add a edit button for the job for the company names because it gets like it gets the wrong that. Oh, okay. That’s another change. Let’s try to implement that right now.
+So what screen is that on? The next screen, the job screen.
+Okay.
+So on the job screen, there are descriptions. That appear in the parsed area after the jobs that are either pasted or collected with the URL, they’re then parsed into those cards underneath. But sometimes it gets things wrong. So there needs to be an edit button where the user can change things. There could be multiple edit buttons, like there could be an edit button next to the job title if they get that wrong. They can retype the job title maybe the edit button should say edit title. So if they’re confused about that it’s even a job title because it got it so wrong, they can be like edit title and then there can be an edit button next to the company edit company. And there can be an edit button next to a couple of other sections that could have been parsed incorrectly.
+Maybe the what would be something? The salary. So edit salary. So at least those three sections we want so next to on the job screen, where the jobs are parsed after the pasting of the job description or the URL, the jobs are parsed. They appear at the bottom. They’re often have errors. So that means in order to make this usable, the user needs to be to go in and correct there needs to be a button for edit title next to the title. There needs to be a button edit job company sorry, edit company next to the company name. And then edit salary if the salary is incorrect or not fully parsed.
+There we go. Talking to my robot. My robot’s going to fix it.
+Talking to my robot. Me and my robot. Me and my robot. I’m going to fix my website.
+All right Well, while we wait for it to do this, we can move on because it’ll take a few minutes for it to make those changes. And then upload them and everything. Oh, did you log out and log back in? Yeah, let’s try that change because that change should be I’ll go ahead and test that when you’re ready. When you’re but it should be up there now.
+Yeah, everything should be updated I want to if you don’t mind sharing, I’d like to like you to try to log in and see what happens when you type the wrong password. I don’t want to see that API post thing anymore. Make sure you refresh too.
+Okay. All right Now,
+wait. Actually, the wireframes they have access to, no? Yeah, I’m not. I didn’t update that.
+We can the wireframes are for us. We can just remove that link if we’re ready to do that. Well, can you put somewhere else? Yeah. Because this is not like our information. Yeah.
+That’s fine.
+It’s not a problem. I don’t want to get rid of it. I want to use it. But I just don’t want someone to go into rawfire.com and then have all of our investment information, our marketing hub. Not a problem. I agree. It’s time to remove that. The day has come. Time to take that. I want to be able to go back to it. Yeah. I’ll just take it out. I’ll take the button off of that screen.
+Yeah. But then show me where I can get into it because I want to compare the wireframes to rawfire. Well, you can copy it now.
+Put a button because it’s not going to go away. It’s just not going to be so easy to find.
+Oh, maybe that’s yeah, that’s a good thing.
+Right now they just click and click our wireframes like you said and take all our stuff.
+We needed that before when we didn’t have the app. We don’t really need it for them anymore because we have the actual app. They don’t need to show them the plan when we can just show them the thing. Exactly.
+I mean, we needed it before. I didn’t know when the app was going to be if there was going to I was able to get it up online already, so that’s cool.
+Well, making progress Okay. You need to log in. Are you logged in?
+No. Yeah. I made a change already. I wanted you to test the login.
+And if you want, we can try to get through all the screens today if that’s too much we can do the other half another day. But it’d be kind of cool to get through some more screens and make some more updates.
+You’ve already made some updates today, so. Baby steps, I guess. Progress. So type it in wrong. Because I want to test that too. I’m going to go password or email is incorrect. Instead of API post bracket nonsense. And then now type it. Now type it correct. Actually, before you log in, try to access the website without logging in.
+Wait, but are you going to log in No, the wireframes.
+Oh, I was actually talking about the actual app.
+How do you do it? You’d have to log in to get in there, right? Yeah.
+Okay, fine. We’ll just log in then.
+Email required. Yeah, you got to create an account. Yeah. I think your account should still be in there. So go ahead and just log in. All right.
+But the idea is the wireframes, I think.
+Remove the wireframes button from the homepage of the website. So that our IP doesn’t get stolen.
+And log in Cool. All right. Well, that’s done. And I’m removing the wireframes now. I’m just removing that button.
+Yeah. Remove it from the website. And then again, just go to rawfire.com and look at the wireframes. Take everything we did.
+Okay. Also added those inline button edits to the jobs thing. So I still need to push those changes.
+So let me do that.
+Maybe we can make this kind of a working before I was doing it where I was working on the wireframes and then I’d show you this week’s updates. But we could make this more of a working session. Like we’re doing now. Where we go through stuff together. We make changes.
+Does that make sense? Yeah. I mean, I feel like the first time we were first time around, we were trying to get the vision. Yeah, yeah. The vision was necessary. And we’re still doing that a little, but now we’re so close that if we do these real-time edits, and since AI is pretty fast, you’re not going to be waiting around for hours while I fix things, right? It’s like a couple of minutes each change. So kind of go things one at a time, one at a time. I fix it. I’ll fix it correctly because if I don’t, you’ll tell me like, “Oh, that’s not what I meant,” right? So then things will get fixed the right way the first time. And then we can just kind of iterate through and go through the whole website until it’s done. We won’t be able to finish, fix everything in a day, but we’ll get through what we get through and we’ll actually get stuff done concretely. And you don’t have to wonder that all of our do those things we talked about. It’s like you’ll actually watch it happen. We call it a working session.
+We’re like one person’s kind of guiding another one’s making changes. And then it’s to get a lot of work done that way. All right. So if you want to wait, hold on. It’s not quite ready.
+All right Right now it says building so it means it’s already committed the changes.
+And about one minute maybe.
+It’s going to add those edit buttons in a minute. Give it about one minute. It should do that. I have to refresh it for that to happen. After it finishes. It’s not finished building yet. Oh, we also got to take out company ETF boards. Oh, okay.
+Remove the company ATS boards section from what page? Job description. From the job descriptions page.
+And add a third column for tech jobs. So there’ll be a general I can’t see your screen very well. Let me look.
+I’m sharing my screen. Yeah, I know, but hold on.
+Okay. So for the jobs page, where it says job descriptions, right now there’s a job general job boards. There’s a startups and remote column. There should be a third column that says tech jobs. We want to remove the company ATS job boards because this website is being targeted to job seekers right now.
+And so we also want to add some general job boards. Don’t invent any, but try to get closer to 8 to 10 general job boards, 8 to 10 startups and remote job boards, and 8 to 10 tech job boards.
+And move the Google jobs and other ones that are in the general job boards to the tech one if they’re belonging there because some of those are tech jobs specifically.
+Yeah, so there should be 8 to 10 jobs in each. In each column, general shouldn’t be tech jobs. And unless it’s unless there’s a lot of other types of jobs there, under the general job boards, it should be less tech ones. And then save the tech ones for the tech column. So 8 to 10 in the general job boards column. 8 to 10 in the startups and remote job boards column. And 8 to 10 in the tech jobs column. Remove company ATS boards. Again, we’re talking about the job screen.
+There we go. This is probably the best way to do it. You tell me a thing to fix, I fix it. We refresh. While it’s refreshing, we move on to other stuff. Look at that. Let’s do like that. And it’s actually fewer steps for me because I don’t have to take the whole transcript. Write a list of things to fix. Go through. You’re hoping I do the changes and understood what you meant. And then the next week, if we even get around to a meeting, right, we have to you check on my work and be like, “Okay, I see what you did there. I guess that’s kind of what I meant.” You know what I mean? None of that. You’re like, “I fixed it. We talk about it. Fix it. Talk about it. Fix it. Talk about it.” That seems more efficient. Probably a better workflow for us. All right. Let’s move on to while it’s fixing this job boards, let’s look at other screens and talk about things we want to fix.
+Sorry So we got that.
+We got the edit buttons already in there.
+It’s working on that Yeah, go ahead. That’s right. Go back, refresh. Go ahead and look at that. See how that came out.
+It might just work to just refresh the page.
+Did it work Edit company and a title. Nice. Nice. Oh, okay. It’s a little big. The text is a little big, right? It could be like the edit button. It could be a little smaller.
+Not too bad. These are leave it alone or just at least make it a different color.
+Second, I go recruiter. It’s not bad. I want a company called This Is The Company. Yeah, it’s working. I like that. I think that’s a good little feature. I just don’t like the way it looks. It’s too close to the actual size of the font that it’s kind of like ugly. So it either needs to be smaller or a different color or less bold or something.
+If you think so. I don’t mind it. I’m just happy that I can freaking fix this thing. What’s the big deal?
+Edit salary. You try that one?
+You want to make up a company name? It’s like a really long name for a company. And a terrible name. It’s both a terrible name for a company and a really long name for a company.
+Job details and title.
+So let’s say we did change see delete. See where the next to add job tracker in the corner of each card. You see the word delete and it’s red.
+I’m not telling you to click it. I’m just saying look how it looks. It’s red. So you know it’s not part of the add to job tracker, even though it’s the same size. So I think edit title could be a different color. Maybe not red. Red is very much like you’re about to do something serious, but maybe yellow or orange or something.
+Orange. I like orange. All right.
+For the edit title. Edit company and edit salary. Links. Or we can just put them inside buttons.
+Can make them a bit smaller and put them inside orange.
+Fill buttons.
+So they don’t like text.
+All right So we’re implementing those changes too. I’m going to put them inside little orange pill buttons.
+Kind of like the buttons up at the top there.
+Oh, okay. It’s circular. Yeah. They’ll be small. I want them to be kind of small, like little orange buttons. So for the edit, yeah, I like that.
+Just to kind of keep the theme consistent.
+Yeah. I don’t know. Edit company. Yeah. And then you can edit it and then it’ll be yeah. That’s how you can actually edit the company. Oh, yeah, yeah. That’s a huge improvement. It’s necessary. It’s needed. Something necessary. So when you click edit salary, that works, right?
+It does not I was trying to say that before. It does not work. Oh, this edit salary button does not work.
+Does not work Okay.
+Please valid gaps for this listing.
+I don’t know if it’s gaps thing. How does it gap analysis wasn’t in the original UI? Yeah. It’s a newer thought. I just thought it was missing.
+We were matching them, but they might be matched for jobs that they’re missing key skills for. So they shouldn’t even really be thinking about that job. They literally aren’t going to get hired because it’s like master’s degree required. And they didn’t graduate high school or something. So it’s like
+they’re not qualified. You know what I mean? So if they’re not qualified for a job, they shouldn’t be looking at that job. They should be looking for stuff where they’re well matched, but also qualified, right?
+There might be they might be well matched in 20 other ways, but they’re not qualified.
+Yeah. I mean, there’s an interesting idea. I mean, it’s not excluding these jobs, by the way. The gap analysis isn’t like, “Okay, you don’t get to apply for this.” It’s just like, “By the way, it asks for this and you don’t have it.” So how does that interact with the idea of difficulty? Did the difficulty thing before? Well, after they do the gap analysis, they may personally decide that they should add more difficulty. Because like, “Oh, I’m not qualified for this. It’s going to be hard.” Right?
+It informs their decision.
+I want it to be self-reported first. That’s very important. Yeah, it is self-reported, but then they’re going to look at this gap analysis like, “Oh shit, it’s got asking for 10 things I don’t have.” Yeah.
+And that would be my process I’d be like, “Oh, maybe I’m not good for this job.” Well, I’ll apply anyways because it’s like pay is good and I got this other stuff on my resume, but they will look at me, but. Yeah. I don’t know. It’s going to be a long shot. Yeah. I haven’t thought about the gap thing too much. Maybe instead of hard, we should put long shot.
+Well, to a certain degree, you want some things to be hard. You want it to be a long shot, completely. You want you would have never believed that I could get you a $200,000 position when you were making $130,000. Yeah. Except that there were so many of them. And I was like, “Well, this seems to be like the target salary for me.” I definitely wasn’t comfortable asking for that. And at first, I was like, “Oh, yeah.” After a few interviews, I was like,
+“Yeah, I won’t accept anything less than $200,000.” Only because there was like hundreds of jobs that offered that. So I’m like, “Why am I not asking for this?” It’s literally like the target for what I’m saying, so. Also, I got it in my head that if I didn’t ask for 200K, it actually hurt me. Because it makes me look not confident. So I literally have to ask for that. Or they won’t even look at me.
+That’s what I’m saying.
+I don’t know. I don’t know about the gap analysis. I think it’s important for them to look at and say, “Hey, do you have these skills? Do you not?” I think that’s important. But it has to have some kind of interplay with the difficulty rating. Well, it does, but you want it self-reported. And my process would be I look at this gap analysis. It’s like, “Oh, yeah.” I think I’m going to go look at that job tracker again because some of those jobs I said were either actually going to be harder than I thought because I don’t have these skills.
+Okay. So yeah. I mean, then I got to figure out a way to really zone in on the gap analysis a little bit stronger. You want to work on that personality test? That could be a fun creative thing we could do.
+Yeah. Maybe you combine the personality piece with the gap analysis.
+No.
+Maybe separate. I mean, I think it can be part one can include some things from the other. I think it would be more like the gaps. The gap analysis could come after. So after jobs, so what do you want to call it? Personality? Let’s do personality. Personality isn’t too woo-woo. I think everybody’s got a personality, right? So there’ll be a personality button. We’re going to remove the analysis button from the dashboards keypad array. We can keep the analytics somewhere else on the screen, but it won’t be one of the 12 buttons on the main dashboard screen. So for the analytics that is, we’re going to replace we’re going to, in between job descriptions and gap analysis, we’re going to do a personality button. And that personality button is going to use personality tests that will help them align to the type of job they want. This will be especially useful for people who have less work experience and need to lean on soft skills and personality types and help them figure out what kinds of jobs they want. But for those who don’t have a strong resume, this is where they lean on this personality thing. So anyways, before they get to gaps, because some of the personality stuff can move over to the gaps, they may have gaps in the personality and the jobs that they’re looking at. So they actually could actually, we could put personality just after resume, even before jobs. Yeah. I think we could do that. Okay. So job preps and then resume and then personality button. The personality screen will have personality tests. There’s the Myers-Briggs test. We can have our own kind of condensed version of that. You mean the Myers-Briggs? Are you using Myers-Briggs? You use a strength finder? Strength finders. We can use job search specific, like personality types. You can also do partnership programs with them. We can do paid partnerships with these different companies.
+So that we can make money with that too, actually. But for now, I think we should focus on letting AI come up with these personality tests that are like job-targeted. And using existing ones, but nothing where we have to pay anybody anything.
+So we want to construct a job search. In high school, they had an assessment that helped us figure out what kind of job we would want to have based on our preferences and our favorite things and all of this, right? So we want one like that. And we want to use the Myers-Briggs, but like a condensed job-specific one. And we won’t call it the Myers-Briggs so nobody pick at the slight inconsistencies. They’ll be like, “Oh, I’ve done the Myers-Briggs. This is not it.” Like our own version of the Myers-Briggs is a little bit more condensed, a little bit cleaner, and nobody wants to do that long-ass test. It’ll be limited to a number of questions that are manageable for the average person.
+Well, you can just use a site there’s a site that gives you a free test. Yeah. You send it to it. It was like a condensed version. But I think AI can come up with one for us. Or if you want, give me that website and we can plug it in here and let it borrow from that one. 16 Personality Types. 16 Personalities.com. 16. Let me look for it. 16. Is it the number 16 or the word 16? Yeah. I have it on the shared screen now.
+16 Personality.com So the number 16. Okay. Yeah. 16 Personalities.com.
+That’s funny.
+All right So yeah.
+I’ll let it work on that. Condensed version.
+They have a condensed version Yeah. That’s good. Let’s step through 10.
+I don’t think you should come up with your own because creating these assessments are actually quite difficult because the questions are weighted differently.
+Well, the thing is, so keep in mind, so someone had to go through and weight all these and figure out the scoring system, right?
+And that was a whole process that could have taken them months.
+We do have AI that can look at how these things are weighted.
+And implement all of the same rules. And it can also look at all the personality tests ever created by humanity. And it can come up with a weighting system that’s logical.
+Well, I think that’s a lot of information. And maybe you’re right. But I think it’s just in like 15 minutes. I know. Yeah. I think we should keep the things that I know so that I can actually be an authority and instead of it being just random shit. Okay. That’s a good argument. Okay. So well, what I’m going to do is let it finish its doing. I’ve already started it. It’s looking at the 16 Personalities website. It’s creating something based on that and what else we said. And then we can figure out what’s good and what’s bad and if we want, we can say make it more like the one on their site and so on.
+So yeah.
+Here we go. So use the four temperaments, which I think is really very interesting as well. I think this is it works off of the framework of the Myers-Briggs, but I would beat it this too.
+Because it’s really quite interesting.
+Okay.
+I have David Kirsey’s books as well.
+I think he spent his whole life on this shit.
+He really devoted himself. Yeah.
+That’s what I would give it Okay.
+David Kirsey, you think David Kirsey, yeah.
+David Kirsey talks about temperament,
+which is actually the oldest standing personality assessment in history.
+The four temperaments are really quite interesting. Because year one,
+there was Hippocrates, the guy that created the Hippocratic oath.
+Medical fields.
+He originally came up with the idea of 2,000 years ago called temperament. And he originally did was pretty weird. But he would look at the bile of he was liver. And they’re dead.
+And they found four different temperaments based on the bile in a person’s liver.
+And the four temperaments are here.
+But historically, they were climatic,
+caloric, sanguine, and melancholic.
+Sounds a little old-fashioned. Only the melancholy part. I mean,
+is that a personality Yeah. Those are the four original temperaments.
+Historically speaking. And David Kirsey the reason why he’s heralded as the champion of personality type that he is is he found the link from year one temperament and connected it to today’s age.
+That’s his claim to fame.
+Yeah. And it’s quite interesting, man.
+He also connected temperament to Myers-Briggs personality types as well.
+Okay. By the way, I think hold on. Let me see if I need to push the changes again.
+I think we have another update to look at here.
+Oh, we do. All right. So I just made some changes. We can check in a minute. So there’s updated the job board links. So I added the column, removed the ATS boards. Restyled the edit links with the orange pills. And fixed the salary edit. So it’ll take a couple of minutes for those changes to come through. But then I’m pushing them right now. The build, I had to wait for it to build. And that takes like maybe two or three minutes. And we can check.
+All right But those changes are right Just need to wait for the upload.
+All right. I’m sharing my screen now on the four temperaments of your curious. Oh, yeah.
+There’s four temperaments. So these are the four rational is climatic. The idealist is caloric.
+The artisan is melancholy.
+The artisan is sanguine. And then the garden is melancholy.
+Different ways of indicating and taking action.
+Some use abstract language. Some use concrete language.
+Some use Trinitarian.
+Cooperative.
+Different self-images.
+Sometimes intelligence for each type. And here are the Myers-Briggs types.
+Connected to the. I’m screenshotting all this. So try to slow down just a little. Oh, yeah. You are. Yeah.
+It’s really crazy accurate.
+This is what I’ve studied. This is what I know.
+Temperament theory and personality type. Well, then we should definitely make it a focus of the site since this is your app.
+I pretty much just implement your stuff This is your 99% of this is stuff that you envisioned. So let’s gear it towards something that is your brand too. Wouldn’t make sense not to.
+There’s a million job-helping websites out there. This one needs to be Dave’s version. So yeah, it’s going to be Dave’s version that they’re going to have personality types from David Kirsey and insane David Kirsey includes everything else because the Myers-Briggs type is right here. The ESTJ, ISTJ, ESFJ, under a guardian.
+Those are all the Myers-Briggs type codes within that temperament category, if you will. So there’s four categories. And then within each one of these four categories, there’s four types, which make the 16 types. Yeah.
+My book, that I wrote, Vision in Action,
+talks about career coaching from the standpoint of personality types using Myers-Briggs and David Kirsey and Carl Jung. Which is the Swiss psychotic most people know of. Because Carl Jung was the one that created the 16 types in the first place.
+It’s all related Everything that I’m talking about is all connected. Yeah. It would make sense to have your branding with your book not be completely disconnected from your app either.
+So it would make sense to have some common overlap there. And then you can refer to your book and the app and refer to your app and your book and. Yeah. No problem.
+Yeah. I really think this is it’s really just interesting because of its historical impact.
+Connecting it back historically.
+I think it’s really important.
+All right So I agree. I think we need a personality assessment page to kind of give the app a little bit of it makes it, like I said, it makes it more accessible to those with weak resumes. It makes it more brandable in terms of I use the what is it? eHarmony. We find 16, what is it? 23 levels of however many levels of compatibility. And it’s like that’s some bullshit right there, right? But it also makes you wonder is like, huh, that sounds like they have this complex system of finding the perfect partner.
+On some level, I read that as probably nonsense. But at the same time, it’s like it does tell me there’s some complexity to the app. And it’s going to do more than just swipe left, swipe right, or it’s going to have a little bit more involved. And maybe it will do something smart. And actually find me someone that I get along with. Maybe. I’m very skeptical. But it does kind of open my mind to like, well, sounds like somebody thought about some stuff that I haven’t thought about yet. Let me go ahead and give it a shot, right? Especially if I’m a single guy. Let me see how it does. So I think that’s the angle, the marketing angle for us. It’s sort of you’ll have an opportunity you’re the marketing guy, but you’ll have an opportunity to kind of explore some different ways to make it kind of interesting. In fact, that’s kind of their slogan, right? I don’t even remember what the number is, but they’re like, we look at you for 25 different types of compatibility or whatever they say. I don’t remember exactly their slogan is, but I remember the gist of it and the idea is that it’s complex and we have our 12 steps. And I think
+it’s kind of like these are the 12 critical steps that you need to find a job as fast as possible. If you’re skipping one of these steps, you’re doing something wrong. And you kind of make this sense of you didn’t think of everything we did. And everybody else is skipping a lot. And then that’s another thing to lean on heavily with the message and the marketing is that, yeah, there’s a lot of apps that do some of these things, but you’re not going to find a job just doing some of these things. You need to do all of these things.
+And then for those who have weaker resumes, it’s like if you don’t do a personality test, how do you even know what kind of job you want?
+Yeah. I mean, it really is a beginning stages level of personality-based. 90%. Because, yeah, I’ve not worked history. You have a degree. So what do they have to go off of, really? It’s your soft skills. It’s your personality. It’s your ability to connect with people, with your empathy, which is a soft skill.
+Or your ingenuity. It’s a soft skill.
+So that’s kind of the thing.
+Yeah, man, definitely should include it Yeah, it makes sense.
+Any other thoughts for what you want to include in this? Personality section? Yeah.
+Yeah, definitely should be the personality putting the card.
+Putting their type code. Do you want this? Do you want this for these four types of artisans in there?
+Well, I mean,
+yeah, I mean, these are all of the these are all the so there’s 16 types. And each category has four. So artisans have four. The idealist have four.
+The teacher, counselor, champion, healer,
+and when I do my resumes,
+historically,
+I don’t know I changed it up a little bit when I started working with you guys. I mean, in doing more of the emails,
+but historically, when I first started out, I was all about this soft skills in the resume. That’s what I focused on mostly. And writing I was just writing resumes.
+Before, writing resumes was gone to shit.
+I was really into writing resumes that had character, that had their personality in there.
+And so I would use the different adjectives here for each type when describing them.
+Intuitive.
+Interpersonal.
+And people would hire me really based off of the personality thing. They didn’t really care if I got a job or not.
+It’s interesting. I mean, but I wanted it to be more like I’m happy that you’re getting the job. I’m happy that you’re getting those insight, but people would tell me like, “The marriage was better.” I was like,
+“I’m a career coach, and your marriage is better?” I feel like what I’m doing isn’t really helping you out. But no, it really helped me.
+Helping is helping, man. Take it But that’s good. Now, okay, so tell me when we look at these things, what do you want to borrow? What do we want to see on our site? What would be a good way for this to appear? Because we can have some similar stuff. I mean, anything we see here, we can have something like it.
+I’m taking screenshots, right So we’ve got all these different screenshots. So what we have is a look at their site. Which of these things do we want on ours? We can do these are just icons with text. Any of this can be recreated very quickly, right?
+And so what do we want? We want our own version of this. Is this geared toward job seekers, their site, the 16 personalities?
+This temperament or the 16 personalities? No. I mean, okay. So we can just kind of shift the content from their site to a very job-specific kind of context. Without changing the content. In other words, without changing the message. So they can all mean the same thing, but then we should shift it so jobs, with language about roles and jobs and opportunities that align for these types of personalities. Yeah. So we just need to kind of take it and condense it because we don’t want to be like a whole website based on personality. It’s basically like one screen. With maybe different tabs. So the screen, this is just me spitballing some thoughts, but if you have different thoughts, go ahead. But I’m thinking like so since we don’t have a whole site dedicated to personality, we have like a screen. But that screen can be scrollable. And that screen can also be scrollable to the right. So you could be like clicking through, and then what populates on that screen can be based on your own personality questionnaire. So maybe as they’re completing the questionnaire, right? It’s kind of like those diagrams that narrow things down as you go. So if yes, then it takes you to this branch, right? And then if no, then it takes you to this branch. And so it kind of like narrows down your personality. And by the time you get to the end, you have like your personality profile, based on this questionnaire. And it’s kind of building your personality profile. And then it populates this whole screen. And the screen is like your profile based on all the questions. But it’s like in real time, it’s instead of taking you to a bunch of different screens that explain all the different personalities, it’s just figuring you out, asking you questions, and then shifting the page around as you go. Does that make sense?
+Yeah. I mean, I’m going to share with this too. I think this will help you. This is what I made of my I made this on school.
+Originally, like a group coaching call. A group coaching thing that I was looking to do. And again, that’s what we talked about before. I think group from a group coaching angle, it’s really great to look at this. Because this is what I already planned out and everything. From doing my own program with career coaching. You have values, vision, personality, strategically position your strengths, build your authority brand, launch your strategic outreach, step into leadership, show up, speak up, negotiate without fear, accept the offer.
+And then within vision, within this one,
+you have know yourself so that you can market yourself.
+And then you have core content, which is the most big.
+Probably here’s the how to fascinate.
+And I had all this wrote all this stuff out already. And you have all your personality type stuff here.
+Like first up for job hunting. This is all the you’re right on target with making it applicable for jobs. Because that’s the whole idea. All these personalities type things are very general. Almost like horoscope. Hey. It’s almost 3:00. Okay.
+Did you want me to get you a shirt TJ Maxx at 2XL? Yeah, if you want. Are you almost home? Yeah. I forgot about you and so I was about to. And then I was like, “Well, let me find something for him.” Then I have no pants. They only have 30. That’s the length. Okay. They don’t have 34. All right. So you’ll be home when?
+In a few So the blanket’s smaller than I find you something. Okay. I’ll see you in like 25 minutes. What do you not want? Like style lines. Like do you want a polo or do you want just like a button-up shirt? Sure. Button-up’s probably well, button-ups are hard for me. I’m really tall and my lungs arms are really long. Yeah, that’s what I’m saying.
+What do you want me to do Do you want to just do like an office shirt? What do you like? Do you like that look with do you like the look with just like the black shirt underneath the jacket? Yeah, I do. Let me look at the shirt. Do you want the black T-shirt? Yeah. Give me some more black T-shirts. Look, I see I could find some. Okay. Love you. Love you. Bye. Bye.
+Okay.
+I’m going to do so. I mean, this is what I did, man. This is like this is like you want to go deep, man? I got tons of fucking shit I can talk about on this. I did a whole course on this whole thing.
+Like I said, people with the people having the coaching and it’s like a lot of them wouldn’t get like a job, but they feel like their marriage is better or they can relate with other people better. Or everything else, but when I was actually marketing,
+so.
+Which was crazy Which was like, what am I doing? Why am I not getting people jobs? Everybody’s really happy, but I feel like I’m not sending out what I said to do. Which is why I didn’t. Hey, can you make sure the girls are out, please? Okay. My mom’s downstairs, but I don’t think she’s concerned. She’s paid attention to whether or not they’re awake or not. Okay. Bye. Please, take care. Let me go make sure my kids are up and stuff. We’re going to go to church and all of that, and she’s going to want to come home. Sorry about that. What was it done? You want to go? It might be a good idea, but I wanted to make one more change.
+I want to look at the I think it’d be fun to end the thing looking at the personality test, even if it’s crazy.
+Just to kind of like have it started. Oh, but I think you can look at actually,
+hold on one sec I think we can look at some more changes that I made. Why don’t you go ahead and go ahead and refresh.
+Let’s see.
+Before we started talking about personality tests, we were talking about changing a couple of other things.
+And we can check on those things because they should be online now. Okay. I got them. I’m going to share my screen.
+Yeah, we got to get going before your wife comes back.
+Yeah. All right. Okay. Cool. So those are showing up. That’s cool.
+These are good We got the three columns we wanted. We have a reasonable number of links now that actually looks like an app that is giving you some value versus just like a couple of links. All right. And they can go to those. There should be enough there that even if they don’t find anything on one of those links, there should be enough other ones there that they should be able to, right? And they got the general, they’ve got the tech, they’ve got the startup. Those are all like there’s a good list there. Right? Yeah. And then the company specific ones are limited to the tech jobs, which is good, right? So Apple jobs, Amazon jobs, and that sort of stuff. Yeah. We can change this up to be a little bit better. We could actually have it scrollable too. Like we can leave it that height and then just put 100 of them in there. And they can scroll down and pick one.
+Yeah, it looks much better actually with the added title at a company.
+What else did you put in?
+Hello They don’t have double X. Only have XL and black. Okay. I’m good with the little hammer. Just for my blue blazer and some jeans and black. I said I’ll use I’ll wear what I have to the funeral.
+It’s okay. I’ll make it work.
+Not funeral for today, for the rosary. That’s it. I don’t even know where the day is. Okay. I’ll be all right. I’ll make it work. I love you. Bye. Bye.
+Okay. Sorry Okay. Where were we?
+Okay. It’s deploying.
+Okay. And then the last thing it’s deploying my personality thing. Okay. Go ahead and go ahead and look at go to the dashboard and then refresh it.
+Dashboard Refresh.
+Screen. Control shift. Oh, there it is there. And then click that.
+All right Choose a test So we’ve got Oh, wow.
+And let’s just see what happens when you fill it out. Maybe it works. Maybe it doesn’t. I haven’t tested it yet, so this is the first time I’ve seen the screen.
+So you can see like this might have potential to add some value.
+Something different too, you know Yeah. It’s something that the other sites don’t offer. Certainly not with the whole package. And it makes more sense when you have this 12-step thing that at least one of the steps is something you haven’t even thought about using, right? At least not in Tanda. People have done personality tests for jobs, but not the same people that are going to the sites with the other stuff, you know? So yeah. It is something thatYeah, it does match my brand better. It does.
+Let’s go with um four temperaments first.
+Examples and facts. Principles and concepts.
+So this is saying you’re intuitive, or are you sensory?
+Actually, this is really good. I think this is gonna be something kinda cool.
+I’m reading a job description you pay more attention to. Wow.
+Um, negative two. Well, I think that should be a graphic rating scale.
+I don’t think negative. You wanna make anything negative, ‘cause negative makes it sound negative.
+Maybe use it just in, like, a scale of, um,
+1 to 10 You don’t want it to sound like it’s negative. What did what did they use?
+Oh, yeah. It’s somewhat like me, like me, not like me. That’s what you wanna use.
+Seven numbers.
+Okay.
+I’m gonna use like me.
+Uh, I mean, I like the idea of it being, like, specific. I like what they’ve done so far, but. Yeah, yeah. I don’t know if, like. This is this is our first iteration, and it’s easy to yeah.
+I don’t know if negative is good to say negative. Yeah, yeah, yeah. I’ve already told it that. Mm-hmm.
+I like where they’re going with it though.
+When you learn, you prefer I like theory.
+And group work you’re motivated by, hmm, telling what works.
+Conflict should default is to tech relations.
+Continues, you’re naturally emphasized results.
+You know, work style I couldn’t see results. I do this. Oh, that’s kinda neat. Calculated it quickly.
+Very quickly That’s kinda neat. I kinda like our condensed version better than, like, a more complex thing where you have to go through multiple screens.
+I like how it colors too.
+Huh Huh. Not bad for a first shot.
+Best environments.
+Wow I like it. All right. Well, I got another another version of it coming in a sec. You can look at. So if you wanna hold on for two more minutes. Wait for me to upload these changes.
+It’s very cool. Nobody else is doing that. And I think that using temperament is pretty important because again, temperament includes Myers-Briggs. It’s not one of the Myers-Briggs 16 personality types. It’s a cool thing Myers uh, the temperament includes that. So even looks better. Mm-hmm.
+Yeah, man. That is very cool.
+Good job to okay. So we did it in eight questions. Wow.
+And overall you recharge most by working independently. Outreach. Oh, look at that. Outreach networking. That’s funny.
+That’s right on brand.
+For outreach and networking, you prefer small party conversations, high-vibe networking. I like that.
+And learning a new domain. You prefer concrete examples of checklist with digital concepts.
+Evaluating a job post. You focus more on specific requirements achieved by that.
+Fairness and logic.
+Feedback motivates.
+Hmm.
+Oh, okay. Yeah. Okay. Found the same results for me both ways. Oh, it did?
+Um,
+I mean, it makes sense that it would, but.
+Um. Oh, it does it The four temperaments and the job fit. Um, tests. Mm-hmm. Um,
+came back with the same kind of results. Can you describe what would be better output?
+Um,
+uh, better output for four temperaments and job fit.
+Um, I think that the four temperaments should give you this exact um, output. I think it did great in that. I feel like the job fit should not give it the four temperaments, but rather it should give action steps based on the temperaments.
+The personality type. The so that should have different output on the job fit than in the four temperaments. All right.
+Hold on one sec. I have to make sure my kids are not.
+Hello.
+Hey, guys. They got Mommy’s gonna come back, and you have to go.
+Um,
+to pray for going and stuff.
+Take a while.
+Mommy wants you up She wants me to make sure you’re up. Go back to my meeting.
+Okay. Sorry. End zero.
+Sorry What were you saying?
+Um, I was just saying that the, uh, personality assessment here, I think, is really, really cool.
+Um, but there should be a difference in the output for the four temperaments and for the job fit.
+Uh,
+the output that would be better would be for the job fit. I’d keep the same one for the four temperaments. But for the job fit,
+I’d use the understanding of the temperament personality type understanding and then create action steps. Hmm. Instead of giving it the same breakdown of what. Can you describe what action steps would look like?
+Uh, action steps would look like for someone that is, you know,
+the um one of the introverted types, which could be either the counselor or healer in the idealist temperament. Mm-hmm. They’re should be, like,
+ways to network, um, and ways to communicate that don’t completely drain you. Hmm. Because extroverts are more energized by, uh, external stimuli and introverts are typically more drained. Yeah, yeah.
+So some action steps, things that you could do, um, within a job fit situation like this one of the questions, but it was literally for outreach and networking. Would you prefer a small targeted conversations high-vibe high-volume networking and events? This was clearly a conversation. It’s clearly a question that was assessing introverted and extroverted. Mm-hmm. So um, they can create some action steps here, and this bottom portion on how someone could, um, you know,
+take some actions based off of the answers. Can you give me some more examples of actions other than the one you gave me?
+Um,
+uh,
+let’s say, uh, your ideal workday. So what, what your ideal workday is describing is the difference between J and P, um, in the Myers-Briggs type code. Mm-hmm. Um, the J and the P. So the action steps would be um,
+you know, for the Js, um,
+you know,
+write, write down five things that can move your career forward. Um, in a sequential and planned way, and then the other one would be for the Ps,
+and that would be um, you know, what are five ways that can um, allow you flexibility but also um,
+give you progress, um, in your career? Uh, yeah, in your job search or something like that. Okay. Um, that’s more like targeted to the personality.
+Okay.
+So the Js and Ps typically the Ps are um,
+more the type of people who like to do things last minute, and then the Js are the type of people who like to do things in a very sequential, planned way.
+Great.
+All right I’m gonna take that and run it there. Go ahead.
+So uh, action steps that are based off the personality would be the job fit results. And the personality like we have here would be on the temperaments.
+Four temperaments on the slider on the top. Okay.
+Cool.
+Uh, so um, they should get their code right.
+They didn’t get the code right? All right. What the hell kind of code is that? What’s FVHA? Never heard of that. It’s not a code. Yeah, drunk.
+Okay. So why are they getting the codes wrong?
+I don’t know I don’t know why they’re not getting it right. So we want. The codes. We want Myers-Briggs specific codes, not some made-up bullshit. It looks like it’s getting those ENFJ and, uh, INFJ, ENFP, INFP. Those are all real. What’s that other one? Uh, these are all real, but they’re not picking which one out of the four. Yeah. But then it’s got you’re an FVHA, is like you’re very rare. You’re like literally the only one.
+Yeah.
+So you clearly know what the right answer is. It must be one of these four, but it gave me some bullshit over here of what it is.
+Huh Like pick the category of idealist and these four type codes are in that category, but we gave you some bullshit code that we just made up.
+So for the for the code that it gives the person and tells them your profile, that code is just crazy. We don’t even know where that FVHA comes from. But when for the description section, it has the INFP and INFJ and I and ENFP and it has all those. Those are real uh, Myers-Briggs codes that we don’t like that’s fine. But for some reason, when you get down to the profile section, it has some bogus code or at least a unfamiliar code.
+I mean, if it’s not It’s either completely bogus or they invented their own ‘cause the AI’s taken over and they’ve decided that this human way just isn’t good enough.
+Like you guys are actually all FVHAs. We’re gonna create a super race of KPLMs and they’re gonna take over.
+Screw this ISFPP people and we don’t need your types here anymore.
+Oh my goodness All right, man. I think we’re uh, okay. What I’m doing right now is I’m implementing these changes and uploading them to the thing.
+So you can see them.
+If you have five more minutes, you can wait and we can look at those changes together. If you gotta go, I understand. I have to go pretty soon too.
+Yeah. I mean, I, I can chill All right. Chill just for a couple more minutes. I’m gonna be pulled away anyways to just figure it. I like to watch the I think I like this new so from now on, it’s gonna be like this if that’s all right. So I’m not gonna do a ton of work in between meetings unless there’s like something I was already working on that I didn’t finish. But most of the work I wanna do with you on the phone and we’re gonna do working sessions from now on. So it’ll be like this where like or at least how this was for the last half of our meeting where I’m instead of trying to transcribe and then come back and do the work, we’re gonna go through one thing we’re gonna iterate, we may not get to the whole website in one go, but every vis every page that we do look at will make updates to real time.
+Right Mm-hmm. And then uh, I think that’s the better, don’t you?
+Let’s, let’s room let’s room for error, I think, ‘cause yeah, you don’t have to wait for me and wonder what I got done or anything. You’ll know what I got done ‘cause you see it. And then there won’t be any like potential misunderstandings ‘cause like if I do misunderstand you, you’ll be able to fix it in like two minutes, so.
+Yeah. So then you wanna do it on Sunday at like 1 o’clock? Is that what you wanna do? Um, Sunday 1:00 is usually a pretty good time, yeah.
+‘Cause we either go to church at 3:00, we go to church at 7:00 on Sunday, or we’ve already gone to church at 3:00 PM on Saturday. We’re, we’re not early people, so we usually like wake up late and that’s why we go at those late times. And yeah,
+my mother-in-law lives with us, so it’s like very like religious environment. Just fine. Mm-hmm. Been doing the rosary a lot lately. So it’s kind of that meditative thing like with the Buddhist thing. Instead of numb your whole, it’s Hail Mary, full of grace, but same kind of vibe. It’s interesting how I noticed that interesting connection on, you know, people told me that once before. Um, ‘cause we have beads. Mm-hmm. Um, in Buddhism, but we don’t call it a rosary. We call it beads. We just say get your beads and book. Mm-hmm. Oh, and uh, and, and, and, and, and your and the Catholic or whatever they call it. Um, they call it a rosary and something else. Yeah.
+And then I noticed when I was in Iraq, I was praying with the Muslims, they like to do this they like to say God is great, God is great, God is great. And then I serve God, I serve God. So it’s like Allahu Akbar, Allahu Akbar, and they say Alhamdulillah, Alhamdulillah. And they kind of just repeat that over and over. And they have their beads. And they go through their beads to count their prayers and, and they get down on their mats all the way face down, all the way back up, very, very religious people, man. The difference between them and most Americans of any religion is they’re like really devout. Like you could be a single bachelor living alone and you’re still getting down five times a day facing Mecca, doing a full body prayer. Like they really believe. They don’t mess around. They don’t they don’t do it for social community. Like they’re just really into God over there. Yeah. I kind of like the the people that I spoke to. I like the people from Turkey from Turkey. Yeah.
+Everybody I met in Iraq in terms of they’re all like real nice. Like all the Iraqis. I was there. Before I went there, I was warned by all these people like, “Oh, watch out. You can’t trust those people.” And they were bringing me food every day. Nobody ever tried to poison me. I was eating that baklava, that real flaky dessert with like the pistachios and sweetness. They would you know how many times they brought me baklava? Once they learned that I liked baklava, I was getting brought desserts by all these interpreters and all these Iraqis.
+Yeah. Me too. At least back then I was obsessed with this stuff. So they would bring it to me on a daily basis. Nothing ever weird. I never got sick. Nobody ever tried to hurt me. Perfectly nice. But every time before I went, all the Americans were like, “Don’t trust those Iraqis. Iraqis are perfectly nice people.” We just wanted their oil and we went over there and made up a bunch of propaganda about them. We’re fine.
+Like there there’s as many American terrorists as there are Iraqi ones. Like yeah. They’re not bad people.
+Nothing wrong with Muslims either. The Jihad thing was a bunch of fucking conspiracies is what it was. A bunch of people trying to make them I don’t even know if 9/11 was real, man. I think that fucking was American planned shit maybe. I don’t know.
+I don’t even know if 9/11 was real. I don’t know. I mean, obviously they killed people. I’m just saying like who did it? Like I think it might have been some like conspiracy shit. Based on who’s president right now, fucking who knows, man. There’s some corrupt fucking people in this world. I’ll tell you that. A lot of them are Americans. Anyways, all right. So let’s see. Did we push that change?
+Okay.
+I’ve been saying this a lot. This is the last time I’ll say it. Give it give it like two, three minutes and then refresh. And I’ll tell you when.
+I’m gonna what I’m gonna do too is I have a uh, what you wanna call it? I have one of those.
+I have a what you wanna call it on uh, on this monitor. And I can use that instead of the computer monitor.
+I have a camera I can say. Oh, a camera. That’s it. All right. That’s the what you wanna call it.
+The person I like the personality field, man.
+Something different in it And that’s good. I, I, I think I think we our, our site needs a little character to be conversation-worthy. Can’t just be another site where you like do a job search. It’s just not interesting enough to talk about it. There’s too many of those already. Even though ours has more steps and ours might be more complete, it’s still not it’s still not a whole conversation around ours being more complete than theirs. You know what I mean? Like make it make it more interesting. Ours has a personality test. I’m like, “Oh, that’s an interesting conversation.” Even if it’s not the most helpful part of our app, it’s the most interesting thing to talk about. Right? Potentially. Depending on. Yeah. Yeah. Depending on what you’re interested in. Some people will find that very disinteresting. Like I would probably find that not that interesting. Only because I’m kind of skeptical about like anything related to personality. I don’t like anybody but me in a box.
+So I’m like, “That’s not me.” That kind of a knee-jerk is like, “You don’t know me.” But um, that’s just me. That’s actually quite accurate. It’s actually quite I mean, they try to tell me I was Gemini and all this stuff. I’m like, “Come on.” Well, I don’t know about all of this. I don’t know if it was a horoscope stuff. Um. I mean, the stars shifted. You know what I’m saying? Neil deGrasse Tyson says like, “The stars aren’t even on the same place they were when they came up with that stuff.” Just a bunch of bore people in their basement making up a bunch of bullshit.
+Sorry Yeah.
+Yeah. All right. So um. All right. I see you took the wireframes off too. That was good. Yeah. Good. That button works now. And let me go I haven’t even looked at it since I told her to do that.
+Yeah. But I don’t know where it is. Like if you wanna look at it, you can probably find it. Well, I mean, you you can literally go to wireframes and HTML or or if you bookmarked it, like I said, then that works too.
+If you replace home.html, I think it’s with um, let’s see, wireframes.html.
+Uh-huh Yeah.
+I, I just bookmarked it like you said. Yeah. And so where it says home.html, like when you go to rollfary.com,
+where it says home.html, just replace that with the word wireframes and that’ll take you there.
+Oh. In terms of home? Huh? You said? Is that what you said? So you know why you go to rollfary.com?
+Yeah. And then the URL at the top will be home.html.
+Yeah. So instead of home.html, put wireframes.html.
+It comes up And then that will take you to the wireframes. It’s kind of easy. Okay. All right. So oh, it does. Yeah. I see it now. Yeah. So it’s still there. It’s just there’s no button. Yeah. It’s better that there’s no button. You wanna protect it somehow. Yeah. I mean, it’s not as protected exactly, but at least it’s not putting your ass out there and saying, “Hey, look at my ass.” Yeah. So um, click on the rollfary wait. Is it updated? Let me make sure. I think it’s updated now.
+Yeah. I think I think we’re we’re updated. Go ahead and navigate you can click like through the normal process if you want.
+Um,
+I haven’t logged in Okay. After the resume, it’ll take you to the personality good. It does take you to the personality. I added some some flair.
+Uh-oh Uh-oh All right. Here’s the stuff from here, right? Yeah.
+See our application. Our client-side accepts a client-side exception has occurred while loading Sunny Spirit production the C browser console for more information. Okay. I don’t know how you got there. I’ve not seen that.
+Maybe um X out and go back in? I don’t know. I I didn’t see that, so. Why is that coming up?
+I don’t know If I go to the app and I navigate through and I click next after the resume screen, it takes me to the personality page. And it looks. I click next.
+Yeah. It, it gives me an application error. Maybe log out and log back in. Maybe you’re not logged in anymore.
+I’m just not getting that error, so I don’t really know what to say. Um, I go back. I log out. Mm-hmm. Log back in. Try that.
+Um,
+okay. Now I’m here again.
+Logged in Same continue. Resume.
+Same continue. Error. You got an error?
+Yeah. I got an error.
+Are you sharing Let me share.
+I’m not getting that error.
+Like I believe you got an error. I need you to see how you got the error.
+All right So let’s go to back. Mm-hmm.
+The dashboard. Resume.
+Same continue. Okay. Let me just can you just copy and paste that and pop it in the chat, and I’ll
+‘cause I’m I just need to type it into the thing. But it’d be easier to copy and paste it.
+All right. New chat.
+Go from the that’s from the resume page?
+That’s if I click on the personality tab on the top. If I click on the personality tab on the dashboard, or if I click next, or save continue from the resume. Okay. So it doesn’t want you to see the personality screen.
+Yeah. Anyway it disappears. What if you go there go to the what can you do?
+It’s weird How about I share and and at least we can see the differences?
+Meanwhile. Yeah. Meanwhile, I’m having it fix the issue.
+But um let me see what you made though. Yeah. Yeah. I wanna now I’ll get the error watch. Anyway, so here is the the page. I click save and continue.
+And then I’ve got my resume extracted and I don’t need to do that again. And it takes me here.
+Oh, wow So if I go to job fit, it’s got the same kind of questionnaires.
+The fonts I told it to make the font bigger, but I meant the font underneath it, not the this one, but anyways.
+Well, it’s oh, I see. So it is bigger here. So for networking job search, your best channel is small little too big now. But that’s fine. We’re. Yeah. We’ll get there. So it does the very like me, somewhat like me, right? So we can just. Oh, yeah. You said she put not like me. Huh? Uh, that was that was the the distinguish, right? So not like it depends. So it’s very like me. Oh, it should be very un very unlike me. Yeah. That’s what it is. That’s not it.
+Very unlike me, somewhat unlike me, it depends, somewhat like me, very like me.
+It just sounds better than negative two. Yeah.
+Okay. Well, we’ll f I’m I’m having it fix that. So we’ll just pretend that that’s already fixed. I’m gonna move on.
+Mm-hmm. Um, so there it is. So we can let’s see what happens when I everything’s just like me.
+So the I wanted to make the font bigger, but it made it too big. But that’s the problem with having it do it for you. It has to guess what you want. And then see results. Now I have my job fit playbook. So role oriented guidance based on your answers. The four-letter code. Oh, it’s actually got a real code, not some made-up craziness. And then it’s got collaboration charged, big picture values of people adaptive. I don’t know what I answered ‘cause I just clicked the number five for all. Best fit environments, fast-moving teams, zero to one or high charge environments. And it’s got the suggested role directions. It’s got networking and outreaching. How to do it without tra draining yourself. Kinda like what you said, right? Yeah. How to choose roles, what what what to filter for. ‘Cause this could be a value to people. And interview style, how to answer under pressure. And. Yeah. And then planning your weekly job search routine. So these are good little things.
+Yeah. I like it Yeah. AI AI’s pretty smart, man. It’ll do some shit.
+And then and there you go. So that’s that’s what we that’s what we did. And that 20-minute conversation about that. We got somewhere. So let’s see what happens here. So on this screen, it’s navigates a little bit differently. The questionnaire is like, right, I click this kinda stuff. I think it thinks it I don’t know why it did that weird typo there, but whatever. So as I answer questions, right, it’s it’s filling out the thing. See the question eight out of eight. You see what it’s doing? Hmm. Like it’s a status bar. And then I click, it depends. And then here. So I’m a guardian according to my random answers. Right? And it says concrete and cooperative. It’s got the same kind of key as before. But here it has my strengths. It’s gonna give me my job fit playbook again.
+Right You gotta change that code to be one of the um, it it it has to be one of the four. I mean, I don’t know why it knows that these are one of the four on the top right for guardians, but then it just gives you that code. Mm-hmm.
+So guardian, yeah. I get it. But it has to be one of these four if you’re gonna say it’s guardian. Mm-hmm. ENFP is an idealist. Well, maybe I think this is what it gave me for the other thing.
+So it saved my results from completing the job fit.
+Which makes sense because it’s called the job fit playbook. So this code is not coming from this. This is this one.
+Oh.
+Well, okay. You answered them differently. It, it answered the questions differently. So they might align better if I actually like was trying to answer them. Yeah. It should have the same personality for each of them. It, it might. Why don’t you play with it? I’ll fix this error here so you’re not getting an error anymore. And um, that should be fixed. So let me let me um,
+hold on See when I every time I deploy it, I have to go here.
+Then I have to take my commits. So my last two commits are the fix the personality page handles older local storage profile shape. Personality use unlike like labels on scale. So I should fix that little typo with unlike. Push that. And then when I go here, you can kinda see what I’m talking about. So as soon as I push the changes,
+maybe takes a second or two, and then it starts to push that upload.
+Oh.
+Normally it’s a little faster. Oh, I didn’t. That’s ‘cause I didn’t merge it. Sorry.
+There we go.
+Usually it detects it There it goes. See, it’s initializing.
+And then it’s kind of moving it from GitHub to the to the server where we’re showing it. To this railway dot com thing. Railway’s pretty cool. I like it. I haven’t used it before. This is the first time I’ve used railway. It’s a good it’s got like a free tier, and it’s got like a really low price tier.
+So it’s building.
+See, this is the database. This is where it’s hosting the database. This is where it’s posting it’s hosting all the back-end stuff, like everything that the front-end interacts with. And then here’s where it’s hosting all of the like UI stuff that you interact with. Right? So it it has to it’s a three separate places. On their server. Right? Uh-huh. And so it’s they’re connected. Right? The back-end connects to the database. The database is where it’s like storing like your own personal information, like everything from your resume and everything from your job search. It has to store it in like a database. Right? And then the front-end is obviously what you should look at in that communicates with the back-end, like all the APIs where it talks to GPT and stuff.
+It’s kind of a it’s kinda a neat, clean, simple thing. Really costs anything. It will cost money once we actually get customers.
+‘Cause they’re gonna be using it and the use is it’s gonna cost a bit. It won’t be like a million bucks. It’ll be like a few hundred bucks.
+You like this better than like Lovable or? I mean, I, I, I like how it’s working so far.
+It’s more like professional. Like I can you know, customize the front-end. This is just for back-end. This is for us, you know, to still waiting for the front-end to finish uploading. It’s been going for a couple minutes already.
+And then you can try to log in again and and. It’s more professional. It’s got more like rules than like Lovable. Okay. Hold on. Yes, dear.
+Hello I was gonna make it we’re not gonna make it for three. So I think we’re gonna go to mile seven. I understand.
+Okay. So um, did you wake up the girls anyways or like? Yeah. They’re up. Okay.
+Um,
+yeah. I’m gonna head that way in a minute. I’m gonna wash the car real quick ‘cause it’s dusty. Okay. And then uh,
+I don’t know Does that have all the time? I wanna see if I can go find you something. If you want to. No. No pressure. I’ll I’ll figure out if you don’t. I got some stuff I could wear. You want me to scoop you up? Um. If you. Give the girls a good dress? Yeah. You can.
+And then I’ll scoop you up while we hang on a call or something and and or if you have any or. Mm-hmm. And and grab me some T-shirts. Sounds fine. If you wanna do that. I’m hungry too. If you wanna feed me. I’m hungry. It’s so hot. Are we gonna try to I guess we’re not gonna try to do the movies today? No. Maybe it’ll be just gonna happen. Are we still gonna do the free popcorn?
+Yeah. We should definitely grab a big thing of popcorn. I’m not eating carbs, so it’s for you guys, but. But uh, well then we shouldn’t do the popcorn. We don’t need it. Well, we have those little movie buckets we got.
+Yeah. They’ll be kinda fun to pull up but Hey, Dave. You can go ahead and check it. Is it kinda weird to go to a pop lesson to eat popcorn?
+Uh, I don’t know It’s a little low class, but I don’t think anybody cares. I like a gathering working with kinda like a week.
+Is it working You’re able to log in You can see their personality thing? Yeah. Not 100%. Okay. I’m talking to Dave. All right. Uh. Oh, I see. But we’re about done. So yeah. Come get me.
+Okay. Let’s start getting dressed. I will. Bye. Okay. Love you. Bye. Love you. Bye. All right. So you wanna share? What you got?
+And then if you wanna do the what’s that?
+Oh. It looks like it actually works now Yeah. So now you can interact with it and kinda play with it and like we’re not gonna do any more changes today ‘cause I have to go, but you can like interact with it. It might be a fun a fun part of the app to interact with, and then you can uh, isn’t it neat how quickly we built it? Like with like. We now have like our own little personality thing. It you might even argue that it’s better than theirs.
+Uh-huh At least potentially. Like it’s more compact. It’s in one place. Like it’s easy to complete. Like we might even argue with a little bit of work we did that we uh, we created something better than what they have on their site, so. This is what I meant. Like we can probably just make our own.
+So. Wow.
+And you can retake it. I like there’s a retake button. It’s still doing the VFHA thing. Are you serious? Oh. You need to reset it.
+Click reset. Like down.
+Down down down Down? Down. There you go. There’s a reset button. Uh-huh. You need to clear off that V VFHA over there. Remember seeing that? It’s still there. Oh. Yeah.
+Um,
+hmm. That’d be very fresh. No. Reset.
+I click on reset. Oh. It didn’t work Uh, okay. Well, that’s another thing to fix.
+Um. All right Well, I think we’ve got everything we want. Wait a minute. Reset.
+It should clear my previous personality, test results. The V FVHA is still showing at the bottom.
+And it is done.
+All right, man. It was good. It was productive. I think from now on our sessions are gonna be working sessions. And we’ll do this iterate. We may not get through the whole page the whole site, but w-whatever we do get through will be productive and and every time we’ll make progress. And that’ll feel good.
+And if one of these days we’re able to get through the whole page the whole site, that’s even better. And now it’s closer to something you can show people. So now if you wanna start showing people the personality test, that might be a fun thing to show off. Yeah. I’ve been trying to show people without it, but um, now it’s really really more more branded. Yeah. It’s more branded. It’s coming together as something interesting. It’s gotta be conversation-worthy, so. These are good things.
+All right Oliver. It’s been a pleasure. It’s a pleasure, sir. Get back to my uh, my family activities for the day. Gonna go buy clothes for a funeral stuff. Good Monday and activities. This is probably the most excitement you had all day. Yeah. I’m hungry too. I’m gonna go eat some food.
+All right brother. I’ll talk to you later. All right. Take it easy. Bye.
+Okay.

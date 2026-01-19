@@ -98,6 +98,9 @@ def extract_key_metrics(lines: List[str]) -> List[str]:
         r"create|created|creating|"
         r"develop|developed|developing|"
         r"launch|launched|launching|"
+        r"drive|drove|driving|"
+        r"support|supported|supporting|"
+        r"generate|generated|generating|"
         r"spearheaded|spearhead"
         r")\b",
         re.I,
@@ -185,8 +188,13 @@ def extract_key_metrics(lines: List[str]) -> List[str]:
     merged_lines = _merge_wrapped(lines)
     for raw in merged_lines:
         l = (raw or "").strip()
-        if len(l) < 10 or len(l) > 240:
+        if len(l) < 10:
             continue
+        # LinkedIn/PDF extraction can produce long wrapped lines. Keep them, but cap for UI/variables.
+        if len(l) > 420:
+            continue
+        if len(l) > 260:
+            l = l[:260].rstrip()
         low = l.lower()
         if "linkedin.com" in low or "mailto:" in low or "@" in low:
             continue
@@ -220,6 +228,8 @@ def extract_key_metrics(lines: List[str]) -> List[str]:
         cleaned = _clean_metric_line(m)
         if not cleaned:
             continue
+        if len(cleaned) > 240:
+            cleaned = cleaned[:240].rstrip()
         k = cleaned.lower()
         if k in seen:
             continue
@@ -271,6 +281,17 @@ _MAJOR_HEADINGS = {
     "TECHNOLOGIES",
     "TOOLS",
     "TECHNICAL PROFICIENCIES",
+    # Certifications / awards (LinkedIn exports often include these near skills)
+    "CERTIFICATIONS",
+    "CERTIFICATION",
+    "LICENSES",
+    "LICENSES & CERTIFICATIONS",
+    "CERTIFICATIONS & LICENSES",
+    "HONORS",
+    "AWARDS",
+    "HONORS-AWARDS",
+    "HONORSAWARDS",
+    "HONORS & AWARDS",
     # Other
     "PUBLICATIONS",
     "BOOKS",
@@ -294,10 +315,15 @@ _MAJOR_HEADINGS = {
 def _normalize_text(s: str) -> str:
     # Remove common PDF null separators and normalize whitespace.
     s = (s or "").replace("\x00", " ").replace("\u0000", " ")
+    # Normalize non-breaking spaces from PDF extraction.
+    s = s.replace("\u00A0", " ")
     s = s.replace("\u2013", "-").replace("\u2014", "-")
     # DOCX/PDF extraction sometimes replaces punctuation with U+FFFD (�).
     # Be conservative: only normalize when it's used as a separator between words.
     s = re.sub(r"\s*�\s*", " - ", s)
+    # Some PDFs embed U+FFFD with no surrounding spaces (e.g., "2025�-�Present�(1 year)").
+    # After the conservative pass above, scrub any remaining U+FFFD so downstream regexes work.
+    s = s.replace("\uFFFD", " ")
     # Collapse repeated spaces but keep newlines for section logic.
     s = re.sub(r"[ \t]+", " ", s)
     return s
@@ -318,7 +344,7 @@ def _is_heading(line: str) -> bool:
     # e.g. "Technical Recruiter Skills and Software".
     # Keep this conservative to avoid treating normal sentences as headings.
     if len(up2) <= 80:
-        for kw in ("SKILLS", "EXPERIENCE", "EDUCATION", "CERTIFICATION", "ACCOMPLISHMENT"):
+        for kw in ("SKILLS", "EXPERIENCE", "EDUCATION", "CERTIFICATION", "CERTIFICATIONS", "AWARD", "AWARDS", "HONOR", "HONORS", "ACCOMPLISHMENT"):
             if re.search(rf"\b{kw}\b", up2):
                 return True
     return False
@@ -381,6 +407,11 @@ def _slice_sections(text: str) -> Dict[str, List[str]]:
                 head = "SKILLS"
             if head in ["TOP SKILLS", "LANGUAGES", "TECH STACK", "TECHNOLOGIES", "TOOLS", "TECHNICAL PROFICIENCIES"]:
                 head = "SKILLS"
+            # Certifications and awards should not be treated as skills.
+            if head in ["CERTIFICATION", "CERTIFICATIONS", "LICENSES", "LICENSES & CERTIFICATIONS", "CERTIFICATIONS & LICENSES"]:
+                head = "CERTIFICATIONS"
+            if head in ["HONORS", "AWARDS", "HONORS-AWARDS", "HONORSAWARDS", "HONORS & AWARDS", "HONOR AWARDS"]:
+                head = "HONORS_AWARDS"
             # Some resumes use headings like "Technical Recruiter Skills and Software".
             if "SKILL" in head:
                 head = "SKILLS"
@@ -408,6 +439,138 @@ def extract_skills_from_sections(sections: Dict[str, List[str]]) -> List[str]:
     raw_lines = sections.get("SKILLS") or []
     if not raw_lines:
         return []
+
+    def _strip_proficiency_suffix(s: str) -> str:
+        """
+        LinkedIn exports often attach proficiency like "(Full Professional)".
+        Keep the skill, drop the proficiency tag.
+        """
+        t = (s or "").strip()
+        t = re.sub(
+            r"\s*\(\s*(?:full professional|native or bilingual|professional working|limited working|elementary|beginner|intermediate|advanced|fluent)\s*\)\s*$",
+            "",
+            t,
+            flags=re.I,
+        ).strip()
+        return t
+
+    def _strip_category_label(s: str) -> str:
+        """
+        Remove leading category labels like:
+          - "Languages: Python"
+          - "Frameworks / Libraries: React"
+          - "Tools (continued): Docker"
+        """
+        t = (s or "").strip()
+        m = re.match(
+            r"^(?:languages?|frameworks?|libraries?|frameworks?\s*/\s*libraries?|tools?|databases?|technologies?|tech stack|stack|skills?|operating systems?|os)\b[^:]{0,40}:\s*(.+)$",
+            t,
+            flags=re.I,
+        )
+        if m:
+            return (m.group(1) or "").strip()
+        return t
+
+    def _expand_embedded_label(s: str) -> List[str]:
+        """
+        Handle tokens like:
+          - "JSON Frameworks / Libraries: React"
+          - "Electron Databases: PostgreSQL"
+          - "FontAwesome Tools (continued): Docker"
+          - "Loadash Hosting: Heroku"
+        Return a list of candidate tokens (prefix + rhs) to be re-filtered/deduped.
+        """
+        t = (s or "").strip()
+        if ":" not in t:
+            return [t]
+        m = re.match(
+            r"^(?P<prefix>[A-Za-z0-9\.\+\#]{2,}(?:\s+[A-Za-z0-9\.\+\#]{2,}){0,2})\s+.*?\b(?:frameworks?|libraries?|databases?|tools?|hosting|platforms?|operating systems?|os)\b[^:]{0,40}:\s*(?P<rhs>.+)$",
+            t,
+            flags=re.I,
+        )
+        if not m:
+            return [t]
+        prefix = (m.group("prefix") or "").strip(" ,;:|\n\t")
+        rhs = (m.group("rhs") or "").strip()
+        out = []
+        if prefix:
+            out.append(prefix)
+        if rhs:
+            out.append(rhs)
+        return out or [t]
+
+    _stop_tokens = {
+        # Locations / personal tags commonly present in LinkedIn headers
+        "mission",
+        "texas",
+        "united states",
+        "usa",
+        # Section labels / noise
+        "certifications",
+        "certification",
+        "honors-awards",
+        "honors",
+        "awards",
+        "medal",
+        "techniques",
+        "introduction",
+        "languages",
+        "top skills",
+        # Non-skill personal tags that are often extracted as tokens
+        "author",
+        "veteran",
+        "girl dad",
+    }
+
+    def _looks_like_location(s: str) -> bool:
+        low = (s or "").strip().lower()
+        if not low:
+            return False
+        if low in _stop_tokens:
+            return True
+        if "," in low and any(x in low for x in ["united states", "texas", "usa"]):
+            return True
+        return False
+
+    def _looks_like_role_or_header(s: str) -> bool:
+        t = (s or "").strip()
+        if not t:
+            return False
+        low = t.lower()
+        # Very common LinkedIn header line: "Principal ... | ... | ..."
+        if "|" in t and len(t.split()) >= 6:
+            return True
+        # Degree + role headline
+        if re.search(r"\b(ms|mba|phd|bs|ba)\b", low) and re.search(r"\b(engineer|architect|director|principal|manager|vp)\b", low):
+            return True
+        # Section-like lines
+        if t.endswith(":"):
+            return True
+        return False
+
+    def _is_likely_skill(tok: str) -> bool:
+        t = (tok or "").strip()
+        if not t:
+            return False
+        t = t.lstrip("~").strip()
+        if not t:
+            return False
+        low = t.lower()
+        if low in _stop_tokens:
+            return False
+        if _looks_like_location(t):
+            return False
+        if _looks_like_role_or_header(t):
+            return False
+        if _is_heading(t):
+            return False
+        # Reject obvious certifications fragments and award-like phrases that are not skills
+        if re.search(r"\b(certification|certifications|honors|awards|medal|ribbon|commendation)\b", low):
+            return False
+        # Reject very long multi-word phrases (usually headlines or sentences)
+        if len(t.split()) >= 8 and ":" not in t:
+            return False
+        return True
 
     # Many DOCX resumes list skills as bullets or short lines; PDFs often use commas.
     # We'll support both.
@@ -438,14 +601,24 @@ def extract_skills_from_sections(sections: Dict[str, List[str]]) -> List[str]:
         s = _normalize_text(l).strip()
         s = s.lstrip("-•* ").strip()
         if s:
+            s = _strip_proficiency_suffix(s)
+            s = _strip_category_label(s)
             # Common in recruiting resumes: "ATS | CRM | Workday | ..."
             if "|" in s:
                 for part in s.split("|"):
                     pt = part.strip(" ,;:|\n\t")
                     if pt:
                         tokens.append(pt)
+            # Comma-separated short lists (common in DOCX skills sections)
+            elif "," in s and len(s) <= 80:
+                for part in s.split(","):
+                    pt = part.strip(" ,;:|\n\t")
+                    if pt:
+                        tokens.append(pt)
             else:
-                tokens.append(s)
+                # Avoid swallowing long headline/location lines as "skills"
+                if len(s) <= 60 and len(s.split()) <= 6 and not _looks_like_role_or_header(s) and not _looks_like_location(s):
+                    tokens.append(s)
 
     category_set = {m.upper() for m in category_markers}
 
@@ -454,33 +627,43 @@ def extract_skills_from_sections(sections: Dict[str, List[str]]) -> List[str]:
     for tok in tokens:
         if not tok:
             continue
+        expanded = _expand_embedded_label(tok)
+        for t2 in expanded:
+            t2 = _strip_proficiency_suffix(t2)
+            t2 = _strip_category_label(t2)
+            t2 = t2.lstrip("~").strip()
+            if not t2:
+                continue
         # Trim leading label fragments like "AI & ML" or "DATA ENGINEERING"
-        up = tok.upper().strip()
-        if up in category_set:
-            continue
+            up = t2.upper().strip()
+            if up in category_set:
+                continue
         # If a category marker got merged into a token, split it out.
         for m in category_markers:
             mu = m.upper()
             if mu in up and up != mu:
-                tok = re.split(re.escape(m), tok, flags=re.I)[0].strip(" ,;:\n\t")
-                up = tok.upper().strip()
+                t2 = re.split(re.escape(m), t2, flags=re.I)[0].strip(" ,;:\n\t")
+                up = t2.upper().strip()
                 break
-        if not tok or up in category_set:
-            continue
+            if not t2 or up in category_set:
+                continue
         # Drop very long descriptive phrases (likely not a skill token)
-        if len(tok) > 80 and " " in tok:
-            continue
+            if len(t2) > 80 and " " in t2:
+                continue
         # Drop obvious extraction garbage
-        if re.fullmatch(r"[A-Za-z\? ]{0,6}", tok) and "?" in tok:
-            continue
+            if re.fullmatch(r"[A-Za-z\? ]{0,6}", t2) and "?" in t2:
+                continue
         # Normalize a couple artifacts
-        tok = tok.replace("  ", " ").strip()
-        tok = re.sub(r"\s*\(.*?\)\s*", lambda m: m.group(0) if len(m.group(0)) <= 28 else " ", tok).strip()
-        key = tok.lower()
-        if key in seen:
-            continue
-        seen.add(key)
-        skills.append(tok)
+            t2 = t2.replace("  ", " ").strip()
+            t2 = re.sub(r"\s*\(.*?\)\s*", lambda m: m.group(0) if len(m.group(0)) <= 28 else " ", t2).strip()
+            t2 = _strip_proficiency_suffix(t2)
+            if not _is_likely_skill(t2):
+                continue
+            key = t2.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            skills.append(t2)
 
     return skills[:60]
 
@@ -495,6 +678,37 @@ def extract_skills_from_lines(lines: List[str]) -> List[str]:
 
     def add(tok: str) -> None:
         t = (tok or "").strip().strip("•-* ").strip()
+        # Strip LinkedIn proficiency suffixes.
+        t = re.sub(
+            r"\s*\(\s*(?:full professional|native or bilingual|professional working|limited working|elementary|beginner|intermediate|advanced|fluent)\s*\)\s*$",
+            "",
+            t,
+            flags=re.I,
+        ).strip()
+        # Strip leading category labels (common in DOCX resumes).
+        m = re.match(
+            r"^(?:languages?|frameworks?|libraries?|frameworks?\s*/\s*libraries?|tools?|databases?|technologies?|tech stack|stack|skills?|operating systems?|os)\b[^:]{0,40}:\s*(.+)$",
+            t,
+            flags=re.I,
+        )
+        if m:
+            t = (m.group(1) or "").strip()
+        # Split embedded category labels (e.g., "Electron Databases: PostgreSQL" -> "Electron" + "PostgreSQL").
+        if ":" in t:
+            m2 = re.match(
+                r"^(?P<prefix>[A-Za-z0-9\.\+\#]{2,}(?:\s+[A-Za-z0-9\.\+\#]{2,}){0,2})\s+.*?\b(?:frameworks?|libraries?|databases?|tools?|hosting|platforms?|operating systems?|os)\b[^:]{0,40}:\s*(?P<rhs>.+)$",
+                t,
+                flags=re.I,
+            )
+            if m2:
+                prefix = (m2.group("prefix") or "").strip()
+                rhs = (m2.group("rhs") or "").strip()
+                # Recurse via inner adds, but keep guards/seen behavior.
+                if prefix and prefix != t:
+                    add(prefix)
+                if rhs and rhs != t:
+                    add(rhs)
+                return
         if not t or len(t) > 60:
             return
         k = t.lower()
@@ -509,7 +723,7 @@ def extract_skills_from_lines(lines: List[str]) -> List[str]:
         if not m:
             continue
         rhs = m.group(2)
-        for tok in re.split(r"[;,/|]| {2,}", rhs):
+        for tok in re.split(r"[,;/|]| {2,}", rhs):
             if tok.strip():
                 add(tok)
 
@@ -1077,7 +1291,7 @@ def extract_positions(lines: List[str], sections: Dict[str, List[str]] | None = 
     if sections and (sections.get("EXPERIENCE") or []):
         exp_lines = [_normalize_text(l).strip() for l in (sections.get("EXPERIENCE") or []) if l and l.strip()]
 
-    title_tokens = COMMON_TITLES + ["recruiter", "coach", "account", "sales", "architect"]
+    title_tokens = COMMON_TITLES + ["recruiter", "coach", "account", "sales", "architect", "facilitator", "medic"]
     def _has_title_token(s: str) -> bool:
         low = (s or "").lower()
         for tok in title_tokens:
@@ -1100,11 +1314,47 @@ def extract_positions(lines: List[str], sections: Dict[str, List[str]] | None = 
         re.I,
     )
 
+    # LinkedIn-exported resumes often format experience as:
+    #   Company
+    #   Title
+    #   Month YYYY - Month YYYY (duration)
+    # and put the description after. Capture these too.
+    month_name = r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
+    linkedin_date_re = re.compile(
+        rf"^(?P<start>{month_name}\s+\d{{4}})\s*(?:-|–|—|to)\s*(?P<end>{month_name}\s+\d{{4}}|Present)(?:\s*\(.*\))?\s*$",
+        re.I,
+    )
+
     def _looks_like_company_line(s: str) -> bool:
         cand = (s or "").strip()
         if not cand:
             return False
         low = cand.lower()
+        # Skip PDF page markers which often appear in extracted text.
+        if re.fullmatch(r"page\s+\d+\s+of\s+\d+", low):
+            return False
+        # Skip duration-only lines like "7 years 9 months" that appear in LinkedIn exports.
+        if re.fullmatch(r"\d+\s+years?(?:\s+\d+\s+months?)?", low) or re.fullmatch(r"\d+\s+months?", low):
+            return False
+        # Skip obvious non-company location lines.
+        if low in {"united states", "remote"}:
+            return False
+        if low.endswith("metropolitan area"):
+            return False
+        # Section labels / headers that show up as standalone lines in PDF extraction.
+        if cand.endswith(":"):
+            return False
+        # Companies are typically capitalized; reject obvious sentence fragments.
+        if cand[:1].islower():
+            return False
+        if low.endswith("."):
+            return False
+        # Reject common achievement/action sentences that are frequently mis-identified as company names.
+        if re.search(
+            r"\b(built|delivered|developed|optimized|designed|implemented|led|created|deployed|integrated|established|prototyped|collaborated|supported|maintained|directed|engineered|scaled|played|improved|reduced|increased|secured|enabled|eliminated|mentored|modernized)\b",
+            low,
+        ):
+            return False
         if "http" in low or "linkedin.com" in low:
             return False
         # Avoid picking up sentences as "company"
@@ -1125,9 +1375,79 @@ def extract_positions(lines: List[str], sections: Dict[str, List[str]] | None = 
         while i < len(exp):
             l = exp[i]
             m = title_date_re.match(l)
+            m_li = linkedin_date_re.match(l)
             if not m:
-                i += 1
+                # Try LinkedIn-style date line; look backward for title/company.
+                if not m_li:
+                    i += 1
+                    continue
+
+                start = (m_li.group("start") or "").strip()
+                end = (m_li.group("end") or "").strip()
+                current = end.lower() == "present"
+
+                # Find previous non-empty, non-heading lines for title/company (LinkedIn exports can insert duration lines).
+                prevs: List[str] = []
+                j = i - 1
+                while j >= 0 and len(prevs) < 14:
+                    cand = (exp[j] or "").strip()
+                    if cand and not _is_heading(cand):
+                        prevs.append(cand)
+                    j -= 1
+                if prevs and len(prevs) >= 2 and prevs[0].endswith(")") and "(" in prevs[1] and ")" not in prevs[1] and len(prevs[0].split()) <= 4:
+                    prevs[1] = f"{prevs[1]} {prevs[0]}".strip()
+                    prevs = prevs[1:]
+
+                title = ""
+                title_idx = None
+                for idx, cand in enumerate(prevs):
+                    if cand.endswith(":"):
+                        continue
+                    if _has_title_token(cand) and len(cand.split()) <= 14:
+                        title = cand
+                        title_idx = idx
+                        break
+                if not title and prevs:
+                    title = prevs[0]
+                    title_idx = 0
+
+                company = ""
+                if title_idx is not None:
+                    for cand in prevs[title_idx + 1 :]:
+                        if _looks_like_company_line(cand):
+                            company = cand
+                            break
+
+                # Description: gather a few lines after the date line.
+                desc_lines: List[str] = []
+                k = i + 1
+                while k < len(exp) and len(desc_lines) < 4:
+                    cand = (exp[k] or "").strip()
+                    if not cand:
+                        k += 1
+                        continue
+                    if _is_heading(cand) or title_date_re.match(cand) or company_date_re.match(cand) or linkedin_date_re.match(cand):
+                        break
+                    # LinkedIn exports sometimes include "United States" / locations as standalone lines—skip those.
+                    if re.fullmatch(r"[A-Za-z ,]{2,40}", cand) and cand.lower() in {"united states", "remote"}:
+                        k += 1
+                        continue
+                    desc_lines.append(cand.strip(" -•\t"))
+                    k += 1
+
+                out.append(
+                    {
+                        "title": (title or "")[:80],
+                        "company": (company or "")[:80],
+                        "start_date": start,
+                        "end_date": "" if current else end,
+                        "current": current,
+                        "description": " ".join(desc_lines).strip()[:240],
+                    }
+                )
+                i = k
                 continue
+
             title = (m.group("title") or "").strip()
             start = (m.group("start") or "").strip()
             end = (m.group("end") or "").strip()
@@ -1168,19 +1488,99 @@ def extract_positions(lines: List[str], sections: Dict[str, List[str]] | None = 
     if exp_lines:
         positions = _positions_from_experience_block(exp_lines)
         if positions:
-            # de-dup by title+company order preserved
+            # de-dup by title+company order preserved.
+            # NOTE: do NOT early-return here; some PDFs (notably LinkedIn exports) may have
+            # additional roles outside the sliced EXPERIENCE block due to intermediate headings
+            # like "Highlights". We'll merge with patterns found across all lines below.
             seen = set()
             unique: List[Dict[str, object]] = []
             for p in positions:
-                key = (p.get("title"), p.get("company"))
+                key = (p.get("title"), p.get("company"), p.get("start_date"))
                 if key not in seen:
                     seen.add(key)
                     unique.append(p)
-            return unique[:10]
+            positions = unique
 
     i = 0
     while i < len(lines):
         l = lines[i]
+        # LinkedIn-style month-year range line on its own; look backward for title/company and forward for a short description.
+        m_li = linkedin_date_re.match(l)
+        if m_li:
+            start = (m_li.group("start") or "").strip()
+            end = (m_li.group("end") or "").strip()
+            current = end.lower() == "present"
+
+            # Find previous non-empty, non-heading lines for title/company (LinkedIn exports can insert duration lines).
+            prevs: List[str] = []
+            j = i - 1
+            while j >= 0 and len(prevs) < 14:
+                cand = (lines[j] or "").strip()
+                if cand and not _is_heading(cand):
+                    prevs.append(cand)
+                j -= 1
+            if prevs and len(prevs) >= 2 and prevs[0].endswith(")") and "(" in prevs[1] and ")" not in prevs[1] and len(prevs[0].split()) <= 4:
+                prevs[1] = f"{prevs[1]} {prevs[0]}".strip()
+                prevs = prevs[1:]
+
+            title = ""
+            title_idx = None
+            for idx, cand in enumerate(prevs):
+                if cand.endswith(":"):
+                    continue
+                if _has_title_token(cand) and len(cand.split()) <= 14:
+                    title = cand
+                    title_idx = idx
+                    break
+            if not title and prevs:
+                title = prevs[0]
+                title_idx = 0
+
+            company = ""
+            if title_idx is not None:
+                for cand in prevs[title_idx + 1 :]:
+                    if _looks_like_company_line(cand):
+                        company = cand
+                        break
+            # Fallback: for LinkedIn exports, company may be declared once for multiple roles.
+            # Walk further back to find the nearest plausible company header.
+            if not company:
+                for j2 in range(i - 1, max(-1, i - 80), -1):
+                    cand = (lines[j2] or "").strip()
+                    if not cand or _is_heading(cand):
+                        continue
+                    if _looks_like_company_line(cand) and not _has_title_token(cand) and len(cand.split()) <= 8:
+                        company = cand
+                        break
+
+            desc_lines: List[str] = []
+            k = i + 1
+            while k < len(lines) and len(desc_lines) < 4:
+                cand = (lines[k] or "").strip()
+                if not cand:
+                    k += 1
+                    continue
+                if _is_heading(cand) or company_date_re.match(cand) or title_date_re.match(cand) or linkedin_date_re.match(cand):
+                    break
+                if re.fullmatch(r"page\s+\d+\s+of\s+\d+", cand.strip().lower()):
+                    k += 1
+                    continue
+                desc_lines.append(cand.strip(" -•\t"))
+                k += 1
+
+            positions.append(
+                {
+                    "title": (title or "")[:80],
+                    "company": (company or "")[:80],
+                    "start_date": start,
+                    "end_date": "" if current else end,
+                    "current": current,
+                    "description": " ".join(desc_lines).strip()[:240],
+                }
+            )
+            i = k
+            continue
+
         m = company_date_re.match(l)
         if m:
             company = (m.group("company") or "").strip().strip(" -–—\t")
@@ -1296,15 +1696,36 @@ def extract_positions(lines: List[str], sections: Dict[str, List[str]] | None = 
         # on modern PDF resumes (e.g., project titles, URLs, headings).
         i += 1
 
-    # de-dup by title+company order preserved
-    seen = set()
-    unique: List[Dict[str, object]] = []
+    # De-dup with quality preference (keep the most informative entry).
+    best_by_key: Dict[Tuple[str, str], Dict[str, object]] = {}
+    order: List[Tuple[str, str]] = []
+
+    def score(p: Dict[str, object]) -> Tuple[int, int, int]:
+        company = str(p.get("company") or "").strip()
+        title = str(p.get("title") or "").strip()
+        desc = str(p.get("description") or "").strip()
+        # Prefer company present; then longer description; then start_date present.
+        return (1 if company and company != title else 0, len(desc), 1 if str(p.get("start_date") or "").strip() else 0)
+
     for p in positions:
-        key = (p.get("title"), p.get("company"))
-        if key not in seen:
-            seen.add(key)
-            unique.append(p)
-    return unique[:8]
+        title = str(p.get("title") or "").strip()
+        company = str(p.get("company") or "").strip()
+        start = str(p.get("start_date") or "").strip()
+        # If company accidentally equals title, treat as missing company.
+        if company and title and company == title:
+            company = ""
+            p["company"] = ""
+        key = (title, start)
+        if key not in best_by_key:
+            best_by_key[key] = p
+            order.append(key)
+        else:
+            cur = best_by_key[key]
+            if score(p) > score(cur):
+                best_by_key[key] = p
+
+    unique = [best_by_key[k] for k in order]
+    return unique[:10]
 
 
 def extract_domains(text: str) -> List[str]:
@@ -1324,6 +1745,10 @@ def parse_resume(text: str) -> Dict[str, object]:
     # Prefer EXPERIENCE-section metrics to avoid education/contact noise on some PDFs (e.g., GPA).
     metric_source = sections.get("EXPERIENCE") or lines
     key_metrics = extract_key_metrics([_normalize_text(l).strip() for l in metric_source if l and l.strip()])
+    # Some resumes (notably LinkedIn exports) break EXPERIENCE into sub-headings (e.g., "Highlights"),
+    # which can cause the sliced EXPERIENCE block to miss the strongest metric lines. Fall back to full text.
+    if not key_metrics and (sections.get("EXPERIENCE") or []):
+        key_metrics = extract_key_metrics([_normalize_text(l).strip() for l in lines if l and l.strip()])
     pa = extract_problems_and_accomplishments(lines)
     # Prefer roles from EXPERIENCE if we can parse them; otherwise fall back to naive title detection.
     roles_info = extract_roles_and_tenure(sections)
