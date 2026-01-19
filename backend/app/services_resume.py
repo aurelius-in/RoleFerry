@@ -59,20 +59,131 @@ def extract_key_metrics(lines: List[str]) -> List[str]:
     """
     metrics: List[str] = []
 
-    # Recognize numbers that are more likely to be "impact" than just years.
-    has_metric_token = re.compile(
+    # Prefer true impact signals (avoid picking up years, versions, GPA, etc.)
+    has_strong_metric = re.compile(
         r"("
         r"\$\s*\d[\d,]*(?:\.\d+)?\s*(?:[kKmMbB])?\+?"
-        r"|\b\d{2,3}%\b|\b\d+%\b"
+        # NOTE: don't use a trailing \b after '%' (it is non-word), or it won't match.
+        r"|\b\d{1,3}\s*%"
         r"|\b\d[\d,]*(?:\.\d+)?\s*(?:k|m|b)\+?\b"
-        r"|\b\d{2,}\b"
-        r")"
+        r"|\b\d+(?:\.\d+)?\s*(?:million|billion)\b"
+        r"|\b\d+\s*(?:x|×)\b"
+        r")",
+        re.I,
+    )
+    # Count metrics that matter only if paired with an action verb and a noun (agents, users, pipelines, etc.)
+    has_count_metric = re.compile(
+        r"\b\d{2,}\s+(?:users?|customers?|pipelines?|models?|microservices?|agents?|workflows?|teams?|projects?|days?|weeks?|months?)\b",
+        re.I,
     )
     looks_like_year = re.compile(r"\b(19|20)\d{2}\b")
     looks_like_year_range = re.compile(r"\b(19|20)\d{2}\b\s*[-–—]\s*\b(19|20)\d{2}\b")
     looks_like_phone = re.compile(r"\b\d{3}[- )]\d{3}[- ]\d{4}\b")
+    # Require an action verb so the metric is usable as downstream context (avoid orphan fragments like "turnaround time by 50%").
+    verbs = re.compile(
+        r"\b("
+        r"reduce|reduced|reducing|cut|cuts|cutting|"
+        r"increase|increased|increasing|grow|grew|growing|"
+        r"improve|improved|improving|"
+        r"boost|boosted|boosting|"
+        r"save|saved|saving|"
+        r"ship|shipped|shipping|deliver|delivered|delivering|"
+        r"build|built|building|design|designed|designing|"
+        r"lead|led|leading|"
+        r"automate|automated|automating|"
+        r"optimize|optimized|optimizing|"
+        r"accelerate|accelerated|accelerating|"
+        r"deploy|deployed|deploying|"
+        r"implement|implemented|implementing|"
+        r"create|created|creating|"
+        r"develop|developed|developing|"
+        r"launch|launched|launching|"
+        r"spearheaded|spearhead"
+        r")\b",
+        re.I,
+    )
 
-    for raw in lines:
+    def _merge_wrapped(ls: List[str]) -> List[str]:
+        """
+        PDFs often wrap a bullet into multiple lines, e.g.
+          'Reduced turnaround time'
+          'by 50%'
+        or:
+          '... improving'
+          'deployment efficiency by 100%'
+        Merge conservative continuations so metrics become readable.
+        """
+        out: List[str] = []
+        i = 0
+        while i < len(ls):
+            cur = (ls[i] or "").strip()
+            if not cur:
+                i += 1
+                continue
+            low = cur.lower()
+            # Skip obvious noise early
+            if "gpa" in low:
+                i += 1
+                continue
+
+            # If this line is a fragment that starts lowercase and the previous line exists,
+            # merge into the previous line (common in PDF extraction).
+            if out:
+                prev = out[-1]
+                if (
+                    cur[:1].islower()
+                    and has_strong_metric.search(cur)
+                    and not has_strong_metric.search(prev)
+                    and (verbs.search(prev) or prev.endswith(("by", "for", "to", ",")))
+                ):
+                    merged_prev = f"{prev} {cur}".strip()
+                    if len(merged_prev) <= 260:
+                        out[-1] = merged_prev
+                        i += 1
+                        continue
+
+            if i + 1 < len(ls):
+                nxt = (ls[i + 1] or "").strip()
+                nlow = nxt.lower()
+
+                # If next line is a continuation ("by 50%", "for X", starts lowercase), merge.
+                if (
+                    nlow.startswith(("by ", "for ", "to ", "and "))
+                    or (nxt[:1].islower() and len(nxt) <= 120)
+                    or (cur.endswith(("by", "for", "to", ",")) and len(nxt) <= 140)
+                ):
+                    merged = f"{cur} {nxt}".strip()
+                    # Only merge if it doesn't explode in size.
+                    if len(merged) <= 220:
+                        out.append(merged)
+                        i += 2
+                        continue
+            out.append(cur)
+            i += 1
+        return out
+
+    def _clean_metric_line(s: str) -> str:
+        t = (s or "").strip().lstrip("-•* ").strip()
+        # If it looks like a trailing clause after a period, keep the last clause (often the real metric)
+        if ". " in t:
+            parts = [p.strip() for p in t.split(". ") if p.strip()]
+            # Prefer the shortest clause that still contains a strong metric + a verb
+            best = ""
+            best_len = 10_000
+            for p in parts:
+                if has_strong_metric.search(p) and verbs.search(p):
+                    if len(p) < best_len:
+                        best = p
+                        best_len = len(p)
+            if best:
+                t = best
+        # Trim leading conjunctions that often appear after PDF wrapping
+        t = re.sub(r"^(and|or)\s+", "", t, flags=re.I).strip()
+        t = re.sub(r"[ \t]+", " ", t).strip()
+        return t
+
+    merged_lines = _merge_wrapped(lines)
+    for raw in merged_lines:
         l = (raw or "").strip()
         if len(l) < 10 or len(l) > 240:
             continue
@@ -83,13 +194,19 @@ def extract_key_metrics(lines: List[str]) -> List[str]:
             continue
         if looks_like_year_range.search(l):
             continue
+        if "gpa" in low:
+            continue
 
-        if not has_metric_token.search(l):
+        # require a strong metric marker OR a count metric + a verb
+        if not (has_strong_metric.search(l) or (has_count_metric.search(l) and verbs.search(l))):
+            continue
+        # If it's a strong metric (%, $, etc), also require an action verb so it's understandable.
+        if has_strong_metric.search(l) and not verbs.search(l):
             continue
 
         # If it contains a year token, require stronger metric markers to avoid date noise.
         if looks_like_year.search(l):
-            if re.search(r"(\$|%|\b\d[\d,]*\s*(?:k|m|b)\b)", l, re.I):
+            if re.search(r"(\$|%|\b\d[\d,]*\s*(?:k|m|b)\b|\b\d+(?:\.\d+)?\s*(?:million|billion)\b)", l, re.I):
                 metrics.append(l)
             else:
                 continue
@@ -100,11 +217,14 @@ def extract_key_metrics(lines: List[str]) -> List[str]:
     seen = set()
     out: List[str] = []
     for m in metrics:
-        k = m.lower()
+        cleaned = _clean_metric_line(m)
+        if not cleaned:
+            continue
+        k = cleaned.lower()
         if k in seen:
             continue
         seen.add(k)
-        out.append(m)
+        out.append(cleaned)
         if len(out) >= 12:
             break
     return out[:10]
@@ -225,8 +345,27 @@ def _slice_sections(text: str) -> Dict[str, List[str]]:
             buf = []
             return
         prev = sections.get(current) or []
-        if len(content) > len(prev):
+        if not prev:
             sections[current] = content
+        else:
+            # Some PDFs repeat major headings across pages/columns (notably EXPERIENCE).
+            # For these, prefer a merged view rather than picking only the longest block.
+            if current in {"EXPERIENCE", "SKILLS", "ACCOMPLISHMENTS", "BUSINESS_CHALLENGES"}:
+                seen = set([p.strip() for p in prev if p and p.strip()])
+                merged = list(prev)
+                for x in content:
+                    k = (x or "").strip()
+                    if not k:
+                        continue
+                    if k in seen:
+                        continue
+                    seen.add(k)
+                    merged.append(x)
+                sections[current] = merged
+            else:
+                # Default behavior: keep the longest chunk
+                if len(content) > len(prev):
+                    sections[current] = content
         buf = []
 
     for line in lines:
@@ -926,9 +1065,17 @@ def extract_notable_accomplishments(sections: Dict[str, List[str]]) -> List[str]
     return acc
 
 
-def extract_positions(lines: List[str]) -> List[Dict[str, str]]:
+def extract_positions(lines: List[str], sections: Dict[str, List[str]] | None = None) -> List[Dict[str, str]]:
     positions: List[Dict[str, object]] = []
     lines = [_normalize_text(l).strip() for l in lines if l and l.strip()]
+
+    # If we have an EXPERIENCE section, prefer extracting positions from it.
+    # Enhancv-style PDFs commonly use:
+    #   "Title 01/2025 - Present"
+    #   "Company Remote"
+    exp_lines: List[str] = []
+    if sections and (sections.get("EXPERIENCE") or []):
+        exp_lines = [_normalize_text(l).strip() for l in (sections.get("EXPERIENCE") or []) if l and l.strip()]
 
     title_tokens = COMMON_TITLES + ["recruiter", "coach", "account", "sales", "architect"]
     def _has_title_token(s: str) -> bool:
@@ -945,6 +1092,91 @@ def extract_positions(lines: List[str]) -> List[Dict[str, str]]:
         rf"^(?P<company>.+?)\s+(?P<start>{month_name}\s+\d{{4}})\s*(?:-|–|—|to)\s*(?P<end>{month_name}\s+\d{{4}}|Present)\s*$",
         re.I,
     )
+
+    # Enhancv/modern PDF resumes often use: "Title   01/2025 - Present" on one line (company next line).
+    date_token = r"(?:\d{2}/\d{4}|[A-Za-z]{3,9}\s+\d{4})"
+    title_date_re = re.compile(
+        rf"^(?P<title>.+?)\s+(?P<start>{date_token})\s*(?:-|–|—|to|\s)\s*(?P<end>(?:{date_token}|Present))(?:\s*\(.*\))?\s*$",
+        re.I,
+    )
+
+    def _looks_like_company_line(s: str) -> bool:
+        cand = (s or "").strip()
+        if not cand:
+            return False
+        low = cand.lower()
+        if "http" in low or "linkedin.com" in low:
+            return False
+        # Avoid picking up sentences as "company"
+        if len(cand) > 90:
+            return False
+        if re.search(r"\b(19|20)\d{2}\b", cand):
+            return False
+        if _is_heading(cand):
+            return False
+        # If it looks like a title, not a company
+        if _has_title_token(cand) and len(cand.split()) <= 12:
+            return False
+        return True
+
+    def _positions_from_experience_block(exp: List[str]) -> List[Dict[str, object]]:
+        out: List[Dict[str, object]] = []
+        i = 0
+        while i < len(exp):
+            l = exp[i]
+            m = title_date_re.match(l)
+            if not m:
+                i += 1
+                continue
+            title = (m.group("title") or "").strip()
+            start = (m.group("start") or "").strip()
+            end = (m.group("end") or "").strip()
+            current = end.lower() == "present"
+            company = ""
+            if i + 1 < len(exp) and _looks_like_company_line(exp[i + 1]):
+                company = exp[i + 1].strip()
+            # Description: gather a few lines until next role line or heading
+            desc_lines: List[str] = []
+            k = i + 2 if company else i + 1
+            while k < len(exp) and len(desc_lines) < 4:
+                cand = (exp[k] or "").strip()
+                if not cand:
+                    k += 1
+                    continue
+                if _is_heading(cand) or title_date_re.match(cand) or company_date_re.match(cand):
+                    break
+                # Avoid swallowing the next company's line as description
+                if _looks_like_company_line(cand) and not _has_title_token(cand) and len(cand.split()) <= 10:
+                    # keep one company-ish blurb only if we don't have any description yet
+                    if desc_lines:
+                        break
+                desc_lines.append(cand.strip(" -•\t"))
+                k += 1
+            out.append(
+                {
+                    "title": title[:80],
+                    "company": company[:80],
+                    "start_date": start,
+                    "end_date": "" if current else end,
+                    "current": current,
+                    "description": " ".join(desc_lines).strip()[:240],
+                }
+            )
+            i = k
+        return out
+
+    if exp_lines:
+        positions = _positions_from_experience_block(exp_lines)
+        if positions:
+            # de-dup by title+company order preserved
+            seen = set()
+            unique: List[Dict[str, object]] = []
+            for p in positions:
+                key = (p.get("title"), p.get("company"))
+                if key not in seen:
+                    seen.add(key)
+                    unique.append(p)
+            return unique[:10]
 
     i = 0
     while i < len(lines):
@@ -1019,28 +1251,49 @@ def extract_positions(lines: List[str]) -> List[Dict[str, str]]:
             i = k
             continue
 
-        # Fallback: naive position parsing from lines that mention common titles
-        if _has_title_token(l) and not _is_heading(l):
-            # Avoid misclassifying summary sentences as positions.
-            # Require it to look like a short title line.
-            if len(l.split()) > 12:
-                i += 1
-                continue
-            if "," in l or "." in l:
-                i += 1
-                continue
-            parts = re.split(r"\s+at\s+|\s+-\s+|,\s*", l)
-            if len(parts) >= 1:
-                positions.append(
-                    {
-                        "title": (parts[0] or "")[:80],
-                        "company": (parts[1] if len(parts) > 1 else "")[:80],
-                        "start_date": None,
-                        "end_date": None,
-                        "current": False,
-                        "description": "",
-                    }
-                )
+        # Handle "Title + date range" lines (company usually next line)
+        m2 = title_date_re.match(l)
+        if m2 and _has_title_token(m2.group("title") or ""):
+            title = (m2.group("title") or "").strip()
+            start = (m2.group("start") or "").strip()
+            end = (m2.group("end") or "").strip()
+            current = end.lower() == "present"
+            company = ""
+            if i + 1 < len(lines) and _looks_like_company_line(lines[i + 1]):
+                company = lines[i + 1].strip()
+            # short description lines after company
+            desc_lines: List[str] = []
+            k = i + 2 if company else i + 1
+            while k < len(lines) and len(desc_lines) < 3:
+                cand = (lines[k] or "").strip()
+                if not cand:
+                    k += 1
+                    continue
+                if _is_heading(cand) or company_date_re.match(cand) or title_date_re.match(cand):
+                    break
+                if "http" in cand.lower() or "linkedin.com" in cand.lower():
+                    k += 1
+                    continue
+                # Stop if we hit another title-ish line (likely the next role)
+                if _has_title_token(cand) and len(cand.split()) <= 12:
+                    break
+                desc_lines.append(cand.strip(" -•\t"))
+                k += 1
+            positions.append(
+                {
+                    "title": title[:80],
+                    "company": company[:80],
+                    "start_date": start,
+                    "end_date": "" if current else end,
+                    "current": current,
+                    "description": " ".join(desc_lines).strip()[:240],
+                }
+            )
+            i = k
+            continue
+
+        # We intentionally avoid date-less fallback title detection here because it produces lots of false positives
+        # on modern PDF resumes (e.g., project titles, URLs, headings).
         i += 1
 
     # de-dup by title+company order preserved
@@ -1068,14 +1321,16 @@ def parse_resume(text: str) -> Dict[str, object]:
     text = _normalize_text(text)
     lines = [l.strip() for l in text.splitlines() if l.strip()]
     sections = _slice_sections(text)
-    key_metrics = extract_key_metrics(lines)
+    # Prefer EXPERIENCE-section metrics to avoid education/contact noise on some PDFs (e.g., GPA).
+    metric_source = sections.get("EXPERIENCE") or lines
+    key_metrics = extract_key_metrics([_normalize_text(l).strip() for l in metric_source if l and l.strip()])
     pa = extract_problems_and_accomplishments(lines)
     # Prefer roles from EXPERIENCE if we can parse them; otherwise fall back to naive title detection.
     roles_info = extract_roles_and_tenure(sections)
     roles_info_all = extract_roles_and_tenure_from_lines(lines)
     if len(roles_info_all.get("tenure") or []) > len(roles_info.get("tenure") or []):
         roles_info = roles_info_all
-    positions = extract_positions(lines)
+    positions = extract_positions(lines, sections)
     skills = extract_skills_from_sections(sections)
     if not skills:
         skills = extract_skills_from_lines(lines)
