@@ -28,6 +28,8 @@ function extractJargon(text: string): string[] {
   return found.map((p) => p.replace(/^\w/, (c) => c.toUpperCase()));
 }
 
+type Difficulty = "Easy" | "Stretch" | "Hard";
+
 interface JobDescription {
   id: string;
   title: string;
@@ -45,6 +47,8 @@ interface JobDescription {
   requirements?: string[];
   benefits?: string[];
   jdJargon: string[];
+  difficulty?: Difficulty;
+  // Back-compat: older caches used "grade" (Shoo-in/Stretch/Ideal). We'll migrate to difficulty.
   grade?: 'Shoo-in' | 'Stretch' | 'Ideal';
   parsedAt: string;
 }
@@ -93,6 +97,21 @@ type JobRecommendation = {
   created_at?: string;
 };
 
+function migrateGradeToDifficulty(grade?: JobDescription["grade"]): Difficulty | undefined {
+  if (!grade) return undefined;
+  if (grade === "Shoo-in") return "Easy";
+  if (grade === "Stretch") return "Stretch";
+  return "Hard";
+}
+
+function cycleDifficulty(cur?: Difficulty): Difficulty | undefined {
+  // undefined == "Difficulty" (unset)
+  if (!cur) return "Easy";
+  if (cur === "Easy") return "Stretch";
+  if (cur === "Stretch") return "Hard";
+  return undefined;
+}
+
 export default function JobDescriptionsPage() {
   const router = useRouter();
   // Important: avoid reading localStorage during the initial render to prevent
@@ -109,7 +128,7 @@ export default function JobDescriptionsPage() {
   const [importUrl, setImportUrl] = useState("");
   const [importText, setImportText] = useState("");
   const [importType, setImportType] = useState<'url' | 'text'>('url');
-  const [sortBy, setSortBy] = useState<'date' | 'grade'>('date');
+  const [sortBy, setSortBy] = useState<'date' | 'difficulty'>('date');
   const [trackerNotice, setTrackerNotice] = useState<string | null>(null);
   const [trackerPulseId, setTrackerPulseId] = useState<string | null>(null);
   const trackerPulseTimer = useRef<number | null>(null);
@@ -123,13 +142,21 @@ export default function JobDescriptionsPage() {
       if (cached) {
         const parsed = JSON.parse(cached) as JobDescription[];
         // Drop old demo placeholder JDs so they don't keep showing up as "mock output".
-        const cleaned = (parsed || []).filter((jd) => {
+        const cleanedRaw = (parsed || []).filter((jd) => {
           const isOldDemoId = (jd.id || "").startsWith("jd_demo_");
           const isOldDemoContent =
             (jd.company || "") === "TechCorp Inc." &&
             (jd.content || "").startsWith("Job description content from URL");
           return !isOldDemoId && !isOldDemoContent;
         });
+
+        // Migrate legacy grade -> difficulty, and drop legacy grade from persisted data.
+        const cleaned = cleanedRaw.map((jd) => {
+          const difficulty = jd.difficulty ?? migrateGradeToDifficulty(jd.grade);
+          const { grade: _legacyGrade, ...rest } = jd as any;
+          return { ...rest, difficulty } as JobDescription;
+        });
+
         setJobDescriptions(cleaned);
         localStorage.setItem("job_descriptions", JSON.stringify(cleaned));
       }
@@ -224,10 +251,10 @@ export default function JobDescriptionsPage() {
     setEditMeta((cur) => (cur?.id === id ? null : cur));
   };
 
-  const handleGradeChange = (id: string, grade: string) => {
+  const handleDifficultyChange = (id: string, difficulty?: Difficulty) => {
     setJobDescriptions(prev => {
       const next = prev.map(jd =>
-        jd.id === id ? { ...jd, grade: grade as JobDescription['grade'] } : jd
+        jd.id === id ? { ...jd, difficulty } : jd
       );
       try { localStorage.setItem("job_descriptions", JSON.stringify(next)); } catch {}
       return next;
@@ -238,8 +265,8 @@ export default function JobDescriptionsPage() {
     if (sortBy === 'date') {
       return new Date(b.parsedAt).getTime() - new Date(a.parsedAt).getTime();
     }
-    const gradeOrder: Record<string, number> = { 'Shoo-in': 1, 'Stretch': 2, 'Ideal': 3 };
-    return (gradeOrder[a.grade || ''] || 4) - (gradeOrder[b.grade || ''] || 4);
+    const diffOrder: Record<string, number> = { Easy: 1, Stretch: 2, Hard: 3 };
+    return (diffOrder[a.difficulty || ''] || 4) - (diffOrder[b.difficulty || ''] || 4);
   });
 
   const handleContinue = () => {
@@ -299,6 +326,7 @@ export default function JobDescriptionsPage() {
           logo: jd.company ? `https://logo.clearbit.com/${jd.company.toLowerCase().replace(/\\s+/g, "")}.com` : undefined,
         },
         role: jd.title,
+        difficulty: jd.difficulty,
         status: "saved",
         appliedDate: new Date().toISOString().slice(0, 10),
         lastContact: new Date().toISOString().slice(0, 10),
@@ -397,6 +425,8 @@ export default function JobDescriptionsPage() {
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.google.com/search?q=jobs" target="_blank" rel="noopener noreferrer">Google Jobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.builtin.com/jobs" target="_blank" rel="noopener noreferrer">Built In (Tech)</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.dice.com/" target="_blank" rel="noopener noreferrer">Dice</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://jobright.ai/" target="_blank" rel="noopener noreferrer">Jobright.ai</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://simplify.jobs/" target="_blank" rel="noopener noreferrer">Simplify.jobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://careers.google.com/" target="_blank" rel="noopener noreferrer">Google Careers</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://jobs.careers.microsoft.com/" target="_blank" rel="noopener noreferrer">Microsoft Careers</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.amazon.jobs/" target="_blank" rel="noopener noreferrer">Amazon Jobs</a></li>
@@ -503,11 +533,11 @@ export default function JobDescriptionsPage() {
             {hasMounted && jobDescriptions.length > 0 && (
               <select 
                 value={sortBy} 
-                onChange={(e) => setSortBy(e.target.value as 'date' | 'grade')}
+                onChange={(e) => setSortBy(e.target.value as 'date' | 'difficulty')}
                 className="rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="date">Sort by Date</option>
-                <option value="grade">Sort by Grade</option>
+                <option value="difficulty">Sort by Difficulty</option>
               </select>
             )}
           </div>
@@ -641,21 +671,23 @@ export default function JobDescriptionsPage() {
                       )}
                     </div>
                     <div className="flex items-center space-x-4">
-                      <select
-                        value={jd.grade || ""}
-                        onChange={(e) => handleGradeChange(jd.id, e.target.value)}
-                        className={`border rounded-md px-3 py-1 text-sm font-medium ${
-                          jd.grade === 'Shoo-in' ? 'bg-green-50 text-green-700 border-green-200' :
-                          jd.grade === 'Stretch' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                          jd.grade === 'Ideal' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                          'bg-white/5 text-white/70 border-white/10'
+                      <button
+                        type="button"
+                        title="How difficult do you expect this job will be to get? (Self‑reported.)"
+                        onClick={() => handleDifficultyChange(jd.id, cycleDifficulty(jd.difficulty))}
+                        className={`inline-flex items-center gap-2 rounded-md border px-3 py-1 text-sm font-semibold transition-colors ${
+                          jd.difficulty === "Easy"
+                            ? "bg-green-500/15 text-green-200 border-green-400/30 hover:bg-green-500/20"
+                            : jd.difficulty === "Stretch"
+                              ? "bg-yellow-500/15 text-yellow-200 border-yellow-400/30 hover:bg-yellow-500/20"
+                              : jd.difficulty === "Hard"
+                                ? "bg-red-500/15 text-red-200 border-red-400/30 hover:bg-red-500/20"
+                                : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10"
                         }`}
                       >
-                        <option value="" disabled>Grade this Role</option>
-                        <option value="Shoo-in">1. Shoo-in Position</option>
-                        <option value="Stretch">2. Stretch Position</option>
-                        <option value="Ideal">3. Ideal Future Position</option>
-                      </select>
+                        <span>{jd.difficulty ?? "Difficulty"}</span>
+                        <span className="text-[11px] text-white/50" aria-hidden="true">ⓘ</span>
+                      </button>
                       <button
                         type="button"
                         onClick={() => addToTracker(jd)}

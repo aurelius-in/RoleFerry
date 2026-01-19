@@ -10,6 +10,7 @@ type TrackerApp = {
   id: string;
   company: { name: string; logo?: string };
   role: string;
+  difficulty?: Difficulty;
   status: string;
   appliedDate: string;
   lastContact: string;
@@ -21,6 +22,21 @@ type TrackerApp = {
 };
 
 const STORAGE_KEY = "tracker_applications";
+type Difficulty = "Easy" | "Stretch" | "Hard";
+
+function cycleDifficulty(cur?: Difficulty): Difficulty | undefined {
+  if (!cur) return "Easy";
+  if (cur === "Easy") return "Stretch";
+  if (cur === "Stretch") return "Hard";
+  return undefined;
+}
+
+function difficultyClass(d?: Difficulty) {
+  if (d === "Easy") return "bg-green-500/20 text-green-300 border-green-400/30 hover:bg-green-500/25";
+  if (d === "Stretch") return "bg-yellow-500/20 text-yellow-200 border-yellow-400/30 hover:bg-yellow-500/25";
+  if (d === "Hard") return "bg-red-500/20 text-red-200 border-red-400/30 hover:bg-red-500/25";
+  return "bg-white/5 text-white/70 border-white/10 hover:bg-white/10";
+}
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -208,10 +224,11 @@ export default function TrackerPage() {
   };
 
   const exportCSV = () => {
-    const headers = ['Company', 'Role', 'Status', 'Applied Date', 'Last Contact', 'Reply Status'];
+    const headers = ['Company', 'Role', 'Difficulty', 'Status', 'Applied Date', 'Last Contact', 'Reply Status'];
     const rows = applications.map(app => [
       app.company.name,
       app.role,
+      (app.difficulty || ''),
       app.status,
       app.appliedDate,
       app.lastContact,
@@ -325,6 +342,25 @@ export default function TrackerPage() {
                             <div className="font-semibold text-sm truncate">{app.role}</div>
                             <div className="text-xs text-slate-400 truncate">{app.company.name}</div>
                           </div>
+                          <div className="shrink-0">
+                            <button
+                              type="button"
+                              title="How difficult do you expect this job will be to get? (Self‑reported.)"
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setApplications((prev) =>
+                                  prev.map((a) =>
+                                    a.id === app.id ? { ...a, difficulty: cycleDifficulty(a.difficulty) } : a
+                                  )
+                                );
+                              }}
+                              className={`rounded-md border px-2 py-1 text-[11px] font-extrabold transition-colors ${difficultyClass(app.difficulty)}`}
+                            >
+                              {app.difficulty ?? "Difficulty"}
+                            </button>
+                          </div>
                         </div>
                         
                         <div className="text-xs text-slate-500 space-y-1.5">
@@ -375,6 +411,7 @@ export default function TrackerPage() {
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-400">Company</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-400">Role</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-400">Difficulty</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-400">Status</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-400">Applied</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-400">Last Contact</th>
@@ -387,6 +424,20 @@ export default function TrackerPage() {
                   <tr key={app.id} className="border-t border-white/10 hover:bg-white/5 transition-colors">
                     <td className="px-4 py-3">{app.company.name}</td>
                     <td className="px-4 py-3">{app.role}</td>
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        title="How difficult do you expect this job will be to get? (Self‑reported.)"
+                        onClick={() =>
+                          setApplications((prev) =>
+                            prev.map((a) => (a.id === app.id ? { ...a, difficulty: cycleDifficulty(a.difficulty) } : a))
+                          )
+                        }
+                        className={`rounded-md border px-2 py-1 text-[11px] font-extrabold transition-colors ${difficultyClass(app.difficulty)}`}
+                      >
+                        {app.difficulty ?? "Difficulty"}
+                      </button>
+                    </td>
                     <td className="px-4 py-3">
                       <select
                         value={app.status}
