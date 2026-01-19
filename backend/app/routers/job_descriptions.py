@@ -150,6 +150,9 @@ _KNOWN_SKILLS: List[str] = [
     "TypeScript",
     "Java",
     "Kotlin",
+    "C",
+    "C/C++",
+    "C++",
     "Golang",
     "C++",
     "C#",
@@ -174,6 +177,7 @@ _KNOWN_SKILLS: List[str] = [
     "Docker",
     "Kubernetes",
     "Terraform",
+    "Linux",
     # Data
     "PostgreSQL",
     "MySQL",
@@ -200,6 +204,20 @@ _KNOWN_SKILLS: List[str] = [
     "Canvas",
     "Custom Views",
     "Background Services",
+    "Embedded",
+    "Embedded programming",
+    "Device drivers",
+    "Drivers",
+    "FPGA",
+    "PCIe",
+    "Debugging",
+    "Troubleshooting",
+    "Version control",
+    "Testing",
+    "Software testing",
+    "System architecture",
+    "Architecture",
+    "Design patterns",
     # Common platform / growth / customer roles
     "SaaS",
     "Customer Success",
@@ -315,7 +333,17 @@ def _infer_employment_type_from_text(text: str) -> str:
     t = (text or "").lower()
     if not t.strip():
         return "unknown"
-    if "intern" in t:
+    # Check explicit job type markers first; "non-internship" appears in some JDs and should not be classified as internship.
+    if "full time" in t or "full-time" in t:
+        return "full-time"
+    if "part time" in t or "part-time" in t:
+        return "part-time"
+    if "contract" in t or "contractor" in t or "1099" in t:
+        return "contract"
+    if re.search(r"\bnon[-\s]?internship\b", t):
+        # Explicitly not an internship
+        return "unknown"
+    if re.search(r"\bintern(?:ship)?\b", t):
         return "internship"
     if "contract" in t or "contractor" in t or "1099" in t:
         return "contract"
@@ -422,6 +450,55 @@ def _extract_section_lines(text: str, header_patterns: List[str], *, max_lines: 
     return out
 
 
+def _extract_explicit_skills_block(text: str) -> List[str]:
+    """
+    LinkedIn/Indeed often include an explicit 'Skills' block near the top, e.g.:
+      Skills
+      Version control
+      System architecture design
+      Software testing
+      + show more
+    Extract those tokens (they are frequently higher-signal than global keyword scanning).
+    """
+    lines = [ln.strip() for ln in (text or "").splitlines() if ln.strip()]
+    if not lines:
+        return []
+    start = -1
+    for i, ln in enumerate(lines[:160]):
+        if ln.strip().lower() == "skills":
+            start = i + 1
+            break
+    if start < 0:
+        return []
+    out: List[str] = []
+    for ln in lines[start : start + 30]:
+        low = ln.lower().strip()
+        if not low:
+            continue
+        if any(k in low for k in ["+ show more", "do you have experience", "job details", "full job description", "profile insights"]):
+            break
+        # short-ish skills, not paragraphs
+        s = ln.strip("•-* ").strip()
+        if len(s) < 3 or len(s) > 60:
+            continue
+        # skip obvious UI-ish tokens
+        if any(bad in low for bad in ["premium", "apply", "save", "clicked apply"]):
+            continue
+        out.append(s)
+        if len(out) >= 12:
+            break
+    # de-dupe preserve order
+    seen = set()
+    dedup: List[str] = []
+    for s in out:
+        k = s.lower()
+        if k in seen:
+            continue
+        seen.add(k)
+        dedup.append(s)
+    return dedup[:12]
+
+
 def _extract_skills(text: str) -> List[str]:
     """
     Best-effort skill extraction from raw job description text.
@@ -449,6 +526,23 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
     company = ""
 
     lines = [ln.strip() for ln in (content or "").splitlines() if ln.strip()]
+
+    def _looks_like_company_header_line(s: str) -> bool:
+        cand = (s or "").strip()
+        if not cand:
+            return False
+        low = cand.lower()
+        if any(x in low for x in ["out of 5 stars", "followers", "people clicked apply", "job post", "profile insights", "job details"]):
+            return False
+        if re.search(r"\$\s?\d", cand):
+            return False
+        # location-ish
+        if re.search(r"\b[A-Z][a-z]+,\s*[A-Z]{2}\b", cand) or re.search(r"\b\d{5}\b", cand):
+            return False
+        # too long / sentence-y
+        if len(cand) > 80 and cand.endswith("."):
+            return False
+        return True
 
     # LinkedIn paste: "About the company" -> next line is often the company name.
     # This is more reliable than "top lines" which can contain UI noise like "Responses managed off LinkedIn".
@@ -596,6 +690,23 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 # A reasonable company line is usually 1-6 words and titlecased.
                 if 1 <= len(s.split()) <= 6 and s[0].isupper() and not s.endswith(".") and not _has_role_token(s):
                     company = s[:120]
+                    break
+
+        # If the first line looks like "Role - job post", treat the next non-noise line as company.
+        if not company and lines:
+            if "job post" in (lines[0] or "").lower():
+                for j in range(1, min(len(lines), 10)):
+                    cand = (lines[j] or "").strip()
+                    if not _looks_like_company_header_line(cand):
+                        continue
+                    if _has_role_token(cand):
+                        continue
+                    company = cand[:120]
+                    # Attach "(part of ...)" style follow-up line if present.
+                    if j + 1 < len(lines):
+                        nxt = (lines[j + 1] or "").strip()
+                        if nxt.startswith("(") and "part of" in nxt.lower() and len(nxt) <= 80:
+                            company = f"{company} {nxt}".strip()[:120]
                     break
 
         top_blob = " ".join(lines[:80])
@@ -1003,7 +1114,12 @@ async def import_job_description(payload: JobImportRequest):
 
         # --- Heuristic parsing (non-LLM fallback) ----------------------
         title, company = _best_effort_title_company(content, url)
-        required_skills: List[str] = _extract_skills(content)
+        required_skills: List[str] = []
+        # Prefer explicit "Skills" blocks (LinkedIn/Indeed UI) when present.
+        explicit = _extract_explicit_skills_block(content)
+        if explicit:
+            required_skills.extend(explicit)
+        required_skills.extend(_extract_skills(content))
         if not required_skills:
             required_skills = _extract_requirement_skill_phrases(content)
         else:
@@ -1024,7 +1140,7 @@ async def import_job_description(payload: JobImportRequest):
         employment_type = _infer_employment_type_from_text(content)
         responsibilities = _extract_section_lines(
             content,
-            ["responsibilities", "you'll be empowered to", "you will", "what you'll do", "what you’ll do"],
+            ["key job responsibilities", "responsibilities", "you'll be empowered to", "you will", "what you'll do", "what you’ll do", "a day in the life"],
             max_lines=10,
         )
         requirements = _extract_section_lines(
@@ -1039,10 +1155,16 @@ async def import_job_description(payload: JobImportRequest):
                 "ideal candidate should have",
                 "ideal candidate",
                 "bonus",
+                "basic qualifications",
+                "preferred qualifications",
             ],
             max_lines=10,
         )
-        benefits = _extract_section_lines(content, ["benefits", "perks", "what we offer"], max_lines=10)
+        benefits = _extract_section_lines(
+            content,
+            ["benefits", "perks", "what we offer", "work/life balance", "mentorship", "career growth", "inclusive team culture", "diverse experiences"],
+            max_lines=10,
+        )
         # We cannot truly infer "pain points" without an LLM, but we can extract
         # meaningful lines as a practical non-mock fallback.
         pain_points: List[str] = _extract_key_lines(
