@@ -376,6 +376,9 @@ def _extract_salary_range(text: str) -> Optional[str]:
         r"(\$\s?\d{2,3}\s?k\s*[–\-]\s*\$\s?\d{2,3}\s?k)",
         r"(\$\s?\d{2,3}\s?[kK]\s*/\s?yr\s*[–\-]\s*\$\s?\d{2,3}\s?[kK]\s*/\s?yr)",
         r"(\$\s?\d{2,3}(?:,\d{3})\s*(?:/year|per year)?\s*[–\-]\s*\$\s?\d{2,3}(?:,\d{3})\s*(?:/year|per year)?)",
+        # Hourly rates: "$80 - $100 an hour", "$80 - $100 per hour", "$80-$100/hr"
+        r"(\$\s?\d{1,3}(?:\.\d{1,2})?\s*[–\-]\s*\$\s?\d{1,3}(?:\.\d{1,2})?\s*(?:an?\s+hour|per\s+hour|/hour|/hr|hr)\b)",
+        r"(\$\s?\d{1,3}(?:\.\d{1,2})?\s*(?:an?\s+hour|per\s+hour|/hour|/hr|hr)\b)",
         # "Derived Salary: $207562 - $345938/Year" (no commas, 6 digits)
         r"(derived\s+salary:\s*\$\s?\d{3,6}(?:,\d{3})?\s*[–\-]\s*\$\s?\d{3,6}(?:,\d{3})?\s*/\s*(?:year|yr))",
         # "$207,562 - 345,938 / Year" (second value sometimes missing $)
@@ -390,7 +393,7 @@ def _extract_salary_range(text: str) -> Optional[str]:
         if m:
             out = str(m.group(1)).strip()
             out = re.sub(r"\s+", " ", out)
-            return out[:80]
+            return out[:120]
     return None
 
 
@@ -712,6 +715,10 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
             "lead",
             "principal",
             "staff",
+            "team",
+            "teams",
+            "logo",
+            "company",
             # Generic words that sometimes get mis-detected (e.g. "This is...")
             "this",
             "we",
@@ -732,6 +739,8 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 s = (ln or "").strip()
                 low = s.lower()
                 if not s or len(s) > 80:
+                    continue
+                if "company logo" in low:
                     continue
                 if low in _COMPANY_STOPWORDS:
                     continue
@@ -756,7 +765,9 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                     continue
                 # A reasonable company line is usually 1-6 words and titlecased.
                 if 1 <= len(s.split()) <= 6 and s[0].isupper() and not s.endswith(".") and not _has_role_token(s):
-                    company = s[:120]
+                    # Strip ratings like "STAND 8 - 5.0" -> "STAND 8"
+                    s2 = re.sub(r"\s*[-–—]\s*\d+(\.\d+)?\s*$", "", s).strip()
+                    company = (s2 or s)[:120]
                     break
 
         # If the first line looks like "Role - job post", treat the next non-noise line as company.
@@ -945,6 +956,7 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
     def _pretty_company(s: str) -> str:
         s = (s or "").strip().strip("-—|@")
         s = re.sub(r"[_\-]+", " ", s).strip()
+        s = re.sub(r"\bcompany\s+logo\b", "", s, flags=re.I).strip()
         if not s:
             return s
         # Preserve short all-caps brands (IBM, SAP). Otherwise title-case words.
@@ -1074,6 +1086,21 @@ def _extract_key_lines(content: str, max_items: int, keywords: List[str]) -> Lis
         r"\bout\s+of\s+5\s+stars\b",
         r"\b\d{1,5}\s+[A-Za-z0-9 .'\-]+(?:drive|dr|street|st|avenue|ave|road|rd|boulevard|blvd|lane|ln|way|court|ct)\b",
         r"\b[A-Za-z .'\-]+,\s*[A-Z]{2}\s*\d{5}\b",
+        # Company boilerplate / marketing copy (not challenges/metrics)
+        r"\bour\s+mission\b",
+        r"\bmission\s+is\b",
+        r"\bwe\s+are\s+(?:a|an)\b",
+        r"\bwe(?:'re|’re)\s+(?:a|an)\b",
+        r"\bprovides?\s+end[\-\s]?to[\-\s]?end\b",
+        r"\bend[\-\s]?to[\-\s]?end\s+it\s+solutions\b",
+        r"\bwith\s+offices?\s+in\b",
+        r"\bcheck\s+out\s+more\b",
+        r"\breach\s+out\s+today\b",
+        r"\babout\s+us\b",
+        r"\bequal\s+opportunity\b",
+        r"\bvisit\s+us\s+at\b",
+        r"\bclick\s+to\s+reveal\s+url\b",
+        r"\bwww\.[a-z0-9\-]+\.[a-z]{2,}\b",
     ]
     ignore_re = re.compile("|".join(ignore_patterns), re.I)
 
@@ -1328,13 +1355,17 @@ async def import_job_description(payload: JobImportRequest):
             keywords=["challenge", "problem", "need", "support", "scale", "grow", "reliability"],
         )
 
-        # Prefer "success metrics" from responsibilities if available (avoids culture/mission paragraphs).
-        success_source = "\n".join(responsibilities) if responsibilities else content
-        success_metrics: List[str] = _extract_key_lines(
-            success_source,
-            max_items=3,
-            keywords=["metric", "measured", "reliability", "deliver", "improve", "reduce", "increase", "impact"],
-        )
+        # Prefer responsibilities as a stand-in for "success metrics" when GPT isn't available.
+        # This avoids accidentally selecting company boilerplate ("mission", "offices in") as "metrics".
+        if responsibilities:
+            success_metrics = responsibilities[:3]
+        else:
+            success_source = content
+            success_metrics = _extract_key_lines(
+                success_source,
+                max_items=3,
+                keywords=["metric", "measured", "reliability", "deliver", "improve", "reduce", "increase", "impact", "roi", "efficiency"],
+            )
 
         # De-dupe across sections: avoid repeating the same paragraph/bullet in multiple columns.
         # If there is overlap, keep it in Success Metrics (more appropriate for responsibilities-style lines).
