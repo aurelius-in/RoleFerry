@@ -24,7 +24,11 @@ type ResumeExtract = {
   keyMetrics?: Array<{ metric: string; value: string; context: string }>;
   skills?: string[];
   accomplishments?: string[];
+  education?: Array<{ school: string; degree: string; field?: string; startYear?: string; endYear?: string; notes?: string }>;
 };
+
+type PersonalityProfile = Record<string, any>;
+type TemperamentProfile = Record<string, any>;
 
 type JobDescription = {
   id: string;
@@ -47,7 +51,9 @@ type GapAnalysisItem = {
   recommendation: "pursue" | "maybe" | "skip";
   matched_skills: string[];
   missing_skills: string[];
-  preference_gaps: string[];
+  resume_gaps: Array<{ gap: string; severity: "low" | "medium" | "high"; evidence: string[]; how_to_close: string }>;
+  personality_gaps: Array<{ gap: string; severity: "low" | "medium" | "high"; evidence: string[]; how_to_close: string }>;
+  preference_gaps: Array<{ gap: string; severity: "low" | "medium" | "high"; evidence: string[]; how_to_close: string }>;
   notes: string[];
 };
 
@@ -55,6 +61,7 @@ type GapAnalysisResponse = {
   success: boolean;
   message: string;
   ranked: GapAnalysisItem[];
+  overall?: any;
   helper?: {
     used_llm: boolean;
     model?: string;
@@ -82,9 +89,12 @@ export default function GapAnalysisPage() {
   const [jobDescriptions, setJobDescriptions] = useState<JobDescription[]>([]);
   const [preferences, setPreferences] = useState<JobPreferences | null>(null);
   const [resumeExtract, setResumeExtract] = useState<ResumeExtract | null>(null);
+  const [personalityProfile, setPersonalityProfile] = useState<PersonalityProfile | null>(null);
+  const [temperamentProfile, setTemperamentProfile] = useState<TemperamentProfile | null>(null);
 
   const [ranked, setRanked] = useState<GapAnalysisItem[]>([]);
   const [helper, setHelper] = useState<GapAnalysisResponse["helper"] | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,6 +102,8 @@ export default function GapAnalysisPage() {
     setJobDescriptions(safeJson<JobDescription[]>(localStorage.getItem("job_descriptions"), []));
     setPreferences(safeJson<JobPreferences | null>(localStorage.getItem("job_preferences"), null));
     setResumeExtract(safeJson<ResumeExtract | null>(localStorage.getItem("resume_extract"), null));
+    setPersonalityProfile(safeJson<PersonalityProfile | null>(localStorage.getItem("personality_profile"), null));
+    setTemperamentProfile(safeJson<TemperamentProfile | null>(localStorage.getItem("temperament_profile"), null));
   }, []);
 
   const canAnalyze = jobDescriptions.length > 0 && Boolean(preferences) && Boolean(resumeExtract);
@@ -100,8 +112,9 @@ export default function GapAnalysisPage() {
     if (!preferences) missing.push({ key: "prefs", label: "Job Preferences (Step 1)", href: "/job-preferences" });
     if (!resumeExtract) missing.push({ key: "resume", label: "Resume (Step 3)", href: "/resume" });
     if (jobDescriptions.length === 0) missing.push({ key: "jobs", label: "Job Descriptions (Step 2)", href: "/job-descriptions" });
+    if (!personalityProfile) missing.push({ key: "personality", label: "Personality (Step 3)", href: "/personality" });
     return missing;
-  }, [jobDescriptions.length, preferences, resumeExtract]);
+  }, [jobDescriptions.length, preferences, resumeExtract, personalityProfile]);
 
   const topSummary = useMemo(() => {
     const top = ranked[0];
@@ -135,16 +148,55 @@ export default function GapAnalysisPage() {
       const resp = await api<GapAnalysisResponse>("/gap-analysis/analyze", "POST", {
         preferences: prefsPayload,
         resume_extract: resumeExtract,
+        personality_profile: personalityProfile,
+        temperament_profile: temperamentProfile,
         job_descriptions: jobDescriptions,
       });
       if (!resp.success) throw new Error(resp.message || "Analysis failed");
       setRanked(resp.ranked || []);
       setHelper(resp.helper || null);
+      const firstId = (resp.ranked || [])[0]?.job_id || null;
+      setSelectedJobId(firstId);
     } catch (e: any) {
       setError(e?.message || "Failed to run gap analysis.");
     } finally {
       setIsAnalyzing(false);
     }
+  }
+
+  const selected = useMemo(() => ranked.find((r) => r.job_id === selectedJobId) || ranked[0] || null, [ranked, selectedJobId]);
+
+  function severityPill(sev: "low" | "medium" | "high") {
+    if (sev === "high") return "bg-red-500/15 border-red-500/30 text-red-200";
+    if (sev === "medium") return "bg-yellow-500/15 border-yellow-500/30 text-yellow-200";
+    return "bg-emerald-500/15 border-emerald-500/30 text-emerald-200";
+  }
+
+  function Icon({ kind }: { kind: "resume" | "personality" | "prefs" }) {
+    const base = "w-4 h-4";
+    if (kind === "resume") {
+      return (
+        <svg className={base} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M7 4h7l3 3v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.6" />
+          <path d="M14 4v4h4" stroke="currentColor" strokeWidth="1.6" />
+          <path d="M8 12h8M8 16h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      );
+    }
+    if (kind === "personality") {
+      return (
+        <svg className={base} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 2l1.4 4.6L18 8l-4.6 1.4L12 14l-1.4-4.6L6 8l4.6-1.4L12 2Z" fill="currentColor" opacity="0.9" />
+          <path d="M18.5 12.5l.9 2.9 2.9.9-2.9.9-.9 2.9-.9-2.9-2.9-.9 2.9-.9.9-2.9Z" fill="currentColor" opacity="0.7" />
+        </svg>
+      );
+    }
+    return (
+      <svg className={base} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 7h16M7 7v10M17 7v10M4 17h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        <path d="M9 12h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    );
   }
 
   return (
@@ -217,69 +269,116 @@ export default function GapAnalysisPage() {
           ) : null}
 
           {ranked.length > 0 ? (
-            <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {ranked.map((r) => (
-                <div key={r.job_id} className="rounded-lg border border-white/10 bg-black/20 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="text-lg font-bold text-white">{r.title}</div>
-                      <div className="text-sm text-white/70">{r.company}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-white font-bold">{r.score}/100</div>
-                      <div className="mt-1 flex justify-end">
-                        <StarRating value={r.score} scale="percent" showNumeric={false} className="text-[10px]" />
-                      </div>
-                      <div className={`mt-1 inline-flex items-center px-2 py-1 rounded-full border text-xs ${pillColor(r.recommendation)}`}>
-                        {r.recommendation}
-                      </div>
-                    </div>
+            <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-4">
+              <div className="lg:col-span-4">
+                <div className="rounded-lg border border-white/10 bg-black/20 p-2">
+                  <div className="text-xs font-semibold text-white/70 px-2 py-2">Ranked jobs</div>
+                  <div className="max-h-[560px] overflow-auto">
+                    {ranked.map((r) => (
+                      <button
+                        key={r.job_id}
+                        type="button"
+                        onClick={() => setSelectedJobId(r.job_id)}
+                        className={`w-full text-left px-3 py-3 border-t border-white/10 hover:bg-white/5 transition-colors ${
+                          selectedJobId === r.job_id ? "bg-white/5" : ""
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="text-sm font-bold text-white truncate">{r.title}</div>
+                            <div className="text-xs text-white/60 truncate">{r.company}</div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <div className="text-white font-bold text-xs">{r.score}/100</div>
+                            <div className={`mt-1 inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] ${pillColor(r.recommendation)}`}>
+                              {r.recommendation}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
                   </div>
-
-                  {r.matched_skills?.length ? (
-                    <div className="mt-3">
-                      <div className="text-xs font-semibold text-white/70 mb-1">Skillset matches</div>
-                      <div className="flex flex-wrap gap-2">
-                        {r.matched_skills.slice(0, 10).map((s) => (
-                          <span key={s} className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80 text-xs">
-                            {s}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {r.missing_skills?.length ? (
-                    <div className="mt-3">
-                      <div className="text-xs font-semibold text-white/70 mb-1">Skillset gaps (missing skills)</div>
-                      <div className="flex flex-wrap gap-2">
-                        {r.missing_skills.slice(0, 10).map((s) => (
-                          <span key={s} className="px-2 py-1 rounded-full border border-red-500/20 bg-red-500/10 text-red-200 text-xs">
-                            {s}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {(r.preference_gaps || []).length ? (
-                    <div className="mt-3 text-sm text-white/70">
-                      <div className="text-xs font-semibold text-white/70 mb-1">Preference alignment gaps</div>
-                      <ul className="list-disc list-inside space-y-1">
-                        {r.preference_gaps.slice(0, 3).map((g, i) => (
-                          <li key={`pg_${i}`}>{g}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-
-                  {(r.notes || []).length ? (
-                    <div className="mt-3 text-xs text-white/60">
-                      {r.notes.slice(0, 3).join(" · ")}
-                    </div>
-                  ) : null}
                 </div>
-              ))}
+              </div>
+
+              <div className="lg:col-span-8">
+                {selected ? (
+                  <div className="rounded-lg border border-white/10 bg-black/20 p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-xl font-bold text-white">{selected.title}</div>
+                        <div className="text-sm text-white/70">{selected.company}</div>
+                        <div className="mt-2 flex items-center gap-3">
+                          <div className="text-white font-bold">{selected.score}/100</div>
+                          <StarRating value={selected.score} scale="percent" showNumeric={false} className="text-[10px]" />
+                          <div className={`inline-flex items-center px-2 py-1 rounded-full border text-xs ${pillColor(selected.recommendation)}`}>
+                            {selected.recommendation}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {[
+                        { title: "Resume gaps", kind: "resume" as const, items: selected.resume_gaps || [] },
+                        { title: "Personality gaps", kind: "personality" as const, items: selected.personality_gaps || [] },
+                        { title: "Preference gaps", kind: "prefs" as const, items: selected.preference_gaps || [] },
+                      ].map((col) => (
+                        <div key={col.title} className="rounded-lg border border-white/10 bg-white/5 p-4">
+                          <div className="flex items-center gap-2 text-white/80 mb-2">
+                            <span className="text-white/70"><Icon kind={col.kind} /></span>
+                            <div className="text-xs font-semibold">{col.title}</div>
+                          </div>
+                          {col.items.length ? (
+                            <div className="space-y-2">
+                              {col.items.slice(0, 6).map((g, idx) => (
+                                <div key={`${col.title}_${idx}`} className="rounded-md border border-white/10 bg-black/20 p-3">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="text-sm text-white/90">{g.gap}</div>
+                                    <div className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] ${severityPill(g.severity)}`}>
+                                      {g.severity}
+                                    </div>
+                                  </div>
+                                  {g.how_to_close ? (
+                                    <div className="mt-1 text-xs text-white/60">
+                                      {g.how_to_close}
+                                    </div>
+                                  ) : null}
+                                  {(g.evidence || []).length ? (
+                                    <div className="mt-2 text-[11px] text-white/50">
+                                      Evidence: {(g.evidence || []).slice(0, 2).join(" · ")}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-white/50">No major gaps detected.</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {(selected.matched_skills?.length || selected.missing_skills?.length) ? (
+                      <div className="mt-5">
+                        <div className="text-xs font-semibold text-white/70 mb-2">Skill fit (from job required skills)</div>
+                        <div className="flex flex-wrap gap-2">
+                          {(selected.matched_skills || []).slice(0, 12).map((s) => (
+                            <span key={`ms_${s}`} className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80 text-xs">
+                              {s}
+                            </span>
+                          ))}
+                          {(selected.missing_skills || []).slice(0, 12).map((s) => (
+                            <span key={`xs_${s}`} className="px-2 py-1 rounded-full border border-red-500/20 bg-red-500/10 text-red-200 text-xs">
+                              {s}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
             </div>
           ) : null}
 

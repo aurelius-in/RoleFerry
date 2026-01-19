@@ -46,7 +46,19 @@ class GapJobDescription(BaseModel):
 class GapAnalysisRequest(BaseModel):
     preferences: Dict[str, Any]
     resume_extract: Dict[str, Any]
+    personality_profile: Optional[Dict[str, Any]] = None
+    temperament_profile: Optional[Dict[str, Any]] = None
     job_descriptions: List[Dict[str, Any]]
+
+class GapSeverity(str):
+    pass
+
+
+class GapDetail(BaseModel):
+    gap: str
+    severity: Literal["low", "medium", "high"] = "medium"
+    evidence: List[str] = Field(default_factory=list)
+    how_to_close: str = ""
 
 
 class GapAnalysisItem(BaseModel):
@@ -57,7 +69,9 @@ class GapAnalysisItem(BaseModel):
     recommendation: Literal["pursue", "maybe", "skip"]
     matched_skills: List[str] = Field(default_factory=list)
     missing_skills: List[str] = Field(default_factory=list)
-    preference_gaps: List[str] = Field(default_factory=list)
+    resume_gaps: List[GapDetail] = Field(default_factory=list)
+    personality_gaps: List[GapDetail] = Field(default_factory=list)
+    preference_gaps: List[GapDetail] = Field(default_factory=list)
     notes: List[str] = Field(default_factory=list)
 
 
@@ -65,6 +79,7 @@ class GapAnalysisResponse(BaseModel):
     success: bool
     message: str
     ranked: List[GapAnalysisItem] = Field(default_factory=list)
+    overall: Optional[Dict[str, Any]] = None
     helper: Optional[Dict[str, Any]] = None
 
 
@@ -260,6 +275,21 @@ def _deterministic_rank(preferences: GapAnalysisPreferences, resume: ResumeExtra
         if preferences.minimum_salary:
             pref_gaps.append("Salary preference not checked yet (no salary data parsed from this JD).")
 
+        pref_gap_objs: List[GapDetail] = [
+            GapDetail(gap=g, severity="medium", evidence=["Derived from job text + preferences"], how_to_close="Adjust preferences or focus on better-aligned roles.")
+            for g in pref_gaps[:6]
+        ]
+        resume_gap_objs: List[GapDetail] = []
+        for s in missing[:10]:
+            resume_gap_objs.append(
+                GapDetail(
+                    gap=f"Missing required skill: {s}",
+                    severity="high" if len(missing) >= 6 else "medium",
+                    evidence=["Job required_skills vs resume skills"],
+                    how_to_close=f"Add evidence of {s} to resume, or build/refresh {s} and include a project bullet.",
+                )
+            )
+
         ranked.append(
             GapAnalysisItem(
                 job_id=j.id,
@@ -269,7 +299,9 @@ def _deterministic_rank(preferences: GapAnalysisPreferences, resume: ResumeExtra
                 recommendation=recommendation,
                 matched_skills=matched[:20],
                 missing_skills=missing[:20],
-                preference_gaps=pref_gaps[:6],
+                resume_gaps=resume_gap_objs[:8],
+                personality_gaps=[],
+                preference_gaps=pref_gap_objs[:6],
                 notes=["Deterministic scoring (no LLM)."],
             )
         )
@@ -303,6 +335,7 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
             success=True,
             message="Gap analysis complete (no LLM)",
             ranked=ranked,
+            overall=None,
             helper={
                 "used_llm": False,
                 "model": client.model,
@@ -318,18 +351,39 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
             "notes": ["Stub fallback (should not be used when GPT is ON)."],
         }
 
+        personality = req.personality_profile or {}
+        temperament = req.temperament_profile or {}
+
         messages = [
             {
                 "role": "system",
                 "content": (
-                    "You are RoleFerry's job-fit analyst. You will rank imported job descriptions for a candidate.\n\n"
+                    "You are RoleFerry's Gap Analyst. You will compare:\n"
+                    "- resume_extract\n"
+                    "- personality_profile + temperament_profile\n"
+                    "- job preferences\n"
+                    "- selected job descriptions\n\n"
+                    "Your job is to produce a SMART, practical analysis with three explicit gap buckets:\n"
+                    "- Resume gaps (skills/experience mismatches vs job)\n"
+                    "- Personality gaps (work-style/environment mismatches vs job)\n"
+                    "- Preference gaps (stated preferences that conflict with job)\n\n"
                     "Rules:\n"
                     "- Do NOT fabricate candidate experience.\n"
-                    "- Use the provided resume_extract + preferences.\n"
+                    "- Do NOT invent facts or requirements not present in the inputs.\n"
+                    "- If you cannot support a gap with evidence from the inputs, omit it.\n"
+                    "- Prefer concise, scannable items.\n"
                     "- Output ONLY JSON.\n\n"
                     "Return a JSON object with:\n"
-                    "- ranked: array of items { job_id, title, company, score (0-100), recommendation (pursue|maybe|skip), "
-                    "matched_skills[], missing_skills[], preference_gaps[], notes[] }\n"
+                    "- ranked: array of items {\n"
+                    "  job_id, title, company,\n"
+                    "  score (0-100), recommendation (pursue|maybe|skip),\n"
+                    "  matched_skills[], missing_skills[],\n"
+                    "  resume_gaps: [{gap, severity(low|medium|high), evidence[], how_to_close}],\n"
+                    "  personality_gaps: [{gap, severity(low|medium|high), evidence[], how_to_close}],\n"
+                    "  preference_gaps: [{gap, severity(low|medium|high), evidence[], how_to_close}],\n"
+                    "  notes[]\n"
+                    "}\n"
+                    "- overall: { resume_gaps[], personality_gaps[], preference_gaps[] } (optional summary buckets)\n"
                     "- notes: short array of strings\n"
                 ),
             },
@@ -339,6 +393,8 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
                     "Analyze and rank these jobs.\n\n"
                     f"preferences:\n{prefs.model_dump()}\n\n"
                     f"resume_extract:\n{resume.model_dump()}\n\n"
+                    f"personality_profile:\n{personality}\n\n"
+                    f"temperament_profile:\n{temperament}\n\n"
                     f"job_descriptions:\n{[j.model_dump() for j in jobs]}\n"
                 ),
             },
@@ -359,8 +415,10 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
         if not ranked:
             ranked = _deterministic_rank(prefs, resume, jobs)
             notes = ["GPT output could not be parsed; used deterministic scoring."]
+            overall = None
         else:
             notes = _norm_list(data.get("notes"))[:6] or ["GPT-ranked analysis."]
+            overall = data.get("overall") if isinstance(data.get("overall"), dict) else None
 
         # Ensure every imported job appears at least once (append missing with heuristic scores)
         seen = {r.job_id for r in ranked}
@@ -373,6 +431,7 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
             success=True,
             message="Gap analysis complete",
             ranked=ranked,
+            overall=overall,
             helper={"used_llm": True, "model": client.model, "notes": notes},
         )
     except Exception as e:
@@ -382,6 +441,7 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
             success=True,
             message="Gap analysis complete (LLM error; used deterministic scoring)",
             ranked=ranked,
+            overall=None,
             helper={"used_llm": False, "model": client.model, "notes": [f"LLM error: {str(e)[:160]}"]},
         )
 

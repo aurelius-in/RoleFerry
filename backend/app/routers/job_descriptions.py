@@ -304,20 +304,39 @@ def _extract_requirement_skill_phrases(text: str) -> List[str]:
         if header_re.search(ln):
             start = i + 1
             break
+    # Fallback: no explicit header; detect a block of requirement-ish lines (common in pasted JDs).
     if start < 0:
-        return []
-
-    chunk: List[str] = []
-    for ln in lines[start : start + 40]:
-        if stop_re.search(ln):
-            break
-        # Capture bullet-ish lines, or short requirement lines.
-        cleaned = ln.lstrip("•-* ").strip()
-        if len(cleaned) < 6:
-            continue
-        chunk.append(cleaned[:160])
-        if len(chunk) >= 14:
-            break
+        reqish = []
+        req_line_re = re.compile(
+            r"^(\d+\+?\s+years?|must\s+have|strong\s+experience|experience\s+with|ability\s+to|proven\s+ability|required\s+to)\b",
+            re.I,
+        )
+        for ln in lines[:260]:
+            s = ln.lstrip("•-* ").strip()
+            low = s.lower()
+            if not s or len(s) < 6:
+                continue
+            if any(k in low for k in ["benefits", "salary", "equal opportunity", "apply", "about ascendion", "ascendion is"]):
+                continue
+            if req_line_re.search(s) or re.search(r"\bboolean\b", low) or re.search(r"\bats\b", low):
+                reqish.append(s[:160])
+            if len(reqish) >= 14:
+                break
+        if not reqish:
+            return []
+        chunk = reqish
+    else:
+        chunk: List[str] = []
+        for ln in lines[start : start + 40]:
+            if stop_re.search(ln):
+                break
+            # Capture bullet-ish lines, or short requirement lines.
+            cleaned = ln.lstrip("•-* ").strip()
+            if len(cleaned) < 6:
+                continue
+            chunk.append(cleaned[:160])
+            if len(chunk) >= 14:
+                break
 
     if not chunk:
         return []
@@ -334,6 +353,18 @@ def _extract_requirement_skill_phrases(text: str) -> List[str]:
         ("customer-facing", "Customer-facing experience"),
         ("stakeholder", "Stakeholder management"),
         ("crm", "CRM"),
+        # Recruiting / sourcing
+        ("boolean", "Boolean search"),
+        ("search string", "Boolean search"),
+        ("ats", "ATS"),
+        ("applicant tracking", "ATS"),
+        ("sourcing", "Candidate sourcing"),
+        ("full lifecycle recruiting", "Full-cycle recruiting"),
+        ("full-cycle recruiting", "Full-cycle recruiting"),
+        ("recruiting", "Recruiting"),
+        ("job boards", "Job boards"),
+        ("requisitions", "Requisition management"),
+        ("executive", "Executive stakeholder communication"),
     ]
     low = blob.lower()
     for needle, label in phrase_patterns:
@@ -641,6 +672,163 @@ def _extract_skills(text: str) -> List[str]:
         if s not in seen:
             out.append(s)
             seen.add(s)
+    return out
+
+
+def _extract_requirement_lines_fallback(content: str, max_lines: int = 12) -> List[str]:
+    """
+    Some pasted JDs have no explicit 'Requirements' header but include a block of requirement lines.
+    Capture those lines so the UI doesn't show empty Requirements.
+    """
+    lines = [ln.strip() for ln in (content or "").splitlines() if ln.strip()]
+    if not lines:
+        return []
+    out: List[str] = []
+    seen = set()
+    req_line_re = re.compile(
+        r"^(\d+\+?\s+years?|must\s+have|strong\s+experience|experience\s+with|ability\s+to|proven\s+ability|required\s+to)\b",
+        re.I,
+    )
+    for ln in lines[:320]:
+        s = ln.lstrip("•-* ").strip()
+        low = s.lower()
+        if not s or len(s) < 6 or len(s) > 220:
+            continue
+        if any(k in low for k in ["benefits", "salary", "equal opportunity", "ascendion is", "about ascendion", "want to change the world"]):
+            continue
+        if req_line_re.search(s) or re.search(r"\bboolean\b", low) or re.search(r"\bats\b", low) or "requisitions" in low:
+            key = re.sub(r"\s+", " ", low).strip()
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(s)
+        if len(out) >= max_lines:
+            break
+    return out
+
+
+def _infer_pain_points_from_requirements(requirements: List[str], max_items: int = 3) -> List[str]:
+    """
+    Convert requirement-style lines into business challenges when no explicit 'challenge/problem' language exists.
+    Keeps them grounded and non-salary.
+    """
+    out: List[str] = []
+    seen = set()
+    blob = " ".join(requirements or []).lower()
+    candidates: List[str] = []
+    if "boolean" in blob:
+        candidates.append("Source hard-to-find candidates using advanced search (Boolean strings).")
+    if "ats" in blob or "applicant tracking" in blob:
+        candidates.append("Operate efficiently within an ATS while managing recruiting workflow end-to-end.")
+    if "requisition" in blob or "volume" in blob:
+        candidates.append("Manage a high volume of open requisitions across multiple stakeholders.")
+    if "executive" in blob:
+        candidates.append("Communicate effectively with executive stakeholders to align on open roles.")
+    if "job board" in blob:
+        candidates.append("Source candidates across multiple job boards to build qualified pipelines.")
+
+    for c in candidates:
+        k = c.lower()
+        if k in seen:
+            continue
+        seen.add(k)
+        out.append(c)
+        if len(out) >= max_items:
+            break
+    return out
+
+
+def _merge_label_bullets(lines: List[str]) -> List[str]:
+    """
+    Merge label-only bullets like:
+      - "Education:"
+      - "Experience:"
+    with the next line if present.
+    """
+    if not lines:
+        return []
+    out: List[str] = []
+    i = 0
+    while i < len(lines):
+        cur = str(lines[i] or "").strip()
+        low = cur.lower().strip()
+        if cur.endswith(":") and low.rstrip(":") in {"education", "experience", "requirements", "qualifications"}:
+            nxt = str(lines[i + 1] or "").strip() if i + 1 < len(lines) else ""
+            if nxt:
+                merged = f"{cur} {nxt}".strip()
+                out.append(merged[:220])
+                i += 2
+                continue
+        out.append(cur[:220])
+        i += 1
+    return [x for x in out if x and x.strip()]
+
+
+def _clean_required_skills(skills: List[str]) -> List[str]:
+    """
+    Remove bogus/low-signal skill tokens (e.g. 'C') and normalize recruiter-domain skills.
+    """
+    if not skills:
+        return []
+    out: List[str] = []
+    seen = set()
+    for s in skills:
+        t = str(s or "").strip()
+        if not t:
+            continue
+        low = t.lower()
+        # Drop single-letter skills (common false positive from "SC" etc.)
+        if len(t) == 1:
+            continue
+        if low in {"c/c++"}:
+            continue
+        # Normalize common recruiter tokens
+        repl = {
+            "ats": "ATS",
+            "applicant tracking system": "ATS",
+            "boolean search": "Boolean search",
+            "candidate sourcing": "Candidate sourcing",
+            "full-cycle recruiting": "Full-cycle recruiting",
+            "full lifecycle recruiting": "Full-cycle recruiting",
+            "stakeholder management": "Stakeholder management",
+            "requisition management": "Requisition management",
+        }
+        norm = repl.get(low, t)
+        key = norm.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(norm)
+    return out[:20]
+
+
+def _condense_pain_points(pain_points: List[str], max_words: int = 18, max_items: int = 8) -> List[str]:
+    """
+    Ensure pain points are scannable (no paragraphs).
+    """
+    if not pain_points:
+        return []
+    out: List[str] = []
+    seen = set()
+    for p in pain_points:
+        raw = " ".join(str(p or "").split()).strip()
+        if not raw:
+            continue
+        # If it's a paragraph, take the first sentence/clause.
+        first = re.split(r"(?<=[.!?])\s+", raw)[0].strip()
+        first = re.split(r"[;–—-]\s+", first)[0].strip()
+        words = first.split()
+        if len(words) > max_words:
+            first = " ".join(words[:max_words]).strip()
+        if first and first[-1] not in ".!?":
+            first += "."
+        key = first.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(first)
+        if len(out) >= max_items:
+            break
     return out
 
 
@@ -1479,6 +1667,8 @@ async def import_job_description(payload: JobImportRequest):
             max_lines=10,
             stop_patterns=["want more jobs like this", "job alert subscription", "benefits", "benefits include", "what we offer", "about"],
         )
+        if not requirements:
+            requirements = _extract_requirement_lines_fallback(content, max_lines=12)
         benefits = _extract_section_lines(
             content,
             ["benefits", "perks", "what we offer", "work/life balance", "mentorship", "career growth", "inclusive team culture", "diverse experiences"],
@@ -1536,6 +1726,16 @@ async def import_job_description(payload: JobImportRequest):
             max_items=3,
             keywords=["challenge", "problem", "need", "support", "scale", "grow", "reliability"],
         )
+        if (not pain_points or len(pain_points) < 2) and requirements:
+            inferred = _infer_pain_points_from_requirements(requirements, max_items=3)
+            if inferred:
+                # Prefer explicit pain points first, then inferred.
+                seen = {p.lower() for p in pain_points}
+                for x in inferred:
+                    if x.lower() not in seen:
+                        pain_points.append(x)
+                        seen.add(x.lower())
+                pain_points = pain_points[:3]
 
         # Prefer responsibilities as a stand-in for "success metrics" when GPT isn't available.
         # This avoids accidentally selecting company boilerplate ("mission", "offices in") as "metrics".
@@ -1679,6 +1879,43 @@ async def import_job_description(payload: JobImportRequest):
             except Exception:
                 # On any GPT failure, keep heuristic extraction.
                 pass
+
+        # --- Post-LLM safety net ---------------------------------------
+        # Even with GPT enabled, some postings (esp. recruiting/non-tech) can come back with empty skills/requirements.
+        # Ensure we still return something useful and grounded.
+        # Clean up common formatting artifacts (label-only bullets).
+        requirements = _merge_label_bullets(list(requirements or []))
+        responsibilities = _merge_label_bullets(list(responsibilities or []))
+
+        if not requirements:
+            requirements = _extract_requirement_lines_fallback(content, max_lines=12) or requirements
+        if not required_skills:
+            required_skills = _extract_requirement_skill_phrases(content) or _extract_skills(content) or required_skills
+        required_skills = _clean_required_skills([str(s) for s in (required_skills or [])])
+        if (not pain_points or len(pain_points) < 2) and requirements:
+            inferred = _infer_pain_points_from_requirements(requirements, max_items=3)
+            if inferred:
+                seen = {p.lower() for p in (pain_points or [])}
+                pain_points = list(pain_points or [])
+                for x in inferred:
+                    if x.lower() not in seen:
+                        pain_points.append(x)
+                        seen.add(x.lower())
+                pain_points = pain_points[:3]
+        pain_points = _condense_pain_points([str(p) for p in (pain_points or [])], max_words=18, max_items=8)
+
+        parsed_json = {
+            "pain_points": pain_points,
+            "required_skills": required_skills,
+            "success_metrics": success_metrics,
+            "salary_range": salary_range,
+            "location": location,
+            "work_mode": work_mode,
+            "employment_type": employment_type,
+            "responsibilities": responsibilities,
+            "requirements": requirements,
+            "benefits": benefits,
+        }
 
         # Validate: do not create incomplete JDs (common when scraping a job board/search page).
         validation_error = _validate_extracted_job(

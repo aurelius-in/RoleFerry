@@ -393,11 +393,13 @@ export default function JobDescriptionsPage() {
                 <ul className="space-y-1 text-sm">
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.linkedin.com/jobs/" target="_blank" rel="noopener noreferrer">LinkedIn Jobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.indeed.com/" target="_blank" rel="noopener noreferrer">Indeed</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.google.com/search?q=jobs" target="_blank" rel="noopener noreferrer">Google Jobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.glassdoor.com/Job/index.htm" target="_blank" rel="noopener noreferrer">Glassdoor</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.ziprecruiter.com/" target="_blank" rel="noopener noreferrer">ZipRecruiter</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.monster.com/jobs/" target="_blank" rel="noopener noreferrer">Monster</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.careerbuilder.com/" target="_blank" rel="noopener noreferrer">CareerBuilder</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.simplyhired.com/" target="_blank" rel="noopener noreferrer">SimplyHired</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://simplify.jobs/" target="_blank" rel="noopener noreferrer">Simplify.jobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.themuse.com/jobs" target="_blank" rel="noopener noreferrer">The Muse</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.usajobs.gov/" target="_blank" rel="noopener noreferrer">USAJOBS (US Government)</a></li>
                 </ul>
@@ -422,11 +424,9 @@ export default function JobDescriptionsPage() {
               <div className="rounded-md border border-white/10 bg-white/5 p-4">
                 <div className="text-xs font-semibold text-white/70 mb-2">Tech jobs</div>
                 <ul className="space-y-1 text-sm">
-                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.google.com/search?q=jobs" target="_blank" rel="noopener noreferrer">Google Jobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.builtin.com/jobs" target="_blank" rel="noopener noreferrer">Built In (Tech)</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.dice.com/" target="_blank" rel="noopener noreferrer">Dice</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://jobright.ai/" target="_blank" rel="noopener noreferrer">Jobright.ai</a></li>
-                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://simplify.jobs/" target="_blank" rel="noopener noreferrer">Simplify.jobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://careers.google.com/" target="_blank" rel="noopener noreferrer">Google Careers</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://jobs.careers.microsoft.com/" target="_blank" rel="noopener noreferrer">Microsoft Careers</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.amazon.jobs/" target="_blank" rel="noopener noreferrer">Amazon Jobs</a></li>

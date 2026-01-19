@@ -436,7 +436,9 @@ class OpenAIClient:
                     "Rules for pain_points (business challenges):\n"
                     "- Focus on business/technical goals, problems, or challenges.\n"
                     "- DO NOT include compensation/salary/benefits/employment type/location as pain points.\n"
-                    "- DO NOT include addresses, commute text, ratings, or job-board UI lines (e.g., 'Responded to 75%').\n\n"
+                    "- DO NOT include addresses, commute text, ratings, or job-board UI lines (e.g., 'Responded to 75%').\n"
+                    "- Write pain_points as concise fragments (8–18 words each). No paragraphs.\n"
+                    "- Return 4–8 pain_points for most postings.\n\n"
                     "Rules for success_metrics:\n"
                     "- Prefer measurable outcomes or KPI-style expectations.\n"
                     "- If none are explicitly stated, return 1-3 short outcome statements derived from responsibilities (not marketing fluff).\n\n"
@@ -447,8 +449,15 @@ class OpenAIClient:
                     "Also:\n"
                     "- DO NOT include salary or addresses in success_metrics.\n\n"
                     "Rules for required_skills:\n"
-                    "- Include concrete skills/tools/technologies (e.g., 'Salesforce', 'APIs', 'SQL', 'Customer success').\n"
+                    "- Include concrete skills/tools/technologies OR domain skills for the role (e.g., for recruiting: 'Boolean search', 'ATS', 'sourcing', 'full-cycle recruiting', 'stakeholder management').\n"
                     "- Avoid accidental matches like the word 'go' from 'go live' (only include 'Go' if clearly referring to the programming language).\n\n"
+                    "Hard requirement for required_skills:\n"
+                    "- If the job post includes ANY qualifications/requirements, required_skills MUST NOT be empty.\n"
+                    "- Prefer 8–15 skills for a typical posting.\n\n"
+                    "Rules for requirements:\n"
+                    "- Include the core qualification bullets/lines (e.g., years of experience, ATS, sourcing, communication, volume of requisitions).\n"
+                    "- Do not include benefits, salary, or company boilerplate.\n\n"
+                    "- Do not output label-only bullets like 'Education:' or 'Experience:'; merge them with the following content.\n\n"
                     "Skills normalization:\n"
                     "- Normalize casing/synonyms (e.g., 'node js' -> 'Node.js', 'reactjs' -> 'React').\n"
                     "- Do not include proficiency levels or duplicates.\n\n"
@@ -507,12 +516,24 @@ class OpenAIClient:
             {
                 "role": "system",
                 "content": (
-                    "You compare a job description and a resume. Propose up to three alignments where the user's experience solves a business challenge.\n\n"
-                    "Rules:\n"
-                    "- jd_snippet: must be a business or technical challenge (NOT salary/benefits).\n"
-                    "- resume_snippet: how the user solved it.\n"
-                    "- metric: measurable impact.\n\n"
-                    "Return ONLY JSON: pairs[ { jd_snippet, resume_snippet, metric } ], alignment_score (0-1)."
+                    "You match a job's REAL responsibilities/requirements to a candidate's REAL resume evidence.\n"
+                    "Goal: produce up to 3 grounded alignments that feel like a logical, specific flow (not vague or generic).\n\n"
+                    "Inputs:\n"
+                    "- The user message contains two JSON blobs: Job description and Resume.\n"
+                    "- Prefer JD responsibilities/requirements over fluffy marketing lines.\n\n"
+                    "Critical rules (grounding):\n"
+                    "- Do NOT invent facts or numbers.\n"
+                    "- jd_snippet MUST be a concrete responsibility / problem-to-solve. Avoid generic slogans like 'Solve complex problems' or 'Learn new skills'.\n"
+                    "- jd_evidence MUST be a short quote or bullet taken from JD responsibilities/requirements/pain_points.\n"
+                    "- resume_snippet MUST be a concrete solution anchored in the resume (role, accomplishment, metric context, skills). No hand-wavy strategies.\n"
+                    "- resume_evidence MUST be a short quote or bullet taken from the resume blob.\n"
+                    "- metric MUST be taken from resume key metrics/accomplishments if present. If none, return an empty string or a qualitative metric like 'Qualitative: improved X' WITHOUT numbers.\n\n"
+                    "Output quality bar:\n"
+                    "- Each pair should read like: (JD challenge) -> (why it matters) -> (what you did / can do) -> (proof).\n"
+                    "- Keep solution to 1–2 sentences. Evidence fields can be short fragments.\n\n"
+                    "Return ONLY JSON with:\n"
+                    "- pairs: array (max 3) of { jd_snippet, jd_evidence, resume_snippet, resume_evidence, metric, overlap }\n"
+                    "- alignment_score: number (0-1)\n"
                 ),
             },
             {"role": "user", "content": f"Job description:\n{jd_blob}\n\nResume:\n{resume_blob}"},
@@ -521,19 +542,28 @@ class OpenAIClient:
         stub = {
             "pairs": [
                 {
-                    "jd_snippet": "Improve onboarding activation and reduce drop-off",
-                    "resume_snippet": "Led onboarding funnel revamp and improved activation via experiments",
-                    "metric": "+12% activation",
+                    "jd_snippet": "Improve onboarding activation by reducing drop-off in first-week usage",
+                    "jd_evidence": "Own onboarding and activation initiatives end-to-end",
+                    "resume_snippet": "Redesigned onboarding flow and instrumented key events to identify drop-off and iterate quickly.",
+                    "resume_evidence": "Led onboarding funnel revamp; ran experiments to improve activation",
+                    "metric": "",
+                    "overlap": "Both focus on onboarding activation; resume shows direct experience improving the flow.",
                 },
                 {
-                    "jd_snippet": "Reduce churn by improving time-to-value",
-                    "resume_snippet": "Built usage-based lifecycle messaging that reduced early churn",
-                    "metric": "-8% churn",
+                    "jd_snippet": "Reduce churn by improving time-to-value for new customers",
+                    "jd_evidence": "Reduce churn by improving time-to-value",
+                    "resume_snippet": "Improved time-to-value by prioritizing early-success milestones and lifecycle touchpoints based on usage signals.",
+                    "resume_evidence": "Built usage-based lifecycle messaging to reduce early churn",
+                    "metric": "",
+                    "overlap": "JD targets churn/time-to-value; resume evidence shows lifecycle + usage-signal work.",
                 },
                 {
-                    "jd_snippet": "Increase visibility into funnel metrics and attribution",
-                    "resume_snippet": "Implemented event taxonomy + dashboards for end-to-end attribution",
-                    "metric": "4x faster insights",
+                    "jd_snippet": "Increase visibility into funnel metrics and attribution for decision-making",
+                    "jd_evidence": "Increase visibility into funnel metrics and attribution",
+                    "resume_snippet": "Defined an event taxonomy and shipped dashboards so stakeholders could self-serve funnel insights.",
+                    "resume_evidence": "Implemented event taxonomy + dashboards for end-to-end attribution",
+                    "metric": "",
+                    "overlap": "JD needs attribution visibility; resume shows instrumentation + dashboards experience.",
                 },
             ],
             "alignment_score": round(0.72 + ((seed % 20) / 100), 2),
