@@ -17,7 +17,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Bump this when changing prompting/logic so cached results don't mask improvements.
-_PROMPT_VERSION = "2025-12-28-company-research-v2"
+_PROMPT_VERSION = "2026-01-19-company-research-v3"
 
 # PDL can be expensive; default OFF unless explicitly enabled.
 _ENABLE_PDL = str(os.getenv("ROLEFERRY_ENABLE_PDL", "false")).lower() == "true"
@@ -87,6 +87,9 @@ class ResearchRequest(BaseModel):
     company_name: str
     # Optional: pass selected job context so we can research the right org unit for large companies.
     selected_job_description: Optional[Dict[str, Any]] = None
+    # Optional: upstream context so the background report can be grounded in the candidate + role.
+    resume_extract: Optional[Dict[str, Any]] = None
+    painpoint_matches: Optional[List[Dict[str, Any]]] = None
     # Optional: pass full contact objects so we can generate per-contact research/bios.
     contacts: Optional[List[SelectedContact]] = None
     # Optional: UI data mode ("demo" | "live"). If "live" and keys exist, we will fetch real web/company signals.
@@ -259,14 +262,19 @@ async def conduct_research(request: ResearchRequest):
                 q_general = f"{nm} {co} {c.title or ''}".strip()
                 q_posts = f"{nm} {co} posts articles blog LinkedIn"
                 q_talks = f"{nm} {co} podcast interview conference talk"
+                # If we have an explicit LinkedIn URL, bias a query toward it (public snippets only).
+                li = str(getattr(c, "linkedin_url", "") or "").strip()
+                q_li = f"{li} {nm} {co}".strip() if li else f'site:linkedin.com/in "{nm}" {co}'
                 hits_general = _serper(q_general, num=5)
                 hits_posts = _serper(q_posts, num=5)
                 hits_talks = _serper(q_talks, num=5)
+                hits_li = _serper(q_li, num=5)
                 contact_serper_hits[c.id] = hits_general
                 contact_serper_by_topic[c.id] = {
                     "general": hits_general,
                     "posts": hits_posts,
                     "talks": hits_talks,
+                    "linkedin": hits_li,
                 }
 
         # PDL company enrichment (best effort, but OFF by default due to cost)
@@ -290,6 +298,9 @@ async def conduct_research(request: ResearchRequest):
             "job_required_skills": jd.get("required_skills") or [],
             "job_pain_points": jd.get("pain_points") or [],
             "job_success_metrics": jd.get("success_metrics") or [],
+            # Candidate context (best effort). Keep these lightweight/outreach-safe.
+            "resume_extract": request.resume_extract or {},
+            "painpoint_matches": request.painpoint_matches or [],
             # Internal-only convenience fields (also included in the payload passed to the LLM).
             "contacts_raw": [],
             "recent_news_raw": [],
@@ -453,7 +464,7 @@ async def conduct_research(request: ResearchRequest):
             if not base_desc:
                 # When we have no web/company enrichment, avoid "backend unavailable" style messages.
                 # Keep it explicitly limited but still usable for drafting without sounding like the system gave up.
-                base_desc = f"High-level overview for {scope_target} (no external web lookup used)."
+                base_desc = f"High-level overview for {scope_target}."
             if bucket == "engineering":
                 tailored = (
                     f"{base_desc} Tailored for engineering leadership: emphasize delivery velocity, reliability, "
@@ -495,8 +506,9 @@ async def conduct_research(request: ResearchRequest):
                 "company_summary": {
                     "name": scope_target,
                     "description": tailored,
-                        "industry": (corpus.get("signals") or {}).get("company_industries", ["Unknown"])[0] if (corpus.get("signals") or {}).get("company_industries") else "Unknown",
-                        "size": (corpus.get("signals") or {}).get("company_sizes", ["Unknown"])[0] if (corpus.get("signals") or {}).get("company_sizes") else "Unknown",
+                        # Avoid low-confidence industry/size guesses in stub mode; prefer Unknown unless we have enriched data.
+                        "industry": str((corpus.get("pdl_company_enrich") or {}).get("industry") or "Unknown"),
+                        "size": str((corpus.get("pdl_company_enrich") or {}).get("size") or "Unknown"),
                         "founded": "Unknown",
                         "headquarters": "Unknown",
                         "website": corpus.get("website") or "Unknown",
@@ -509,10 +521,10 @@ async def conduct_research(request: ResearchRequest):
                         "company": c.company or company,
                         "bio": (
                             f"{c.name} is a {c.title} at {c.company or company}. "
-                            f"Likely cares about measurable outcomes, speed, and low-risk improvements."
+                            f"Likely cares about outcomes, execution risk, and pragmatic improvements aligned to their team."
                         ),
-                        "experience": "10+ years in leadership roles with measurable outcomes.",
-                        "education": "BS Computer Science; ongoing executive training",
+                        "experience": "Unknown",
+                        "education": "Unknown",
                         "skills": skills,
                         "linkedin_url": c.linkedin_url,
                     }
@@ -522,18 +534,20 @@ async def conduct_research(request: ResearchRequest):
                 "background_report_title": "Contact Background Report",
                 "background_report_sections": [
                     {
-                        "heading": "Outreach personalization angles",
+                        "heading": "What to personalize (based on their role)",
                         "body": (
-                            "Lead with one concrete outcome you can improve in 2–3 weeks, and tie it to a measurable KPI. "
-                            "Offer a short, low-risk mini-plan (2–3 bullets) aligned to the contact’s role and team."
+                            f"Personalize your opener to {c.title} by connecting the role you’re pursuing ({corpus.get('job_title') or 'the role'}) "
+                            f"to a likely priority for {dept_phrase}. Mention one specific problem-to-solve from the job posting (pain points / responsibilities), "
+                            f"then offer one concrete proof point from your resume (a shipped project, a metric, or a scoped mini-plan). "
+                            f"Keep it grounded: no big claims, just a crisp 'here’s what I’d improve first' tied to a measurable outcome."
                         ),
                         "sources": [],
                     }
                 ],
                 "hooks": [
-                    "Open with a specific outcome you can improve in 2–3 weeks",
-                    "Reference a relevant initiative/news item as timing",
-                    "Offer a concrete mini-plan instead of a generic pitch",
+                    "Connect the job’s top pain point to a specific outcome you’ve delivered before",
+                    "Reference their org’s likely constraints (speed vs reliability vs cost) and offer a low-risk first step",
+                    "Offer a 2–3 bullet mini-plan tied to a KPI the role is accountable for",
                 ],
             }
 
@@ -567,6 +581,7 @@ async def conduct_research(request: ResearchRequest):
                     "not the entire company.\n\n"
                     "Rules:\n"
                     "- Prefer facts from the corpus JSON when available.\n"
+                    "- Do NOT include meta/system disclaimers like '(no external lookup used)' in any user-facing text.\n"
                     "- If the corpus has no web snippets/enrichment (serper_hits empty and pdl_company_enrich empty), you SHOULD still try:\n"
                     "  - Use general model knowledge to write a useful company description (what they sell, who they sell to, and the buying motion).\n"
                     "  - Populate industry/size/headquarters/website/linkedin_url ONLY if you are confident (well-known company) — otherwise 'Unknown'.\n"
@@ -581,6 +596,10 @@ async def conduct_research(request: ResearchRequest):
                     "- The company_summary.description should be 2–4 sentences and outreach-useful (what they do + why it matters + likely priorities).\n"
                     "- contact_bios.bio should be 1–2 sentences tailored to the contact's title/department.\n"
                     "- hooks should be 4–8 punchy, concrete outreach angles (no fluff), grounded in the job pain_points / success_metrics if present.\n\n"
+                    "Grounding rules for the Contact Background Report:\n"
+                    "- If resume_extract or painpoint_matches are provided, use them to make the report SPECIFIC.\n"
+                    "  Example: cite 1 job pain point + 1 resume proof point + a recommended first 2–3 steps.\n"
+                    "- Avoid generic coaching language. Make it a brief intelligence brief, not advice.\n\n"
                     "Contact Background Report (dynamic sections):\n"
                     "- Build a report titled 'Contact Background Report' for each contact, containing ~20 possible headings.\n"
                     "- Only INCLUDE a heading if you have at least ~2 sentences of useful, outreach-relevant info for it.\n"

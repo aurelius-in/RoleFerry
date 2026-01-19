@@ -80,6 +80,9 @@ export default function OfferCreationPage() {
   const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
   const [researchHistory, setResearchHistory] = useState<Array<{ contact: Contact; research: any; researched_at: string }>>([]);
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
+  const [isEditingOffer, setIsEditingOffer] = useState(false);
+  const [draftVersion, setDraftVersion] = useState(0);
+  const [draftSavedNotice, setDraftSavedNotice] = useState<string | null>(null);
 
   const readActiveResearch = () => {
     try {
@@ -183,6 +186,52 @@ export default function OfferCreationPage() {
     return resp?.offer || o;
   };
 
+  const readSelectedJob = () => {
+    try {
+      return JSON.parse(localStorage.getItem("selected_job_description") || "null");
+    } catch {
+      return null;
+    }
+  };
+
+  const seedDraftFromContext = () => {
+    // Deterministic baseline so the box is never empty (AI can overwrite on first click).
+    const m0 = painPointMatches?.[0];
+    const research = readActiveResearch();
+    const jd = readSelectedJob();
+    const company = String(jd?.company || (selectedContacts?.[0]?.company || "") || "the company").trim();
+    const jobTitle = String(jd?.title || "this role").trim();
+    const contactName =
+      String(
+        selectedContacts.find((c) => String(c?.id || "") === String(activeContactId || ""))?.name ||
+          researchHistory.find((h) => String(h?.contact?.id || "") === String(activeContactId || ""))?.contact?.name ||
+          selectedContacts?.[0]?.name ||
+          "the team"
+      ).trim();
+
+    const pain = String(m0?.painpoint_1 || "a key priority").trim();
+    const sol = String(m0?.solution_1 || "").trim();
+    const metric = displayMetric(String(m0?.metric_1 || "")) || "";
+    const hooks = (research && Array.isArray((research as any)?.hooks)) ? (research as any).hooks : [];
+    const hook = String(hooks?.[0] || "").trim();
+
+    const title = `Offer: ${pain} @ ${company}`;
+    const lines = [
+      `Hi ${contactName},`,
+      ``,
+      `I’m exploring ${jobTitle} at ${company}. Here’s a quick, concrete offer tied to the role’s priorities:`,
+      ``,
+      `- Focus: ${pain}`,
+      sol ? `- Proof point: ${sol}${metric ? ` (${metric})` : ""}` : `- Proof point: [Add 1 proof point from your background]`,
+      hook ? `- First-week plan: ${hook}` : `- First-week plan: Identify the top bottleneck + ship a low-risk improvement with a measurable KPI`,
+      ``,
+      `If you’d like, I can share a 2–3 bullet plan tailored to your team’s current constraints.`,
+    ];
+
+    setOfferTitle((prev) => prev || title);
+    setOfferContent((prev) => prev || lines.join("\n"));
+  };
+
   useEffect(() => {
     // Load mode from localStorage
     const stored = localStorage.getItem("rf_mode");
@@ -247,6 +296,14 @@ export default function OfferCreationPage() {
       if (active) setActiveContactId(active);
     } catch {}
   }, []);
+
+  useEffect(() => {
+    // Prefill draft as soon as we have enough upstream context.
+    if (!offerContent && painPointMatches.length > 0) {
+      seedDraftFromContext();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [painPointMatches, activeContactId, selectedContacts.length, researchHistory.length]);
 
   useEffect(() => {
     // Load saved offers for this logged-in user (server-backed when available).
@@ -316,16 +373,9 @@ export default function OfferCreationPage() {
           custom_tone: (o as any)?.custom_tone || undefined,
           created_at: o.created_at,
         };
-        // Auto-save to the user's library so demos don't need a separate "Save" action.
-        try {
-          const saved = await persistOffer(mapped);
-          setOffers(prev => [saved as any, ...prev.filter(p => p.id !== (saved as any)?.id)]);
-        } catch {
-          // If save fails, still show it locally so the workflow can continue.
-          setOffers(prev => [mapped, ...prev.filter(p => p.id !== mapped.id)]);
-        }
         setOfferTitle(mapped.title);
         setOfferContent(mapped.content);
+        setDraftVersion((v) => v + 1);
       }
     } catch (e: any) {
       setError("Failed to generate offer. Please try again.");
@@ -351,14 +401,8 @@ export default function OfferCreationPage() {
       try {
         const saved = await persistOffer(newOffer);
         setOffers(prev => [saved as any, ...prev.filter(p => p.id !== (saved as any)?.id)]);
-        setOfferTitle("");
-        setOfferContent("");
-        setOptionalLink("");
-        setVideoFileName("");
-        try {
-          if (videoObjectUrl) URL.revokeObjectURL(videoObjectUrl);
-        } catch {}
-        setVideoObjectUrl("");
+        setDraftSavedNotice("Saved to Offer Library.");
+        window.setTimeout(() => setDraftSavedNotice(null), 1800);
       } catch (e: any) {
         setError("Failed to save offer. Please try again.");
       }
@@ -366,10 +410,25 @@ export default function OfferCreationPage() {
   };
 
   const handleContinue = () => {
-    if (offers.length > 0) {
-      localStorage.setItem('created_offers', JSON.stringify(offers));
-      router.push('/compose');
+    // Continue should use the CURRENT draft (even if not saved to the library).
+    if (!offerTitle.trim() || !offerContent.trim()) {
+      setError("Generate (or edit) a personalized offer before continuing.");
+      return;
     }
+    const draft: Offer = {
+      id: `draft_${Date.now()}`,
+      title: offerTitle,
+      content: offerContent,
+      tone: selectedTone,
+      format: selectedFormat,
+      url: optionalLink || undefined,
+      video_url: videoObjectUrl || undefined,
+      custom_tone: selectedTone === "custom" ? customTone : undefined,
+      created_at: new Date().toISOString(),
+    };
+    // Do NOT add to Offer Library unless they hit Save.
+    localStorage.setItem('created_offers', JSON.stringify([draft]));
+    router.push('/compose');
   };
 
   const getToneDescription = (tone: string) => {
@@ -445,16 +504,7 @@ export default function OfferCreationPage() {
                 </div>
               )}
 
-              {offers.length > 0 && (
-                <div className="mt-6 pt-4 border-t border-white/10">
-                  <button
-                    onClick={handleContinue}
-                    className="w-full bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition-colors text-sm"
-                  >
-                    Continue ({offers.length}) →
-                  </button>
-                </div>
-              )}
+              {/* Continue button lives under the Personalized Offer (single CTA for this step). */}
             </div>
           </div>
 
@@ -511,8 +561,8 @@ export default function OfferCreationPage() {
                       </a>
                     </div>
 
-                    <div className="mt-3 grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
-                      <div className="md:col-span-6">
+                    <div className="mt-3">
+                      <div>
                         <label className="block text-[11px] font-semibold text-white/70 mb-1">Researched contacts</label>
                         <select
                           value={activeContactId || ""}
@@ -537,7 +587,7 @@ export default function OfferCreationPage() {
                         ) : null}
                       </div>
 
-                      <div className="md:col-span-6">
+                      <div className="mt-3">
                         <label className="block text-[11px] font-semibold text-white/70 mb-1">Quick pick</label>
                         <div className="flex flex-wrap gap-2">
                           {researchHistory.slice(0, 6).map((h) => {
@@ -555,7 +605,7 @@ export default function OfferCreationPage() {
                                 }`}
                                 title="Set this contact as the target"
                               >
-                                {String(h?.contact?.name || "Contact").split(" ")[0]}
+                                {String(h?.contact?.name || "Contact")}
                               </button>
                             );
                           })}
@@ -576,18 +626,6 @@ export default function OfferCreationPage() {
                           "Selected contact"}
                       </div>
                     ) : null}
-                  </div>
-
-                  {/* Pain Point Match Summary Card */}
-                  <div className="bg-blue-50 border border-white/10 rounded-lg p-4">
-                     <h3 className="text-sm font-semibold text-white uppercase tracking-wide mb-2">Target Opportunity</h3>
-                     <p className="text-white/90 font-medium mb-1">Challenge: {painPointMatches[0].painpoint_1}</p>
-                     <p className="text-white/70 text-sm">
-                       Proposed solution: {painPointMatches[0].solution_1}
-                       {displayMetric(painPointMatches[0].metric_1) ? (
-                         <span className="text-white/60">{" "}— {displayMetric(painPointMatches[0].metric_1)}</span>
-                       ) : null}
-                     </p>
                   </div>
 
                   {/* Tone Selection */}
@@ -634,21 +672,86 @@ export default function OfferCreationPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
                       <h2 className="text-xl font-semibold">Personalized Offer</h2>
-                      
-                      <div className="space-y-3">
-                        <button 
-                          onClick={() => setOfferContent(prev => prev + "\n[Insert Snippet: Case Study X]")}
-                          className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded text-sm font-medium transition-colors"
-                        >
-                          + Insert Snippet
-                        </button>
 
-                        <textarea
-                          value={offerContent}
-                          onChange={(e) => setOfferContent(e.target.value)}
-                          placeholder="Draft your offer here..."
-                          className="w-full h-64 border border-gray-300 rounded-lg p-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                        />
+                      <div className="text-sm text-white/70">
+                        Click the offer box to rotate through new AI-generated versions. When you see one you like, you can edit it and/or hit Save.
+                      </div>
+
+                      {draftSavedNotice ? (
+                        <div className="rounded-md border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100">
+                          {draftSavedNotice}
+                        </div>
+                      ) : null}
+
+                      <div className="space-y-3">
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => {
+                            if (!isGenerating) generateOffer();
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              if (!isGenerating) generateOffer();
+                            }
+                          }}
+                          className={`w-full rounded-lg border p-4 transition-colors ${
+                            isGenerating
+                              ? "border-blue-400/40 bg-blue-500/10 cursor-wait"
+                              : "border-white/10 bg-black/20 hover:bg-black/30 cursor-pointer"
+                          }`}
+                          title="Click to generate a new version"
+                        >
+                          <div className="flex items-center justify-between gap-3 mb-2">
+                            <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">
+                              Offer draft {draftVersion ? `(v${draftVersion})` : ""}
+                            </div>
+                            <div className="text-xs text-white/60">
+                              {isGenerating ? "Generating…" : "Click to generate a new version"}
+                            </div>
+                          </div>
+                          <div className="text-sm text-white whitespace-pre-wrap">
+                            {offerContent || "Click to generate your first offer…"}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setIsEditingOffer((v) => !v)}
+                            className="text-sm px-3 py-2 rounded-md bg-white/10 border border-white/10 text-white hover:bg-white/15 transition-colors"
+                          >
+                            {isEditingOffer ? "Hide editor" : "Edit"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSaveOffer}
+                            disabled={!offerTitle.trim() || !offerContent.trim()}
+                            className="text-sm px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                          >
+                            Save to library
+                          </button>
+                        </div>
+
+                        {isEditingOffer ? (
+                          <textarea
+                            value={offerContent}
+                            onChange={(e) => setOfferContent(e.target.value)}
+                            className="w-full h-64 border border-white/10 bg-black/30 rounded-lg p-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm text-white"
+                          />
+                        ) : null}
+
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={handleContinue}
+                            disabled={!offerTitle.trim() || !offerContent.trim()}
+                            className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                          >
+                            Continue to Compose →
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -755,20 +858,7 @@ export default function OfferCreationPage() {
                         ) : null}
                       </div>
 
-                      <div className="pt-4 border-t border-white/10">
-                        <div className="flex flex-col gap-3">
-                          <button
-                            onClick={generateOffer}
-                            disabled={isGenerating}
-                            className="w-full bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 shadow-sm"
-                          >
-                            {isGenerating ? "✨ Generating with AI..." : "✨ Generate AI Offer"}
-                          </button>
-                          <div className="text-xs text-white/60 text-center">
-                            Offers are auto-saved to your library when generated.
-                          </div>
-                        </div>
-                      </div>
+                      {/* Offer generation is driven by clicking the offer box (left). */}
                     </div>
                   </div>
                 </div>

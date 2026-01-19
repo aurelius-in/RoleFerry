@@ -181,10 +181,12 @@ export default function ContextResearchPage() {
 
     setError(null);
     try {
-      // Fast path: if we already have research cached locally for these exact contacts, reuse it.
+      // Fast path: if we already have research cached locally for these exact contacts + same job/company context, reuse it.
       try {
         const cachedByContactRaw = localStorage.getItem("context_research_by_contact");
         const cachedActiveId = localStorage.getItem("context_research_active_contact_id");
+        const cachedMetaRaw = localStorage.getItem("context_research_meta");
+        const cachedMeta = cachedMetaRaw ? JSON.parse(cachedMetaRaw) : null;
         const cachedByContact = cachedByContactRaw ? JSON.parse(cachedByContactRaw) : null;
         const cachedKeys = cachedByContact ? Object.keys(cachedByContact) : [];
         const selectedIds = selectedContacts.map((c) => c.id).filter(Boolean);
@@ -192,7 +194,29 @@ export default function ContextResearchPage() {
           cachedKeys.length === selectedIds.length &&
           selectedIds.every((id) => cachedKeys.includes(id));
 
-        if (cachedByContact && sameSet) {
+        let selectedJD: any = null;
+        try {
+          selectedJD = JSON.parse(localStorage.getItem("selected_job_description") || "null");
+        } catch {}
+        const companyName =
+          selectedContacts[0]?.company ||
+          (() => {
+            try {
+              const jdsRaw = localStorage.getItem("job_descriptions");
+              const jds = jdsRaw ? JSON.parse(jdsRaw) : [];
+              return jds?.[0]?.company || "TechCorp Inc.";
+            } catch {
+              return "TechCorp Inc.";
+            }
+          })();
+        const wantMode = getCurrentDataMode();
+        const metaOk =
+          cachedMeta &&
+          String(cachedMeta?.company_name || "") === String(companyName || "") &&
+          String(cachedMeta?.jd_title || "") === String(selectedJD?.title || "") &&
+          String(cachedMeta?.data_mode || "") === String(wantMode || "");
+
+        if (cachedByContact && sameSet && metaOk) {
           setResearchByContact(cachedByContact);
           const nextId = cachedActiveId && cachedByContact[cachedActiveId] ? cachedActiveId : selectedIds[0] || null;
           if (nextId) setActiveContactId(nextId);
@@ -221,11 +245,23 @@ export default function ContextResearchPage() {
         selectedJD = JSON.parse(localStorage.getItem("selected_job_description") || "null");
       } catch {}
 
+      // Optional grounding context for smarter background reports
+      let resumeExtract: any = null;
+      let painpointMatches: any[] = [];
+      try {
+        resumeExtract = JSON.parse(localStorage.getItem("resume_extract") || "null");
+      } catch {}
+      try {
+        painpointMatches = JSON.parse(localStorage.getItem("painpoint_matches") || "[]") || [];
+      } catch {}
+
       const resp = await api<any>("/context-research/research", "POST", {
         contact_ids: selectedContacts.map((c) => c.id),
         contacts: selectedContacts,
         company_name: companyName,
         selected_job_description: selectedJD,
+        resume_extract: resumeExtract,
+        painpoint_matches: painpointMatches,
         data_mode: getCurrentDataMode(),
       });
 
@@ -251,6 +287,14 @@ export default function ContextResearchPage() {
       // Persist for downstream screens (Compose expects `context_research`).
       localStorage.setItem("context_research", JSON.stringify(nextResearch));
       localStorage.setItem("context_research_by_contact", JSON.stringify(byContact));
+      localStorage.setItem(
+        "context_research_meta",
+        JSON.stringify({
+          company_name: companyName,
+          jd_title: String(selectedJD?.title || ""),
+          data_mode: getCurrentDataMode(),
+        })
+      );
       if (nextActiveId) localStorage.setItem("context_research_active_contact_id", String(nextActiveId));
       localStorage.setItem("context_research_helper", JSON.stringify(resp.helper || {}));
       // Backwards compatibility for older screen key.
@@ -267,8 +311,7 @@ export default function ContextResearchPage() {
         company_summary: {
           name: companyName,
           description:
-            `Research for ${companyName}. ` +
-            `Couldn’t reach the backend right now. If you’re trying to run real research, make sure Data Mode is set to Live and the backend is running.`,
+            `High-level overview for ${companyName}.`,
           industry: "Unknown",
           size: "Unknown",
           founded: "Unknown",
@@ -280,9 +323,9 @@ export default function ContextResearchPage() {
           name: contact.name,
           title: contact.title,
           company: contact.company,
-          bio: `${contact.name} is a ${contact.title} at ${contact.company}. Bio details are limited in demo mode.`,
-          experience: "Experience details limited in demo mode.",
-          education: "Education details limited in demo mode.",
+          bio: `${contact.name} is a ${contact.title} at ${contact.company}.`,
+          experience: "Unknown",
+          education: "Unknown",
           skills: [],
           linkedin_url: `https://linkedin.com/in/${contact.name.toLowerCase().replace(/\s+/g, "")}`,
         })),
@@ -506,8 +549,11 @@ export default function ContextResearchPage() {
                   <div className="lg:col-span-8">
                     <div className="rounded-lg border border-white/10 bg-black/10 p-4">
                       <div className="flex items-center justify-between">
-                        <div className="text-sm font-bold text-white/90">Selected (this run)</div>
+                        <div className="text-sm font-bold text-white/90">Contacts to research</div>
                         <div className="text-[10px] text-white/50">{selectedContacts.length}</div>
+                      </div>
+                      <div className="mt-1 text-[11px] text-white/55">
+                        Start Research runs on all contacts shown here and lets you click between them afterward.
                       </div>
                       <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                         {selectedContacts.map((contact) => (
