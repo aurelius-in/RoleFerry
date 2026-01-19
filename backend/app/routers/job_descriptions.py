@@ -376,6 +376,8 @@ def _extract_salary_range(text: str) -> Optional[str]:
         r"(\$\s?\d{2,3}\s?k\s*[–\-]\s*\$\s?\d{2,3}\s?k)",
         r"(\$\s?\d{2,3}\s?[kK]\s*/\s?yr\s*[–\-]\s*\$\s?\d{2,3}\s?[kK]\s*/\s?yr)",
         r"(\$\s?\d{2,3}(?:,\d{3})\s*(?:/year|per year)?\s*[–\-]\s*\$\s?\d{2,3}(?:,\d{3})\s*(?:/year|per year)?)",
+        # "$92,000.00-$153,000.00" (decimals, no spaces)
+        r"(\$\s?\d{1,3}(?:,\d{3})+(?:\.\d{2})?\s*[–\-]\s*\$\s?\d{1,3}(?:,\d{3})+(?:\.\d{2})?)",
         # Hourly rates: "$80 - $100 an hour", "$80 - $100 per hour", "$80-$100/hr"
         r"(\$\s?\d{1,3}(?:\.\d{1,2})?\s*[–\-]\s*\$\s?\d{1,3}(?:\.\d{1,2})?\s*(?:an?\s+hour|per\s+hour|/hour|/hr|hr)\b)",
         r"(\$\s?\d{1,3}(?:\.\d{1,2})?\s*(?:an?\s+hour|per\s+hour|/hour|/hr|hr)\b)",
@@ -404,6 +406,12 @@ def _extract_location_hint(text: str) -> Optional[str]:
     # Look for explicit Location / Job Location blocks
     for i, ln in enumerate(lines[:120]):
         low = ln.lower()
+        # Common listing-style: "Today • San Antonio, TX" / "San Antonio, TX"
+        m_city = re.search(r"\b([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*,\s*[A-Z]{2})\b", ln)
+        if m_city and len(m_city.group(1)) <= 40:
+            return m_city.group(1)
+        if low.strip() in {"remote", "us remote", "u.s. remote"}:
+            return "Remote"
         if low in {"location", "job location"} or low.startswith("location:"):
             # Try same line after colon
             if ":" in ln:
@@ -421,7 +429,13 @@ def _extract_location_hint(text: str) -> Optional[str]:
     return None
 
 
-def _extract_section_lines(text: str, header_patterns: List[str], *, max_lines: int = 10) -> List[str]:
+def _extract_section_lines(
+    text: str,
+    header_patterns: List[str],
+    *,
+    max_lines: int = 10,
+    stop_patterns: Optional[List[str]] = None,
+) -> List[str]:
     """
     Best-effort extraction of bullet-ish lines after a section header.
     """
@@ -429,10 +443,21 @@ def _extract_section_lines(text: str, header_patterns: List[str], *, max_lines: 
     if not lines:
         return []
     header_re = re.compile(r"^(?:" + "|".join(header_patterns) + r")\b", re.I)
-    stop_re = re.compile(
-        r"^(?:salary|salary range|perks|benefits|bonus points|nice to have|location|about us|about the job|corporate values|equal opportunity)\b",
-        re.I,
-    )
+    if stop_patterns is None:
+        stop_patterns = [
+            "salary",
+            "salary range",
+            "perks",
+            "benefits",
+            "bonus points",
+            "nice to have",
+            "location",
+            "about us",
+            "about the job",
+            "corporate values",
+            "equal opportunity",
+        ]
+    stop_re = re.compile(r"^(?:" + "|".join(stop_patterns) + r")\b", re.I)
     start = -1
     for i, ln in enumerate(lines[:240]):
         if header_re.search(ln):
@@ -590,6 +615,24 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
         if company:
             break
 
+    # Many job boards use "About {Company}" rather than "About the company".
+    if not company:
+        for ln in lines[:260]:
+            m = re.search(
+                r"^about\s+([A-Z][A-Za-z0-9&.,'’\-]+(?:\s+[A-Z][A-Za-z0-9&.,'’\-]+){0,4})\b",
+                (ln or "").strip(),
+                flags=re.I,
+            )
+            if not m:
+                continue
+            cand = (m.group(1) or "").strip().strip(":")
+            low = cand.lower()
+            if low in {"the job", "this role", "the role", "our team"}:
+                continue
+            if 1 <= len(cand.split()) <= 6:
+                company = cand[:120]
+                break
+
     def _looks_like_real_title(ln: str) -> bool:
         s = (ln or "").strip()
         if not s or len(s) < 4:
@@ -730,6 +773,9 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
             "an",
             "and",
             "or",
+            "as",
+            "today",
+            "viewed",
         }
 
         # Indeed-style / job-board header: company often appears as a standalone line near the top
@@ -739,6 +785,9 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 s = (ln or "").strip()
                 low = s.lower()
                 if not s or len(s) > 80:
+                    continue
+                # Job board header noise (date/location lines)
+                if "•" in s or low.startswith("today") or low.startswith("viewed on"):
                     continue
                 if "company logo" in low:
                     continue
@@ -1084,6 +1133,13 @@ def _extract_key_lines(content: str, max_items: int, keywords: List[str]) -> Lis
         r"\bjob\s+details\b",
         r"\bresponded\s+to\s+\d{1,3}%\b",
         r"\bout\s+of\s+5\s+stars\b",
+        r"\bwant\s+more\s+jobs\s+like\s+this\b",
+        r"\bget\s+jobs\s+in\b",
+        r"\bdelivered\s+to\s+your\s+inbox\b",
+        r"\bjob\s+alert\s+subscription\b",
+        r"\bviewed\s+on\b",
+        r"\bterms\s+of\s+service\b",
+        r"\bprivacy\s+policy\b",
         r"\b\d{1,5}\s+[A-Za-z0-9 .'\-]+(?:drive|dr|street|st|avenue|ave|road|rd|boulevard|blvd|lane|ln|way|court|ct)\b",
         r"\b[A-Za-z .'\-]+,\s*[A-Z]{2}\s*\d{5}\b",
         # Company boilerplate / marketing copy (not challenges/metrics)
@@ -1271,8 +1327,9 @@ async def import_job_description(payload: JobImportRequest):
         employment_type = _infer_employment_type_from_text(content)
         responsibilities = _extract_section_lines(
             content,
-            ["key job responsibilities", "responsibilities", "you'll be empowered to", "you will", "what you'll do", "what you’ll do", "a day in the life"],
+            ["key job responsibilities", "responsibilities", "you'll be empowered to", "you will", "what you'll do", "what you’ll do", "what you will do", "a day in the life"],
             max_lines=10,
+            stop_patterns=["what you will need", "what you will need:", "basic qualifications", "preferred qualifications", "what would be nice to have", "what we offer", "benefits", "about"],
         )
         requirements = _extract_section_lines(
             content,
@@ -1286,6 +1343,9 @@ async def import_job_description(payload: JobImportRequest):
                 "subject matter knowledge & experience",
                 "subject matter knowledge and experience",
                 "required skills",
+                "what you will need",
+                "what you will need:",
+                "what would be nice to have",
                 "we'd love you to bring",
                 "we’d love you to bring",
                 "experience/skills required",
@@ -1297,11 +1357,13 @@ async def import_job_description(payload: JobImportRequest):
                 "preferred qualifications",
             ],
             max_lines=10,
+            stop_patterns=["want more jobs like this", "job alert subscription", "benefits", "benefits include", "what we offer", "about"],
         )
         benefits = _extract_section_lines(
             content,
             ["benefits", "perks", "what we offer", "work/life balance", "mentorship", "career growth", "inclusive team culture", "diverse experiences"],
             max_lines=10,
+            stop_patterns=["about", "equal opportunity", "job id", "employment type", "posted", "client-provided", "all communication", "guidehouse will", "if you have visited"],
         )
         # If there isn't an explicit benefits section, capture top-of-JD perk-like lines.
         # (Common in startup posts: "Remote 1st", "Equity", "Series A", etc.)

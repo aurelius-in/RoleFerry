@@ -644,7 +644,7 @@ export default function JobDescriptionsPage() {
                           ) : null}
                           {jd.location ? (
                             <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
-                              {jd.location}
+                              Location: {jd.location}
                             </span>
                           ) : null}
                           {jd.workMode ? (
