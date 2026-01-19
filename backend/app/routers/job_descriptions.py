@@ -1424,6 +1424,7 @@ async def import_job_description(payload: JobImportRequest):
                 "we’d love you to bring",
                 "experience/skills required",
                 "an ideal candidate should have",
+                "the ideal candidate",
                 "ideal candidate should have",
                 "ideal candidate",
                 "bonus",
@@ -1437,7 +1438,7 @@ async def import_job_description(payload: JobImportRequest):
             content,
             ["benefits", "perks", "what we offer", "work/life balance", "mentorship", "career growth", "inclusive team culture", "diverse experiences"],
             max_lines=10,
-            stop_patterns=["about", "equal opportunity", "job id", "employment type", "posted", "client-provided", "all communication", "guidehouse will", "if you have visited"],
+            stop_patterns=["the ideal candidate", "ideal candidate", "requirements", "qualifications", "about", "equal opportunity", "job id", "employment type", "posted", "client-provided", "all communication", "guidehouse will", "if you have visited"],
         )
         # If there isn't an explicit benefits section, capture top-of-JD perk-like lines.
         # (Common in startup posts: "Remote 1st", "Equity", "Series A", etc.)
