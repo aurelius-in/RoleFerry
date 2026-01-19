@@ -185,8 +185,21 @@ _KNOWN_SKILLS: List[str] = [
     "Kafka",
     # AI/ML
     "LLM",
+    "LLMs",
+    "AI",
+    "AI Agents",
+    "Agentic",
+    "AI/ML",
+    "ML",
     "Machine Learning",
     "Deep Learning",
+    "Process Automation",
+    "Automation",
+    "BPaaS",
+    "BPS",
+    "KYC",
+    "Data modeling",
+    "Ontology",
     # Mobile / Android
     "Android",
     "Jetpack Compose",
@@ -363,6 +376,12 @@ def _extract_salary_range(text: str) -> Optional[str]:
         r"(\$\s?\d{2,3}\s?k\s*[–\-]\s*\$\s?\d{2,3}\s?k)",
         r"(\$\s?\d{2,3}\s?[kK]\s*/\s?yr\s*[–\-]\s*\$\s?\d{2,3}\s?[kK]\s*/\s?yr)",
         r"(\$\s?\d{2,3}(?:,\d{3})\s*(?:/year|per year)?\s*[–\-]\s*\$\s?\d{2,3}(?:,\d{3})\s*(?:/year|per year)?)",
+        # "Derived Salary: $207562 - $345938/Year" (no commas, 6 digits)
+        r"(derived\s+salary:\s*\$\s?\d{3,6}(?:,\d{3})?\s*[–\-]\s*\$\s?\d{3,6}(?:,\d{3})?\s*/\s*(?:year|yr))",
+        # "$207,562 - 345,938 / Year" (second value sometimes missing $)
+        r"(\$\s?\d{3,6}(?:,\d{3})?\s*[–\-]\s*\d{3,6}(?:,\d{3})?\s*/\s*(?:year|yr))",
+        # "$207562 - $345938/Year" (no label)
+        r"(\$\s?\d{3,6}(?:,\d{3})?\s*[–\-]\s*\$\s?\d{3,6}(?:,\d{3})?\s*/\s*(?:year|yr))",
         r"(\b\d{2,3}(?:,\d{3})\s*[–\-]\s*\d{2,3}(?:,\d{3})\s*(?:usd)?\s*/\s*year\b)",
         r"(salary\s+range:\s*\$\s?\d[\d,]+.*?\$\s?\d[\d,]+)",
     ]
@@ -509,6 +528,11 @@ def _extract_skills(text: str) -> List[str]:
     for skill in _KNOWN_SKILLS:
         needle = skill.lower()
         # Very light boundary matching; works well enough for common skill tokens.
+        # Special-case: "C" matches lots of non-skill text (e.g., "C-level").
+        if needle == "c":
+            if re.search(r"(^|[^a-z0-9])c([^a-z0-9]|$)", hay) and not re.search(r"\bc\s*[-–—]\s*level\b", hay):
+                found.append(skill)
+            continue
         if re.search(rf"(^|[^a-z0-9]){re.escape(needle)}([^a-z0-9]|$)", hay):
             found.append(skill)
     # De-dupe while preserving order
@@ -571,6 +595,12 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
         # Never treat a sentence as the title (common failure: responsibility lines).
         if s.endswith("."):
             return False
+        # Reject multi-sentence lines (e.g., "... platforms. A") which are never real titles.
+        if "." in s and not re.search(r"\b(?:sr|jr|dr)\.\b", low):
+            return False
+        # "You will ..." / "We are ..." are almost always body copy, not the title.
+        if low.startswith(("you will ", "we are ", "we're ", "we’re ")):
+            return False
         # Avoid common section headers and obvious non-titles
         if any(low.startswith(h) for h in ["about us", "about the role", "benefits", "location", "requirements", "qualifications"]):
             return False
@@ -604,6 +634,11 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
         return False
 
     # Title: pass 1 – prefer lines that contain role tokens (avoids title=company).
+    # Extra pass 0 – prefer explicit "Role - ..." titles in the first few lines.
+    for ln in lines[:8]:
+        if " - " in ln and _has_role_token(ln) and _looks_like_real_title(ln):
+            title = ln[:120]
+            break
     for ln in lines[:20]:
         if _has_role_token(ln) and _looks_like_real_title(ln):
             title = ln[:120]
@@ -616,6 +651,13 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 break
     if not title and lines:
         title = lines[0][:120]
+
+    # If we ended up with an obviously too-long title, try to recover a better one.
+    if title and (len(title) > 90 or len(title.split()) > 14):
+        for ln in lines[:40]:
+            if _has_role_token(ln) and _looks_like_real_title(ln) and len(ln) <= 90:
+                title = ln[:120]
+                break
 
     # Company: explicit markers win.
     for ln in lines[:60]:
@@ -1216,6 +1258,7 @@ async def import_job_description(payload: JobImportRequest):
                 "subject matter knowledge",
                 "subject matter knowledge & experience",
                 "subject matter knowledge and experience",
+                "required skills",
                 "we'd love you to bring",
                 "we’d love you to bring",
                 "experience/skills required",
@@ -1255,6 +1298,28 @@ async def import_job_description(payload: JobImportRequest):
                 if len(perk_lines) >= 6:
                     break
             benefits = perk_lines[:10]
+
+        # If still empty, detect embedded benefits paragraphs (common in big-company posts).
+        if not benefits:
+            t = (content or "").lower()
+            if any(k in t for k in ["medical", "dental", "vision", "401k", "paid time off", "life and ad&d", "short and long term disability", "employee assistance"]):
+                benefit_phrases = [
+                    ("medical", "Medical insurance"),
+                    ("dental", "Dental insurance"),
+                    ("vision", "Vision insurance"),
+                    ("401k", "401k (with company match when offered)"),
+                    ("paid time off", "Paid time off (PTO)"),
+                    ("life and ad&d", "Life and AD&D insurance"),
+                    ("short and long term disability", "Short/long-term disability coverage"),
+                    ("employee assistance", "Employee assistance program"),
+                    ("health savings account", "Health Savings Account (HSA)"),
+                    ("flexible spending", "Flexible Spending Account (FSA)"),
+                ]
+                out: List[str] = []
+                for key, label in benefit_phrases:
+                    if key in t and label.lower() not in {x.lower() for x in out}:
+                        out.append(label)
+                benefits = out[:10]
         # We cannot truly infer "pain points" without an LLM, but we can extract
         # meaningful lines as a practical non-mock fallback.
         pain_points: List[str] = _extract_key_lines(
