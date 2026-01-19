@@ -17,14 +17,23 @@ DEMO_USER_ID = "demo-user"
 
 class PainPointMatch(BaseModel):
     painpoint_1: str
+    jd_evidence_1: Optional[str] = ""
     solution_1: str
+    resume_evidence_1: Optional[str] = ""
     metric_1: str
+    overlap_1: Optional[str] = ""
     painpoint_2: str
+    jd_evidence_2: Optional[str] = ""
     solution_2: str
+    resume_evidence_2: Optional[str] = ""
     metric_2: str
+    overlap_2: Optional[str] = ""
     painpoint_3: str
+    jd_evidence_3: Optional[str] = ""
     solution_3: str
+    resume_evidence_3: Optional[str] = ""
     metric_3: str
+    overlap_3: Optional[str] = ""
     alignment_score: float
 
 
@@ -38,6 +47,8 @@ class MatchRequest(BaseModel):
     resume_extract_id: str
     # Optional fallback from frontend when the job isn't present in DB/demo store.
     job_description: Optional[Dict[str, Any]] = None
+    # Optional fallback from frontend when the resume isn't present in DB/demo store.
+    resume_extract: Optional[Dict[str, Any]] = None
 
 @router.post("/generate", response_model=PainPointMatchResponse)
 async def generate_painpoint_matches(request: MatchRequest):
@@ -98,7 +109,14 @@ async def generate_painpoint_matches(request: MatchRequest):
         else:
             resume_parsed = (resume_row.parsed_json if resume_row else {}) or {}
 
+        if not resume_parsed and isinstance(request.resume_extract, dict):
+            resume_parsed = request.resume_extract or {}
+
         jd_pain_points = jd_parsed.get("pain_points") or []
+        jd_responsibilities = jd_parsed.get("responsibilities") or []
+        jd_requirements = jd_parsed.get("requirements") or []
+        jd_required_skills = jd_parsed.get("required_skills") or []
+        jd_success_metrics = jd_parsed.get("success_metrics") or []
         def _to_text(x: Any) -> str:
             if x is None:
                 return ""
@@ -150,7 +168,40 @@ async def generate_painpoint_matches(request: MatchRequest):
 
         # Helper: rule-based pairing (avoid demo defaults; allow 0–3 alignments)
         def build_rule_based_match() -> PainPointMatch:
-            pp = [str(x).strip() for x in (jd_pain_points or []) if str(x).strip()]
+            # Prefer concrete items over generic slogans; responsibilities/requirements tend to be most concrete.
+            def _clean_list(items: Any) -> List[str]:
+                if not isinstance(items, list):
+                    return []
+                out: List[str] = []
+                for it in items:
+                    s = str(it or "").strip()
+                    if not s:
+                        continue
+                    out.append(s)
+                return out
+
+            resp = _clean_list(jd_responsibilities)
+            reqs = _clean_list(jd_requirements)
+            pps = _clean_list(jd_pain_points)
+
+            # Lightweight filter for obvious marketing fluff; keep only if we have nothing else.
+            def _is_generic(s: str) -> bool:
+                low = (s or "").lower()
+                generic_phrases = [
+                    "solve complex problems",
+                    "learn new skills",
+                    "change the world",
+                    "coolest tech",
+                    "fortune 500",
+                    "culture built on",
+                    "opportunity, inclusion",
+                    "spirit of partnership",
+                ]
+                return any(p in low for p in generic_phrases)
+
+            pp = [s for s in (resp + reqs + pps) if s and not _is_generic(s)]
+            if not pp:
+                pp = [s for s in (resp + reqs + pps) if s]
             acc = [str(x).strip() for x in (resume_accomplishments or []) if str(x).strip()]
 
             def _safe_get(items, idx) -> str:
@@ -166,14 +217,23 @@ async def generate_painpoint_matches(request: MatchRequest):
 
             return PainPointMatch(
                 painpoint_1=_safe_get(pp, 0),
+                jd_evidence_1="",
                 solution_1=_safe_get(acc, 0),
+                resume_evidence_1="",
                 metric_1="",
+                overlap_1="",
                 painpoint_2=_safe_get(pp, 1),
+                jd_evidence_2="",
                 solution_2=_safe_get(acc, 1),
+                resume_evidence_2="",
                 metric_2="",
+                overlap_2="",
                 painpoint_3=_safe_get(pp, 2),
+                jd_evidence_3="",
                 solution_3=_safe_get(acc, 2),
+                resume_evidence_3="",
                 metric_3="",
+                overlap_3="",
                 alignment_score=score,
             )
 
@@ -181,20 +241,36 @@ async def generate_painpoint_matches(request: MatchRequest):
         client = get_openai_client()
         match: PainPointMatch
 
-        if client.should_use_real_llm and (jd_pain_points or resume_accomplishments):
+        has_jd_signal = bool(jd_pain_points or jd_responsibilities or jd_requirements or jd_required_skills or jd_success_metrics)
+        has_resume_signal = bool(
+            resume_accomplishments
+            or (resume_parsed.get("Positions") or resume_parsed.get("positions") or resume_parsed.get("positions"))
+            or (resume_parsed.get("Skills") or resume_parsed.get("skills") or resume_parsed.get("skills"))
+            or (resume_parsed.get("KeyMetrics") or resume_parsed.get("key_metrics") or resume_parsed.get("keyMetrics"))
+            or (resume_parsed.get("NotableAccomplishments") or resume_parsed.get("accomplishments") or resume_parsed.get("accomplishments"))
+        )
+
+        if client.should_use_real_llm and (has_jd_signal and has_resume_signal):
             try:
                 # Build compact text blobs for GPT
                 jd_blob = json.dumps(
                     {
                         "pain_points": jd_pain_points,
-                        "success_metrics": jd_parsed.get("success_metrics") or [],
+                        "responsibilities": jd_responsibilities,
+                        "requirements": jd_requirements,
+                        "required_skills": jd_required_skills,
+                        "success_metrics": jd_success_metrics,
                     },
                     ensure_ascii=False,
                 )
                 resume_blob = json.dumps(
                     {
-                        "notable_accomplishments": resume_parsed.get("NotableAccomplishments") or [],
-                        "key_metrics": resume_parsed.get("KeyMetrics") or [],
+                        "positions": resume_parsed.get("Positions") or resume_parsed.get("positions") or [],
+                        "skills": resume_parsed.get("Skills") or resume_parsed.get("skills") or [],
+                        "accomplishments": resume_parsed.get("NotableAccomplishments") or resume_parsed.get("accomplishments") or [],
+                        "key_metrics": resume_parsed.get("KeyMetrics") or resume_parsed.get("key_metrics") or resume_parsed.get("keyMetrics") or [],
+                        "business_challenges": resume_parsed.get("BusinessChallenges") or resume_parsed.get("business_challenges") or [],
+                        "education": resume_parsed.get("Education") or resume_parsed.get("education") or [],
                     },
                     ensure_ascii=False,
                 )
@@ -223,14 +299,23 @@ async def generate_painpoint_matches(request: MatchRequest):
 
                 match = PainPointMatch(
                     painpoint_1=str(p1.get("jd_snippet") or _safe_list_get(jd_pain_points, 0)).strip(),
+                    jd_evidence_1=str(p1.get("jd_evidence") or "").strip(),
                     solution_1=str(p1.get("resume_snippet") or _safe_list_get(resume_accomplishments, 0)).strip(),
+                    resume_evidence_1=str(p1.get("resume_evidence") or "").strip(),
                     metric_1=str(p1.get("metric") or "").strip(),
+                    overlap_1=str(p1.get("overlap") or "").strip(),
                     painpoint_2=str(p2.get("jd_snippet") or _safe_list_get(jd_pain_points, 1)).strip(),
+                    jd_evidence_2=str(p2.get("jd_evidence") or "").strip(),
                     solution_2=str(p2.get("resume_snippet") or _safe_list_get(resume_accomplishments, 1)).strip(),
+                    resume_evidence_2=str(p2.get("resume_evidence") or "").strip(),
                     metric_2=str(p2.get("metric") or "").strip(),
+                    overlap_2=str(p2.get("overlap") or "").strip(),
                     painpoint_3=str(p3.get("jd_snippet") or _safe_list_get(jd_pain_points, 2)).strip(),
+                    jd_evidence_3=str(p3.get("jd_evidence") or "").strip(),
                     solution_3=str(p3.get("resume_snippet") or _safe_list_get(resume_accomplishments, 2)).strip(),
+                    resume_evidence_3=str(p3.get("resume_evidence") or "").strip(),
                     metric_3=str(p3.get("metric") or "").strip(),
+                    overlap_3=str(p3.get("overlap") or "").strip(),
                     alignment_score=alignment_score,
                 )
             except Exception:

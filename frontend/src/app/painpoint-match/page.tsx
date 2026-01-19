@@ -7,14 +7,23 @@ import StarRating from "@/components/StarRating";
 
 interface PainPointMatch {
   painpoint_1: string;
+  jd_evidence_1?: string;
   solution_1: string;
+  resume_evidence_1?: string;
   metric_1: string;
+  overlap_1?: string;
   painpoint_2: string;
+  jd_evidence_2?: string;
   solution_2: string;
+  resume_evidence_2?: string;
   metric_2: string;
+  overlap_2?: string;
   painpoint_3: string;
+  jd_evidence_3?: string;
   solution_3: string;
+  resume_evidence_3?: string;
   metric_3: string;
+  overlap_3?: string;
   alignment_score: number;
 }
 
@@ -25,6 +34,8 @@ interface JobDescription {
   painPoints: string[];
   requiredSkills: string[];
   successMetrics: string[];
+  responsibilities?: string[];
+  requirements?: string[];
 }
 
 interface BackendJobDescription {
@@ -47,14 +58,23 @@ interface JobDescriptionsListResponse {
 
 interface BackendPainPointMatch {
   painpoint_1: string;
+  jd_evidence_1?: string | null;
   solution_1: string;
+  resume_evidence_1?: string | null;
   metric_1: string;
+  overlap_1?: string | null;
   painpoint_2: string;
+  jd_evidence_2?: string | null;
   solution_2: string;
+  resume_evidence_2?: string | null;
   metric_2: string;
+  overlap_2?: string | null;
   painpoint_3: string;
+  jd_evidence_3?: string | null;
   solution_3: string;
+  resume_evidence_3?: string | null;
   metric_3: string;
+  overlap_3?: string | null;
   alignment_score: number;
 }
 
@@ -108,6 +128,14 @@ export default function PainPointMatchPage() {
     return cleaned;
   };
 
+  const renderValueOrMissing = (raw: string, className: string) => {
+    const v = sanitizeForUi(raw, "Missing details");
+    if (v === "Missing details") {
+      return <span className="text-red-700 font-semibold">Missing details</span>;
+    }
+    return <span className={className}>{v}</span>;
+  };
+
   useEffect(() => {
     // Load data from localStorage for initial render
     try {
@@ -159,19 +187,38 @@ export default function PainPointMatchPage() {
           pain_points: selectedJD.painPoints || [],
           required_skills: selectedJD.requiredSkills || [],
           success_metrics: selectedJD.successMetrics || [],
+          responsibilities: selectedJD.responsibilities || [],
+          requirements: selectedJD.requirements || [],
         },
+        resume_extract: resumeExtract
+          ? {
+              positions: resumeExtract.positions || [],
+              skills: resumeExtract.skills || [],
+              accomplishments: resumeExtract.accomplishments || [],
+              keyMetrics: resumeExtract.keyMetrics || [],
+            }
+          : undefined,
       });
       const backendMatches = resp.matches || [];
       const mapped: PainPointMatch[] = backendMatches.map((m) => ({
         painpoint_1: m.painpoint_1,
+        jd_evidence_1: m.jd_evidence_1 || "",
         solution_1: m.solution_1,
+        resume_evidence_1: m.resume_evidence_1 || "",
         metric_1: m.metric_1,
+        overlap_1: m.overlap_1 || "",
         painpoint_2: m.painpoint_2,
+        jd_evidence_2: m.jd_evidence_2 || "",
         solution_2: m.solution_2,
+        resume_evidence_2: m.resume_evidence_2 || "",
         metric_2: m.metric_2,
+        overlap_2: m.overlap_2 || "",
         painpoint_3: m.painpoint_3,
+        jd_evidence_3: m.jd_evidence_3 || "",
         solution_3: m.solution_3,
+        resume_evidence_3: m.resume_evidence_3 || "",
         metric_3: m.metric_3,
+        overlap_3: m.overlap_3 || "",
         alignment_score: m.alignment_score,
       }));
       setMatches(mapped);
@@ -233,22 +280,35 @@ export default function PainPointMatchPage() {
     return "Fair Match";
   };
 
-  const solutionFallbacks = [
-    "Cut time-to-fill by streamlining screening, tightening role requirements, and running structured interviews with calibrated scorecards.",
-    "Improved candidate signal by adding work-sample tasks and structured culture/values interview rounds with consistent rubrics.",
-    "Reduced churn by implementing growth plans, manager 1:1 cadence, and clearer leveling/promotion criteria to boost retention.",
-  ];
-  const metricFallbacks = [
-    "40% faster (30 → 18 days) with maintained offer-accept rate",
-    "35% improvement in onsite-to-offer conversion",
-    "25% lower turnover over 6 months",
-  ];
-
   const renderableAlignments = (match: PainPointMatch) => {
     const items = [
-      { n: 1, painpoint: match.painpoint_1, solution: match.solution_1, metric: match.metric_1, sf: solutionFallbacks[0], mf: metricFallbacks[0] },
-      { n: 2, painpoint: match.painpoint_2, solution: match.solution_2, metric: match.metric_2, sf: solutionFallbacks[1], mf: metricFallbacks[1] },
-      { n: 3, painpoint: match.painpoint_3, solution: match.solution_3, metric: match.metric_3, sf: solutionFallbacks[2], mf: metricFallbacks[2] },
+      {
+        n: 1,
+        painpoint: match.painpoint_1,
+        jdEvidence: match.jd_evidence_1 || "",
+        solution: match.solution_1,
+        resumeEvidence: match.resume_evidence_1 || "",
+        overlap: match.overlap_1 || "",
+        metric: match.metric_1,
+      },
+      {
+        n: 2,
+        painpoint: match.painpoint_2,
+        jdEvidence: match.jd_evidence_2 || "",
+        solution: match.solution_2,
+        resumeEvidence: match.resume_evidence_2 || "",
+        overlap: match.overlap_2 || "",
+        metric: match.metric_2,
+      },
+      {
+        n: 3,
+        painpoint: match.painpoint_3,
+        jdEvidence: match.jd_evidence_3 || "",
+        solution: match.solution_3,
+        resumeEvidence: match.resume_evidence_3 || "",
+        overlap: match.overlap_3 || "",
+        metric: match.metric_3,
+      },
     ];
     return items.filter((it) => String(it.painpoint || "").trim().length > 0);
   };
@@ -457,16 +517,40 @@ export default function PainPointMatchPage() {
                                   <div className="flex-1">
                                     <h4 className="font-semibold text-red-900 mb-2">Pain Point</h4>
                                     <p className="text-red-800 mb-3">{a.painpoint}</p>
+                                    {String(a.jdEvidence || "").trim() ? (
+                                      <div className="mb-3 text-xs text-red-800/80">
+                                        <span className="font-semibold">From JD:</span>{" "}
+                                        <span className="italic">“{sanitizeForUi(String(a.jdEvidence), "Missing details")}”</span>
+                                      </div>
+                                    ) : (
+                                      <div className="mb-3 text-xs text-red-800/80">
+                                        <span className="font-semibold">From JD:</span>{" "}
+                                        <span className="text-red-700 font-semibold">Missing details</span>
+                                      </div>
+                                    )}
 
                                     <h4 className="font-semibold text-green-900 mb-2">Your Solution</h4>
-                                    <p className="text-green-800 mb-3">
-                                      {sanitizeForUi(a.solution, a.sf)}
-                                    </p>
+                                    <p className="mb-3">{renderValueOrMissing(String(a.solution || ""), "text-green-800")}</p>
+                                    {String(a.resumeEvidence || "").trim() ? (
+                                      <div className="mb-3 text-xs text-green-800/80">
+                                        <span className="font-semibold">From resume:</span>{" "}
+                                        <span className="italic">“{sanitizeForUi(String(a.resumeEvidence), "Missing details")}”</span>
+                                      </div>
+                                    ) : (
+                                      <div className="mb-3 text-xs text-green-800/80">
+                                        <span className="font-semibold">From resume:</span>{" "}
+                                        <span className="text-red-700 font-semibold">Missing details</span>
+                                      </div>
+                                    )}
+                                    {String(a.overlap || "").trim() ? (
+                                      <div className="mb-3 text-xs text-slate-700">
+                                        <span className="font-semibold">Why it matches:</span>{" "}
+                                        {sanitizeForUi(String(a.overlap), "Missing details")}
+                                      </div>
+                                    ) : null}
 
                                     <h4 className="font-semibold text-blue-900 mb-2">Impact Metric</h4>
-                                    <p className="text-blue-800">
-                                      {sanitizeForUi(a.metric, a.mf)}
-                                    </p>
+                                    <p className="text-blue-800">{renderValueOrMissing(String(a.metric || ""), "text-blue-800")}</p>
                                   </div>
                                 </div>
                               </div>
