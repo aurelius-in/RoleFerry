@@ -539,19 +539,19 @@ export default function ResumePage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    resume.key_metrics[]
+                    {"{{resume.key_metrics[]}}"}
                   </code>
                   <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    resume.business_challenges[]
+                    {"{{resume.business_challenges[]}}"}
                   </code>
                   <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    resume.accomplishments[]
+                    {"{{resume.accomplishments[]}}"}
                   </code>
                   <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    resume.total_years_experience{totalYearsExperience !== null ? `=${totalYearsExperience}` : ""}
+                    {"{{resume.total_years_experience}}"}{totalYearsExperience !== null ? `=${totalYearsExperience}` : ""}
                   </code>
                   <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    resume.positions[]
+                    {"{{resume.positions[]}}"}
                   </code>
                 </div>
                 {totalYearsExperience === null ? (
