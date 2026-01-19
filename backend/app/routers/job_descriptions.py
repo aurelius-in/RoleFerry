@@ -744,6 +744,11 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 return -10_000
             if low in _COMPANY_STOPWORDS:
                 return -10_000
+            # Avoid generic single-word tokens that frequently appear in employer boilerplate.
+            # They can be real in rare cases, but most of the time they're a bad parse
+            # (e.g., "Learning" from "Imagine Learning provides...").
+            if low in {"learning", "education", "technology", "technologies", "software", "services"}:
+                return -50
             # Strong preference for domain-like names (Lamatic.ai, example.io)
             looks_like_domain = bool(re.search(r"\.[a-z]{2,10}$", low)) or bool(re.search(r"\.[a-z]{2,10}\b", low))
             score = 0
@@ -772,6 +777,31 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
             mention_ct = _mentions(best)
             if looks_like_domain or (mention_ct >= 2 and best_score >= 20):
                 company = best
+
+        # If we only found a single-word company (common failure: "Learning"),
+        # upgrade it to the most frequent multi-word brand phrase that includes it (e.g., "Imagine Learning").
+        if company and len(company.split()) == 1:
+            token = company.strip()
+            low_token = token.lower()
+            phrase_re = re.compile(r"\b([A-Z][A-Za-z0-9&.'\-]+(?:\s+[A-Z][A-Za-z0-9&.'\-]+){1,3})\b")
+            candidates: List[str] = []
+            for ln in lines[:220]:
+                for ph in phrase_re.findall(ln):
+                    if low_token in ph.lower().split():
+                        plow = ph.lower()
+                        if any(bad in plow for bad in ["apply", "job details", "profile insights", "full job description"]):
+                            continue
+                        candidates.append(ph.strip())
+            best_phrase = ""
+            best_ct = 0
+            # Prefer shorter phrases first (2 words beats 4 words) if mention counts are similar.
+            for ph in sorted(set(candidates), key=lambda s: (len(s.split()), len(s))):
+                ct = sum(1 for ln in lines[:300] if ph.lower() in ln.lower())
+                if ct >= 2 and ct > best_ct:
+                    best_ct = ct
+                    best_phrase = ph
+            if best_phrase:
+                company = best_phrase[:120]
 
     def _company_from_url(u: str) -> str:
         try:
