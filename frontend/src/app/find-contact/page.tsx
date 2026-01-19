@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import StarRating from "@/components/StarRating";
+
 
 interface Contact {
   id: string;
@@ -67,6 +67,17 @@ export default function FindContactPage() {
   const [userKey, setUserKey] = useState<string>("anon");
   const [buildStamp, setBuildStamp] = useState<string>("");
 
+  // Outreach drafts (per contact)
+  const LINKEDIN_NOTE_LIMIT = 300;
+  type OutreachDraft = {
+    linkedin_note: string;
+    email_subject: string;
+    email_body: string;
+    updated_at: string;
+  };
+  const [outreachDrafts, setOutreachDrafts] = useState<Record<string, OutreachDraft>>({});
+  const [activeDraftContactId, setActiveDraftContactId] = useState<string>("");
+
   const formatTitleCase = (input?: string) => {
     const s = String(input || "").trim();
     if (!s) return "";
@@ -99,6 +110,106 @@ export default function FindContactPage() {
   };
 
   const getSavedKey = (uid: string) => `rf_saved_verified_contacts:${uid || "anon"}`;
+  const getOutreachDraftsKey = (uid: string) => `rf_outreach_drafts:${uid || "anon"}`;
+
+  const persistOutreachDrafts = (next: Record<string, OutreachDraft>) => {
+    setOutreachDrafts(next);
+    try {
+      localStorage.setItem(getOutreachDraftsKey(userKey), JSON.stringify(next || {}));
+    } catch {}
+  };
+
+  const safeFirstName = (full: string) => {
+    const s = String(full || "").trim();
+    if (!s) return "there";
+    return s.split(/\s+/)[0] || "there";
+  };
+
+  const loadSelectedJob = () => {
+    try {
+      return JSON.parse(localStorage.getItem("selected_job_description") || "null");
+    } catch {
+      return null;
+    }
+  };
+
+  const loadPainpointMatch = () => {
+    // Prefer per-job matches if available
+    try {
+      const selectedJobId = String(localStorage.getItem("selected_job_description_id") || "").trim();
+      const byJobRaw = localStorage.getItem("painpoint_matches_by_job");
+      if (selectedJobId && byJobRaw) {
+        const byJob = JSON.parse(byJobRaw) as Record<string, any[]>;
+        const matches = byJob?.[selectedJobId] || [];
+        if (Array.isArray(matches) && matches.length) return matches[0] || null;
+      }
+    } catch {}
+    try {
+      const legacyPainpointKey = ["pin", "point_matches"].join("");
+      const matches =
+        JSON.parse(localStorage.getItem("painpoint_matches") || "null") ||
+        JSON.parse(localStorage.getItem(legacyPainpointKey) || "[]") ||
+        JSON.parse(localStorage.getItem("pain_point_matches") || "[]");
+      if (Array.isArray(matches) && matches.length) return matches[0] || null;
+    } catch {}
+    return null;
+  };
+
+  const trimToChars = (s: string, limit: number) => {
+    const t = String(s || "");
+    if (t.length <= limit) return t;
+    const ell = "…";
+    if (limit <= ell.length) return t.slice(0, limit);
+    return t.slice(0, limit - ell.length).trimEnd() + ell;
+  };
+
+  const buildDefaultDraft = (c: Contact): OutreachDraft => {
+    const jd = loadSelectedJob();
+    const m0 = loadPainpointMatch();
+    const first = safeFirstName(c?.name || "");
+    const company = String(jd?.company || c?.company || "your team").trim();
+    const jobTitle = String(jd?.title || "the role").trim();
+    const pain = String(m0?.painpoint_1 || "a key priority").trim();
+    const sol = String(m0?.solution_1 || "").trim();
+    const metric = String(m0?.metric_1 || "").trim();
+
+    const li = trimToChars(
+      `Hi ${first} — I’m exploring ${jobTitle} at ${company}. I noticed ${pain}. I’ve worked on similar problems (${sol || "relevant work"}${metric ? ` — ${metric}` : ""}). Open to connect?`,
+      LINKEDIN_NOTE_LIMIT
+    );
+
+    const subject = `${company} — quick idea on ${pain}`.slice(0, 120);
+    const body = [
+      `Hi ${first},`,
+      ``,
+      `I’m exploring ${jobTitle} opportunities at ${company} and wanted to reach out directly.`,
+      ``,
+      `One thing that stood out is: ${pain}.`,
+      sol ? `A relevant example from my background: ${sol}${metric ? ` (${metric})` : ""}.` : `I’ve worked on similar problem spaces and can share concrete examples.`,
+      ``,
+      `If it’s useful, I can share a brief 2–3 bullet plan for how I’d approach this at ${company}.`,
+      `Would you be open to a quick 10–15 minute chat this week?`,
+      ``,
+      `Best,`,
+      `[Your Name]`,
+    ].join("\n");
+
+    return {
+      linkedin_note: li,
+      email_subject: subject,
+      email_body: body,
+      updated_at: new Date().toISOString(),
+    };
+  };
+
+  const ensureDraftForContact = (c: Contact) => {
+    const cid = String(c?.id || "").trim();
+    if (!cid) return;
+    if (outreachDrafts?.[cid]) return;
+    const next = { ...(outreachDrafts || {}) };
+    next[cid] = buildDefaultDraft(c);
+    persistOutreachDrafts(next);
+  };
 
   const contactIdentity = (c: Contact) => {
     const email = String(c.email || "").trim().toLowerCase();
@@ -231,6 +342,16 @@ export default function FindContactPage() {
     }
   }, []);
 
+  useEffect(() => {
+    // Load outreach drafts (per user)
+    try {
+      const raw = localStorage.getItem(getOutreachDraftsKey(userKey));
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (parsed && typeof parsed === "object") setOutreachDrafts(parsed);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userKey]);
+
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     
@@ -243,8 +364,23 @@ export default function FindContactPage() {
     setHelper(null);
 
     try {
+      let targetJobTitle = "";
+      let candidateTitle = "";
+      try {
+        const selectedJD = JSON.parse(localStorage.getItem("selected_job_description") || "null");
+        targetJobTitle = String(selectedJD?.title || "").trim();
+      } catch {}
+      try {
+        const resume = JSON.parse(localStorage.getItem("resume_extract") || "null");
+        const p0 = (resume?.positions && Array.isArray(resume.positions) && resume.positions.length) ? resume.positions[0] : null;
+        candidateTitle = String(p0?.title || "").trim();
+      } catch {}
+
       const res = await api<ContactSearchResponse>("/find-contact/search", "POST", {
         query: searchQuery,
+        company: searchQuery,
+        target_job_title: targetJobTitle || undefined,
+        candidate_title: candidateTitle || undefined,
       });
       if (!res.success) throw new Error(res.message || "Search failed");
       setContacts(res.contacts || []);
@@ -266,68 +402,60 @@ export default function FindContactPage() {
             `site:linkedin.com/in "${title}" ${company}`
           )}`;
 
-        const fallback: Contact[] = [
-          {
-            id: `suggested_vp_eng_${Date.now()}`,
-            name: "Target: VP of Engineering",
-            title: "VP of Engineering",
-            email: "unknown@example.com",
-            linkedin_url: mkPeopleSearch("VP of Engineering"),
-            confidence: 0.45,
-            verification_status: "unknown",
-            company,
-            department: "Engineering",
-            level: "VP",
-          },
-          {
-            id: `suggested_dir_eng_${Date.now() + 1}`,
-            name: "Target: Director of Engineering",
-            title: "Director of Engineering",
-            email: "unknown@example.com",
-            linkedin_url: mkPeopleSearch("Director of Engineering"),
-            confidence: 0.45,
-            verification_status: "unknown",
-            company,
-            department: "Engineering",
-            level: "Director",
-          },
-          {
-            id: `suggested_head_ta_${Date.now() + 2}`,
-            name: "Target: Head of Talent Acquisition",
-            title: "Head of Talent Acquisition",
-            email: "unknown@example.com",
-            linkedin_url: mkPeopleSearch("Head of Talent Acquisition"),
-            confidence: 0.45,
-            verification_status: "unknown",
-            company,
-            department: "HR",
-            level: "Head",
-          },
-          {
-            id: `suggested_talent_mgr_${Date.now() + 3}`,
-            name: "Target: Recruiting Manager",
-            title: "Recruiting Manager",
-            email: "unknown@example.com",
-            linkedin_url: mkPeopleSearch("Recruiting Manager"),
-            confidence: 0.4,
-            verification_status: "unknown",
-            company,
-            department: "HR",
-            level: "Manager",
-          },
-          {
-            id: `suggested_cto_${Date.now() + 4}`,
-            name: "Target: CTO / Technical Founder",
-            title: "CTO",
-            email: "unknown@example.com",
-            linkedin_url: mkPeopleSearch("CTO"),
-            confidence: 0.4,
-            verification_status: "unknown",
-            company,
-            department: "Engineering",
-            level: "C-Level",
-          },
-        ];
+        // Role-aware suggested targets (fallback when we can't find real people).
+        let targetJobTitle = "";
+        try {
+          const selectedJD = JSON.parse(localStorage.getItem("selected_job_description") || "null");
+          targetJobTitle = String(selectedJD?.title || "").trim().toLowerCase();
+        } catch {}
+
+        const inferFn = () => {
+          const t = targetJobTitle;
+          if (!t) return "engineering";
+          if (t.includes("recruit") || t.includes("talent") || t.includes("sourcer")) return "recruiting";
+          if (t.includes("product")) return "product";
+          if (t.includes("design") || t.includes("ux") || t.includes("ui")) return "design";
+          if (t.includes("marketing") || t.includes("seo") || t.includes("demand gen")) return "marketing";
+          if (t.includes("sales") || t.includes("account executive") || t.includes("customer success")) return "sales";
+          if (t.includes("engineer") || t.includes("software") || t.includes("developer") || t.includes("data") || t.includes("ml") || t.includes("ai")) return "engineering";
+          return "engineering";
+        };
+        const fn = inferFn();
+
+        const titlesByFn: Record<string, string[]> = {
+          engineering: ["Engineering Manager", "Director of Engineering", "VP of Engineering", "CTO", "Head of Talent Acquisition", "Recruiting Manager"],
+          product: ["Director of Product", "Head of Product", "VP Product", "CPO", "Head of Talent Acquisition", "Recruiting Manager"],
+          design: ["Head of Design", "Design Director", "VP Design", "Chief Design Officer", "Head of Talent Acquisition", "Recruiting Manager"],
+          marketing: ["VP of Marketing", "Head of Marketing", "Marketing Director", "CMO", "Head of Talent Acquisition", "Recruiting Manager"],
+          sales: ["VP of Sales", "Head of Sales", "Sales Director", "CRO", "Head of Talent Acquisition", "Recruiting Manager"],
+          recruiting: ["Head of Talent Acquisition", "Recruiting Manager", "Talent Acquisition Partner", "Lead Recruiter", "VP People", "Chief People Officer"],
+        };
+
+        const seedTitles = titlesByFn[fn] || titlesByFn.engineering;
+
+        const fallback: Contact[] = seedTitles.slice(0, 6).map((title, idx) => ({
+          id: `suggested_${fn}_${idx}_${Date.now() + idx}`,
+          name: `Target: ${title}`,
+          title,
+          email: "unknown@example.com",
+          linkedin_url: mkPeopleSearch(title),
+          confidence: 0.45,
+          verification_status: "unknown",
+          company,
+          department: fn === "recruiting" ? "HR" : fn.charAt(0).toUpperCase() + fn.slice(1),
+          level:
+            title.includes("Chief") || title === "CTO" || title === "CRO" || title === "CMO" || title === "CPO"
+              ? "C-Level"
+              : title.includes("VP")
+                ? "VP"
+                : title.includes("Head")
+                  ? "Head"
+                  : title.includes("Director")
+                    ? "Director"
+                    : title.includes("Manager")
+                      ? "Manager"
+                      : "Lead",
+        }));
         setSuggested(fallback);
       }
       try {
@@ -397,15 +525,33 @@ export default function FindContactPage() {
     );
   };
 
+  // Keep an "active" contact for drafting when selection changes.
+  useEffect(() => {
+    const chosen =
+      (savedVerified && savedVerified.length > 0)
+        ? savedVerified
+        : contacts.filter((c) => selectedContacts.includes(c.id));
+    const cur = String(activeDraftContactId || "").trim();
+    const nextActive =
+      cur && chosen.some((c) => c.id === cur)
+        ? cur
+        : String(chosen?.[0]?.id || "");
+    if (nextActive && nextActive !== activeDraftContactId) setActiveDraftContactId(nextActive);
+    const active = chosen.find((c) => c.id === nextActive) || chosen?.[0];
+    if (active) ensureDraftForContact(active);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedContacts, contacts, savedVerified]);
+
   const handleContinue = () => {
-    // Prefer the saved verified list (multi-company workflow) if present.
-    const chosen = (savedVerified && savedVerified.length > 0)
-      ? savedVerified
-      : contacts.filter(c => selectedContacts.includes(c.id));
-    if (chosen.length > 0) {
-      localStorage.setItem('selected_contacts', JSON.stringify(chosen));
-      router.push('/context-research');
+    // Only allow continuing with SAVED verified contacts.
+    // Selected contacts are for verification workflow only and should not be carried forward.
+    const chosen = savedVerified || [];
+    if (chosen.length === 0) {
+      setError("Verify emails to save Valid contacts before continuing to Research.");
+      return;
     }
+    localStorage.setItem('selected_contacts', JSON.stringify(chosen));
+    router.push('/context-research');
   };
 
   const getVerificationBadge = (status: string, score?: number): VerificationBadge => {
@@ -441,7 +587,7 @@ export default function FindContactPage() {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Decision Makers</h1>
             <p className="text-white/70">
-              Select a contact and reach out via email (if available) or LinkedIn.
+              Select a contact to reach out via email or LinkedIn. We’ll generate a short LinkedIn request note (≤300 chars) and a longer email draft.
             </p>
             {buildStamp ? (
               <div className="mt-2 text-[11px] text-white/40 font-mono">{buildStamp}</div>
@@ -505,9 +651,11 @@ export default function FindContactPage() {
                               ) : null}
                             </div>
                             <div className="flex flex-col items-end gap-2">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getBadgeColor(badge.color)}`}>
-                                {badge.icon} {badge.label}
-                              </span>
+                              {badge.label !== "Unknown" ? (
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getBadgeColor(badge.color)}`}>
+                                  {badge.icon} {badge.label}
+                                </span>
+                              ) : null}
                               <button
                                 type="button"
                                 onClick={() => {
@@ -529,16 +677,7 @@ export default function FindContactPage() {
                   </div>
                 )}
 
-                <div className="mt-3 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={handleContinue}
-                    disabled={(savedVerified?.length || 0) === 0 && selectedContacts.length === 0}
-                    className="px-4 py-2 rounded-md font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    Continue to Research ({savedVerified.length > 0 ? `${savedVerified.length} saved` : `${selectedContacts.length} selected`})
-                  </button>
-                </div>
+                {/* Continue button lives at the bottom of the right column (single CTA) */}
               </div>
             </div>
 
@@ -612,18 +751,115 @@ export default function FindContactPage() {
                         {verifyLabel}
                       </button>
                     )}
-                    <button
-                      onClick={handleContinue}
-                      className="px-4 py-2 rounded-md font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700"
-                    >
-                      Continue (Email or LinkedIn outreach)
-                    </button>
+                    {/* Continue button lives at the bottom of the right column (single CTA) */}
                   </div>
                   );
                 })()}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Outreach drafts (auto-generated) */}
+              {(() => {
+                const chosen =
+                  (savedVerified && savedVerified.length > 0)
+                    ? savedVerified
+                    : contacts.filter((c) => selectedContacts.includes(c.id));
+                const active =
+                  chosen.find((c) => c.id === activeDraftContactId) || chosen?.[0] || null;
+                if (!active) return null;
+                const draft = outreachDrafts?.[active.id] || null;
+                if (!draft) return null;
+
+                return (
+                  <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-bold text-white">Outreach drafts</div>
+                        <div className="text-xs text-white/60">
+                          LinkedIn connection request notes are capped at <span className="font-semibold">300 characters</span>. Email can be longer.
+                        </div>
+                      </div>
+                      {chosen.length > 1 ? (
+                        <select
+                          value={activeDraftContactId}
+                          onChange={(e) => {
+                            const nextId = String(e.target.value || "");
+                            setActiveDraftContactId(nextId);
+                            const nextContact = chosen.find((c) => c.id === nextId);
+                            if (nextContact) ensureDraftForContact(nextContact);
+                          }}
+                          className="bg-white/5 border border-white/10 text-white text-xs rounded-md px-2 py-1"
+                        >
+                          {chosen.map((c) => (
+                            <option key={`draft_${c.id}`} value={c.id}>
+                              {c.name} — {formatTitleCase(c.title)}
+                            </option>
+                          ))}
+                        </select>
+                      ) : null}
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="rounded-md border border-white/10 bg-white/5 p-3">
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">
+                            LinkedIn request note
+                          </div>
+                          <div className={`text-xs ${draft.linkedin_note.length > LINKEDIN_NOTE_LIMIT ? "text-red-300" : "text-white/60"}`}>
+                            {draft.linkedin_note.length}/{LINKEDIN_NOTE_LIMIT}
+                          </div>
+                        </div>
+                        {!active.linkedin_url ? (
+                          <div className="mb-2 text-xs text-amber-200">
+                            Missing LinkedIn URL for this contact — you can still copy the note, but you’ll need to find their profile manually.
+                          </div>
+                        ) : null}
+                        <textarea
+                          value={draft.linkedin_note}
+                          onChange={(e) => {
+                            const nextVal = trimToChars(e.target.value, LINKEDIN_NOTE_LIMIT);
+                            const next = { ...(outreachDrafts || {}) };
+                            next[active.id] = { ...draft, linkedin_note: nextVal, updated_at: new Date().toISOString() };
+                            persistOutreachDrafts(next);
+                          }}
+                          rows={5}
+                          className="w-full bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm text-white placeholder:text-white/40"
+                          placeholder="Write a short connection request note…"
+                        />
+                        <div className="mt-2 text-[11px] text-white/50">
+                          Tip: Mention the specific pain point + 1 proof point; ask to connect (not to “chat”).
+                        </div>
+                      </div>
+
+                      <div className="rounded-md border border-white/10 bg-white/5 p-3">
+                        <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Email draft</div>
+                        <input
+                          value={draft.email_subject}
+                          onChange={(e) => {
+                            const next = { ...(outreachDrafts || {}) };
+                            next[active.id] = { ...draft, email_subject: e.target.value, updated_at: new Date().toISOString() };
+                            persistOutreachDrafts(next);
+                          }}
+                          className="w-full bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm text-white placeholder:text-white/40 mb-2"
+                          placeholder="Subject"
+                        />
+                        <textarea
+                          value={draft.email_body}
+                          onChange={(e) => {
+                            const next = { ...(outreachDrafts || {}) };
+                            next[active.id] = { ...draft, email_body: e.target.value, updated_at: new Date().toISOString() };
+                            persistOutreachDrafts(next);
+                          }}
+                          rows={8}
+                          className="w-full bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm text-white placeholder:text-white/40"
+                          placeholder="Write a longer email…"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
                 {contacts.map((contact) => {
                   const badge = getVerificationBadge(contact.verification_status, contact.verification_score);
                   const isSelected = selectedContacts.includes(contact.id);
@@ -645,9 +881,11 @@ export default function FindContactPage() {
                           <p className="text-gray-500 text-xs">{contact.company}</p>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getBadgeColor(badge.color)}`}>
-                            {badge.icon} {badge.label}
-                          </span>
+                          {badge.label !== "Unknown" ? (
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getBadgeColor(badge.color)}`}>
+                              {badge.icon} {badge.label}
+                            </span>
+                          ) : null}
                           {isSelected && (
                             <span className="text-blue-600">✓</span>
                           )}
@@ -656,27 +894,11 @@ export default function FindContactPage() {
 
                       <div className="space-y-2">
                         {isRealEmail(contact.email) && (
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-start space-x-2">
                             <span className="text-gray-500 text-sm">Email:</span>
-                            <span className="text-sm font-mono">{contact.email}</span>
+                            <span className="text-sm font-mono break-all min-w-0">{contact.email}</span>
                           </div>
                         )}
-                        
-                        <div className="flex items-center space-x-2">
-                          <span className="text-gray-500 text-sm">Confidence:</span>
-                          <div className="flex items-center space-x-1">
-                            <div className="w-16 bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="bg-blue-600 h-2 rounded-full" 
-                                style={{ width: `${contact.confidence * 100}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-sm text-gray-600">
-                              {Math.round(contact.confidence * 100)}%
-                            </span>
-                            <StarRating value={contact.confidence} scale="fraction" showNumeric={false} className="ml-1 text-[10px]" />
-                          </div>
-                        </div>
 
                         {contact.verification_score && (
                           <div className="flex items-center space-x-2">
@@ -710,22 +932,7 @@ export default function FindContactPage() {
                 })}
               </div>
 
-              {selectedContacts.length > 0 && (
-                <div className="flex justify-end space-x-4">
-                  <button
-                    onClick={() => router.push('/painpoint-match')}
-                    className="bg-gray-100 text-gray-700 px-6 py-3 rounded-md font-medium hover:bg-gray-200 transition-colors"
-                  >
-                    Back
-                  </button>
-                  <button
-                    onClick={handleContinue}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
-                  >
-                    Continue to Research ({selectedContacts.length} selected)
-                  </button>
-                </div>
-              )}
+              {/* Action buttons live at the bottom of the right column (single CTA) */}
             </div>
           )}
 
@@ -748,7 +955,7 @@ export default function FindContactPage() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
                 {suggested.map((contact) => {
                   const isSelected = selectedContacts.includes(contact.id);
                   return (
@@ -783,15 +990,7 @@ export default function FindContactPage() {
                 })}
               </div>
 
-              <div className="flex justify-end">
-                <button
-                  onClick={handleContinue}
-                  disabled={selectedContacts.length === 0}
-                  className="px-4 py-2 rounded-md font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-                >
-                  Continue (Email or LinkedIn outreach)
-                </button>
-              </div>
+              {/* Action buttons live at the bottom of the right column (single CTA) */}
             </div>
           )}
 
@@ -808,6 +1007,30 @@ export default function FindContactPage() {
               </p>
             </div>
           )}
+
+          {(() => {
+            const canContinue = (savedVerified?.length || 0) > 0;
+            const continueLabel = `Continue to Research (${savedVerified.length} saved)`;
+            return (
+              <div className="mt-8 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => router.push("/painpoint-match")}
+                  className="bg-gray-100 text-gray-700 px-6 py-3 rounded-md font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  onClick={handleContinue}
+                  disabled={!canContinue}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {continueLabel}
+                </button>
+              </div>
+            );
+          })()}
 
             </div>
           </div>
