@@ -201,6 +201,7 @@ export default function ComposePage() {
     let selectedJD: any = null;
     let matches: any[] = [];
     let createdOffers: any[] = [];
+    let bioPageUrl = "";
 
     try {
       selectedContacts = JSON.parse(localStorage.getItem("selected_contacts") || "[]");
@@ -213,6 +214,9 @@ export default function ComposePage() {
     } catch {}
     try {
       createdOffers = JSON.parse(localStorage.getItem("created_offers") || "[]");
+    } catch {}
+    try {
+      bioPageUrl = String(localStorage.getItem("bio_page_url") || "").trim();
     } catch {}
     try {
       const selectedJobId = String(localStorage.getItem("selected_job_description_id") || "").trim();
@@ -282,6 +286,7 @@ export default function ComposePage() {
       { name: "{{offer_title}}", value: offerTitle, description: "Offer title (from Offer step)" },
       { name: "{{offer_snippet}}", value: offerSnippet, description: "Short offer excerpt (reword into 1 sentence)" },
       { name: "{{work_link}}", value: offerUrl, description: "Portfolio/Work Link (URL) (from Offer step)" },
+      { name: "{{bio_page_url}}", value: bioPageUrl, description: "Public Bio Page URL (from Bio Page step)" },
     ];
   };
 
@@ -355,6 +360,7 @@ export default function ComposePage() {
                     : "Please see my work here:";
 
     const workLinkVal = String(variables.find((v) => v.name === "{{work_link}}")?.value || "").trim();
+    const bioUrlVal = String(variables.find((v) => v.name === "{{bio_page_url}}")?.value || "").trim();
     const signature = (() => {
       try {
         const u = JSON.parse(localStorage.getItem("rf_user") || "null");
@@ -377,6 +383,7 @@ export default function ComposePage() {
       "- Idea: {{offer_snippet}}\n" +
       `- Proof: {{solution_1}}${metricVal ? " ({{metric_1}})" : ""}\n\n` +
       "Open to a quick 10–15 minute chat?\n\n" +
+      (bioUrlVal ? `Bio page: {{bio_page_url}}\n\n` : "") +
       (workLinkVal ? `${linkIntro} {{work_link}}\n\n` : "") +
       `Best,\n${signature}\n`;
 
