@@ -41,6 +41,12 @@ class GapJobDescription(BaseModel):
     painPoints: Optional[List[str]] = None
     requiredSkills: Optional[List[str]] = None
     successMetrics: Optional[List[str]] = None
+    # Optional enrichments (if provided by frontend/job parser)
+    location: Optional[str] = None
+    workMode: Optional[str] = None
+    employmentType: Optional[str] = None
+    salaryRange: Optional[str] = None
+    industries: Optional[List[str]] = None
 
 
 class GapAnalysisRequest(BaseModel):
@@ -97,6 +103,231 @@ def _norm_list(xs: Any) -> List[str]:
 
 def _tokenize(s: str) -> List[str]:
     return [t for t in (s or "").lower().replace("/", " ").replace("-", " ").split() if t]
+
+
+def _norm_skill(s: str) -> str:
+    t = str(s or "").strip().lower()
+    if not t:
+        return ""
+    # normalize common punctuation
+    t = t.replace("–", "-").replace("—", "-").replace("/", " ")
+    t = " ".join(t.split())
+    # normalize common AI terms
+    repl = {
+        "ai/ml": "ai ml",
+        "ai ml": "ai ml",
+        "machine-learning": "machine learning",
+        "gen ai": "generative ai",
+        "genai": "generative ai",
+        "llms": "llm",
+        "ai agents": "agentic ai",
+    }
+    return repl.get(t, t)
+
+
+def _resume_evidence_text(resume: ResumeExtract) -> str:
+    """
+    Build a rich text corpus from the resume extract so we can match skills even when
+    they appear in role descriptions instead of the top-level skills list.
+    """
+    parts: List[str] = []
+    parts.extend(_norm_list(resume.skills))
+    parts.extend(_norm_list(resume.accomplishments))
+
+    pos = resume.positions or []
+    if isinstance(pos, list):
+        for p in pos[:30]:
+            if isinstance(p, dict):
+                parts.append(str(p.get("title") or ""))
+                parts.append(str(p.get("company") or ""))
+                parts.append(str(p.get("description") or ""))
+            else:
+                parts.append(str(p))
+
+    kms = resume.keyMetrics or []
+    if isinstance(kms, list):
+        for m in kms[:30]:
+            if isinstance(m, dict):
+                parts.append(str(m.get("metric") or ""))
+                parts.append(str(m.get("value") or ""))
+                parts.append(str(m.get("context") or ""))
+            else:
+                parts.append(str(m))
+
+    return " \n ".join([p.strip() for p in parts if str(p or "").strip()])
+
+
+def _skill_supported_by_resume(skill: str, resume_text: str) -> bool:
+    """
+    Smarter-than-exact matching for required skills:
+    - AI/ML/GenAI/Agentic are treated as a family
+    - cloud platforms match on common tokens
+    - otherwise substring/token check
+    """
+    s = _norm_skill(skill)
+    hay = (resume_text or "").lower()
+    if not s or not hay:
+        return False
+
+    # AI family matching
+    if any(k in s for k in ["ai", "ml", "machine learning", "generative", "llm", "agentic"]):
+        needles = [
+            "ai",
+            "ml",
+            "machine learning",
+            "deep learning",
+            "llm",
+            "gpt",
+            "openai",
+            "generative ai",
+            "genai",
+            "agentic",
+            "ai agent",
+            "ai agents",
+        ]
+        return any(n in hay for n in needles)
+
+    # Cloud family matching
+    if any(k in s for k in ["gcp", "google cloud", "azure", "aws"]):
+        if "gcp" in s or "google cloud" in s:
+            return ("gcp" in hay) or ("google cloud" in hay)
+        if "azure" in s:
+            return "azure" in hay
+        if "aws" in s:
+            return "aws" in hay
+
+    # Agile / SDLC family
+    if "agile" in s:
+        return any(n in hay for n in ["agile", "scrum", "kanban"])
+    if "testing" in s:
+        return any(n in hay for n in ["testing", "test", "unit test", "integration"])
+
+    # Default: substring match on normalized text
+    return s in hay
+
+
+def _job_work_mode(job: GapJobDescription) -> str:
+    # prefer explicit field if present
+    for v in [job.workMode, _infer_work_mode(job.content)]:
+        t = str(v or "").lower().strip()
+        if t in {"remote", "hybrid", "onsite", "unknown"}:
+            return t
+    return "unknown"
+
+
+def _job_employment_type(job: GapJobDescription) -> str:
+    t = str(job.employmentType or "").lower().strip()
+    if t in {"full-time", "part-time", "contract", "internship"}:
+        return t
+    return _infer_employment_type(job.content)
+
+
+def _parse_salary_floor(s: str) -> Optional[int]:
+    """
+    Parse a rough minimum annual salary if possible.
+    Returns USD/year integer or None if unknown/ambiguous (e.g. hourly).
+    """
+    txt = str(s or "")
+    low = txt.lower()
+    if not txt.strip():
+        return None
+    # hourly -> skip (preference comparisons can get tricky)
+    if any(k in low for k in ["/hour", "/hr", "per hour", "an hour", "hourly"]):
+        return None
+    import re
+    m = re.search(r"\$\s*([\d,]{2,7})", txt)
+    if not m:
+        m = re.search(r"\b([\d]{2,3})\s*k\b", low)
+        if m:
+            try:
+                return int(m.group(1)) * 1000
+            except Exception:
+                return None
+        return None
+    try:
+        return int(m.group(1).replace(",", ""))
+    except Exception:
+        return None
+
+
+def _deterministic_personality_gaps(
+    personality_profile: Dict[str, Any] | None,
+    temperament_profile: Dict[str, Any] | None,
+    job: GapJobDescription,
+) -> List[GapDetail]:
+    """
+    Best-effort personality/work-style gaps without an LLM.
+    Uses temperament_profile when available; otherwise light hints from personality_profile.
+    """
+    out: List[GapDetail] = []
+    txt = (job.content or "").lower()
+
+    # Signals from job
+    needs_alignment = any(k in txt for k in ["stakeholder", "cross-functional", "cross functional", "matrix", "collaborate", "partner with"])
+    needs_autonomy = any(k in txt for k in ["autonomy", "independent", "self-directed", "self directed", "ambiguous", "0 to 1", "0→1", "build from scratch"])
+    high_process = any(k in txt for k in ["compliance", "hipaa", "regulatory", "audit", "policy", "process", "governance"])
+    fast_paced = any(k in txt for k in ["fast-paced", "fast paced", "move fast", "tight deadlines", "rapidly"])
+
+    t = temperament_profile or {}
+    t_scores = (t.get("scores") if isinstance(t, dict) else {}) or {}
+    action = None
+    try:
+        action = int(t_scores.get("action")) if "action" in t_scores else None
+    except Exception:
+        action = None
+
+    # action < 0 ≈ autonomy/utilitarian; action >= 0 ≈ cooperative/alignment
+    if action is not None:
+        if action < 0 and needs_alignment:
+            out.append(
+                GapDetail(
+                    gap="Role emphasizes cross-team alignment; your work-style leans toward autonomy.",
+                    severity="medium",
+                    evidence=["Temperament: autonomy-leaning (action axis)", "Job text mentions collaboration/stakeholders"],
+                    how_to_close="In outreach/interviews, emphasize times you aligned stakeholders and mentored others without losing execution speed.",
+                )
+            )
+        if action >= 0 and needs_autonomy:
+            out.append(
+                GapDetail(
+                    gap="Role may require high autonomy/ambiguity tolerance; you lean toward alignment-driven environments.",
+                    severity="low",
+                    evidence=["Temperament: alignment-leaning (action axis)", "Job text suggests autonomy/ambiguity"],
+                    how_to_close="Highlight independent decision-making examples and how you set direction when requirements are unclear.",
+                )
+            )
+
+    # Process / pace sensitivity: fall back to personality_profile 'scores' if present
+    p = personality_profile or {}
+    p_scores = (p.get("scores") if isinstance(p, dict) else {}) or {}
+    structure = None
+    try:
+        structure = int(p_scores.get("structure")) if "structure" in p_scores else None
+    except Exception:
+        structure = None
+
+    # structure < 0 ≈ flexible; structure > 0 ≈ structured (based on earlier comment in file)
+    if structure is not None:
+        if structure < 0 and high_process:
+            out.append(
+                GapDetail(
+                    gap="Role appears process-heavy/regulatory; you may prefer flexible execution.",
+                    severity="medium",
+                    evidence=["Personality: flexibility-leaning (structure axis)", "Job text mentions compliance/process"],
+                    how_to_close="Prepare examples of delivering in regulated environments (docs, audits, guardrails) while keeping momentum.",
+                )
+            )
+        if structure > 0 and fast_paced:
+            out.append(
+                GapDetail(
+                    gap="Role looks fast-paced; you may prefer more structured planning cycles.",
+                    severity="low",
+                    evidence=["Personality: structure-leaning (structure axis)", "Job text mentions fast-paced execution"],
+                    how_to_close="Show how you plan in short cycles (weekly milestones) and keep quality high under speed constraints.",
+                )
+            )
+
+    return out[:3]
 
 
 def _company_size_bucket(company_sizes: List[str]) -> str:
@@ -194,8 +425,16 @@ def _infer_employment_type(content: str | None) -> str:
     return "unknown"
 
 
-def _deterministic_rank(preferences: GapAnalysisPreferences, resume: ResumeExtract, jobs: List[GapJobDescription]) -> List[GapAnalysisItem]:
+def _deterministic_rank(
+    preferences: GapAnalysisPreferences,
+    resume: ResumeExtract,
+    jobs: List[GapJobDescription],
+    *,
+    personality_profile: Dict[str, Any] | None = None,
+    temperament_profile: Dict[str, Any] | None = None,
+) -> List[GapAnalysisItem]:
     pref_skills = {s.lower() for s in _norm_list(preferences.skills)}
+    resume_text = _resume_evidence_text(resume)
     resume_skills = {s.lower() for s in _norm_list(resume.skills)}
     role_cats = {s.lower() for s in _norm_list(preferences.role_categories)}
 
@@ -203,8 +442,16 @@ def _deterministic_rank(preferences: GapAnalysisPreferences, resume: ResumeExtra
     for j in jobs:
         req = _norm_list(j.requiredSkills)
         req_set = {s.lower() for s in req}
-        matched = sorted({s for s in req if s.lower() in resume_skills or s.lower() in pref_skills})
-        missing = sorted({s for s in req if s.lower() not in resume_skills})
+        matched = sorted(
+            {
+                s
+                for s in req
+                if (s.lower() in resume_skills)
+                or (s.lower() in pref_skills)
+                or _skill_supported_by_resume(s, resume_text)
+            }
+        )
+        missing = sorted({s for s in req if not _skill_supported_by_resume(s, resume_text) and s.lower() not in resume_skills})
 
         # Heuristic score:
         # - reward overlap with required skills
@@ -245,7 +492,7 @@ def _deterministic_rank(preferences: GapAnalysisPreferences, resume: ResumeExtra
 
         # Work mode mismatch (remote/hybrid/onsite)
         pref_work = " ".join([x.lower() for x in (preferences.work_type or preferences.location_preferences or [])])
-        job_work = _infer_work_mode(j.content)
+        job_work = _job_work_mode(j)
         if "remote" in pref_work and "in-person" not in pref_work and "hybrid" not in pref_work:
             # remote-only
             if job_work in {"onsite", "hybrid"}:
@@ -256,7 +503,7 @@ def _deterministic_rank(preferences: GapAnalysisPreferences, resume: ResumeExtra
 
         # Employment type mismatch (full-time/part-time/contract/internship)
         pref_types = {x.lower() for x in _norm_list(preferences.role_type)}
-        job_type = _infer_employment_type(j.content)
+        job_type = _job_employment_type(j)
         if pref_types:
             # Normalize to our labels
             wanted = set()
@@ -273,7 +520,19 @@ def _deterministic_rank(preferences: GapAnalysisPreferences, resume: ResumeExtra
                 pref_gaps.append(f"Role type preference mismatch: you selected {', '.join(sorted(wanted))}, but this job looks {job_type}.")
 
         if preferences.minimum_salary:
-            pref_gaps.append("Salary preference not checked yet (no salary data parsed from this JD).")
+            # Best-effort salary check (only for annual salary ranges; hourly is skipped)
+            try:
+                pref_floor = _parse_salary_floor(preferences.minimum_salary)
+            except Exception:
+                pref_floor = None
+            job_salary = str(j.salaryRange or "").strip()
+            job_floor = _parse_salary_floor(job_salary)
+            if pref_floor is not None and job_floor is not None and job_floor < pref_floor:
+                pref_gaps.append(
+                    f"Salary preference mismatch: you want at least ${pref_floor:,}/yr, but this job appears to start around ${job_floor:,}/yr."
+                )
+            elif pref_floor is not None and job_floor is None:
+                pref_gaps.append("Salary preference not checked yet (salary is missing or not parseable from this job).")
 
         pref_gap_objs: List[GapDetail] = [
             GapDetail(gap=g, severity="medium", evidence=["Derived from job text + preferences"], how_to_close="Adjust preferences or focus on better-aligned roles.")
@@ -285,10 +544,12 @@ def _deterministic_rank(preferences: GapAnalysisPreferences, resume: ResumeExtra
                 GapDetail(
                     gap=f"Missing required skill: {s}",
                     severity="high" if len(missing) >= 6 else "medium",
-                    evidence=["Job required_skills vs resume skills"],
-                    how_to_close=f"Add evidence of {s} to resume, or build/refresh {s} and include a project bullet.",
+                    evidence=["Job required_skills vs resume evidence (skills + role descriptions + accomplishments)"],
+                    how_to_close=f"Add explicit evidence of {s} to your resume (skill line + 1 bullet), or build/refresh {s} and include a project bullet.",
                 )
             )
+
+        personality_gap_objs = _deterministic_personality_gaps(personality_profile, temperament_profile, j)
 
         ranked.append(
             GapAnalysisItem(
@@ -300,7 +561,7 @@ def _deterministic_rank(preferences: GapAnalysisPreferences, resume: ResumeExtra
                 matched_skills=matched[:20],
                 missing_skills=missing[:20],
                 resume_gaps=resume_gap_objs[:8],
-                personality_gaps=[],
+                personality_gaps=personality_gap_objs[:6],
                 preference_gaps=pref_gap_objs[:6],
                 notes=["Deterministic scoring (no LLM)."],
             )
@@ -330,7 +591,13 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
 
     client = get_openai_client()
     if not client.should_use_real_llm:
-        ranked = _deterministic_rank(prefs, resume, jobs)
+        ranked = _deterministic_rank(
+            prefs,
+            resume,
+            jobs,
+            personality_profile=req.personality_profile,
+            temperament_profile=req.temperament_profile,
+        )
         return GapAnalysisResponse(
             success=True,
             message="Gap analysis complete (no LLM)",
@@ -345,7 +612,16 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
 
     # LLM path
     try:
-        stub_ranked = [r.model_dump() for r in _deterministic_rank(prefs, resume, jobs)[: min(8, len(jobs))]]
+        stub_ranked = [
+            r.model_dump()
+            for r in _deterministic_rank(
+                prefs,
+                resume,
+                jobs,
+                personality_profile=req.personality_profile,
+                temperament_profile=req.temperament_profile,
+            )[: min(8, len(jobs))]
+        ]
         stub_json = {
             "ranked": stub_ranked,
             "notes": ["Stub fallback (should not be used when GPT is ON)."],

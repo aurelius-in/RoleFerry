@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
+import placeholderPat from "@/profile-pat.png";
 
 type BioPageDraft = {
   display_name: string;
@@ -14,6 +15,7 @@ type BioPageDraft = {
   fit_points: string[];
   resume_extract: any;
   portfolio_url: string;
+  profile_image_url?: string;
   theme?: { accent?: string };
 };
 
@@ -78,6 +80,9 @@ export default function PublicBioPage() {
     );
   }
 
+  const profileSrc =
+    isNonEmpty(d.profile_image_url) ? String(d.profile_image_url) : (placeholderPat as any).src || placeholderPat;
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <div className="border-b border-white/10 bg-black/20">
@@ -115,6 +120,17 @@ export default function PublicBioPage() {
       <main className="max-w-5xl mx-auto px-6 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7">
+            <div className="flex items-center gap-4 mb-6">
+              <img
+                src={profileSrc}
+                alt="Profile picture"
+                className="h-20 w-20 rounded-full object-cover border border-white/10 bg-white/5"
+              />
+              <div className="min-w-0">
+                <div className="text-sm text-white/60">Candidate</div>
+                <div className="text-xl font-bold truncate">{d.display_name || "—"}</div>
+              </div>
+            </div>
             <h1 className="text-4xl font-extrabold leading-tight">{d.headline}</h1>
             <p className="mt-4 text-white/70 text-lg">{d.subheadline}</p>
 

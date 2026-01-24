@@ -86,7 +86,19 @@ def create_app() -> FastAPI:
         path = request.url.path or "/"
         if request.method == "OPTIONS":
             return await call_next(request)
-        if path == "/" or path == "/ping" or path.startswith("/health") or path.startswith("/auth") or path.startswith("/docs") or path.startswith("/openapi.json"):
+        # Public endpoints:
+        # - health + auth
+        # - docs/openapi
+        # - bio pages (published pages must be publicly retrievable; demo generation also works without login)
+        if (
+            path == "/"
+            or path == "/ping"
+            or path.startswith("/health")
+            or path.startswith("/auth")
+            or path.startswith("/docs")
+            or path.startswith("/openapi.json")
+            or path.startswith("/bio-pages")
+        ):
             return await call_next(request)
 
         from .config import settings as _settings

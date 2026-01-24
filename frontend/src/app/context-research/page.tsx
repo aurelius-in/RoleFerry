@@ -74,6 +74,7 @@ interface ResearchData {
 export default function ContextResearchPage() {
   const router = useRouter();
   const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
+  const [userKey, setUserKey] = useState<string>("anon");
   const [researchData, setResearchData] = useState<ResearchData | null>(null);
   const [researchByContact, setResearchByContact] = useState<Record<string, ResearchData>>({});
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
@@ -93,6 +94,7 @@ export default function ContextResearchPage() {
   const [editValue, setEditValue] = useState("");
 
   const RESEARCH_HISTORY_KEY = "context_research_history";
+  const getSavedVerifiedKey = (uid: string) => `rf_saved_verified_contacts:${uid || "anon"}`;
 
   const loadResearchHistory = () => {
     try {
@@ -163,14 +165,43 @@ export default function ContextResearchPage() {
   useEffect(() => {
     setDataMode(getCurrentDataMode());
     setResearchHistory(loadResearchHistory());
-    // Load selected contacts from localStorage
-    const savedContacts = localStorage.getItem('selected_contacts');
-    if (savedContacts) {
-      const parsed = JSON.parse(savedContacts);
-      setSelectedContacts(parsed);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        setActiveContactId(parsed[0]?.id || null);
+    // Load contacts from the previous step:
+    // - Prefer the full saved verified contacts set (persisted across searches)
+    // - Fall back to 'selected_contacts' (legacy)
+    try {
+      const u = JSON.parse(localStorage.getItem("rf_user") || "null");
+      const uid = String(u?.id || "anon");
+      setUserKey(uid);
+
+      let fromSaved: any[] = [];
+      try {
+        const rawSaved = localStorage.getItem(getSavedVerifiedKey(uid));
+        const parsedSaved = rawSaved ? JSON.parse(rawSaved) : [];
+        if (Array.isArray(parsedSaved)) fromSaved = parsedSaved;
+      } catch {}
+
+      let fromSelected: any[] = [];
+      try {
+        const rawSelected = localStorage.getItem("selected_contacts");
+        const parsedSelected = rawSelected ? JSON.parse(rawSelected) : [];
+        if (Array.isArray(parsedSelected)) fromSelected = parsedSelected;
+      } catch {}
+
+      const chosen = (fromSaved && fromSaved.length > 0) ? fromSaved : fromSelected;
+      if (Array.isArray(chosen) && chosen.length > 0) {
+        setSelectedContacts(chosen as any);
+        setActiveContactId(String((chosen as any)[0]?.id || "") || null);
       }
+    } catch {
+      // Legacy fallback
+      try {
+        const raw = localStorage.getItem("selected_contacts");
+        const parsed = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(parsed)) {
+          setSelectedContacts(parsed as any);
+          if (parsed.length > 0) setActiveContactId(parsed[0]?.id || null);
+        }
+      } catch {}
     }
   }, []);
 
@@ -421,17 +452,122 @@ export default function ContextResearchPage() {
   };
 
   const handleSelectContact = (contactId: string) => {
-    setActiveContactId(contactId);
-    const next = researchByContact?.[contactId];
-    const fromHistory = researchHistory.find((h) => String(h?.contact?.id) === String(contactId));
+    const cid = String(contactId || "").trim();
+    if (!cid) return;
+    setActiveContactId(cid);
+
+    // 1) Immediate hit: in-memory or saved history.
+    const next = researchByContact?.[cid];
+    const fromHistory = researchHistory.find((h) => String(h?.contact?.id) === cid);
     const chosen = next || fromHistory?.research || null;
-    if (!chosen) return;
-    setResearchData(chosen);
+    if (chosen) {
+      setResearchData(chosen);
+      try {
+        localStorage.setItem("context_research", JSON.stringify(chosen));
+        localStorage.setItem("research_data", JSON.stringify(chosen));
+        localStorage.setItem("context_research_active_contact_id", cid);
+      } catch {}
+      return;
+    }
+
+    // 2) If we have cached per-contact research from a prior run, reuse it.
     try {
-      localStorage.setItem("context_research", JSON.stringify(chosen));
-      localStorage.setItem("research_data", JSON.stringify(chosen));
-      localStorage.setItem("context_research_active_contact_id", String(contactId));
+      const cachedByContactRaw = localStorage.getItem("context_research_by_contact");
+      const cachedByContact = cachedByContactRaw ? JSON.parse(cachedByContactRaw) : null;
+      if (cachedByContact && typeof cachedByContact === "object" && cachedByContact[cid]) {
+        const cached = cachedByContact[cid];
+        setResearchByContact((prev) => ({ ...(prev || {}), [cid]: cached }));
+        setResearchData(cached);
+        try {
+          localStorage.setItem("context_research", JSON.stringify(cached));
+          localStorage.setItem("research_data", JSON.stringify(cached));
+          localStorage.setItem("context_research_active_contact_id", cid);
+        } catch {}
+        return;
+      }
     } catch {}
+
+    // 3) No cached research — run research for this single contact on click.
+    const contact = selectedContacts.find((c) => String(c?.id || "") === cid);
+    if (!contact) return;
+
+    (async () => {
+      setIsResearching(true);
+      setError(null);
+      try {
+        const companyName =
+          contact?.company ||
+          (() => {
+            try {
+              const jdsRaw = localStorage.getItem("job_descriptions");
+              const jds = jdsRaw ? JSON.parse(jdsRaw) : [];
+              return jds?.[0]?.company || "TechCorp Inc.";
+            } catch {
+              return "TechCorp Inc.";
+            }
+          })();
+
+        let selectedJD: any = null;
+        try {
+          selectedJD = JSON.parse(localStorage.getItem("selected_job_description") || "null");
+        } catch {}
+
+        // Optional grounding context for smarter background reports
+        let resumeExtract: any = null;
+        let painpointMatches: any[] = [];
+        try {
+          resumeExtract = JSON.parse(localStorage.getItem("resume_extract") || "null");
+        } catch {}
+        try {
+          painpointMatches = JSON.parse(localStorage.getItem("painpoint_matches") || "[]") || [];
+        } catch {}
+
+        const resp = await api<any>("/context-research/research", "POST", {
+          contact_ids: [cid],
+          contacts: [contact],
+          company_name: companyName,
+          selected_job_description: selectedJD,
+          resume_extract: resumeExtract,
+          painpoint_matches: painpointMatches,
+          data_mode: getCurrentDataMode(),
+        });
+
+        if (!resp?.success || !resp?.research_data) {
+          throw new Error(resp?.message || "Research failed");
+        }
+
+        const byContact: Record<string, ResearchData> = resp?.research_by_contact || {};
+        const nextResearch =
+          (byContact?.[cid] as any) || (resp.research_data as any);
+
+        setResearchByContact((prev) => ({ ...(prev || {}), ...(byContact || {}), [cid]: nextResearch }));
+        setResearchData(nextResearch);
+        setHelper(resp.helper || null);
+
+        // Persist for downstream screens (Offer Creation expects `context_research`).
+        try {
+          localStorage.setItem("context_research", JSON.stringify(nextResearch));
+          localStorage.setItem("context_research_by_contact", JSON.stringify({ ...(byContact || {}), [cid]: nextResearch }));
+          localStorage.setItem(
+            "context_research_meta",
+            JSON.stringify({
+              company_name: companyName,
+              jd_title: String(selectedJD?.title || ""),
+              data_mode: getCurrentDataMode(),
+            })
+          );
+          localStorage.setItem("context_research_active_contact_id", cid);
+          localStorage.setItem("context_research_helper", JSON.stringify(resp.helper || {}));
+          localStorage.setItem("research_data", JSON.stringify(nextResearch));
+        } catch {}
+
+        upsertResearchHistory({ ...(byContact || {}), [cid]: nextResearch } as any, [contact]);
+      } catch (e: any) {
+        setError(String(e?.message || "Research failed"));
+      } finally {
+        setIsResearching(false);
+      }
+    })();
   };
 
   return (
@@ -473,7 +609,7 @@ export default function ContextResearchPage() {
 
           {helper?.hooks?.length ? (
             <div className="mb-6 rounded-lg border border-white/10 bg-black/20 p-4">
-              <div className="text-sm font-bold text-white mb-2">GPT Helper: outreach hooks</div>
+              <div className="text-sm font-bold text-white mb-2">Smart Helper: outreach hooks</div>
               <ul className="list-disc list-inside text-sm text-white/70 space-y-1">
                 {helper.hooks.slice(0, 5).map((h: string, i: number) => (
                   <li key={`hook_${i}`}>{h}</li>
@@ -502,103 +638,149 @@ export default function ContextResearchPage() {
             </div>
           ) : (
             <div className="space-y-8">
-              {/* Contacts (Selected + Researched history) */}
+              {/* Contacts + Start Research (cleaner workflow) */}
               <div>
-                <h2 className="text-xl font-semibold mb-4">Contacts</h2>
+                <h2 className="text-xl font-semibold mb-4">Contacts to research</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                  {/* Left: researched contacts (persisted across runs) */}
-                  <div className="lg:col-span-4">
+                  {/* Left: contacts list (primary) */}
+                  <div className="lg:col-span-5">
                     <div className="rounded-lg border border-white/10 bg-black/20 p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm font-bold text-white/90">Researched</div>
-                        <div className="text-[10px] text-white/50">{researchHistory.length}</div>
-                      </div>
-                      <div className="mt-3 space-y-2">
-                        {researchHistory.length === 0 ? (
-                          <div className="text-xs text-white/60">
-                            No saved research yet. Click <span className="font-semibold text-white">Start Research</span> to build a list.
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-sm font-bold text-white/90">Saved contacts</div>
+                          <div className="mt-1 text-[11px] text-white/55">
+                            These come from the previous step. Click a contact to view their research.
                           </div>
-                        ) : (
-                          researchHistory.slice(0, 30).map((h) => {
-                            const id = String(h?.contact?.id || "");
-                            const active = activeContactId === id;
-                            const when = String(h?.researched_at || "").slice(0, 19).replace("T", " ");
-                            return (
+                        </div>
+                        <div className="text-[10px] text-white/50">{selectedContacts.length}</div>
+                      </div>
+
+                      <div className="mt-3 space-y-2 max-h-[520px] overflow-auto pr-1">
+                        {selectedContacts.map((contact) => {
+                          const active = activeContactId === contact.id;
+                          return (
+                            <div
+                              key={contact.id}
+                              className={`rounded-lg border p-3 transition-colors ${
+                                active ? "border-blue-400/60 bg-blue-500/10" : "border-white/10 bg-black/10 hover:bg-black/20"
+                              }`}
+                            >
                               <button
                                 type="button"
-                                key={`hist_${id}`}
-                                onClick={() => handleSelectContact(id)}
-                                className={`w-full text-left rounded-md border px-3 py-2 transition-colors ${
-                                  active ? "border-blue-400/60 bg-blue-500/10" : "border-white/10 bg-black/10 hover:bg-black/20"
-                                }`}
-                                title="Click to load saved research"
+                                onClick={() => handleSelectContact(contact.id)}
+                                className="w-full text-left"
+                                title="Set as active contact"
                               >
-                                <div className="text-sm font-semibold text-white truncate">{h.contact?.name || "Contact"}</div>
-                                <div className="text-[10px] text-white/50 truncate">
-                                  {h.contact?.company ? `${h.contact.company} • ` : ""}{when || "Saved"}
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <div className="text-sm font-semibold text-white truncate">{contact.name}</div>
+                                    <div className="text-xs text-white/70 truncate">{formatTitleCase(contact.title)}</div>
+                                    <div className="text-[11px] text-white/50 truncate">{contact.company}</div>
+                                  </div>
+                                  {active ? (
+                                    <span className="shrink-0 rounded-full border border-blue-300/40 bg-blue-500/10 px-2 py-0.5 text-[11px] font-semibold text-blue-100">
+                                      Active
+                                    </span>
+                                  ) : null}
                                 </div>
                               </button>
-                            );
-                          })
-                        )}
+
+                              <div className="mt-2 flex items-center gap-2">
+                                <input
+                                  value={String(contact.linkedin_url || "")}
+                                  onChange={(e) => {
+                                    const nextVal = e.target.value;
+                                    setSelectedContacts((prev) => {
+                                      const next = (prev || []).map((c) => (c.id === contact.id ? { ...c, linkedin_url: nextVal } : c));
+                                      try {
+                                        localStorage.setItem("selected_contacts", JSON.stringify(next));
+                                        // Keep the canonical saved-verified store in sync so this sticks across runs.
+                                        localStorage.setItem(getSavedVerifiedKey(userKey), JSON.stringify(next));
+                                      } catch {}
+                                      return next;
+                                    });
+                                  }}
+                                  placeholder="Paste LinkedIn URL (optional, helps research)"
+                                  className="flex-1 rounded-md border border-white/15 bg-black/30 px-3 py-2 text-xs text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                {contact.linkedin_url ? (
+                                  <a
+                                    href={String(contact.linkedin_url)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="shrink-0 text-xs font-semibold text-blue-200/90 hover:text-blue-100"
+                                  >
+                                    Open
+                                  </a>
+                                ) : null}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
 
-                  {/* Right: selected contacts (this run) */}
-                  <div className="lg:col-span-8">
+                  {/* Right: actions + saved research shortcuts (small, non-redundant) */}
+                  <div className="lg:col-span-7">
                     <div className="rounded-lg border border-white/10 bg-black/10 p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm font-bold text-white/90">Contacts to research</div>
-                        <div className="text-[10px] text-white/50">{selectedContacts.length}</div>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-sm font-bold text-white/90">Research workflow</div>
+                          <div className="mt-1 text-[11px] text-white/55">
+                            Click a contact on the left to load their research. If we don’t have it yet, we’ll research that contact automatically.
+                          </div>
+                        </div>
                       </div>
-                      <div className="mt-1 text-[11px] text-white/55">
-                        Start Research runs on all contacts shown here and lets you click between them afterward.
-                      </div>
-                      <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {selectedContacts.map((contact) => (
-                          <button
-                            type="button"
-                            key={contact.id}
-                            onClick={() => handleSelectContact(contact.id)}
-                            className={`text-left border rounded-lg p-4 transition-colors ${
-                              activeContactId === contact.id
-                                ? "border-blue-400/60 bg-blue-500/10"
-                                : "border-white/10 bg-black/20 hover:bg-black/30"
-                            }`}
-                            title="Click to view research for this contact"
-                          >
-                            <h3 className="font-semibold text-white">{contact.name}</h3>
-                            <p className="text-white/70 text-sm">{formatTitleCase(contact.title)}</p>
-                            {contact.department ? (
-                              <p className="text-white/60 text-xs">{formatTitleCase(contact.department)}</p>
-                            ) : null}
-                            <p className="text-white/50 text-xs">{contact.company}</p>
-                            {activeContactId === contact.id ? (
-                              <p className="mt-2 text-xs text-blue-200/80">Active</p>
-                            ) : null}
-                          </button>
-                        ))}
-                      </div>
-                      {selectedContacts.length > 1 ? (
-                        <p className="mt-2 text-xs text-white/60">
-                          Click a contact to swap the research panels below (Company Summary, Contact Bio, News, Shared Connections).
-                        </p>
+
+                      {isResearching ? (
+                        <div className="mt-4 rounded-lg border border-white/10 bg-black/20 p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                            <div className="text-sm text-white/70">Researching…</div>
+                          </div>
+                        </div>
+                      ) : dataMode === "demo" ? (
+                        <div className="mt-4 text-xs text-yellow-200/90">
+                          Demo mode: web lookups are limited. Switch to <span className="font-semibold">Live</span> for richer results.
+                        </div>
                       ) : null}
+
+                      {researchHistory.length > 0 ? (
+                        <div className="mt-5">
+                          <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">
+                            Recently researched
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {researchHistory.slice(0, 10).map((h) => {
+                              const id = String(h?.contact?.id || "");
+                              const active = activeContactId === id;
+                              return (
+                                <button
+                                  key={`histpill_${id}`}
+                                  type="button"
+                                  onClick={() => handleSelectContact(id)}
+                                  className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors ${
+                                    active
+                                      ? "brand-gradient text-black border-white/20"
+                                      : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white"
+                                  }`}
+                                  title="Load saved research"
+                                >
+                                  {String(h?.contact?.name || "Contact").split(/\s+/)[0] || "Contact"}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-5 text-xs text-white/55">
+                          No saved research yet. After you run research once, quick-switch pills will appear here.
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Research Button */}
-              <div className="text-center">
-                <button
-                  onClick={handleResearch}
-                  disabled={isResearching}
-                  className="bg-blue-600 text-white px-8 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  {isResearching ? "Researching..." : "Start Research"}
-                </button>
               </div>
 
               {/* Research Results */}
@@ -629,9 +811,9 @@ export default function ContextResearchPage() {
                           })
                           .slice(0, 20)
                           .map((s, idx) => (
-                            <div key={`sec_${idx}`} className="border border-gray-200 rounded-lg p-4">
-                              <div className="text-sm font-semibold text-gray-900">{s.heading}</div>
-                              <div className="mt-2 text-sm text-gray-700 whitespace-pre-wrap">{s.body}</div>
+                            <div key={`sec_${idx}`} className="rounded-lg border border-white/10 bg-black/20 p-4">
+                              <div className="text-sm font-semibold text-white/90">{s.heading}</div>
+                              <div className="mt-2 text-sm text-white/70 whitespace-pre-wrap">{s.body}</div>
                             </div>
                           ))}
                       </div>
@@ -655,7 +837,7 @@ export default function ContextResearchPage() {
                         <textarea
                           value={editValue}
                           onChange={(e) => setEditValue(e.target.value)}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 h-32"
+                          className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 h-32 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <div className="flex space-x-2">
                           <button
@@ -666,27 +848,27 @@ export default function ContextResearchPage() {
                           </button>
                           <button
                             onClick={() => setEditingField(null)}
-                            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-200"
+                            className="bg-white/10 border border-white/20 text-white px-4 py-2 rounded-md text-sm hover:bg-white/15"
                           >
                             Cancel
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                        <p className="text-gray-700">{researchData.company_summary.description}</p>
-                        <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
+                      <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                        <p className="text-white/70">{researchData.company_summary.description}</p>
+                        <div className="mt-3 grid grid-cols-2 gap-4 text-sm text-white/70">
                           <div>
-                            <span className="font-medium">Industry:</span> {researchData.company_summary.industry}
+                            <span className="font-medium text-white/80">Industry:</span> {researchData.company_summary.industry}
                           </div>
                           <div>
-                            <span className="font-medium">Size:</span> {researchData.company_summary.size}
+                            <span className="font-medium text-white/80">Size:</span> {researchData.company_summary.size}
                           </div>
                           <div>
-                            <span className="font-medium">Founded:</span> {researchData.company_summary.founded}
+                            <span className="font-medium text-white/80">Founded:</span> {researchData.company_summary.founded}
                           </div>
                           <div>
-                            <span className="font-medium">Headquarters:</span> {researchData.company_summary.headquarters}
+                            <span className="font-medium text-white/80">Headquarters:</span> {researchData.company_summary.headquarters}
                           </div>
                         </div>
                       </div>
@@ -703,12 +885,12 @@ export default function ContextResearchPage() {
                     ) : null}
                     <div className="space-y-4">
                       {researchData.contact_bios.map((bio, index) => (
-                        <div key={index} className="border border-gray-200 rounded-lg p-4">
+                        <div key={index} className="rounded-lg border border-white/10 bg-black/20 p-4">
                           <div className="flex justify-between items-center mb-2">
-                            <h3 className="font-semibold text-gray-900">{bio.name}</h3>
+                            <h3 className="font-semibold text-white/90">{bio.name}</h3>
                             <button
                               onClick={() => handleEdit(`contact_${index}`, bio.bio)}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
+                              className="text-blue-200/90 hover:text-blue-100 text-sm font-semibold"
                             >
                               Edit
                             </button>
@@ -719,7 +901,7 @@ export default function ContextResearchPage() {
                               <textarea
                                 value={editValue}
                                 onChange={(e) => setEditValue(e.target.value)}
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 h-24"
+                                className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 h-24 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                               />
                               <div className="flex space-x-2">
                                 <button
@@ -730,7 +912,7 @@ export default function ContextResearchPage() {
                                 </button>
                                 <button
                                   onClick={() => setEditingField(null)}
-                                  className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-200"
+                                  className="bg-white/10 border border-white/20 text-white px-4 py-2 rounded-md text-sm hover:bg-white/15"
                                 >
                                   Cancel
                                 </button>
@@ -738,19 +920,19 @@ export default function ContextResearchPage() {
                             </div>
                           ) : (
                             <div>
-                              <div className="mb-1 text-xs text-gray-600">
+                              <div className="mb-1 text-xs text-white/60">
                                 {formatTitleCase(bio.title)}{bio.company ? ` • ${bio.company}` : ""}
                               </div>
-                              <p className="text-gray-700 mb-3">{bio.bio}</p>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                              <p className="text-white/70 mb-3">{bio.bio}</p>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-white/70">
                                 <div>
-                                  <span className="font-medium">Experience:</span> {bio.experience}
+                                  <span className="font-medium text-white/80">Experience:</span> {bio.experience}
                                 </div>
                                 <div>
-                                  <span className="font-medium">Education:</span> {bio.education}
+                                  <span className="font-medium text-white/80">Education:</span> {bio.education}
                                 </div>
                                 <div className="md:col-span-2">
-                                  <span className="font-medium">Skills:</span> {bio.skills.join(", ")}
+                                  <span className="font-medium text-white/80">Skills:</span> {bio.skills.join(", ")}
                                 </div>
                                 {(bio.public_profile_highlights?.length ||
                                   bio.publications?.length ||
@@ -758,12 +940,12 @@ export default function ContextResearchPage() {
                                   bio.opinions?.length ||
                                   bio.other_interesting_facts?.length) ? (
                                   <div className="md:col-span-2">
-                                    <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                                      <div className="text-xs font-semibold text-gray-700 mb-2">Public profile insights (best effort)</div>
+                                    <div className="mt-2 rounded-lg border border-white/10 bg-black/10 p-3">
+                                      <div className="text-xs font-semibold text-white/80 mb-2">Public profile insights (best effort)</div>
                                       {bio.public_profile_highlights?.length ? (
                                         <div className="mb-2">
-                                          <div className="text-xs font-medium text-gray-600">Highlights</div>
-                                          <ul className="mt-1 list-disc pl-5 text-gray-700">
+                                          <div className="text-xs font-medium text-white/60">Highlights</div>
+                                          <ul className="mt-1 list-disc pl-5 text-white/70">
                                             {bio.public_profile_highlights.slice(0, 6).map((x, idx) => (
                                               <li key={idx}>{x}</li>
                                             ))}
@@ -772,10 +954,10 @@ export default function ContextResearchPage() {
                                       ) : null}
                                       {bio.post_topics?.length ? (
                                         <div className="mb-2">
-                                          <div className="text-xs font-medium text-gray-600">Post topics</div>
+                                          <div className="text-xs font-medium text-white/60">Post topics</div>
                                           <div className="mt-1 flex flex-wrap gap-1">
                                             {bio.post_topics.slice(0, 10).map((t, idx) => (
-                                              <span key={idx} className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-xs text-gray-700">
+                                              <span key={idx} className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-white/70">
                                                 {t}
                                               </span>
                                             ))}
@@ -784,8 +966,8 @@ export default function ContextResearchPage() {
                                       ) : null}
                                       {bio.publications?.length ? (
                                         <div className="mb-2">
-                                          <div className="text-xs font-medium text-gray-600">Publications / writing</div>
-                                          <ul className="mt-1 list-disc pl-5 text-gray-700">
+                                          <div className="text-xs font-medium text-white/60">Publications / writing</div>
+                                          <ul className="mt-1 list-disc pl-5 text-white/70">
                                             {bio.publications.slice(0, 5).map((x, idx) => (
                                               <li key={idx}>{x}</li>
                                             ))}
@@ -794,8 +976,8 @@ export default function ContextResearchPage() {
                                       ) : null}
                                       {bio.opinions?.length ? (
                                         <div className="mb-2">
-                                          <div className="text-xs font-medium text-gray-600">Opinions / takes</div>
-                                          <ul className="mt-1 list-disc pl-5 text-gray-700">
+                                          <div className="text-xs font-medium text-white/60">Opinions / takes</div>
+                                          <ul className="mt-1 list-disc pl-5 text-white/70">
                                             {bio.opinions.slice(0, 5).map((x, idx) => (
                                               <li key={idx}>{x}</li>
                                             ))}
@@ -804,8 +986,8 @@ export default function ContextResearchPage() {
                                       ) : null}
                                       {bio.other_interesting_facts?.length ? (
                                         <div>
-                                          <div className="text-xs font-medium text-gray-600">Other interesting facts</div>
-                                          <ul className="mt-1 list-disc pl-5 text-gray-700">
+                                          <div className="text-xs font-medium text-white/60">Other interesting facts</div>
+                                          <ul className="mt-1 list-disc pl-5 text-white/70">
                                             {bio.other_interesting_facts.slice(0, 5).map((x, idx) => (
                                               <li key={idx}>{x}</li>
                                             ))}
@@ -816,7 +998,7 @@ export default function ContextResearchPage() {
                                   </div>
                                 ) : (
                                   <div className="md:col-span-2">
-                                    <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
+                                    <div className="mt-2 rounded-lg border border-white/10 bg-black/10 p-3 text-xs text-white/60">
                                       Public profile insights will appear here when we have public snippets (e.g., via Serper) or other sources.
                                     </div>
                                   </div>
@@ -833,9 +1015,9 @@ export default function ContextResearchPage() {
                   <div>
                     <h2 className="text-xl font-semibold mb-4">Recent News</h2>
                     {researchData.recent_news.length === 0 ? (
-                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+                      <div className="rounded-lg border border-white/10 bg-black/20 p-4 text-sm text-white/70">
                         No sourced news available right now.
-                        <div className="mt-1 text-xs text-gray-500">
+                        <div className="mt-1 text-xs text-white/50">
                           To fetch real headlines + links, set Data Mode to <span className="font-semibold">Live</span> and configure Serper.
                           Until then, use the <span className="font-semibold">hooks</span> above as “timing” angles.
                         </div>
@@ -846,17 +1028,17 @@ export default function ContextResearchPage() {
                           const hasUrl = Boolean((news.url || "").trim());
                           const isUnsourced = !hasUrl;
                           return (
-                            <div key={index} className="border border-gray-200 rounded-lg p-4">
+                            <div key={index} className="rounded-lg border border-white/10 bg-black/20 p-4">
                               <div className="flex items-start justify-between gap-3">
-                                <h3 className="font-semibold text-gray-900 mb-2">{news.title}</h3>
+                                <h3 className="font-semibold text-white/90 mb-2">{news.title}</h3>
                                 {isUnsourced ? (
                                   <span className="shrink-0 rounded-full border border-yellow-200 bg-yellow-50 px-2 py-0.5 text-[11px] font-semibold text-yellow-800">
                                     Unsourced theme
                                   </span>
                                 ) : null}
                               </div>
-                              <p className="text-gray-700 mb-2">{news.summary}</p>
-                              <div className="flex justify-between items-center text-sm text-gray-500">
+                              <p className="text-white/70 mb-2">{news.summary}</p>
+                              <div className="flex justify-between items-center text-sm text-white/50">
                                 <span>
                                   {(news.source || "General").trim()}
                                   {news.date ? ` • ${news.date}` : ""}
@@ -866,7 +1048,7 @@ export default function ContextResearchPage() {
                                     href={news.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-800"
+                                    className="text-blue-200/90 hover:text-blue-100 font-semibold"
                                   >
                                     Read More
                                   </a>
@@ -883,12 +1065,12 @@ export default function ContextResearchPage() {
                   {researchData.shared_connections.length > 0 ? (
                     <div>
                       <h2 className="text-xl font-semibold mb-4">Shared Connections</h2>
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <div className="rounded-lg border border-white/10 bg-black/20 p-4">
                         <ul className="space-y-2">
                           {researchData.shared_connections.map((connection, index) => (
                             <li key={index} className="flex items-center space-x-2">
                               <span className="text-green-500">•</span>
-                              <span className="text-gray-700">{connection}</span>
+                              <span className="text-white/70">{connection}</span>
                             </li>
                           ))}
                         </ul>
@@ -899,26 +1081,26 @@ export default function ContextResearchPage() {
                   {/* Variables Preview */}
                   <div>
                     <h2 className="text-xl font-semibold mb-4">Available Variables</h2>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <p className="text-sm text-blue-800 mb-3">
+                    <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                      <p className="text-sm text-white/70 mb-3">
                         These variables can be used in your email templates:
                       </p>
                       <div className="space-y-2 text-sm">
                         <div>
-                          <code className="bg-blue-100 px-2 py-1 rounded">{"{{company_summary}}"}</code>
-                          <span className="ml-2 text-gray-600">
+                          <code className="bg-white/10 border border-white/10 px-2 py-1 rounded text-emerald-200">{"{{company_summary}}"}</code>
+                          <span className="ml-2 text-white/60">
                             {getVariableText('company_summary').substring(0, 100)}...
                           </span>
                         </div>
                         <div>
-                          <code className="bg-blue-100 px-2 py-1 rounded">{"{{contact_bio}}"}</code>
-                          <span className="ml-2 text-gray-600">
+                          <code className="bg-white/10 border border-white/10 px-2 py-1 rounded text-emerald-200">{"{{contact_bio}}"}</code>
+                          <span className="ml-2 text-white/60">
                             {getVariableText('contact_bio').substring(0, 100)}...
                           </span>
                         </div>
                         <div>
-                          <code className="bg-blue-100 px-2 py-1 rounded">{"{{recent_news}}"}</code>
-                          <span className="ml-2 text-gray-600">
+                          <code className="bg-white/10 border border-white/10 px-2 py-1 rounded text-emerald-200">{"{{recent_news}}"}</code>
+                          <span className="ml-2 text-white/60">
                             {getVariableText('recent_news').substring(0, 100)}...
                           </span>
                         </div>
@@ -929,7 +1111,7 @@ export default function ContextResearchPage() {
                   <div className="flex justify-end space-x-4">
                     <button
                       onClick={() => router.push('/find-contact')}
-                      className="bg-gray-100 text-gray-700 px-6 py-3 rounded-md font-medium hover:bg-gray-200 transition-colors"
+                      className="bg-white/10 border border-white/20 text-white px-6 py-3 rounded-md font-medium hover:bg-white/15 transition-colors"
                     >
                       Back
                     </button>

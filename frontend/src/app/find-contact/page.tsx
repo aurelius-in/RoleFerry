@@ -68,11 +68,9 @@ export default function FindContactPage() {
   const [buildStamp, setBuildStamp] = useState<string>("");
 
   // Outreach drafts (per contact)
-  const LINKEDIN_NOTE_LIMIT = 300;
+  const LINKEDIN_NOTE_LIMIT = 200;
   type OutreachDraft = {
     linkedin_note: string;
-    email_subject: string;
-    email_body: string;
     updated_at: string;
   };
   const [outreachDrafts, setOutreachDrafts] = useState<Record<string, OutreachDraft>>({});
@@ -167,37 +165,20 @@ export default function FindContactPage() {
     const jd = loadSelectedJob();
     const m0 = loadPainpointMatch();
     const first = safeFirstName(c?.name || "");
-    const company = String(jd?.company || c?.company || "your team").trim();
+    // Prefer the CONTACT's company (this screen is about reaching out to them).
+    const company = String(c?.company || jd?.company || "your team").trim();
     const jobTitle = String(jd?.title || "the role").trim();
     const pain = String(m0?.painpoint_1 || "a key priority").trim();
     const sol = String(m0?.solution_1 || "").trim();
     const metric = String(m0?.metric_1 || "").trim();
 
     const li = trimToChars(
-      `Hi ${first} — I’m exploring ${jobTitle} at ${company}. I noticed ${pain}. I’ve worked on similar problems (${sol || "relevant work"}${metric ? ` — ${metric}` : ""}). Open to connect?`,
+      `Hi ${first}, I’m exploring ${jobTitle} at ${company}. I noticed ${pain}. I’ve worked on similar problems (${sol || "relevant work"}${metric ? `; ${metric}` : ""}). Open to connect?`,
       LINKEDIN_NOTE_LIMIT
     );
 
-    const subject = `${company} — quick idea on ${pain}`.slice(0, 120);
-    const body = [
-      `Hi ${first},`,
-      ``,
-      `I’m exploring ${jobTitle} opportunities at ${company} and wanted to reach out directly.`,
-      ``,
-      `One thing that stood out is: ${pain}.`,
-      sol ? `A relevant example from my background: ${sol}${metric ? ` (${metric})` : ""}.` : `I’ve worked on similar problem spaces and can share concrete examples.`,
-      ``,
-      `If it’s useful, I can share a brief 2–3 bullet plan for how I’d approach this at ${company}.`,
-      `Would you be open to a quick 10–15 minute chat this week?`,
-      ``,
-      `Best,`,
-      `[Your Name]`,
-    ].join("\n");
-
     return {
       linkedin_note: li,
-      email_subject: subject,
-      email_body: body,
       updated_at: new Date().toISOString(),
     };
   };
@@ -209,6 +190,17 @@ export default function FindContactPage() {
     const next = { ...(outreachDrafts || {}) };
     next[cid] = buildDefaultDraft(c);
     persistOutreachDrafts(next);
+  };
+
+  const getContactById = (id: string) => {
+    const cid = String(id || "").trim();
+    if (!cid) return null;
+    const c1 = (contacts || []).find((c) => String(c.id) === cid);
+    if (c1) return c1;
+    const c2 = (savedVerified || []).find((c) => String(c.id) === cid);
+    if (c2) return c2;
+    const c3 = (suggested || []).find((c) => String(c.id) === cid);
+    return c3 || null;
   };
 
   const contactIdentity = (c: Contact) => {
@@ -347,7 +339,27 @@ export default function FindContactPage() {
     try {
       const raw = localStorage.getItem(getOutreachDraftsKey(userKey));
       const parsed = raw ? JSON.parse(raw) : null;
-      if (parsed && typeof parsed === "object") setOutreachDrafts(parsed);
+      if (parsed && typeof parsed === "object") {
+        // Strip em dashes from saved LinkedIn notes for consistency.
+        const next: Record<string, OutreachDraft> = {};
+        let changed = false;
+        for (const [k, v] of Object.entries(parsed)) {
+          const obj = (v as any) || {};
+          const noteRaw = String(obj.linkedin_note || "");
+          const note = trimToChars(noteRaw.replaceAll("—", "-"), LINKEDIN_NOTE_LIMIT);
+          if (note !== noteRaw) changed = true;
+          next[k] = {
+            linkedin_note: note,
+            updated_at: String(obj.updated_at || new Date().toISOString()),
+          };
+        }
+        setOutreachDrafts(next);
+        if (changed) {
+          try {
+            localStorage.setItem(getOutreachDraftsKey(userKey), JSON.stringify(next));
+          } catch {}
+        }
+      }
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userKey]);
@@ -527,10 +539,16 @@ export default function FindContactPage() {
 
   // Keep an "active" contact for drafting when selection changes.
   useEffect(() => {
+    // Drafts should follow the current search results first (so notes update when you switch companies).
+    const selectedInResults = contacts.filter((c) => selectedContacts.includes(c.id));
     const chosen =
-      (savedVerified && savedVerified.length > 0)
-        ? savedVerified
-        : contacts.filter((c) => selectedContacts.includes(c.id));
+      selectedInResults.length > 0
+        ? selectedInResults
+        : (contacts && contacts.length > 0)
+          ? contacts
+          : (savedVerified && savedVerified.length > 0)
+            ? savedVerified
+            : [];
     const cur = String(activeDraftContactId || "").trim();
     const nextActive =
       cur && chosen.some((c) => c.id === cur)
@@ -587,7 +605,7 @@ export default function FindContactPage() {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Decision Makers</h1>
             <p className="text-white/70">
-              Select a contact to reach out via email or LinkedIn. We’ll generate a short LinkedIn request note (≤300 chars) and a longer email draft.
+              Select a contact to reach out via LinkedIn. We’ll generate a short LinkedIn request note (≤200 chars). Email drafting happens later.
             </p>
             {buildStamp ? (
               <div className="mt-2 text-[11px] text-white/40 font-mono">{buildStamp}</div>
@@ -759,12 +777,16 @@ export default function FindContactPage() {
 
               {/* Outreach drafts (auto-generated) */}
               {(() => {
+                const selectedInResults = contacts.filter((c) => selectedContacts.includes(c.id));
                 const chosen =
-                  (savedVerified && savedVerified.length > 0)
-                    ? savedVerified
-                    : contacts.filter((c) => selectedContacts.includes(c.id));
-                const active =
-                  chosen.find((c) => c.id === activeDraftContactId) || chosen?.[0] || null;
+                  selectedInResults.length > 0
+                    ? selectedInResults
+                    : (contacts && contacts.length > 0)
+                      ? contacts
+                      : (savedVerified && savedVerified.length > 0)
+                        ? savedVerified
+                        : [];
+                const active = getContactById(activeDraftContactId) || chosen?.[0] || null;
                 if (!active) return null;
                 const draft = outreachDrafts?.[active.id] || null;
                 if (!draft) return null;
@@ -775,26 +797,41 @@ export default function FindContactPage() {
                       <div>
                         <div className="text-sm font-bold text-white">Outreach drafts</div>
                         <div className="text-xs text-white/60">
-                          LinkedIn connection request notes are capped at <span className="font-semibold">300 characters</span>. Email can be longer.
+                          LinkedIn connection request notes are capped at <span className="font-semibold">200 characters</span>.
                         </div>
                       </div>
                       {chosen.length > 1 ? (
-                        <select
-                          value={activeDraftContactId}
-                          onChange={(e) => {
-                            const nextId = String(e.target.value || "");
-                            setActiveDraftContactId(nextId);
-                            const nextContact = chosen.find((c) => c.id === nextId);
-                            if (nextContact) ensureDraftForContact(nextContact);
-                          }}
-                          className="bg-white/5 border border-white/10 text-white text-xs rounded-md px-2 py-1"
-                        >
-                          {chosen.map((c) => (
-                            <option key={`draft_${c.id}`} value={c.id}>
-                              {c.name} — {formatTitleCase(c.title)}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="max-w-[420px]">
+                          <div className="text-[11px] text-white/50 mb-1">Draft for</div>
+                          <div className="flex flex-wrap gap-2 justify-end">
+                            {chosen.slice(0, 10).map((c) => {
+                              const isActive = String(activeDraftContactId || "") === String(c.id || "");
+                              return (
+                                <button
+                                  key={`draft_pill_${c.id}`}
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveDraftContactId(String(c.id || ""));
+                                    ensureDraftForContact(c);
+                                  }}
+                                  title={`${c.name} — ${formatTitleCase(c.title)}`}
+                                  className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors ${
+                                    isActive
+                                      ? "brand-gradient text-black border-white/20"
+                                      : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white"
+                                  }`}
+                                >
+                                  {String(c.name || "").split(/\s+/)[0] || c.name}
+                                </button>
+                              );
+                            })}
+                            {chosen.length > 10 ? (
+                              <div className="px-2 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs text-white/60">
+                                +{chosen.length - 10} more
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
                       ) : null}
                     </div>
 
@@ -810,7 +847,7 @@ export default function FindContactPage() {
                         </div>
                         {!active.linkedin_url ? (
                           <div className="mb-2 text-xs text-amber-200">
-                            Missing LinkedIn URL for this contact — you can still copy the note, but you’ll need to find their profile manually.
+                            Missing LinkedIn URL for this contact - you can still copy the note, but you’ll need to find their profile manually.
                           </div>
                         ) : null}
                         <textarea
@@ -826,33 +863,19 @@ export default function FindContactPage() {
                           placeholder="Write a short connection request note…"
                         />
                         <div className="mt-2 text-[11px] text-white/50">
-                          Tip: Mention the specific pain point + 1 proof point; ask to connect (not to “chat”).
+                          Tip: This LinkedIn request note is a strong first step to request a connect, introduce yourself, and win the numbers game.
+                          <br />
+                          Email will be drafted in the next steps as you build more context.
+                          <div className="mt-2">
+                            How to send:
+                            <ol className="mt-1 list-decimal list-inside space-y-0.5">
+                              <li>Click the contact’s “View LinkedIn Profile” link below.</li>
+                              <li>Click <span className="font-semibold text-white/70">Connect</span>.</li>
+                              <li>Click <span className="font-semibold text-white/70">Add a note</span>.</li>
+                              <li>Copy/paste this note into LinkedIn, then send.</li>
+                            </ol>
+                          </div>
                         </div>
-                      </div>
-
-                      <div className="rounded-md border border-white/10 bg-white/5 p-3">
-                        <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Email draft</div>
-                        <input
-                          value={draft.email_subject}
-                          onChange={(e) => {
-                            const next = { ...(outreachDrafts || {}) };
-                            next[active.id] = { ...draft, email_subject: e.target.value, updated_at: new Date().toISOString() };
-                            persistOutreachDrafts(next);
-                          }}
-                          className="w-full bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm text-white placeholder:text-white/40 mb-2"
-                          placeholder="Subject"
-                        />
-                        <textarea
-                          value={draft.email_body}
-                          onChange={(e) => {
-                            const next = { ...(outreachDrafts || {}) };
-                            next[active.id] = { ...draft, email_body: e.target.value, updated_at: new Date().toISOString() };
-                            persistOutreachDrafts(next);
-                          }}
-                          rows={8}
-                          className="w-full bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm text-white placeholder:text-white/40"
-                          placeholder="Write a longer email…"
-                        />
                       </div>
                     </div>
                   </div>

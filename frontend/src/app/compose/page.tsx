@@ -65,9 +65,11 @@ export default function ComposePage() {
   const [helper, setHelper] = useState<ComposeResponse["helper"] | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [previewWithValues, setPreviewWithValues] = useState(true);
   const [variableOverrides, setVariableOverrides] = useState<Record<string, string>>({});
   const [buildStamp, setBuildStamp] = useState<string>("");
+  const [canUseAiGenerate, setCanUseAiGenerate] = useState<boolean>(true);
 
   // Offer Library (from Offer step)
   const [offerLibrary, setOfferLibrary] = useState<Offer[]>([]);
@@ -265,6 +267,29 @@ export default function ComposePage() {
     const recentNews = String(research?.recent_news?.[0]?.summary || "");
     const contactBio = String(research?.contact_bios?.[0]?.bio || `${firstContact?.title || "Decision maker"} at ${jdCompany}`.trim());
 
+    const personalizationAngle = (() => {
+      try {
+        const secs = research?.background_report_sections;
+        if (Array.isArray(secs) && secs.length) {
+          const pick =
+            secs.find((s: any) => String(s?.heading || "").toLowerCase().includes("personal")) ||
+            secs.find((s: any) => String(s?.heading || "").toLowerCase().includes("priorit")) ||
+            secs.find((s: any) => String(s?.heading || "").toLowerCase().includes("initiativ")) ||
+            secs[0];
+          const body = String(pick?.body || "").trim();
+          if (body) {
+            const firstSentence = (body.split(/(?<=[.!?])\s+/)[0] || "").trim();
+            const cleaned = firstSentence.length >= 40 ? firstSentence : body.slice(0, 160).trim();
+            return cleaned.slice(0, 180);
+          }
+        }
+      } catch {}
+      // Best-effort fallback: short, non-fluffy angle from available signals.
+      if (recentNews) return recentNews.slice(0, 160);
+      if (companySummary) return companySummary.slice(0, 160);
+      return "";
+    })();
+
     const lastOffer = Array.isArray(createdOffers) && createdOffers.length ? createdOffers[createdOffers.length - 1] : null;
     const offerTitle = String(lastOffer?.title || "");
     const offerContent = String(lastOffer?.content || "");
@@ -277,12 +302,14 @@ export default function ComposePage() {
       { name: "{{first_name}}", value: firstName, description: "Contact's first name" },
       { name: "{{job_title}}", value: jdTitle, description: "Target job title" },
       { name: "{{company_name}}", value: jdCompany, description: "Target company name" },
+      { name: "{{contact_title}}", value: String(firstContact?.title || ""), description: "Contact's title (best effort)" },
       { name: "{{painpoint_1}}", value: painpoint1, description: "First pain point / business challenge" },
       { name: "{{solution_1}}", value: sol1, description: "Your solution to challenge 1" },
       { name: "{{metric_1}}", value: metric1, description: "Key metric for solution 1" },
       { name: "{{company_summary}}", value: companySummary || `${jdCompany} is a growing enterprise software company focused on onboarding, retention, and analytics.`, description: "Company overview" },
       { name: "{{recent_news}}", value: recentNews || `${jdCompany} recently expanded its product roadmap and partnerships to accelerate customer onboarding.`, description: "Recent company news" },
       { name: "{{contact_bio}}", value: contactBio || `${firstName} is a decision maker at ${jdCompany}.`, description: "Contact's background" },
+      { name: "{{personalization_angle}}", value: personalizationAngle, description: "A short personalization angle from research (1 sentence)" },
       { name: "{{offer_title}}", value: offerTitle, description: "Offer title (from Offer step)" },
       { name: "{{offer_snippet}}", value: offerSnippet, description: "Short offer excerpt (reword into 1 sentence)" },
       { name: "{{work_link}}", value: offerUrl, description: "Portfolio/Work Link (URL) (from Offer step)" },
@@ -337,10 +364,10 @@ export default function ComposePage() {
     // Users can refine with AI later, but should always have a reasonable first draft.
     const subject =
       toneToUse === "recruiter"
-        ? "{{company_name}} — {{job_title}} (quick question)"
+        ? "{{company_name}} - {{job_title}} (quick question)"
         : toneToUse === "exec"
-          ? "{{company_name}} — {{painpoint_1}} idea"
-          : "{{job_title}} at {{company_name}} — quick idea";
+          ? "{{company_name}} - {{painpoint_1}} idea"
+          : "{{job_title}} at {{company_name}} - quick idea";
 
     const linkIntro =
       toneToUse === "recruiter"
@@ -486,8 +513,10 @@ export default function ComposePage() {
           localStorage.setItem("rf_user", JSON.stringify(me.user));
           regenerateFromEditedVariables();
         }
+        setCanUseAiGenerate(true);
       } catch {
-        // ignore
+        // If not authenticated, keep the Compose UX usable (local draft still works).
+        setCanUseAiGenerate(false);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -509,8 +538,19 @@ export default function ComposePage() {
   }, [emailTemplate, offerTone, selectedTone, toneOverrideEnabled, offerSnippetOverride, currentVariables]);
 
   const generateEmail = async () => {
+    // If AI generation isn't available (no auth cookie), just regenerate the local draft.
+    if (!canUseAiGenerate) {
+      regenerateFromEditedVariables();
+      setHelper(null);
+      setError(null);
+      setNotice("Draft regenerated locally. Log in to enable AI regeneration.");
+      window.setTimeout(() => setNotice(null), 2400);
+      return;
+    }
+
     setIsGenerating(true);
     setError(null);
+    setNotice(null);
 
     try {
       const variables = currentVariables;
@@ -552,26 +592,48 @@ export default function ComposePage() {
         throw new Error(res.message || "Failed to generate email.");
       }
 
+      const sanitizeNoEmDash = (s: string) => String(s || "").replaceAll("—", "-").replaceAll("–", "-");
+      const sanitizedHelper = res.helper
+        ? {
+            ...res.helper,
+            variants: Array.isArray(res.helper.variants)
+              ? res.helper.variants.map((v) => ({
+                  ...v,
+                  subject: sanitizeNoEmDash(String(v?.subject || "")),
+                  body: sanitizeNoEmDash(String(v?.body || "")),
+                }))
+              : res.helper.variants,
+          }
+        : null;
+
       // If the user wants simplified copy, use the server-provided simplified_body.
       const tpl = simplifyLanguage
         ? { ...res.email_template, body: res.email_template.simplified_body }
         : res.email_template;
 
-      setEmailTemplate(tpl);
-      setHelper(res.helper || null);
-      if (res.helper) {
-        localStorage.setItem("compose_helper", JSON.stringify(res.helper));
+      const sanitizedTpl: EmailTemplate = {
+        ...tpl,
+        subject: sanitizeNoEmDash(String(tpl.subject || "")),
+        body: sanitizeNoEmDash(String(tpl.body || "")),
+        simplified_body: sanitizeNoEmDash(String(tpl.simplified_body || "")),
+      };
+
+      setEmailTemplate(sanitizedTpl);
+      setHelper(sanitizedHelper);
+      if (sanitizedHelper) {
+        localStorage.setItem("compose_helper", JSON.stringify(sanitizedHelper));
       }
     } catch (err: any) {
       const msg = String(err?.message || err || "").trim();
-      // If auth expired/missing, do NOT bounce the user out mid-flow.
-      // Show a clear error and let them decide to log in again.
+      // If auth expired/missing, do NOT show a scary error if we can still produce a local draft.
       if (msg.includes(" 401 ") || msg.includes("Not authenticated")) {
-        setError("Your session looks expired. Please refresh the page or log in again, then retry Generate Email.");
+        setCanUseAiGenerate(false);
         // Always keep a usable local draft even if the backend call fails.
         try {
           setEmailTemplate((prev) => prev || buildFallback());
         } catch {}
+        setNotice("AI regeneration is unavailable (not logged in). Showing the local draft.");
+        window.setTimeout(() => setNotice(null), 2600);
         return;
       }
       // Always show a usable variable-based template (even if backend is down)
@@ -942,26 +1004,49 @@ export default function ComposePage() {
             )}
           </div>
 
-          {/* Generate Email Button */}
-          <div className="text-center mb-8">
-            <button
-              onClick={generateEmail}
-              disabled={isGenerating}
-              className="bg-blue-600 text-white px-8 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-            >
-              {isGenerating ? "Generating Email..." : "Generate Email"}
-            </button>
-          </div>
-
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-white/10 rounded-md">
-              <p className="text-red-200">{error}</p>
+          {notice ? (
+            <div className="mb-6 rounded-md border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
+              {notice}
             </div>
-          )}
+          ) : null}
+
+          {error ? (
+            <div className="mb-6 rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+              {error}
+            </div>
+          ) : null}
 
           {/* Email Template */}
           {emailTemplate && (
             <div className="space-y-6">
+              {/* Regenerate controls (optional, non-obtrusive) */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-lg border border-white/10 bg-black/20 p-4">
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-white">Draft controls</div>
+                  <div className="text-xs text-white/60">
+                    You already have a usable draft. Regenerate only if you want a new angle.
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={regenerateFromEditedVariables}
+                    className="px-4 py-2 rounded-md bg-white/10 border border-white/15 text-white text-sm font-semibold hover:bg-white/15"
+                  >
+                    Regenerate draft
+                  </button>
+                  <button
+                    type="button"
+                    onClick={generateEmail}
+                    disabled={isGenerating || !canUseAiGenerate}
+                    className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
+                    title={canUseAiGenerate ? "Regenerate using AI" : "Log in to enable AI regeneration"}
+                  >
+                    {isGenerating ? "Regenerating..." : "Regenerate with AI"}
+                  </button>
+                </div>
+              </div>
+
               {/* Jargon Clarity Toggle */}
               <div className="flex items-center space-x-4">
                 <label className="flex items-center space-x-2 cursor-pointer">

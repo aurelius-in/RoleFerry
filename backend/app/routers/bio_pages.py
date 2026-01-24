@@ -7,7 +7,7 @@ import re
 import uuid
 from datetime import datetime, timezone
 
-from ..auth import require_current_user
+from ..auth import get_current_user_optional
 from ..clients.openai_client import get_openai_client, extract_json_from_text
 from ..storage import store
 
@@ -36,6 +36,10 @@ class BioPageDraft(BaseModel):
     headline: str = ""
     subheadline: str = ""
 
+    # image
+    # May be a public URL or a data URL (demo/localStorage). Stored with the draft at publish time.
+    profile_image_url: str = ""
+
     # CTAs
     calendly_url: str = ""
     linkedin_url: str = ""
@@ -60,6 +64,7 @@ class GenerateBioPageRequest(BaseModel):
     selected_job_description: Optional[Dict[str, Any]] = None
     painpoint_matches: Optional[List[Dict[str, Any]]] = None
     offer_draft: Optional[Dict[str, Any]] = None
+    profile_image_url: Optional[str] = None
     theme: Optional[BioPageTheme] = None
 
 
@@ -92,6 +97,7 @@ def _build_deterministic_draft(
     theme: BioPageTheme | None,
     display_name: str,
     linkedin_url: str,
+    profile_image_url: str = "",
 ) -> BioPageDraft:
     rx = resume_extract or {}
     jd = selected_job_description or {}
@@ -148,6 +154,7 @@ def _build_deterministic_draft(
         display_name=display_name,
         headline=headline,
         subheadline=subheadline,
+        profile_image_url=profile_image_url or "",
         calendly_url="",  # filled by profile vars later (or user)
         linkedin_url=linkedin_url or "",
         proof_points=proof[:6],
@@ -161,11 +168,18 @@ def _build_deterministic_draft(
 @router.post("/bio-pages/generate", response_model=GenerateBioPageResponse)
 async def generate_bio_page(payload: GenerateBioPageRequest, http_request: Request):
     try:
-        user = await require_current_user(http_request)
-        user_id = user.id
+        # Bio pages should work in demo mode without auth. If logged in, we’ll personalize from the user record.
+        user = await get_current_user_optional(http_request)
+        user_id = user.id if user else "anon"
 
-        display_name = str(getattr(user, "first_name", "") or "").strip() or str(getattr(user, "email", "User") or "User")
-        linkedin_url = str(getattr(user, "linkedin_url", "") or "").strip()
+        display_name = "User"
+        linkedin_url = ""
+        if user:
+            display_name = (
+                str(getattr(user, "first_name", "") or "").strip()
+                or str(getattr(user, "email", "User") or "User")
+            )
+            linkedin_url = str(getattr(user, "linkedin_url", "") or "").strip()
 
         deterministic = _build_deterministic_draft(
             resume_extract=payload.resume_extract,
@@ -175,6 +189,7 @@ async def generate_bio_page(payload: GenerateBioPageRequest, http_request: Reque
             theme=payload.theme,
             display_name=display_name,
             linkedin_url=linkedin_url,
+            profile_image_url=str(payload.profile_image_url or "").strip(),
         )
 
         client = get_openai_client()
@@ -251,14 +266,19 @@ async def generate_bio_page(payload: GenerateBioPageRequest, http_request: Reque
 @router.post("/bio-pages/publish", response_model=PublishBioPageResponse)
 async def publish_bio_page(payload: PublishBioPageRequest, http_request: Request):
     try:
-        user = await require_current_user(http_request)
-        user_id = user.id
+        user = await get_current_user_optional(http_request)
+        user_id = user.id if user else "anon"
 
         # Ensure storage exists
         if not hasattr(store, "bio_pages_by_slug"):
             store.bio_pages_by_slug = {}  # type: ignore[attr-defined]
 
-        slug_base = _safe_slug(payload.slug_hint or payload.draft.display_name or str(getattr(user, "email", "")) or "bio")
+        slug_base = _safe_slug(
+            payload.slug_hint
+            or payload.draft.display_name
+            or (str(getattr(user, "email", "")) if user else "")
+            or "bio"
+        )
         slug = slug_base
         # Uniqueness
         while slug in store.bio_pages_by_slug:  # type: ignore[attr-defined]
