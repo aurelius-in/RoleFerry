@@ -33,42 +33,11 @@ export default function BioPageStep() {
   const [draft, setDraft] = useState<BioPageDraft | null>(null);
   const [busy, setBusy] = useState<"generate" | "publish" | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
-
-  const resumeExtract = useMemo(() => {
-    try {
-      const raw = localStorage.getItem("resume_extract");
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  }, []);
-
-  const selectedJob = useMemo(() => {
-    try {
-      const raw = localStorage.getItem("selected_job_description");
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  }, []);
-
-  const painpointMatches = useMemo(() => {
-    try {
-      const raw = localStorage.getItem("painpoint_matches");
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  }, []);
-
-  const offerDraft = useMemo(() => {
-    try {
-      const raw = localStorage.getItem("offer_draft");
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  }, []);
+  const [resumeExtract, setResumeExtract] = useState<any>(null);
+  const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [painpointMatches, setPainpointMatches] = useState<any>(null);
+  const [offerDraft, setOfferDraft] = useState<any>(null);
+  const [bioUrl, setBioUrl] = useState<string>("");
 
   useEffect(() => {
     // Load cached draft if available for quick UX
@@ -76,6 +45,43 @@ export default function BioPageStep() {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (raw) setDraft(JSON.parse(raw));
     } catch {}
+  }, []);
+
+  useEffect(() => {
+    // Load dependencies from localStorage (client-only)
+    try {
+      const rawResume = localStorage.getItem("resume_extract");
+      setResumeExtract(rawResume ? JSON.parse(rawResume) : null);
+    } catch {
+      setResumeExtract(null);
+    }
+
+    try {
+      const rawJob = localStorage.getItem("selected_job_description");
+      setSelectedJob(rawJob ? JSON.parse(rawJob) : null);
+    } catch {
+      setSelectedJob(null);
+    }
+
+    try {
+      const rawMatches = localStorage.getItem("painpoint_matches");
+      setPainpointMatches(rawMatches ? JSON.parse(rawMatches) : null);
+    } catch {
+      setPainpointMatches(null);
+    }
+
+    try {
+      const rawOffer = localStorage.getItem("offer_draft");
+      setOfferDraft(rawOffer ? JSON.parse(rawOffer) : null);
+    } catch {
+      setOfferDraft(null);
+    }
+
+    try {
+      setBioUrl(safeStr(localStorage.getItem(BIO_URL_KEY)));
+    } catch {
+      setBioUrl("");
+    }
   }, []);
 
   const generate = async () => {
@@ -113,6 +119,7 @@ export default function BioPageStep() {
       if (url) {
         localStorage.setItem(PUBLISHED_KEY, JSON.stringify(res));
         localStorage.setItem(BIO_URL_KEY, url);
+        setBioUrl(url);
       }
       setMsg(url ? "Published." : "Published (no URL returned).");
     } catch (e: any) {
@@ -124,14 +131,13 @@ export default function BioPageStep() {
   };
 
   const copyLink = async () => {
-    const url = safeStr(localStorage.getItem(BIO_URL_KEY));
-    if (!url) {
+    if (!bioUrl) {
       setMsg("Publish first to get a link.");
       setTimeout(() => setMsg(null), 2500);
       return;
     }
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(bioUrl);
       setMsg("Copied link.");
     } catch {
       setMsg("Couldn’t copy automatically. (Clipboard blocked)");
@@ -141,11 +147,10 @@ export default function BioPageStep() {
   };
 
   const previewHref = useMemo(() => {
-    const url = safeStr(localStorage.getItem(BIO_URL_KEY));
-    if (url) return url;
+    if (bioUrl) return bioUrl;
     // If not published, we can still preview using a local-only route in this step (below)
     return "";
-  }, [draft]);
+  }, [bioUrl, draft]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 to-blue-950 text-white py-8">

@@ -36,6 +36,88 @@ interface ResumeExtract {
   }>;
 }
 
+function _asString(v: any): string {
+  if (v === null || v === undefined) return "";
+  return String(v);
+}
+
+function _asBool(v: any): boolean {
+  return v === true || v === "true" || v === 1 || v === "1";
+}
+
+function coerceResumeExtract(raw: any): ResumeExtract | null {
+  if (!raw || typeof raw !== "object") return null;
+
+  const positionsRaw =
+    raw.positions ?? raw.work_experience ?? raw.workExperience ?? raw.experience ?? [];
+  const keyMetricsRaw = raw.keyMetrics ?? raw.key_metrics ?? raw.keyMetrics ?? [];
+  const skillsRaw = raw.skills ?? [];
+  const businessChallengesRaw = raw.businessChallenges ?? raw.business_challenges ?? [];
+  const accomplishmentsRaw = raw.accomplishments ?? [];
+  const tenureRaw = raw.tenure ?? [];
+  const educationRaw = raw.education ?? raw.education_history ?? [];
+
+  const positions = Array.isArray(positionsRaw)
+    ? positionsRaw.map((p: any) => ({
+        company: _asString(p?.company),
+        title: _asString(p?.title),
+        startDate: _asString(p?.startDate ?? p?.start_date),
+        endDate: _asString(p?.endDate ?? p?.end_date),
+        current: _asBool(p?.current),
+        description: _asString(p?.description ?? p?.summary),
+      }))
+    : [];
+
+  const keyMetrics = Array.isArray(keyMetricsRaw)
+    ? keyMetricsRaw.map((m: any) => ({
+        metric: _asString(m?.metric),
+        value: _asString(m?.value),
+        context: _asString(m?.context),
+      }))
+    : [];
+
+  const skills = Array.isArray(skillsRaw)
+    ? skillsRaw.map((s: any) => _asString(s).trim()).filter(Boolean)
+    : [];
+
+  const businessChallenges = Array.isArray(businessChallengesRaw)
+    ? businessChallengesRaw.map((s: any) => _asString(s).trim()).filter(Boolean)
+    : [];
+
+  const accomplishments = Array.isArray(accomplishmentsRaw)
+    ? accomplishmentsRaw.map((s: any) => _asString(s).trim()).filter(Boolean)
+    : [];
+
+  const tenure = Array.isArray(tenureRaw)
+    ? tenureRaw.map((t: any) => ({
+        company: _asString(t?.company),
+        duration: _asString(t?.duration),
+        role: _asString(t?.role),
+      }))
+    : [];
+
+  const education = Array.isArray(educationRaw)
+    ? educationRaw.map((e: any) => ({
+        school: _asString(e?.school),
+        degree: _asString(e?.degree),
+        field: _asString(e?.field),
+        startYear: _asString(e?.startYear ?? e?.start_year),
+        endYear: _asString(e?.endYear ?? e?.end_year),
+        notes: _asString(e?.notes),
+      }))
+    : [];
+
+  return {
+    positions,
+    keyMetrics,
+    skills,
+    businessChallenges,
+    accomplishments,
+    tenure,
+    education,
+  };
+}
+
 export default function ResumePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -102,7 +184,11 @@ export default function ResumePage() {
     // Load cached resume extract (if any) so the UI reflects what's powering downstream steps.
     try {
       const raw = localStorage.getItem("resume_extract");
-      if (raw) setExtract(JSON.parse(raw));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const coerced = coerceResumeExtract(parsed);
+        if (coerced) setExtract(coerced);
+      }
       const metaRaw = localStorage.getItem("resume_extract_meta");
       if (metaRaw) {
         const meta = JSON.parse(metaRaw);
@@ -217,8 +303,8 @@ export default function ResumePage() {
 
   const handleSave = () => {
     if (extract) {
-      localStorage.setItem('resume_extract', JSON.stringify(extract));
-      router.push('/personality');
+      localStorage.setItem("resume_extract", JSON.stringify(extract));
+      router.push("/personality");
     }
   };
 

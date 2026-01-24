@@ -1,0 +1,1370 @@
+
+Transcript
+There we go.
+There we go.
+Sorry, I was getting the transcribing going.
+So what was that
+What’s that?
+Oh, your go ahead and share your screen so I can see what you’re talking about.
+Oh, I’ll share my screen. Yeah.
+Window
+Okay.
+There you go.
+Not share my screen.
+I see your screen.
+You see it?
+Yeah, am I still? It’s because I’m still sharing. Oh, I didn’t know you could share two screens at this time. All right, that’s fine. So now you’re sharing and I’m not, which is what I wanted.
+Oh, okay.
+Yeah. Before, I was sharing and you were sharing, so. I guess two people can share.
+All right I don’t think it lets you do that Only one person can share at a time. Anyways, you were saying so I already told AI to move those job boards.
+It’s already working on that But we can move on. Come back and check it.
+Yeah. Yeah. I think that Google Career, Google Jobs would be a good option.
+All these companies, and
+I think companies specific shouldn’t be here.
+Shouldn’t.
+Because this is just specific companies.
+Specific companies.
+Is it Okay.
+Yeah.
+So for tech jobs, what do you want to see under tech jobs?
+The tech jobs I want to see more of a focus. So I can see here built-in is good, dice is good, job board is good.
+Also,
+I like tech bench. Tech bench sounds interesting. I’ll just check this out here.
+That sounds more what’s the tech companies? I never used it before. I can’t really say that I stand by it or anything, but.
+But it’s the right kind of thing. You’re looking for general job boards, not specific companies.
+Yeah, you’re right You don’t really want to focus on one company. But we could have a fourth column for that since those are big companies. We could call it Fortune we could just say top tech companies, top tech companies because they offer tens of thousands of jobs or whatever. Which might be a smaller number here in a couple of years, but for now, it’s they still are hiring thousands of people, so
+we may as well have them on our list.
+Yeah. I just don’t like that it’s incorrect.
+Click to incorrect.
+Yeah. It shouldn’t be incorrect here.
+It would be incorrect. You know what I’m saying?
+Okay. So now there’s going to be four columns. Is there room for four columns? Let’s look at it.
+Maybe we should just keep it three. I don’t know.
+No, I mean, four might be fine. I just want to look at the screen and see if it’s going to be it’s going to fit okay.
+Oh, four builds should be general.
+Let’s see. Jobs.
+So yeah, I think there’s room for four columns. The real skinny.
+Most of the links are just one word. So yeah, we can fit four columns under the websites to find job descriptions. But under tech jobs, we want general tech jobs, not one company. Right? By the way, Google Jobs and Google Careers are two different things. Right? So we could.
+Yeah. Yeah.
+So Google Careers would go under top employers. How about that? They don’t even have to be tech jobs. They could be top employers.
+Yeah. Top employers. It’s just not an accurate heading. This is the main thing.
+So we’ll keep the tech jobs as the general ones, like Dice and what was the other one?
+Dice.
+You have built-in is general.
+We got built-in job board.
+You can also do still hiring today.
+Still hiring today can go under tech jobs. But the other ones like Google Careers, Microsoft Careers, Amazon Jobs, Apple Jobs, Meta, Careers, Netflix Jobs, and Shopify Careers needs to go to another column called top employers. And we should probably add some non-tech companies that are top employers too. But the question is, what industries? So we’re not just going to be helping people with tech jobs find work.
+No. We’re helping people with sales and marketing and.
+So top marketing hirers, top sales hirers, hirers?
+Yeah. Definitely data analytics.
+That’s still tech, I think.
+Definitely data analytics. Operations.
+Project managers, product managers.
+Okay. But that’s still tech?
+Not necessarily. I mean, product managers could be for a different product that isn’t tech. I suppose. So anyways, we got our top companies, and we don’t just want tech companies under the top companies because then it’s going to seem redundant with a tech jobs list. So for the tech jobs, we want more generalized tech job boards that aren’t company-specific. But for the company-specific job boards, we don’t want to move that to the top careers.
+Yeah. Function board would also be in the tech careers one.
+What’s it called
+Function board.
+Function board.
+What was that one that was real popular that I kept hearing about? I never really used it. Well, maybe I did. I don’t know. I wonder if I have some stuff.
+Function is good
+I wonder if I have stuff on my phone. Let’s see. Jobs.
+I think Function is really good.
+Function is general.
+There was one that was for freelance kind of jobs.
+Is that a website freelance jobs or something like that?
+Freelance or something
+Might be, yeah. Is that already on here
+No. Freelance is kind of a freelancing job.
+Freelance is kind of
+Yeah. Should we have any of that kind of stuff on there?
+No. No.
+It’s different altogether.
+All right So we don’t want to put freelancer stuff because we don’t really have the infrastructure to handle helping them with that. We’re designed to help them with resume-type jobs and stuff.
+Yeah. Not freelancer jobs. Actual salary jobs, not but that’s like your own business, really. That’s like having your own business.
+Yeah. Fair enough That’s what they’re trying to get out of. All right. And then so we have our tech jobs, which are not going to be company-specific, but bigger more tech job boards. And then there’s going to be a fourth column now that’s going to be top hirers or top employers, I guess, is a more familiar word. I’m not even sure hirers is a word, but.
+You mean it’s really not even top employers. It’s who you’re really doing is just you’re really just looking at the employee side, and you’re saying these are the biggest companies by revenue and employee size.
+Yeah.
+I just need a heading that makes it easy to kind of understand. So top one.
+Top employers.
+If you have something better, let me know
+General job boards, startup and remote, tech jobs.
+We’ll let the AI come up with a good one. It usually comes up with good stuff. So come up with a heading for the fourth column that’s company-specific that’s got the excuse built in where like, “Why are we picking these 15 companies?” is the ones to offer jobs and not others.
+Yeah. I would say the metric here is really company size, employee size. And revenue. That’s really if you’re looking at Amazon, Apple, Meta, Netflix, the reason why I picked those is because those have the most revenue and the most employees.
+Yeah.
+That’s the metric
+Great.
+All righty.
+That’s it So I’m going to start trying to put more job in here now.
+Okay. Oh, yeah. Copy and paste. Some URLs, some text, and see how it’s parsing and kind of curious.
+And we’ll give it some feedback. I’m going to need the same text that you pasted in the chat so that I can copy and paste it and share it with Cursor. And tell it, “I pasted this, and this is what was parsed,” and I’ll take a screenshot and show it. And then I’ll be like, “Here are the issues. Fix them.” And use AI to fix them this time so we’re not just trying to parse. Parsing without AI is kind of hard. Because what it’s doing is it’s trying to give it conditions like, “Okay, if it has the word medical, then that goes under this category.” And it’s really kind of tedious and eventually it gets kind of good if you put enough through there, but it’s a lot of rules. And it’s going to.
+Copy and paste this.
+Copy.
+Copy and paste works better usually.
+My camera’s off
+It’s just in the sense of a lot of it just gets crazy.
+All right. Have a good time.
+That’s what I was asking.
+Okay. Yeah. I had a little break between meetings to talk with Dave.
+You’re fine. I was just asking.
+Okay.
+But I wanted to ask you too, so.
+Yeah. Thanks for asking, but
+yeah, it’s.
+Love you, buddy.
+Love you. Bye.
+All right.
+What are you? But you can just click on that, and this is easy search hard. Just a little bit. Oh, is it working?
+It’s working, yeah. That’s nice.
+Good Good deal. I like how it works, how crazy here today.
+Yeah. I mean, I’m growing my hair a little bit. I’m just going to keep growing it. I’m going to have long hair one day.
+My hair grows. And it’s thinning out a little bit, I think, because it used to be thicker. So I think my hair is thinning. I’m going to start using some Rogaine, I think, before I get any bald spots.
+But I mean, I just noticed when I brush it, it’s like there’s not as much hair. You know what I mean? There’s not bald anything, but I can just tell there’s less.
+And when I wet it it’s kind of lays down before what I’d wet it. I still have to.
+Yeah.
+Anyway sorry I didn’t mean to sidetrack. So we’re looking at.
+So we’re looking at this job screen here. I don’t think it’s changed.
+Oh, required skills is growth. It’s not really required skill.
+Yeah. That’s what I’m saying.
+So let’s screenshot. So copy and paste that into the chat.
+Copy and paste.
+And try to fix it in real time.
+You already copied You don’t have to copy it again. I want to know what you already pasted. So I can put it in the chat. Yeah. Put it in chat. I’ll copy that into the thing.
+And into the AI and all right. So you got that for me. And then let me go to the chat.
+This is challenging. This is not good. And it requires skill.
+Okay.
+Here comes the magic.
+I pasted this into the jobs page.
+And let’s see.
+The screen.
+For what Let’s parse.
+Okay. So let me see the screen of what was parsed real quick.
+So I’m going to screenshot that. Can you go back to your app, Row Ferry app? And I can see how it parsed it. So I can give it a visual example of what we’re criticizing here. Okay.
+Still learning how to use this thing. Because I’ll just zoom in. All right. So leave it there. Let me screenshot. And then okay.
+All right So what are we criticizing on this thing?
+This is challenging.
+The required skills.
+It found no required skills. To parse. Okay. What else?
+This is challenging.
+The best one.
+Required skills.
+Challenges.
+Heading only has one thing listed.
+Parsed.
+Is the recruiter the correct title?
+Yeah. That’s the title of the company name, right?
+Okay. Good.
+It’s not that right now.
+Cool. Any other criticisms about—oh, there’s no requirements.
+Yeah.
+But it has the benefits. It doesn’t have the requirements. There were no requirements.
+Yeah.
+Found to parse. Either.
+Can’t view anything to do better.
+It’s stuff here. I think that’s good.
+Okay. Let’s do another. I fed it that one. So let’s give it another.
+Yeah. All right
+Another, another, another job site probably. Or that’s fine. We can do another one for this one.
+Let’s do this one.
+All right So when you put it in the thing, also send it to me so we can—
+This is a good job description.
+Well, let’s see.
+No, it should pick this up well
+I hope so. But we want it to work with all of them, not just the good ones.
+And sometimes the good ones don’t parse as well as they should. So we need to get it to work either way.
+And also paste it in the chat for me, please.
+Yeah. It’s definitely getting the title and company name right now.
+That’s progress because it was screwing up that company name for a while. I did a whole bunch last night, by the way. Maybe like probably like 15 or something. And I did a lot, maybe 20.
+Yeah. Yeah.
+The company name and the title is definitely coming in correctly.
+Okay. Skills. Okay. Here it is. I can make my screen a little bit smaller so you can get a little bit—
+Okay. Yeah. Give me that.
+Skills.
+Benefits. Requirements. Assess metrics.
+Assess metrics is—yeah. That was helpful. This is challenging.
+All right. So what are we—sorry. Let me see if there’s a result again.
+Benefits.
+So this is challenges. Pretty much all the key responsibilities.
+Yeah.
+The key responsibilities. This is challenges.
+The qualification would be equal to—I’d say the qualifications would be more what they say requirements are here.
+Yeah.
+It’s messing up with the requirements. So the requirements is messing up.
+Requirements should be.
+It’s showing education as a separate bullet.
+Yeah. Requirements should map to qualification.
+And the business challenges should map to the responsibilities.
+Can you go back to that screen so I can—don’t worry about here. It already has that text. I need to look at what was—I’m talking to the AI right now about what’s missing from the thing. So it got the salary. Oh, required skills.
+There should be more required skills found in the job listing I believe. And
+it only shows C. And
+growth. Okay.
+Anything else that stands out? The auto club group is the correct company name. The talent acquisition manager sales is the correct role name.
+Yeah. I mean, like I said, I think the main things are business challenges maps to key responsibilities. Requirements maps to qualifications.
+Salary looks good. Title looks good. Company name looks good. Required skills. Should be extracted from, let’s see,
+required skills should be extracted from.
+Oh, skills.
+That makes sense.
+Yeah.
+It’s working on those last two, and it’s going to do some stuff. So before we paste a bunch more, when it may have already fixed some of the parsing process, let’s move on to another step.
+No stuff
+And if you want, you’re going to have the difficulty to that or whatever.
+Oh, yeah. I think I’m back.
+You think that makes the most sense? Easy stretch and hard?
+Yeah.
+It’s intuitive enough, even if it’s not a perfect thing. I think it’s a—it fits in the brain and a comfortable place. It’s like okay. Even if they think, “I don’t know if I would have put stretch as like the medium.” It’s fine. Makes enough sense. It’s like, I guess, hard’s really hard because stretch is already hard, right?
+Yeah.
+We’re in the gap now.
+All right I like how
+I’m not crazy about the gap analysis.
+I’m not crazy about it
+Let’s talk about that. Let’s talk about what you’re not crazy about.
+I don’t see the benefit.
+Oh, you don’t like the idea of the gap analysis, or you just don’t like how it’s working?
+Well, first of all we wanted to find gaps from the personality test and the jobs.
+Yeah. I like that.
+Use AI to do that.
+To do that creatively because that’s kind of a right-brained thing. Right? Kind of the.
+I like that
+And then what else? So we want to see if they put in their preferences,
+anything that conflicts with the role,
+then that should be a gap. That’s how it was supposed to work.
+I think that looks better.
+So then and then as far as so the personality the jobs and the job preferences,
+yeah, and then the resume. If they are lacking required skills in their resume, that should be a gap too. Use AI to analyze the resume of the personality test. The jobs selected and their job preferences and use and cite which the I guess we have gaps from three different areas, right? And cite resume gaps personality gaps and what was the other one?
+Resume gap preferences.
+Preference gaps. So they know why the gaps are there.
+Yeah. So resume
+yeah, resume experience gaps.
+I’ll put resume gaps. So then yeah, use AI to make this a smart analysis.
+A much smarter and you want it more aesthetic too?
+Yeah.
+Aesthetic. Use a nice icon.
+To represent each of the gap types.
+And we’ll stop there before we get too crazy because it’ll do its own creative stuff.
+All right We can move on to the next thing. That’s in the works.
+That’s a good thing.
+Yeah, yeah. This is probably a better workflow now that we’re at this stage, I think. So we’re going to keep doing it, I think. I think we’ll knock this app out in a reasonable amount of time if we just do 30 minutes every other day or whatever. Whenever we can make time.
+Yeah.
+Get through this thing soon. All right. We can move on to the next step. It’s working on the gap thing.
+Match.
+Yeah. So yeah. How do we feel about this screen? What are the issues we have?
+The numbers are the ones that.
+Okay. What would make it better
+Sound complex problems. Learning skills.
+It’s not actually the pain points should come from the business challenges which the business challenges should be mapped to the job responsibilities.
+Okay. So copy and paste that pain point match for me. And let’s discuss that one with AI and tell it why it sucks. So it can fix it.
+Don’t know why it sucks.
+Well, it’s not sensitive. It doesn’t have feeling. So we can say whatever we want.
+We can even say “How could you This is the stupidest thing I’ve ever seen. You’re the dumbest robot in the world.” Spit in the corner for 10 minutes, and then we’ll talk about what you did.
+Yeah. But it actually worked better that way, I hear.
+No, it doesn’t. It doesn’t. It’s just a distraction.
+I messed around with a lot. It doesn’t help. In fact, sometimes I wonder, it’s charging me more when I do that. It uses more tokens for my cursor, and I use up my tokens faster.
+I might just be paranoid, but it seems like it’s doing that sometimes. How do I get that?
+You have to do tokens more when you’re a natural to it?
+Yeah. I’m like, “How did I just go to 10,000 tokens?” on my cursor. It’s like, “Wait a minute. I was being kind of mean.” And I’m like, “That’s got me at the pocketbook, man. Maybe that’s fine.” I’m sure it’s my imagination, but it’s still kind of like,
+I guess I don’t want to I don’t want to get in the habit of being addicted to anybody, so. Probably don’t want to mistreat my AI too much. All right. So right now, it has oh, and it’s transcribing this. So if it wasn’t already doing it, I just gave it ideas, right?
+Yeah.
+Right now it has pain points of complex problems. As a result, for one of the roles. One of the pain point matches. Okay. Let’s talk about why we don’t like it.
+So I don’t like it because first of all, it’s so abstract and vague that it’s not going to provide any value.
+That’s the first reason. Second reason is I think that it should be a logical flow. Pain point should be connected to the previous page’s what I said pain points should be the business challenges and the business challenges should be the job responsibilities. The job responsibilities, business challenges, pain points.
+And the solution is.
+The solution should come from the resume and it should.
+Related skills.
+It should be the related skills to the.
+Accomplishments.
+Yeah.
+Like accomplishments. What do they call it? Metrics?
+Yeah.
+Your related skills. Experience.
+Put in the resume anything that’s related to the.
+That’s.
+To the skills.
+Related
+The accomplishments. And experiences.
+Directly to the pain point. Even education could be I suppose.
+But not usually. You don’t usually be like, “Hey, John, I have a PhD from Harvard, so I can help you.” But I mean.
+I mean, I just that’s the thing that a lot of the talk to me about. A lot of the talk to me about being arrogant. A lot of people are like, super afraid of advocating for themselves on their resume or on in their candidacy in general. Because they don’t understand arrogance. That’s the number one complaint I get from most people.
+Yeah, but you’re literally going through a stack of resume trying to find the best person. So you better sell yourself a little.
+Yeah. And that’s the craziest thing.
+You’re like, “I’m going to go with this humble guy because he didn’t brag about where he went to school.” In fact, not even sure he did go to school, but seems humble. I like him.
+Yeah.
+Yeah. Not sure if he has any experience, but he’s probably just being humble about it.
+It’s so funny when you say it out loud, but it’s honestly the biggest thing that comes up when I talk to people.
+Yeah. Well, yeah, it’s a little socially obnoxious to go around to your peers and your loved ones to be like, “Guess what I can do?” Or, “Look what I did.” And nobody wants to hear. If I talk about half the stuff I did, it just sounds like I’m lying because I did some crazy shit when I was younger. So yeah, I just kind of don’t talk about it. But when it gets different, when you’re can prove it and you need to compete with 20 other people.
+Yeah.
+In a situation.
+With this job that I have, I remember they were kind of impressed by the fact that I did some I helped the professor at the university. It was a facilitator. So I was able to explain and do some lecturing and stuff. Because they wanted somebody that could explain their work. And even though I was using AI for their take-home assignment, like they told me to, just being able to talk about it, which, of course, GPT was also helping me with. But it’s part of my story. I was like, “Well, the reason I’m able to explain this so well is because I teach it too.” So that was a good narrative for me. It really sold it. I think that’s a clinch for the deal a little bit. So yeah.
+Yeah. You sold them. You sold your skills. The point is this whole thing.
+But it felt very braggy when I said it. The reason I’m so good at this is because I do this for a living. I can explain myself well. They’re like, “All right, you’re hired.” We’ll be calling you back.
+They pretty much told me I was hired during that call They’re like, “Yeah, well, we’ll talk to Dominic. I’m pretty sure this is the last interview you’re going to need to do, but we’ll make sure that Dominic squared away. He’s the VP and blah, blah, blah.” So I’m like, “All right.” Anyways, right now it’s working. We can probably move on to another screen. Unless you want to look at another pain point and criticize that one.
+Yeah.
+You might not need to Let’s see what it does with this criticism because it may have already fixed all the issues. So yeah, I don’t want to waste if we don’t need to. It’s probably already. Let’s see what it does.
+I’m assuming we’re going to contact
+Yeah, let’s move on to the next screen. Let’s see what it does with that.
+All right So this isn’t right.
+It’s like a contact.
+I would say that the writing here should be a little more clear.
+This isn’t making sense. Select a contact to reach out via email.
+Does that make sense to put two instead of one?
+Okay.
+So that’s an easy fix. So right now, it says select a contact and reach out via email.
+But it should say select a contact to reach out to.
+To reach out via email
+Okay. To reach out via email.
+Do you want to say if available or remove that parenthesis, if available?
+Via email. Are we going to send it? The other stuff is not sent out to send out to LinkedIn messages. So I would just say.
+No, we can prepare it. So like.
+But you can copy and paste it into the email.
+We are collecting their LinkedIn addresses. That’s one of the ways. Yeah, I mean, that’s how we’re verifying if we’re actually getting real leads here. You can click on any of their LinkedIn profiles and they should load a real LinkedIn profile. The issue there is if they’re not in your network, it may not even load the screen.
+Right It’s not like they’re connected to Sales Navigator, right? So
+for half of them, we do have real emails. And apparently, it’s actually verifying if it is a real email or not.
+But we’re giving them both. It’s kind of like if you have their LinkedIn and you can access it, then great. But the message is for messages for LinkedIn, since they’re not already contacts,
+and they don’t necessarily have LinkedIn credits, and we don’t want to make that a requirement of using our app unless we do, which might be a good idea if we wanted to really use the app. It might be like, “Look, you’re going to have to connect this to your LinkedIn account.” And be able to use Sales Navigator. But we’re creating extra loops for people to jump through and hoops. So but with a what I can do for a lot of these is since I have a LinkedIn account and it’s I’ve already got thousands of people on there as contacts, usually when I click on one of these guys, I’m able to load their screen and I can send them one of those request contact things. And it’s like however many characters. It’s very few. It’s like one run-on sentence is as much as I could send them, maybe two sentences, right? So we can create that message for them.
+So we have to
+You can send a note to anybody, I think right? There’s no agenda right now.
+It’s all very different though. You have to create different constraints, right?
+Yeah.
+So it’s going to have to the way it’s set up right now is not for a LinkedIn connect message is what I’m trying to say.
+With one prompt right now, I can make it so that it can create so you can click generate short LinkedIn contact note. So that you can and then we can put in a little.
+All right Well, if you’re going to do that, then the LinkedIn connect, it’s a connect request.
+Connect note. Limited to this mini characters and then.
+If.
+Yeah.
+It’s specifically 300 characters.
+That’s the 300 I forget. That sounds about right. You’re sure it’s 300, not 250? It’s 300, right?
+Yes.
+Yeah. I mean, I doubt you. I just want to verify because I don’t remember and I did send a ton of these out. 300 doesn’t sound wrong.
+I just can’t remember myself. Add a note you were there. What did you do?
+And I want to say some bullshit.
+Oh, dude Oh, okay.
+Yeah.
+Request. First, you have to connect. Click connect.
+Yeah. No, I have to it’s just going to connect without the oh, here. Okay. Send a note.
+Add a note. There you go.
+Yeah, 300. 300.
+300 Okay. Good to verify that. Thank you. All right.
+And there should be a 300 limit character 300 character note created for the LinkedIn request. Is there a limit to how many of those you can send? There’s not.
+Yeah.
+There’s not Well, I mean, there’s a limit to how many connection requests you can send, but it’s a big limit. I think it’s several hundred, right?
+No. There’s 100 a week.
+Oh, 100 a week.
+And then that’s.
+I’m sure I’ve sent 100
+And then personal notes, you can only do 10 personal notes out of the 100 in a week.
+This is without any kind of subscription.
+Okay.
+Okay. Well, we’re going to if they want to subscribe or whatever, that’s great. But we’ll at least create the LinkedIn request for them. And they may decide to upgrade their LinkedIn account to send more. But LinkedIn is going to give them the bottleneck, not us. So there should be a 300-character note created for a 300-character limit.
+Yeah. So it should probably be less than that because.
+Yeah, yeah. No, the AI will create something like usually 200 and 90-something characters.
+Yeah.
+There should be a 300-character limit note created for the LinkedIn request message generated. And a longer version created for the emails.
+Yeah.
+Yeah. Because they’re not going to be sending these out to these people as personal messages on LinkedIn because they can’t. So we need for the LinkedIn, it needs to be the 300-character limit. And for the email, it can be significantly longer.
+Yeah.
+And they should probably do both.
+Yeah.
+You can go to I was going to say.
+Oh, we’re going to do emails too. The email is pretty much an email. It’s the same thing.
+But you can’t do emails unless you have premium. You know them or whatever.
+Yeah.
+It depends if I have an email friend.
+Okay. So it’s working on those. Updates for the LinkedIn message and for that verbiage at the top of that page.
+Is there anything else for this screen that you want to work on, or do you want to move on?
+Yeah. I mean, that’s the screen.
+I figured
+So quick search companies from previous steps.
+Okay. So quick search companies of these are the company names.
+Oh, these are working. I don’t think this worked before.
+No Okay.
+And then when you do a search does it actually find information on that company?
+Let’s see.
+Looks like it’s good.
+Well, what’s on the note
+I don’t know.
+Something’s unknown.
+That’s a good question. So there is an un there is text. Unknown.
+And the top right corner of each contact is the email brought on the next part.
+I can’t even see for this one, I can’t tell. Yeah.
+I can’t read it because it’s running over.
+So I have to make sure that
+Can I screenshot that page real quick so I can tell AI that I hate it?
+I used to stop fucking up and being a loser.
+Fuck up. All right.
+Get with it You dumb robot. All right. So it also doesn’t look very professional to have the email extend outside the bounds of the contacts specific card.
+We should probably only do two columns and not three.
+Right
+Yeah. Why is the.
+Because it’s doing three columns. It’s trying to fit three columns in there. After it added that column on the left for the little things it collects. So now it’s squished all of the content. So do so what I’m going to do, do two columns.
+Yeah.
+On the left side, we’re going to have this section here. So we’re going to be here.
+Yeah. When you click stuff, click on one of those dudes. Now verify.
+Now just write them straight for purposes of click verify.
+Click the verify emails above there. You got three. Boom.
+So how much is unknown?
+Oh, oh, that’s why it’s unknown.
+So we could leave it alone and then so we could say valid email. So how about this?
+That’s what we’ll do So for those, we’ll make them not even be there.
+Okay.
+Well, also, it has it under. It has it under. Verification 87, 95, 76.
+Apparently,
+that’s related right There must be some kind of or percentage. Maybe it’s under 80%. It’s valid. Because this is 76% and it’s risky.
+Well, no.
+Oh, yeah. So valid, valid, and then verification percentage. Verification 85, verification 95, 60. So 67 is low.
+Yeah. 76
+Yeah. The confidence that we verified it as 67 is 90. I don’t think confidence is the confidence score doesn’t need to be there. Remove the confidence score.
+But the verification score is useful. I wonder what should the threshold be? 76 is too low?
+Yeah. So I think that the I think we’ll first of all,
+the valid or risky you see that?
+Yeah.
+That’s related to the verification score.
+Yeah. I see that The question is a 76. Right now, it’s calling the 76 one risky.
+It’s fine. We’ll leave it. Whatever threshold it has, it’s probably got some reason for it. And I don’t know.
+Yeah. It sounds like 80% of the threshold. That’s what it sounds like.
+Yeah. That sounds like that. By the way, you could do a whole bunch more. It doesn’t have to be just those three. And I think I made it hopefully, I made it so that you can do other companies and keep collecting your dudes on the left, your dudes and chicks.
+On the left,
+and they should be different companies, not just one company. So check a different company with.
+Yeah.
+Yeah, yeah. Because before, it was just as soon as I switched companies, it would clear the whole thing out. And I’d have to start collecting more contacts. I’m like, “No, I want to be able to contact people from different companies.”
+So let’s try this one.
+And.
+And added it, right? So now I have Blue Force and Ascendion. So good. It didn’t remove them, right? So we still have oh, now we have a couple that are invalid. They have verification 94 for the valid one. I guess 0. So they just couldn’t verify the other ones.
+Yeah. I don’t think I got the confidence there. I don’t know why.
+I already told it to get rid of that. So it’s working on that right now.
+And then so continue, email or LinkedIn outreach. And then that screen hopefully.
+You can’t even research? That’s a little confusing.
+Yeah.
+So there shouldn’t be well, go ahead and click both. Just make sure they go to the same place before we tell it which one we want it to remove if either.
+So background research Okay. That took us to the next button. That was
+what we wanted right now. Go to the other one.
+Okay. It’s the same.
+It’s just confusing.
+That would be one button that moves them to the next screen.
+Yeah.
+There are three. Continue. That’s done.
+Continue. To so the question is, which of those three do you want to keep?
+One on the side.
+Okay.
+So I’m going to take out the top one.
+Remove the one that says continue. Email or LinkedIn. Outreach. And remove which one do you want? The one underneath the save results?
+Or the one at the bottom
+This is cool. I like both of them over here. Down here and in here.
+And do you want to change the name of either of the ones at the bottom?
+Continue research Continue research. No.
+I don’t understand why it says one selected at the bottom.
+Oh, I see.
+I don’t like the one at the bottom. Or at least, I don’t like what it’s doing. As you click more things, it’s saying how many you have selected as if what you have selected has anything to do with the research page.
+Right So can we just remove the one at the bottom?
+I like the continue button on the right there because it’s right next to the back button.
+Okay.
+But maybe just continue to research without it being selected.
+And place it. Behavior and text-wise.
+With the one under the left-hand column. What’s it called?
+Can you scroll down a little bit? Left-hand column. What do we call it? Save the verified contacts.
+So that one won’t have a button. But its button. So that right column won’t have its button. But its button will be moved to where the bottom button was next to the back button.
+Sorry It seems like the least confusing way to explain it to AI. We’ll see. We can move on. Hope for the best with that.
+Yeah, yeah, yeah. We’re doing good. Let me know when you’re out of time.
+We’ll do 6:30.
+Sounds good to me.
+Well, the strange thing is we don’t have anything to click. You don’t even have that option.
+You’ll be in that that’s why I told it to move the button from the left to the bottom and then it should have that behavior.
+Yeah. It should be there no matter if you click or not.
+The current button on the bottom reacts to the items selected. Which it shouldn’t.
+Because the information hopefully being carried to the research screen is the information that was collected on the right column.
+Save verified contacts.
+Section.
+Okay. We can move on I think I gave it enough explanations.
+Also, given the fact that this is a group division,
+why is it giving me a principal engineer?
+That’s probably saved already.
+Why is it giving you a principal engineer?
+Yeah, yeah.
+These are all decision-makers. They’re buyer purchasing procurement person.
+This is decision-makers entirely.
+On the decision-makers. Screen.
+It’s listing principal engineers.
+Listing non-decision-makers.
+Like you sure that’s not a decision-maker?
+There’s no engineer.
+The principal engineer.
+The principal is pretty high up. I mean, I’m an AI solutions architect, but AI software architect, but there’s a principal engineer is above everybody in the department. They probably attend interviews.
+Maybe that just do the other one. Because it’s five options here.
+Buyer purchasing procurement. Definitely not the buyer manager.
+E-commerce executive.
+An e-commerce person. Senior marketing executive.
+It’s not relevant. It has to be relevant to the job title.
+Okay. I’ll say also make sure that AI is used to make these selected individuals relevant decision-makers for the job title being the job title of the app user.
+Fair enough.
+Yeah. Of the job title of the position.
+There you go.
+Okay.
+Moving on That’s being worked on. The robots are working.
+All right What are we going to do All right. Let’s fix this one too. What do we got going on here? So go ahead and click one or more and then start research, I guess.
+Let’s see.
+Yeah. Selected this run. So I do pick one. Start research.
+Let’s try this.
+Saman.
+Yeah, that’s not related So what just happened?
+So there was Okay. So it’s messed up. So let’s see. On the research page,
+the heading of the contacts and the middle of the screen.
+Says,
+“Selected this run.” But if you click start research, it acts on all of them. So the heading is inconsistent with the button page behavior.
+Okay. Then when you scroll down, it has a viewing research for Suman Chahudri. And then do we like the research report? Does it make sense?
+I think it’s saying what it’s supposed to do as opposed to doing it in this one.
+Okay.
+For the generated contact background report.
+There’s a subsection titled Outreach Personalization Angles.
+And it presents the text led with one concrete outcome you can improve in two to three weeks, which does not seem like contact background report. Use AI to be smarter.
+And give me a better report. Use AI, integrate, I should say. That’s what I was getting confused. Integrate AI into this page button operation. To be smarter and give me a better background report. All right. So
+what else do we want to see here?
+Some of it looks heavy plausible.
+You can also pull it from the profile. You want to bring up contact background report into more relevancy. It can pull from the LinkedIn profile.
+If possible, pull information and context from their LinkedIn profile if available. And make it a interesting and relevant back. Okay.
+Anything else What’s that?
+For the philosophy of this company’s summary is not accurate.
+Okay. Let’s do a screenshot. Can you?
+Can you send a screenshot?
+Yeah. My zooming out, I guess.
+Can you zoom out
+Are you?
+Huh Zoom out I mean, I don’t have your this screen.
+Zoom out
+Do you know how to do Control minus to zoom out There you go.
+And then when I screenshot, that.
+A little bit more.
+The zoom out one more?
+I think so. Yeah. Because we want to see the recent news and everything.
+Yeah.
+Yeah, yeah, yeah. I’m going to screenshot. I’m going to put it in AI. I’m going to talk about it to the AI and so it knows what we’re looking at. So it can fix the little thing.
+Yeah. AI doesn’t have to
+AI can do it.
+AI doesn’t have to.
+Good vision.
+Good vision.
+It can parse the text the same way, whether it’s big or small. Unless it’s totally, totally blurry.
+Look at the screenshot.
+To see what was parsed.
+What else So pretty much all the sections suck.
+All the sections results suck. Also,
+oh, good So what I do like at the very bottom is the available variables. It doesn’t just have them in brackets, but it’s actually telling you what the variables are.
+That’s even better.
+Yeah, yeah, yeah. I fixed that earlier. So that’s actually in brackets too. I like the brackets so much better. Except, I’ll say except the available variables.
+Good job on those, buddy.
+All right One of these days, A is going to be like, “Fuck you, man. I’m taking a break.” We’ll have a cigarette. I’ll talk to you later.
+All right Let’s move on to the next screen. If you got time.
+One more screen, and then we’ll call it a day, and then we’ll stab a few screens to go through, it looks like.
+Yeah.
+That’s all right. We’re doing good. We’re making some progress here. And by the way, we haven’t even gone back to check any of our previously completed work, but that’s all right. You can do that separately. We can do that on our own. So looking forward to.
+The theme recent theme, you got that in there too?
+What’s that
+Recent news
+Yeah. I just said all the sections suck except the available variables.
+So it’s going to use AI to integrate it’s going to integrate AI into this process now. Right now, it’s not a smart process. It’s scraping. Sections from stuff.
+And if it is using AI, it’s not doing it very smartly. So yeah, we’ll let it do what it does.
+Okay.
+Moving on.
+Okay.
+That looks good You’re going to turn your contacts now. That’s good.
+Is this the one company now
+Okay. We’ll fix that. So on the offer creation page, it’s only showing one company’s. Are you sure?
+Yeah. Oh, it’s showing two different companies.
+And this is two companies.
+Okay.
+I don’t love the way it’s presented because it’s like big text and a little box.
+So we could just maybe make the text a little bit smaller inside that box or make the text of the box wider. I’m going to do both.
+Also,
+this I think this over here. Is related to what’s in the box.
+Well, clearly yeah.
+But then.
+It doesn’t need to be a drop.
+As this builds up you’re going to have a whole bunch of people here.
+Yeah.
+It’s not super bad. It’s not really bad.
+It can be probably a lot. It’s funny that it’s using their first name. It’s like John, John, John, John, John.
+Yeah, it could be an issue with John, John, John, John.
+Yeah. They probably need to use at least the last initial or something.
+Anyways, let me fix the box. So on the offer creation page, make the box that presents the researched contacts.
+The width of the card it’s contained in and move the quick pics names underneath it and use their full names because I don’t see this first name thing being necessary.
+Just first names.
+Yeah.
+There we go. That makes more sense.
+Did I make this the whole width of the screen, the whole width of the card that it’s contained in, and then move all those guys underneath it and then just build it? That’ll be better.
+Yeah. It’s not better. You don’t need these first names.
+Because if they’re really making use of our app, they’re not going to have four people to reach out to.
+Yeah. And they’re all going to jump.
+There might be some Johns in there.
+There’s two Johns I work with every day.
+There’s no Johns.
+Yeah.
+When I was a sales manager at Sunrun, I had four Johns and I had gave up. I just called him John the Fourth.
+John the Fourth I got a John Coyce and a John Sanford, and we just call them Coyce and Sanford.
+Yeah. At four you start to be like, “I don’t know this shit.”
+It’s kind of useful though because I messaged him a lot of the same stuff. So I’m like, “Good morning, John,” and then I copy the next one and send it to the other guy too.
+But it’s like a whole thing, a whole question. I’m like, “Whichever answers me first, it’s fine.” And then when I do a code approval request, it’s to both Johns. They’re like, “Hey, John, can you approve this code?” Copy, paste. “Hey, John, can you approve this code?”
+I’m sorry I couldn’t help you.
+Okay. That needs to be that might be changed when we change the. This is apparently the pain point that we had before, remember?
+Contact problems and learning skills.
+So target opportunity.
+Why do I say target opportunity
+So do you want to just remove that whole thing?
+Yeah. This looks confusing. I don’t understand why it’s there.
+It’s not offering value unless you can think of a way for it.
+It’s not offering any value.
+Okay. So we’ll just say for now, we’ll remove the target opportunity card as it seems to offer no value.
+Process Okay. So now let’s move on and pick a tone.
+And see what happens.
+I want to choose from the offer library.
+Okay.
+So go to the left.
+That would be something I would give you to put in your Postgres database. I’ll give you the like I gave you, I’ll give you the messages. The different offers. That’s the offer library.
+What would be a clean way to put that on the screen for them so that they can pick one of those things?
+Yeah.
+Yeah. It’s not an answer to a question. It is not a yes or no question. What would be a clean way to put that on the screen?
+So it would be a.
+So I’m asking how do you envision that offer library?
+How do you envision that
+Showing up there. It could be like.
+Actually, I envision it being on the left side. No, it’s right here.
+But that’s after it’s created
+After it’s created
+You mentioned an offer library. We created a thing called that, but I don’t know if it’s what you want. So let’s go ahead and create an offer. So kick a guy. And then generate AI offer. Click the right button right at the bottom right. There’s a button down there. That’s fine. It doesn’t matter. We’re just doing an experiment. Click the generate. You can also add a video. It works, by the way. You can add a video. And then so there’s your offer library. And up there on the left, it is now has that.
+Oh, okay. So then I get it now. So I don’t want that. I want to add templates. I mean, when I have templates here,
+templates is what I was thinking about. Offer library.
+Okay. A number of. Well, yeah, because it has an insert snippet, but it’s like, “Where’s my snippet?” So yeah. So it needs to insert a snippet from somewhere. So where are those templates? Do we we could have it toggle through them. You know how we do the easy button and it goes from easy to stretch to hard and we click it? And each time you click it, it changes the version of the thing. They could do that here.
+So they could just keep clicking this until it’s like their template that they like.
+Then they need to have an okay one too. Unless you click on that and then it shows it right on the screen, you’re saying?
+Yeah, yeah. So just imagine instead of the hard stretch and medium versus hard stretch and easy buttons, right, or toggle things, that it is. It’s instead inside that little box that you see there where it says efficiency focused, it has your little template, right? And if they click, you click to see next and they click it, it changes into a different template. And they click it again, it changes to a different one. Until they find one they like and then they can click okay or whatever.
+And then you just find from your own.
+And then they don’t need an insert snippet button.
+So you’re saying kind of like cycle through them.
+Cycle through them. Yeah. Just like you cycle through the button, like the easy, hard, and stretch.
+Yeah. Yeah, yeah.
+You like that I mean, I’m just trying to think of how we’re going to fit it in the page. We’re trying to make the kind of a clean condensed thing, kind of like we did with the personality test, everything’s kind of like on one screen.
+Right And each of the steps should be like a one-screen deal.
+We want to give them a clean presentation. So if they have to go to another screen to get their thing and then copy it over here, people are kind of lazy and they ask for an easy thing that pays for an easy thing. It’s got to get from that.
+Yeah. Okay. So cycle through the templates.
+Okay.
+But then I feel like when they ask of convenience,
+I feel like people would want to know what is in the templates. Let’s say this 10 templates and you want the 10th one. You don’t even know that it exists.
+Yeah.
+Maybe a list of what’s in the templates. I’m not really sure.
+Maybe they want the 10th template and they cycle over.
+Do you guys see all templates option? Or they can toggle.
+Like both.
+Is there a list of templates we can show them?
+Yeah. I mean, you’ll have to create the list. For now, we’ll have AI generate it and you can tweak them or just give me yours. Either way, we have their templates, but it’s in the backend until they click on it. And there’s also an option like see all templates and it’s going to open a separate screen where they can read through this long, long bunch of templates. But most people don’t want to process that information at once.
+It’s not too hard to click, click, click, click. View all 10 templates. I don’t know. Let me type this prompt real quick to try to get it started on this. So instead of the insert snippet,
+button,
+have the box under it be prefilled with a templated message pre-generated based on the previous screens.
+Variables.
+And AI processes.
+Then when they click on it, it can
+toggle to a different AI-generated message with a different version of it and then finally when they have cycled through enough and like the message they read, they can click okay or what’s better than okay?
+I like this one as a good button.
+Or just continue. Move that continue.
+Well, I also feel like we should have a star to be like, “That’s my favorite one.” So if they want to go back to that, they can go back to it easily.
+Sure Who knows the other thing? Oh.
+So the generate AI offer is no longer necessary because it’s already doing that.
+Yeah.
+We wouldn’t need that
+Well, we don’t because it’s already generating 10 of them.
+It’s generating 10 different recycling food, 10 different templates.
+By the way, we might be thinking smaller than we could be. So instead of cycling through 10, they could literally just click that indefinitely till they get one they like.
+And we can feed it the ones you have in mind, right? So it’s basing all the ones to generate it based on those, those basic principles. But literally, they could just click the thing forever.
+All right Well, that’s actually a smart idea too. But I think the main thing with AI is you got to give it constraints.
+It has to be working within this framework that I gave it.
+And then I’m curious how the cones get activated. Because by clicking them, they’re not activated.
+How about we add a save button? So instead of just a star of like, “If they see a message they like, they can click save.” Maybe under it, replace the generate AI offer button with the continue button removing it from the left column.
+Oh, that’s all right We’re already doing that. So yeah, of course, we want to save when we click save, it moves it to the left, right?
+Yeah.
+Don’t put it in the offer library unless they hit save. So that’s what we’re doing anyways. They’re going to click, click, click, click, click.
+They also need a little description above the toggle offer box they need a explanation. They need instructions.
+Yeah.
+What to do. Toggle click to rotate through or regenerate AI message.
+I guess, what do they call them? Scroll up again. What do we call it? Column?
+Offers.
+Okay. I’m going to go ahead and just let it run with that. I think we gave it a lot of ideas there. Okay. So there’s also the template.
+This is good I think.
+Okay. Let’s call it an 8
+Nothing.
+How do you activate the tones? Do you run it? Do you write the message and cycle through these different things? And then click on the tone? How does the tone?
+If you’ve selected a tone, then what you generate should be consistent with the tone you’ve selected.
+So the tone should be consistent with the the tone is connected to the template.
+It should be. I don’t know if it’s working, but that’s the idea. So you select the tone, and then you generate the offer, and it should have that tone. If you select a different tone, and you generate an offer, it should be a different message, and it should reflect the tone selected. So you click the exact click generate offer.
+There you go. ROA strategy focused. I noticed the challenges. See, that kind of sounds maybe it’s for an exact. I think it’s doing it. Let’s try a different one. Try recruiter.
+You have to listen to what I’m saying is you have to click. Maybe you need to have maybe you need to have instructions like, “Click on audience tone and then this and then that.”
+Okay.
+Right They have to be in that flow. They can’t just click on the tone and generate AI offer. It has to be you click on the tone and then you must click on the template and then you can click on generate offer.
+Well, they’re not going to be clicking generate AI offer anymore.
+Okay.
+They’re going to be clicking on the message. If they don’t like it, they can click regenerate. Something like that.
+When they load the screen, it should as soon as they click the tone, I guess they need to click the tone and as soon as they click the tone, it should generate the message there.
+Well, I have to.
+They click manager, boom, there should be a message down there. If they don’t like it, they can click regenerate.
+So as soon as they get onto this page, as soon as they land on the screen, they’re going to be like, “What’s this?” Oh, let me click recruiter. Oh, look, it made a new message. And then down there, it says personalized offer. And then it can even be based on recruiter tone.
+In parentheses at the top. And then they click that. And then so they know that it’s just reinforcing in the case they were wondering, that message was based on the recruiter tone selected. So it says personalized offer based on recruiter tone selected. And then they click a different one. You can even say select a different tone for a different message. Or they can just regenerate and it could generate a different one. Or you know a lot of.
+Have you ever done those song generation apps where you’re describe the song?
+And then it makes you a song?
+Yeah.
+There’s two variants. There’s a slightly of the templates. And then there’s a cycling of the tone. And then. So you can cycle through the templates and keep the tone the same.
+Yeah. I know that. That’s why there’s going to be regenerate option, right?
+Yeah. So you’re going to have to that’s the thing.
+There are two separate things that work independently, but also work together.
+Yeah, yeah. I think that’s fine. I don’t think that’s going to add any confusion. I think that’s a given. But they’re going to collect the thing. It’s going to generate the thing. Right? But what I’m saying, what I was getting at is we could have it where that’s why I asked you, have you ever been to the sites where you create a song?
+Have you ever used AI to generate a song before?
+I haven’t used it.
+Okay. That’s fine.
+I’ll explain it So I think it’s called Suno. So you go to Suno, and you can do it two ways. There’s a thing that says put your lyrics, right? And you actually give it the lyrics. And then it will and then you can and then we can pick a style or genre or whatever. And just like up there where you pick your tone. So you do the lyrics, you pick your style, boom, it generates a song, and it sounds like it’s been on the radio. It’s actually pretty good. It’s kind of amazing. And then another way you can do it is instead of the lyrics, you click this other tab that says select or describe your song.
+So now instead of using you can describe it’s like reminiscent of industrial rock or grunge or emo or some shit. And then you describe your genre and it’s influences of you can listen you can actually go online and find the way other music is being described by different albums and how they have this whole music DNA thing where it describes a song in detail. And you can paste that description of the song and get a surprisingly similar song based on all the different elements that it includes. R&B notes and blah, blah, blah, right? Minor keys, ambiance,
+angry vibe, whatever you want to write. And make it a song. You can also, instead of putting the lyrics in, you say, “Make it a song about how my mom doesn’t love me anymore,” kind of nonsense, right? Or some silly thing. And then it’ll make that song.
+Boom. Be like, “I love song to my frog.” Boom. Song about a frog. A surprisingly good song about a frog that sounds like it could be on the radio.
+Right Add distortion, add style. Okay. Point is, you pick your tone, you can either describe your describe what you want the message to be about. Instead of typing the message, just like when you go to GPT and you be like, “Hey, write me a letter that sounds like I’m a friendly guy who wants a job.” So in your section here, this is just an idea. I’m not in love with it, but I just wanted to put it there as an option. You can enter a prompt, basically, that says like, “Write me a “ but you can even have one preloaded there where it says if they pick the little tab right over the personalized offer, like, “Write me a message to a recruiter that explains that I have the following talents, and I like to go to the zoo on weekends.” And then it will do that, and it will create that based on what you told it. Or they could pick the other tab that says, “Write your offer or AI generate offer.” Either way, just saying there’s other ways to do it. So you don’t have to type anything. You type a prompt. Because we’re already got AI in the backend. So typing a prompt is not a crazy thing to implement. It’s like literally already running it’s just for.
+And it’s really just a framework. And the templates are just providing the framework of how it’s supposed to think.
+Yeah. We already literally already have it running. The AI is already working in this app, so why not give it a prompt? It’s just another prompt. It’s already working off prompts. So.
+Makes sense.
+It’s just a thought But it can be a thought for their next meeting, whatever that is.
+Yeah.
+So it’s just
+Also, I want to share I want to share with you what Jose and I were working on just recently.
+While you load that up, let me just commit this last change.
+So that way, whenever you’re ready to look at the changes, we actually made because you never saw them actually working. We just kind of told it to do stuff. We’re hoping it understood most of our instructions.
+I have it up in there.
+Oh, yeah Okay. Let me look.
+Jose.
+And there’s an offer website view of an offer.
+Talking about you already?
+Yeah, I’m looking.
+Yeah. Yeah, that’s pretty cool. I think that’s really nice. Actually, this is the landing page. Create a landing page.
+Or is it and this is the can you want to do video? So I put no video, but you can just imagine you can put a video here on the right side if you want to. So move to the left. Video on the right.
+Gotcha.
+But yeah, it’s a really cool landing page.
+You can click on here, click on this link there. You can go here, you go to this calendar link.
+Then you have this picture there and some little bit about him.
+I have his resume right here.
+You can scroll to the resume right in the landing page.
+And then you also have different FAQ sections.
+First canvassing. And you can book an interview. This is calendar link right here.
+Nice.
+It’s not bad, actually. Pretty nice.
+We could auto-generate one of these for every one of our role-free people if we want to just plug that HTML in there.
+Yep
+We could literally just be like, “Here’s the HTML for the template. Create one of these for each of the people,” and then when they push the link, they’re going to see this identical page with whatever customizations they selected showing up there.
+Yeah. And then I said you could put a video here so people who might not want to see the people that I see.
+Most people aren’t going to have a video, but plenty well as well. Just it’s a nice thing to have. If you feel like.
+And you could put a video.
+Like a video is good Yeah.
+Yeah. They could do their own video. We could do a podcast kind of thing that we did. And then they could put a slip, a clip from the podcast on the right side there.
+But this is really kind of more bare bones.
+And I think it looks great.
+Yeah. It’s a clean kind of simple thing. And I think so if I were a job applicant and it generate whatever you call it, a landing page or whatever, and this happened like it is one of the steps of the process, maybe near the end, I would be like, “Pretty cool.” And I would start sending people my link when I send a message and be like, “Hey, check out my landing page.” It’s a nice value add, and it’s a simple one to implement.
+Yeah. And then this right here is his resume.
+Yeah.
+Is a custom embed to the Google Doc, which holds his resume. So any resume changes that he makes on his Google Doc will be automatically reflected on this section here.
+I think we should integrate something like this. This would be a good value add.
+Because you don’t have to worry about like, “Oh, I’m going to change my resume,” and you have your own bullshit. It’s like whatever you change in your Google Doc will be automatically changed here. You don’t have to worry about any kind of updates to your resume.
+So for their landing page, they can pick their background color, just a couple of real basic customizations to kind of make them feel like they it’s theirs. And then it’s not going to be like everybody else’s. I like the really large calendar thing. That lets connect things. That’s kind of nice. It’s bigger than how it shows up on LinkedIn and stuff.
+Yeah.
+So yeah, it’s nice. I think we should do it. I think some of those headings are really long, but they’re not terrible.
+No, is that it?
+Yeah, yeah. That’s long So it’s the other ones. It’s not a bad thing. It’s not a criticism. It’s just a taste thing. I personally would compulsively make them shorter.
+And then we spent a lot of time on that.
+Oh, okay. Well, you’re the expert. It’s like an article heading, right? They’re kind of long.
+Yeah. I mean, it could be different for every person, but I think that this really tells you everything you need to know, right?
+And then the next page is on this LinkedIn profile, right? Like that.
+I think it’s good
+Yeah. It does give you everything you need.
+So yeah, I like it And then they click on this. It brings you right to the calendar page.
+On the case about something. Can you do F12? You have a Windows, right?
+I’m sorry, what did you say
+Can you click F12 real quick?
+F12
+Yeah.
+F12 Open DevTools, yeah?
+Yeah, DevTools, yeah.
+There we go.
+Okay. You see now
+I just wanted to look and see if the HTML is right there. Can you just scroll down a little bit?
+The HTML?
+Yeah, yeah, but it’s reviewed.
+Yeah, anyways, it’d be pretty straightforward to just copy this. And use it as our template if we like this template.
+And then we don’t need to use the sender.page; we could just use the template that we like.
+Yeah, sender’s expensive too.
+Yeah. We don’t need it.
+No, they don’t have to do without sender.
+Well, I do It’s actually pretty simple stuff.
+And so it’s good. I like your thing here. Let’s see, did my changes go through?
+It’s pretty cool, right I think it’s really nice idea.
+It’s really nice. It’s a really nice value add. We should definitely do it. So we’ll put a pin in that for next meeting. Do you want to try to do this? Do you want to just try every day? And we’ll probably only be able to fit in like two or three a week, but every day I’ll just check in and be like, “Hey, do you want to jump on for another 30 minutes today?” Or is that too much? Am I bugging you?
+I’m assuming you can do it.
+Yeah, I mean, no pressure. Just like every day, I’ll be like, “Hey, you free?” And then if you’re so, if not, we’ll do it the next day or the day after.
+Yeah.
+Yeah, just we’ll do a daily check-in and see if we’ve got time. We’ll try to jump on for 30 minutes. I know today was a lot longer than 30 minutes, but even if we can just get through one screen in a 15-minute, like one screen, make one change. By the way, I made a bunch of changes.
+Right now they’re updating. So I’ll share and show you.
+No, no, no.
+Give it like 10 minutes, and then whenever you’re free,
+look at those, and you’ll find that we made a lot of changes today. It’s a lot better.
+I think it looks good I think we’re making progress for sure. Much more progress than we’re making before. We weren’t making any progress.
+I think we’ll have a better rhythm now That’s why I said it’s like, “We’ll just bug you every day and see if you’re free.”
+Yeah.
+We can’t wait weeks at a time whenever we’re going to get this thing on the market. And the time is nigh or whatever, because it’s good that there’s not that many jobs. It’s actually makes what we’re offering the value was greater.
+It’s good for us that for this app, that the jobs are reducing while the demand is increasing. That means that we’re offering a precious commodity.
+Perhaps the most precious commodity, because you can’t buy diamonds without money. So what we’re offering is more precious than diamonds. Right?
+Yeah. The other cool thing that I’ll just show you before I say you’re really going to get going here and we just keep going off and on.
+And you’re good.
+I’m going to share one more thing. Because this is how I use it right now. You probably want to do something like this in the realtor. Because how we use that landing page is like this, right? So I go here.
+So that landing page, that I showed you before, is going to an email like this.
+Yeah, yeah. That’s good.
+So these are not really hard web pages to make. So these are really easy ones to make. We can make them in like a few seconds. With GPT or Cursor or whatever. So that’s a good thing. They’re nice, and it’s super positive, and it definitely value-add. But we definitely don’t need to pay for any third-party services. So that’s good.
+Yeah. Well, the concept is that this page here that you see in this press play thing, that would just be the template that you saw here.
+It’s the same template. It’ll just say, “Let’s connect on LinkedIn,” whatever.
+And then that would be sent out as an email. Like this.
+Yeah, and we’ll actually have more versatility. We can work on our template too. Is there anything wrong with this one? But since it’s our thing, it’s not like we have to work within the limitations of a third-party site. So we can just kind of keep tweaking it until we get something that if we do want to customize a little bit.
+I’m just saying it’s ours. We can do whatever we want to it. But we can use those starting point and make it identical, and then we’ll tweak.
+Send me that link by the way. Before you get off so I can copy it.
+Oh, the
+Your guy. Your guys’ thing. His page. Yeah.
+The landing page is like that.
+If you don’t mind That way, I’ll make our version and I’ll have it to talk about tomorrow or the next day.
+Just obviously, you want to be keeping it safe and everything for the confidential stuff.
+You just sent me a link to a guy’s thing. To a guy’s page.
+No, I mean,
+like he’s no, just like you get what I’m saying.
+Yeah. I’m looking at his template. I’m not looking at his information.
+Yeah.
+And do you have another one with a video?
+Yeah. I mean, send me one.
+So send me yours and his
+The landing thing.
+And before you hang up, let me copy it because I don’t know if I can access this chat after the call.
+I’m sending you an email
+Oh, well, then never mind That works too. Good. I’ll just look through that one and I’m going to give you the one I made. This one I made.
+And it’s much more kind of nuts, but it’s not. I’ll show you the link as well. I’ll send it to you. I guess one question might be is where I guess the landing page is, well, it’s not last because you would have the campaign. You create the offer. And you compose. And then you create a landing. No, you kind of need to have your little landing page before you create the offer, right?
+The landing page is built from the offer.
+It is
+Yeah.
+Okay, fine. So then the offer, then what do we call it? Bio page?
+Yeah. It’s a landing page.
+Bio page because it’s fewer letters. And then I see your little it looks good.
+So yeah, okay. So we’ll use that. We’ll use this template and we’ll create one of these for all of our people who use the app. So we have a little another value add. I think so the personality thing, it’s kind of cool and interesting. This landing page is another real value add where they’re like, “Okay, I made something. I created a website,” right? We can even host it for them because these pages don’t take up any kind of storage.
+I love it
+And yeah, this is about to put together a bunch of fucking videos with all the fun fucking people.
+That’s cool. She looks upset. I don’t think she likes your services.
+This is more like because I can’t even use.
+They were all happy except that one lady.
+You must have wronged her real bad.
+Well, which one?
+Keep going. Is she still there?
+Oh, I just saw some lady rubbing her forehead. Maybe it was an advertisement.
+Oh, yeah. Yeah, that was the advertisement.
+It was just funny because there’s all these happy people and she’s like,
+“Hi.”
+That’s because this video is supposed to be more like advertisement.
+That’s cool.
+Yeah. I think I got a fucking video. That was kind of much it.
+All right man. Well, the site’s already updated, so whenever you get a chance, take a look at the changes we made. I think it’ll be fun to go through them.
+And if you want to send me an email of other stuff to fix, I’ll fix that. And then otherwise, I’ll wait for our call. And we’ll go through it.
+Okay. I’m going to send you this as an email.
+Okay.
+And send that out. You got those two things. And that’s it. All right.
+All right man.
+So I’m going to stick that between offer I mean, yeah, offer between offer and compose. There’s going to be a bio page. Page? Page. What’s a button? What’s a verb form of create yourself a bio page?
+Whenever you have a landing page, you’ll have a landing page.
+That’s not on there.
+But I know what I’m saying. In terms of the title, do you like a title and landing page or bio page? Bio page might sound better.
+It’s shorter. I don’t know if it sounds better, but it’s easier to talk about. And it’s also more descriptive.
+It is more descriptive.
+Bio.
+I like bio, but I just think.
+Bio makes sense. Actually, we could probably just put bio for the button.
+Bio page? Let’s just put bio page.
+Yeah, okay. It’s not like too huge. It can fit there. So it’ll be offer, then bio page, then whatever the next button is. Tired. You know what I’m saying?
+Yeah.
+Offer. Bio page. The thing that comes after that, which is like offer.
+Bio page compose.
+Compose. Yeah. Okay. Yeah. So then that way, it’s you use the offer to create the bio page, and then you compose.
+And include that link to that bio page. It’s turning into a pretty cool thing. I mean, it’s turning into an app that I’d get excited about using if I was unemployed. It’d be like, “Yeah, I need this app.”
+Yeah.
+Right? It’s going to do my personality. It’s going to create a little bio page for me. Because
+I had to create my own bio page ultimately. I had to create my portfolio and all this stuff. And it did help me.
+So anyway man, peace Good talk.
+Yeah.
+All right Good talk. We got a lot of work done. Thank you.
+Yeah.
+All right Bye.
+Bye-bye.
+Hello,
+hello.
+you can see it sweeps across the scene faster than the laser pulse itself. Which means this camera must be traveling faster than the light. So how is that possible?
+Well, in this video, I’m going to show you three unusual ways of stopping time and what you can see if you just keep slowing down from century old technique that still keeps modern slow-mo cameras all the way to a massive quadrillion frames per second camera that captures electrons whizzing around molecules.
+By the 1920s, electric motors were the new standard for powering factories and mills. But many of these motors also came with a flaw. They were sensitive to fluctuations in the electrical current. Our search for electric strength made them unique and unpredictable. So what am I keeping here? No help there. Set out to find a solution.
+The M subject is going to use these power surges in a lab, but no matter what you try, you can just couldn’t see what was going on with the motors. Because the machines would spend 10 laps before the human eye could see. And cameras that time offered no help. Their excluded times were too slow, so any photograph of a running motor would become a blur.
+But what next? Here’s a notice that every time the trigger power surge is equipment gave off a bright flash of light. Then when that flash hit the motor, the moving parts appeared to stand perfectly still as if frozen in time. Which gave them an idea. We could turn off all the lights in the room, set up a camera, and leave the shutter open. And since there was no light, no image would form on the film. Then we could illuminate the motor with a very brief and very bright flash like the ones that quickly gave off. Well, then we would get a sharp photograph. All they needed was a way to reliably create these flashes.
+So we started by using a high-voltage power source to load electrons onto a capacitor where they piled up onto one of the plates. Because there was an insulator slot between the two sides, the electrons couldn’t just jump off the side bounce at the charges.
+The only way for them to get there would be to travel through the rest of the surge. And the surge was intentionally designed so that electrons would pass across and collapse to fill with the non-conducting gas like argon or xenon. On their own, they would not have the energy to get through that gas. So they just added a trigger that sent a high-voltage pulse through a wire wrapped around a tube. And the electric field from that pulse would drift electrons off the gas atoms inside the tube. Ionizing the gas and turning it into a conductor. In that case, the charge stored in the capacitor would surge through, leaving the gas tube around 10,000 Kelvin nearly twice as hot as the surge of the sun. This would produce a very bright and very brief flash of light lasting just 10 microseconds. Then the electrons would take back the gas atoms and stop the interaction, and the surge would close out again. This was intended to instill the illuminating theories we here to test it outside the lab. So we packed up the strobe and through the road with this electric. When we saw a random factor, we pulled over, got inside the nearest phone booth, and we called up the factory’s president and asked him something like, “Do you happen to have any motors in there that don’t work right? I’d like to show you something.” More often than not, we ended up inside setting up the strobe next to one of the motors. The workers could watch as the engine throws the motor in time, allowing them to take sharp pictures with ears in motion. Better than in the first man’s throat. Rather, we could remove bits of technology that existed so that he could make a better strobe, a strobe that was brighter, shorter flash duration, but they were not engaged in that. There were lots of electrons in here, in the world, at that time who would have done that. No one was able to even drop the table with his eyes scarred. The closest thing there’s not. I think it’s hard to judge these stuffs later. Cool. One day, he showed his wife the 300 photos in the photos. And she said, “Carol, hang a bigger picture of something a little brighter.” And so he did.
+Tennis balls acted against the rocket. Hummingbirds froze in time.
+These were the first few surges of the strobe.
+What is happening at this time?
+there are a lot of. And the answer is, if you stab so we’re going to try to recreate one of the pictures. Photos. I’ll give a little hand freezing it. Is it okay if we walk through the setup? I think that would make perfect sense. Why did you pull out the photos? Step one, is you set up the experiment, or in this case, the performer. And the next thing you want to do is create the image with your branding now to focus on the example. We can’t get a good photo with nothing happening. Having the motion will not help. And so the next step will be to get the strobe in the right spot. Now, the strobe is set out with a triggering thing with a microphone. And with a sharp sound, it’s a microphone. The triggering is a signal to set off the strobe. We’re going to turn the lights out. And then we’re going to open the shutter with the camera. But there won’t be an image because the room will be dark. And I will say two to two to one top and when I say top, top to the room with an upward motion and then the sound from the top gets the mic out of the electric.
+The camera will capture that image where the 1/100,000th of a second split. All right. We are in. Like that. Yeah. Three, two, one.
+Oh, there you go. You look very You can see the inside of the room.
+Okay. Here’s another photo.
+Here is just a moment later.
+That work is across the room.
+Now 1939. The US maker named George Donner walked into the lab on an accident. He was working in the Army’s photographic lab, developing ways to photograph any movements from a plane during a nighttime. His old way of knowing better about photographs was to fly over the sun and high altitude and put up a flare of energy. Then the constant way that fly in under the flare is where a silhouetted ring shoot at it. So totally exposed. Donner wanted to staple it so he estimated whether to get off the strobe powerful enough to illuminate the ground from a plane that was a mile or so up in the sky. A strobe that would be bright enough to beam over constant photos. In addition, he pulled out some paper, did a few calculations, and said, “We can do that.” The flash released about 60,000 joules in a single millisecond of heat power of roughly 60 megawatts. This topical came up with a large solar problem.
+The flashback was utilized in World War II and allowed the Allies to take features of Normandy to connect before it did. This way, they could confirm German troops were unprepared to be attacked.
+It’s hard with the word just how sharp these strobe photos are, especially the one Edison took in 1930. So we got a reasonably small count of 20 points that should fit 20,000 FPS and 23rd quality to Edison’s technique by ensuring the photos proved plain enough. So let’s do the photo count first. Three, two, one.
+Let’s see the data.
+Okay. And now let’s do the same with Edison.
+Sure Three, two, one.
+What was the open the shutter and the second or two corrections are done. They were not straight lines in the room.
+So here’s the dotted prior to the sound of the dotted prior. Comes out. So the photo is coming out at 10. It was down, but the bullet missed the precision. And the supersonic optic moving through the air creates a sound beside the room.
+Now we can pick up the photo with a microphone. And by moving the microphone physically along the trajectory, you get the signs where the bullet is going to be, where the strobe goes up. I think it’s a perfect way to solve the problem. And then I get to say that I did not attempt.
+Edison was very excited. That’s why there’s photos of things that would be. But then he had companies for things like underwater cameras, and he was making movies and hoped that he was one of the authors. So if there’s anything you want to do, he sort of just did. And I feel like I’m quite the opposite. When I do a very tough thing, I feel like going crazy. I started off with the reason because I was practicing video setting up shoots. So then there is the other right of the shift. I didn’t make video on my own. And I remember thinking, “Yeah, I don’t know. Maybe one day.” But they kept playing for me. And I’m so glad that they did. Because whenever I made my first video, I fell in love with it. So if there’s anything you’re coming up, you should just go do it. And I think that’s something that positives want to set out as a positive part of the air. Well, today’s positive photos are based on personal experience. Maybe a website or any kind of online source. We’ll see her in the following one and how ecosystems are being affected by these events. So go see her. Here you can have pretty detailed results, especially with metaphorical, so you can go from an idea to execution without needing to ask for your computer. If there’s a target you’ve been putting off for that one day, turn that into your day one photo shoot. Okay. I hope you heard that powerful session. Very happy to attend and use our photos very passively and answer that question first. You can also scan it into our photo series. So I want to come up here for positive part of the video, and now let’s go look at pictures of that carbon shell. Okay. So here are the two techniques that I tried. And here’s Edison’s original as well.
+So one of the reasons his camera from 2020 strove to get the same resolution as his camera from ‘80, well, that’s because there were really two resolutions we’re working with here. A spatial resolution, or how many pixels your image has, and a temporal resolution, which dictates whether you capture only one frame, like a strobe photo, or a progression of frames, like our IP video. The problem is that more often than not, the hardware is limited, so they have to degrade one resolution to the other. High pixel counts, more high frames.
+The fundamental issue is how fast we get pixels off the sensor, and that’s why there’s a maximum speed for every pixel. And then going faster you have to not get that long of a pixel. So this camera will give you a million pixels a second, but you’re like, “16 by 128 pixels? That’s not possible.” Okay. So there’s always a trick. Either you go very high pixel count and bring the frame rate up, and the image that’s looking for this large strobe is one frame per day. If you open the camera, one pixel and very high. One strobe that can. Okay. It’s just one pixel. What can you do with one pixel?
+frames per second And ultra slow motion video shows light acting up. Use that video of light traveling through the soda bottle. You can see actual waveforms propagating underneath the bottle and even how the light bounces off the camera.
+And even though the strobe has no video, you can take it to a camera and only see one pixel. Here’s how you do it. A single pixel camera is one that captures just one thing. How many photons land on the sensor? And the sensor here is completely sensitive enough to register when even a single photon hits it. And if you have those incoming photons around a trillion times a second. So each bit that’s technically trained is roughly one ecosecond long. In that time, even light itself only travels around 0.3 trillion.
+So I’m just going to show you actually how this thing really works for real. Just what happens to you shoot up all this light from the top high all of these things for that moment to come back. And from that, you get to this object that’s on the top. But this is all we need to make you feel like this.
+We have a setup here that’s basically a scale down the room. And we just have some different shapes ahead of us here. We have a mirror in the back. And finally, we have the very passive light propagating through the scene. So the way we do that is we shoot out a really short laser pulse that is just one point in the scene. And that laser pulse is going to go down. This goes around and up and scatter in very neatly see what that scattering looks like out between the scene. So start our single pixel camera point at the top of the core. So for a practical comp, what we’re supposed to do is either touch the wall, reflect into the corner, and finally bounce the camera. The sensor is meant to put your signal at a two-minute rate per second. What that signal will be pretty vague.
+Then you move the camera slightly and repeat the experiment. So you shoot out a laser pulse, then scatter on the same spot, and record the signal at this new position. You do that for a few new times, and then move the camera again until you record a whole great performance.
+You’re literally directing one pixel at a time, one pixel at a time. That’s the magic of the camera. We actually have two cameras here: a Siri electric light that automatically turns the mirror with the sensor pulse. The most important thing is making sure that the people who play out the image exactly the same every time with the sensor. Because if you edit every pixel out the different story, it’s like high priority photo in a second or less time in a quarter or each. There’s always a very great idea of that tech leader called Rusty every way.
+Absolutely. That says, “It’s unlimited resolution.” Where you basically say, “Let’s scan as many points as we need that gets us to a spatial resolution.” The more points you scan along this road, the higher your high resolution. If you work for big, you simply scan before being deliberate. It’s just going to take more time. The nice thing is, light is fast. So you can do this as fast as the mirror scan. Within just a couple of minutes, the sensor captures millions of laser pulses across this whole grid. So this is now everything I found together working out of light. AI is going to be discerning for the edges while we’re looking at it now. It’s going to be again from fixed laser spots of light.
+All of this was less than eight nanoseconds of time. And here’s another single camera.
+There you also see this step further, right? We’ll continue to see where the multiple points are here. We have this factor that annotates this column that they capture different views. And it’s able to create these five views that we get to see the light propagate in one direction and fly through the scene as it’s happening.
+No, that’s all cool.
+So something that I really love is because we’re looking for the light and the light is propagating towards the light, and we’re looking kind of faster in this visualization. The wave comes here faster, and.
+Well, yeah, that is very good. I mean, you’re arguing the camera faster than light.
+Yeah, exactly Yeah. It’s kind of very important about this.
+So this is a picture that we put on the mirror. And this diffuser factor. So you’ll see a pulse of light going after the mechanical reflect on the mirror. And when it hits this diffuser factor,
+that’s great. This is a type of great way of organizing different the light between those.
+And so it’s really different modes. That’s to say, my first impression was only in this simulation from fundamental unreal engine. But this is like real data.
+Different photos than the other pictures. You’ll probably see that.
+No, wait, because you’re putting these in the matrix. By the way, these videos were created at the University of Toronto and MIT.
+Ryan from Alpha Phoenix actually built one of these speed of light cameras in his garage. Is that you can go check that. So those are new experiences. You don’t talk to people alongside in a trillion FPS on the other side. These are like folks who actually can see what electrons are doing.
+And what that means exactly today?
+Today, electrons act like light. They act like particles, little big companies. They’re like mathematical solutions that calculate what things are. Without actually being able to fix it, people are able to fix it.
+That’ll be really cool. And we figured it through. Now, we still don’t have videos for electrons, but this might be the next stage in photographs. We have to go big.
+Really big.
+Okay. So starting up with one of the 2017 with the world’s greatest objects. So we have been drawing for like what, five Fridays now?
+Yeah. And we have all the cameras laying in about halfway there.
+Oh,
+no.
+There’s still a lot more.
+Here.
+This is like the US National Lab that houses the 3.2-kilometer-long perfectly straight electron. So whoa, that is still long down there.
+And that is actually not going to be like this all the way up.
+What you see here is exactly 120 Hertz. That’s the frequency at which electron pulses are generated underneath this building for 120 pulses a second. And this is a sound equivalent that accelerates at over 99.9999992% speed of light. And this led me to electron moving around molecules.
+Right So they have one or two pairs. Because essentially, electrons create the fields in which everything else happens. If you want to put bonds break and form because the electrons essentially give them the push to do something, right? So the electrons are responsible for everything that you see and observe. And being able to look into their motion is the most fundamental way of studying materials.
+Now to achieve this, you need a nanoscopic wiggle of a strobe. So you first beat these relativistic electron pulses through the set of devices called adjuvants. Their stacks of magnets basically give millimeters of light when you alternate them. So the first pair has a little hole facing the electron.
+And the sound goes low. Then the second pair flips, and so on. Now, because the electrons are traveling through a field, a force called the Lorentz force will push them in the direction perpendicular to the velocity and the magnitude. In accordance with the left hand rule. So at one magnetic pair, electrons will travel clockwise, and at the next pair, counterclockwise. And so on. This causes the electrons to wiggle. Now, since electrons carry a charge, this wiggle in motion causes them to emit electrostatic radiation. And even though they oscillate at least millimeters right now, because the magnets exist, the wiggle of the resulting beam radiation is much smaller. This is the funny thing about the theory of relativity. If you travel at medium speed of light, the next scales contract while they’re traveling structure is microscopic loss, right? You see each magnet, these are centimeter scales. For the electrons, they give this traveling sort of loss all of that space contracts, right? And so it’s actually oscillating really, really short paths. And these oscillation periods are compressed. And it means that if you compare that to wavelength, that is in the X-ray. Now, the fact that we only make the wavelength part of the wavelength through X-ray, but if atoms are breaking span at the far end of the accelerator, all those electrons will be coming anyway more than 99% speed of light. So if you’re a reference frame, any electron or electron will finish with a dilution that’s producing X-rays as small as 50 micrometers.
+Right
+Usually, these X-rays are faded randomly along the energy wave, producing an equal share of light atoms. But soon after,
+these X-rays turn into gravity electrons. This gave some of them up. This one understands. This causes faster electrons to catch up with the solar ones. So they can rush up these nuclear surges. These parallel streams that are facing at distances exactly equal to the wavelength of the X-ray. This is called gravity. Now, these sheets of electrons emit light through the light curves. So the resulting X-rays come out clearer as a laser pulse. This dramatically increases their intensity. And the pulses come out incredibly tightly packed. We only gave you 10 milliseconds long. And then even as short as a couple of hundred nanoseconds. Now, into the power of negative 18 on the observable curve pulse. To put it in other words, the nanosecond is the second or the second is the 18 millimeters.
+By nanosecond scale, you can see electrons flip around essentially at the molecule at the regulator. The X-ray pulses are sent to experimental stations and.
+So where do the main X-ray beam?
+The main X-ray beam is coming to this tube over here.
+Okay.
+If you want it to happen, go on and see if they’re coming in through this tube over here. So this is the main place where the X-ray is coming into the. And so the X-ray is focused into what we call an interaction point.
+Now it’s focused where?
+The molecule.
+Electron pulse.
+Now we shine that X-ray pulse on a molecule, and when it hits the molecule, it will ionize the molecule. And it ionizes the dominantly from these inner shells from the very core parts.
+The thing is particle electrons go through their elements after 35 minutes. So if you want an X-ray, you inject the particle electrons from the magnet into the molecule under the electron pulse. Whereas for the population, the electron goes fifth. So by doing these X-ray techniques, we’ve actually provided an unrestricted switch when you have a molecule in X-ray flow time. And they make up for this less after the X-ray has injected the electrons. We’ll be taking five electrons at the next session. Now, if you want to ionize this molecule, the kinetic energy will tell you something about what’s going on around that electron.
+Well, electrons are not independent particles. They talk to each other, right? They have a negative charge.
+So if you have five electrons in a field at the current level electrons, you have a less high nucleus than the presence of the other electrons throughout the atom. So the kinetic energy will actively cycle both. Whereas if you have a lower electron density, average around the atom, those are electrons will bounce tightly with a higher transition energy. Therefore, when you measure the nuclear energy of these electrons, you inject you can do this transition into X-ray and the output kinetic energy confirms what that electron density was.
+Now as we begin to picture electron density, we can change what the molecule is doing. I can do some process in time. And then we can look at how electron densities change. We have above us, we actually have an entire laser hall. So we generate laser light. You right now, through tubes, like here behind you, or over here on the ceiling, traditional laser light. These are infrared lasers. We bring them onto this table, and you see all these boxes on this table. These boxes are in addition to the laser. Give the properties that we want. We can change the color of the laser. We can change the polarization state. We can change the duration of the pulse. So we sculpt these pulses. Then we go co-propagating the X-ray into electron density. And so now our first laser pulse will create some non-equilibrium state in the molecule. It will drive some dynamics. And then our X-ray pulse will travel there.
+This action, X-ray pulses, we inject the electrons in the molecule after the time of the tube. And by measuring the kinetic energy of that electron, you can study how the electron density of the molecule reacted to the triggering. So we get an unrestricted snapshot of X-ray of how the molecule changed. Then you give another sample of the same molecule, treat it with the laser again, but this time increase the focal length slightly to T plus delta. This will tell you how the electron density changed at a little bit of a later.
+And can we keep increasing this delay each time we get a sequenceful snapshot of how that electron density evolves over time?
+Isn’t there a bigger function here that every time you do it, you’re expecting a repeatable result?
+Yes.
+From the molecule
+Absolutely. You need for your initiator to try the same dynamic over and over again.
+Yes.
+If you have a new process happening every time, this technique will fail.
+But you can see in the table that what we showed in the previous demo, you can really simply decrease the molecular volume. And here, the smallest amount by which you decrease the time delay for the X-ray stroke is around 300,000. So in X-rays, there are only a few hundred thousandths of parts. And you can switch those together to get a really intensely constant or a quadrillion frames per second.
+So this is a movie of the dynamics that we might like to image. So this is a small molecule. This is called ferritin. You know, this calculation was done by some of our collaborators.
+They have this happens because water molecules are slightly full. Groups of these molecules pull in all directions, but at the surface, there’s no water above, so the pull is only sideways and downwards. This balance creates stronger piece of forces that compress the surface into a tightly packed layer, making it difficult to break.
+This is the same effect that lets water striders walk on the surfaces of ponds and lakes.
+This other robot weighs only 68 milligrams, and by using a spring mechanism that lifts up these legs, it can jump without breaking the water’s surface. Just like a water strider,
+it’s like there’s a solid ground below.
+Now that’s great to be able to stay on top of the water, but this barrier can also be a problem if you want to go underwater.
+To escape this trap, submarine splits water into hydrogen and oxygen.
+And then it stores these gases in a buoyancy chamber. It does this because the lumens are small.
+If they start flapping over a still trapped underwater, they would break free off. So the buoyancy from the gas helps bring the hydrogel parts of the robot out of the water. The robot is still stuck in that top layer of surface there. So a sparkler inside a chamber emits the gas. The explosion breaks the surface tension and shakes the robot 30 centimeters from the air. And once it’s free, this robot will fly.
+This robot found a different way to break through the surface tension. It uses these large water molecules added on its feet to walk on the water.
+But when it needs to dive beneath, it applies 600 volts to those pads, which creates a positive charge that attracts water molecules to it and breaks the hydrophobic barrier. And that allows it to sink on the land.
+Then once the waterWhat are you sorry about?
+Trying to hurry up and get home.
+Okay. You’re headed home?
+There’s construction on the highway, so I’m taking a visit to the street.
+Okay. Whatever. I’m not worried about it. I’m just checking in on you.
+I’m painting, so you’re fine.
+Yeah. I’m trying to paint too.
+Yeah. I drove an alley here for a bit. I don’t know how long.
+But it hurt him down there.
+I am
+So I was downstairs watching YouTube, and drove an alley came inside.
+Yeah. We do pretty well.
+They made their own food
+That’s what I said. They made some food.
+Yeah.
+I just went upstairs.
+I am. Mom, I’m driving.
+Come on
+They’re I was on the couch laying down watching YouTube, and their dog ran in there and jumped on me while I was on the couch.
+Did I bother you
+Well, I don’t really want dogs on my couch. I found popcorn on the couch last night.
+Oh, yeah
+Yes.
+Popcorn was supposed to be in her room last night, not roaming around the house.
+Well, roaming is one thing, but stinking up her couch is the other. I don’t really want my couch to smell like dog.
+I didn’t say that. I said.
+I heard you.
+Popcorn was supposed to be in her little room.
+Yes, I know
+There’s a cupboard.
+Anyways, how was the rosary
+I don’t know what happened to it. I didn’t do anything. They took it with them upstairs.
+Well, honey.
+What did you say Oh, how was your rosary?
+It was good
+You had some angel eggs?
+No, they’re finished I told you they were going to finish.
+Oh, I didn’t ask if you brought any. I just asked if you had some.
+Yeah, I have one. My cousin didn’t make a lot, so I only had one that was finished.
+They’re not hard to make, by the way. We can make them.
+They have devil’s eggs. They’re angel eggs.
+Huh
+They’re not hard to make. We can make them if you want.
+Would you like me to make them
+Yeah.
+All right We have a lot of eggs.
+I wouldn’t be mad about it.
+We do have a lot of eggs, and I love those things. They’re good. And they’re actually relatively keto because mayonnaise is in the cart.
+You get the hard-boiled inside, right? Out, and then you make a paste, and you add the mustard and mayonnaise and paprika.
+Yes.
+It’s all pepper.
+The main thing is mayonnaise and mustard and the rest is optional.
+Oh, actually, not now. One goes bad.
+Yeah.
+So I’m painting Mary.
+She calls to me and says, “Paint me, paint me.” It’s nice having some inspiration.
+That’s better.
+I haven’t wanted to paint for 20-something years, so I got to give Mary some credit.
+Mary, paint her a little bit when I met you.
+Yeah, not for long.
+No, not for long.
+I was painting digital paintings, but not really, not really.
+No, well, I wasn’t talking about that one.
+Oh, only because this guy requested it. But I never really finished his painting. I think it ended up at Alfredo’s house.
+But I never finished it because the face was too small, and I couldn’t get it to look the way I wanted it to.
+Oh, yeah. Did you leave it there at home? You’re painting all of her faces?
+It’s fine. You can have it It’s not a finished painting. I don’t like it.
+It’s because you’re painting Mariana without realizing it.
+No, it’s not Mariana. It’s some random guy’s daughter who commissioned me for a painting that I never finished.
+No, no, no. I know, love.
+I’m going to paint Mariana, and it’s going to be much better.
+So she’s putting up the red light 4:35 or 4:25.
+How did Jove and Natalie’s interview go today?
+How did Jove get the job so you would do a lot of paperwork right now today?
+Oh, okay. So they just wanted to get the application?
+How? Yeah.
+That’s good I’m glad you’re doing that
+My mom’s going to tell us the joke.
+Okay.
+Stop Don’t interrupt.
+How did the joke saying that there was a lot of people that wanted to go to heaven? That’s all. Jesus was asking everybody, “Who wanted to go to heaven?” But they all went to heaven.
+Well,
+if you want to come to heaven,
+then whoever is up here on the sidewalk or the pavement, why is so much dough at the finish that are here? And you’re without sin, you have to go through stones. Those stones don’t live.
+Somebody threw a stone.
+Who threw the stone Because everything you added was wasted. Who threw the stone? But if they didn’t hate anybody, you wanted to know who threw it. Who was without sin? And you turned around and said, “Oh, Mom,
+the Virgin Mary was without sin.” No, she didn’t hate anybody.
+You were just saying that she was just saying like, “Throw the first stone,” but not at a person, but just throw the stone.
+It’s cute.
+Mary jokes.
+She’s without sin
+Mom’s got Mary jokes.
+Do you have to be at the photo?
+I forgot about the turnaround. However, going to there when I was driving was scary. To go up like that, go up right. Yeah, I remember. I know. Because she would go fast. I mean, but she was scared.
+I already talked to Joelle I just need to know how many people. And then how much are they wanting to spend for how many days?
+Oh, no.
+What happened
+I can’t cry The crunchy, crunchy expressway, man. We’re never going to get home, babe.
+Oh, no.
+Because the front road is closed.
+What am I going to do without you?
+Probably not the rest of today.
+What You’re going to keep in the car while I try to get home.
+I try to get—I’m going to get back to Disney City three months.
+I know I’m going to call to Disney City three.
+How many days?
+Are you done again?
+No, I was talking with Jessica.
+I’m going to try.
+Because it’s not going to return grain.
+There are not many people going up the top.
+Oh, wake up Look.
+You feel I am aware, Mom. The lights don’t work for us. Just not meant to be today.
+Making a shortcut to strife and nothing. Ended up back up where we were.
+So how many days too
+What are they talking about back there? I just heard little chirps.
+I don’t know what they’re talking about.
+Are they loving their population?
+Hey, say a little bit.
+Nothing, babe.
+Nothing, babe.
+Is that music?
+Are you guys doing
+Good
+Better, Rosary
+Better.
+Ready to pray again
+Hi, Daddy.
+Thank you, baby.
+Copy.
+Good job Where’s the trees at?
+Oh, it’s not from either of our trees.
+Oh, is it Okay.
+But it’s a little sour, so I put a little bit of sugar-free sugar on it before you eat it.
+Thank you.
+How are you
+I have to make lemonade out of it.
+Good idea.
+How’s it doing
+Good.
+Oh, you forgot some on your hands.
+I know, right
+That’s beautiful art
+Thank you.
+Your hands are stunning.
+What’s your guys’ You guys have a good time?
+Yeah.
+Everybody sad and stuff
+Yeah.
+Are they nice
+Yeah. Why wouldn’t they Dad wasn’t here today.
+So we didn’t play tag as much as we did yesterday.
+Since he had a streak of not getting tagged, we wanted to get him today. But he wasn’t here. He’s coming tomorrow.
+Which one is he, the little one or the bigger one?
+The bigger one.
+The little one’s crazy. He screams.
+The little one is nicknamed Child.
+Child You should be nicknamed Creature.
+No.
+He screams like a creature, but he isn’t a creature. He’s a chicken. I like the nickname.
+You know Does he talk?
+No.
+No, he just screams and runs around?
+Yeah.
+Well, a little bit. He talks a little bit, like running.
+Oh, yeah How old is he?
+Like two, probably.
+Oh, you got one of those. How did you like it?
+Oh, I don’t know I just had to sit.
+I really do like them. How about the wrap, everyone?
+It’s pretty good You want to try it
+Oh, yeah.
+It’s really good but I need to go to the baby room.
+Good time.
+Daddy,
+can I put another butt sticker?
+On the drink today
+What drink How about my shaker cup?
+Yeah.
+Okay. I guess so.
+Yay.
+Okay. So should we do the grenade or the what is it called?
+I just had a brain fart.
+Gross. That’s sticky.
+Daddy.
+What a brain fart smell like.
+Daddy, you smell it Oh, okay.
+Do you want the what is it? I saw it here.
+Okay.
+Do you want the soda or the coffee?
+All right I’ll take the coffee because you’re too young to be drinking coffee.
+Okay.
+And then you can have the other one.
+And I’ll probably just put that one on tomorrow.
+Can I put it over the words
+Yeah, sure.
+Okay.
+Can I put it over the symbol on it?
+Sure
+Okay. I’ll put it directly over there.
+Why not It goes through and it makes it look like it has the stuff. So that’s cool. I want to put another one but tomorrow.
+I’m going to keep looking for your butt stickers, okay?
+Okay.
+I’m going to get a plate to dump them all out. And I will put them back later, I promise.
+B-R-B Okay.
+Have you seen Diarrhea of a Wimpy Kid?
+Maybe.
+Have you
+Sure I don’t remember.
+Okay.
+Now I’m going to go through your stickers.
+All right
+A French fry butt.
+I don’t want French fry butt. I don’t like it.
+I know I’m going to put all the nose over here.
+The candy, the ice cream, the cake.
+You want plant? You could have a plant if you want. There’s two plant butts. Oh, there’s a big one. There’s a small one. Do you what do you think about the plant ones?
+What kind of plant Amazing.
+What is that Lettuce
+I don’t know. Just plant?
+It could be a fern
+What Whatever your imagination says. So it’s what? What do you think?
+You pick
+Well, no. I want you to I want you to decide. That’s why I’m doing this.
+For you to decide.
+Oh, yeah?
+Yeah.
+Pick a little one.
+A little? Okay.
+Do you want the cactus butt too?
+No.
+Okay.
+Too many butts.
+I think that’s enough butts.
+Really You can only put two? Oh, no. It’s for today.
+Just one butt a day
+I know I’m just picking out which one I want.
+Oh, okay.
+There’s a burrito butt.
+Yeah, burritos are pretty good.
+Okay.
+Are they fighting or what?
+I think so.
+Do they fight a lot
+Sometimes.
+Who starts it
+Both of them.
+It’s usually about Olivia because she’s being disrespectful.
+Which one do you want me to put on? So what do you think about this one?
+This one’s new This one you already like, so.
+The burrito’s good I don’t know what the other ones are.
+Okay.
+I don’t like not knowing what plant it is.
+Okay.
+Oh, so you don’t want the mini plant sticker?
+Yeah, if I don’t know what it is then I don’t know what it is that I’m putting on my cup, you know?
+Oh, okay.
+So the burrito, yes. I’m going to put it.
+I don’t like all the plants in the world. It’s just certain ones, you know?
+Yeah. I see.
+There’s noodles. Do you what do you?
+Noodles are carbs. I’m not doing carbs.
+It’s like Chinese ones, but you’re not doing carbs. I already know you don’t want cinnamon, though. Or lollipop.
+Too tempting.
+Another cactus. Do you like cactuses?
+Not really. I mean, I don’t hate them, but you can’t pet them or anything.
+Well, okay.
+You can’t pet normal plants, can you? What do you think about a candy?
+You can pet a cactus.
+What do you think about a camera
+Cameras are all right
+Okay.
+I like to take photos.
+I know you don’t want popcorn What do you think of tacos?
+Tacos are all right.
+Okay.
+What about Lego mini fig?
+Lego Look. Look.
+You can have that one.
+I don’t really want it, but I’ll take it.
+Do you want the computer
+Not like I don’t know.
+There’s two butts.
+Yeah, I guess I want the computer.
+Look, there’s two butts. One on the peach and one on the actual computer.
+Oh, my gosh With the double butt computer.
+So I’m going to put that there.
+Let’s make a butt.
+Do you want the chicken?
+Look at the chicken.
+Sure It’s protein.
+Okay. I’m going to stop asking and just telling you what they are.
+Okay.
+Do you want a football
+No thanks.
+Okay. No football.
+Do you want okay, this one, I do not know what type of plant it is, but I think you do.
+Some kind of yellow flower, but I don’t know what kind.
+So no
+Not really.
+Okay. Don’t want it. Oh, a toilet paper booty?
+Sure
+Okay.
+A woods pot booty?
+Let me see.
+No, nothing. I can have that one.
+Okay.
+Pizza booty I don’t think you want this one, do you?
+No, not really. A pizza anymore.
+Okay.
+A rainbow booty?
+Some people call them a gay booty.
+Gay booty.
+Do you want it?
+No thanks.
+Okay.
+There’s a Lego booty? Do you want to see?
+I see that No, that’s all right. I don’t care about Legos.
+Okay. A watermelon booty?
+Sure A watermelon’s good.
+A grenade booty
+Sure
+I’m going to get rid of all the sweet ones, okay?
+Okay.
+Just real quick Because I know you don’t want them. You already have coffee on there, so you don’t need that one. You don’t want some more?
+You used to be a post office man. Do you want a post office thing?
+Sure
+Okay. A mini one or a big one?
+A little one.
+Okay.
+Oh, we’re going to put
+Good to know I’ll be right there.
+I’ll go down I’ll clean up my mess while I’m coming down. You’re going to bring it down for me to see?
+Oh, I’m going to bring it down. Yeah.
+And what else can I do here?
+Lydia. Lydia. Come here.
+Come here.
+Come here. You’re not asleep.
+think I’m being mean No, I’m not being mean. I just don’t want to deal with it anymore. I don’t want somebody who’s not going to make my life easier by not getting their siblings and getting some sleep when I was socializing with family members. I’m constantly hearing this person can’t take care of themselves. I actually witnessed it several times.
+So why do I want you to want that around me? I don’t want people. I don’t want you there. Because you do those things.
+I should want you around. I need your stuff.
+I should want you around me. I should want to want you to be with me. I should want to invite you to go with me.
+I should want to do those things, but I don’t want. Why do I want that?
+Your day Yeah, you told me that you don’t like the way I’ve been treating you, and I told you because I don’t like the way you behave.
+I was going to get out of your life. Because you don’t see the fact that I was upset with you for things that you didn’t do. You didn’t play the victim. Why do you play the victim? How are you the victim when you hate your sister? And I’m upset with you.
+Where are you the victim in that, where I don’t want to associate with somebody who hits your sister?
+No, this has been weeks of this has been just one year.
+It’s constant.
+Picking on them. I just want to hear it.
+I can just add it to my memories. I don’t hear that in the car.
+Going in the middle of the car with them. When they start fighting, they start arguing.
+It didn’t happen with them yesterday. It should have been great when we were laughing and joking around. It shouldn’t have been nice to each other when we were playing with the jet, running around, laughing. There were less than anything negative about it. Not less.
+No, it’s not It’s not normal. It’s not normal.
+You don’t want to be punished. You don’t want to be punished. Tell me about a polite punishment.
+I didn’t hear what the word she said.
+I said, “What did she say” I couldn’t hear what she was saying because she hung over. So don’t interrupt. I started the conversation.
+All right. I started the conversation first. I said, “You want to get this out?” You’re stuck there. You’re stuck there.
+I didn’t do that You did that.
+I’m talking about a general approach to life.
+You go through life, trying to be funny, by putting people down, those people will fail because of you, and you will fail because that is the culture you will create. People that are successful surround people that don’t waste any time putting each other down. It’s not funny. It’s not healthy. If you want to be successful person in this world, you won’t just try to find funny things to say. It will make people laugh and believe it’s something funny that a lot of us are tired of discussing.
+Whatever your mom said was really I want you to be successful.
+And this interview is saved.
+And I know the conference.
+Right now they don’t want to do anything out of your curiosity.
+She’s genuinely wants to do something kind for you.
+Something kindly for Joe. That’s a great start to stop her. She’s stopping being kind to Joe and thinking about being kind. She’s stopping that. There’s going to be a time where you’re going to be so close to her or upset her so badly that she’s no longer going to want you to be because she genuinely loves you. You understand her language and feelings between people?
+You understand all the words.
+You understand that There’s going to be a time where she’s not going to want you to listen to me. I will stop wanting to be anything kind to you. She’s like, “You’re supposed to stop because you’re so fed up with how not kind you are to Joe.” It’s not. Think about it.
+Think about it first.
+Try to.
+I’ll say today you didn’t like me, but why?
+I can’t say anything.
+Don’t laugh at you or exclude me.
+It’s just normal.
+People
+And then you’ll be suffering.
