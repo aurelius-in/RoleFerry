@@ -19,6 +19,7 @@ from .routers import (
     enrich,
     tracker,
     livepages,
+    bio_pages,
     personas,
     job_preferences,
     gap_analysis,
@@ -145,6 +146,7 @@ def create_app() -> FastAPI:
     app.include_router(enrich.router, tags=["enrichment"])
     app.include_router(tracker.router, tags=["tracker"])
     app.include_router(livepages.router, tags=["livepages"])
+    app.include_router(bio_pages.router, tags=["bio-pages"])
     app.include_router(personas.router, tags=["personas"])
     app.include_router(job_preferences.router, prefix="/job-preferences", tags=["job-preferences"])
     app.include_router(gap_analysis.router, prefix="/gap-analysis", tags=["gap-analysis"])

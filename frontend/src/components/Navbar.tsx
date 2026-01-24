@@ -100,12 +100,13 @@ export default function Navbar() {
             <NavPill href="/find-contact" pathname={pathname}>Contact</NavPill>
             <NavPill href="/context-research" pathname={pathname}>Research</NavPill>
             <NavPill href="/offer-creation" pathname={pathname}>Offer</NavPill>
+            <NavPill href="/bio-page" pathname={pathname}>Bio</NavPill>
             <NavPill href="/compose" pathname={pathname}>Compose</NavPill>
             <NavPill href="/campaign" pathname={pathname}>Campaign</NavPill>
-            <NavPill href="/deliverability-launch" pathname={pathname}>Launch</NavPill>
             <span className="mx-2 h-4 w-px bg-white/10" />
             <NavPill href="/analytics" pathname={pathname} kind="utility">Analytics</NavPill>
             <NavPill href="/tracker" pathname={pathname} kind="utility">Tracker</NavPill>
+            <NavPill href="/deliverability-launch" pathname={pathname} kind="utility">Launch</NavPill>
           </div>
 
           {/* Right: utilities that should NOT look like steps */}

@@ -46,6 +46,9 @@ class InMemoryStore:
         self.demo_offer: Dict[str, Any] | None = None
         # Offer library per user (used when Postgres is unavailable)
         self.demo_offer_library_by_user: Dict[str, List[Dict[str, Any]]] = {}
+        # Bio Pages (demo + public published-by-slug)
+        self.demo_bio_pages_by_user: Dict[str, Dict[str, Any]] = {}
+        self.bio_pages_by_slug: Dict[str, Dict[str, Any]] = {}
         self.demo_compose: Dict[str, Any] | None = None
         self.demo_campaign: Dict[str, Any] | None = None
 

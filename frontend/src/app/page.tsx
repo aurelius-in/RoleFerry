@@ -24,10 +24,9 @@ const STONES: StoneConfig[] = [
   { step: 7, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
   { step: 8, tab: "background-research", label: "Background Research", icon: "🔍", href: "/context-research" },
   { step: 9, tab: "offer-creation", label: "Offer Creation", icon: "💼", href: "/offer-creation" },
-  // Week 10: Compose is the first screen in building the campaign sequence.
-  { step: 10, tab: "campaign", label: "Campaign", icon: "📧", href: "/compose" },
-  { step: 11, tab: "deliverability-launch", label: "Warm-up + Launch", icon: "🚀", href: "/deliverability-launch" },
-  { step: 12, tab: "job-tracker", label: "Job Tracker", icon: "📌", href: "/tracker" },
+  { step: 10, tab: "bio-page", label: "Bio Page", icon: "🌐", href: "/bio-page" },
+  { step: 11, tab: "compose", label: "Compose", icon: "✍️", href: "/compose" },
+  { step: 12, tab: "campaign", label: "Campaign", icon: "📧", href: "/campaign" },
 ];
 
 const LEFT_FOOT_SRC = "/wireframes/assets/left-foot.gif";
@@ -59,17 +58,46 @@ export default function Home() {
     const saved = window.localStorage.getItem("roleferry-progress");
     if (saved) {
       try {
-        const arr: number[] = JSON.parse(saved);
-        // Backwards-compat: previously step 3 was Job Descriptions and step 11 was Analytics.
-        // We inserted Personality at step 3 and removed Analytics from the 12-step keypad,
-        // so we shift old steps (3..10) forward by 1 and drop step 11.
-        const remapped: number[] = [];
-        for (const n of arr || []) {
-          if (n === 11) continue; // old Analytics
-          if (n >= 3 && n <= 10) remapped.push(n + 1);
-          else remapped.push(n);
+        const parsed = JSON.parse(saved);
+        const steps: number[] = Array.isArray(parsed)
+          ? parsed
+          : Array.isArray(parsed?.steps)
+            ? parsed.steps
+            : [];
+
+        // Backwards-compat (safe, heuristic-based):
+        // - If the saved array includes 12, it came from the era where
+        //   10=Compose, 11=Launch, 12=Tracker (Analytics already removed).
+        // - If it does NOT include 12, it may predate the Personality insertion
+        //   where 3=Job Descriptions and 11=Analytics.
+        let out: number[] = (steps || []).filter((n) => Number.isFinite(n));
+
+        const hasTwelve = out.includes(12);
+        if (!hasTwelve) {
+          // Legacy: insert Personality at step 3 and drop old Analytics at step 11.
+          const remapped: number[] = [];
+          for (const n of out) {
+            if (n === 11) continue; // old Analytics
+            if (n >= 3 && n <= 10) remapped.push(n + 1);
+            else remapped.push(n);
+          }
+          out = remapped;
         }
-        setCompleted(new Set(remapped));
+
+        // New: remove Tracker from keypad, insert Bio Page at step 10,
+        // and make Campaign the final step. Old (pre-change): 10=Compose, 11=Launch, 12=Tracker
+        // New: 10=Bio, 11=Compose, 12=Campaign (Launch removed from keypad)
+        const remapped2: number[] = [];
+        for (const n of out) {
+          if (n === 12) continue; // Tracker removed from keypad
+          if (n === 10) remapped2.push(11);
+          else if (n === 11) remapped2.push(12);
+          else remapped2.push(n);
+        }
+
+        // Clamp + de-dupe for safety.
+        const final = Array.from(new Set(remapped2.filter((n) => n >= 1 && n <= 12)));
+        setCompleted(new Set(final));
       } catch {
         // ignore
       }
@@ -88,7 +116,7 @@ export default function Home() {
   }, []);
 
   function saveProgress(next: Set<number>) {
-    window.localStorage.setItem("roleferry-progress", JSON.stringify(Array.from(next)));
+    window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 2, steps: Array.from(next) }));
   }
 
   function playFootstepSequence(targetStep: number, onComplete: () => void) {
@@ -196,6 +224,34 @@ export default function Home() {
             );
           })}
         </div>
+
+        {(() => {
+          const hasAllSteps = (() => {
+            for (let i = 1; i <= 12; i++) if (!completed.has(i)) return false;
+            return true;
+          })();
+          const disabled = isAnimating || !hasAllSteps;
+          return (
+            <div className="mt-6 flex justify-center">
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => {
+                  if (disabled) return;
+                  router.push("/deliverability-launch");
+                }}
+                className={`w-full max-w-[600px] rounded-2xl border px-6 py-5 text-xl font-extrabold tracking-wide transition-colors ${
+                  disabled
+                    ? "bg-white/5 border-white/10 text-white/40"
+                    : "bg-emerald-500/20 border-emerald-400/40 text-emerald-200 hover:bg-emerald-500/25"
+                }`}
+                title={disabled ? "Complete all 12 steps above to unlock Warm-up + Launch" : "Warm-up + Launch"}
+              >
+                🚀 Warm-up + Launch
+              </button>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
