@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import placeholderPat from "@/profile-pat.png";
 
 type BioPageTheme = {
   accent: string;
@@ -18,18 +19,21 @@ type BioPageDraft = {
   fit_points: string[];
   resume_extract: any;
   portfolio_url: string;
+  profile_image_url?: string;
   theme: BioPageTheme;
 };
 
 const DRAFT_KEY = "bio_page_draft";
 const PUBLISHED_KEY = "bio_page_published";
 const BIO_URL_KEY = "bio_page_url";
+const PROFILE_IMAGE_KEY = "bio_page_profile_image_url";
 
 function safeStr(v: any) {
   return String(v ?? "").trim();
 }
 
 export default function BioPageStep() {
+  const profileInputRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<BioPageDraft | null>(null);
   const [busy, setBusy] = useState<"generate" | "publish" | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -38,6 +42,7 @@ export default function BioPageStep() {
   const [painpointMatches, setPainpointMatches] = useState<any>(null);
   const [offerDraft, setOfferDraft] = useState<any>(null);
   const [bioUrl, setBioUrl] = useState<string>("");
+  const [profileImageUrl, setProfileImageUrl] = useState<string>("");
 
   useEffect(() => {
     // Load cached draft if available for quick UX
@@ -82,7 +87,56 @@ export default function BioPageStep() {
     } catch {
       setBioUrl("");
     }
+
+    try {
+      setProfileImageUrl(safeStr(localStorage.getItem(PROFILE_IMAGE_KEY)));
+    } catch {
+      setProfileImageUrl("");
+    }
   }, []);
+
+  const onPickProfilePhoto = () => {
+    profileInputRef.current?.click();
+  };
+
+  const onProfilePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type?.startsWith("image/")) {
+      setMsg("Please upload an image file (PNG/JPG).");
+      setTimeout(() => setMsg(null), 2500);
+      try {
+        e.target.value = "";
+      } catch {}
+      return;
+    }
+
+    // Keep this small-ish since we're storing a data URL in localStorage.
+    if (file.size > 2.5 * 1024 * 1024) {
+      setMsg("Please use an image under 2.5MB.");
+      setTimeout(() => setMsg(null), 2500);
+      try {
+        e.target.value = "";
+      } catch {}
+      return;
+    }
+
+    const reader = new FileReader();
+    const dataUrl: string = await new Promise((resolve, reject) => {
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.readAsDataURL(file);
+    });
+
+    setProfileImageUrl(dataUrl);
+    try {
+      localStorage.setItem(PROFILE_IMAGE_KEY, dataUrl);
+    } catch {}
+    try {
+      e.target.value = "";
+    } catch {}
+  };
 
   const generate = async () => {
     setBusy("generate");
@@ -95,8 +149,9 @@ export default function BioPageStep() {
         offer_draft: offerDraft,
       });
       if (res?.draft) {
-        setDraft(res.draft);
-        localStorage.setItem(DRAFT_KEY, JSON.stringify(res.draft));
+        const merged = { ...res.draft, profile_image_url: profileImageUrl || res.draft.profile_image_url || "" };
+        setDraft(merged);
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(merged));
       }
       setMsg("Draft generated.");
     } catch (e: any) {
@@ -113,7 +168,7 @@ export default function BioPageStep() {
     setMsg(null);
     try {
       const res = await api<{ slug: string; public_url: string }>("/bio-pages/publish", "POST", {
-        draft,
+        draft: { ...draft, profile_image_url: profileImageUrl || draft.profile_image_url || "" },
       });
       const url = safeStr(res?.public_url);
       if (url) {
@@ -238,6 +293,30 @@ export default function BioPageStep() {
                 </div>
               ) : (
                 <div className="mt-4 rounded-lg border border-white/10 bg-black/20 p-6">
+                  <div className="flex flex-col items-center text-center">
+                    <input
+                      ref={profileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={onProfilePhotoChange}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={onPickProfilePhoto}
+                      className="group rounded-full border border-white/10 bg-white/5 p-1 hover:bg-white/10 transition-colors"
+                      aria-label="Upload profile picture"
+                      title="Upload profile picture"
+                    >
+                      <img
+                        src={profileImageUrl || (placeholderPat as any).src || placeholderPat}
+                        alt="Profile picture"
+                        className="h-24 w-24 rounded-full object-cover"
+                      />
+                    </button>
+                    <div className="mt-2 text-xs text-white/50">upload your own profile picture.</div>
+                  </div>
+
                   <div className="text-xs text-white/50 mb-2">CTA</div>
                   <div className="flex flex-wrap gap-2">
                     <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm">

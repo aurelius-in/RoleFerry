@@ -12,6 +12,7 @@ from ..services.jargon_detector import jargon_detector
 from ..services.campaign_sender import record_outreach_send
 from ..services.email_sender import send_email
 from ..config import settings
+from ..clients.instantly import InstantlyClient
 from ..clients.openai_client import get_openai_client, extract_json_from_text, _strip_fluff_openers
 from ..auth import require_current_user
 
@@ -59,6 +60,99 @@ class DeliverabilityCheckRequest(BaseModel):
     user_mode: str = "job-seeker"
     tone: Optional[str] = None
     custom_tone: Optional[str] = None
+
+
+class RoleFerryWarmupStatus(BaseModel):
+    available: bool
+    provider: Optional[str] = None
+    message: str
+
+
+@router.get("/roleferry-warmup/status", response_model=RoleFerryWarmupStatus)
+async def roleferry_warmup_status(http_request: Request):
+    # Protected because it implies access to third-party integrations.
+    await require_current_user(http_request)
+    if not settings.instantly_enabled:
+        return RoleFerryWarmupStatus(
+            available=False,
+            provider=None,
+            message="RoleFerry warm-up is unavailable (Instantly is not configured).",
+        )
+    return RoleFerryWarmupStatus(
+        available=True,
+        provider="instantly",
+        message="RoleFerry warm-up is available via Instantly’s warm-up API.",
+    )
+
+
+@router.get("/roleferry-warmup/accounts")
+async def roleferry_warmup_accounts(http_request: Request):
+    await require_current_user(http_request)
+    if not settings.instantly_enabled:
+        raise HTTPException(status_code=400, detail="Instantly is not configured")
+
+    client = InstantlyClient(settings.instantly_api_key or "")
+    resp = await client.list_accounts()
+    if not resp.get("ok"):
+        raise HTTPException(status_code=502, detail=f"Instantly accounts lookup failed: {resp.get('error')}")
+
+    raw = resp.get("raw")
+    accounts = []
+    if isinstance(raw, list):
+        accounts = raw
+    elif isinstance(raw, dict):
+        # Try common shapes
+        for k in ["accounts", "data", "items", "results"]:
+            v = raw.get(k)
+            if isinstance(v, list):
+                accounts = v
+                break
+        if not accounts and isinstance(raw.get("data"), dict) and isinstance(raw["data"].get("accounts"), list):
+            accounts = raw["data"]["accounts"]
+
+    # Normalize to a stable, minimal shape for the frontend.
+    out = []
+    for a in accounts[:200]:
+        if not isinstance(a, dict):
+            continue
+        email = str(a.get("email") or "").strip()
+        if not email:
+            continue
+        out.append(
+            {
+                "email": email,
+                "warmup_status": a.get("warmup_status"),
+                "stat_warmup_score": a.get("stat_warmup_score"),
+                "status": a.get("status"),
+                "provider_code": a.get("provider_code"),
+                "timestamp_warmup_start": a.get("timestamp_warmup_start"),
+                "raw": a,
+            }
+        )
+    return {"accounts": out}
+
+
+class RoleFerryWarmupEnableRequest(BaseModel):
+    emails: Optional[List[str]] = None
+    include_all_emails: bool = False
+    excluded_emails: Optional[List[str]] = None
+
+
+@router.post("/roleferry-warmup/enable")
+async def roleferry_warmup_enable(payload: RoleFerryWarmupEnableRequest, http_request: Request):
+    await require_current_user(http_request)
+    if not settings.instantly_enabled:
+        raise HTTPException(status_code=400, detail="Instantly is not configured")
+
+    client = InstantlyClient(settings.instantly_api_key or "")
+    resp = await client.enable_warmup(
+        emails=payload.emails or [],
+        include_all_emails=bool(payload.include_all_emails),
+        excluded_emails=payload.excluded_emails or [],
+    )
+    if not resp.get("ok"):
+        raise HTTPException(status_code=502, detail=f"Instantly warm-up enable failed: {resp.get('error')}")
+    return {"ok": True, "result": resp.get("raw")}
 
 
 class DeliverabilityEmailReport(BaseModel):
@@ -436,8 +530,9 @@ async def run_pre_flight_checks(request: CampaignLaunchRequest):
             warmup_check.message = "Warm-up status unavailable"
             warmup_check.details = "Enable warm-up in the UI and select a provider for best results."
         
-        # 6. GPT Deliverability Helper (explanations + copy tweaks)
-        # Keep deterministic results if GPT is not configured.
+        # 6. AI Deliverability Helper (explanations + copy tweaks)
+        # IMPORTANT: Only show this check when a real LLM is active.
+        # Otherwise, we'd be showing generic "stub" suggestions that are not grounded in the user's copy.
         try:
             primary_email = request.emails[0] if request.emails else {}
             subject = str(primary_email.get("subject") or "")
@@ -445,59 +540,27 @@ async def run_pre_flight_checks(request: CampaignLaunchRequest):
 
             client = get_openai_client()
 
-            # Always have a deterministic fallback payload available.
-            stub_json = {
-                "summary": "Overall deliverability looks good; the main improvement is reducing spammy emphasis and increasing specificity.",
-                "copy_tweaks": [
-                    "Remove extra exclamation marks and overly promotional phrasing.",
-                    "Mention one concrete pain point + one metric, then ask a simple CTA.",
-                    "Keep the first paragraph under ~3 lines on mobile.",
-                ],
-                "subject_variants": [
-                    "Quick question about the role",
-                    "Idea for onboarding activation",
-                    "Re: {company} — 10 min?",
-                ],
-            }
-
             helper_ctx = {
                 "pre_flight_checks": [c.model_dump() for c in checks],
                 "subject": subject,
                 "body": body,
             }
 
-            # If OpenAI isn't configured, don't pretend it's an error — explain what to fix.
-            if not client.should_use_real_llm:
-                # Railway note: env var names are case-sensitive, so RoleFerryKey vs ROLEFERRYKEY matters.
-                env_hint = (
-                    f"(env OPENAI_API_KEY={bool(os.getenv('OPENAI_API_KEY'))}, "
-                    f"RoleFerryKey={bool(os.getenv('RoleFerryKey'))}, "
-                    f"ROLEFERRYKEY={bool(os.getenv('ROLEFERRYKEY'))}, "
-                    f"ROLEFERRY_KEY={bool(os.getenv('ROLEFERRY_KEY'))}, "
-                    f"LLM_MODE={str(os.getenv('LLM_MODE') or '')})"
-                )
-                helper_details = (
-                    "GPT is not active for deliverability helper.\n\n"
-                    "To enable:\n"
-                    "- In Railway → Backend service → Variables, set OPENAI_API_KEY (recommended)\n"
-                    "  (aliases also supported: RoleFerryKey / ROLEFERRYKEY / ROLEFERRY_KEY)\n"
-                    "- Set LLM_MODE=openai\n"
-                    "- Redeploy the backend service\n\n"
-                    f"Diagnostics: {env_hint}\n\n"
-                    "Deterministic suggestions:\n"
-                    f"{stub_json.get('summary','')}\n\n"
-                    "Copy tweaks:\n- " + "\n- ".join(stub_json.get("copy_tweaks") or []) + "\n\n"
-                    "Subject variants:\n- " + "\n- ".join(stub_json.get("subject_variants") or [])
-                )
-                checks.append(
-                    PreFlightCheck(
-                        name="GPT Deliverability Helper",
-                        status="warning",
-                        message="AI helper disabled; showing deterministic suggestions",
-                        details=helper_details[:2000],
-                    )
-                )
-            else:
+            if client.should_use_real_llm:
+                # Always have a deterministic fallback payload available for provider failures.
+                stub_json = {
+                    "summary": "Deliverability looks acceptable; tighten the opener and reduce spam-trigger patterns.",
+                    "copy_tweaks": [
+                        "Trim the first email to ~120 words and keep 0–1 links.",
+                        "Remove promotional phrasing/excess punctuation; keep the CTA simple.",
+                        "Lead with one specific pain point + one proof point.",
+                    ],
+                    "subject_variants": [
+                        "Quick question about the role",
+                        "One idea for your top priority",
+                        "10 min this week?",
+                    ],
+                }
                 messages = [
                     {
                         "role": "system",
@@ -525,22 +588,16 @@ async def run_pre_flight_checks(request: CampaignLaunchRequest):
 
                 checks.append(
                     PreFlightCheck(
-                        name="GPT Deliverability Helper",
+                        name="AI Deliverability Helper",
                         status="pass",
                         message="Copy tweaks and safer subject variants generated",
                         details=helper_details[:2000],
                     )
                 )
         except Exception as e:
-            # Keep launch flow stable even if helper fails, but surface why.
-            checks.append(
-                PreFlightCheck(
-                    name="GPT Deliverability Helper",
-                    status="warning",
-                    message="Helper unavailable; proceeding with deterministic checks",
-                    details=f"{type(e).__name__}: {str(e)[:240]}",
-                )
-            )
+            # Keep launch flow stable even if helper fails; do not emit generic stub suggestions.
+            # The copy risk + spam risk checks above already provide grounded feedback.
+            logger.warning("AI deliverability helper failed: %s", str(e)[:200])
 
         return checks
         

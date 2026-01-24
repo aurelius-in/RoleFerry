@@ -428,7 +428,7 @@ export default function OfferCreationPage() {
     };
     // Do NOT add to Offer Library unless they hit Save.
     localStorage.setItem('created_offers', JSON.stringify([draft]));
-    router.push('/compose');
+    router.push('/bio-page');
   };
 
   const getToneDescription = (tone: string) => {
@@ -749,7 +749,7 @@ export default function OfferCreationPage() {
                             disabled={!offerTitle.trim() || !offerContent.trim()}
                             className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                           >
-                            Continue to Compose →
+                            Continue to Bio Page →
                           </button>
                         </div>
                       </div>

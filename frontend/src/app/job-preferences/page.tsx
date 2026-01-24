@@ -637,7 +637,7 @@ export default function JobPreferencesPage() {
 
           {helper && (
             <div className="mt-8 rounded-lg border border-white/10 bg-black/20 p-4">
-              <div className="text-sm font-bold text-white mb-2">GPT Helper: preference suggestions</div>
+              <div className="text-sm font-bold text-white mb-2">Smart Helper: preference suggestions</div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <div className="text-white/70 font-semibold mb-1">Normalized skills</div>

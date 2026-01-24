@@ -749,7 +749,7 @@ export default function CampaignPage() {
               {composeHelper?.variants?.length > 0 && (
                 <div className="rounded-lg border border-white/10 bg-black/20 p-4">
                   <div className="flex items-start justify-between gap-3 mb-2">
-                    <div className="text-sm font-bold text-white">GPT Helper: variants (full)</div>
+                    <div className="text-sm font-bold text-white">Smart Helper: variants (full)</div>
                     {composeHelper?.rationale && (
                       <div className="text-xs text-white/60">{composeHelper.rationale}</div>
                     )}
@@ -922,11 +922,17 @@ export default function CampaignPage() {
                     <div key={email.id} className="border border-gray-200 rounded-lg p-6">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-3">
-                          <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
+                          <div className="bg-orange-500/15 text-orange-300 border border-orange-400/30 px-3 py-1.5 rounded-full text-base font-extrabold">
                             Step {email.step_number}
                           </div>
-                          <div className="text-sm text-gray-600">
-                            {email.delay_days > 0 ? `+${email.delay_days} days` : 'Immediate'}
+                          <div className="text-base font-bold text-orange-300">
+                            {(() => {
+                              const days = Number(email.delay_days || 0) || 0;
+                              const hours = Number((email as any)?.delay_hours || 0) || 0;
+                              if (days > 0) return `${days} day${days === 1 ? "" : "s"} later`;
+                              if (hours > 0) return `${hours} hour${hours === 1 ? "" : "s"} later`;
+                              return "Immediate";
+                            })()}
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">

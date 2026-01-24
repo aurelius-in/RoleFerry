@@ -55,8 +55,9 @@ export default function Home() {
   const [bannerClosed, setBannerClosed] = useState(false);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("roleferry-progress");
-    if (saved) {
+    function loadCompletedFromStorage() {
+      const saved = window.localStorage.getItem("roleferry-progress");
+      if (!saved) return;
       try {
         const parsed = JSON.parse(saved);
         const steps: number[] = Array.isArray(parsed)
@@ -102,6 +103,11 @@ export default function Home() {
         // ignore
       }
     }
+
+    loadCompletedFromStorage();
+    const handler = () => loadCompletedFromStorage();
+    window.addEventListener("roleferry-progress-updated", handler as EventListener);
+    return () => window.removeEventListener("roleferry-progress-updated", handler as EventListener);
   }, []);
 
   const progressCount = completed.size;
@@ -232,7 +238,7 @@ export default function Home() {
           })();
           const disabled = isAnimating || !hasAllSteps;
           return (
-            <div className="mt-6 flex justify-center">
+            <div className="mt-3 flex justify-center">
               <button
                 type="button"
                 disabled={disabled}
@@ -240,7 +246,7 @@ export default function Home() {
                   if (disabled) return;
                   router.push("/deliverability-launch");
                 }}
-                className={`w-full max-w-[600px] rounded-2xl border px-6 py-5 text-xl font-extrabold tracking-wide transition-colors ${
+                className={`w-full max-w-[900px] rounded-2xl border px-6 py-5 text-xl font-extrabold tracking-wide transition-colors ${
                   disabled
                     ? "bg-white/5 border-white/10 text-white/40"
                     : "bg-emerald-500/20 border-emerald-400/40 text-emerald-200 hover:bg-emerald-500/25"

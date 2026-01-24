@@ -10,6 +10,7 @@ import { DataMode, getCurrentDataMode, setCurrentDataMode } from "@/lib/dataMode
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [dataOpen, setDataOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   
@@ -20,6 +21,51 @@ export default function Navbar() {
     }
   }, []);
 
+  // Mark steps complete even if the user navigates via the navbar (not the dashboard stones).
+  useEffect(() => {
+    if (!pathname) return;
+    if (typeof window === "undefined") return;
+    try {
+      const stepForPath = (p: string): number | null => {
+        const path = String(p || "/");
+        if (path === "/job-preferences" || path.startsWith("/job-preferences/")) return 1;
+        if (path === "/resume" || path.startsWith("/resume/")) return 2;
+        if (path === "/personality" || path.startsWith("/personality/")) return 3;
+        if (path === "/job-descriptions" || path.startsWith("/job-descriptions/")) return 4;
+        if (path === "/gap-analysis" || path.startsWith("/gap-analysis/")) return 5;
+        if (path === "/painpoint-match" || path.startsWith("/painpoint-match/")) return 6;
+        if (path === "/find-contact" || path.startsWith("/find-contact/")) return 7;
+        if (path === "/context-research" || path.startsWith("/context-research/")) return 8;
+        if (path === "/offer-creation" || path.startsWith("/offer-creation/")) return 9;
+        if (path === "/bio-page" || path.startsWith("/bio-page/")) return 10;
+        if (path === "/compose" || path.startsWith("/compose/")) return 11;
+        if (path === "/campaign" || path.startsWith("/campaign/")) return 12;
+        return null;
+      };
+
+      const step = stepForPath(pathname);
+      if (!step) return;
+
+      const raw = window.localStorage.getItem("roleferry-progress");
+      let steps: number[] = [];
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          steps = Array.isArray(parsed)
+            ? parsed
+            : Array.isArray(parsed?.steps)
+              ? parsed.steps
+              : [];
+        } catch {}
+      }
+      const next = Array.from(new Set([...(steps || []).filter((n) => Number.isFinite(n)), step]))
+        .filter((n) => n >= 1 && n <= 12);
+      window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 2, steps: next }));
+      window.dispatchEvent(new CustomEvent("roleferry-progress-updated", { detail: { step } }));
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
   async function logout() {
     try {
       await api("/auth/logout", "POST");
@@ -29,7 +75,6 @@ export default function Navbar() {
     } catch {}
   }
   const [toolsOpen, setToolsOpen] = useState(false);
-  const pathname = usePathname();
   const hideOnAuth = pathname === "/login";
   if (hideOnAuth) return null;
 
@@ -107,6 +152,7 @@ export default function Navbar() {
             <NavPill href="/analytics" pathname={pathname} kind="utility">Analytics</NavPill>
             <NavPill href="/tracker" pathname={pathname} kind="utility">Tracker</NavPill>
             <NavPill href="/deliverability-launch" pathname={pathname} kind="utility">Launch</NavPill>
+            <NavPill href="/inbox" pathname={pathname} kind="utility">Inbox</NavPill>
           </div>
 
           {/* Right: utilities that should NOT look like steps */}

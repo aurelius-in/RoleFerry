@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import logging
 import json
+import re
 
 from sqlalchemy import text as sql_text
 
@@ -49,6 +50,98 @@ class MatchRequest(BaseModel):
     job_description: Optional[Dict[str, Any]] = None
     # Optional fallback from frontend when the resume isn't present in DB/demo store.
     resume_extract: Optional[Dict[str, Any]] = None
+
+
+def _tokenize(s: str) -> List[str]:
+    return [t for t in re.split(r"[^a-z0-9]+", (s or "").lower()) if t and len(t) > 2]
+
+
+def _is_fluff_line(s: str) -> bool:
+    low = (s or "").lower()
+    # Filter aggregator/marketing/UI copy that is not a responsibility/problem-to-solve
+    bad = [
+        "kickstart your job search",
+        "get access now",
+        "meet jobcopilot",
+        "try it now",
+        "similar remote jobs",
+        "beware of scams",
+        "please mention that you come from",
+        "do you have experience",
+        "find out how your skills align",
+        "discover valuable connections",
+        "get 3x more responses",
+        "beyond your network",
+        "find any email",
+        "apply for this position",
+        "apply now",
+        "save",
+        "premium",
+        # A.Team / community marketing (not a concrete problem)
+        "invited to impactful missions",
+        "match your interests",
+        "off-the-record gatherings",
+        "micro-communities",
+        "we quietly launched",
+        "our long-term vision",
+        "we call them",
+        "invite-only",
+    ]
+    if any(b in low for b in bad):
+        return True
+    # Section headers (esp. with colon)
+    if s.strip().endswith(":"):
+        return True
+    # Too short to be useful
+    if len(s.strip()) < 12:
+        return True
+    return False
+
+
+def _clean_candidates(items: Any, *, max_len: int = 240) -> List[str]:
+    if not isinstance(items, list):
+        return []
+    out: List[str] = []
+    seen = set()
+    for it in items:
+        s = str(it or "").strip().lstrip("•-* ").strip()
+        if not s:
+            continue
+        s = " ".join(s.split())
+        if _is_fluff_line(s):
+            continue
+        if len(s) > max_len:
+            s = s[: max_len - 1].rstrip() + "…"
+        key = s.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(s)
+    return out
+
+
+def _best_evidence(target: str, candidates: List[str]) -> str:
+    """
+    Pick the closest candidate line to the target based on token overlap.
+    """
+    t = (target or "").strip()
+    if not t:
+        return ""
+    if not candidates:
+        return t[:220]
+    tt = set(_tokenize(t))
+    best = ""
+    best_score = -1
+    for c in candidates:
+        cc = set(_tokenize(c))
+        score = len(tt.intersection(cc))
+        # Prefer lines that share more words; small bias for shorter quotes.
+        score = score * 10 - int(len(c) / 60)
+        if score > best_score:
+            best_score = score
+            best = c
+    return (best or t)[:220]
+
 
 @router.post("/generate", response_model=PainPointMatchResponse)
 async def generate_painpoint_matches(request: MatchRequest):
@@ -150,7 +243,10 @@ async def generate_painpoint_matches(request: MatchRequest):
 
         raw_accomplishments = (
             resume_parsed.get("NotableAccomplishments")
+            or resume_parsed.get("accomplishments")
             or resume_parsed.get("KeyMetrics")
+            or resume_parsed.get("keyMetrics")
+            or resume_parsed.get("key_metrics")
             or []
         )
         # Normalize + filter out PDF/binary artifacts so we never show them as "solutions".
@@ -168,41 +264,35 @@ async def generate_painpoint_matches(request: MatchRequest):
 
         # Helper: rule-based pairing (avoid demo defaults; allow 0–3 alignments)
         def build_rule_based_match() -> PainPointMatch:
-            # Prefer concrete items over generic slogans; responsibilities/requirements tend to be most concrete.
-            def _clean_list(items: Any) -> List[str]:
-                if not isinstance(items, list):
-                    return []
-                out: List[str] = []
-                for it in items:
-                    s = str(it or "").strip()
-                    if not s:
-                        continue
-                    out.append(s)
-                return out
+            # Prefer concrete items; responsibilities/requirements tend to be most concrete.
+            resp = _clean_candidates(jd_responsibilities)
+            reqs = _clean_candidates(jd_requirements)
+            pps = _clean_candidates(jd_pain_points)
+            sms = _clean_candidates(jd_success_metrics)
 
-            resp = _clean_list(jd_responsibilities)
-            reqs = _clean_list(jd_requirements)
-            pps = _clean_list(jd_pain_points)
+            # Candidate JD evidence pool (ordered by relevance)
+            jd_candidates = (resp + reqs + pps + sms)[:30]
+            pp = jd_candidates[:10]
 
-            # Lightweight filter for obvious marketing fluff; keep only if we have nothing else.
-            def _is_generic(s: str) -> bool:
-                low = (s or "").lower()
-                generic_phrases = [
-                    "solve complex problems",
-                    "learn new skills",
-                    "change the world",
-                    "coolest tech",
-                    "fortune 500",
-                    "culture built on",
-                    "opportunity, inclusion",
-                    "spirit of partnership",
-                ]
-                return any(p in low for p in generic_phrases)
-
-            pp = [s for s in (resp + reqs + pps) if s and not _is_generic(s)]
-            if not pp:
-                pp = [s for s in (resp + reqs + pps) if s]
             acc = [str(x).strip() for x in (resume_accomplishments or []) if str(x).strip()]
+            # Resume evidence pool: accomplishments + role descriptions + key metric contexts
+            resume_candidates: List[str] = []
+            for a in acc[:25]:
+                if a and not _is_fluff_line(a):
+                    resume_candidates.append(a[:240])
+            for p in (resume_parsed.get("Positions") or resume_parsed.get("positions") or [])[:25]:
+                if isinstance(p, dict):
+                    d = str(p.get("description") or "").strip()
+                    if d and not _is_fluff_line(d):
+                        resume_candidates.append(d[:240])
+            for m in (resume_parsed.get("KeyMetrics") or resume_parsed.get("key_metrics") or resume_parsed.get("keyMetrics") or resume_parsed.get("keyMetrics") or [])[:25]:
+                if isinstance(m, dict):
+                    ctx = str(m.get("context") or "").strip()
+                    metric = str(m.get("metric") or "").strip()
+                    val = str(m.get("value") or "").strip()
+                    s = " — ".join([x for x in [metric, val, ctx] if x])
+                    if s and not _is_fluff_line(s):
+                        resume_candidates.append(s[:240])
 
             def _safe_get(items, idx) -> str:
                 return items[idx] if idx < len(items) else ""
@@ -217,21 +307,21 @@ async def generate_painpoint_matches(request: MatchRequest):
 
             return PainPointMatch(
                 painpoint_1=_safe_get(pp, 0),
-                jd_evidence_1="",
+                jd_evidence_1=_best_evidence(_safe_get(pp, 0), jd_candidates),
                 solution_1=_safe_get(acc, 0),
-                resume_evidence_1="",
+                resume_evidence_1=_best_evidence(_safe_get(acc, 0), resume_candidates),
                 metric_1="",
                 overlap_1="",
                 painpoint_2=_safe_get(pp, 1),
-                jd_evidence_2="",
+                jd_evidence_2=_best_evidence(_safe_get(pp, 1), jd_candidates),
                 solution_2=_safe_get(acc, 1),
-                resume_evidence_2="",
+                resume_evidence_2=_best_evidence(_safe_get(acc, 1), resume_candidates),
                 metric_2="",
                 overlap_2="",
                 painpoint_3=_safe_get(pp, 2),
-                jd_evidence_3="",
+                jd_evidence_3=_best_evidence(_safe_get(pp, 2), jd_candidates),
                 solution_3=_safe_get(acc, 2),
-                resume_evidence_3="",
+                resume_evidence_3=_best_evidence(_safe_get(acc, 2), resume_candidates),
                 metric_3="",
                 overlap_3="",
                 alignment_score=score,
@@ -322,6 +412,38 @@ async def generate_painpoint_matches(request: MatchRequest):
                 match = build_rule_based_match()
         else:
             match = build_rule_based_match()
+
+        # Post-process: ensure evidence is never blank, and avoid fluff pain points.
+        jd_candidates = _clean_candidates(jd_responsibilities) + _clean_candidates(jd_requirements) + _clean_candidates(jd_pain_points) + _clean_candidates(jd_success_metrics)
+        resume_candidates: List[str] = []
+        resume_candidates.extend(_clean_candidates(resume_parsed.get("accomplishments") or resume_parsed.get("NotableAccomplishments") or []))
+        resume_candidates.extend(_clean_candidates(resume_parsed.get("skills") or resume_parsed.get("Skills") or []))
+        for p in (resume_parsed.get("positions") or resume_parsed.get("Positions") or [])[:40]:
+            if isinstance(p, dict):
+                d = str(p.get("description") or "").strip()
+                if d and not _is_fluff_line(d):
+                    resume_candidates.append(" ".join(d.split())[:240])
+        for m in (resume_parsed.get("keyMetrics") or resume_parsed.get("KeyMetrics") or resume_parsed.get("key_metrics") or [])[:40]:
+            if isinstance(m, dict):
+                s = " — ".join([str(m.get("metric") or "").strip(), str(m.get("value") or "").strip(), str(m.get("context") or "").strip()]).strip(" —")
+                if s and not _is_fluff_line(s):
+                    resume_candidates.append(" ".join(s.split())[:240])
+
+        for n in (1, 2, 3):
+            pp = str(getattr(match, f"painpoint_{n}", "") or "").strip()
+            jde = str(getattr(match, f"jd_evidence_{n}", "") or "").strip()
+            sol = str(getattr(match, f"solution_{n}", "") or "").strip()
+            rse = str(getattr(match, f"resume_evidence_{n}", "") or "").strip()
+
+            # If pain point itself is fluff, try to replace from candidates
+            if pp and _is_fluff_line(pp) and jd_candidates:
+                pp = jd_candidates[min(n - 1, len(jd_candidates) - 1)]
+                setattr(match, f"painpoint_{n}", pp)
+
+            if pp and not jde:
+                setattr(match, f"jd_evidence_{n}", _best_evidence(pp, jd_candidates))
+            if sol and not rse:
+                setattr(match, f"resume_evidence_{n}", _best_evidence(sol, resume_candidates))
 
         # Persist each (challenge, solution) pair into pain_point_match table (best-effort).
         try:

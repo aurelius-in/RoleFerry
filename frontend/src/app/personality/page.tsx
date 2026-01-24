@@ -8,12 +8,21 @@ type Choice = -2 | -1 | 0 | 1 | 2;
 type AxisId = "energy" | "info" | "decisions" | "structure";
 type TemperamentAxis = "communication" | "action";
 
+type ScaleLabels = {
+  neg2: string;
+  neg1: string;
+  zero: string;
+  pos1: string;
+  pos2: string;
+};
+
 type Question = {
   id: string;
   axis: AxisId;
   prompt: string;
   leftLabel: string;  // -2
   rightLabel: string; // +2
+  scaleLabels?: Partial<ScaleLabels>;
 };
 
 type PersonalityResult = {
@@ -36,6 +45,7 @@ type TemperamentQuestion = {
   prompt: string;
   leftLabel: string;  // -2
   rightLabel: string; // +2
+  scaleLabels?: Partial<ScaleLabels>;
 };
 
 type TemperamentResult = {
@@ -106,8 +116,15 @@ const TEMPERAMENT_QUESTIONS: TemperamentQuestion[] = [
     id: "t8",
     axis: "action",
     prompt: "In your work style, you prefer…",
-    leftLabel: "Autonomy and flexibility",
-    rightLabel: "Alignment and coordination",
+    leftLabel: "Autonomy & flexibility",
+    rightLabel: "Alignment & coordination",
+    scaleLabels: {
+      neg2: "Strongly prefer autonomy",
+      neg1: "Somewhat prefer autonomy",
+      zero: "Neutral / depends",
+      pos1: "Somewhat prefer alignment",
+      pos2: "Strongly prefer alignment",
+    },
   },
 ];
 
@@ -639,14 +656,46 @@ export default function PersonalityPage() {
     value: Choice | null;
     leftLabel: string;
     rightLabel: string;
+    scaleLabels?: Partial<ScaleLabels>;
     onPick: (c: Choice) => void;
     size?: "sm" | "md";
   }) => {
     const size = opts.size ?? "sm";
     const pillBase =
       size === "md"
-        ? "h-11 px-3 rounded-full text-[12px] font-extrabold"
-        : "h-9 px-3 rounded-full text-[11px] font-bold";
+        ? "h-10 px-3 rounded-full text-[11px] font-extrabold"
+        : "h-8 px-2.5 rounded-full text-[10px] font-bold";
+
+    const choiceStyles: Record<Choice, { idle: string; active: string }> = {
+      [-2]: {
+        idle: "border-red-400/25 bg-red-500/10 text-red-100 hover:bg-red-500/15",
+        active: "border-red-300/50 bg-red-500/25 text-red-50",
+      },
+      [-1]: {
+        idle: "border-orange-400/25 bg-orange-500/10 text-orange-100 hover:bg-orange-500/15",
+        active: "border-orange-300/50 bg-orange-500/25 text-orange-50",
+      },
+      [0]: {
+        idle: "border-white/10 bg-black/20 text-white/70 hover:bg-white/10",
+        active: "border-white/20 bg-white/10 text-white",
+      },
+      [1]: {
+        idle: "border-sky-400/25 bg-sky-500/10 text-sky-100 hover:bg-sky-500/15",
+        active: "border-sky-300/50 bg-sky-500/25 text-sky-50",
+      },
+      [2]: {
+        idle: "border-emerald-400/25 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/15",
+        active: "border-emerald-300/50 bg-emerald-500/25 text-emerald-50",
+      },
+    };
+
+    const labels: ScaleLabels = {
+      neg2: opts.scaleLabels?.neg2 ?? "Strongly prefer left",
+      neg1: opts.scaleLabels?.neg1 ?? "Somewhat prefer left",
+      zero: opts.scaleLabels?.zero ?? "Neutral / depends",
+      pos1: opts.scaleLabels?.pos1 ?? "Somewhat prefer right",
+      pos2: opts.scaleLabels?.pos2 ?? "Strongly prefer right",
+    };
 
     const Btn = (p: { choice: Choice; label: string }) => (
       <button
@@ -654,11 +703,7 @@ export default function PersonalityPage() {
         type="button"
         onClick={() => opts.onPick(p.choice)}
         aria-pressed={opts.value === p.choice}
-        className={`${pillBase} border transition-colors ${
-          opts.value === p.choice
-            ? "border-orange-400/40 bg-orange-500/25 text-white"
-            : "border-white/10 bg-black/20 text-white/70 hover:bg-white/10"
-        }`}
+        className={`${pillBase} border transition-colors ${opts.value === p.choice ? choiceStyles[p.choice].active : choiceStyles[p.choice].idle}`}
       >
         {p.label}
       </button>
@@ -667,25 +712,23 @@ export default function PersonalityPage() {
     return (
       <div className="mt-2 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-2">
         <div className="text-white/90">
-          <div className={`${size === "md" ? "text-lg" : "text-base"} font-extrabold leading-snug`}>{opts.leftLabel}</div>
-          <div className="mt-0.5 text-[11px] text-white/60">Lean this direction</div>
+          <div className={`${size === "md" ? "text-base" : "text-sm"} font-extrabold leading-snug`}>{opts.leftLabel}</div>
         </div>
 
         <div className="flex items-center justify-center gap-2 flex-wrap">
           <div className="flex items-center gap-2">
-            <Btn choice={-2} label="Very unlike me" />
-            <Btn choice={-1} label="Somewhat unlike me" />
+            <Btn choice={-2} label={labels.neg2} />
+            <Btn choice={-1} label={labels.neg1} />
           </div>
-          <Btn choice={0} label="It depends" />
+          <Btn choice={0} label={labels.zero} />
           <div className="flex items-center gap-2">
-            <Btn choice={1} label="Somewhat like me" />
-            <Btn choice={2} label="Very like me" />
+            <Btn choice={1} label={labels.pos1} />
+            <Btn choice={2} label={labels.pos2} />
           </div>
         </div>
 
         <div className="text-white/90 md:text-right">
-          <div className={`${size === "md" ? "text-lg" : "text-base"} font-extrabold leading-snug`}>{opts.rightLabel}</div>
-          <div className="mt-0.5 text-[11px] text-white/60">Lean this direction</div>
+          <div className={`${size === "md" ? "text-base" : "text-sm"} font-extrabold leading-snug`}>{opts.rightLabel}</div>
         </div>
       </div>
     );
@@ -873,6 +916,7 @@ export default function PersonalityPage() {
                             value: v,
                             leftLabel: q.leftLabel,
                             rightLabel: q.rightLabel,
+                            scaleLabels: q.scaleLabels,
                             onPick: answerAndAdvance,
                             size: "md",
                           })}
@@ -945,6 +989,7 @@ export default function PersonalityPage() {
                         value: v,
                         leftLabel: q.leftLabel,
                         rightLabel: q.rightLabel,
+                        scaleLabels: q.scaleLabels,
                         onPick: (c) => setAnswers((prev) => ({ ...prev, [q.id]: c })),
                         size: "sm",
                       })}

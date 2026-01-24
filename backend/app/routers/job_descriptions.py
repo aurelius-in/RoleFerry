@@ -79,6 +79,98 @@ def _should_retry_jd_llm(content: str, data: Dict[str, Any], *, title: str, comp
     return False
 
 
+def _is_bad_title(s: str) -> bool:
+    t = str(s or "").strip()
+    low = t.lower()
+    if not t:
+        return True
+    if t.endswith(":"):
+        return True
+    if any(bad in low for bad in ["you can expect", "how to apply", "who ", "about the company", "similar remote jobs"]):
+        return True
+    # Too long = likely a sentence/header
+    if len(t) > 90 or len(t.split()) > 14:
+        return True
+    return False
+
+
+def _is_bad_company(s: str) -> bool:
+    t = str(s or "").strip()
+    low = t.lower().strip()
+    if not t:
+        return True
+    # UI labels / noise frequently mis-parsed as "company"
+    if low in {
+        "company",
+        "overview",
+        "position",
+        "location",
+        "remote",
+        "hybrid",
+        "onsite",
+        "on-site",
+        "full-time",
+        "part-time",
+        "contract",
+        "job post",
+        "original job post",
+        "company-logo",
+        "web-link",
+    }:
+        return True
+    if low.startswith(("company-logo", "company logo", "original job post")):
+        return True
+    if any(bad in low for bad in ["find any email", "insider connection", "beyond your network"]):
+        return True
+    if t.endswith(":"):
+        return True
+    # Too long / sentence-y
+    if len(t) > 90 or t.endswith("."):
+        return True
+    return False
+
+
+def _extract_company_from_company_block(content: str) -> str:
+    """
+    Many scrapes include a labeled block like:
+      Company
+      HCA Healthcare
+    Also capture patterns like "Insider Connection @HCA Healthcare".
+    """
+    lines = [ln.strip() for ln in (content or "").splitlines() if ln.strip()]
+    if not lines:
+        return ""
+
+    # Pattern: "... @Company"
+    for ln in lines[:160]:
+        m = re.search(r"@\s*([A-Z][A-Za-z0-9&.,'’\-\s]{1,80})\b", ln)
+        if m:
+            cand = (m.group(1) or "").strip().strip(",.;:-")
+            if cand and not _is_bad_company(cand):
+                return cand[:120]
+
+    # Labeled Company block
+    for i, ln in enumerate(lines[:320]):
+        if ln.lower().strip() == "company":
+            for j in range(i + 1, min(len(lines), i + 10)):
+                cand = (lines[j] or "").strip()
+                low = cand.lower()
+                if not cand:
+                    continue
+                if _is_bad_company(cand):
+                    continue
+                if any(x in low for x in ["company-logo", "company logo", "twitter", "glassdoor", "web-link", "people-size", "people size", "location", "date", "funding", "leadership team", "leader-logo", "leader logo"]):
+                    continue
+                # Avoid picking job title lines as company
+                if any(tok in low for tok in ["engineer", "developer", "manager", "director", "architect", "analyst", "designer"]):
+                    # Still allow if it's a known company-like multiword brand ending with Healthcare, Inc, etc.
+                    if not re.search(r"\b(healthcare|inc|llc|ltd|corp|corporation|group|systems|labs)\b", low):
+                        continue
+                if 1 <= len(cand.split()) <= 8 and cand[0].isupper() and not cand.endswith("."):
+                    return cand[:120]
+    return ""
+
+
 def _html_to_text(raw_html: str) -> str:
     """
     Very lightweight HTML-to-text. Good enough for job descriptions / listings.
@@ -577,6 +669,119 @@ def _extract_section_lines(
     return out
 
 
+def _extract_remotive_title_company(content: str) -> tuple[str, str]:
+    """
+    Remotive-style / aggregator paste often includes a strong header like:
+      "[Hiring] Senior Independent Software Developer @A.Team"
+      "Senior Independent Software Developer"
+      "@A.Team"
+    Extract it before generic heuristics.
+    """
+    lines = [ln.strip() for ln in (content or "").splitlines() if ln.strip()]
+    if not lines:
+        return "", ""
+
+    top = " \n ".join(lines[:25])
+
+    # Pattern 1: [Hiring] Title @Company
+    m = re.search(r"^\[hiring\]\s*(.+?)\s*@\s*([A-Za-z0-9&.\-’'· ]{1,80})\s*$", lines[0], flags=re.I)
+    if m:
+        return (m.group(1) or "").strip()[:120], (m.group(2) or "").strip()[:120]
+
+    m2 = re.search(r"\[hiring\]\s*(.+?)\s*@\s*([A-Za-z0-9&.\-’'· ]{1,80})", top, flags=re.I)
+    if m2:
+        return (m2.group(1) or "").strip()[:120], (m2.group(2) or "").strip()[:120]
+
+    # Pattern 2: Title on one line, then "@Company" on next line.
+    for i in range(min(len(lines) - 1, 25)):
+        a = (lines[i] or "").strip()
+        b = (lines[i + 1] or "").strip()
+        if not a or not b:
+            continue
+        if b.startswith("@") and len(b) <= 40 and not a.endswith(":"):
+            title = a.strip().strip("-—|")
+            company = b.lstrip("@").strip()
+            if title and company:
+                return title[:120], company[:120]
+
+    return "", ""
+
+
+def _extract_expectations_as_benefits(content: str, max_lines: int = 10) -> List[str]:
+    """
+    Posts like A.Team don't have a 'Benefits' header, but do have:
+      "As part of A·Team, you can expect:" followed by perk-like bullets/paras.
+    Treat those as benefits/perks (not pain points).
+    """
+    header_patterns = [r"as part of .* you can expect"]
+    stop_patterns = [
+        "how to apply",
+        "what you(?:'|’)?ll do",
+        "who .* is for",
+        "who .* is not for",
+        "our long-term vision",
+        "about the company",
+        "similar remote jobs",
+        "salary",
+        "job type",
+        "posted",
+    ]
+    return _extract_section_lines(content, header_patterns, max_lines=max_lines, stop_patterns=stop_patterns)
+
+
+def _extract_who_is_for_as_requirements(content: str, max_lines: int = 12) -> List[str]:
+    """
+    Convert "Who X is for / not for" blocks into requirement-style lines.
+    """
+    out: List[str] = []
+
+    # Must be located in ... (location restriction)
+    m_loc = re.search(
+        r"\bmust\s+be\s+located\s+in\s+([A-Za-z,\s/]+?)(?:\s+to\s+apply|\.|\n)",
+        content or "",
+        flags=re.I,
+    )
+    if m_loc:
+        loc = " ".join((m_loc.group(1) or "").split()).strip().strip(".")
+        if loc:
+            out.append(f"Location restriction: must be located in {loc}.")
+
+    for_lines = _extract_section_lines(
+        content,
+        [r"who .* is for", r"who .* is this for"],
+        max_lines=8,
+        stop_patterns=["who .* is not for", "how to apply", "about the company", "our long-term vision", "similar remote jobs"],
+    )
+    not_for_lines = _extract_section_lines(
+        content,
+        [r"who .* is not for"],
+        max_lines=8,
+        stop_patterns=["our long-term vision", "about the company", "how to apply", "similar remote jobs"],
+    )
+
+    for ln in for_lines:
+        s = ln.strip().strip(".")
+        if s:
+            out.append(s[:200] + ("." if not s.endswith(".") else ""))
+    for ln in not_for_lines:
+        s = ln.strip().strip(".")
+        if s:
+            out.append(("Not a fit if: " + s)[:200] + ("." if not s.endswith(".") else ""))
+
+    # De-dupe preserve order
+    seen = set()
+    dedup: List[str] = []
+    for s in out:
+        k = re.sub(r"\s+", " ", (s or "").lower()).strip()
+        if not k or k in seen:
+            continue
+        seen.add(k)
+        dedup.append(s)
+        if len(dedup) >= max_lines:
+            break
+    return dedup
+
+
 def _extract_explicit_skills_block(text: str) -> List[str]:
     """
     LinkedIn/Indeed often include an explicit 'Skills' block near the top, e.g.:
@@ -914,6 +1119,9 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
         if not s or len(s) < 4:
             return False
         low = s.lower()
+        # Colons are almost always section headers in pasted JDs.
+        if s.endswith(":"):
+            return False
         # Never treat a sentence as the title (common failure: responsibility lines).
         if s.endswith("."):
             return False
@@ -959,6 +1167,14 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
 
     # Title: pass 1 – prefer lines that contain role tokens (avoids title=company).
     # Extra pass 0 – prefer explicit "Role - ..." titles in the first few lines.
+    # Extra pass -1 – Remotive-style "[Hiring] Title @Company"
+    if lines and not title:
+        t0, c0 = _extract_remotive_title_company(content)
+        if t0:
+            title = t0
+        if c0:
+            company = c0
+
     for ln in lines[:8]:
         if " - " in ln and _has_role_token(ln) and _looks_like_real_title(ln):
             title = ln[:120]
@@ -992,6 +1208,12 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 break
         if company:
             break
+
+    # Company: labeled "Company" block (common in scraped job pages)
+    if not company:
+        cand = _extract_company_from_company_block(content)
+        if cand:
+            company = cand[:120]
 
     # Company: common narrative openings like "Kochava is hiring..." / "Kochava provides..."
     # This is very common for pasted JDs where the first line contains the company name.
@@ -1055,6 +1277,7 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
             "today",
             "viewed",
             "interview",
+            "overview",
         }
 
         # Indeed-style / job-board header: company often appears as a standalone line near the top
@@ -1669,12 +1892,22 @@ async def import_job_description(payload: JobImportRequest):
         )
         if not requirements:
             requirements = _extract_requirement_lines_fallback(content, max_lines=12)
+        # Remotive / A.Team style: "Who X is for / not for" and location restrictions.
+        if not requirements or len(requirements) < 2:
+            req2 = _extract_who_is_for_as_requirements(content, max_lines=12)
+            if req2:
+                requirements = req2
         benefits = _extract_section_lines(
             content,
             ["benefits", "perks", "what we offer", "work/life balance", "mentorship", "career growth", "inclusive team culture", "diverse experiences"],
             max_lines=10,
             stop_patterns=["the ideal candidate", "ideal candidate", "requirements", "qualifications", "about", "equal opportunity", "job id", "employment type", "posted", "client-provided", "all communication", "guidehouse will", "if you have visited"],
         )
+        # Remotive / A.Team style: "As part of X, you can expect:" is effectively benefits/perks.
+        if not benefits or len(benefits) < 2:
+            b2 = _extract_expectations_as_benefits(content, max_lines=10)
+            if b2:
+                benefits = b2
         # If there isn't an explicit benefits section, capture top-of-JD perk-like lines.
         # (Common in startup posts: "Remote 1st", "Equity", "Series A", etc.)
         if not benefits:
@@ -1849,8 +2082,28 @@ async def import_job_description(payload: JobImportRequest):
                         pass
                 if isinstance(data, dict) and data:
                     # Let GPT override title/company when provided
-                    title = str(data.get("title") or title)
-                    company = str(data.get("company") or company)
+                    llm_title = str(data.get("title") or "").strip()
+                    llm_company = str(data.get("company") or "").strip()
+
+                    # Guard: reject obvious non-title headers (common on Remotive-style pastes)
+                    if llm_title and not _is_bad_title(llm_title):
+                        title = llm_title
+                    if llm_company and not _is_bad_company(llm_company):
+                        company = llm_company
+
+                    # Remotive-style header fallback if the resulting title still looks wrong
+                    if _is_bad_title(title):
+                        t0, c0 = _extract_remotive_title_company(content)
+                        if t0:
+                            title = t0
+                        if c0 and (not company or company.lower() == "unknown"):
+                            company = c0
+
+                    # If company still looks wrong, use deterministic labeled-block extraction
+                    if _is_bad_company(company) or (not company or company.lower() == "unknown"):
+                        c2 = _extract_company_from_company_block(content)
+                        if c2:
+                            company = c2
                     pain_points = [str(p) for p in (data.get("pain_points") or pain_points)]
                     required_skills = [str(s) for s in (data.get("required_skills") or required_skills)]
                     success_metrics = [str(m) for m in (data.get("success_metrics") or success_metrics)]

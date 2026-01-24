@@ -22,6 +22,7 @@ interface LaunchResult {
 }
 
 type WarmupProvider =
+  | "roleferry"
   | "warmbox"
   | "mailreach"
   | "lemwarm"
@@ -73,6 +74,12 @@ export default function DeliverabilityLaunchPage() {
     rescue_from_spam: true,
   });
   const [warmupNotice, setWarmupNotice] = useState<string | null>(null);
+  const [roleferryWarmupAvailable, setRoleferryWarmupAvailable] = useState(false);
+  const [roleferryWarmupMessage, setRoleferryWarmupMessage] = useState<string>("");
+  const [rfAccounts, setRfAccounts] = useState<any[]>([]);
+  const [rfSelected, setRfSelected] = useState<Record<string, boolean>>({});
+  const [rfLoading, setRfLoading] = useState(false);
+  const [rfNotice, setRfNotice] = useState<string | null>(null);
 
   const persistChannel = (next: OutreachChannel) => {
     setChannel(next);
@@ -254,24 +261,55 @@ export default function DeliverabilityLaunchPage() {
     const selectedContacts = loadSelectedContacts();
     const recipients = selectedContacts.length;
 
+    const companyNorm = (c: any) => String(c || "").replace(/\s+/g, " ").trim();
+
+    const recipientCompanies = new Set(
+      selectedContacts.map((c: any) => companyNorm(c?.company)).filter(Boolean)
+    ).size;
+
+    const byCompany: Array<{ company: string; contacts: number; planned_sends: number }> = (() => {
+      const steps = Array.isArray(campaign?.emails) ? campaign.emails.length : 0;
+      const m = new Map<string, number>();
+      for (const c of selectedContacts) {
+        const key = companyNorm(c?.company) || "Unknown";
+        m.set(key, (m.get(key) || 0) + 1);
+      }
+      const out: Array<{ company: string; contacts: number; planned_sends: number }> = [];
+      for (const [company, contacts] of m.entries()) {
+        out.push({ company, contacts, planned_sends: contacts * steps });
+      }
+      out.sort((a, b) => b.planned_sends - a.planned_sends || b.contacts - a.contacts || a.company.localeCompare(b.company));
+      return out;
+    })();
+
+    // Jobs step context (NOT the same thing as emails sent/applied)
     let jobDescs: any[] = [];
     try {
       jobDescs = JSON.parse(localStorage.getItem("job_descriptions") || "[]");
     } catch {}
-    const rolesApplied = Array.isArray(jobDescs) ? jobDescs.length : 0;
-    const companies = Array.isArray(jobDescs)
+    const targetJobsCount = Array.isArray(jobDescs) ? jobDescs.length : 0;
+    const targetJobTitles = Array.isArray(jobDescs)
+      ? new Set(jobDescs.map((j) => String(j?.title || "").trim()).filter(Boolean)).size
+      : 0;
+    const targetCompanies = Array.isArray(jobDescs)
       ? new Set(jobDescs.map((j) => String(j?.company || "").trim()).filter(Boolean)).size
       : 0;
 
-    const emailCount = Array.isArray(campaign?.emails) ? campaign.emails.length : 0;
-    const totalVolume = recipients * emailCount;
+    const sequenceSteps = Array.isArray(campaign?.emails) ? campaign.emails.length : 0;
+    const plannedSends = recipients * sequenceSteps;
+    const firstStepSends = recipients;
 
     return {
       campaignName: nameParts.join(" – "),
       recipients,
-      rolesApplied,
-      companies,
-      totalVolume,
+      sequenceSteps,
+      plannedSends,
+      firstStepSends,
+      recipientCompanies,
+      byCompany,
+      targetJobsCount,
+      targetJobTitles,
+      targetCompanies,
     };
   };
 
@@ -325,6 +363,21 @@ export default function DeliverabilityLaunchPage() {
         }
       }
     } catch {}
+
+    // Check whether RoleFerry warm-up (Instantly API) is available
+    (async () => {
+      try {
+        const res = await api<{ available: boolean; provider?: string; message?: string }>(
+          "/deliverability-launch/roleferry-warmup/status",
+          "GET"
+        );
+        setRoleferryWarmupAvailable(Boolean(res?.available));
+        setRoleferryWarmupMessage(String(res?.message || ""));
+      } catch {
+        setRoleferryWarmupAvailable(false);
+        setRoleferryWarmupMessage("");
+      }
+    })();
     
     // Listen for mode changes
     const handleModeChange = (event: CustomEvent) => {
@@ -334,6 +387,61 @@ export default function DeliverabilityLaunchPage() {
     window.addEventListener('modeChanged', handleModeChange as EventListener);
     return () => window.removeEventListener('modeChanged', handleModeChange as EventListener);
   }, []);
+
+  const loadRoleferryAccounts = async () => {
+    setRfLoading(true);
+    setRfNotice(null);
+    try {
+      const res = await api<{ accounts: any[] }>("/deliverability-launch/roleferry-warmup/accounts", "GET");
+      const accounts = Array.isArray(res?.accounts) ? res.accounts : [];
+      setRfAccounts(accounts);
+      // default-select none; keep prior selections if possible
+      setRfSelected((prev) => {
+        const next: Record<string, boolean> = { ...(prev || {}) };
+        for (const a of accounts) {
+          const email = String(a?.email || "").trim();
+          if (!email) continue;
+          if (next[email] === undefined) next[email] = false;
+        }
+        return next;
+      });
+    } catch (e: any) {
+      setRfNotice(String(e?.message || "Failed to load warm-up accounts"));
+    } finally {
+      setRfLoading(false);
+    }
+  };
+
+  const enableRoleferryWarmup = async (opts: { includeAll?: boolean }) => {
+    setRfLoading(true);
+    setRfNotice(null);
+    try {
+      const includeAll = Boolean(opts?.includeAll);
+      const emails = includeAll
+        ? []
+        : Object.entries(rfSelected || {})
+            .filter(([, v]) => Boolean(v))
+            .map(([k]) => k);
+
+      if (!includeAll && emails.length === 0) {
+        setRfNotice("Select at least one sender account to enable warm-up.");
+        return;
+      }
+
+      await api("/deliverability-launch/roleferry-warmup/enable", "POST", {
+        include_all_emails: includeAll,
+        emails,
+      });
+      setRfNotice(includeAll ? "Enabled warm-up for all accounts in Instantly." : `Enabled warm-up for ${emails.length} account(s).`);
+      window.setTimeout(() => setRfNotice(null), 2400);
+      // refresh list to reflect statuses
+      try { await loadRoleferryAccounts(); } catch {}
+    } catch (e: any) {
+      setRfNotice(String(e?.message || "Failed to enable warm-up"));
+    } finally {
+      setRfLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Persist warmup plan (per user)
@@ -599,7 +707,18 @@ export default function DeliverabilityLaunchPage() {
               <div className="bg-blue-50 border border-white/10 rounded-lg p-6">
                 <h2 className="text-xl font-semibold text-white mb-4">Campaign Summary</h2>
                 {(() => {
-                  const { campaignName, recipients, rolesApplied, companies, totalVolume } = computeCampaignSummary();
+                  const {
+                    campaignName,
+                    recipients,
+                    sequenceSteps,
+                    plannedSends,
+                    firstStepSends,
+                    recipientCompanies,
+                    byCompany,
+                    targetJobsCount,
+                    targetJobTitles,
+                    targetCompanies,
+                  } = computeCampaignSummary();
                   return (
                     <>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -608,8 +727,8 @@ export default function DeliverabilityLaunchPage() {
                     <div className="font-semibold text-white">{campaignName || campaign.name}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-white/70">Total Emails</div>
-                    <div className="font-semibold text-white">{campaign.emails.length}</div>
+                    <div className="text-sm text-white/70">Sequence steps</div>
+                    <div className="font-semibold text-white">{sequenceSteps}</div>
                   </div>
                   <div>
                     <div className="text-sm text-white/70">Total Duration</div>
@@ -621,19 +740,64 @@ export default function DeliverabilityLaunchPage() {
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
                     <div className="text-sm text-white/70">Recipients</div>
-                    <div className="font-semibold text-white">{recipients} Contacts</div>
+                    <div className="font-semibold text-white">{recipients} contact{recipients === 1 ? "" : "s"}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-white/70">Roles applied</div>
-                    <div className="font-semibold text-white">{rolesApplied} Roles</div>
+                    <div className="text-sm text-white/70">Recipient companies</div>
+                    <div className="font-semibold text-white">{recipientCompanies} compan{recipientCompanies === 1 ? "y" : "ies"}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-white/70">Companies</div>
-                    <div className="font-semibold text-white">{companies} Companies</div>
+                    <div className="text-sm text-white/70">Planned sends (all steps)</div>
+                    <div className="font-semibold text-white">{plannedSends} email{plannedSends === 1 ? "" : "s"}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-white/70">Total Volume</div>
-                    <div className="font-semibold text-white">{totalVolume} Emails Total</div>
+                    <div className="text-sm text-white/70">Step 1 sends</div>
+                    <div className="font-semibold text-white">{firstStepSends} email{firstStepSends === 1 ? "" : "s"}</div>
+                  </div>
+                </div>
+
+                <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                    <div className="text-sm font-semibold text-white">Send volume by company</div>
+                    <div className="mt-1 text-xs text-white/60">
+                      This is based on your selected contacts (where emails actually go).
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      {(byCompany || []).slice(0, 6).map((row) => (
+                        <div key={`co_${row.company}`} className="flex items-center justify-between gap-3 text-sm">
+                          <div className="min-w-0 truncate text-white/80">{row.company}</div>
+                          <div className="shrink-0 text-white/70">
+                            {row.contacts} × {sequenceSteps} = <span className="font-semibold text-white">{row.planned_sends}</span>
+                          </div>
+                        </div>
+                      ))}
+                      {Array.isArray(byCompany) && byCompany.length > 6 ? (
+                        <div className="text-xs text-white/50">
+                          +{byCompany.length - 6} more
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2 rounded-lg border border-white/10 bg-black/20 p-4">
+                    <div className="text-sm font-semibold text-white">Jobs step context (not sends)</div>
+                    <div className="mt-1 text-xs text-white/60">
+                      These come from your imported job descriptions and are used for targeting, not for counting sent emails.
+                    </div>
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                      <div className="rounded-md border border-white/10 bg-white/5 p-3">
+                        <div className="text-xs text-white/60">Job descriptions imported</div>
+                        <div className="text-white font-semibold">{targetJobsCount}</div>
+                      </div>
+                      <div className="rounded-md border border-white/10 bg-white/5 p-3">
+                        <div className="text-xs text-white/60">Unique target titles</div>
+                        <div className="text-white font-semibold">{targetJobTitles}</div>
+                      </div>
+                      <div className="rounded-md border border-white/10 bg-white/5 p-3">
+                        <div className="text-xs text-white/60">Unique target companies</div>
+                        <div className="text-white font-semibold">{targetCompanies}</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                     </>
@@ -830,11 +994,21 @@ export default function DeliverabilityLaunchPage() {
                   <div className="lg:col-span-2 rounded-lg border border-white/10 bg-white/5 p-4">
                     <div className="text-sm font-semibold text-white mb-2">Choose a warm-up method</div>
                     <div className="text-xs text-white/60 mb-3">
-                      RoleFerry doesn’t run a warm-up network itself (most apps plug into a provider). Pick one, then follow their connection steps.
+                      Pick a provider. If RoleFerry warm-up is available, you can enable it directly here.
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {[
+                        ...(roleferryWarmupAvailable
+                          ? [
+                              {
+                                id: "roleferry",
+                                label: "Use RoleFerry’s Warm-up",
+                                hint: "Enable warm-up via RoleFerry (powered by Instantly’s warm-up API)",
+                                url: "https://instantly.ai/",
+                              },
+                            ]
+                          : []),
                         { id: "warmbox", label: "Warmbox", hint: "AI warm-up, opens/replies, spam rescue", url: "https://www.warmbox.ai/" },
                         { id: "mailreach", label: "Mailreach", hint: "Warm-up + deliverability monitoring", url: "https://mailreach.co/" },
                         { id: "lemwarm", label: "Lemwarm (Lemlist)", hint: "Warm-up network (Lemlist ecosystem)", url: "https://www.lemlist.com/lemwarm" },
@@ -872,6 +1046,90 @@ export default function DeliverabilityLaunchPage() {
                         );
                       })}
                     </div>
+
+                    {roleferryWarmupAvailable && warmupPlan.provider === "roleferry" ? (
+                      <div className="mt-4 rounded-lg border border-white/10 bg-black/20 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="text-sm font-semibold text-white">RoleFerry’s Warm-up</div>
+                            <div className="mt-1 text-xs text-white/60">
+                              {roleferryWarmupMessage || "Enable warm-up for your sender account(s) inside Instantly via RoleFerry."}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={loadRoleferryAccounts}
+                            disabled={rfLoading}
+                            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-white text-xs font-bold hover:bg-white/10 disabled:opacity-50"
+                          >
+                            {rfLoading ? "Loading..." : "Load accounts"}
+                          </button>
+                        </div>
+
+                        {rfNotice ? (
+                          <div className="mt-3 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/80">
+                            {rfNotice}
+                          </div>
+                        ) : null}
+
+                        {Array.isArray(rfAccounts) && rfAccounts.length ? (
+                          <div className="mt-3 space-y-2">
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() => enableRoleferryWarmup({ includeAll: true })}
+                                disabled={rfLoading}
+                                className="px-3 py-2 rounded-md bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 disabled:opacity-50"
+                              >
+                                Enable for all accounts
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => enableRoleferryWarmup({ includeAll: false })}
+                                disabled={rfLoading}
+                                className="px-3 py-2 rounded-md bg-white text-black text-xs font-bold hover:bg-white/90 disabled:opacity-50"
+                              >
+                                Enable for selected
+                              </button>
+                            </div>
+
+                            <div className="rounded-md border border-white/10 divide-y divide-white/10">
+                              {rfAccounts.slice(0, 12).map((a: any) => {
+                                const email = String(a?.email || "").trim();
+                                const score = a?.stat_warmup_score;
+                                const warm = a?.warmup_status;
+                                const selected = Boolean(rfSelected?.[email]);
+                                return (
+                                  <label key={`rfw_${email}`} className="flex items-center justify-between gap-3 px-3 py-2 text-xs text-white/80">
+                                    <div className="min-w-0 flex items-center gap-2">
+                                      <input
+                                        type="checkbox"
+                                        checked={selected}
+                                        onChange={(e) => setRfSelected((prev) => ({ ...(prev || {}), [email]: e.target.checked }))}
+                                      />
+                                      <span className="truncate">{email}</span>
+                                    </div>
+                                    <div className="shrink-0 text-white/60">
+                                      {score !== undefined && score !== null ? `score ${score}` : null}
+                                      {warm !== undefined && warm !== null ? ` • warmup ${warm}` : null}
+                                    </div>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                            {rfAccounts.length > 12 ? (
+                              <div className="text-[11px] text-white/50">
+                                Showing 12 of {rfAccounts.length}. (We can expand this list later.)
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <div className="mt-3 text-xs text-white/60">
+                            No accounts loaded yet.
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="rounded-lg border border-white/10 bg-white/5 p-4">
@@ -1020,7 +1278,7 @@ export default function DeliverabilityLaunchPage() {
                       <div
                         key={index}
                         className={`flex items-center space-x-4 p-4 rounded-lg border ${
-                          check.name === "GPT Deliverability Helper"
+                          check.name === "AI Deliverability Helper"
                             ? "border-orange-400/30 bg-orange-500/10"
                             : "border-white/10 bg-black/20"
                         }`}

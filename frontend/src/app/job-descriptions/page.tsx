@@ -387,7 +387,7 @@ export default function JobDescriptionsPage() {
               Open a site, find a posting, then paste the URL or job text below.
             </div>
 
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="rounded-md border border-white/10 bg-white/5 p-4">
                 <div className="text-xs font-semibold text-white/70 mb-2">General job boards</div>
                 <ul className="space-y-1 text-sm">
@@ -399,9 +399,9 @@ export default function JobDescriptionsPage() {
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.monster.com/jobs/" target="_blank" rel="noopener noreferrer">Monster</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.careerbuilder.com/" target="_blank" rel="noopener noreferrer">CareerBuilder</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.simplyhired.com/" target="_blank" rel="noopener noreferrer">SimplyHired</a></li>
-                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://simplify.jobs/" target="_blank" rel="noopener noreferrer">Simplify.jobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.themuse.com/jobs" target="_blank" rel="noopener noreferrer">The Muse</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.usajobs.gov/" target="_blank" rel="noopener noreferrer">USAJOBS (US Government)</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://joinhandshake.com/" target="_blank" rel="noopener noreferrer">Handshake (Early career)</a></li>
                 </ul>
               </div>
 
@@ -418,6 +418,7 @@ export default function JobDescriptionsPage() {
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://himalayas.app/jobs" target="_blank" rel="noopener noreferrer">Himalayas</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.flexjobs.com/" target="_blank" rel="noopener noreferrer">FlexJobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://app.welcometothejungle.com/" target="_blank" rel="noopener noreferrer">Welcome to the Jungle (formerly Otta)</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.ventureloop.com/" target="_blank" rel="noopener noreferrer">VentureLoop (Startups)</a></li>
                 </ul>
               </div>
 
@@ -426,7 +427,20 @@ export default function JobDescriptionsPage() {
                 <ul className="space-y-1 text-sm">
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.builtin.com/jobs" target="_blank" rel="noopener noreferrer">Built In (Tech)</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.dice.com/" target="_blank" rel="noopener noreferrer">Dice</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.techcareers.com/" target="_blank" rel="noopener noreferrer">TechCareers</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.techfetch.com/" target="_blank" rel="noopener noreferrer">TechFetch</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.levels.fyi/jobs/" target="_blank" rel="noopener noreferrer">Levels.fyi Jobs</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://hnhiring.com/" target="_blank" rel="noopener noreferrer">HN Hiring</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://authenticjobs.com/" target="_blank" rel="noopener noreferrer">Authentic Jobs (Tech + Design)</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://simplify.jobs/" target="_blank" rel="noopener noreferrer">Simplify.jobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://jobright.ai/" target="_blank" rel="noopener noreferrer">Jobright.ai</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.hired.com/jobs" target="_blank" rel="noopener noreferrer">Hired (Tech hiring marketplace)</a></li>
+                </ul>
+              </div>
+
+              <div className="rounded-md border border-white/10 bg-white/5 p-4">
+                <div className="text-xs font-semibold text-white/70 mb-2">Top Company Boards</div>
+                <ul className="space-y-1 text-sm">
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://careers.google.com/" target="_blank" rel="noopener noreferrer">Google Careers</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://jobs.careers.microsoft.com/" target="_blank" rel="noopener noreferrer">Microsoft Careers</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.amazon.jobs/" target="_blank" rel="noopener noreferrer">Amazon Jobs</a></li>
@@ -434,6 +448,9 @@ export default function JobDescriptionsPage() {
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.metacareers.com/" target="_blank" rel="noopener noreferrer">Meta Careers</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://jobs.netflix.com/" target="_blank" rel="noopener noreferrer">Netflix Jobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.shopify.com/careers" target="_blank" rel="noopener noreferrer">Shopify Careers</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://stripe.com/jobs" target="_blank" rel="noopener noreferrer">Stripe Jobs</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://careers.airbnb.com/" target="_blank" rel="noopener noreferrer">Airbnb Careers</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.salesforce.com/company/careers/" target="_blank" rel="noopener noreferrer">Salesforce Careers</a></li>
                 </ul>
               </div>
             </div>

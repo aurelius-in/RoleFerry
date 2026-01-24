@@ -75,6 +75,7 @@ async def generate_email(request: ComposeRequest, http_request: Request):
         # Create variable lookup dictionary
         variable_lookup = {var.name: var.value for var in request.variables}
         work_link_value = str(variable_lookup.get("{{work_link}}") or "").strip()
+        bio_page_url_value = str(variable_lookup.get("{{bio_page_url}}") or "").strip()
 
         # Build GPT context (everything upstream should be present here, even if mocked).
         context_data = request.context_data or {}
@@ -116,6 +117,9 @@ async def generate_email(request: ComposeRequest, http_request: Request):
         tone = (request.tone or offer_tone or "manager").strip().lower()
         custom_tone = (request.custom_tone or offer_custom_tone or "").strip()
 
+        def _no_em_dashes(s: str) -> str:
+            return str(s or "").replace("—", "-").replace("–", "-")
+
         def link_intro(t: str) -> str:
             if t == "recruiter":
                 return "Please see my work here:"
@@ -135,43 +139,7 @@ async def generate_email(request: ComposeRequest, http_request: Request):
                 return f"In a {custom_tone} tone, here’s my work:"
             return "Please see my work here:"
 
-        # Provide a tight, structured template; AI variants are handled via helper below.
-        subject = "{{job_title}} at {{company_name}} — quick idea"
-        if tone == "recruiter":
-            subject = "{{company_name}} — {{job_title}} (quick question)"
-        elif tone == "exec":
-            subject = "{{company_name}} — {{painpoint_1}} idea"
-
-        offer_line = "Idea: {{offer_snippet}}"
-
-        metric_val = str(variable_lookup.get("{{metric_1}}") or "").strip()
-        metric_is_bad = False
-        try:
-            digits_only = re.sub(r"[^\d]", "", metric_val)
-            if metric_val and re.fullmatch(r"[\d\-\s()+.]+", metric_val) and 9 <= len(digits_only) <= 12:
-                metric_is_bad = True
-            if metric_val and re.fullmatch(r"\d{8,}", metric_val):
-                metric_is_bad = True
-        except Exception:
-            metric_is_bad = False
-        proof_line = "Proof: {{solution_1}}" + (f" ({{{{metric_1}}}})" if (metric_val and not metric_is_bad) else "")
-        cta_line = "Open to a quick 10–15 minute chat?"
-        # Note: this is an f-string; quadruple braces produce double braces in output.
-        work_line = f"{link_intro(tone)} {{{{work_link}}}}"
-
-        parts: list[str] = [
-            "Hi {{first_name}},\n\n",
-            "I saw the {{job_title}} role at {{company_name}} and had one concrete idea that might help.\n\n",
-            f"- {offer_line}\n",
-            f"- {proof_line}\n\n",
-            f"{cta_line}\n\n",
-        ]
-        if work_link_value:
-            parts.append(f"{work_line}\n\n")
-        parts.append(f"Best,\n{signature}\n")
-        body = "".join(parts)
-
-        # Build GPT context for optional helper variants only (kept permissive).
+        # Build GPT context for Compose generation (main subject/body + variants).
         context = {
             "tone": tone,
             "custom_tone": custom_tone,
@@ -195,24 +163,82 @@ async def generate_email(request: ComposeRequest, http_request: Request):
             "offer_title": "{{offer_title}}",
             "offer_snippet": "{{offer_snippet}}",
             "offer_url": "{{work_link}}",
+            "bio_page_url": "{{bio_page_url}}",
+            "contact_title": "{{contact_title}}",
+            "personalization_angle": "{{personalization_angle}}",
             "painpoint_matches": request.painpoint_matches or [],
             "context_data": context_data,
         }
 
-        # GPT helper (variants) — best effort, but do not block template generation.
+        # Deterministic fallback (if LLM fails)
+        def _fallback_template() -> tuple[str, str]:
+            subject = "{{job_title}} at {{company_name}} - quick idea"
+            if tone == "recruiter":
+                subject = "{{company_name}} - {{job_title}} (quick question)"
+            elif tone == "exec":
+                subject = "{{company_name}} - {{painpoint_1}} idea"
+
+            metric_val = str(variable_lookup.get("{{metric_1}}") or "").strip()
+            metric_is_bad = False
+            try:
+                digits_only = re.sub(r"[^\d]", "", metric_val)
+                if metric_val and re.fullmatch(r"[\d\-\s()+.]+", metric_val) and 9 <= len(digits_only) <= 12:
+                    metric_is_bad = True
+                if metric_val and re.fullmatch(r"\d{8,}", metric_val):
+                    metric_is_bad = True
+            except Exception:
+                metric_is_bad = False
+
+            proof_line = "Proof: {{solution_1}}" + (f" ({{{{metric_1}}}})" if (metric_val and not metric_is_bad) else "")
+
+            parts: list[str] = [
+                "Hi {{first_name}},\n\n",
+                "I saw the {{job_title}} role at {{company_name}} and had one concrete idea that might help.\n\n",
+                "- Personalization: {{personalization_angle}}\n" if str(variable_lookup.get("{{personalization_angle}}") or "").strip() else "",
+                "- One idea I’d bring: {{offer_snippet}}\n",
+                f"- {proof_line}\n\n",
+                "Open to a quick 10–15 minute chat?\n\n",
+            ]
+            if bio_page_url_value:
+                parts.append("Bio page: {{bio_page_url}}\n\n")
+            if work_link_value:
+                parts.append(f"{link_intro(tone)} {{{{work_link}}}}\n\n")
+            parts.append(f"Best,\n{signature}\n")
+            return subject, "".join([p for p in parts if p])
+
+        # GPT compose generation — best effort, but do not block output.
         client = get_openai_client()
         helper_data: Dict[str, Any] = {}
+        subject: str
+        body: str
         try:
-            raw = client.draft_compose_email(context)
+            raw = client.draft_compose_email(
+                {
+                    **context,
+                    "constraints": {
+                        "no_em_dashes": True,
+                        "include_work_link": bool(work_link_value),
+                        "include_bio_page_url": bool(bio_page_url_value),
+                    },
+                }
+            )
             choices = raw.get("choices") or []
             msg = (choices[0].get("message") if choices else {}) or {}
             content_str = str(msg.get("content") or "")
             helper_data = extract_json_from_text(content_str) or {}
+
+            subject = str(helper_data.get("subject") or "").strip() or _fallback_template()[0]
+            body = str(helper_data.get("body") or "").strip() or _fallback_template()[1]
         except Exception:
             helper_data = {}
+            subject, body = _fallback_template()
 
-        # Enforce "no fluff opener" even if the LLM drifts.
+        # Enforce quality + style rules even if the LLM drifts.
         try:
+            body = _append_signature(_strip_fluff_openers(body))
+            body = _no_em_dashes(body)
+            subject = _no_em_dashes(subject)
+
             variants = helper_data.get("variants") or []
             if isinstance(variants, list):
                 cleaned = []
@@ -221,7 +247,10 @@ async def generate_email(request: ComposeRequest, http_request: Request):
                         continue
                     vb = str(v.get("body") or "")
                     if vb:
-                        v["body"] = _append_signature(_strip_fluff_openers(vb))
+                        v["body"] = _no_em_dashes(_append_signature(_strip_fluff_openers(vb)))
+                    vs = str(v.get("subject") or "")
+                    if vs:
+                        v["subject"] = _no_em_dashes(vs)
                     cleaned.append(v)
                 helper_data["variants"] = cleaned
         except Exception:
