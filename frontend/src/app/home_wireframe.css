@@ -58,7 +58,7 @@
 .path-container {
   position: relative;
   width: 900px;
-  height: 700px;
+  height: 560px;
   border-radius: 20px;
   padding: 2rem;
   z-index: 1;
@@ -227,7 +227,7 @@
   .path-container {
     width: 100%;
     max-width: 600px;
-    height: 700px;
+    height: 560px;
   }
 
   .stone {

@@ -432,6 +432,7 @@ class OpenAIClient:
                     "- Do NOT fabricate facts. Only extract what is clearly present.\n"
                     "- title MUST be the role title (e.g., 'Strategic Customer Success Manager'), NOT the company name.\n"
                     "- company MUST be the company name (e.g., 'SentiLink'), NOT a generic word like 'This'/'We'/'Remote'.\n"
+                    "- title MUST NOT include salary/rate, location, or any person name (e.g., recruiter/author). Those belong elsewhere.\n"
                     "- title MUST NOT be a section header. If the candidate title ends with ':' (colon) it is NOT a title.\n"
                     "- When posts contain '[Hiring] <Title> @<Company>' or '<Title>\\n@<Company>' patterns, prefer those.\n"
                     "- Ignore “Similar jobs”, “Get access”, “Kickstart your job search”, and other aggregator sections.\n"

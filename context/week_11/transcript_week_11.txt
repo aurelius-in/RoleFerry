@@ -1,0 +1,1201 @@
+
+Transcript
+It’s like very unique.
+Yeah. I used to be very, very useful and important and so like I w the reason it’s like surely has value. Like surely has value. If it does what it’s supposed to do, it fills a real need. Supply and demand is the rule for every single thing that you sell, right? You either have to create demand ‘cause nobody wants your stupid beaded necklace, right? So you have to like make it interesting by advertising. Or there’s a real need, and I can’t think of any need greater than having money to buy everything else you have. So it’s literally like the goal that the one thing that people need most is the money that will get them everything else. So if they don’t have that, that becomes like a real demand. And what’s gonna increase is the demand. For that, because people are getting laid off and it’s harder to find jobs and AI is, I think, faster than we even realize is gonna start replacing jobs. Like we don’t even know, like it just like companies will have no choice but to lay off employees because so many things are getting replaced. Like they just don’t even I don’t even think the employers wanna lay, lay people off the way they’re gonna have to. They’re just going to have to. Like.
+Yeah.
+‘Cause otherwise how are they gonna stay competitive? Everybody else is doing it and they gotta have a bottom line and all kinds of weird stuff’s happening with our economy ‘cause our stupid-ass government is so crazy.
+Um, weird tariffs and all kinds of bullshit. It’s like fucking things up in such a major way. So like, yeah, man, this shit’s getting real and we are coming we are rising to the, the occasion with the perfect solution to a lot of people’s problems. So the supply and demand is absolutely I can’t I really can’t think of another thing that, that satisfies satisfies it better as long as it works the way it’s supposed to, so.
+Yeah. It’s yeah. I mean, it’s, you know, when I was when I was gonna say was it’s so unique because we’re using I’m using cutting-edge like go-to-market tools. Like I’m a go-to like my I should say I am I like aspire to be like a GTM engineer.
+Yeah.
+Like a go-to-market engineer.
+Okay.
+That’s good
+You know, that’s why I got certified in like clay and everything.
+Oh, that’s what I need to do That’s great.
+Well, it’s good ‘cause you yeah, you-you’re gonna in order to make the app, like good, right? In order to keep it good, y-you need to stay close to the to the customer. I’m in the wrong re wrong account here. Hold on.
+Yeah.
+It is really interesting. Yeah.
+So yeah, in order to stay close to like understanding the market that we’re within, you’re gonna have to actually be on the ground, like actually like staying fresh, like you said today, you were. Am I in the wrong thing again?
+Oh, okay.
+Sorry That was on my work account, so I was like reloading up the wrong repositories.
+All right so I got roll fairy, got a recent recent push from my cursor update. Fixing that bug.
+Merge the pull request.
+Okay.
+Okay.
+Cool.
+So we added the bio page step and the public bio pages. Make the campaign step 12 and gate, and then fix the resume crash.
+So we are going to
+Well, you know, you made the bio page already?
+Well, I haven’t seen it yet.
+Well, you I sent it to you.
+No, no, no. I haven’t seen our I haven’t I haven’t like tested my code yet. Like.
+Oh, okay.
+I’m literally you’re seeing it for the first time with me right now, so it could be chaos.
+Oh, okay.
+Or it could actually be interesting. Like we don’t know.
+That is yeah. This is cool. That’s cool stuff. Yeah.
+So let’s see. It’s building.
+And as soon as it’s fresh we’ll refresh the page. So it’s building and then-.
+I think the bio thing is really cool. Ho-Jose and I were looking at it and he’s like, “This looks really nice.” Um.
+Yeah.
+So and the other thing is I noticed if you don’t put a video, it doesn’t give you a gif.
+Okay. Well, ours can be like however we want it to be. So but yeah. It isn’t hard to build a page. We’ll see if it gets it right the first time. I didn’t give it anything to load as a gif. I should have.
+Let me, uh,
+let’s, um mid-journey this real quick. Actually, we’ll judge GPT. Judge GPT is actually pretty good at little image creator. So we’re gonna say create a profile picture of a racial racially um, ambiguous um.
+Ambiguous. Okay.
+Gender ambiguous.
+Can’t spell ambiguous, apparently. Um,
+job seeker.
+For a generic portfolio page. There.
+And it’s creating the picture We’ll call it Pat.
+And you’re gonna use it for the gif?
+Yeah. For the there we go. There’s Pat.
+So save image as.
+Anything.
+And then, uh,
+roll fairy.
+Where do we put this?
+Front end SRC.
+Um,
+we call it profile. Pat.
+So we have something here.
+Should it be like this or a square?
+Should it be a square or like vertical? What do you think?
+Um, square.
+Yeah. Well, I mean, it’s gotta be a little bigger than that.
+But I’m more zoomed out
+Yeah. Yeah. It’s got yeah. Yeah. Actually, more like rectangly I think.
+So vertical like this?
+H-horizontally. No, horizontally. Hor no, horizontal.
+Okay. For a profile picture
+Like that Yeah. No, for for the gif. So I’m gonna make it a gif.
+I don’t know Like I, I never seen a profile picture that’s a wide one before.
+Um, I mean, are we making a profile picture or making a gif?
+Well, we’re making a gif of a profile picture I don’t understand the distinction.
+Hmm.
+We’re, we’re we need the, the person to have their own picture, right? Picture of the person?
+Yeah. Yeah. But I mean, I’ll, I’ll and I guess what I’m saying is, uh, at the end, I’m gonna I’m thinking about using this for the email. So are we thinking about using this for the email or something else?
+Well, for the bio page. Right now, I just need to ‘cause remember I created the bio page page?
+Okay. Okay. So this is just this is just like the headshot for the bio page.
+Yeah.
+We’re not using this for the email right now. Okay.
+That’s right That was my thinking.
+Okay.
+So I’m gonna make it a perfect square so the robot doesn’t get confused.
+Yeah.
+Let’s make it um, 50.
+There we go.
+Yeah. It looks like a profile picture.
+All right. So there’s that.
+Yeah. All right So it will launch.
+I’m excited to see the, the bio page. I think that’s gonna be a game changer.
+Yeah.
+I mean, I, I, I agree. I think it’s a great value. I think that we need to give them a sense like I can like after they mess with the app or like the pro better version the beta version, they’re like, “You know what? I actually think this shit’s gonna get me a job.” You know?
+Yeah. You know.
+Like I a I, I want them to come away with this kinda sense of like you know what? I, I do. I, I believe. Like I wanna make believers out of them.
+So and, uh, you know, that’s initially, they might have doubts. But I don’t by the end of the experience, I want them to be invested in the process where they’re like, “You know what? This is worth my money. I’ve been playing this playing with this app for a few minutes now and I’m gonna go ahead and pay for this subscription ‘cause I believe it’s gonna be worth my money.” So I’m gonna get I’m gonna I get the value of this profile page. They’re, they’re really looking at my personality. They’re looking at my resume. They’re like, they’re looking at these people’s like information so I can write them personalized messages and the AI is really smart. Like I think it’s probably good. So um, yeah.
+Yeah.
+I think it’s gonna be key, bro. I think it’s definitely gonna be key.
+Sorry I’m telling it what to do as terms of what to do with this profile picture and how they can upload their own profile picture.
+Yeah. Man, I think that uh, well, we gotta see how the bio page works. Before we think about that, no?
+Yeah. We’ll let the AI take a shot at it.
+All right Well, let’s see what, what it’s got going on here. Boom. All right. Cool. So I clear cached resume.
+I’ll load my r my resume here. Um,
+um resumes.
+This one seems to be the most complete one that I have. Scrapes it pretty good. It’s got the job, the key metrics, the business challenges, the skills, notable accomplishments, the 10-year summary, education.
+Available variables from this step is defined into columns now. Do you see that?
+Um, when did you do that?
+It’s like kind of a-at the end of the last one. So we’ve got these variables and since remember they’re a list. So we’ve got all of these for the different metrics. So it kinda gives the user a better idea.
+All right
+Yeah. Let’s, let’s put it in the columns.
+Yeah. Works a little bit better. Um, except they’re having to scroll a little bit. Not the best UI, but can work with that.
+Um,
+saving continue.
+And we can do a personality test I’ve never really tried to answer this thing like correctly before. I guess I should try. Let’s see. When you explain an idea, you usually start with.
+Well, you did one question dude, you um, you made updates.
+Huh? Well, I didn’t. Yeah, I did. So like I, I did this in 10 seconds. Do you really think I gave it that much thought? Examples and facts. So oh, I see. So when I when you explain an idea, you usually start with examples and facts. Our principles and concepts.
+Um, I feel like it depends.
+In a new job you feel most grounded by clear steps and concrete tasks. A clear vision and direction.
+In the beginning,
+I want a clear vision. Then I want facts. Okay. When reading a job description, you pay more attention to specific responsibilities or the mission and strategy.
+Well, I mean, I’m looking to see if it matches my resume. But if I didn’t have to worry about that, I’d probably lean toward the mission and strategy. But since I don’t really understand mission and strategy necessarily all the time,
+it depends. When you learn?
+I yeah. It’s interesting. Go here and go through it because my mind works differently.
+All right
+‘Cause I know I know the theory behind it too well.
+Yeah. Yeah. So when you learn, you prefer hands-on practice or theory first.
+Well, I mean, I, I need hands-on practice. That’s how you get good at everything. But I think I wanna understand the theory in the beginning. Okay. In group work, you’re more motivated by doing what works or doing what’s right.
+Probably leaning more towards doing what works.
+It depends. Like how serious are these like moral debates? You know, remember talking about like hurting people or something?
+Mm-hmm.
+It depends. Like in con
+It depends who’s asking it.
+In conflict, you’re default is to optimize the outcome or protect relationships.
+Oh, definitely protect relationships. I don’t care if they think if I have to say I’m wrong even when I’m not or apologize when I when I’m not wrong. I relationships are everything, man. Um, I got nothing to prove. They don’t need to think I’m smart. Like I, you know, I’m over trying to prove I’m smart. Okay. In interviews, you naturally emphasize results and impact, or values and collaboration.
+Hmm.
+Um,
+maybe more like this one.
+In your work style you prefer autonomy and flexibility or alignment and coordination.
+Probably more like more like this. Actually, that’s it just occurred to me that like it shouldn’t be very like me since we’re talking about two different things. These are the wrong skills. It should be.
+Hmm.
+It should be like this color and then this color. Or like arrow yeah. These need to be changed. This doesn’t make sense. This isn’t very like me. And very like me. Oh, that’s why it used to say very like me. It just needs to be changed.
+Okay.
+What should be here
+This is very unlike me and very like me.
+Yeah. Yeah. But look, it’s doesn’t relate to how this is structured here. We’ve got autonomy and flexibility on the right and alignment and coordination on the left. The answer isn’t very like me. It’s either more this or more this. Needs to be like you know what I mean? We need different things here.
+Yeah. Um, for this particular question, if your work style.
+No, I’m not talking about this question. I’m talking about the structure of the whole test. I’m talking about how it says very unlike me and very like me.
+So what would you put in place for that?
+This scale doesn’t make sense because in between the two options, it says so we need some something that makes sense in this context.
+You need words.
+What would be better give me three options?
+Okay.
+Uh, but anyways, I’ll go ahead and finish the test doing it like this. But, um, in your work style, you prefer autonomy and flexibility or alignment and coordination.
+More like the autonomy thing.
+So I’m, I’m an idealist, I guess. People first, values led, guidelines lead with values. I think I’ve become that way over time by not being that and seeing the consequences.
+Um, but whatever. And then the next test would be the job.
+What’s your first or see results when it comes out. You don’t have to press see results, actually.
+Yeah. Yeah. Oh, I see. Good point. And now I have this other test. So in a new role, you recharge most by.
+Hmm.
+It’s the same problem.
+It’s doing it’s giving you two options, and then it’s saying very like me and very like very unlike me. So this is not the proper scale. It would make more sense if it was deep focus and this one of these options, and then I would say very like me or very unlike me, but it’s, it’s giving me two options. So I need to pick a scale between the two things. Does that make sense?
+Yeah. It’s a rough and rating scale where the middle is zero, and the ends are plus plus two, minus one, you know, whatever it is.
+Okay. So are so I asked the AI to answer this question. So it says the left anchor for autonomy and flexibility and the right anchor is alignment and coordination. And the scale labels could be strongly prefer autonomy and the right anchor could be strongly prefer alignment.
+So they’d be like different per thing.
+It’s just they’ll be kind of long and wordy.
+Um, okay. So then fine, but fine. Make the change, but the text will have to be smaller to fit and color code them. Make them different.
+Colors.
+Options, different colors. Okay. So that fixes in the works. But I’ll go ahead and try to finish my personality test.
+Yeah. It’s still gonna be the same like, uh,
+you know, graphic rating scale and everything, right?
+Mm-hmm.
+Like in in the sense of yeah.
+So in a new role, you recharge most by oh, definitely not. I’m an introvert, dude. I don’t wanna be in like this is cool ‘cause we’re actually like getting stuff done, but sometimes there’s like planning meetings and planning meetings. It’s why I’m not too upset about the Jamaicans being gone because they were all like product people. They were all like planners. And like I have to do all the work, and then they just like take me to 12 planning meetings about one thing I’m working on. I’m like, “Dude, I can just do it. Shut up.” So yeah, definitely like the one on the left here, even though these are labeled weird, for a networking job search, your best channel is small targeted one-on-one conversations or high volume network events. Yeah. One-on-one is definitely me. When learning a new domain or target role, you prefer concrete examples or big picture concepts.
+Probably big picture concepts.
+And then when choosing roles to apply to, you focus more on specific requirements and scope, mission, and strategic impact.
+I mean, this is better for my brain, but this is more relevant, but I guess I’ll just do that one. Um,
+in career decisions, your most persuaded by logic and evidence and people values and alignment.
+Well, this one, even though this one is smarter, I mean, my brain is an atheist, but my behavior is religious person. In other words, I just I, I, I care more about the people than I care about being right. You know what I mean? I don’t try to like be like I, I know better than you, even though I might sometimes, but that’s okay. They can they’re happy being having their point of view. I’m not gonna try to talk the Trump people out of it. Like they can’t be helped. And anyways, interview feedback that helps you improve fastest. Clear, direct, actionable, or supportive, encouraging, or rational.
+I got somewhere in between. Aren’t those kind of all kind of good? I want all, all the things.
+Mm-hmm.
+Do all the things. Your ideal workday and job search routine is planned and predictable. Flexible and adaptive.
+I mean, I don’t want too much pressure. A little structure is good.
+When priorities change, midstream, you prefer stability and scope, and enjoy iterating quickly.
+I mean, if they change midstream, then I need more flexibility ‘cause context changing is like really hard. Right? In your target role, your best work looks like deep focus and individual ownership, influence, and relationship building. I mean, my best work just depends, man. Like I mean, I’m not real strong at the relationship building thing, but I mean, I value others’ input, and I find that they often notice things I don’t, so. Anyways, when you’re stuck at work on your job search, you look for proven playbooks.
+Invent a new approach. Well, nowadays, I look for playbooks.
+‘Cause I used to do this way about everything, and it didn’t get me anywhere. I thought I was smarter than everybody, and it always did everything my way. Like I did not listen to anybody about anything.
+It was just like I was smarter than everybody, and nobody knew anything, and that’s how I was through most of my 20s until I figured out that was not working. Um, you feel confident saying yes to a role when the data supports the choice. Or the people in the cultural feel right.
+Actually, more like this. Even though I recognize that the data yeah, the data supports the choice, but ultimately it doesn’t matter. If the people disagree, they create their own world. And then own and define scope. Um,
+probably this one.
+See results.
+And then put some down here, I guess.
+Yeah.
+So I’m an INFJ these days. So.
+Mm-hmm.
+We’ve got a focus charge, big picture values, and people plan, temperament, context. Still an idealist. Well, I guess it’s consistent, so that’s good. That gives to the test some credit. Um,
+also a counselor. I mean, I do have kids, and I do counsel them, so there you go. But, um,
+fair enough Done. Moving on. All right. So we have job descriptions. Here we have our job boards. We worked on them last time. I think we made a few changes. Does are there any notice noticeable ones here? I think you had me add a couple, right?
+Simplified
+Mm-hmm.
+You had me move simplified and simply hired and, uh,
+I don’t it was Himalayas there before. Working nomads. We added a few to the startups.
+Mm-hmm. The, the total jobs,
+um no, it’s tech jobs. Uh, they still have the corporate jobs in there.
+Oh.
+I guess that’s okay, though
+No, we told it to update it I’m not sure what happened. So on the on the jobs screen, we need a fourth column.
+Um, the tech jobs column should contain the job boards that are not company-specific.
+Mm-hmm.
+And there should be a fourth column for company-specific job boards. Titled, um, what do we wanna call it? Like top, um, company boards.
+Yeah, top company boards. Yeah.
+Um, the tech jobs should contain what are there now? Like 10 or 15? About 10 to 15.
+I think 10 I think we’re doing 10.
+Okay.
+Do I should do 10 consistent?
+Okay. Okay. About 10 job boards that are not company-specific, but focus mostly on tech job seekers.
+And the startups and remote should be apt to that heading.
+And the general job boards should, should not be too tech-focused, but more general.
+As titled. Think of some more to add. Do these lists and reorganize.
+The lists to make them better. Okay.
+That-that’s going on in the background So now we can try and anything new here. I don’t remember remote if. Let’s see.
+Remote is yeah, remotive.
+And then we go to software remote.
+Oh, our website’s found the back
+Okay. Cool.
+I can have a list of things I wanna check.
+So I’m gonna copy and paste this chicken here.
+Um, see what happens.
+Okay. Just kinda copy and paste that whole thing.
+Paste the text. Boom.
+Import. See what it does. That is not a good heading.
+I guess I’ll have to let the robots know. Okay. So on the jobs screen,
+I pasted.
+This and I got I’m gonna take a screenshot.
+I can send you, um message mess I just sent you a message on Google Meet. Um, for the remote boards.
+Okay. Cool.
+I will I will feed that to the robots in a second.
+Um, just one sec here.
+A team is not an actual name of a company, right? Wait.
+A team?
+Oh, A team is the name. So they actually got the company, right?
+Mm-hmm.
+A team is a VC-backed stealth application-only home on the internet for senior independent software builders. So yeah, A team is actually the correct part. But obviously, the title is not a title.
+Mm-hmm.
+Yeah. Um,
+yeah. I think they got a lot of the good ones.
+Um,
+and, and simplified job.
+Okay. And then we’ll do another one. So we’ll just say, um,
+software.
+Super.
+These, these titles were, were not bad. General job boards, startup and remote.
+Um,
+we could do general job boards, remote,
+tech, and startup maybe.
+And then the company-specific top 10 company.
+Himalayas
+I haven’t seen a lot of Himalayas before.
+That would be product and vendor. There we go.
+Yeah. That’s my transition.
+That’s a good title.
+Hmm.
+Do Control A. Let’s do a Control A.
+And then paste. And then import. See how it comes up.
+So that’s so highly it’s getting everything right, but the title okay.
+Software.
+Um.
+And yeah, you’re gonna have to apply the job title and the, the applied job link.
+Do you have that as the as the variables?
+No, I guess not.
+When you paste when you paste the body, it’s not gonna have the link.
+Oh.
+When you edit the title,
+the job title, um, does that also reflect the applied job title, like, um, variable?
+Yeah. You’re fixing it. It’s like messed up, so you’re fixing it.
+Yeah. Yeah. ‘Cause it has to be the
+Yeah. It’s like, “No, I, I saw in the thing. It’s actually two three it’s 300,000.” Yeah.
+It’s 2900 290,000 to 300,000.
+Yeah. Yeah. You can see the reason that that’s important because you, you in your in your message,
+um you’re gonna, let’s say, create a variable that says, uh, you know, “If this position is closed, I am looking for, you know, salary,” variable.
+Mm-hmm.
+Um,
+so that, you know, they know.
+Yeah. Yeah.
+Okay. I’ll do one more here. So far, it’s messing up the job titles now. It didn’t didn’t used to do that so consistently, at least. Um, let’s see. Job write AI.
+Job write AI is a good one. That’s a tech one.
+Okay.
+I think this is this is the one this is the top one I use, right now.
+Oh, yeah.
+Yeah. That’s a good one, though.
+Except you have to be logged in, but shouldn’t be a problem for our people. They can create an account or whatever. Okay, man. I’m not trying to click on extra stuff here. We’re just trying to copy a screen. Okay. Next. Exit. Boom. Get out of my face. Okay.
+Mm-hmm.
+There it is. So we got lead AI engineer. What the fuck? Or the.
+Well, you got all these things that are right and left. See, you get your you’re capturing too much stuff.
+Yeah, but I’m trying to make it like a process. Like, I’m trying to create, like, um, a workflow that’s simple. Like, really easy. In fact, ideally, if it could go to the link, do a collect all, and then paste it without the user having to do anything, that would be a repeatable process that we could automate. So that’s why I’m doing that.
+Yeah. Yeah. Good point.
+Um, and it doesn’t like that, maybe. Um, I’ll try it without doing that.
+Overview.
+I don’t think funding and stuff really matters too much, but, um,
+import Yeah. I guess it was too much information. So there we go. Lead AI engineer. What the fuck?
+And then overview is definitely overview is not the name of the company, right?
+Like, that would be crazy Let’s see.
+Below
+No. It’s HCA Healthcare.
+HCA. But the but WFH. Yeah. Isn’t that right?
+Yeah. Yeah. I got the title right, but this time I got the company name wrong.
+Yeah.
+And it’s a salary really not really not included in what I copied?
+HCA Healthcare.
+Yeah.
+Salary data Um,
+yeah.
+Maybe it’s not
+I don’t know.
+What happens if I try the URL? Let’s see what happens.
+Same. Import URL. Boom. Import.
+Lead AI engineer.
+Okay. Better. It did better.
+It did. It, it got it still doesn’t know the salary. I guess they just don’t put it on that screen.
+Hmm. Yeah. There’s no import.
+But it does have the right company name. In the United States, it’s not really a title, but it’s not.
+You do you will have to edit it to to get out ‘cause we can’t use that in the email with jobs in the United States.
+Yeah. Right I heard you have a job in the United States. I like that one.
+Yeah.
+I like your country very much.
+Okay. Let’s let’s do the thing again.
+Write copy it Okay.
+And the job title.
+We’re like right here as people who
+And then paste it What’s that
+We’re like light years ahead of people dude.
+Let’s hope so, man.
+There’s a lot of people looking for jobs right now so just to say they won’t have the same ideas as us, right? But I think we’re okay.
+Well, they, they all are having the same idea. You want them to all have the same idea because then we could sell them our idea.
+Yeah. There you go.
+You know what I mean It’s it’s really like I’m trying to tell you what what’s really captivating about this is the idea that we’re essentially using clay but we’re not. We’re like creating our own version of it.
+That’s specific to like this. Like, nobody’s like I said, we’re like right here is ahead of people with that.
+Yeah. That’s the goal. All right. And then this one, I used this one, I used the URL.
+Well, I don’t really need to fix this one. I guess the one with the URL pretty much got it all. The salary just wasn’t there.
+Yeah. The salary wasn’t there, yeah.
+Yeah. You’re just gonna have to.
+It wasn’t.
+I, I guess they didn’t get anything wrong except this is a big redundant.
+Yeah.
+But it’s not like a problem.
+Yeah. I might just leave it alone. It’s kind of perfect except for missing the salary.
+I think it looks quite good.
+Okay. Then I’ll just pretend we did a little research and say this one was 500K.
+All right
+Good for saved.
+Yeah. Per day All right. And then we’ll delete this one.
+Someday. That’s how much we’ll be making per day We’ll be like Bill Gates of this thing, right?
+All right
+I mean.
+Oh, yeah. We wanna change this to all right.
+I’m gonna get rid of the jobs in the United States.
+There. Perfect.
+All right The typo. Sorry about that. Boom. Okay.
+Um, so I think I’ve got three jobs. That’s enough to move on. Continue to gap analysis. So it’s gonna run the gap analysis. Let’s see. So for the gap analysis, it’s an it’s acknowledging that resume gaps, personality gaps, and preference gaps.
+Mm-hmm.
+Okay. So
+I.
+I don’t think the resume gap. It’s not it’s not I think it’s a good fit. 41 out of 100?
+It seems missing required skill AI/ML.
+Add evidence of AI to resume or build refresh AI. Okay. Um,
+saying my resume doesn’t have evidence of AI. But take a look at this resume.
+There’s gap analysis thing. I’m, I’m not
+I’m not too like I said, there’s a little bit crazy. You know, I’m not like I know we’re trying to put into it, but.
+The personality gaps doesn’t.
+Maybe, maybe take out the resume gap ‘cause that’s not right.
+No, no. We’ll just fix it. Why wouldn’t you want resume gaps? That’s kinda like the most important thing. Like, if they say you need five years’ experience on this thing and you don’t have it,
+it just needs to be fixed so the AI’s.
+I said you’re right
+What’s that?
+It’s really not getting it right
+Well, it’s not getting it right so we need to fix it and get it right. Like, it’s fine. Whatever it’s doing, it can be fixed. Are you thinking we can’t fix it? We can fix it. I don’t know what it’s it’s, it’s probably not like um,
+So we gotta go back to your resume and see if it uses the keywords AI/ML? That’s that’s what we’re looking for?
+Or it didn’t it didn’t pull up AI/ML as a skill. And so so it’s not on the resume.
+But
+I’m guessing it’s not saving things properly. So it just needs to do a better job before it gets to the step where it actually saves all the resume things that could be gaps in the personality things that could be gaps. And the preference things that could be gaps.
+Yeah. Yeah.
+Hmm.
+Yeah. I could see that That makes sense. You don’t have to work on that.
+Hmm. I’m, I’m working on this little update here for that.
+What do you want? Hello?
+Yeah.
+Oh.
+There we go.
+We haven’t got to the offer yet. I mean, the not the offer. The bio thing. We didn’t get to the bio. Oh, the bio’s there. I’m gonna check the bio.
+So we’re gonna go ahead and I guess it’s automatically ranking them. It’s, it’s not doing something right on the way to the get to the screen, but we’ll fix that. And then I think this would be a useful I still think gap analysis is important. I think it’s missing the there’s not enough to do a pain point. We need actually, like, figure out what’s missing. It shouldn’t be applying for jobs you’re not qualified for ‘cause then it’s gonna make us look bad when we can’t get them these impossible jobs. Like we told you, you got all these jobs, right?
+Yeah.
+So we’re gonna click here, and we’re gonna generate pain point match. Okay. Once part of 18, you’ll regularly be invited to impactful missions that match your interests. Missions mission blah, blah, blah. So then we scroll down. Architect the rails pipeline.
+Those things don’t necessarily match up very good. I think we need to use more AI in this process.
+All right So I’m gonna say for the match, screen,
+we need a smarter AI-driven process for finding pain points. For example,
+for one job it says these do not seem like appropriate pain point matches.
+Another, it says a mi missions usually involve building an ambitious 0 to 1 as small as part of a small 3 to 4-person team. Yeah.
+Yeah. Okay. Let it try to chew on that for a minute. And then, um, we can do all of these, I guess, and generate pain point matches.
+Um, it looks like it needs to work on those a bit, but I just told it to incorporate more AI into that process. So we’ll see if it does a better job next time. Um,
+we can remove these contacts ‘cause we’re gonna start this process over again. Boom, boom, boom, boom, boom, boom. Boom, boom. Got a lot of contacts here. Boom.
+Okay. Um,
+we need to click 18 and search. We got these guys. Whoa. Okay. LinkedIn request? No. Look at that.
+I see now
+Yeah. So 283 out of 300 characters. I click the countdown there, their name. It says, uh, “Hi, Christian. I’m exploring software hacker at Harley-Davidson. I noticed proven ability to work within a structured development process. I’ve worked on similar problems, architect the rails pipeline ingestion process, vector storage retrieval agents tool open to connect.” I mean, it’s less than 300 characters, and then it’s not super wrong. And then there’s an email draft. So we’re already we’re only on the contact screen, and it’s already, like, coming up with messages for people. So just kind of interesting. It’s not quite what we thought, but so this is for, um, Christian. His stuff’s down here. It has his email, christiana.team, and then it’s got his LinkedIn profile. We can check if it’s actually giving us a real one. Looks like it is. Does it work for 18?
+Let’s see.
+But is he currently working with them, or do you get fired or something?
+Oh, still works for 18 He’s been there for 2 years and 7 months.
+Yeah. Yeah.
+There he is hey, Christian. Good-looking guy. All right.
+So there we go.
+So it’s that’s an interesting thing. So it kinda misunderstood what I told it, but it’s interesting. So this is a direction option.
+It’s skipping some steps here instead of, like, the offer and then the bio and the compose, but
+you know, maybe, maybe one step here would be to take, like, the LinkedIn request note and, like, take care of that and knock that out. And then work on the email draft later.
+‘Cause you can’t fit much in the LinkedIn request note anyways.
+Yeah.
+So now before you even got halfway through the process, right, ‘cause we’re only on, like, step 5 here, right, we’re, like, gonna send him a LinkedIn note, and then meanwhile, we’re working on an email for them. So they’re gonna get hit twice, already.
+And people don’t always check their LinkedIn unless they’re, like, you know, need to, like me. I don’t look at my LinkedIn. Um,
+you know what I mean Not anymore. I’m not looking for work So why would I do that? I got other stuff to do. And then.
+Yeah.
+Okay. One thing I don’t like is that it says your name here.
+Mm-hmm.
+It should say account name.
+Yeah. Exactly So on the contact screen,
+the I don’t know if it should give me any email draft yet.
+I’m gonna say key.
+No, I don’t think it should any no, no.
+Keep keep the LinkedIn request.
+Right ‘Cause we can’t really do much of that anyways. There’s only 300 characters.
+Yeah. And and the the email drafting.
+Connect messages.
+For later.
+I would change that
+Hmm
+The check the, the connect messages is simple. Connect message. We don’t we don’t need a if you have a very long connect message.
+Mm-hmm.
+Your connect rates are gonna go down.
+Yeah.
+So make it shorter yourself.
+Mm-hmm.
+I mean, it’s only it’s only 283 characters. It’s pretty short.
+Can you verify that I mean, I can’t believe that. It looks long as shit, bro.
+It’s 283 characters. I mean, see? Final ask GPT.
+It’s still long.
+It looks long ‘cause we’re, like,
+I mean,
+yeah, I think it’s I think it’s accurate, but, um, it looks long ‘cause it’s in that little space and the text is real big.
+283 dude. So we’re good there. It just looks like this looks long. The text is huge, and, like, it’s really short. So there’s only, like, 3 words per line. So it’s fine. Um, and I don’t think it’s that long. And, and I think that you want it as long as possible ‘cause it’s only 300 characters you’re working with. Like, I remember trying to send people messages and trying to fit as many words in as I could. Usually, they’d come right up to the I personally don’t like em dashes ‘cause they don’t look human, but, um, I’m just saying. Maybe say more em dashes.
+Don’t use em dashes in the LinkedIn request notes.
+And is there anything else we don’t like about the LinkedIn request notes?
+Hmm.
+I mean, it isn’t the best connection between the role and the and the resume, but it’s not terrible.
+Yeah. They’ve mentioned specific pain points plus one proof point. Ask to connect. Not to chat.
+So we can we can do some more of these.
+Verify. So the Christian one’s risky, but we already reached out to him by LinkedIn, so that’s kinda cool. So they kinda gives us, like, a backup. They’re, like, more likely to get in touch. We already know that, like, our response rate on these is, like, like, 1% or something, so it isn’t, like,
+or like, super excited about every outreach we do, but it’s a numbers game, and I think the fact that we’re giving them two outreaches instead of one personally, like.
+Mm-hmm.
+Everything goes to spam for me. Like, unless I’m, like, literally expecting that email.
+And I’m sure others are the same. Not everybody, but plenty. And same with LinkedIn. I don’t look at it. But if you send it to both, I mean, you’re definitely increasing the chances that you reach me, right?
+Yeah.
+So, so these ones are valid.
+The only
+Well, I turn off the email one, right? This is just LinkedIn connection. But do, do, do you know.
+I, I, I told the AI to remove that, so that’ll be on the next iteration we look at.
+Okay.
+All right
+On the con so that that was kind of answering my question ‘cause I was like, “Where are we gonna put the, the LinkedIn thing?” ‘Cause we we’re, we’re spending all this time drafting emails for people, right?
+Mm-hmm.
+Um,
+maybe we can even say like, tell them on the contact page under the Linked LinkedIn request note that the email will be drafted in a series of steps on of next steps. Um, then, um,
+and then say, um,
+tell them the LinkedIn request note is, is a good first step to request a connection and introduce yourself and helps the numbers game.
+Do you like that
+Yeah.
+All right We’ll work on that Okay. So moving on. So we verified the emails. We can continue. Oh, I only did one company. So we can do was Backline one of them? Oh, Harley-Davidson was another one of them, so we do a search.
+Oh, this doesn’t actually send it They’re gonna have to actually click. We’re, we’re gonna need some instructions. So under the LinkedIn request note,
+field I guess it’s an editable field.
+Editable LinkedIn request note field.
+Um, since the message can’t be sent over the role fairy app, they will need instructions like click the click the contact’s email. Um, LinkedIn link below.
+Mm-hmm.
+Click what is the thing when you go to their thing? It says, like, um, connect. So then click connect.
+Mm-hmm.
+Then copy this note into their then click add a note.
+Yeah.
+Add a note.
+Then copy this note into their email.
+Oh, that’s 200. Why’d you say 200 now?
+Okay.
+Oh, because you have you don’t have the subscription anymore?
+Okay.
+To renew
+Well, we’ll shorten it then.
+Not a problem.
+Then yeah. Look what it says. It says three personalized invites. I think it was a month.
+Hmm.
+Or a week. Add note. Add a note.
+Three personalized invitations remaining for this month.
+Okay.
+Hmm.
+The end of the month
+Whatevs, man. Okay. Um,
+change the max characters. To 200. Well, you said it was too long, so it’s gonna be shorter.
+You were right. I mean, I hope you’re right. So there it is.
+All right. Um,
+moving on Oh, let’s go ahead and did we already get everybody here? So it, it I clicked one of these dudes.
+Verify email. Brad.
+Oh, I see. We’re on Harley-Davidson. Hi, Brad. And then, um.
+No, w-where’s the company name?
+Up there
+Um, I’m exploring software hacker at Harley-Davidson.
+Okay. Can you scroll up a little bit just to see more?
+Brad, 18. Oh, that’s kinda weird, right?
+Yeah. That’s what I’m saying. I was if you scroll up, yeah, you can see the company name. Yeah. It’s oh, it’s a orange circle. Yeah. It’s an orange thing here. I see it.
+Yeah, but I clicked Harley-Davidson, so something’s wrong. HC Healthcare search.
+Hmm.
+Okay. This is I was still giving me fricking Harley-Davidson shit. Okay.
+Um,
+we noticed when when I generate new contact after clicking on a company name on the find contact screen.
+It does not change the LinkedIn request note company info.
+For example, it’s still says, oh, it’s ‘cause I didn’t I didn’t click this.
+And verify emails.
+Oh.
+Well, it says Brad.
+Do a search. It says Brad.
+Sarah.
+Verify emails.
+Still says Brad.
+Oh, wait. Change it over here? Now that’ll drop down. Brad Snyder.
+Oh, I see.
+Well, the drop-down sucks.
+Yeah. That’s hard to see. Yeah. You can’t see all the drop-downs at the same time.
+So the drop-down.
+Just.
+And is currently read.
+The drop-down sucks.
+It is. It does suck All right. Um, use a different method to select and change the note.
+See, it’s saving them over here. That’s good. It’s doing some stuff right. Um.
+Yeah.
+Don’t use a drop-down. Use name pills or something more cutting-edge.
+The drop-downs.
+Can’t be viewed.
+On video. And the background looks white and hard to read. So use another method to select and change the link and request note. Moving on.
+All right Let’s get out of this screen.
+So we’re gonna continue to research. So we still have these guys here. We’re gonna.
+All right So what we’re kinda researching now?
+Start research
+This is for signals. This is for the signals.
+Yeah.
+Right
+So we got some we got some research. So it should be taking when you get to this page.
+This research now?
+I don’t know, but it should when you get to the research page, it should be taking the contact.
+Mm-hmm.
+So when I say that, when you get to the research.
+Mm-hmm.
+Page, it should be taking the taking all the contacts. Saved.
+From the previous contact step.
+And populating the options selected for the research. Options available to be selected for the research page.
+It’s is it doing that? I mean, I’ve got, like, four options. It’s only showing four. It’s also weird. Like, I don’t like this, obviously. So this is we need to make it make more sense.
+Yeah.
+So we don’t need contacts for to research and the contacts on how do we do this?
+Um.
+Hmm.
+We don’t need the contacts to research box.
+Be we can have the okay. To be to be on the left so large. It can be I mean, on the right so large. It can be on the left. And how do you wanna do this?
+How does how how should this page look?
+So um, the page should look like it should be giving you signals. About this person. And, like, pull from their posts or their LinkedIn profile or their about section. Or their experience. Like, what you did, you you just copied the entire, um, LinkedIn profile and you gave it the LinkedIn profile copy and pasted and the message on GBT. And then it created this personalized message based on that.
+Yeah.
+Um,
+you know, but we we essentially just wanna pull, um, data. From this contacts, uh, LinkedIn profile.
+That’s fine. I guess my question is more about how this page is set up. ‘Cause right now, it’s confusing me. And I’m, like, the developer. So like, I see a researched column. Right?
+Mm-hmm.
+And I see the contacts to research.
+Mm-hmm.
+They seem very redundant and pointless for the most to exist.
+Yeah.
+Um, on the left should be the stuff that we’ve already researched. But that that I I believe that populated before we even, like, clicked anything.
+Hmm.
+So if they were already researched and then?
+Uh, you know, times like these, I feel like we should go to the the the wireframes to see what we did originally.
+Mm-hmm. It’s easy enough I suppose.
+Oh, then we have to like, wireframes. Type wireframes.
+Yeah.
+All right And then we had, um, company research.
+Yeah. Company research. Wait. Company research and we have contact research. We have both.
+Yeah.
+Decision makers isn’t is the one we wanna go to.
+Yeah. ‘Cause that’s the contact one. This is the, uh, company research one.
+Oh, okay. So decision makers.
+Yeah. Yeah. Yeah. Okay. Let’s see how it looks now.
+Hmm.
+Hmm.
+Hmm.
+It’s kinda what we were talking about.
+At least filters on the left side. Okay. So now we have okay. We have signals. Okay. Change jobs. That’s good. I like the signal section. Um,
+I like the left side on this one.
+Hmm. Management level.
+I like the lead filters. Yeah.
+Um,
+I like the contact research profile. Yeah. And then yeah. This is good instruction. Select the contact. And research the LinkedIn pro LinkedIn profile. To personalize your. That’s good.
+Interesting facts found. Yeah. Like, that’s good stuff. Like,
+uh,
+job title.
+Post oh, it says something about the posted. Posted about engineering scaling two days ago. That’s interesting.
+I don’t know So I’m trying to think, like,
+this is definitely not I don’t like this.
+This the the actual results aren’t terrible. Although it’s missing stuff.
+Hmm.
+Um, but like, I mean, it gives you a report. Maybe instead of showing the report the problem is so, like, you click it and then it gives you a report and then takes up the whole screen. And then you click another one and then it starts. And then it gives you another report. And then that takes up the whole screen. Right? We don’t want that.
+Mm-hmm.
+In fact.
+Mm-hmm.
+It looks like yeah. So it you don’t first of all, if the start research button isn’t needed ‘cause it’s already doing the research the second you click on it. I’m gonna say that. If the start research.
+Mm-hmm.
+Button isn’t research is done, when you click contact, don’t include the button.
+I’ll clarify the page a lot.
+Definitely.
+Um, the research page.
+Okay.
+So yeah. That’s that’s jacked up page. So we’ll have to work on it. But I I’m gonna let AI take a shot at it. Um, so here we are. Um, offer creation.
+Build a personalized pitch that showcases how you can solve their challenges.
+Hmm.
+We’re not at the bio page yet. I have no idea what that’s gonna show us if it’s gonna be, like, completely jacked up or interesting. Okay. Remember we talked about click to generate a new version? We haven’t seen this yet.
+Yeah. Yeah. That’s cool.
+Boom.
+That’s a good idea.
+Boy. That’s not what we had in mind. Proof of competence. I noticed the challenges around proven ability. So I guess that’s interesting.
+All right Well, that’s not working. That sucks.
+Mm-hmm.
+Maybe it wants to save it.
+Hmm.
+I just don’t know why it gave me any more. It gave me that one. I said, uh, uh, we’ll try a different one.
+You can do credits, though. You can do it based on credits.
+There you go. It was like, “Sorry. You’re out of credits.” So I I I click I ch it changed when I changed the ta the role. If I click on developer and I click it, I noticed challenges around proven ability to work with an instruction development process. In my previous work, I architected the rails pipeline. Yeah. Make sure we, like, are tense, like, is correct. So like, I don’t know why it’s having grammar problems. It’s not a problem with AI usually. Um,
+there seems to be a punctuation.
+And grammar, um,
+problem. With the offer drafts.
+In the personalized offer section of the offer screen. What else do we want them to be different? Let’s what if I just refresh this page? What do I get? Yeah. So it it okay. Also,
+when I start fresh or refresh the screen,
+I get a offer draft that has complete email. Whoops. See it? Like, regenerated it already. See that? Sorry. Okay.
+Copy.
+Copy.
+More complete-looking offer.
+Okay.
+But after I click it, it generates a much shorter offer.
+The version should be more similar to the first one. All right. That’s all I’m gonna say about that. You can also put a video in there so if I go to videos.
+Captures. I don’t have any videos.
+Well, I need to do a video to use a link.
+Yeah. You you can upload your video right here. Cool.
+But how like, what, like, uh, how do you how do you put it?
+Well, it’s gonna embed it in our bio page, right
+Oh, well, well, well, we’ll see. That’s when we’ll see. We’re gonna see which one it’s gonna do. I don’t know.
+Yeah. I mean, whether it happens this time or it happens after we drag it, but that’s that’s the concept. It’s ours to implement, right? But, um.
+Yeah.
+So then the videos.
+It doesn’t like the video file types I have in here, I guess. All files. Nothing.
+Okay. Well.
+Yeah. We can either do it. It’ll probably be better to do it on the bio page.
+Wait. We upload it here. Maybe you’re right Yeah. And then I can put my let’s see what happens. HTTP colon slash slash got reliable AI network dot com. It has my portfolio.
+Hmm.
+That one’s calling me. Hold on. Hello.
+What’s going on, my dear?
+Are you gonna bring me food?
+Would you like some
+I I like food Food’s good.
+Okay. Can you give me some options for you?
+I don’t know Just grab me a burger or something.
+Okay. All right Love you. Bye.
+Love you. Bye.
+Okay. Um, reliable AI network dot com. And then I guess I’ll save see, I don’t I don’t know what it’s doing there. It’s stupid. But I told it to make some changes, so we’ll see what it does. Okay. And then we got some things. We definitely have a couple pages that need some ironing out for sure. But we’re getting real close to the end here. It’s just.
+Are we ending the panel
+What’s that
+You click on bio.
+Oh, it did a skip bio Look at that.
+Yeah.
+It’s a bio offer. Bio. So if I go next. Oh, it’s ‘cause the button. Okay.
+The button at the bottom of offer now that we’ve added the bio page. Should not be continue to compose.
+It should be continue to bio. Page. And it should load the bio screen.
+As the next step, boom. Okay.
+So that’s not working.
+All right So click generate to draft your bio page. Publish to get a permanent URL.
+Nice concept. Okay. What will show up? Headline and summary, proof points, grounded in your resume,
+um fit points tied to the selected job’s responsibilities, pain points, resume section rendered from your parsed resume. No unvetted facts. Calls to action. Wow. Okay. Moment of truth. Keep your expectations low. Oh,
+nothing. All right.
+Hmm.
+That’s all right You know what We’re gonna we’re gonna we’re gonna get it to work today, all right? We’re not going to bed until this thing makes a bio page ‘cause I’m gonna see.
+Oh, shit. Really
+No, no, man. It’s we’re talking about 10 extra minutes. Don’t worry about it. On the bio page, when I click generate I don’t think it needs to be regenerate. Um,
+button. I get an error.
+And no and no bio page.
+All right Um,
+make it work That’s disappointing. I if I had higher hopes. Okay. So
+um, but we’re kind of back to that. We’ll have to, like,
+well, we’ll come back to that All right So we’ve got our message tone, proof of competence. I noticed so this is kind of what we we left it at last time. We can change our tone. Generate an email.
+Oh, wait. This is where this compose. We finally got to compose.
+Yeah. We’re on compose.
+Okay. I don’t oh, simplify language. Oh, that’s not what we want. Oh, down down here we get the preview. Here we go. So so, um, yeah. Here it is. It’s telling us what our variables are. This is your idea, right?
+You know
+Yeah.
+Body variable. Yeah. All right. At least it caught my name. And my email and my my phone number. Um,
+so there it’s it’s doing the variable thing we wanted to do. Okay.
+So title, idea, snippet. Yeah. Preview. That’s what we wanna do. Yeah. That’s what we wanna have. The preview we wanna do that.
+Um, proof architect. Oh, okay. Wait. Idea offers snippet.
+Oh, don’t are we supposed to have a varia available variables? Why it’s so hard to say.
+Available variables.
+We should name our company that Go to available variables dot com.
+Um, so funny.
+It does sound like it could be, like, a company for job seekers. Available variables.
+Are you an available variable Join us at available variables.
+All right So that’s what we get. I don’t love the email draft that it drafts.
+I feel like it could be smarter.
+I’m gonna just say that
+Yeah.
+I don’t love the, um, email that is drafted.
+On the compose screen. I think AI could be used in the generation process to make it could be process used more at this step in the generation process to make it smarter. Use more information from previous screens. Especially the contacts and research screens.
+And create a really personal and more effective email without using fucking em dashes.
+Yeah.
+All right Em dashes seem like such a tell, right?
+Like all these guy.
+You got a you got AI write me a letter. Thanks.
+I mean, I don’t know I I know some people used to use em dashes, but I don’t think people like them now because AI kind of, like, uses them so much. It’s like, “Oh, is this AI? Probably is.”
+Yeah. Destroyed it.
+So we have campaign. So we were here on compose.
+Mm-hmm.
+Generated our email. Don’t know why it says this.
+When I click generate email,
+on the compose screen,
+it generates the email. But it also says,
+“Your session looks expired Please refresh the page or log in again.” Whatever, man. Um, so it’s already generated the email. Um,
+if this button is not needed, then remove it.
+Like, if the email is generated without pushing that button, then the button is just ugly. Maybe a regenerate button works better. If that’s the case.
+All right Moving on. So yeah. When we go from this.
+Can I take example of my work? You have the it’s in there.
+What’s that
+How did that work out Was that a variable? In the at the bottom?
+Yeah. It’s an available variable.
+Yeah. Quick example of my work with the work link.
+It’s so funny to me. We should just we should name a company called a variable.
+Available variable
+And everybody is just like, clueless. What’s going on?
+Elon Musk said in an interview that, like, if something’s funny, it increases its value. So I don’t know if that’s true, but he believes it is, like, a rule. If it’s a little bit funny, it, like, is it increases the value. I’m not really sure what his philosophy. I have to look that one up, but that’s why.
+That’s fine. If you’re really funny. Just, like, and because I I imagine a whole, like, thing in my head about, like, how I would all go down.
+Mm-hmm. So here on the campaign screen now, this is the last screen in the process, right? There’s also an analytics, a tracker, and alarms. The reason these are over here is because we had to keep the dashboard. See the dashboard is, like, 12 steps, right?
+Mm-hmm.
+So in order to make that work the analytics, tracker, and launch had to be, like, their own thing. Like, separate from the 12 steps.
+Yeah.
+There is a warm-up and launch screen. But you you can’t push it unless you’ve gone to the campaign already.
+Mm-hmm.
+You need to change the animation a little bit. Um, anyway, so you can edit your email in compose. It takes you back. That’s kinda good.
+I’m fine with that What else does it let you do? Check deliverability. Okay.
+Mm-hmm.
+I don’t know if that’s mock or real. Um, contains one jargon items consider simplifying. I’m just gonna say make sure the check deliverability button is not producing mock output and the displayed analysis is based on real analysis.
+Okay.
+Um, email sequence. So we have that. So this is the sequence. So we’ve got step one, immediate. Maybe this could be a little more bold.
+Make the text step one, immediate. Larger and bolder. A little bit.
+A little larger and bolder. So it stands out more. Maybe it should be a different color.
+Maybe orange.
+Mm-hmm.
+Orange is our thing. You know what I mean?
+Yeah. Bolder and orange.
+Text. Okay. All right. Moving on. So stop on reply. What does that mean? Stop on reply.
+Yeah. I guess you don’t send them a you don’t send them another so if they reply, you don’t send more messages out. So we’re.
+Yeah. It’s typical
+So we’re we’re this is automated then.
+So we need to think about do we want that? Do we do we want automated email sending?
+Automated sequences. Yeah.
+Oh.
+Yeah.
+Okay. I mean, because, like,
+so anyways, plus two days later. Maybe instead of plus two days, put two days later. To me, that’s more readable.
+Yeah. You don’t need that It’s down here. The play is down there.
+Okay. So if I change this, does that change? Oh, it does. See the plus three? But I want to I think I want it to be, like,
+um I want it to be, like, two days later. So this it’ll still change. Right?
+Yeah.
+So I can put like, 999 days later.
+Okay.
+The company no longer exists, but you’re still trying to get work there. You’re the ghost monster. All right. So immediate. So we make it two days later. However many days.
+Make it one hour later. So they don’t get it at the exact same time of the day, maybe.
+All right And, um,
+so we can stop on reply to any of these. I guess each of them. Maybe they get the second one. I don’t know. It’s weird. What does that mean? Stop on reply. I’m trying to so I understand it’s automated. Stop, like, don’t send the second one.
+Yeah. If they respond to the message, then you stop all the other messages in the sequence.
+But the stop on reply option is for all three messages.
+So.
+Separate
+Essentially, what you need to do is really continue on reply is what you need to have. Stop on re um, you know, it’s like you send a message that say imagine this. You send a message that’s like, um, “I w um, thanks for connecting with me. Um, now that we’re connected, you’ll see my posts on resume writing and career coaching. Um, cloud we’re connected.” They respond, and they say, “Thanks, David. I’m looking forward to it as well.”
+Mm-hmm.
+Then you click continue campaign on those people. Because it stopped on the reply.
+Mm-hmm.
+So at some point, is this thing gonna receive their email reply and and display it here in the app?
+Um, you can have it as a unibox is what you should probably have it.
+Tell me what a unibox is.
+All the top softwares right now have a unibox.
+Um, the unibox is a place where the responses live. So no matter what email address, um, they sent it to, um, it all goes to the unibox.
+Um, all the different email accounts that that we, um, that we send out to goes to one, one location. And, um,
+that’s kinda the idea of the unibox. It’s, it’s just to receive the replies. So um,
+do you want it to just reply back? For the email, you have to reply back on the email here. Because we’re hosting your emails. For the LinkedIn, you’re just gonna copy and paste that message into their LinkedIn. Because we’re not doing LinkedIn automation. We’re just doing email automation.
+Okay. So the unibox So should I put it up here? So it does, like, replies? And then you click that, and it shows you, like, all replies or inbox, maybe?
+Yeah. Well, yeah. Like, the emails, that they’re gonna send out, they’re gonna have to, uh, get a place to, you know, reply to them. Like, what, you know, because because we’re gonna be hosting the email as service for them. Because we’re gonna make sure it’s deliverable. Because we’re gonna host a really high deliverability email addresses.
+Did you call it a unibox, not a inbox?
+Unibox So the reason why it’s a unibox is because um,
+how cold email infrastructure works is, um, it’s, uh, it’s not vertical. It’s horizontal. It grow you grow horizontally, not vertically. So I can only send 20 emails from one email address. So let’s say I have five email addresses. Now I can send 100 emails. 20 from each one of them. So of these five different email accounts,
+they’re gonna all have different email addresses. And so all of the email addresses go to one unibox, one box, unibox. Um, and all the five accounts go to one unibox. So you can just reply to the unibox instead of each individual email account.
+Okay.
+Does that make sense
+So you said the infrastructure is horizontal, not vertical?
+Yeah.
+Does that make sense too?
+Yeah.
+Make the bu so it’s gonna be, uh, an inbox. We’re gonna call it inbox for the UI.
+Make the button
+Okay.
+Inbox, not, um, what do we call it?
+Uh, the unibox
+Unibox. Or replies.
+Because inbox is, um, next to the launch button. In the nav bar. Okay.
+Cool.
+Okay. Cool. So we can just kinda leave that for now. Um, and then finally,
+it jumps from this screen to the launch. So now that we have this, so once we’ve completed that, does the dashboard enable this? No, it doesn’t.
+Um, I completed all steps, but it didn’t. Enable the warm-up plus launch button under the all steps. Also, the warm-up. Plus launch button is really low on the screen.
+Okay.
+Make it wider. And
+center it under the other buttons.
+A little to the left.
+Okay. Sorry Um, campaign. And then we click this, and we click deliverability. And then it tells us that. I’m not sure that’s legit. I asked AI to make sure. Before we look at it again. And then we are now at the campaign summary. It created this campaign. Um,
+um
+We wanna get the campaign summary. Don’t you wanna do, uh, what each email is like a role applied? Or are they just like that? Total yeah. What let it misleading, but I think that’s the idea. Total emails three roles applied three. Like,
+um let it misleading because there could be three emails you sent to one company. So you only really applied one role. Um,
+so that so that could be a little bit challenging in trying to say that in the right way. That hits all the levers kinda thing.
+Mm-hmm.
+Any ideas how to say it
+Um, I would say
+um you need to have how many unique unique applied titles at a company. That’s the first thing. You need to have one of these metrics being unique applied titles at company. And then you can say how many did you apply per company. Um,
+so that way you can say like, “Oh, I applied to “ so maybe three roles at the same company that you liked. And so you reached out to five people, six people, um,
+uh, so you sent out six emails. But there’s only two roles at one company.
+Mm-hmm.
+So I have to figure out what’s the unique companies and what’s the unique applied titles.
+Gotta get like granular with it.
+Let’s do it. Make I just told it everything you said. I don’t have the transcript, so. Um,
+email warm-up So we got warm-box.
+Mail reach So we have a warm several warm-warm-up methods here we can choose from.
+Oh, from the, um.
+So we don’t have to, like, offer that service. We just let them pick one. But we give them enough options. If they don’t want a warm-up method, they can stick with their LinkedIn, and we can stop there. Or they can actually, like, do the thing they need to do and pick one of these.
+Yeah. I’m gonna use um,
+uh, instantly values. I use instantly.
+Okay. Open set up new tab.
+Okay.
+Interesting. That’s how it does, huh
+And then start for free.
+That’s what I use.
+Stuff Okay. I guess I could just sign up with Google.
+Um, but no, but we wanna host it for them. We don’t want them to, right?
+Um, well, we could. I think so.
+So or they could do it themselves. I mean, you could.
+I mean, it’s an extra step. So it might slow us down on our release date. But if for now, if you wanna do this, to integrating their, like, API.
+Well, maybe you connect your API.
+Okay. So if there’s an API for instantly or similar email warm-up that we could easily integrate.
+Mm-hmm.
+Into the role fairy app. Offer that as an option. Described as use role fairies warm-up.
+On the launch screen.
+Okay.
+Um, so here we go. Day warm-up select schedule preview. Day one, eight emails a day. Day two, twelve. So the is this what you’re familiar with in terms of how many emails per day work for a warm-up? Without, like.
+Um.
+No
+Yeah. Yeah.
+Okay.
+I mean, uh, we wanna see how one.
+So you just gradually warm it up. You slightly do a few more. So it looks like it’s adding two a day. So you don’t wanna do more than eight emails the first day.
+Mm-hmm.
+Then the next.
+By the time you hit twelve.
+Yeah.
+You’re at like, thirty-one.
+Yeah. For the most part And how would we’d say we have it as an increase per day. Daily warm-up limit.
+All right
+Um.
+Hold on My wife’s calling me. I’ll be right back.
+Sure
+Yeah.
+Yeah. I’m talking to Dave. What’s going on
+Hello You still there?
+Yeah.
+Sorry about that. My wife brought me food. I had to go downstairs and get it.
+Got to eat, man.
+Right We’re almost we’re almost done. One last page here. All right. Um,
+all right What’s the sender domain and the DD the DKIM selector? Are those things we need to worry about?
+Um, yeah. Again, like,
+what’s the situation What are we gonna use? Um,
+are we gonna use instantly? Um, are we gonna use APIs? Are we gonna do it for them? Are we gonna host the emails? I thought we were gonna host the email accounts and then have everybody send out emails from our warm-up infrastructure. Um, but, you know, if that is the case, then you know, we, um,
+we pretty much, um,
+we pretty much just need to set up the domains.
+Mm-hmm.
+In the back end Now that now that might take a long time.
+Yeah.
+Um,
+so I think it might be might be just, like, we we just API to instantly. And, uh, I get all the, um,
+I get all the stuff And everything gets sent out to instantly.
+Okay.
+Well,
+hold on a second I’m gonna see if we can get instantly, like, API on here real quick.
+Yeah.
+Um,
+let’s see.
+Okay.
+So yeah. It looks like we can.
+So yeah. If we have our own, like, account, I guess, like, already warmed up, right?
+Yeah. That’s what I’m thinking.
+About I mean,
+assuming our app like, grows – you know, we have, like, a lot of people – like, wouldn’t it get shut down pretty fast?
+It’s gonna get pretty expensive for us.
+What’s that
+It might get pretty expensive for, for us.
+Well, that means income. So it’s not necessarily. I mean, that’s built into our price.
+Um.
+Yeah.
+Okay. So it says, um,
+okay.
+So instantly has a warm-up API. And it’s pretty clean integration. Um, it’s gone ahead and implemented um, the use role fairies warm-up on the launch screen as an option. That appears only when instantly is configured. All right?
+So it added a back end with instantly warm-up integration.
+And created a Python file to warm up the instantly. And then it added a deliverable deliverability launch endpoint. Front-end launch screen UI.
+Um, it relies on the instantly API key in the back end. So I’m gonna have to grab one of those. Um,
+and then, um so until I set up the API, it’s not gonna be able to run it. But maybe by next time. I’m gonna dare to. We can actually, like, see how that’s working. So we, we are gonna have a instant instantly. So they’re gonna if you want, we can leave these options here. Right? And but then we can add one of these options as, um,
+use role fairies warm-up.
+Yeah.
+And then it’s pre-warmed.
+Using role fairies.
+But then you they maybe it’s an upsell thing.
+Okay. Well, um, I just wanna have the infrastructure set up so that we have email accounts that can, like, uh, like, we can make we’re making it very easy for them. Because.
+Mm-hmm.
+Um, this whole process, um, is what allows them to have um,
+emails that don’t have a spam.
+Yeah. Yeah.
+Um, and it and it doesn’t use their own email address. Uh, it kind of, like, we’re essentially creating a, um, an email address for them. On our server for them.
+So, like, it saves them time. And all this stuff. We just, like, but it’s all going through instantly, essentially.
+Okay.
+But also, instantly has these pretty cool things. I don’t know if you know this. Check this out. Um,
+let’s share my screen.
+Share screen on instantly. Uh, I think you gotta stop sharing your screen to see my screen though.
+Yeah.
+Let’s see.
+So instantly has its cool thing too. Where you can um,
+oh my God Oh.
+Yeah. Okay. Add new. You can actually buy pre-warm-up accounts.
+Hmm.
+See that
+How many how many emails can you send with a pre-warm-up account?
+Uh, 30 emails each account.
+Like, per day?
+Yeah. Per day You don’t have to wait, like, a month or three days at through. Like, I usually wait three weeks to warm up an account when I do it for my clients.
+Mm-hmm.
+So um I usually wait three weeks to warm up the account. Um, and yeah. Three weeks works well.
+Hmm.
+Um, but yeah. It’s just a lot easier to say a month. So I usually just say a month. Um,
+so let’s say it takes like a month to warm up an account. And then you send 30 emails. From that one account.
+Um,
+and uh, yeah. So pre-warm-up accounts.
+Don’t have to wait that time.
+They, um you can start sending right away. They’re pre-made. Accounts. With domains. They’re set up required. It does all the, um, it does all the, uh, GKI GKIM records and all that kind of stuff.
+Okay.
+Um, adds it’s already added to the premium warm-up pool. It’s all done for you.
+Yeah. Yeah.
+Okay.
+Well, um can I put you responsible for that part of it? Since you’re, like, more of an expert?
+Yeah. You just gotta connect to the API. You say you should be good.
+Yeah. So I don’t know. You could.
+And we include that in part of the price. Uh, it’s a get to get one.
+Okay.
+That we just charge them on top of it
+Oh. Yeah.
+Can you send me $40 on cash out?
+Hey. Can you can you give me a minute? I’m in the middle of a meeting. Like, do you need to wait a second?
+Okay. I, I needed within the next 30 minutes ‘cause I need to send it to my dad.
+Okay. Bye.
+Okay. Bye.
+Fine.
+Mm-hmm. Mm-hmm. Oh. Go ahead. Oh. $15. That sounds good.
+So $15 $15 a month. You get oh, and that’s a domain. You get a random one.
+Um, and yeah. No. So you get a 10. So it’s $15 for the domain. One-time fee. And $10 a month.
+And it already pre-warms every ready-to-go. So 25 so one-time one, one and would you say double it? It’s gonna make profit.
+What about doubling it?
+I was thinking that we just double it So if they charge if they charge $15 one-time fee.
+For a domain.
+Um,
+and then $10 a month.
+Uh, yeah. $10 a month. So you charge them $20 for, uh, what? $30 for the one-time fee for the year. And then
+um $20 for the monthly fee.
+All right
+It’s double. And then if we’re doing 250 a month, that could be included. You know, as, as one of the costs.
+Very cool.
+I’m gonna stop sharing.
+All right So I’m gonna start sharing.
+Right now
+Yeah.
+Okay. So right now I’m pushing all the changes that we made this session.
+Should notice a few things are working better now.
+Did you make any such a huge, huge improvements every call here. It’s crazy.
+Yeah. This is a good good rhythm here. I sent you them already.
+I sent you the 40 already. Thank you. Love you.
+I’ll be done in, like, 10 minutes.
+Okay. We’re just doing a quick review of this stuff that we fixed already.
+Okay.
+They want me to come downstairs.
+All right
+Yeah.
+They but anyway So then if we do this, we launch campaign. And.
+So it’s failed to launch campaign.
+‘Cause it’s speaking the truth. We don’t have everything we set up. Let’s see what’s going on with our deployment. Oh. It’s deploying. Sounds good. Made some changes.
+What’s the oh yeah. Deployment changes.
+Mm-hmm.
+Interesting. To see how many of these pages are improved.
+If my instructions were clear enough it should be all right. Okay. So let’s see.
+Let’s go ahead and log out We’re gonna log in.
+Here we are.
+Go to the next screen. All right. Already parsed my resume pretty good. You still watching?
+Oh. What happened
+Okay. So we didn’t cha we didn’t make any changes to this one this time. Everything was good on the resume screen, right? Other than.
+Resume Yeah. Yeah. Yeah.
+Other than it wouldn’t let us in Did we make any changes here?
+Uh.
+Oh. That’s right We did actually. Remember the remember the whole, like, personality test thing?
+Yeah. What, what did you do? Yeah.
+So retake.
+Hmm.
+Very unlike me saying.
+Still doing that thing.
+Oh.
+I don’t know if you could change it too much. I’m saying.
+No.
+I don’t know how much you probably can say something, but.
+Yeah. No. I’ve seen tests like this. They’re a little bit less intuitive.
+Mm-hmm. Yeah. I mean. I don’t know.
+I don’t know It’s maybe it’s not refreshing. Maybe it fixed it in the job fit screen. I’m not the other one.
+Yeah.
+Well, I’m gonna go back I ha I have the transcript as well. So I have another chance to go back through and be like, “Hey. You didn’t fix the, the personality page.” But this very unlike me, somewhat unlike me, it depends, somewhat like me, and very like me, doesn’t work for a binary decision, right?
+Lean. You know, I used to lean this way or this way. And I think I, I forget how they do it on the actual Myers-Briggs test, but I think it is something like that, right?
+Yeah. So that’s what I’m saying. It’s like a graphic rating scale. It’s like a
+So that still needs to be fixed. So, so far, no dice. Anything different about this screen to refresh?
+No. It’s supposed to be three. It’s supposed to be four columns.
+Okay.
+Ah. Here we go.
+Okay. That’s disappointing.
+Hmm.
+Okay. Moving on.
+Okay. Run gap analysis.
+Still has these errors.
+What do you been up to? GPT? I thought you were working behind the scenes here. Did it not maybe it didn’t upload them or something.
+Hmm.
+Okay. It’s saying it is implemented.
+Something’s not right. Maybe I’m gonna try to open it with a different browser.
+Hmm.
+I’m using Google. I’m gonna try it.
+Hmm. Hmm. Hmm. Hmm. Hmm.
+Man.
+Hmm.
+Hmm.
+Hmm.
+Hold on one sec Okay. May see the problem.
+It’s like making me, like, approve the changes.
+For it saves them, which is dumb.
+But.
+Hmm.
+Let me see.
+Sorry about that Let me try this again. I’d really like to see these changes take
+Yeah.
+Go log out Zero files changed.
+Okay.
+Oh. Yeah. You’re, you’re in Texas.
+It’s true.
+How do you feel about this, uh, storm coming up?
+Oh. I keep hearing it’s we’re gonna have a cold thing come in.
+Yeah. People keep saying that shit.
+I have no idea how to use GitHub now.
+It’s just one of those things. It’s like everything is. Do it a few times and then you know.
+Yeah.
+Mm-hmm.
+Speaking of GitHub that’s what I’m messing with right now.
+Yeah. That’s what I’m saying.
+Yeah, man.
+That five-step. That five-step here.
+That five-step here merging and pulling, you know.
+You made a lot of changes.
+Well, let’s see. Where are they?
+Yeah. Hopefully
+If not it’s all in the transcript, but hopefully it’s all I mean, I watched it make the changes, so it’s not like it’s just kinda frustrating.
+See. Leave it when I see it
+All right. Here we go.
+Um.
+Is there anything else
+I mean, that’s making harder.
+Let’s see what’s going on with our, um,
+what’s this called Railway Okay. It’s building. I think that’s fine.
+Mm-hmm.
+Is that gonna be our commercial? Keep it lining up for the roll fairing?
+That’s it, man.
+I got the job
+We can’t we can’t steal there. I got the job slogan, but we’ll end up getting sued.
+By a billion-dollar corporation.
+Yeah.
+That’s the end of that
+I would say if there’s any time to get into this, uh, specific industry, it would be now.
+Like,
+before, you know,
+you could pretty much pick any industry.
+Now, we’ve got one industry. It’s guaranteed.
+John Dollars.
+To have a, a, a, um, demand.
+Yeah. Well, I mean, the easy the thing the reason why it’s easier is because it’s easier to market something that like this. It’s easier to market. Like, I can just I can literally just, um, post videos about me using it. Like, that’s it.
+Cool.
+Like, it’s just so simple to market it. Say, “Hey, guys. I got a roll fairing up here. I’m getting myself a job.” And that’s it.
+Fixed it
+Good
+Check it out
+All right Hold on. Here’s the chip.
+I don’t know how my.
+Yeah. Okay. Oh. Okay. So yeah.
+Um.
+Strongly prefer left. Strongly prefer right. Show examples of facts.
+Probably wanna fix this font by the way. It’s kinda big. But, um, examples of facts. So then we do that. We go right. There we go. Fixed it finally. And then job fit. Same thing. Good.
+That works
+Yeah.
+Yeah. Problem solved.
+Except I think I, um, I reset my preference thing, so I need to.
+I need to have some results here so that it can see if it’s carrying over to the other screen, so let me see if I can see results. There we go. Now I’m an ENFP.
+And.
+Wait. Yeah. I’m ENFP. You’re an INF. INFJ.
+Yeah. Well, I just randomly selected stuff, so it wouldn’t do that. I need.
+Oh.
+I need some data to carry over to the next page. We’re not trying to figure out all of it right now. We’re just trying to.
+Yeah.
+Do something to make it see if this app’s working.
+All right Continue to job. So still an idealist, apparently. Um, so we got these job boards. Oh. It added our fourth column. Top company boards. We got tech jobs. And it’s.
+Okay.
+And it’s got tech-specific stuff. We’ve got our startups, and we’ve got our general job boards. Nice.
+That’s a good number too.
+Cool.
+Yeah. We did it Yeah. That’s a lot better there.
+Um, we actually wanna try one of these. I don’t wanna take spend to keep you up all night. But let’s just do one just to sanity check. Tech fetch.
+Um,
+jobs. Let’s go with Java.
+And click one. It’s in Dallas.
+Copy and paste.
+Wait. This is multiple jobs. We don’t wanna confuse it too much. You just stop here.
+Um, so there.
+Oops. Wrong screen. And then we gotta do a paste. Come on. Drum roll. Drum roll. It’s got the city as the as a company name. That’s not great.
+$90 an hour It does it does get the salary right. It does get the location right, but it also thinks it’s the company name. It’s got a lot of stuff up here in the title. So it’s not quite there.
+But it’s not like, terrible, terrible. Right? It’s not, like, completely empty. All right. Well, we can work on that later. Or I’ll work on it tonight or whatever, but probably not tonight. We’ll work on it tomorrow, probably. And then, um, move on onto the next step.
+Um, actually, just to oops. Oh my.
+Yeah. Yeah.
+I don’t wanna scrape any more stuff, but I’m gonna do that one. I’m gonna copy this one and see how it does with the URL.
+Just randomly checking a bunch of stuff now. Click.
+Import Parsing. There are tech evaluation login. US.
+Also wrong. But I mean, yeah. It’s just wrong.
+Whatever. Um, moving onto the next thing. Just to see what other stuff it did for us when we were talking.
+Run gap analysis. Still doesn’t have any personality gaps. Let me try to refresh.
+Hmm.
+Okay. No.
+Okay. Personality gap.
+Okay. It does say for the preferences, it says role pref. Role type preference. You selected full-time, but this looks like contract. Okay. That’s that’s a good observation. See? Um.
+Yeah.
+It just
+I’m gonna, uh I’m gonna jump pretty soon, man.
+Okay. Yeah. We’re almost done. I mean, I you could jump whenever you want, but I’m gonna keep going until you jump. So missing mi-mi-missing required skill as your so these are things that might not be.
+Yeah. We have to shut down the next call.
+Okay. And
+Just going like go to like, contact. And research.
+There you go.
+Pain point Design, develop, and implement microserve. An app built to help see. That seems aligned. App. That’s definitely not right. Develops. DevOps engineer, Dallas, Texas.
+And Yeah. That’s not right. So the pain point sucks. Um,
+oh Saved reference. I need to actually I see these aren’t even I don’t even know how it’s yeah. So that’s not good. Research.
+Find contact.
+Hmm.
+I guess we’re gonna have to type something in It’s ‘cause it messed up the previous screens. I didn’t have the company names in there correctly, so. That’s why it can’t move onto this one.
+Google. Okay. Cool. So it doesn’t it just has the I was hoping this would stretch out for the LinkedIn request. Note.
+Let it fill the outreach drafts.
+Card Okay. So then we got Jessica, Cecilia, Jeff, and Sabrina. Um, and before I was, like, complaining, about how it was, like it was stupid drop-down.
+There. All right.
+Yeah. I haven’t looked that over again.
+Yeah. It’s not perfect. Um,
+oh, you can also just do that and it actually changes it now to, like, a different thing. And then we can verify emails. Maybe we should put the verify emails at the top and the request link at the bottom.
+Uh, man. I’m gonna I’m, I’m cutting it. I’m cutting it, dude.
+All right
+I’m cutting it, bro.
+But it did upper so wait. File page. File page. File page. Here we go. Here we go.
+Okay.
+Come on Hey. Look.
+Oh. Oh, okay. At least you got the picture in there. At least you got the picture.
+Yeah. Proof. Missing details. Fit for this role. Missing details. That’s ‘cause we didn’t complete the other screens. But, um.
+Hey, man. It’s not bad. It’s not bad.
+Progress is then published. What does it do? Copy link. Open public page. That’s our public page.
+Oh. Oh, shit.
+Now she has a public page on our website. Which bring brings more traffic to our site.
+I, I she’s probably not buried So they have to say they.
+Change from neutral
+Yeah.
+There it is man. So we’re a step closer. I wanted you to I wanted to leave on something positive. I’m not trying to keep you here all night.
+Yeah. At least you got that.
+Yeah. Go to bed. Or whatever you’re gonna do. All right, man.
+Bye, bro. Thanks to you, man.
+That was good We, we actually made some progress. We actually made more than you think. I just kinda messed up on pushing it to GitHub last when I was done. But anyways. Yeah. We’ll, we’ll figure it out. Uh, let me know when you’re ready for another meeting. We’ll the next day or two.
+All right I’ll talk to you.
+Have a good night
+Bye-bye.
+Bye.
+You too.

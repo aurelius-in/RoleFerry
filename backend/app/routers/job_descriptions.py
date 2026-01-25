@@ -91,6 +91,9 @@ def _is_bad_title(s: str) -> bool:
     # Too long = likely a sentence/header
     if len(t) > 90 or len(t.split()) > 14:
         return True
+    # Titles should not contain explicit pay/rate tokens (these belong in salary_range)
+    if re.search(r"\$\s*\d", t) and any(k in low for k in ["/hr", "/hour", "per hour", "hourly", "hr"]):
+        return True
     return False
 
 
@@ -128,6 +131,111 @@ def _is_bad_company(s: str) -> bool:
     if len(t) > 90 or t.endswith("."):
         return True
     return False
+
+
+_TITLE_ROLE_TOKENS = [
+    "engineer",
+    "developer",
+    "architect",
+    "manager",
+    "director",
+    "analyst",
+    "specialist",
+    "scientist",
+    "designer",
+    "recruiter",
+    "product",
+    "consultant",
+    "administrator",
+]
+
+
+def _sanitize_title(raw: str) -> str:
+    """
+    Best-effort title cleanup for pasted job-board text.
+    Removes common UI noise fragments accidentally captured into the title:
+    - salary/rate tokens (e.g., "$90/hr", "90 per hour")
+    - location suffixes (e.g., "Dallas, TX")
+    - stray person names (e.g., recruiter/author) appended to the header
+    """
+    t = " ".join(str(raw or "").split()).strip()
+    if not t:
+        return ""
+
+    # If the header is delimited, prefer the segment that looks like a real title.
+    parts = [p.strip() for p in re.split(r"\s+[|•]\s+", t) if p.strip()]
+    if len(parts) > 1:
+        def score(p: str) -> int:
+            low = p.lower()
+            sc = 0
+            sc += 30 if any(tok in low for tok in _TITLE_ROLE_TOKENS) else 0
+            sc -= 40 if re.search(r"\$\s*\d", p) else 0
+            sc -= 20 if re.search(r"\b\d+\s*(?:/hr|/hour|per\s+hour|hourly)\b", low) else 0
+            sc -= 10 if re.search(r"\b[A-Z][a-z]+,\s*[A-Z]{2}\b", p) else 0
+            sc -= max(0, len(p) - 60) // 5
+            return sc
+        t = sorted(parts, key=score, reverse=True)[0]
+
+    # Remove salary/rate snippets anywhere in the string.
+    t = re.sub(r"\$\s*\d[\d,]*(?:\.\d+)?\s*(?:/hr|/hour|per\s+hour|hourly)\b", "", t, flags=re.I).strip()
+    t = re.sub(r"\b\d[\d,]*(?:\.\d+)?\s*(?:/hr|/hour|per\s+hour|hourly)\b", "", t, flags=re.I).strip()
+
+    # Remove trailing location fragments.
+    t = re.sub(r"\s*[-–—,]\s*\b[A-Z][a-z]+,\s*[A-Z]{2}\b\s*$", "", t).strip()
+    t = re.sub(r"\s*\(\s*\b[A-Z][a-z]+,\s*[A-Z]{2}\b\s*\)\s*$", "", t).strip()
+
+    # Remove a trailing person-name fragment if the title already contains a role token.
+    # (Avoid stripping common title phrases like "Machine Learning".)
+    low = t.lower()
+    if any(tok in low for tok in _TITLE_ROLE_TOKENS):
+        m = re.search(r"\b([A-Z][a-z]{2,})\s+([A-Z][a-z]{2,})\s*$", t)
+        if m:
+            w1 = m.group(1).lower()
+            w2 = m.group(2).lower()
+            # If either word looks like a title noun/adjective, don't strip.
+            safe = {
+                "machine",
+                "learning",
+                "data",
+                "software",
+                "full",
+                "stack",
+                "cloud",
+                "senior",
+                "junior",
+                "staff",
+                "principal",
+                "lead",
+                "engineer",
+                "developer",
+                "architect",
+                "manager",
+                "director",
+                "analyst",
+                "scientist",
+                "product",
+                "security",
+                "platform",
+                "systems",
+                "site",
+                "reliability",
+                "devops",
+                "sre",
+                "qa",
+                "test",
+                "mobile",
+                "frontend",
+                "front",
+                "end",
+                "backend",
+                "back",
+            }
+            if w1 not in safe and w2 not in safe and len(t.split()) >= 4:
+                t = re.sub(r"\s+\b[A-Z][a-z]{2,}\s+[A-Z][a-z]{2,}\b\s*$", "", t).strip()
+
+    # Final cleanup.
+    t = re.sub(r"\s{2,}", " ", t).strip().strip(",.;:-")
+    return t
 
 
 def _extract_company_from_company_block(content: str) -> str:
@@ -1192,6 +1300,8 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
     if not title and lines:
         title = lines[0][:120]
 
+    title = _sanitize_title(title)
+
     # If we ended up with an obviously too-long title, try to recover a better one.
     if title and (len(title) > 90 or len(title.split()) > 14):
         for ln in lines[:40]:
@@ -2082,7 +2192,7 @@ async def import_job_description(payload: JobImportRequest):
                         pass
                 if isinstance(data, dict) and data:
                     # Let GPT override title/company when provided
-                    llm_title = str(data.get("title") or "").strip()
+                    llm_title = _sanitize_title(str(data.get("title") or "").strip())
                     llm_company = str(data.get("company") or "").strip()
 
                     # Guard: reject obvious non-title headers (common on Remotive-style pastes)
@@ -2098,6 +2208,8 @@ async def import_job_description(payload: JobImportRequest):
                             title = t0
                         if c0 and (not company or company.lower() == "unknown"):
                             company = c0
+
+                    title = _sanitize_title(title)
 
                     # If company still looks wrong, use deterministic labeled-block extraction
                     if _is_bad_company(company) or (not company or company.lower() == "unknown"):

@@ -260,21 +260,38 @@ def _deterministic_personality_gaps(
     Uses temperament_profile when available; otherwise light hints from personality_profile.
     """
     out: List[GapDetail] = []
-    txt = (job.content or "").lower()
+    txt = " \n ".join(
+        [
+            str(job.title or ""),
+            str(job.company or ""),
+            str(job.content or ""),
+            " ".join(_norm_list(job.painPoints)),
+            " ".join(_norm_list(job.requiredSkills)),
+            " ".join(_norm_list(job.successMetrics)),
+        ]
+    ).lower()
 
     # Signals from job
     needs_alignment = any(k in txt for k in ["stakeholder", "cross-functional", "cross functional", "matrix", "collaborate", "partner with"])
     needs_autonomy = any(k in txt for k in ["autonomy", "independent", "self-directed", "self directed", "ambiguous", "0 to 1", "0→1", "build from scratch"])
     high_process = any(k in txt for k in ["compliance", "hipaa", "regulatory", "audit", "policy", "process", "governance"])
     fast_paced = any(k in txt for k in ["fast-paced", "fast paced", "move fast", "tight deadlines", "rapidly"])
+    needs_strategy = any(k in txt for k in ["strategy", "strategic", "roadmap", "vision", "principles", "concepts", "north star"])
+    needs_detail = any(k in txt for k in ["requirements", "details", "detail-oriented", "documentation", "docs", "spec", "specification"])
+    needs_people = any(k in txt for k in ["coach", "ment", "culture", "values", "relationships", "people-first", "people first", "feedback", "collaboration"])
 
     t = temperament_profile or {}
     t_scores = (t.get("scores") if isinstance(t, dict) else {}) or {}
     action = None
+    communication = None
     try:
         action = int(t_scores.get("action")) if "action" in t_scores else None
     except Exception:
         action = None
+    try:
+        communication = int(t_scores.get("communication")) if "communication" in t_scores else None
+    except Exception:
+        communication = None
 
     # action < 0 ≈ autonomy/utilitarian; action >= 0 ≈ cooperative/alignment
     if action is not None:
@@ -297,37 +314,148 @@ def _deterministic_personality_gaps(
                 )
             )
 
-    # Process / pace sensitivity: fall back to personality_profile 'scores' if present
+    # Temperament communication axis: concrete (-) vs abstract (+)
+    if communication is not None:
+        if communication < 0 and needs_strategy:
+            out.append(
+                GapDetail(
+                    gap="Role leans strategic/abstract; you may prefer concrete examples and specifics first.",
+                    severity="low",
+                    evidence=["Temperament: concrete-leaning (communication axis)", "Job text suggests strategy/vision"],
+                    how_to_close="In interviews, start with one concrete example, then zoom out to the principle/strategy you used.",
+                )
+            )
+        if communication >= 0 and needs_detail:
+            out.append(
+                GapDetail(
+                    gap="Role looks detail/spec heavy; you may prefer principles over granular execution details.",
+                    severity="low",
+                    evidence=["Temperament: abstract-leaning (communication axis)", "Job text suggests specs/documentation"],
+                    how_to_close="Prepare a 1-page example of how you translate a high-level goal into requirements, tickets, and acceptance criteria.",
+                )
+            )
+
+    # Work-style sensitivity: use personality_profile 'scores' if present
     p = personality_profile or {}
     p_scores = (p.get("scores") if isinstance(p, dict) else {}) or {}
+    energy = None
+    info = None
+    decisions = None
     structure = None
+    try:
+        energy = int(p_scores.get("energy")) if "energy" in p_scores else None
+    except Exception:
+        energy = None
+    try:
+        info = int(p_scores.get("info")) if "info" in p_scores else None
+    except Exception:
+        info = None
+    try:
+        decisions = int(p_scores.get("decisions")) if "decisions" in p_scores else None
+    except Exception:
+        decisions = None
     try:
         structure = int(p_scores.get("structure")) if "structure" in p_scores else None
     except Exception:
         structure = None
 
-    # structure < 0 ≈ flexible; structure > 0 ≈ structured (based on earlier comment in file)
-    if structure is not None:
-        if structure < 0 and high_process:
+    # energy: negative => independent/deep focus, positive => collaboration-charged
+    if energy is not None:
+        if energy < 0 and needs_alignment:
             out.append(
                 GapDetail(
-                    gap="Role appears process-heavy/regulatory; you may prefer flexible execution.",
+                    gap="Role is stakeholder-heavy; your style may be more deep-focus/independent.",
                     severity="medium",
-                    evidence=["Personality: flexibility-leaning (structure axis)", "Job text mentions compliance/process"],
+                    evidence=["Personality: focus-charged (energy axis)", "Job text mentions stakeholders/cross-functional work"],
+                    how_to_close="Show 1–2 examples of driving alignment with stakeholders (cadence, docs, decision records) without losing execution speed.",
+                )
+            )
+
+    # info: negative => concrete/details, positive => big-picture/patterns
+    if info is not None:
+        if info < 0 and needs_strategy:
+            out.append(
+                GapDetail(
+                    gap="Role may expect strategic framing; your style may lean more concrete/requirements-first.",
+                    severity="low",
+                    evidence=["Personality: concrete-leaning (info axis)", "Job text suggests strategy/vision"],
+                    how_to_close="Bring a short 'strategy-to-execution' story: how you turned a vague goal into a plan and measurable outcomes.",
+                )
+            )
+        if info >= 0 and needs_detail:
+            out.append(
+                GapDetail(
+                    gap="Role may be detail/requirements heavy; your style may lean more big-picture.",
+                    severity="low",
+                    evidence=["Personality: big-picture-leaning (info axis)", "Job text suggests specs/documentation"],
+                    how_to_close="Prepare a concrete artifact example (PRD, spec, runbook) to show you can go from concept to precise execution.",
+                )
+            )
+
+    # decisions: negative => logic/evidence, positive => values/people
+    if decisions is not None:
+        if decisions < 0 and needs_people:
+            out.append(
+                GapDetail(
+                    gap="Role emphasizes people/culture/relationship work; you may default to logic-first framing.",
+                    severity="low",
+                    evidence=["Personality: logic/evidence-leaning (decisions axis)", "Job text suggests coaching/culture/collaboration"],
+                    how_to_close="Add one 'people impact' line to your stories: how you influenced, coached, or improved team dynamics.",
+                )
+            )
+
+    # structure: negative => planned/predictable, positive => adaptive (matches frontend scoring)
+    if structure is not None:
+        if structure >= 0 and high_process:
+            out.append(
+                GapDetail(
+                    gap="Role appears process-heavy/regulatory; you may prefer faster iteration and flexibility.",
+                    severity="medium",
+                    evidence=["Personality: adaptive-leaning (structure axis)", "Job text mentions compliance/process"],
                     how_to_close="Prepare examples of delivering in regulated environments (docs, audits, guardrails) while keeping momentum.",
                 )
             )
-        if structure > 0 and fast_paced:
+        if structure < 0 and fast_paced:
             out.append(
                 GapDetail(
                     gap="Role looks fast-paced; you may prefer more structured planning cycles.",
                     severity="low",
-                    evidence=["Personality: structure-leaning (structure axis)", "Job text mentions fast-paced execution"],
+                    evidence=["Personality: planned-leaning (structure axis)", "Job text mentions fast-paced execution"],
                     how_to_close="Show how you plan in short cycles (weekly milestones) and keep quality high under speed constraints.",
                 )
             )
 
-    return out[:3]
+    # If we still have nothing, be explicit about why (prevents empty columns).
+    if not out:
+        if not str(job.content or "").strip():
+            out.append(
+                GapDetail(
+                    gap="Work-style fit not scored (job description text is missing).",
+                    severity="low",
+                    evidence=["Job content is empty/missing; can’t infer environment signals"],
+                    how_to_close="Re-import the job description (paste the full text) to get personality/work-style fit gaps.",
+                )
+            )
+        else:
+            out.append(
+                GapDetail(
+                    gap="No obvious work-style conflicts detected from the job text.",
+                    severity="low",
+                    evidence=["Checked for pace, autonomy, process, stakeholder load, and strategy/detail signals"],
+                    how_to_close="Validate in screening: ask about meeting load, ambiguity, and how work is prioritized week-to-week.",
+                )
+            )
+
+    # De-dupe by gap text and cap
+    uniq: List[GapDetail] = []
+    seen = set()
+    for g in out:
+        key = str(g.gap or "").strip().lower()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        uniq.append(g)
+    return uniq[:4]
 
 
 def _company_size_bucket(company_sizes: List[str]) -> str:
@@ -695,6 +823,22 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
         else:
             notes = _norm_list(data.get("notes"))[:6] or ["GPT-ranked analysis."]
             overall = data.get("overall") if isinstance(data.get("overall"), dict) else None
+
+        # Ensure personality gaps are populated when profile data exists.
+        try:
+            jobs_by_id = {j.id: j for j in jobs}
+            for idx in range(len(ranked)):
+                item = ranked[idx]
+                if item.personality_gaps:
+                    continue
+                j = jobs_by_id.get(item.job_id)
+                if not j:
+                    continue
+                filled = _deterministic_personality_gaps(req.personality_profile, req.temperament_profile, j)
+                if filled:
+                    item.personality_gaps = filled
+        except Exception:
+            pass
 
         # Ensure every imported job appears at least once (append missing with heuristic scores)
         seen = {r.job_id for r in ranked}
