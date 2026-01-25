@@ -121,6 +121,7 @@ def _norm_skill(s: str) -> str:
         "genai": "generative ai",
         "llms": "llm",
         "ai agents": "agentic ai",
+        "rag": "retrieval augmented generation",
     }
     return repl.get(t, t)
 
@@ -176,6 +177,10 @@ def _skill_supported_by_resume(skill: str, resume_text: str) -> bool:
             "ml",
             "machine learning",
             "deep learning",
+            "artificial intelligence",
+            "neural",
+            "nlp",
+            "computer vision",
             "llm",
             "gpt",
             "openai",
@@ -184,6 +189,12 @@ def _skill_supported_by_resume(skill: str, resume_text: str) -> bool:
             "agentic",
             "ai agent",
             "ai agents",
+            "rag",
+            "retrieval augmented generation",
+            "retrieval-augmented generation",
+            "vector database",
+            "embeddings",
+            "embedding",
         ]
         return any(n in hay for n in needles)
 
@@ -553,6 +564,36 @@ def _infer_employment_type(content: str | None) -> str:
     return "unknown"
 
 
+def _infer_location_hint(text: str | None) -> str:
+    """
+    Lightweight location extraction for preference checks (NOT authoritative).
+    Returns a short location string or empty.
+    """
+    t = (text or "").strip()
+    if not t:
+        return ""
+    low = t.lower()
+    if "united states" in low:
+        return "United States"
+    if "canada" in low:
+        return "Canada"
+    if "europe" in low or "eu" in low:
+        return "Europe"
+    import re
+    m = re.search(r"\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2}),\s*([A-Z]{2})\b", t)
+    if m:
+        return f"{m.group(1)}, {m.group(2)}"
+    return ""
+
+
+def _job_location(job: GapJobDescription) -> str:
+    # Prefer explicit field if present, otherwise sniff from content.
+    explicit = str(job.location or "").strip()
+    if explicit:
+        return explicit
+    return _infer_location_hint(job.content)
+
+
 def _deterministic_rank(
     preferences: GapAnalysisPreferences,
     resume: ResumeExtract,
@@ -662,6 +703,60 @@ def _deterministic_rank(
             elif pref_floor is not None and job_floor is None:
                 pref_gaps.append("Salary preference not checked yet (salary is missing or not parseable from this job).")
 
+        # Role category mismatch (soft): user selected categories but title doesn't match.
+        if role_cats:
+            title_tokens = set(_tokenize(j.title))
+            cat_hit = any(tok in title_tokens for cat in role_cats for tok in _tokenize(cat))
+            if not cat_hit:
+                pref_gaps.append(
+                    f"Role-category fit not obvious: you selected {', '.join(sorted(list(role_cats))[:4])}, but the title may not match those categories."
+                )
+
+        # Location preferences (soft): if user selected specific places, check job location when available.
+        loc_prefs = [x.strip() for x in _norm_list(preferences.location_preferences) if str(x).strip()]
+        loc_floor = str(preferences.state or "").strip()
+        job_loc = _job_location(j)
+        if loc_prefs or loc_floor:
+            jl = (job_loc or "").lower()
+            # If user picked a state, require it when job is onsite/hybrid and location is known.
+            if loc_floor and job_work in {"onsite", "hybrid"} and jl and loc_floor.lower() not in jl:
+                pref_gaps.append(f"Location preference mismatch: you selected {loc_floor}, but this job appears to be in {job_loc or 'an unspecified location'}.")
+            # If user picked explicit cities/states and job location is known and doesn't mention any, flag as a soft mismatch.
+            if jl and loc_prefs and not any(p.lower() in jl for p in loc_prefs):
+                pref_gaps.append(
+                    "Location preference not confirmed: your preferred locations don’t appear to match this job’s listed location."
+                )
+
+        # Industry preferences (soft): we can't reliably infer industries without an LLM, but we can surface a check.
+        inds = [x.strip() for x in _norm_list(preferences.industries) if str(x).strip()]
+        if inds:
+            # If the job explicitly lists industries and none intersect, flag.
+            job_inds = [x.strip() for x in _norm_list(j.industries) if str(x).strip()]
+            if job_inds:
+                inter = {x.lower() for x in inds}.intersection({x.lower() for x in job_inds})
+                if not inter:
+                    pref_gaps.append(f"Industry preference mismatch: you selected {', '.join(inds[:3])}, but this job appears outside those industries.")
+            else:
+                pref_gaps.append("Industry preference not confirmed: the posting doesn’t clearly state the industry; confirm in screening.")
+
+        # Values (soft): translate values into screening checks using job text signals.
+        vals = [x.strip() for x in _norm_list(preferences.values) if str(x).strip()]
+        if vals:
+            txt = (j.content or "").lower()
+            # A few high-signal contradictions to surface (best-effort).
+            if any(v.lower() in {"work-life balance", "work life balance", "flexibility"} for v in vals) and any(
+                k in txt for k in ["on-call", "on call", "weekend", "nights", "overtime", "tight deadlines"]
+            ):
+                pref_gaps.append("Values fit risk: you value work-life balance, but the job text suggests on-call or intense deadlines.")
+            if any(v.lower() in {"structure", "clarity", "stability"} for v in vals) and any(
+                k in txt for k in ["0 to 1", "0→1", "ambiguous", "wear many hats", "fast-paced"]
+            ):
+                pref_gaps.append("Values fit risk: you want structure/clarity, but the role signals high ambiguity and fast iteration.")
+
+        # Force non-empty preference gaps (user request): add an actionable screening check when none were found.
+        if not pref_gaps:
+            pref_gaps.append("Preference fit looks OK from available signals; confirm work mode, role type, and salary range in the first screen.")
+
         pref_gap_objs: List[GapDetail] = [
             GapDetail(gap=g, severity="medium", evidence=["Derived from job text + preferences"], how_to_close="Adjust preferences or focus on better-aligned roles.")
             for g in pref_gaps[:6]
@@ -678,6 +773,16 @@ def _deterministic_rank(
             )
 
         personality_gap_objs = _deterministic_personality_gaps(personality_profile, temperament_profile, j)
+        # Force non-empty personality gaps when profile context exists (user request).
+        if (personality_profile or temperament_profile) and not personality_gap_objs:
+            personality_gap_objs = [
+                GapDetail(
+                    gap="Work-style fit looks broadly compatible; confirm meeting load, autonomy, and pace in the first screen.",
+                    severity="low",
+                    evidence=["Personality/temperament profile provided", "No strong conflicts detected from job text"],
+                    how_to_close="Ask about meeting cadence, on-call expectations, and how priorities change week-to-week.",
+                )
+            ]
 
         ranked.append(
             GapAnalysisItem(
@@ -774,9 +879,14 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
                     "Rules:\n"
                     "- Do NOT fabricate candidate experience.\n"
                     "- Do NOT invent facts or requirements not present in the inputs.\n"
-                    "- If you cannot support a gap with evidence from the inputs, omit it.\n"
+                    "- If job text does not specify a preference-related signal (salary/work mode/etc), you MAY include a low-severity 'confirm in screening' gap.\n"
+                    "  Evidence for those must cite: the user's stated preference AND that the job text is missing/unclear.\n"
                     "- Prefer concise, scannable items.\n"
                     "- Output ONLY JSON.\n\n"
+                    "Hard requirements (non-empty buckets):\n"
+                    "- If personality_profile or temperament_profile is provided, EACH ranked item MUST include at least 1 personality_gaps entry.\n"
+                    "- EACH ranked item MUST include at least 2 preference_gaps entries (can be 'confirm in screening' when unclear).\n"
+                    "- Use ALL preference inputs when relevant: values, role_categories, location_preferences, work_type, role_type, company_size, industries, skills, minimum_salary.\n\n"
                     "Return a JSON object with:\n"
                     "- ranked: array of items {\n"
                     "  job_id, title, company,\n"

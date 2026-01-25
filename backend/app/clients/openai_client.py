@@ -535,7 +535,8 @@ class OpenAIClient:
                     "- jd_evidence MUST be a short quote copied verbatim from the JD blob’s responsibilities/requirements/pain_points/success_metrics.\n"
                     "- resume_snippet MUST be a concrete solution anchored in the resume (role, accomplishment, metric context, skills). No hand-wavy strategies.\n"
                     "- resume_evidence MUST be a short quote copied verbatim from the resume blob (positions descriptions, accomplishments, key_metrics context).\n"
-                    "- metric MUST be taken from resume key metrics/accomplishments if present. If none, return an empty string or a qualitative metric like 'Qualitative: improved X' WITHOUT numbers.\n\n"
+                    "- metric MUST be taken from resume key metrics/accomplishments if present.\n"
+                    "- If the resume has NO numeric metrics, metric MUST still be non-empty: use a qualitative metric starting with 'Qualitative:' (no made-up numbers).\n\n"
                     "Hard requirement:\n"
                     "- jd_evidence and resume_evidence MUST NOT be empty strings. If you cannot find evidence, omit that pair entirely.\n\n"
                     "Output quality bar:\n"
@@ -598,6 +599,9 @@ class OpenAIClient:
                     "- Do NOT start with fluff like \"I hope you're doing well\" / \"I hope this message finds you well\".\n"
                     "- The snippet must be a standalone paragraph or few sentences that can be inserted into a larger email template later.\n"
                     "- Focus immediately on the value (offer, pain point, proof, or question).\n"
+                    "- Do NOT use em dashes or en dashes. Use commas/parentheses or simple hyphens.\n"
+                    "- Length: 2–4 sentences, roughly 60–110 words.\n"
+                    "- If metric_1 is missing/empty, do NOT write \"achieving\" with nothing after it. Use a qualitative metric sentence instead.\n"
                 ),
             },
             {

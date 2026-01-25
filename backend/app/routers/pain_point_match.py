@@ -89,6 +89,11 @@ def _is_fluff_line(s: str) -> bool:
     ]
     if any(b in low for b in bad):
         return True
+    # Generic role descriptors are not pain points (common scrape failure)
+    if re.match(r"^(developer|software developer|engineer|software engineer)\b.*\bworking on\b", low):
+        return True
+    if re.match(r"^(developer|software developer|engineer|software engineer)\b.*\bmaintenance\b", low) and "reduce" not in low and "improve" not in low:
+        return True
     # Section headers (esp. with colon)
     if s.strip().endswith(":"):
         return True
@@ -262,6 +267,19 @@ async def generate_painpoint_matches(request: MatchRequest):
             if txt and not _looks_like_pdf_garbage(txt):
                 resume_accomplishments = [txt]
 
+        # Metrics pool: prefer numeric values; otherwise keep qualitative metrics as "Qualitative: <metric>"
+        metric_candidates: List[str] = []
+        for m in (resume_parsed.get("KeyMetrics") or resume_parsed.get("key_metrics") or resume_parsed.get("keyMetrics") or [])[:40]:
+            if isinstance(m, dict):
+                metric = str(m.get("metric") or "").strip()
+                value = str(m.get("value") or "").strip()
+                ctx = str(m.get("context") or "").strip()
+                if value:
+                    metric_candidates.append(" — ".join([x for x in [metric, value, ctx] if x]).strip(" —")[:240])
+                elif metric:
+                    metric_candidates.append(f"Qualitative: {metric}"[:240])
+        metric_candidates = [x for x in metric_candidates if x and not _is_fluff_line(x)]
+
         # Helper: rule-based pairing (avoid demo defaults; allow 0–3 alignments)
         def build_rule_based_match() -> PainPointMatch:
             # Prefer concrete items; responsibilities/requirements tend to be most concrete.
@@ -272,7 +290,16 @@ async def generate_painpoint_matches(request: MatchRequest):
 
             # Candidate JD evidence pool (ordered by relevance)
             jd_candidates = (resp + reqs + pps + sms)[:30]
-            pp = jd_candidates[:10]
+            def _pp_score(line: str) -> int:
+                low = (line or "").lower()
+                sc = 0
+                sc += 15 if any(k in low for k in ["reduce", "improve", "increase", "scale", "optimiz", "reliab", "latency", "cost", "incident", "uptime", "performance"]) else 0
+                sc += 8 if any(k in low for k in ["deliver", "ship", "build", "implement", "migrate", "automate"]) else 0
+                sc -= 12 if "working on" in low else 0
+                sc -= 8 if low.startswith(("developer ", "engineer ", "software engineer", "software developer")) else 0
+                sc -= max(0, len(line) - 140) // 20
+                return sc
+            pp = sorted(jd_candidates, key=_pp_score, reverse=True)[:10]
 
             acc = [str(x).strip() for x in (resume_accomplishments or []) if str(x).strip()]
             # Resume evidence pool: accomplishments + role descriptions + key metric contexts
@@ -294,35 +321,45 @@ async def generate_painpoint_matches(request: MatchRequest):
                     if s and not _is_fluff_line(s):
                         resume_candidates.append(s[:240])
 
+            # Solutions: prefer accomplishments, then key metric lines, then role description lines.
+            solution_pool = []
+            solution_pool.extend([a for a in acc[:10] if a and not _is_fluff_line(a)])
+            solution_pool.extend([m for m in resume_candidates[:15] if m and not _is_fluff_line(m)])
+            if not solution_pool:
+                solution_pool = resume_candidates[:10]
+
             def _safe_get(items, idx) -> str:
                 return items[idx] if idx < len(items) else ""
 
             # Best-effort score: more real inputs -> higher confidence
             score = 0.55
             score += 0.1 if len(pp) >= 1 else 0.0
-            score += 0.1 if len(acc) >= 1 else 0.0
+            score += 0.1 if len(solution_pool) >= 1 else 0.0
             score += 0.05 if len(pp) >= 2 else 0.0
-            score += 0.05 if len(acc) >= 2 else 0.0
+            score += 0.05 if len(solution_pool) >= 2 else 0.0
             score = min(score, 0.9)
+
+            # Metric: never leave empty; prefer numeric, else qualitative.
+            metric_default = metric_candidates[0] if metric_candidates else "Qualitative: improved outcomes (confirm metric in resume bullets)."
 
             return PainPointMatch(
                 painpoint_1=_safe_get(pp, 0),
                 jd_evidence_1=_best_evidence(_safe_get(pp, 0), jd_candidates),
-                solution_1=_safe_get(acc, 0),
-                resume_evidence_1=_best_evidence(_safe_get(acc, 0), resume_candidates),
-                metric_1="",
+                solution_1=_safe_get(solution_pool, 0),
+                resume_evidence_1=_best_evidence(_safe_get(solution_pool, 0), resume_candidates),
+                metric_1=metric_default,
                 overlap_1="",
                 painpoint_2=_safe_get(pp, 1),
                 jd_evidence_2=_best_evidence(_safe_get(pp, 1), jd_candidates),
-                solution_2=_safe_get(acc, 1),
-                resume_evidence_2=_best_evidence(_safe_get(acc, 1), resume_candidates),
-                metric_2="",
+                solution_2=_safe_get(solution_pool, 1),
+                resume_evidence_2=_best_evidence(_safe_get(solution_pool, 1), resume_candidates),
+                metric_2=metric_default,
                 overlap_2="",
                 painpoint_3=_safe_get(pp, 2),
                 jd_evidence_3=_best_evidence(_safe_get(pp, 2), jd_candidates),
-                solution_3=_safe_get(acc, 2),
-                resume_evidence_3=_best_evidence(_safe_get(acc, 2), resume_candidates),
-                metric_3="",
+                solution_3=_safe_get(solution_pool, 2),
+                resume_evidence_3=_best_evidence(_safe_get(solution_pool, 2), resume_candidates),
+                metric_3=metric_default,
                 overlap_3="",
                 alignment_score=score,
             )
@@ -434,6 +471,7 @@ async def generate_painpoint_matches(request: MatchRequest):
             jde = str(getattr(match, f"jd_evidence_{n}", "") or "").strip()
             sol = str(getattr(match, f"solution_{n}", "") or "").strip()
             rse = str(getattr(match, f"resume_evidence_{n}", "") or "").strip()
+            met = str(getattr(match, f"metric_{n}", "") or "").strip()
 
             # If pain point itself is fluff, try to replace from candidates
             if pp and _is_fluff_line(pp) and jd_candidates:
@@ -444,6 +482,13 @@ async def generate_painpoint_matches(request: MatchRequest):
                 setattr(match, f"jd_evidence_{n}", _best_evidence(pp, jd_candidates))
             if sol and not rse:
                 setattr(match, f"resume_evidence_{n}", _best_evidence(sol, resume_candidates))
+            # Never return empty metric; prefer extracted key metrics, otherwise a qualitative placeholder.
+            if not met:
+                setattr(
+                    match,
+                    f"metric_{n}",
+                    (metric_candidates[n - 1] if len(metric_candidates) >= n else (metric_candidates[0] if metric_candidates else "Qualitative: positive impact (confirm metric from resume).")),
+                )
 
         # Persist each (challenge, solution) pair into pain_point_match table (best-effort).
         try:
