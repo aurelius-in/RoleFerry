@@ -183,6 +183,21 @@ export default function FindContactPage() {
     };
   };
 
+  const ensureDraftsForContacts = (list: Contact[]) => {
+    const cs = Array.isArray(list) ? list : [];
+    if (!cs.length) return;
+    const next = { ...(outreachDrafts || {}) };
+    let changed = false;
+    for (const c of cs) {
+      const cid = String(c?.id || "").trim();
+      if (!cid) continue;
+      if (next[cid]) continue;
+      next[cid] = buildDefaultDraft(c);
+      changed = true;
+    }
+    if (changed) persistOutreachDrafts(next);
+  };
+
   const ensureDraftForContact = (c: Contact) => {
     const cid = String(c?.id || "").trim();
     if (!cid) return;
@@ -556,6 +571,8 @@ export default function FindContactPage() {
         : String(chosen?.[0]?.id || "");
     if (nextActive && nextActive !== activeDraftContactId) setActiveDraftContactId(nextActive);
     const active = chosen.find((c) => c.id === nextActive) || chosen?.[0];
+    // Ensure drafts exist so the Outreach drafts card is always populated.
+    ensureDraftsForContacts(chosen);
     if (active) ensureDraftForContact(active);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedContacts, contacts, savedVerified]);

@@ -60,17 +60,24 @@ export default function Home() {
       if (!saved) return;
       try {
         const parsed = JSON.parse(saved);
+        const vRaw = (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? (parsed as any).v : undefined;
+        const version = Number.isFinite(Number(vRaw)) ? Number(vRaw) : 0;
         const steps: number[] = Array.isArray(parsed)
           ? parsed
-          : Array.isArray(parsed?.steps)
-            ? parsed.steps
+          : Array.isArray((parsed as any)?.steps)
+            ? (parsed as any).steps
             : [];
 
-        // Backwards-compat (safe, heuristic-based):
-        // - If the saved array includes 12, it came from the era where
-        //   10=Compose, 11=Launch, 12=Tracker (Analytics already removed).
-        // - If it does NOT include 12, it may predate the Personality insertion
-        //   where 3=Job Descriptions and 11=Analytics.
+        // New format (v2): already uses the current 12-step flow (10=Bio, 11=Compose, 12=Campaign).
+        // IMPORTANT: do not run legacy remaps or we can accidentally drop step 12 and never unlock Launch.
+        if (version >= 2) {
+          const final = Array.from(new Set((steps || []).filter((n) => Number.isFinite(n) && n >= 1 && n <= 12)));
+          setCompleted(new Set(final));
+          return;
+        }
+
+        // Backwards-compat for older/localStorage shapes (no explicit version).
+        // We remap step numbers from prior step layouts into the current 12-step layout.
         let out: number[] = (steps || []).filter((n) => Number.isFinite(n));
 
         const hasTwelve = out.includes(12);
@@ -85,16 +92,21 @@ export default function Home() {
           out = remapped;
         }
 
-        // New: remove Tracker from keypad, insert Bio Page at step 10,
-        // and make Campaign the final step. Old (pre-change): 10=Compose, 11=Launch, 12=Tracker
-        // New: 10=Bio, 11=Compose, 12=Campaign (Launch removed from keypad)
+        // Next legacy change: Bio Page inserted at step 10 and Campaign became step 12.
+        // Old (pre-change): 10=Compose, 11=Launch, 12=Tracker
+        // New: 10=Bio, 11=Compose, 12=Campaign
+        //
+        // For migration, if the user reached Compose/Launch/Tracker in the old flow,
+        // we treat Bio as completed (otherwise Launch can stay locked forever).
+        const hadEndOfFlow = out.some((n) => n === 10 || n === 11 || n === 12);
         const remapped2: number[] = [];
         for (const n of out) {
-          if (n === 12) continue; // Tracker removed from keypad
-          if (n === 10) remapped2.push(11);
-          else if (n === 11) remapped2.push(12);
+          if (n === 10) remapped2.push(11); // old Compose -> new Compose
+          else if (n === 11) remapped2.push(12); // old Launch -> new Campaign (final step)
+          else if (n === 12) remapped2.push(12); // old Tracker -> new Campaign (final step)
           else remapped2.push(n);
         }
+        if (hadEndOfFlow) remapped2.push(10); // new Bio
 
         // Clamp + de-dupe for safety.
         const final = Array.from(new Set(remapped2.filter((n) => n >= 1 && n <= 12)));
