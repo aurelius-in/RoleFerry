@@ -218,6 +218,9 @@ export default function Home() {
             const pos = POSITIONS[stone.step];
             const showFootstep = visibleFootstepsUpTo >= stone.step;
             const footSrc = footstepsForStep.get(stone.step) || LEFT_FOOT_SRC;
+            // Row 2 (steps 5–8) animates right-to-left, so flip footprints to match direction.
+            // Row 1 and Row 3 animate left-to-right (default orientation).
+            const flipFootstep = stone.step >= 5 && stone.step <= 8;
             return (
               <div
                 key={stone.step}
@@ -237,7 +240,14 @@ export default function Home() {
                   <div className="icon">{stone.icon}</div>
                   <div className="stone-label-text">{stone.label}</div>
                 </div>
-                {showFootstep && <img src={footSrc} alt="Footstep" className="footstep-gif" />}
+                {showFootstep && (
+                  <img
+                    src={footSrc}
+                    alt="Footstep"
+                    className="footstep-gif"
+                    style={flipFootstep ? { transform: "scaleX(-1)" } : undefined}
+                  />
+                )}
               </div>
             );
           })}

@@ -687,19 +687,19 @@ export default function ResumePage() {
                   <table className="w-full border-collapse text-[11px]">
                     <thead>
                       <tr className="text-left text-white/70">
-                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-nowrap">
+                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-normal">
                           {"{{resume.key_metrics[]}}"}
                         </th>
-                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-nowrap">
+                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-normal">
                           {"{{resume.business_challenges[]}}"}
                         </th>
-                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-nowrap">
+                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-normal">
                           {"{{resume.accomplishments[]}}"}
                         </th>
-                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-nowrap">
+                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-normal">
                           {"{{resume.positions[]}}"}
                         </th>
-                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-nowrap">
+                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-normal">
                           {"{{resume.education[]}}"}
                         </th>
                       </tr>
@@ -741,19 +741,19 @@ export default function ResumePage() {
 
                         return (
                           <tr key={i} className="align-top">
-                            <td className="border border-white/10 px-2 py-2 min-w-[220px]">
+                            <td className="border border-white/10 px-2 py-2 min-w-[170px]">
                               {kmText || <span className="text-white/30">—</span>}
                             </td>
-                            <td className="border border-white/10 px-2 py-2 min-w-[220px]">
+                            <td className="border border-white/10 px-2 py-2 min-w-[170px]">
                               {bc || <span className="text-white/30">—</span>}
                             </td>
-                            <td className="border border-white/10 px-2 py-2 min-w-[220px]">
+                            <td className="border border-white/10 px-2 py-2 min-w-[170px]">
                               {ac || <span className="text-white/30">—</span>}
                             </td>
-                            <td className="border border-white/10 px-2 py-2 min-w-[260px]">
+                            <td className="border border-white/10 px-2 py-2 min-w-[210px]">
                               {posText || <span className="text-white/30">—</span>}
                             </td>
-                            <td className="border border-white/10 px-2 py-2 min-w-[260px]">
+                            <td className="border border-white/10 px-2 py-2 min-w-[210px]">
                               {eduText || <span className="text-white/30">—</span>}
                             </td>
                           </tr>

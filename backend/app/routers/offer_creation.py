@@ -68,20 +68,28 @@ async def create_offer(request: OfferCreationRequest):
                 raw_label = base_match.get("painpoint_1", "Your Challenge")
                 label_words = str(raw_label).split(" ")[:3]
                 title = f"How I Can Solve {' '.join(label_words)}"
+                pain = str(base_match.get("painpoint_1", "the role")).strip()
+                sol = str(base_match.get("solution_1", "delivered results")).strip()
+                met = str(base_match.get("metric_1", "")).strip()
+                metric_phrase = met if met else "Qualitative: meaningful improvements (confirm specifics in resume bullets)."
                 content = (
-                    f"I noticed the challenges around {str(base_match.get('painpoint_1', 'the role')).lower()}. "
-                    f"In my previous work, I {str(base_match.get('solution_1', 'delivered results')).lower()}, "
-                    f"achieving {str(base_match.get('metric_1', 'significant impact'))}. "
-                    "I can bring similar results to your team."
+                    f"I noticed the challenges around {pain}. "
+                    f"I’ve done similar work, for example: {sol}. "
+                    f"Impact: {metric_phrase}. "
+                    "If it’s useful, I can share a 2–3 bullet plan tailored to this role."
                 )
             else:
                 raw_label = base_match.get("painpoint_1", "Your Role")
                 label_words = str(raw_label).split(" ")[:3]
                 title = f"Perfect Candidate for {' '.join(label_words)}"
+                pain = str(base_match.get("painpoint_1", "this")).strip()
+                sol = str(base_match.get("solution_1", "achieved results")).strip()
+                met = str(base_match.get("metric_1", "")).strip()
+                metric_phrase = met if met else "Qualitative: strong impact (confirm specifics in resume bullets)."
                 content = (
-                    f"I'm working with a candidate who successfully {str(base_match.get('solution_1', 'achieved results')).lower()}, "
-                    f"achieving {str(base_match.get('metric_1', 'outstanding metrics'))}. "
-                    f"They are a strong fit for addressing {str(base_match.get('painpoint_1', 'this')).lower()}."
+                    f"I'm working with a candidate who has done similar work, for example: {sol}. "
+                    f"Impact: {metric_phrase}. "
+                    f"They are a strong fit for addressing {pain}."
                 )
 
             # Adjust tone based on audience
@@ -129,6 +137,9 @@ async def create_offer(request: OfferCreationRequest):
                 rule_fallback = build_rule_based_offer()
                 title = str(title_val or rule_fallback.title)
                 body = _strip_fluff_openers(str(body_val or rule_fallback.content))
+                # Guardrail: if GPT returns something too short/sparse, fall back to deterministic.
+                if len(body.split()) < 35:
+                    body = rule_fallback.content
 
                 offer = Offer(
                     id=str(uuid.uuid4()),
