@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { formatCompanyName } from "@/lib/format";
+import { getCurrentDataMode } from "@/lib/dataMode";
 
 
 interface Contact {
@@ -78,6 +79,8 @@ export default function FindContactPage() {
   const [activeDraftContactId, setActiveDraftContactId] = useState<string>("");
   const [isImprovingNote, setIsImprovingNote] = useState(false);
   const [improveNoteError, setImproveNoteError] = useState<string | null>(null);
+  const [isResearching, setIsResearching] = useState(false);
+  const [researchNotice, setResearchNotice] = useState<string | null>(null);
 
   const formatTitleCase = (input?: string) => {
     const s = String(input || "").trim();
@@ -162,6 +165,51 @@ export default function FindContactPage() {
     const ell = "…";
     if (limit <= ell.length) return t.slice(0, limit);
     return t.slice(0, limit - ell.length).trimEnd() + ell;
+  };
+
+  const readResearchForContact = (contactId: string) => {
+    const cid = String(contactId || "").trim();
+    if (!cid) return null;
+    try {
+      const rawBy = localStorage.getItem("context_research_by_contact");
+      const by = rawBy ? JSON.parse(rawBy) : null;
+      const hit = by && typeof by === "object" ? (by[cid] || null) : null;
+      if (hit) return hit;
+    } catch {}
+    try {
+      const rawHist = localStorage.getItem("context_research_history");
+      const hist = rawHist ? JSON.parse(rawHist) : [];
+      if (Array.isArray(hist)) {
+        const h = hist.find((x: any) => String(x?.contact?.id || "") === cid);
+        if (h?.research) return h.research;
+      }
+    } catch {}
+    return null;
+  };
+
+  const getInterestingFactsForContact = (contactId: string): string[] => {
+    const r = readResearchForContact(contactId) || {};
+    const bio = Array.isArray(r?.contact_bios) ? r.contact_bios[0] : null;
+    const lists: any[] = [
+      bio?.public_profile_highlights,
+      bio?.post_topics,
+      bio?.publications,
+      bio?.opinions,
+      bio?.other_interesting_facts,
+    ];
+    const out: string[] = [];
+    const seen = new Set<string>();
+    for (const lst of lists) {
+      for (const item of (Array.isArray(lst) ? lst : [])) {
+        const s = String(item || "").trim();
+        if (!s) continue;
+        const k = s.toLowerCase();
+        if (seen.has(k)) continue;
+        seen.add(k);
+        out.push(s);
+      }
+    }
+    return out.slice(0, 6);
   };
 
   const buildDefaultDraft = (c: Contact): OutreachDraft => {
@@ -300,6 +348,12 @@ export default function FindContactPage() {
           setBuildStamp(short ? `build ${short}${ts ? ` • ${ts}` : ""}` : (ts ? `build • ${ts}` : ""));
         })
         .catch(() => {});
+    } catch {}
+
+    // If the user just finished Company Research, prefill the company for a smoother workflow.
+    try {
+      const co = String(localStorage.getItem("selected_company_name") || "").trim();
+      if (co) setSearchQuery((prev) => (String(prev || "").trim() ? prev : co));
     } catch {}
 
     // Identify user for per-user persistence
@@ -619,11 +673,113 @@ export default function FindContactPage() {
     // Selected contacts are for verification workflow only and should not be carried forward.
     const chosen = savedVerified || [];
     if (chosen.length === 0) {
-      setError("Verify emails to save Valid contacts before continuing to Research.");
+      setError("Verify emails to save Valid contacts before continuing.");
       return;
     }
     localStorage.setItem('selected_contacts', JSON.stringify(chosen));
-    router.push('/context-research');
+    router.push('/offer-creation');
+  };
+
+  const runContactResearch = async () => {
+    const chosen = savedVerified || [];
+    if (!chosen.length) {
+      setError("Save at least 1 verified contact before running research.");
+      return;
+    }
+    setIsResearching(true);
+    setResearchNotice(null);
+    setError(null);
+    try {
+      const selectedJD = loadSelectedJob();
+      const selectedJobId = String(localStorage.getItem("selected_job_description_id") || "").trim();
+      const resumeExtract = (() => {
+        try {
+          return JSON.parse(localStorage.getItem("resume_extract") || "null");
+        } catch {
+          return null;
+        }
+      })();
+      const matchesByJob = (() => {
+        try {
+          return JSON.parse(localStorage.getItem("painpoint_matches_by_job") || "{}") as Record<string, any[]>;
+        } catch {
+          return {};
+        }
+      })();
+      const painpointMatches = (selectedJobId && matchesByJob?.[selectedJobId]) ? matchesByJob[selectedJobId] : [];
+
+      const companyName =
+        String(localStorage.getItem("selected_company_name") || "").trim() ||
+        String((selectedJD as any)?.company || "").trim() ||
+        String(chosen?.[0]?.company || "").trim() ||
+        "Company";
+
+      const resp = await api<any>("/context-research/research", "POST", {
+        contact_ids: chosen.map((c) => c.id),
+        company_name: companyName,
+        selected_job_description: selectedJD,
+        resume_extract: resumeExtract,
+        painpoint_matches: painpointMatches,
+        contacts: chosen,
+        data_mode: getCurrentDataMode(),
+      });
+      if (!resp?.success) throw new Error(resp?.message || "Research failed");
+
+      const byContact = resp?.research_by_contact || {};
+      const helper = resp?.helper || {};
+
+      // Persist in the SAME shape downstream pages already read.
+      const now = new Date().toISOString();
+      const histRaw = localStorage.getItem("context_research_history");
+      const hist = (() => {
+        try {
+          const parsed = histRaw ? JSON.parse(histRaw) : [];
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      })();
+
+      // Upsert by contact id
+      const map = new Map<string, any>();
+      for (const it of hist) {
+        const cid = String(it?.contact?.id || "").trim();
+        if (cid) map.set(cid, it);
+      }
+      for (const c of chosen) {
+        const cid = String(c?.id || "").trim();
+        if (!cid) continue;
+        const r = byContact?.[cid];
+        if (!r) continue;
+        map.set(cid, { contact: c, research: r, researched_at: now });
+      }
+      const nextHist = Array.from(map.values()).sort((a, b) => String(b?.researched_at || "").localeCompare(String(a?.researched_at || "")));
+
+      localStorage.setItem("context_research_history", JSON.stringify(nextHist));
+      localStorage.setItem("context_research_by_contact", JSON.stringify(byContact));
+      const activeId = String(chosen?.[0]?.id || "").trim();
+      if (activeId) localStorage.setItem("context_research_active_contact_id", activeId);
+      if (activeId && byContact?.[activeId]) {
+        localStorage.setItem("context_research", JSON.stringify(byContact[activeId]));
+        localStorage.setItem("research_data", JSON.stringify(byContact[activeId]));
+      }
+      localStorage.setItem("context_research_helper", JSON.stringify(helper || {}));
+      localStorage.setItem(
+        "context_research_meta",
+        JSON.stringify({
+          company_name: companyName,
+          jd_title: String((selectedJD as any)?.title || ""),
+          data_mode: getCurrentDataMode(),
+        })
+      );
+
+      setResearchNotice(`Research saved for ${Object.keys(byContact || {}).length} contact${Object.keys(byContact || {}).length === 1 ? "" : "s"}.`);
+      window.setTimeout(() => setResearchNotice(null), 2600);
+    } catch (e: any) {
+      setError(String(e?.message || "Failed to run research."));
+    } finally {
+      setIsResearching(false);
+    }
   };
 
   const getVerificationBadge = (status: string, score?: number): VerificationBadge => {
@@ -748,6 +904,29 @@ export default function FindContactPage() {
                     })}
                   </div>
                 )}
+
+                <div className="mt-4 rounded-md border border-white/10 bg-black/10 p-3">
+                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">
+                    Contact research (Smart)
+                  </div>
+                  <div className="mt-1 text-[11px] text-white/60">
+                    This runs background research for your saved contacts and stores it for Offer/Compose.
+                  </div>
+                  {researchNotice ? (
+                    <div className="mt-2 rounded-md border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-100">
+                      {researchNotice}
+                    </div>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={runContactResearch}
+                    disabled={isResearching || (savedVerified?.length || 0) === 0}
+                    className="mt-3 w-full rounded-md bg-white/10 border border-white/15 px-3 py-2 text-sm font-semibold text-white/85 hover:bg-white/15 disabled:opacity-50"
+                    title="Run background research for saved contacts"
+                  >
+                    {isResearching ? "Researching…" : "Run research for saved contacts"}
+                  </button>
+                </div>
 
                 {/* Continue button lives at the bottom of the right column (single CTA) */}
               </div>
@@ -936,6 +1115,31 @@ export default function FindContactPage() {
                           className="w-full bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm text-white placeholder:text-white/40"
                           placeholder="Write a short connection request note…"
                         />
+
+                        {(() => {
+                          const facts = getInterestingFactsForContact(active.id);
+                          return (
+                            <div className="mt-3 rounded-md border border-amber-400/25 bg-amber-500/10 p-3">
+                              <div className="text-xs font-semibold text-amber-200 uppercase tracking-wider">
+                                Interesting facts found
+                              </div>
+                              {facts.length ? (
+                                <ul className="mt-2 list-disc list-inside space-y-1 text-sm text-white/80">
+                                  {facts.map((f, idx) => (
+                                    <li key={`fact_${active.id}_${idx}`}>{f}</li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <div className="mt-2 text-xs text-white/65">
+                                  No facts yet. Click{" "}
+                                  <span className="font-semibold text-white/80">Run research for saved contacts</span>{" "}
+                                  on the left to populate this.
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+
                         <div className="mt-2 text-[11px] text-white/50">
                           Tip: This LinkedIn request note is a strong first step to request a connect, introduce yourself, and win the numbers game.
                           <br />

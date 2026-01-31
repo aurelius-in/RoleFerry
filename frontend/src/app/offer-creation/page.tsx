@@ -64,6 +64,8 @@ interface Contact {
 export default function OfferCreationPage() {
   const router = useRouter();
   const videoInputRef = useRef<HTMLInputElement | null>(null);
+  const offerEditorRef = useRef<HTMLTextAreaElement | null>(null);
+  const [hasMounted, setHasMounted] = useState(false);
   const [mode, setMode] = useState<'job-seeker' | 'recruiter'>('job-seeker');
   const [painPointMatches, setPainPointMatches] = useState<PainPointMatch[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -81,9 +83,13 @@ export default function OfferCreationPage() {
   const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
   const [researchHistory, setResearchHistory] = useState<Array<{ contact: Contact; research: any; researched_at: string }>>([]);
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
-  const [isEditingOffer, setIsEditingOffer] = useState(false);
+  const [isEditingOffer, setIsEditingOffer] = useState(true);
   const [draftVersion, setDraftVersion] = useState(0);
   const [draftSavedNotice, setDraftSavedNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const readActiveResearch = () => {
     try {
@@ -176,6 +182,98 @@ export default function OfferCreationPage() {
     // Hide tokens that look like unhelpful ids
     if (/^\d{8,}$/.test(s)) return null;
     return s;
+  };
+
+  const insertVariableToken = (token: string) => {
+    const t = String(token || "").trim();
+    if (!t) return;
+
+    // Ensure the editor is visible so the user can see where text landed.
+    if (!isEditingOffer) setIsEditingOffer(true);
+
+    const el = offerEditorRef.current;
+    if (!el) {
+      setOfferContent((prev) => (prev ? `${prev}${prev.endsWith(" ") ? "" : " "}${t}` : t));
+      return;
+    }
+
+    const start = Number(el.selectionStart || 0);
+    const end = Number(el.selectionEnd || 0);
+    const cur = String(offerContent || "");
+    const next = cur.slice(0, start) + t + cur.slice(end);
+    setOfferContent(next);
+    // Restore focus/cursor
+    window.requestAnimationFrame(() => {
+      try {
+        el.focus();
+        const pos = start + t.length;
+        el.selectionStart = pos;
+        el.selectionEnd = pos;
+      } catch {}
+    });
+  };
+
+  const buildAvailableVariables = () => {
+    if (typeof window === "undefined") return [];
+    const selectedJob = readSelectedJob() || {};
+    const companyName = formatCompanyName(
+      String(
+        localStorage.getItem("selected_company_name") ||
+          selectedJob?.company ||
+          selectedContacts?.[0]?.company ||
+          "Company"
+      )
+    );
+    const jobTitle = String(selectedJob?.title || "the role").trim();
+
+    const activeResearch = readActiveResearch() || {};
+    const bio = Array.isArray(activeResearch?.contact_bios) ? activeResearch.contact_bios[0] : null;
+    const contactName = String(selectedContacts?.[0]?.name || bio?.name || "Contact").trim();
+    const contactTitle = String(selectedContacts?.[0]?.title || bio?.title || "").trim();
+
+    const companySummary = String(activeResearch?.company_summary?.description || "").trim();
+    const recentNews = Array.isArray(activeResearch?.recent_news)
+      ? activeResearch.recent_news
+          .slice(0, 3)
+          .map((n: any) => String(n?.title || n?.summary || "").trim())
+          .filter(Boolean)
+          .join(" · ")
+      : "";
+
+    const m0 = painPointMatches?.[0] || ({} as any);
+    const metric1 = displayMetric(String(m0?.metric_1 || "")) || "";
+
+    const fact1 = (() => {
+      const lsts: any[] = [
+        bio?.public_profile_highlights,
+        bio?.other_interesting_facts,
+        bio?.post_topics,
+        bio?.opinions,
+        bio?.publications,
+      ];
+      for (const lst of lsts) {
+        if (Array.isArray(lst) && lst.length) {
+          const s = String(lst[0] || "").trim();
+          if (s) return s;
+        }
+      }
+      return "";
+    })();
+
+    const vars: Array<{ token: string; label: string; value: string }> = [
+      { token: "{{contact.name}}", label: "Contact Name", value: contactName },
+      { token: "{{contact.title}}", label: "Contact Title", value: contactTitle },
+      { token: "{{company.name}}", label: "Company Name", value: companyName },
+      { token: "{{job_title}}", label: "Job Title", value: jobTitle },
+      { token: "{{company.summary}}", label: "Company Summary", value: companySummary },
+      { token: "{{company.news}}", label: "Recent News", value: recentNews },
+      { token: "{{pp_match.pairs[0].jd_snippet}}", label: "Pain Point", value: String(m0?.painpoint_1 || "").trim() },
+      { token: "{{pp_match.pairs[0].resume_snippet}}", label: "Your Solution", value: String(m0?.solution_1 || "").trim() },
+      { token: "{{metric_1}}", label: "Impact Metric", value: metric1 },
+      { token: "{{contact.facts[0]}}", label: "Interesting Fact", value: fact1 },
+    ];
+
+    return vars;
   };
 
   const persistOffer = async (o: Offer) => {
@@ -463,7 +561,7 @@ export default function OfferCreationPage() {
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-7xl mx-auto px-4 mb-4">
         <div className="flex justify-between items-center">
-          <a href="/context-research" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+        <a href="/find-contact" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
             <span className="mr-2">←</span> Back to Research
           </a>
           <div className="bg-gray-900/70 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-white/10">
@@ -510,7 +608,7 @@ export default function OfferCreationPage() {
           </div>
 
           {/* Main Content: Offer Creation */}
-          <div className="lg:col-span-9">
+          <div className="lg:col-span-6">
             <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
               <div className="mb-8 text-center">
                 <h1 className="text-3xl font-bold text-white mb-2">Offer Creation</h1>
@@ -554,7 +652,7 @@ export default function OfferCreationPage() {
                         </div>
                       </div>
                       <a
-                        href="/context-research"
+                        href="/find-contact"
                         className="text-xs font-semibold text-blue-200/90 hover:text-blue-100 underline underline-offset-2"
                         title="Go back to research more contacts"
                       >
@@ -670,20 +768,22 @@ export default function OfferCreationPage() {
                   </div>
 
                   {/* Editor Section */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
+                  <div className="space-y-6">
+                    <div>
                       <h2 className="text-xl font-semibold">Personalized Offer</h2>
-
-                      <div className="text-sm text-white/70">
+                      <div className="mt-2 text-xs text-white/65">
                         Click the offer box to rotate through new AI-generated versions. When you see one you like, you can edit it and/or hit Save.
                       </div>
+                    </div>
 
-                      {draftSavedNotice ? (
-                        <div className="rounded-md border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100">
-                          {draftSavedNotice}
-                        </div>
-                      ) : null}
+                    {draftSavedNotice ? (
+                      <div className="rounded-md border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100">
+                        {draftSavedNotice}
+                      </div>
+                    ) : null}
 
+                    {/* Draft + Editor side-by-side (comparison-friendly) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                       <div className="space-y-3">
                         <div
                           role="button"
@@ -716,47 +816,50 @@ export default function OfferCreationPage() {
                             {offerContent || "Click to generate your first offer…"}
                           </div>
                         </div>
+                        <div className="text-[11px] text-white/55">
+                          Tip: keep the draft box as your reference, and make edits in the editor.
+                        </div>
+                      </div>
 
+                      <div className="space-y-3">
                         <div className="flex items-center justify-between gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setIsEditingOffer((v) => !v)}
-                            className="text-sm px-3 py-2 rounded-md bg-white/10 border border-white/10 text-white hover:bg-white/15 transition-colors"
-                          >
-                            {isEditingOffer ? "Hide editor" : "Edit"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleSaveOffer}
-                            disabled={!offerTitle.trim() || !offerContent.trim()}
-                            className="text-sm px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-50"
-                          >
-                            Save to library
-                          </button>
+                          <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">Editor</div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setIsEditingOffer((v) => !v)}
+                              className="text-sm px-3 py-2 rounded-md bg-white/10 border border-white/10 text-white hover:bg-white/15 transition-colors"
+                            >
+                              {isEditingOffer ? "Hide editor" : "Edit"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleSaveOffer}
+                              disabled={!offerTitle.trim() || !offerContent.trim()}
+                              className="text-sm px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                            >
+                              Save to library
+                            </button>
+                          </div>
                         </div>
 
                         {isEditingOffer ? (
                           <textarea
+                            ref={offerEditorRef}
                             value={offerContent}
                             onChange={(e) => setOfferContent(e.target.value)}
                             className="w-full h-64 border border-white/10 bg-black/30 rounded-lg p-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm text-white"
                           />
-                        ) : null}
-
-                        <div className="flex justify-end">
-                          <button
-                            type="button"
-                            onClick={handleContinue}
-                            disabled={!offerTitle.trim() || !offerContent.trim()}
-                            className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-                          >
-                            Continue to Bio Page →
-                          </button>
-                        </div>
+                        ) : (
+                          <div className="rounded-lg border border-white/10 bg-black/20 p-4 text-sm text-white/70">
+                            Editor hidden. Click <span className="font-semibold text-white/80">Edit</span> to show it.
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    <div className="space-y-6">
+                    {/* Underneath: Portfolio + Video */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <h3 className="font-medium text-gray-900 mb-2">Portfolio/Work Link (URL)</h3>
                         <input
@@ -858,12 +961,60 @@ export default function OfferCreationPage() {
                           </div>
                         ) : null}
                       </div>
+                    </div>
 
-                      {/* Offer generation is driven by clicking the offer box (left). */}
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={handleContinue}
+                        disabled={!offerTitle.trim() || !offerContent.trim()}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                      >
+                        Continue to Bio Page →
+                      </button>
                     </div>
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Right Sidebar: Available Variables */}
+          <div className="lg:col-span-3">
+            <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-6 sticky top-8 shadow-2xl shadow-black/20">
+              <div className="text-xl font-bold text-white mb-1">Available Variables</div>
+              <div className="text-xs text-white/60 mb-4">
+                Click a variable to insert it into the offer editor.
+              </div>
+
+              <div className="space-y-2">
+                {!hasMounted ? (
+                  <div className="text-sm text-white/60">Loading variables…</div>
+                ) : null}
+                {(hasMounted ? buildAvailableVariables() : []).map((v) => {
+                  const preview = String(v.value || "").trim();
+                  const previewShort = preview.length > 110 ? `${preview.slice(0, 110).trimEnd()}…` : preview;
+                  return (
+                    <button
+                      key={v.token}
+                      type="button"
+                      onClick={() => insertVariableToken(v.token)}
+                      className="w-full text-left rounded-md border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/15 px-3 py-2 transition-colors"
+                      title={`Insert ${v.token}`}
+                    >
+                      <div className="font-mono text-[12px] font-semibold text-emerald-200">{v.token}</div>
+                      <div className="text-[11px] text-white/70">{v.label}</div>
+                      {previewShort ? (
+                        <div className="mt-1 text-[11px] text-white/60 line-clamp-3">
+                          {previewShort}
+                        </div>
+                      ) : (
+                        <div className="mt-1 text-[11px] text-white/35 italic">Missing details</div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
