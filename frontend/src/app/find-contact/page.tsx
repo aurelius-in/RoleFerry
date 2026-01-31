@@ -776,7 +776,7 @@ export default function FindContactPage() {
                           : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white"
                       }`}
                     >
-                      {c}
+                      {formatCompanyName(c)}
                     </button>
                   ))}
                 </div>

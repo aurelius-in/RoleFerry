@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { formatCompanyName } from "@/lib/format";
 
 const mockLivePages = [
   {
@@ -62,7 +63,7 @@ export default function LivePagesPage() {
             <div key={page.id} className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all">
               <div className="mb-4">
                 <h3 className="text-lg font-bold mb-1">{page.role}</h3>
-                <div className="text-sm text-slate-400">{page.companyName}</div>
+                <div className="text-sm text-slate-400">{formatCompanyName(page.companyName)}</div>
                 <div className="text-sm text-slate-500 mt-1">For: {page.contactName}</div>
               </div>
 

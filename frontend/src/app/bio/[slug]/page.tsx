@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
 import placeholderPat from "@/profile-pat.png";
+import { formatCompanyName } from "@/lib/format";
 
 type BioPageDraft = {
   display_name: string;
@@ -182,7 +183,7 @@ export default function PublicBioPage() {
                         <div className="font-semibold">
                           {fmtTitleCase(String(p?.title || "")) || "Role"}{" "}
                           <span className="text-white/60">
-                            @ {fmtTitleCase(String(p?.company || "")) || "Company"}
+                            @ {formatCompanyName(String(p?.company || "")) || "Company"}
                           </span>
                         </div>
                         <div className="text-xs text-white/50 mt-1">
