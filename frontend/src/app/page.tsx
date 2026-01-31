@@ -20,9 +20,9 @@ const STONES: StoneConfig[] = [
   { step: 4, tab: "job-descriptions", label: "Job Descriptions", icon: "📋", href: "/job-descriptions" },
   { step: 5, tab: "gap-analysis", label: "Gap Analysis", icon: "🧩", href: "/gap-analysis" },
   { step: 6, tab: "pain-point-match", label: "Pain Point Match", icon: "🔗", href: "/painpoint-match" },
-  // Flow order: choose contacts first, then do contact-aware research.
-  { step: 7, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
-  { step: 8, tab: "background-research", label: "Background Research", icon: "🔍", href: "/context-research" },
+  // Flow order (per wireframes): company research first, then decision makers.
+  { step: 7, tab: "company-research", label: "Company Research", icon: "🏢", href: "/company-research" },
+  { step: 8, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
   { step: 9, tab: "offer-creation", label: "Offer Creation", icon: "💼", href: "/offer-creation" },
   { step: 10, tab: "bio-page", label: "Bio Page", icon: "🌐", href: "/bio-page" },
   { step: 11, tab: "compose", label: "Compose", icon: "✍️", href: "/compose" },
