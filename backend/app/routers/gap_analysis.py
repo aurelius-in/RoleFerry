@@ -804,6 +804,64 @@ def _deterministic_rank(
     return ranked
 
 
+def _safe_deterministic_rank(
+    prefs: GapAnalysisPreferences,
+    resume: ResumeExtract,
+    jobs: List[GapJobDescription],
+    *,
+    personality_profile: Dict[str, Any] | None = None,
+    temperament_profile: Dict[str, Any] | None = None,
+) -> List[GapAnalysisItem]:
+    """
+    Production safety: never let the endpoint 500 due to a heuristic edge case.
+    If deterministic ranking fails, return a minimal-but-valid response so the UI can proceed.
+    """
+    try:
+        return _deterministic_rank(
+            prefs,
+            resume,
+            jobs,
+            personality_profile=personality_profile,
+            temperament_profile=temperament_profile,
+        )
+    except Exception as e:
+        logger.exception("Deterministic gap ranking failed")
+        ranked: List[GapAnalysisItem] = []
+        for j in jobs:
+            ranked.append(
+                GapAnalysisItem(
+                    job_id=j.id,
+                    title=j.title,
+                    company=j.company,
+                    score=50,
+                    recommendation="maybe",
+                    matched_skills=[],
+                    missing_skills=[],
+                    resume_gaps=[],
+                    personality_gaps=[
+                        GapDetail(
+                            gap="Could not compute personality gaps due to an internal scoring error (rerun after refresh).",
+                            severity="low",
+                            evidence=["Fallback: deterministic gap analyzer hit an error"],
+                            how_to_close="Refresh and re-run. If it persists, re-import the job description text and resume.",
+                        )
+                    ]
+                    if (personality_profile or temperament_profile)
+                    else [],
+                    preference_gaps=[
+                        GapDetail(
+                            gap="Could not compute preference gaps due to an internal scoring error (rerun after refresh).",
+                            severity="low",
+                            evidence=["Fallback: deterministic gap analyzer hit an error"],
+                            how_to_close="Refresh and re-run. If it persists, re-import the job description text and resume.",
+                        )
+                    ],
+                    notes=[f"Deterministic rank failed: {str(e)[:120]}"],
+                )
+            )
+        return ranked
+
+
 @router.post("/analyze", response_model=GapAnalysisResponse)
 async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
     """
@@ -824,7 +882,7 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
 
     client = get_openai_client()
     if not client.should_use_real_llm:
-        ranked = _deterministic_rank(
+        ranked = _safe_deterministic_rank(
             prefs,
             resume,
             jobs,
@@ -847,7 +905,7 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
     try:
         stub_ranked = [
             r.model_dump()
-            for r in _deterministic_rank(
+            for r in _safe_deterministic_rank(
                 prefs,
                 resume,
                 jobs,

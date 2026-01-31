@@ -34,6 +34,30 @@ interface ResumeExtract {
     endYear?: string;
     notes?: string;
   }>;
+  // Convenience: 1-indexed versions of lists for easier human reference in later steps.
+  numbered?: {
+    key_metrics?: Array<{ n: number; metric: string; value: string; context: string }>;
+    business_challenges?: Array<{ n: number; text: string }>;
+    accomplishments?: Array<{ n: number; text: string }>;
+    positions?: Array<{
+      n: number;
+      company: string;
+      title: string;
+      startDate: string;
+      endDate: string;
+      current: boolean;
+      description: string;
+    }>;
+    education?: Array<{
+      n: number;
+      school: string;
+      degree: string;
+      field?: string;
+      startYear?: string;
+      endYear?: string;
+      notes?: string;
+    }>;
+  };
 }
 
 function _asString(v: any): string {
@@ -107,6 +131,22 @@ function coerceResumeExtract(raw: any): ResumeExtract | null {
       }))
     : [];
 
+  const buildNumbered = (ex: {
+    keyMetrics: ResumeExtract["keyMetrics"];
+    businessChallenges: ResumeExtract["businessChallenges"];
+    accomplishments: ResumeExtract["accomplishments"];
+    positions: ResumeExtract["positions"];
+    education: ResumeExtract["education"];
+  }): ResumeExtract["numbered"] => {
+    return {
+      key_metrics: (ex.keyMetrics || []).map((m, idx) => ({ n: idx + 1, ...m })),
+      business_challenges: (ex.businessChallenges || []).map((t, idx) => ({ n: idx + 1, text: String(t || "") })),
+      accomplishments: (ex.accomplishments || []).map((t, idx) => ({ n: idx + 1, text: String(t || "") })),
+      positions: (ex.positions || []).map((p, idx) => ({ n: idx + 1, ...p })),
+      education: (ex.education || []).map((e, idx) => ({ n: idx + 1, ...e })),
+    };
+  };
+
   return {
     positions,
     keyMetrics,
@@ -115,6 +155,7 @@ function coerceResumeExtract(raw: any): ResumeExtract | null {
     accomplishments,
     tenure,
     education,
+    numbered: buildNumbered({ positions, keyMetrics, businessChallenges, accomplishments, education }),
   };
 }
 
@@ -237,7 +278,7 @@ export default function ResumePage() {
             ? backendBusinessChallenges
             : [];
 
-        const mapped: ResumeExtract = {
+        const mappedBase: ResumeExtract = {
           positions: (backendExtract.positions || []).map((p: any) => ({
             company: p.company,
             title: p.title,
@@ -269,8 +310,20 @@ export default function ResumePage() {
           })),
         };
 
+        const mapped: ResumeExtract = {
+          ...mappedBase,
+          numbered: {
+            key_metrics: (mappedBase.keyMetrics || []).map((m, idx) => ({ n: idx + 1, ...m })),
+            business_challenges: (mappedBase.businessChallenges || []).map((t, idx) => ({ n: idx + 1, text: String(t || "") })),
+            accomplishments: (mappedBase.accomplishments || []).map((t, idx) => ({ n: idx + 1, text: String(t || "") })),
+            positions: (mappedBase.positions || []).map((p, idx) => ({ n: idx + 1, ...p })),
+            education: (mappedBase.education || []).map((e, idx) => ({ n: idx + 1, ...e })),
+          },
+        };
+
         // Persist immediately so downstream steps (Gap Analysis / Match) use the new resume right away.
         localStorage.setItem("resume_extract", JSON.stringify(mapped));
+        localStorage.setItem("resume_extract_numbered", JSON.stringify(mapped.numbered || {}));
         localStorage.setItem(
           "resume_extract_meta",
           JSON.stringify({ filename: file.name, updated_at: new Date().toISOString() })
@@ -303,7 +356,18 @@ export default function ResumePage() {
 
   const handleSave = () => {
     if (extract) {
-      localStorage.setItem("resume_extract", JSON.stringify(extract));
+      const withNumbered: ResumeExtract = {
+        ...extract,
+        numbered: {
+          key_metrics: (extract.keyMetrics || []).map((m, idx) => ({ n: idx + 1, ...m })),
+          business_challenges: (extract.businessChallenges || []).map((t, idx) => ({ n: idx + 1, text: String(t || "") })),
+          accomplishments: (extract.accomplishments || []).map((t, idx) => ({ n: idx + 1, text: String(t || "") })),
+          positions: (extract.positions || []).map((p, idx) => ({ n: idx + 1, ...p })),
+          education: (extract.education || []).map((e, idx) => ({ n: idx + 1, ...e })),
+        },
+      };
+      localStorage.setItem("resume_extract", JSON.stringify(withNumbered));
+      localStorage.setItem("resume_extract_numbered", JSON.stringify(withNumbered.numbered || {}));
       router.push("/personality");
     }
   };
@@ -686,7 +750,10 @@ export default function ResumePage() {
                 <div className="mt-4 overflow-x-auto">
                   <table className="w-full border-collapse text-[11px]">
                     <thead>
-                      <tr className="text-left text-white/70">
+                      <tr className="text-left text-white/70 text-[10px] leading-tight">
+                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-nowrap w-[1%]">
+                          #
+                        </th>
                         <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-normal">
                           {"{{resume.key_metrics[]}}"}
                         </th>
@@ -741,19 +808,22 @@ export default function ResumePage() {
 
                         return (
                           <tr key={i} className="align-top">
-                            <td className="border border-white/10 px-2 py-2 min-w-[170px]">
+                            <td className="border border-white/10 px-2 py-2 text-white/50 tabular-nums whitespace-nowrap">
+                              {i + 1}
+                            </td>
+                            <td className="border border-white/10 px-2 py-2 min-w-[145px]">
                               {kmText || <span className="text-white/30">—</span>}
                             </td>
-                            <td className="border border-white/10 px-2 py-2 min-w-[170px]">
+                            <td className="border border-white/10 px-2 py-2 min-w-[145px]">
                               {bc || <span className="text-white/30">—</span>}
                             </td>
-                            <td className="border border-white/10 px-2 py-2 min-w-[170px]">
+                            <td className="border border-white/10 px-2 py-2 min-w-[145px]">
                               {ac || <span className="text-white/30">—</span>}
                             </td>
-                            <td className="border border-white/10 px-2 py-2 min-w-[210px]">
+                            <td className="border border-white/10 px-2 py-2 min-w-[150px]">
                               {posText || <span className="text-white/30">—</span>}
                             </td>
-                            <td className="border border-white/10 px-2 py-2 min-w-[210px]">
+                            <td className="border border-white/10 px-2 py-2 min-w-[180px]">
                               {eduText || <span className="text-white/30">—</span>}
                             </td>
                           </tr>
@@ -761,6 +831,10 @@ export default function ResumePage() {
                       })}
                     </tbody>
                   </table>
+                </div>
+                <div className="mt-2 text-[11px] text-white/50">
+                  Tip: Rows are <span className="font-semibold text-white/70">1-indexed</span> (Metric 1, Metric 2, etc.). We also store a 1-indexed copy in{" "}
+                  <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-[10px] text-green-200">resume_extract_numbered</code>.
                 </div>
                 {totalYearsExperience === null ? (
                   <div className="mt-2 text-[11px] text-white/50">
