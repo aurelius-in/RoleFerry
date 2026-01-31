@@ -416,6 +416,67 @@ class ContactVerificationResponse(BaseModel):
     message: str
     verified_contacts: List[Contact]
 
+class ImproveLinkedInNoteRequest(BaseModel):
+    note: str
+    contact_name: Optional[str] = None
+    contact_title: Optional[str] = None
+    contact_company: Optional[str] = None
+    job_title: Optional[str] = None
+    painpoint: Optional[str] = None
+    solution: Optional[str] = None
+    metric: Optional[str] = None
+    limit: Optional[int] = 200
+
+
+class ImproveLinkedInNoteResponse(BaseModel):
+    note: str
+    used_ai: bool = False
+
+
+def _trim_to_chars(s: str, limit: int) -> str:
+    t = str(s or "").strip()
+    if limit <= 0:
+        return t
+    if len(t) <= limit:
+        return t
+    ell = "…"
+    if limit <= len(ell):
+        return t[:limit]
+    return (t[: (limit - len(ell))].rstrip() + ell).strip()
+
+
+def _sanitize_linkedin_note(note: str, limit: int) -> str:
+    # Avoid em/en dashes per app style.
+    s = (note or "").replace("—", "-").replace("–", "-")
+    # De-noise whitespace.
+    s = re.sub(r"\s+", " ", s).strip()
+    # Keep within character budget.
+    return _trim_to_chars(s, limit)
+
+
+def _deterministic_improve_linkedin_note(req: ImproveLinkedInNoteRequest) -> str:
+    name = (req.contact_name or "").strip()
+    first = (name.split()[0] if name else "").strip() or "there"
+    company = (req.contact_company or "").strip() or "your team"
+    job_title = (req.job_title or "").strip() or "the role"
+    pain = (req.painpoint or "").strip()
+    sol = (req.solution or "").strip()
+    metric = (req.metric or "").strip()
+
+    # Keep it warm/casual but professional; avoid over-selling and avoid em dashes.
+    bits: List[str] = [f"Hi {first},"]
+    bits.append(f"I’m reaching out about the {job_title} role at {company}.")
+    if pain and pain.lower() not in {"a key priority", "key priority"}:
+        bits.append(f"I noticed {pain}.")
+    if sol:
+        if metric:
+            bits.append(f"I’ve done similar work ({sol}; {metric}).")
+        else:
+            bits.append(f"I’ve done similar work ({sol}).")
+    bits.append("Open to connect?")
+    return " ".join([b.strip() for b in bits if b.strip()])
+
+
 @router.post("/search", response_model=ContactSearchResponse)
 async def search_contacts(request: ContactSearchRequest):
     """
@@ -858,6 +919,76 @@ async def verify_contacts(request: ContactVerificationRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to verify contacts: {str(e)}")
+
+
+@router.post("/improve-linkedin-note", response_model=ImproveLinkedInNoteResponse)
+async def improve_linkedin_note(request: ImproveLinkedInNoteRequest) -> ImproveLinkedInNoteResponse:
+    """
+    Rewrite a LinkedIn connection request note to sound more human:
+    casual/warm/personal but professional enough for first contact.
+    Enforces the app constraints: <=200 chars (or request.limit) and no em dashes.
+    """
+    try:
+        limit = int(request.limit or 200)
+        limit = max(120, min(limit, 300))  # guardrails
+
+        # Always provide a reasonable deterministic improvement, even without AI.
+        fallback = _sanitize_linkedin_note(_deterministic_improve_linkedin_note(request), limit)
+
+        client = get_openai_client()
+        if not client.should_use_real_llm:
+            return ImproveLinkedInNoteResponse(note=fallback, used_ai=False)
+
+        ctx = {
+            "note": str(request.note or "").strip(),
+            "contact_name": (request.contact_name or "").strip(),
+            "contact_title": (request.contact_title or "").strip(),
+            "contact_company": (request.contact_company or "").strip(),
+            "job_title": (request.job_title or "").strip(),
+            "painpoint": (request.painpoint or "").strip(),
+            "solution": (request.solution or "").strip(),
+            "metric": (request.metric or "").strip(),
+            "limit": limit,
+        }
+
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You rewrite LinkedIn connection request notes.\n\n"
+                    "Goal:\n"
+                    "- Make the message sound human, casual, warm, and personal, while still professional for a first contact.\n\n"
+                    "Hard constraints:\n"
+                    "- Output MUST be valid JSON ONLY (no markdown) with key: note\n"
+                    "- note MUST be a single paragraph (no bullets)\n"
+                    "- note MUST be <= limit characters\n"
+                    "- Do NOT use em dashes or en dashes (— or –). Use commas/periods/parentheses or simple hyphens.\n"
+                    "- Do NOT include clichés like 'I hope you're doing well'.\n"
+                    "- Do NOT mention that you are an AI.\n"
+                    "- Do NOT fabricate facts.\n\n"
+                    "Style:\n"
+                    "- Keep it simple: greeting + why you’re reaching out + 1 specific tie-in + soft close.\n"
+                    "- Use 1–2 short sentences if possible.\n"
+                ),
+            },
+            {"role": "user", "content": json.dumps(ctx)},
+        ]
+
+        stub_json = {"note": fallback}
+        raw = client.run_chat_completion(messages, temperature=0.35, max_tokens=180, stub_json=stub_json)
+        choices = raw.get("choices") or []
+        msg = (choices[0].get("message") if choices else {}) or {}
+        content_str = str(msg.get("content") or "")
+        data = extract_json_from_text(content_str) or {}
+        note = str((data.get("note") if isinstance(data, dict) else "") or "").strip()
+        note = _sanitize_linkedin_note(note or fallback, limit)
+        if len(note) < 30:
+            note = fallback
+        return ImproveLinkedInNoteResponse(note=note, used_ai=True)
+    except Exception as e:
+        logger.exception("Failed to improve LinkedIn note")
+        raise HTTPException(status_code=500, detail=f"Failed to improve LinkedIn note: {str(e)}")
+
 
 @router.get("/{contact_id}", response_model=Contact)
 async def get_contact(contact_id: str):

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import StarRating from "@/components/StarRating";
+import { formatCompanyName } from "@/lib/format";
 
 interface PainPointMatch {
   painpoint_1: string;
@@ -389,7 +390,7 @@ export default function PainPointMatchPage() {
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <div className="text-xs font-semibold text-white truncate">{jd.title}</div>
-                              <div className="text-[11px] text-white/60 truncate">{jd.company}</div>
+                              <div className="text-[11px] text-white/60 truncate">{formatCompanyName(jd.company)}</div>
                             </div>
                             <div className="shrink-0 text-[11px] text-white/60">
                               {saved ? `${Math.round((saved.alignment_score || 0) * 100)}%` : "—"}
@@ -439,7 +440,7 @@ export default function PainPointMatchPage() {
                         onClick={() => setSelectedJD(jd)}
                       >
                         <h3 className="font-semibold text-white">{jd.title}</h3>
-                        <p className="text-white/70">{jd.company}</p>
+                        <p className="text-white/70">{formatCompanyName(jd.company)}</p>
                         {matchesByJobId[jd.id]?.length ? (
                           <div className="mt-2 flex items-center gap-2">
                             <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-300 border border-green-500/20">

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { formatCompanyName } from "@/lib/format";
 
 // Must match the backend `PainPointMatch` shape from /painpoint-match/generate
 interface PainPointMatch {
@@ -576,7 +577,7 @@ export default function OfferCreationPage() {
                             <option key={`opt_${h?.contact?.id}`} value={String(h?.contact?.id || "")}>
                               {String(h?.contact?.name || "Contact")}
                               {h?.contact?.title ? ` — ${String(h.contact.title)}` : ""}
-                              {h?.contact?.company ? ` @ ${String(h.contact.company)}` : ""}
+                              {h?.contact?.company ? ` @ ${formatCompanyName(String(h.contact.company))}` : ""}
                             </option>
                           ))}
                         </select>

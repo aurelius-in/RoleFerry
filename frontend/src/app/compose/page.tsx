@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { formatCompanyName } from "@/lib/format";
 
 interface Variable {
   name: string;
@@ -251,7 +252,8 @@ export default function ComposePage() {
     const firstName = firstNameRaw ? firstNameRaw.split(" ")[0] : "there";
 
     const jdTitle = String(selectedJD?.title || "the role");
-    const jdCompany = String(selectedJD?.company || firstContact?.company || "the company");
+    const jdCompanyRaw = String(selectedJD?.company || firstContact?.company || "the company");
+    const jdCompany = formatCompanyName(jdCompanyRaw);
 
     const m0 = matches?.[0] || {};
     const painpoint1 = String(

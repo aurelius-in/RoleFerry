@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { formatCompanyName } from "@/lib/format";
 
 
 interface ResumeExtract {
@@ -551,7 +552,7 @@ export default function ResumePage() {
                           <div className="flex justify-between items-start mb-2">
                             <div>
                               <h4 className="font-semibold text-lg">{position.title}</h4>
-                              <p className="text-gray-600">{position.company}</p>
+                              <p className="text-gray-600">{formatCompanyName(position.company)}</p>
                             </div>
                             <span className="text-sm text-gray-500">
                               {position.startDate} - {position.current ? "Present" : position.endDate}
@@ -697,7 +698,8 @@ export default function ResumePage() {
                   {extract.tenure.map((tenure, index) => (
                     <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100">
                       <div>
-                        <span className="font-medium">{tenure.role}</span> at <span className="font-medium">{tenure.company}</span>
+                        <span className="font-medium">{tenure.role}</span> at{" "}
+                        <span className="font-medium">{formatCompanyName(tenure.company)}</span>
                       </div>
                       <span className="text-gray-600">{tenure.duration}</span>
                     </div>
@@ -794,7 +796,7 @@ export default function ResumePage() {
                           ? [km.metric, km.value, km.context].filter(Boolean).join(" — ")
                           : "";
                         const posText = pos
-                          ? `${pos.title || ""}${pos.company ? ` @ ${pos.company}` : ""}${
+                          ? `${pos.title || ""}${pos.company ? ` @ ${formatCompanyName(pos.company)}` : ""}${
                               pos.startDate || pos.endDate || pos.current
                                 ? ` (${pos.startDate || ""} - ${pos.current ? "Present" : pos.endDate || ""})`
                                 : ""

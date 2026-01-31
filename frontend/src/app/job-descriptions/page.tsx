@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { formatCompanyName } from "@/lib/format";
 
 const JARGON_PHRASES = [
   "fast-paced environment",
@@ -394,7 +395,7 @@ export default function JobDescriptionsPage() {
       };
 
       localStorage.setItem(key, JSON.stringify([nextItem, ...list]));
-      setTrackerNotice(`Added to Job Tracker: ${jd.title} @ ${jd.company}`);
+      setTrackerNotice(`Added to Job Tracker: ${jd.title} @ ${formatCompanyName(jd.company)}`);
       window.setTimeout(() => setTrackerNotice(null), 2500);
 
       // Notify other screens (Tracker) in the same SPA session.
@@ -699,7 +700,7 @@ export default function JobDescriptionsPage() {
                             </div>
                           ) : (
                             <div className="mt-1 flex items-center gap-2">
-                              <p className="text-white/70 break-words">{jd.company}</p>
+                              <p className="text-white/70 break-words">{formatCompanyName(jd.company)}</p>
                               <button
                                 type="button"
                                 onClick={() => startEdit(jd, "company")}

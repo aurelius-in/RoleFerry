@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { formatCompanyName } from "@/lib/format";
 
 
 interface Contact {
@@ -75,6 +76,8 @@ export default function FindContactPage() {
   };
   const [outreachDrafts, setOutreachDrafts] = useState<Record<string, OutreachDraft>>({});
   const [activeDraftContactId, setActiveDraftContactId] = useState<string>("");
+  const [isImprovingNote, setIsImprovingNote] = useState(false);
+  const [improveNoteError, setImproveNoteError] = useState<string | null>(null);
 
   const formatTitleCase = (input?: string) => {
     const s = String(input || "").trim();
@@ -166,7 +169,7 @@ export default function FindContactPage() {
     const m0 = loadPainpointMatch();
     const first = safeFirstName(c?.name || "");
     // Prefer the CONTACT's company (this screen is about reaching out to them).
-    const company = String(c?.company || jd?.company || "your team").trim();
+    const company = formatCompanyName(String(c?.company || jd?.company || "your team").trim());
     const jobTitle = String(jd?.title || "the role").trim();
     const pain = String(m0?.painpoint_1 || "a key priority").trim();
     const sol = String(m0?.solution_1 || "").trim();
@@ -181,6 +184,40 @@ export default function FindContactPage() {
       linkedin_note: li,
       updated_at: new Date().toISOString(),
     };
+  };
+
+  const improveActiveLinkedInNote = async (active: Contact, draft: OutreachDraft) => {
+    if (!active?.id) return;
+    setImproveNoteError(null);
+    setIsImprovingNote(true);
+    try {
+      const jd = loadSelectedJob();
+      const m0 = loadPainpointMatch();
+      const payload = {
+        note: String(draft?.linkedin_note || ""),
+        contact_name: String(active?.name || ""),
+        contact_title: String(active?.title || ""),
+        contact_company: formatCompanyName(String(active?.company || jd?.company || "")),
+        job_title: String(jd?.title || ""),
+        painpoint: String(m0?.painpoint_1 || ""),
+        solution: String(m0?.solution_1 || ""),
+        metric: String(m0?.metric_1 || ""),
+        limit: LINKEDIN_NOTE_LIMIT,
+      };
+
+      const res = await api<{ note: string; used_ai?: boolean }>("/find-contact/improve-linkedin-note", "POST", payload);
+      const improvedRaw = String(res?.note || "").trim();
+      const improved = trimToChars(improvedRaw.replaceAll("—", "-").replaceAll("–", "-"), LINKEDIN_NOTE_LIMIT);
+      if (!improved) throw new Error("Empty improved note");
+
+      const next = { ...(outreachDrafts || {}) };
+      next[active.id] = { ...draft, linkedin_note: improved, updated_at: new Date().toISOString() };
+      persistOutreachDrafts(next);
+    } catch (e: any) {
+      setImproveNoteError(String(e?.message || "Failed to improve note"));
+    } finally {
+      setIsImprovingNote(false);
+    }
   };
 
   const ensureDraftsForContacts = (list: Contact[]) => {
@@ -680,7 +717,7 @@ export default function FindContactPage() {
                             <div className="min-w-0">
                               <div className="text-sm font-semibold text-white truncate">{c.name}</div>
                               <div className="text-xs text-white/70 truncate">{formatTitleCase(c.title)}</div>
-                              <div className="text-[11px] text-white/50 truncate">{c.company}</div>
+                              <div className="text-[11px] text-white/50 truncate">{formatCompanyName(c.company)}</div>
                               {isRealEmail(c.email) ? (
                                 <div className="mt-1 text-[11px] font-mono text-white/70 break-all">{c.email}</div>
                               ) : null}
@@ -852,16 +889,36 @@ export default function FindContactPage() {
                       ) : null}
                     </div>
 
-                    <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="mt-4 grid grid-cols-1 gap-4">
                       <div className="rounded-md border border-white/10 bg-white/5 p-3">
                         <div className="flex items-center justify-between gap-2 mb-2">
                           <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">
                             LinkedIn request note
                           </div>
-                          <div className={`text-xs ${draft.linkedin_note.length > LINKEDIN_NOTE_LIMIT ? "text-red-300" : "text-white/60"}`}>
-                            {draft.linkedin_note.length}/{LINKEDIN_NOTE_LIMIT}
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              disabled={isImprovingNote}
+                              onClick={() => improveActiveLinkedInNote(active, draft)}
+                              className={`rounded-md border px-2 py-1 text-xs font-semibold transition-colors ${
+                                isImprovingNote
+                                  ? "border-white/10 bg-white/5 text-white/40 cursor-not-allowed"
+                                  : "border-white/10 bg-black/20 text-white/80 hover:bg-white/10"
+                              }`}
+                              title="Rewrite to sound more human (casual, warm, professional)."
+                            >
+                              {isImprovingNote ? "Improving…" : "Improve with Smart"}
+                            </button>
+                            <div className={`text-xs ${draft.linkedin_note.length > LINKEDIN_NOTE_LIMIT ? "text-red-300" : "text-white/60"}`}>
+                              {draft.linkedin_note.length}/{LINKEDIN_NOTE_LIMIT}
+                            </div>
                           </div>
                         </div>
+                        {improveNoteError ? (
+                          <div className="mb-2 text-xs text-red-200">
+                            {improveNoteError}
+                          </div>
+                        ) : null}
                         {!active.linkedin_url ? (
                           <div className="mb-2 text-xs text-amber-200">
                             Missing LinkedIn URL for this contact - you can still copy the note, but you’ll need to find their profile manually.
@@ -918,7 +975,7 @@ export default function FindContactPage() {
                         <div className="flex-1">
                           <h3 className="font-semibold text-white">{contact.name}</h3>
                           <p className="text-gray-600 text-sm">{formatTitleCase(contact.title)}</p>
-                          <p className="text-gray-500 text-xs">{contact.company}</p>
+                          <p className="text-gray-500 text-xs">{formatCompanyName(contact.company)}</p>
                         </div>
                         <div className="flex items-center space-x-2">
                           {badge.label !== "Unknown" ? (
@@ -1010,7 +1067,7 @@ export default function FindContactPage() {
                         <div className="flex-1">
                           <h3 className="font-semibold text-white">{contact.name}</h3>
                           <p className="text-gray-600 text-sm">{formatTitleCase(contact.title)}</p>
-                          <p className="text-gray-500 text-xs">{contact.company}</p>
+                          <p className="text-gray-500 text-xs">{formatCompanyName(contact.company)}</p>
                         </div>
                         {isSelected && <span className="text-blue-600">✓</span>}
                       </div>
