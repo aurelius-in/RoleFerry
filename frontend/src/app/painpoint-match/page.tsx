@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import StarRating from "@/components/StarRating";
+import { formatCompanyName } from "@/lib/format";
 
 interface PainPointMatch {
   painpoint_1: string;
@@ -330,7 +331,7 @@ export default function PainPointMatchPage() {
           </div>
 
           {error && (
-            <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className="mb-4 rounded-md border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-100">
               {error}
             </div>
           )}
@@ -389,7 +390,7 @@ export default function PainPointMatchPage() {
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <div className="text-xs font-semibold text-white truncate">{jd.title}</div>
-                              <div className="text-[11px] text-white/60 truncate">{jd.company}</div>
+                              <div className="text-[11px] text-white/60 truncate">{formatCompanyName(jd.company)}</div>
                             </div>
                             <div className="shrink-0 text-[11px] text-white/60">
                               {saved ? `${Math.round((saved.alignment_score || 0) * 100)}%` : "—"}
@@ -439,7 +440,7 @@ export default function PainPointMatchPage() {
                         onClick={() => setSelectedJD(jd)}
                       >
                         <h3 className="font-semibold text-white">{jd.title}</h3>
-                        <p className="text-white/70">{jd.company}</p>
+                        <p className="text-white/70">{formatCompanyName(jd.company)}</p>
                         {matchesByJobId[jd.id]?.length ? (
                           <div className="mt-2 flex items-center gap-2">
                             <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-300 border border-green-500/20">
@@ -507,50 +508,53 @@ export default function PainPointMatchPage() {
                             <div className="text-sm text-gray-600 italic">No alignments were found for this job.</div>
                           ) : (
                             renderableAlignments(match).map((a) => (
-                              <div key={`align_${index}_${a.n}`} className="bg-red-50 border border-red-200 rounded-lg p-4">
+                              <div
+                                key={`align_${index}_${a.n}`}
+                                className="rounded-lg p-4 border border-red-400/25 bg-red-500/10"
+                              >
                                 <div className="flex items-start space-x-3">
                                   <div className="flex-shrink-0">
-                                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                                      <span className="text-red-600 font-semibold">{a.n}</span>
+                                    <div className="w-8 h-8 bg-red-500/15 rounded-full flex items-center justify-center border border-red-400/25">
+                                      <span className="text-red-200 font-semibold">{a.n}</span>
                                     </div>
                                   </div>
                                   <div className="flex-1">
-                                    <h4 className="font-semibold text-red-900 mb-2">Pain Point</h4>
-                                    <p className="text-red-800 mb-3">{a.painpoint}</p>
+                                    <h4 className="font-semibold text-red-200 mb-2">Pain Point</h4>
+                                    <p className="text-white/85 mb-3">{a.painpoint}</p>
                                     {String(a.jdEvidence || "").trim() ? (
-                                      <div className="mb-3 text-xs text-red-800/80">
-                                        <span className="font-semibold">From JD:</span>{" "}
-                                        <span className="italic">“{sanitizeForUi(String(a.jdEvidence), "Missing details")}”</span>
+                                      <div className="mb-3 text-xs text-white/75">
+                                        <span className="font-semibold text-red-200">From JD:</span>{" "}
+                                        <span className="italic text-white/85">“{sanitizeForUi(String(a.jdEvidence), "Missing details")}”</span>
                                       </div>
                                     ) : (
-                                      <div className="mb-3 text-xs text-red-800/80">
-                                        <span className="font-semibold">From JD:</span>{" "}
+                                      <div className="mb-3 text-xs text-white/75">
+                                        <span className="font-semibold text-red-200">From JD:</span>{" "}
                                         <span className="text-red-700 font-semibold">Missing details</span>
                                       </div>
                                     )}
 
-                                    <h4 className="font-semibold text-green-900 mb-2">Your Solution</h4>
+                                    <h4 className="font-semibold text-emerald-200 mb-2">Your Solution</h4>
                                     <p className="mb-3">{renderValueOrMissing(String(a.solution || ""), "text-green-800")}</p>
                                     {String(a.resumeEvidence || "").trim() ? (
-                                      <div className="mb-3 text-xs text-green-800/80">
-                                        <span className="font-semibold">From resume:</span>{" "}
-                                        <span className="italic">“{sanitizeForUi(String(a.resumeEvidence), "Missing details")}”</span>
+                                      <div className="mb-3 text-xs text-white/75">
+                                        <span className="font-semibold text-emerald-200">From resume:</span>{" "}
+                                        <span className="italic text-white/85">“{sanitizeForUi(String(a.resumeEvidence), "Missing details")}”</span>
                                       </div>
                                     ) : (
-                                      <div className="mb-3 text-xs text-green-800/80">
-                                        <span className="font-semibold">From resume:</span>{" "}
+                                      <div className="mb-3 text-xs text-white/75">
+                                        <span className="font-semibold text-emerald-200">From resume:</span>{" "}
                                         <span className="text-red-700 font-semibold">Missing details</span>
                                       </div>
                                     )}
                                     {String(a.overlap || "").trim() ? (
-                                      <div className="mb-3 text-xs text-slate-700">
-                                        <span className="font-semibold">Why it matches:</span>{" "}
-                                        {sanitizeForUi(String(a.overlap), "Missing details")}
+                                      <div className="mb-3 text-xs text-white/75">
+                                        <span className="font-semibold text-white/85">Why it matches:</span>{" "}
+                                        <span className="text-white/80">{sanitizeForUi(String(a.overlap), "Missing details")}</span>
                                       </div>
                                     ) : null}
 
-                                    <h4 className="font-semibold text-blue-900 mb-2">Impact Metric</h4>
-                                    <p className="text-blue-800">{renderValueOrMissing(String(a.metric || ""), "text-blue-800")}</p>
+                                    <h4 className="font-semibold text-sky-200 mb-2">Impact Metric</h4>
+                                    <p className="text-white/85">{renderValueOrMissing(String(a.metric || ""), "text-white/85")}</p>
                                   </div>
                                 </div>
                               </div>

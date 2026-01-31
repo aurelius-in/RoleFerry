@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { formatCompanyName } from "@/lib/format";
 
 // Mock data - in production would come from API
 const mockJobs = [
@@ -174,7 +175,7 @@ export default function JobsPage() {
                     />
                     <div className="flex-1">
                       <h2 className="text-xl font-bold mb-1">{job.title}</h2>
-                      <div className="text-slate-400 mb-2">{job.company.name}</div>
+                      <div className="text-slate-400 mb-2">{formatCompanyName(job.company.name)}</div>
                       <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
                         <span>📍 {job.location}</span>
                         <span>💰 ${(job.salary.min/1000).toFixed(0)}K-${(job.salary.max/1000).toFixed(0)}K</span>

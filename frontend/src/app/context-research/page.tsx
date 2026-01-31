@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { getCurrentDataMode } from "@/lib/dataMode";
+import { formatCompanyName } from "@/lib/format";
 
 interface Contact {
   id: string;
@@ -342,7 +343,7 @@ export default function ContextResearchPage() {
         company_summary: {
           name: companyName,
           description:
-            `High-level overview for ${companyName}.`,
+            `High-level overview for ${formatCompanyName(companyName)}.`,
           industry: "Unknown",
           size: "Unknown",
           founded: "Unknown",
@@ -354,7 +355,7 @@ export default function ContextResearchPage() {
           name: contact.name,
           title: contact.title,
           company: contact.company,
-          bio: `${contact.name} is a ${contact.title} at ${contact.company}.`,
+          bio: `${contact.name} is a ${contact.title} at ${formatCompanyName(contact.company)}.`,
           experience: "Unknown",
           education: "Unknown",
           skills: [],
@@ -675,7 +676,7 @@ export default function ContextResearchPage() {
                                   <div className="min-w-0">
                                     <div className="text-sm font-semibold text-white truncate">{contact.name}</div>
                                     <div className="text-xs text-white/70 truncate">{formatTitleCase(contact.title)}</div>
-                                    <div className="text-[11px] text-white/50 truncate">{contact.company}</div>
+                                    <div className="text-[11px] text-white/50 truncate">{formatCompanyName(contact.company)}</div>
                                   </div>
                                   {active ? (
                                     <span className="shrink-0 rounded-full border border-blue-300/40 bg-blue-500/10 px-2 py-0.5 text-[11px] font-semibold text-blue-100">
@@ -921,7 +922,7 @@ export default function ContextResearchPage() {
                           ) : (
                             <div>
                               <div className="mb-1 text-xs text-white/60">
-                                {formatTitleCase(bio.title)}{bio.company ? ` • ${bio.company}` : ""}
+                                {formatTitleCase(bio.title)}{bio.company ? ` • ${formatCompanyName(bio.company)}` : ""}
                               </div>
                               <p className="text-white/70 mb-3">{bio.bio}</p>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-white/70">

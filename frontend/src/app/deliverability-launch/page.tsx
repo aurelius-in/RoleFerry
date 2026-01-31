@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { formatCompanyName } from "@/lib/format";
 
 interface PreFlightCheck {
   name: string;
@@ -765,7 +766,7 @@ export default function DeliverabilityLaunchPage() {
                     <div className="mt-3 space-y-2">
                       {(byCompany || []).slice(0, 6).map((row) => (
                         <div key={`co_${row.company}`} className="flex items-center justify-between gap-3 text-sm">
-                          <div className="min-w-0 truncate text-white/80">{row.company}</div>
+                          <div className="min-w-0 truncate text-white/80">{formatCompanyName(row.company)}</div>
                           <div className="shrink-0 text-white/70">
                             {row.contacts} × {sequenceSteps} = <span className="font-semibold text-white">{row.planned_sends}</span>
                           </div>
@@ -879,7 +880,7 @@ export default function DeliverabilityLaunchPage() {
                               <div className="text-sm font-semibold text-white">{String(c?.name || "Contact")}</div>
                               <div className="text-xs text-white/60">
                                 {String(c?.title || "Decision maker")}
-                                {c?.company ? ` • ${String(c.company)}` : ""}
+                                {c?.company ? ` • ${formatCompanyName(String(c.company))}` : ""}
                               </div>
                               {hasLinkedin ? (
                                 <a

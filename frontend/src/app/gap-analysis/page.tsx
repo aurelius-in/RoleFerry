@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import StarRating from "@/components/StarRating";
+import { formatCompanyName } from "@/lib/format";
 
 type JobPreferences = {
   values: string[];
@@ -124,7 +125,7 @@ export default function GapAnalysisPage() {
   const topSummary = useMemo(() => {
     const top = ranked[0];
     if (!top) return null;
-    return `${top.title} @ ${top.company} (${top.score}/100)`;
+    return `${top.title} @ ${formatCompanyName(top.company)} (${top.score}/100)`;
   }, [ranked]);
 
   async function runAnalysis() {
@@ -291,7 +292,7 @@ export default function GapAnalysisPage() {
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <div className="text-sm font-bold text-white truncate">{r.title}</div>
-                            <div className="text-xs text-white/60 truncate">{r.company}</div>
+                              <div className="text-xs text-white/60 truncate">{formatCompanyName(r.company)}</div>
                           </div>
                           <div className="text-right shrink-0">
                             <div className="text-white font-bold text-xs">{r.score}/100</div>
@@ -312,7 +313,7 @@ export default function GapAnalysisPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="text-xl font-bold text-white">{selected.title}</div>
-                        <div className="text-sm text-white/70">{selected.company}</div>
+                        <div className="text-sm text-white/70">{formatCompanyName(selected.company)}</div>
                         <div className="mt-2 flex items-center gap-3">
                           <div className="text-white font-bold">{selected.score}/100</div>
                           <StarRating value={selected.score} scale="percent" showNumeric={false} className="text-[10px]" />

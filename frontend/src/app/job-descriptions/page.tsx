@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { formatCompanyName } from "@/lib/format";
 
 const JARGON_PHRASES = [
   "fast-paced environment",
@@ -29,6 +30,7 @@ function extractJargon(text: string): string[] {
 }
 
 type Difficulty = "Easy" | "Stretch" | "Hard";
+type FavoriteRank = number; // 1..N (unique across the visible jobs)
 
 interface JobDescription {
   id: string;
@@ -47,6 +49,9 @@ interface JobDescription {
   requirements?: string[];
   benefits?: string[];
   jdJargon: string[];
+  // New: user-selected preference rank (unique across the visible jobs).
+  favoriteRank?: FavoriteRank;
+  // Legacy (kept for back-compat only)
   difficulty?: Difficulty;
   // Back-compat: older caches used "grade" (Shoo-in/Stretch/Ideal). We'll migrate to difficulty.
   grade?: 'Shoo-in' | 'Stretch' | 'Ideal';
@@ -112,6 +117,28 @@ function cycleDifficulty(cur?: Difficulty): Difficulty | undefined {
   return undefined;
 }
 
+function normalizeFavoriteRanks(list: JobDescription[]): JobDescription[] {
+  const n = Array.isArray(list) ? list.length : 0;
+  if (!n) return [];
+
+  const used = new Set<number>();
+  const out = list.map((jd) => ({ ...jd }));
+  for (let i = 0; i < out.length; i++) {
+    const r = Number((out[i] as any).favoriteRank);
+    const ok = Number.isFinite(r) && r >= 1 && r <= n;
+    if (!ok) {
+      delete (out[i] as any).favoriteRank;
+      continue;
+    }
+    if (used.has(r)) {
+      delete (out[i] as any).favoriteRank;
+      continue;
+    }
+    used.add(r);
+  }
+  return out;
+}
+
 export default function JobDescriptionsPage() {
   const router = useRouter();
   // Important: avoid reading localStorage during the initial render to prevent
@@ -128,7 +155,7 @@ export default function JobDescriptionsPage() {
   const [importUrl, setImportUrl] = useState("");
   const [importText, setImportText] = useState("");
   const [importType, setImportType] = useState<'url' | 'text'>('url');
-  const [sortBy, setSortBy] = useState<'date' | 'difficulty'>('date');
+  const [sortBy, setSortBy] = useState<'date' | 'favoriteRank'>('date');
   const [trackerNotice, setTrackerNotice] = useState<string | null>(null);
   const [trackerPulseId, setTrackerPulseId] = useState<string | null>(null);
   const trackerPulseTimer = useRef<number | null>(null);
@@ -151,11 +178,11 @@ export default function JobDescriptionsPage() {
         });
 
         // Migrate legacy grade -> difficulty, and drop legacy grade from persisted data.
-        const cleaned = cleanedRaw.map((jd) => {
+        const cleaned = normalizeFavoriteRanks(cleanedRaw.map((jd) => {
           const difficulty = jd.difficulty ?? migrateGradeToDifficulty(jd.grade);
           const { grade: _legacyGrade, ...rest } = jd as any;
           return { ...rest, difficulty } as JobDescription;
-        });
+        }));
 
         setJobDescriptions(cleaned);
         localStorage.setItem("job_descriptions", JSON.stringify(cleaned));
@@ -227,8 +254,9 @@ export default function JobDescriptionsPage() {
             if (idx >= 0) next[idx] = { ...next[idx], ...m };
             else next.push(m);
           }
-          if (typeof window !== "undefined") localStorage.setItem("job_descriptions", JSON.stringify(next));
-          return next;
+          const normalized = normalizeFavoriteRanks(next);
+          if (typeof window !== "undefined") localStorage.setItem("job_descriptions", JSON.stringify(normalized));
+          return normalized;
         });
       }
       // Only clear inputs on success
@@ -244,11 +272,37 @@ export default function JobDescriptionsPage() {
 
   const handleDelete = (id: string) => {
     setJobDescriptions(prev => {
-      const next = prev.filter(jd => jd.id !== id);
+      const next = normalizeFavoriteRanks(prev.filter(jd => jd.id !== id));
       try { localStorage.setItem("job_descriptions", JSON.stringify(next)); } catch {}
       return next;
     });
     setEditMeta((cur) => (cur?.id === id ? null : cur));
+  };
+
+  const handleFavoriteRankChange = (id: string, nextRank: number | null) => {
+    setJobDescriptions((prev) => {
+      const max = prev.length;
+      const wanted = nextRank === null ? null : Math.max(1, Math.min(max, Number(nextRank)));
+      const usedByOther = new Set<number>();
+      for (const jd of prev) {
+        if (jd.id === id) continue;
+        const r = Number((jd as any).favoriteRank);
+        if (Number.isFinite(r) && r >= 1 && r <= max) usedByOther.add(r);
+      }
+      if (wanted !== null && usedByOther.has(wanted)) return prev;
+
+      const next = normalizeFavoriteRanks(
+        prev.map((jd) => {
+          if (jd.id !== id) return jd;
+          const out: JobDescription = { ...jd };
+          if (wanted === null) delete (out as any).favoriteRank;
+          else out.favoriteRank = wanted;
+          return out;
+        })
+      );
+      try { localStorage.setItem("job_descriptions", JSON.stringify(next)); } catch {}
+      return next;
+    });
   };
 
   const handleDifficultyChange = (id: string, difficulty?: Difficulty) => {
@@ -265,8 +319,14 @@ export default function JobDescriptionsPage() {
     if (sortBy === 'date') {
       return new Date(b.parsedAt).getTime() - new Date(a.parsedAt).getTime();
     }
-    const diffOrder: Record<string, number> = { Easy: 1, Stretch: 2, Hard: 3 };
-    return (diffOrder[a.difficulty || ''] || 4) - (diffOrder[b.difficulty || ''] || 4);
+    const ar = Number((a as any).favoriteRank);
+    const br = Number((b as any).favoriteRank);
+    const aHas = Number.isFinite(ar) && ar >= 1;
+    const bHas = Number.isFinite(br) && br >= 1;
+    if (aHas && bHas) return ar - br;
+    if (aHas && !bHas) return -1;
+    if (!aHas && bHas) return 1;
+    return new Date(b.parsedAt).getTime() - new Date(a.parsedAt).getTime();
   });
 
   const handleContinue = () => {
@@ -326,7 +386,7 @@ export default function JobDescriptionsPage() {
           logo: jd.company ? `https://logo.clearbit.com/${jd.company.toLowerCase().replace(/\\s+/g, "")}.com` : undefined,
         },
         role: jd.title,
-        difficulty: jd.difficulty,
+        favoriteRank: jd.favoriteRank ?? null,
         status: "saved",
         appliedDate: new Date().toISOString().slice(0, 10),
         lastContact: new Date().toISOString().slice(0, 10),
@@ -335,7 +395,7 @@ export default function JobDescriptionsPage() {
       };
 
       localStorage.setItem(key, JSON.stringify([nextItem, ...list]));
-      setTrackerNotice(`Added to Job Tracker: ${jd.title} @ ${jd.company}`);
+      setTrackerNotice(`Added to Job Tracker: ${jd.title} @ ${formatCompanyName(jd.company)}`);
       window.setTimeout(() => setTrackerNotice(null), 2500);
 
       // Notify other screens (Tracker) in the same SPA session.
@@ -550,11 +610,11 @@ export default function JobDescriptionsPage() {
             {hasMounted && jobDescriptions.length > 0 && (
               <select 
                 value={sortBy} 
-                onChange={(e) => setSortBy(e.target.value as 'date' | 'difficulty')}
+                onChange={(e) => setSortBy(e.target.value as 'date' | 'favoriteRank')}
                 className="rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="date">Sort by Date</option>
-                <option value="difficulty">Sort by Difficulty</option>
+                <option value="favoriteRank">Sort by Favorite Rank</option>
               </select>
             )}
           </div>
@@ -640,7 +700,7 @@ export default function JobDescriptionsPage() {
                             </div>
                           ) : (
                             <div className="mt-1 flex items-center gap-2">
-                              <p className="text-white/70 break-words">{jd.company}</p>
+                              <p className="text-white/70 break-words">{formatCompanyName(jd.company)}</p>
                               <button
                                 type="button"
                                 onClick={() => startEdit(jd, "company")}
@@ -688,23 +748,43 @@ export default function JobDescriptionsPage() {
                       )}
                     </div>
                     <div className="flex items-center space-x-4">
-                      <button
-                        type="button"
-                        title="How difficult do you expect this job will be to get? (Self‑reported.)"
-                        onClick={() => handleDifficultyChange(jd.id, cycleDifficulty(jd.difficulty))}
-                        className={`inline-flex items-center gap-2 rounded-md border px-3 py-1 text-sm font-semibold transition-colors ${
-                          jd.difficulty === "Easy"
-                            ? "bg-green-500/15 text-green-200 border-green-400/30 hover:bg-green-500/20"
-                            : jd.difficulty === "Stretch"
-                              ? "bg-yellow-500/15 text-yellow-200 border-yellow-400/30 hover:bg-yellow-500/20"
-                              : jd.difficulty === "Hard"
-                                ? "bg-red-500/15 text-red-200 border-red-400/30 hover:bg-red-500/20"
-                                : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10"
-                        }`}
-                      >
-                        <span>{jd.difficulty ?? "Difficulty"}</span>
-                        <span className="text-[11px] text-white/50" aria-hidden="true">ⓘ</span>
-                      </button>
+                      {(() => {
+                        const maxRank = jobDescriptions.length;
+                        const current = Number((jd as any).favoriteRank);
+                        const currentOk = Number.isFinite(current) && current >= 1 && current <= maxRank;
+                        const used = new Set<number>();
+                        for (const other of jobDescriptions) {
+                          if (other.id === jd.id) continue;
+                          const r = Number((other as any).favoriteRank);
+                          if (Number.isFinite(r) && r >= 1 && r <= maxRank) used.add(r);
+                        }
+                        return (
+                          <div className="flex flex-col items-end gap-1">
+                            <div className="text-[10px] font-semibold text-white/60">Favorite Rank</div>
+                            <select
+                              value={currentOk ? String(current) : ""}
+                              onChange={(e) => {
+                                const v = String(e.target.value || "");
+                                if (!v) {
+                                  handleFavoriteRankChange(jd.id, null);
+                                  return;
+                                }
+                                const n = Number(v);
+                                handleFavoriteRankChange(jd.id, Number.isFinite(n) ? n : null);
+                              }}
+                              title="Favorite Rank: unique per job (1..N). Pick an unused rank."
+                              className="rounded-md border border-white/10 bg-black/20 px-3 py-1 text-sm font-semibold text-white/80 hover:bg-white/10 outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="">—</option>
+                              {Array.from({ length: maxRank }, (_, i) => i + 1).map((n) => (
+                                <option key={`rank_${jd.id}_${n}`} value={String(n)} disabled={used.has(n)}>
+                                  {n}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        );
+                      })()}
                       <button
                         type="button"
                         onClick={() => addToTracker(jd)}
