@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api } from '@/lib/api';
 import { DataMode, getCurrentDataMode, subscribeToDataModeChanges } from '@/lib/dataMode';
 import StarRating from '@/components/StarRating';
+import { formatCompanyName } from "@/lib/format";
 
 type TrackerMode = 'jobseeker' | 'recruiter';
 type TrackerApp = {
@@ -340,7 +341,7 @@ export default function TrackerPage() {
                           />
                           <div className="flex-1 min-w-0">
                             <div className="font-semibold text-sm truncate">{app.role}</div>
-                            <div className="text-xs text-slate-400 truncate">{app.company.name}</div>
+                            <div className="text-xs text-slate-400 truncate">{formatCompanyName(app.company.name)}</div>
                           </div>
                           <div className="shrink-0">
                             <button
@@ -422,7 +423,7 @@ export default function TrackerPage() {
               <tbody>
                 {filteredApps.map(app => (
                   <tr key={app.id} className="border-t border-white/10 hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-3">{app.company.name}</td>
+                    <td className="px-4 py-3">{formatCompanyName(app.company.name)}</td>
                     <td className="px-4 py-3">{app.role}</td>
                     <td className="px-4 py-3">
                       <button

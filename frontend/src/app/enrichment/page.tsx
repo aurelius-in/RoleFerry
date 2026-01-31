@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { formatCompanyName } from "@/lib/format";
 
 const mockEnrichments = [
   {
@@ -122,7 +123,7 @@ export default function EnrichmentPage() {
                     <div className="font-mono text-sm">{enr.domain}</div>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="font-semibold">{enr.company}</div>
+                    <div className="font-semibold">{formatCompanyName(enr.company)}</div>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
@@ -172,7 +173,7 @@ export default function EnrichmentPage() {
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-slate-900 border border-white/10 rounded-xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">{selectedEnrichment.company}</h2>
+                <h2 className="text-2xl font-bold">{formatCompanyName(selectedEnrichment.company)}</h2>
                 <button 
                   onClick={() => setSelectedEnrichment(null)}
                   className="w-8 h-8 flex items-center justify-center bg-white/5 rounded-md hover:bg-white/10"
