@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import StarRating from "@/components/StarRating";
 
 interface EmailStep {
   id: string;
@@ -14,6 +13,7 @@ interface EmailStep {
   delay_hours: number;
   stop_on_reply: boolean;
   variables: Record<string, string>;
+  template_variant_index?: number;
 }
 
 interface Campaign {
@@ -23,22 +23,7 @@ interface Campaign {
   emails: EmailStep[];
   created_at: string;
   updated_at: string;
-}
-
-interface DeliverabilityCheck {
-  overall_health_score: number;
-  summary?: string;
-  reports: Array<{
-    step_number: number;
-    health_score: number;
-    spam_risk: 'low' | 'medium' | 'high';
-    issues: string[];
-    warnings: string[];
-    subject_variants: string[];
-    copy_tweaks: string[];
-    improved_subject?: string | null;
-    improved_body?: string | null;
-  }>;
+  followups_enabled_count?: number; // 0..3 (Email 2/3/4)
 }
 
 export default function CampaignPage() {
@@ -48,12 +33,12 @@ export default function CampaignPage() {
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
   const [campaignByContact, setCampaignByContact] = useState<Record<string, Campaign>>({});
   const [isGenerating, setIsGenerating] = useState(false);
-  const [deliverabilityCheck, setDeliverabilityCheck] = useState<DeliverabilityCheck | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [composeHelper, setComposeHelper] = useState<any>(null);
-  const [previewWithValues, setPreviewWithValues] = useState(true);
   const [buildStamp, setBuildStamp] = useState<string>("");
   const [researchHistory, setResearchHistory] = useState<Array<{ contact: any; research: any; researched_at: string }>>([]);
+  const [followupsEnabledCount, setFollowupsEnabledCount] = useState<number>(2); // default: 3-email sequence
+  const [activeStepNumber, setActiveStepNumber] = useState<number>(1);
 
   const campaign: Campaign | null = activeContactId ? (campaignByContact[activeContactId] || null) : null;
 
@@ -102,7 +87,7 @@ export default function CampaignPage() {
     const id = String(cid || "").trim();
     if (!id) return;
     setActiveContactId(id);
-    setDeliverabilityCheck(null);
+    setActiveStepNumber(1);
     try {
       localStorage.setItem("campaign_active_contact_id", id);
       // Keep research/offer/compose aligned to the same "active contact" concept.
@@ -199,6 +184,10 @@ export default function CampaignPage() {
   };
 
   const buildFollowUps = (persona: string) => {
+    // Returns the default templates for:
+    // - Email 2: follow-up
+    // - Email 3: follow-up (different angle)
+    // - Email 4: breakup message
     if (persona === "recruiter") {
       return [
         {
@@ -210,10 +199,19 @@ export default function CampaignPage() {
           ),
         },
         {
-          subject: "Last follow-up — {{job_title}}",
+          subject: "Follow-up — one more angle",
           body: sign(
             `Hi {{first_name}},\n\n` +
-              `Last follow-up. If the role is no longer active, no worries — I’m happy to be considered for similar roles.`
+              `Following up once more — I can tailor my approach to {{painpoint_2}} (or the highest-priority gap on your side).\n\n` +
+              `Would it help if I sent a short 3-bullet plan?`
+          ),
+        },
+        {
+          subject: "Breakup — should I close the loop?",
+          body: sign(
+            `Hi {{first_name}},\n\n` +
+              `I don’t want to be a pest. If this isn’t a fit, no worries — just reply “no” and I’ll close the loop.\n\n` +
+              `If it *is* a fit but you’re not the right person, who should I speak with?`
           ),
         },
       ];
@@ -229,10 +227,18 @@ export default function CampaignPage() {
           ),
         },
         {
-          subject: "Last follow-up — quick question",
+          subject: "Follow-up — quick question",
           body: sign(
             `Hi {{first_name}},\n\n` +
               `Should I send a short 3-bullet plan, or is there someone on your team I should connect with instead?`
+          ),
+        },
+        {
+          subject: "Breakup — close the loop?",
+          body: sign(
+            `Hi {{first_name}},\n\n` +
+              `Last note from me — if this isn’t a priority right now, totally fair. If so, I’ll stop reaching out.\n\n` +
+              `If it *is* a priority, what’s the best next step?`
           ),
         },
       ];
@@ -248,10 +254,19 @@ export default function CampaignPage() {
           ),
         },
         {
-          subject: "Last follow-up — {{job_title}}",
+          subject: "Follow-up — can I send a short outline?",
           body: sign(
             `Hi {{first_name}},\n\n` +
-              `Last follow-up. If it’s helpful, I can send a short technical plan + one metric I’d aim to move.`
+              `If helpful, I can send a short technical outline for {{painpoint_1}} (risks + tradeoffs + a metric to move).\n\n` +
+              `Would that be useful?`
+          ),
+        },
+        {
+          subject: "Breakup — close the loop?",
+          body: sign(
+            `Hi {{first_name}},\n\n` +
+              `Last follow-up from me — if this isn’t a fit, no worries, I’ll stop reaching out.\n\n` +
+              `If it *is* a fit, I’m happy to share a quick outline and adapt it to your stack.`
           ),
         },
       ];
@@ -267,45 +282,65 @@ export default function CampaignPage() {
         ),
       },
       {
-        subject: "Final follow-up — {{job_title}} @ {{company_name}}",
+        subject: "Follow-up — one more angle",
         body: sign(
           `Hi {{first_name}},\n\n` +
-            `Last follow-up — happy to share specifics if it’s useful.`
+            `Following up with one more angle: {{offer_snippet}}\n\n` +
+            `If you’re open, I can send a short 3-bullet plan.`
+        ),
+      },
+      {
+        subject: "Breakup — close the loop?",
+        body: sign(
+          `Hi {{first_name}},\n\n` +
+            `I haven’t heard back, so my guess is this isn’t a fit. No worries — I’ll stop reaching out.\n\n` +
+            `If I should connect with someone else, who’s best?`
         ),
       },
     ];
   };
 
-  const activeVarMap = useMemo(() => {
+  const contactById = useMemo(() => {
+    const m = new Map<string, any>();
+    for (const c of Array.isArray(contacts) ? contacts : []) {
+      const id = String(c?.id || "").trim();
+      if (id) m.set(id, c);
+    }
+    return m;
+  }, [contacts]);
+
+  const buildVarMapForContact = (composedEmail: any, cid: string) => {
     const map: Record<string, string> = {};
     try {
-      const composedRaw = localStorage.getItem("composed_email");
-      const composed = composedRaw ? JSON.parse(composedRaw) : null;
-      const vars = composed?.variables || [];
+      const vars = composedEmail?.variables || [];
       for (const v of vars) {
         if (v?.name) map[String(v.name)] = String(v.value ?? "");
       }
     } catch {}
 
-    // Override with active contact info so preview is accurate per person.
-    const c = contacts.find((x: any) => String(x?.id || "") === String(activeContactId || ""));
+    const c = contactById.get(String(cid || "").trim());
     const first = String(c?.name || "").trim().split(" ")[0] || "there";
     if (first) map["{{first_name}}"] = first;
     if (c?.company) map["{{company_name}}"] = String(c.company);
     if (c?.title) map["{{contact_title}}"] = String(c.title);
 
-    // Pull per-contact research so selecting a contact actually changes the context.
-    const r = loadResearchForContact(activeContactId);
+    const r = loadResearchForContact(cid);
     if (r?.company_summary?.description) map["{{company_summary}}"] = String(r.company_summary.description);
     if (r?.recent_news?.[0]?.summary) map["{{recent_news}}"] = String(r.recent_news[0].summary);
     if (r?.contact_bios?.[0]?.bio) map["{{contact_bio}}"] = String(r.contact_bios[0].bio);
 
     return map;
-  }, [activeContactId, contacts]);
+  };
 
   useEffect(() => {
-    // Ensure preview-with-values is ON by default (users can still toggle it off manually).
-    setPreviewWithValues(true);
+    // Follow-ups enabled count (0..3): Email 2/3/4
+    let initialFollowups = 2;
+    try {
+      const raw = localStorage.getItem("rf_campaign_followups_enabled_count");
+      const n = Number(raw);
+      if (Number.isFinite(n)) initialFollowups = Math.min(3, Math.max(0, n));
+    } catch {}
+    setFollowupsEnabledCount(initialFollowups);
 
     // Load mode from localStorage
     const stored = localStorage.getItem("rf_mode");
@@ -390,7 +425,7 @@ export default function CampaignPage() {
         const seedChanged = seed && seed !== prevSeed;
 
         if (!hasExisting || missing || seedChanged) {
-          generateCampaign(emailData, list);
+          generateCampaign(emailData, list, initialFollowups);
           try {
             if (seed) localStorage.setItem("campaign_seed", seed);
           } catch {}
@@ -422,23 +457,13 @@ export default function CampaignPage() {
     } catch {}
   }, []);
 
-  const generateCampaign = async (composedEmail: any, contactList?: any[]) => {
+  const generateCampaign = async (composedEmail: any, contactList?: any[], followUpCountOverride?: number) => {
     setIsGenerating(true);
     setError(null);
 
     try {
       // Keep this snappy (this page is already "the editor").
       await new Promise(resolve => setTimeout(resolve, 250));
-
-      // Pull variable values from the composed email (if present) so the campaign preview
-      // feels realistic instead of showing raw {{placeholders}}.
-      const variableMap: Record<string, string> = {};
-      try {
-        const vars = composedEmail?.variables || [];
-        for (const v of vars) {
-          if (v?.name) variableMap[String(v.name)] = String(v.value ?? "");
-        }
-      } catch {}
 
       const selectedContacts = Array.isArray(contactList) ? contactList : (() => {
         try {
@@ -450,48 +475,55 @@ export default function CampaignPage() {
       })();
       const now = new Date().toISOString();
       const byContact: Record<string, Campaign> = {};
+      const followCount = Number.isFinite(Number(followUpCountOverride))
+        ? Math.min(3, Math.max(0, Number(followUpCountOverride)))
+        : followupsEnabledCount;
       for (const c of selectedContacts) {
         const cid = String(c?.id || "");
         if (!cid) continue;
         const persona = inferPersona(c);
         const v = pickComposeVariant(persona);
         const followUps = buildFollowUps(persona);
+        const varMap = buildVarMapForContact(composedEmail, cid);
 
         const email1Subject = String(v?.subject || composedEmail.subject || "").trim() || "{{job_title}} at {{company_name}} — quick idea";
         const email1Body = String(v?.body || composedEmail.body || "").trim() || composedEmail.body;
 
-        const emails: EmailStep[] = [
-          {
-            id: `email_1_${cid}`,
-            step_number: 1,
-            subject: email1Subject,
-            body: email1Body,
-            delay_days: 0,
-            delay_hours: 0,
+        const delayByStep: Record<number, { days: number; hours: number }> = {
+          1: { days: 0, hours: 0 },
+          2: { days: 2, hours: 0 },
+          3: { days: 4, hours: 0 },
+          4: { days: 7, hours: 0 },
+        };
+
+        const emails: EmailStep[] = [];
+        emails.push({
+          id: `email_1_${cid}`,
+          step_number: 1,
+          subject: applyVariables(email1Subject, varMap),
+          body: applyVariables(email1Body, varMap),
+          delay_days: delayByStep[1].days,
+          delay_hours: delayByStep[1].hours,
+          stop_on_reply: true,
+          variables: {},
+        });
+
+        for (let step = 2; step <= 1 + followCount; step++) {
+          const idx = step - 2;
+          const tpl = followUps[idx];
+          if (!tpl) continue;
+          emails.push({
+            id: `email_${step}_${cid}`,
+            step_number: step,
+            subject: applyVariables(String(tpl.subject || ""), varMap),
+            body: applyVariables(String(tpl.body || ""), varMap),
+            delay_days: delayByStep[step]?.days ?? 0,
+            delay_hours: delayByStep[step]?.hours ?? 0,
             stop_on_reply: true,
             variables: {},
-          },
-          {
-            id: `email_2_${cid}`,
-            step_number: 2,
-            subject: followUps[0].subject,
-            body: followUps[0].body,
-            delay_days: 2,
-            delay_hours: 0,
-            stop_on_reply: true,
-            variables: {},
-          },
-          {
-            id: `email_3_${cid}`,
-            step_number: 3,
-            subject: followUps[1].subject,
-            body: followUps[1].body,
-            delay_days: 4,
-            delay_hours: 0,
-            stop_on_reply: true,
-            variables: {},
-          },
-        ];
+            template_variant_index: 0,
+          });
+        }
 
         byContact[cid] = {
           id: `campaign_${cid}`,
@@ -500,6 +532,7 @@ export default function CampaignPage() {
           emails: emails.map((e) => ({ ...e })),
           created_at: now,
           updated_at: now,
+          followups_enabled_count: followCount,
         };
       }
       setCampaignByContact(byContact);
@@ -513,42 +546,6 @@ export default function CampaignPage() {
     }
   };
 
-  const runDeliverabilityCheck = async () => {
-    try {
-      if (!campaign) return;
-      setError(null);
-      // Use backend GPT deliverability analyzer (with deterministic fallback)
-      const contacts = (() => {
-        try {
-          return JSON.parse(localStorage.getItem("selected_contacts") || "[]");
-        } catch {
-          return [];
-        }
-      })();
-
-      const resp = await api<any>("/deliverability-launch/check", "POST", {
-        emails: campaign.emails.map((e) => ({
-          id: e.id,
-          step_number: e.step_number,
-          subject: applyVariables(e.subject, activeVarMap),
-          body: applyVariables(e.body, activeVarMap),
-          delay_days: e.delay_days,
-        })),
-        contacts,
-        user_mode: mode,
-      });
-
-      if (!resp?.success) throw new Error(resp?.message || "Deliverability check failed");
-      setDeliverabilityCheck({
-        overall_health_score: Number(resp.overall_health_score ?? 0) || 0,
-        summary: resp.summary || "",
-        reports: Array.isArray(resp.reports) ? resp.reports : [],
-      });
-    } catch (err) {
-      setError("Failed to run deliverability check.");
-    }
-  };
-
   const updateEmailStep = (stepId: string, updates: Partial<EmailStep>) => {
     if (!activeContactId) return;
     setCampaignByContact((prev) => {
@@ -556,6 +553,107 @@ export default function CampaignPage() {
       if (!cur) return prev;
       const updatedEmails = cur.emails.map((email) => (email.id === stepId ? { ...email, ...updates } : email));
       return { ...prev, [activeContactId]: { ...cur, emails: updatedEmails, updated_at: new Date().toISOString() } };
+    });
+  };
+
+  const setFollowupsCountAllContacts = (nextCount: number) => {
+    const n = Math.min(3, Math.max(0, Number(nextCount) || 0));
+    setFollowupsEnabledCount(n);
+    try {
+      localStorage.setItem("rf_campaign_followups_enabled_count", String(n));
+    } catch {}
+
+    const composed = (() => {
+      try {
+        const raw = localStorage.getItem("composed_email");
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    })();
+
+    setCampaignByContact((prev) => {
+      const out: Record<string, Campaign> = {};
+      for (const [cid, cur] of Object.entries(prev || {})) {
+        const contact = contactById.get(String(cid));
+        const persona = inferPersona(contact);
+        const followUps = buildFollowUps(persona);
+        const varMap = buildVarMapForContact(composed, cid);
+
+        const keep: EmailStep[] = (cur?.emails || [])
+          .filter((e) => Number(e.step_number) === 1 || (Number(e.step_number) >= 2 && Number(e.step_number) <= 1 + n))
+          .sort((a, b) => a.step_number - b.step_number)
+          .map((e) => ({ ...e }));
+
+        const haveSteps = new Set(keep.map((e) => Number(e.step_number)));
+        const delayByStep: Record<number, { days: number; hours: number }> = {
+          1: { days: 0, hours: 0 },
+          2: { days: 2, hours: 0 },
+          3: { days: 4, hours: 0 },
+          4: { days: 7, hours: 0 },
+        };
+
+        for (let step = 2; step <= 1 + n; step++) {
+          if (haveSteps.has(step)) continue;
+          const idx = step - 2;
+          const tpl = followUps[idx];
+          if (!tpl) continue;
+          keep.push({
+            id: `email_${step}_${cid}`,
+            step_number: step,
+            subject: applyVariables(String(tpl.subject || ""), varMap),
+            body: applyVariables(String(tpl.body || ""), varMap),
+            delay_days: delayByStep[step]?.days ?? 0,
+            delay_hours: delayByStep[step]?.hours ?? 0,
+            stop_on_reply: true,
+            variables: {},
+            template_variant_index: 0,
+          });
+        }
+
+        keep.sort((a, b) => a.step_number - b.step_number);
+
+        out[cid] = {
+          ...(cur as Campaign),
+          emails: keep,
+          updated_at: new Date().toISOString(),
+          followups_enabled_count: n,
+        };
+      }
+      try {
+        localStorage.setItem("campaign_by_contact", JSON.stringify(out));
+      } catch {}
+      return out;
+    });
+
+    // If we reduced the length, ensure the selected step is still valid.
+    setActiveStepNumber((s) => Math.min(s, 1 + n));
+  };
+
+  const resetActiveFollowUpToTemplate = (stepNumber: number) => {
+    if (!activeContactId) return;
+    if (stepNumber < 2 || stepNumber > 4) return;
+    const cid = String(activeContactId);
+    const contact = contactById.get(cid);
+    const persona = inferPersona(contact);
+    const followUps = buildFollowUps(persona);
+    const tpl = followUps[stepNumber - 2];
+    if (!tpl) return;
+    const composed = (() => {
+      try {
+        const raw = localStorage.getItem("composed_email");
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    })();
+    const varMap = buildVarMapForContact(composed, cid);
+    const target = campaign?.emails?.find((e) => Number(e.step_number) === stepNumber);
+    if (!target) return;
+    updateEmailStep(target.id, {
+      subject: applyVariables(String(tpl.subject || ""), varMap),
+      body: applyVariables(String(tpl.body || ""), varMap),
+      template_variant_index: 0,
     });
   };
 
@@ -580,28 +678,6 @@ export default function CampaignPage() {
     }
   };
 
-  const getHealthScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
-  const applyDeliverabilityFix = (stepNumber: number) => {
-    if (!campaign || !deliverabilityCheck) return;
-    const report = deliverabilityCheck.reports.find((r) => r.step_number === stepNumber);
-    if (!report) return;
-    const improvedSubject = String(report.improved_subject || "").trim();
-    const improvedBody = String(report.improved_body || "").trim();
-    if (!improvedSubject && !improvedBody) return;
-
-    const target = campaign.emails.find((e) => e.step_number === stepNumber);
-    if (!target) return;
-    updateEmailStep(target.id, {
-      subject: improvedSubject || target.subject,
-      body: improvedBody || target.body,
-    });
-  };
-
   return (
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
@@ -615,13 +691,13 @@ export default function CampaignPage() {
             <h1 className="text-3xl font-bold text-white mb-2">Email Campaign Sequence</h1>
             <p className="text-white/70">
               {mode === 'job-seeker' 
-                ? 'Your 3-email outreach sequence to land the job.'
-                : 'Your 3-email sequence to pitch the candidate.'
+                ? `Your outreach sequence (${1 + followupsEnabledCount} email${1 + followupsEnabledCount === 1 ? "" : "s"}).`
+                : `Your candidate pitch sequence (${1 + followupsEnabledCount} email${1 + followupsEnabledCount === 1 ? "" : "s"}).`
               }
             </p>
             {buildStamp ? (
               <div className="mt-2 text-[11px] text-white/40 font-mono">
-                {buildStamp} • previewWithValues: {String(previewWithValues)}
+                {buildStamp}
               </div>
             ) : null}
           </div>
@@ -775,9 +851,18 @@ export default function CampaignPage() {
                               if (!campaign) return;
                               const first = campaign.emails.find((e) => e.step_number === 1);
                               if (!first) return;
+                              const composed = (() => {
+                                try {
+                                  const raw = localStorage.getItem("composed_email");
+                                  return raw ? JSON.parse(raw) : null;
+                                } catch {
+                                  return null;
+                                }
+                              })();
+                              const varMap = buildVarMapForContact(composed, String(activeContactId || ""));
                               updateEmailStep(first.id, {
-                                subject: String(v.subject || first.subject),
-                                body: String(v.body || first.body),
+                                subject: applyVariables(String(v.subject || first.subject), varMap),
+                                body: applyVariables(String(v.body || first.body), varMap),
                               });
                             }}
                             className="shrink-0 px-3 py-2 rounded-md bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700"
@@ -809,121 +894,171 @@ export default function CampaignPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div className="text-xs text-white/60">
-                  Selecting a contact switches to their sequence (subjects/follow-ups vary by persona, and previews use that contact’s research).
+                  Selecting a contact switches to their sequence (follow-ups vary by persona, and we avoid showing raw placeholders here).
                 </div>
-                <label className="flex items-center gap-2 text-xs text-white/70">
-                  <input
-                    type="checkbox"
-                    checked={previewWithValues}
-                    onChange={(e) => setPreviewWithValues(e.target.checked)}
-                  />
-                  Preview with values
-                </label>
+                <div className="flex items-center gap-2">
+                  <div className="text-xs text-white/60 mr-1">Include:</div>
+                  {[
+                    { step: 2, label: "Email 2" },
+                    { step: 3, label: "Email 3" },
+                    { step: 4, label: "Email 4 (breakup)" },
+                  ].map((x) => {
+                    const enabled = followupsEnabledCount >= x.step - 1;
+                    return (
+                      <button
+                        key={`fu_${x.step}`}
+                        type="button"
+                        onClick={() => {
+                          const next = enabled ? (x.step - 2) : (x.step - 1);
+                          setFollowupsCountAllContacts(next);
+                        }}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                          enabled
+                            ? "bg-emerald-500/20 border-emerald-400/40 text-emerald-200 hover:bg-emerald-500/25"
+                            : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
+                        }`}
+                      >
+                        {x.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              {/* Email Steps */}
+              {/* Email Steps (single-pane editor to avoid overwhelming "brackets everywhere") */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">Email Sequence</h3>
-                <div className="space-y-6">
-                  {campaign.emails.map((email, index) => (
-                    <div key={email.id} className="border border-gray-200 rounded-lg p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="bg-orange-500/15 text-orange-300 border border-orange-400/30 px-3 py-1.5 rounded-full text-base font-extrabold">
-                            Step {email.step_number}
+                {(() => {
+                  const sorted = [...(campaign.emails || [])].sort((a, b) => a.step_number - b.step_number);
+                  const activeEmail = sorted.find((e) => Number(e.step_number) === Number(activeStepNumber)) || sorted[0] || null;
+                  if (!activeEmail) return <div className="text-sm text-white/70">No emails in this campaign.</div>;
+                  const fmtDelay = (email: EmailStep) => {
+                    const days = Number(email.delay_days || 0) || 0;
+                    const hours = Number((email as any)?.delay_hours || 0) || 0;
+                    if (days > 0) return `${days} day${days === 1 ? "" : "s"} later`;
+                    if (hours > 0) return `${hours} hour${hours === 1 ? "" : "s"} later`;
+                    return "Immediate";
+                  };
+                  return (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                      <div className="lg:col-span-4">
+                        <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+                          <div className="text-sm font-semibold text-white/85">Emails</div>
+                          <div className="mt-2 space-y-2">
+                            {sorted.map((email) => {
+                              const active = Number(email.step_number) === Number(activeEmail.step_number);
+                              return (
+                                <button
+                                  key={`step_${email.id}`}
+                                  type="button"
+                                  onClick={() => setActiveStepNumber(Number(email.step_number))}
+                                  className={`w-full text-left rounded-md border px-3 py-2 transition-colors ${
+                                    active ? "border-orange-400/50 bg-orange-500/10" : "border-white/10 bg-white/5 hover:bg-white/10"
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between gap-3">
+                                    <div className="text-sm font-semibold text-white/90">Email {email.step_number}</div>
+                                    <div className="text-[11px] text-white/60">{fmtDelay(email)}</div>
+                                  </div>
+                                  <div className="mt-1 text-xs text-white/60 truncate">
+                                    {String(email.subject || "").trim() || "(no subject)"}
+                                  </div>
+                                </button>
+                              );
+                            })}
                           </div>
-                          <div className="text-base font-bold text-orange-300">
-                            {(() => {
-                              const days = Number(email.delay_days || 0) || 0;
-                              const hours = Number((email as any)?.delay_hours || 0) || 0;
-                              if (days > 0) return `${days} day${days === 1 ? "" : "s"} later`;
-                              if (hours > 0) return `${hours} hour${hours === 1 ? "" : "s"} later`;
-                              return "Immediate";
-                            })()}
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <label className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              checked={email.stop_on_reply}
-                              onChange={(e) => updateEmailStep(email.id, { stop_on_reply: e.target.checked })}
-                              className="text-blue-600 focus:ring-blue-500"
-                            />
-                            <span className="text-sm text-gray-600">Stop on reply</span>
-                          </label>
                         </div>
                       </div>
 
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Subject Line
-                          </label>
-                          <input
-                            type="text"
-                            value={email.subject}
-                            onChange={(e) => updateEmailStep(email.id, { subject: e.target.value })}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Email Body
-                          </label>
-                          <textarea
-                            value={email.body}
-                            onChange={(e) => updateEmailStep(email.id, { body: e.target.value })}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 h-32"
-                          />
-                        </div>
-
-                        {previewWithValues ? (
-                          <div className="rounded-md border border-white/10 bg-white/5 p-3">
-                            <div className="text-xs font-semibold text-white/80 mb-2">Preview (with values)</div>
-                            <div className="text-xs text-white/70 mb-2">
-                              Subject: {applyVariables(email.subject, activeVarMap)}
+                      <div className="lg:col-span-8">
+                        <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                          <div className="flex items-start justify-between gap-3 mb-4">
+                            <div>
+                              <div className="text-sm font-bold text-white">Email {activeEmail.step_number}</div>
+                              <div className="text-xs text-white/60 mt-1">{fmtDelay(activeEmail)}</div>
                             </div>
-                            <pre className="whitespace-pre-wrap text-sm text-white/70">
-                              {applyVariables(email.body, activeVarMap)}
-                            </pre>
+                            {Number(activeEmail.step_number) >= 2 ? (
+                              <button
+                                type="button"
+                                onClick={() => resetActiveFollowUpToTemplate(Number(activeEmail.step_number))}
+                                className="shrink-0 px-3 py-2 rounded-md bg-white/5 border border-white/10 text-white/80 text-xs font-semibold hover:bg-white/10"
+                              >
+                                Reset to template
+                              </button>
+                            ) : null}
                           </div>
-                        ) : null}
 
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Delay (Days)
-                            </label>
-                            <input
-                              type="number"
-                              value={email.delay_days}
-                              onChange={(e) => updateEmailStep(email.id, { delay_days: parseInt(e.target.value) || 0 })}
-                              className="w-full border border-gray-300 rounded-md px-3 py-2"
-                              min="0"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Delay (Hours)
-                            </label>
-                            <input
-                              type="number"
-                              value={email.delay_hours}
-                              onChange={(e) => updateEmailStep(email.id, { delay_hours: parseInt(e.target.value) || 0 })}
-                              className="w-full border border-gray-300 rounded-md px-3 py-2"
-                              min="0"
-                              max="23"
-                            />
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-white/80 mb-2">
+                                Subject
+                              </label>
+                              <input
+                                type="text"
+                                value={activeEmail.subject}
+                                onChange={(e) => updateEmailStep(activeEmail.id, { subject: e.target.value })}
+                                className="w-full rounded-md px-3 py-2 bg-white/5 border border-white/10 text-white"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-white/80 mb-2">
+                                Body
+                              </label>
+                              <textarea
+                                value={activeEmail.body}
+                                onChange={(e) => updateEmailStep(activeEmail.id, { body: e.target.value })}
+                                className="w-full rounded-md px-3 py-2 bg-white/5 border border-white/10 text-white h-44"
+                              />
+                            </div>
+
+                            <div className="flex items-center justify-between gap-3">
+                              <label className="flex items-center gap-2 text-xs text-white/70">
+                                <input
+                                  type="checkbox"
+                                  checked={activeEmail.stop_on_reply}
+                                  onChange={(e) => updateEmailStep(activeEmail.id, { stop_on_reply: e.target.checked })}
+                                />
+                                Stop on reply
+                              </label>
+                              <div className="text-xs text-white/60">Timing</div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-white/80 mb-2">
+                                  Delay (Days)
+                                </label>
+                                <input
+                                  type="number"
+                                  value={activeEmail.delay_days}
+                                  onChange={(e) => updateEmailStep(activeEmail.id, { delay_days: parseInt(e.target.value) || 0 })}
+                                  className="w-full rounded-md px-3 py-2 bg-white/5 border border-white/10 text-white"
+                                  min="0"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-white/80 mb-2">
+                                  Delay (Hours)
+                                </label>
+                                <input
+                                  type="number"
+                                  value={activeEmail.delay_hours}
+                                  onChange={(e) => updateEmailStep(activeEmail.id, { delay_hours: parseInt(e.target.value) || 0 })}
+                                  className="w-full rounded-md px-3 py-2 bg-white/5 border border-white/10 text-white"
+                                  min="0"
+                                  max="23"
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })()}
               </div>
 
               {/* Action Buttons */}
