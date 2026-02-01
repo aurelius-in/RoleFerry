@@ -43,6 +43,7 @@ export default function BioPageStep() {
   const [offerDraft, setOfferDraft] = useState<any>(null);
   const [bioUrl, setBioUrl] = useState<string>("");
   const [profileImageUrl, setProfileImageUrl] = useState<string>("");
+  const [resumeMeta, setResumeMeta] = useState<any>(null);
 
   useEffect(() => {
     // Load cached draft if available for quick UX
@@ -59,6 +60,13 @@ export default function BioPageStep() {
       setResumeExtract(rawResume ? JSON.parse(rawResume) : null);
     } catch {
       setResumeExtract(null);
+    }
+
+    try {
+      const metaRaw = localStorage.getItem("resume_extract_meta");
+      setResumeMeta(metaRaw ? JSON.parse(metaRaw) : null);
+    } catch {
+      setResumeMeta(null);
     }
 
     try {
@@ -207,6 +215,14 @@ export default function BioPageStep() {
     return "";
   }, [bioUrl, draft]);
 
+  const resumeSnapshot = useMemo(() => {
+    // Prefer the parsed resume from the Resume step (source of truth for public rendering).
+    // Fall back to whatever came back in the draft payload.
+    return resumeExtract || (draft as any)?.resume_extract || null;
+  }, [resumeExtract, draft]);
+
+  const asArr = (v: any) => (Array.isArray(v) ? v : []);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 to-blue-950 text-white py-8">
       <div className="max-w-6xl mx-auto px-4">
@@ -349,7 +365,7 @@ export default function BioPageStep() {
                     </div>
                     <div className="rounded-lg border border-white/10 bg-white/5 p-4">
                       <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">
-                        Fit for this role
+                        Core strengths
                       </div>
                       {draft.fit_points?.length ? (
                         <ul className="text-sm text-white/80 list-disc list-inside space-y-1">
@@ -367,9 +383,134 @@ export default function BioPageStep() {
                     <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">
                       Resume snapshot (from parsed resume)
                     </div>
-                    <div className="text-sm text-white/70">
-                      This section will render from your Resume step data on the public page.
-                    </div>
+                    {!resumeSnapshot ? (
+                      <div className="text-sm text-white/70">
+                        No resume data found yet. Go to{" "}
+                        <a href="/resume" className="underline text-white/80 hover:text-white">
+                          Resume
+                        </a>{" "}
+                        and upload a file to populate this section.
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="text-[11px] text-white/50">
+                          Source: <span className="text-white/70 font-mono">resume_extract</span>
+                          {safeStr(resumeMeta?.filename) ? (
+                            <span className="text-white/50"> • {safeStr(resumeMeta.filename)}</span>
+                          ) : null}
+                          {safeStr(resumeMeta?.updated_at) ? (
+                            <span className="text-white/50"> • updated {safeStr(resumeMeta.updated_at)}</span>
+                          ) : null}
+                        </div>
+
+                        {/* Experience */}
+                        <div>
+                          <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Experience</div>
+                          {asArr((resumeSnapshot as any)?.positions).length ? (
+                            <div className="space-y-2">
+                              {asArr((resumeSnapshot as any)?.positions)
+                                .slice(0, 3)
+                                .map((p: any, i: number) => {
+                                  const company = safeStr(p?.company);
+                                  const title = safeStr(p?.title);
+                                  const start = safeStr(p?.startDate || p?.start_date);
+                                  const end = safeStr(p?.endDate || p?.end_date);
+                                  const current = Boolean(p?.current);
+                                  const dates = [start, current ? "Present" : end].filter(Boolean).join(" — ");
+                                  return (
+                                    <div key={`pos_${i}`} className="rounded-md border border-white/10 bg-black/20 p-3">
+                                      <div className="text-sm text-white/85 font-semibold">
+                                        {company || "Company"}{title ? <span className="text-white/60"> • {title}</span> : null}
+                                      </div>
+                                      {dates ? <div className="mt-1 text-xs text-white/55">{dates}</div> : null}
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-white/60">No positions extracted.</div>
+                          )}
+                        </div>
+
+                        {/* Skills */}
+                        <div>
+                          <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Skills</div>
+                          {asArr((resumeSnapshot as any)?.skills).length ? (
+                            <div className="flex flex-wrap gap-2">
+                              {asArr((resumeSnapshot as any)?.skills)
+                                .slice(0, 14)
+                                .map((s: any, i: number) => (
+                                  <span
+                                    key={`sk_${i}`}
+                                    className="px-2.5 py-1 rounded-full border border-white/10 bg-black/20 text-xs text-white/75"
+                                  >
+                                    {safeStr(s) || "Skill"}
+                                  </span>
+                                ))}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-white/60">No skills extracted.</div>
+                          )}
+                        </div>
+
+                        {/* Highlights */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+                            <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Key metrics</div>
+                            {asArr((resumeSnapshot as any)?.keyMetrics).length ? (
+                              <ul className="text-sm text-white/75 list-disc list-inside space-y-1">
+                                {asArr((resumeSnapshot as any)?.keyMetrics)
+                                  .slice(0, 4)
+                                  .map((m: any, i: number) => (
+                                    <li key={`km_${i}`}>
+                                      {safeStr(m?.metric) || "Metric"}{safeStr(m?.value) ? `: ${safeStr(m.value)}` : ""}
+                                    </li>
+                                  ))}
+                              </ul>
+                            ) : (
+                              <div className="text-sm text-white/60">No metrics extracted.</div>
+                            )}
+                          </div>
+                          <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+                            <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Accomplishments</div>
+                            {asArr((resumeSnapshot as any)?.accomplishments).length ? (
+                              <ul className="text-sm text-white/75 list-disc list-inside space-y-1">
+                                {asArr((resumeSnapshot as any)?.accomplishments)
+                                  .slice(0, 4)
+                                  .map((t: any, i: number) => (
+                                    <li key={`acc_${i}`}>{safeStr(t) || "Accomplishment"}</li>
+                                  ))}
+                              </ul>
+                            ) : (
+                              <div className="text-sm text-white/60">No accomplishments extracted.</div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Education */}
+                        <div>
+                          <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Education</div>
+                          {asArr((resumeSnapshot as any)?.education).length ? (
+                            <ul className="text-sm text-white/75 list-disc list-inside space-y-1">
+                              {asArr((resumeSnapshot as any)?.education)
+                                .slice(0, 2)
+                                .map((e: any, i: number) => {
+                                  const school = safeStr(e?.school);
+                                  const degree = safeStr(e?.degree);
+                                  const field = safeStr(e?.field);
+                                  const years = [safeStr(e?.startYear || e?.start_year), safeStr(e?.endYear || e?.end_year)]
+                                    .filter(Boolean)
+                                    .join("–");
+                                  const line = [school, [degree, field].filter(Boolean).join(" • "), years].filter(Boolean).join(" — ");
+                                  return <li key={`edu_${i}`}>{line || "Education"}</li>;
+                                })}
+                            </ul>
+                          ) : (
+                            <div className="text-sm text-white/60">No education extracted.</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -379,10 +520,10 @@ export default function BioPageStep() {
 
         <div className="mt-6 flex justify-end">
           <Link
-            href="/compose"
+            href="/deliverability-launch"
             className="px-6 py-3 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700"
           >
-            Continue to Compose →
+            Continue to Deliverability + Launch →
           </Link>
         </div>
       </div>

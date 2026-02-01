@@ -55,6 +55,7 @@ interface ComposeResponse {
 export default function ComposePage() {
   const router = useRouter();
   const [mode, setMode] = useState<'job-seeker' | 'recruiter'>('job-seeker');
+  const [hasMounted, setHasMounted] = useState(false);
   const [offerTone, setOfferTone] = useState<AudienceTone>('manager');
   const [selectedTone, setSelectedTone] = useState<AudienceTone>('manager'); // message tone (can override)
   const [customTone, setCustomTone] = useState("");
@@ -76,10 +77,15 @@ export default function ComposePage() {
   const [offerLibrary, setOfferLibrary] = useState<Offer[]>([]);
   const [activeOfferId, setActiveOfferId] = useState<string | null>(null);
   const [offerNotice, setOfferNotice] = useState<string | null>(null);
+  const [isGeneratingOffer, setIsGeneratingOffer] = useState(false);
 
   // Legacy key support (built dynamically to avoid keeping old terminology in code/UI).
   const legacyPainpointKey = ["pin", "point_matches"].join("");
   const legacyPainpointField = (n: number) => `${["pin", "point_"].join("")}${n}`;
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const readActiveResearch = () => {
     // Prefer per-contact research for the currently active contact, then fall back to the last selected blob.
@@ -106,6 +112,87 @@ export default function ComposePage() {
       return JSON.parse(localStorage.getItem("context_research") || "{}");
     } catch {
       return {};
+    }
+  };
+
+  const readPainpointMatches = (): any[] => {
+    try {
+      const selectedJobId = String(localStorage.getItem("selected_job_description_id") || "").trim();
+      const byJobRaw = localStorage.getItem("painpoint_matches_by_job");
+      if (selectedJobId && byJobRaw) {
+        const byJob = JSON.parse(byJobRaw) as Record<string, any[]>;
+        const hits = byJob?.[selectedJobId] || [];
+        if (Array.isArray(hits) && hits.length) return hits;
+      }
+    } catch {}
+    try {
+      const legacyKey = ["pin", "point_matches"].join("");
+      const matches =
+        JSON.parse(localStorage.getItem("painpoint_matches") || "null") ||
+        JSON.parse(localStorage.getItem(legacyKey) || "[]") ||
+        JSON.parse(localStorage.getItem("pain_point_matches") || "[]");
+      return Array.isArray(matches) ? matches : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const generateOffer = async () => {
+    if (!hasMounted) return;
+    setError(null);
+    setOfferNotice(null);
+    setIsGeneratingOffer(true);
+    try {
+      const painpointMatches = readPainpointMatches();
+      if (!painpointMatches.length) throw new Error("Missing pain point matches. Run Pain Point Match first.");
+      const research = readActiveResearch();
+      const resp = await api<any>("/offer-creation/create", "POST", {
+        painpoint_matches: painpointMatches,
+        tone: offerTone,
+        custom_tone: offerTone === "custom" ? (customTone || "") : null,
+        format: "text",
+        user_mode: mode,
+        context_research: research,
+      });
+      if (!resp?.success) throw new Error(resp?.message || "Offer generation failed");
+      const offer = resp?.offer || null;
+      const body = String(offer?.content || "").trim();
+      const title = String(offer?.title || "").trim();
+      if (!body) throw new Error("Offer generation returned empty content");
+
+      // Use this offer as the active payload in Compose.
+      setOfferSnippetOverride(body);
+      setVariableOverrides((prev) => {
+        const next = { ...(prev || {}) };
+        if (title) next["{{offer_title}}"] = title;
+        return next;
+      });
+
+      // Save locally into created_offers so Offer Library stays useful without auth.
+      try {
+        const created = JSON.parse(localStorage.getItem("created_offers") || "[]");
+        const list = Array.isArray(created) ? created : [];
+        const o: Offer = {
+          id: String(offer?.id || `local_${Date.now()}`),
+          title: title || "Offer",
+          content: body,
+          tone: offerTone,
+          format: "text",
+          url: "",
+          created_at: new Date().toISOString(),
+        };
+        list.push(o as any);
+        localStorage.setItem("created_offers", JSON.stringify(list));
+        setOfferLibrary(list as any);
+        setActiveOfferId(o.id);
+      } catch {}
+
+      setOfferNotice("New offer generated. Edit the offer line below, or regenerate.");
+      window.setTimeout(() => setOfferNotice(null), 2400);
+    } catch (e: any) {
+      setError(String(e?.message || "Failed to generate offer."));
+    } finally {
+      setIsGeneratingOffer(false);
     }
   };
 
@@ -667,7 +754,7 @@ export default function ComposePage() {
         localStorage.setItem("compose_variables", JSON.stringify(currentVariables));
       } catch {}
       localStorage.setItem('composed_email', JSON.stringify(emailTemplate));
-      router.push('/campaign');
+      router.push('/bio-page');
     }
   };
 
@@ -716,15 +803,15 @@ export default function ComposePage() {
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-4">
-          <a href="/offer-creation" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
-            <span className="mr-2">←</span> Back to Offer
+          <a href="/find-contact" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+            <span className="mr-2">←</span> Back to Decision Makers
           </a>
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Compose (Email 1)</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Compose</h1>
             <p className="text-white/70">
-              Craft the primary message (Email 1). The next step, <span className="font-semibold text-white/80">Campaign</span>, generates follow-ups (Emails 2–3) per contact.
+              Offer creation + email drafting in one place. Next step: <span className="font-semibold text-white/80">Bio Page</span>.
             </p>
             {buildStamp ? (
               <div className="mt-2 text-[11px] text-white/40 font-mono">
@@ -752,16 +839,17 @@ export default function ComposePage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => router.push("/offer-creation")}
+                    onClick={generateOffer}
+                    disabled={!hasMounted || isGeneratingOffer}
                     className="text-xs underline text-white/70 hover:text-white"
                   >
-                    Create/Edit →
+                    {isGeneratingOffer ? "Generating…" : "Generate offer →"}
                   </button>
                 </div>
 
                 {offerLibrary.length === 0 ? (
                   <div className="mt-3 text-sm text-white/60">
-                    No saved offers yet. Go back to Offer Creation and generate 2–3 options.
+                    No saved offers yet. Click “Generate offer →” to create one.
                   </div>
                 ) : (
                   <div className="mt-3 space-y-2 max-h-[520px] overflow-auto pr-1">
@@ -832,7 +920,7 @@ export default function ComposePage() {
           <div className="mb-8 rounded-lg border border-white/10 bg-black/20 p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="text-sm font-bold text-white">Offer payload (used in the email)</div>
+                <div className="text-sm font-bold text-white">Offer (used in the email)</div>
                 <div className="text-xs text-white/60">
                   Offer tone: <span className="text-white/80 font-semibold capitalize">{offerTone}</span>
                   {offerTone === "custom" && customTone ? (
@@ -843,10 +931,11 @@ export default function ComposePage() {
               </div>
               <button
                 type="button"
-                onClick={() => router.push("/offer-creation")}
-                className="text-xs underline text-white/70 hover:text-white"
+                onClick={generateOffer}
+                disabled={!hasMounted || isGeneratingOffer}
+                className="text-xs underline text-white/70 hover:text-white disabled:opacity-50"
               >
-                Change in Offer →
+                {isGeneratingOffer ? "Generating…" : "Regenerate offer"}
               </button>
             </div>
 
@@ -1139,7 +1228,7 @@ export default function ComposePage() {
               {/* Action Buttons */}
               <div className="flex justify-end space-x-4">
                 <button
-                  onClick={() => router.push('/offer-creation')}
+                  onClick={() => router.push('/find-contact')}
                   className="bg-gray-100 text-gray-700 px-6 py-3 rounded-md font-medium hover:bg-gray-200 transition-colors"
                 >
                   Back
@@ -1148,7 +1237,7 @@ export default function ComposePage() {
                   onClick={handleContinue}
                   className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
                 >
-                  Continue to Campaign
+                  Continue to Bio Page
                 </button>
               </div>
             </div>
