@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '@/lib/api';
 import { DataMode, getCurrentDataMode, subscribeToDataModeChanges } from '@/lib/dataMode';
-import StarRating from '@/components/StarRating';
 import { formatCompanyName } from "@/lib/format";
 
 type TrackerMode = 'jobseeker' | 'recruiter';
@@ -11,7 +10,11 @@ type TrackerApp = {
   id: string;
   company: { name: string; logo?: string };
   role: string;
-  difficulty?: Difficulty;
+  // Job seeker preference (how much you want this job): 1..5 stars
+  preferenceStars?: PreferenceStars;
+  // Back-compat: old field (no longer used by UI)
+  difficulty?: any;
+  favoriteRank?: number | null;
   status: string;
   appliedDate: string;
   lastContact: string;
@@ -23,20 +26,13 @@ type TrackerApp = {
 };
 
 const STORAGE_KEY = "tracker_applications";
-type Difficulty = "Easy" | "Stretch" | "Hard";
+type PreferenceStars = 1 | 2 | 3 | 4 | 5;
 
-function cycleDifficulty(cur?: Difficulty): Difficulty | undefined {
-  if (!cur) return "Easy";
-  if (cur === "Easy") return "Stretch";
-  if (cur === "Stretch") return "Hard";
-  return undefined;
-}
-
-function difficultyClass(d?: Difficulty) {
-  if (d === "Easy") return "bg-green-500/20 text-green-300 border-green-400/30 hover:bg-green-500/25";
-  if (d === "Stretch") return "bg-yellow-500/20 text-yellow-200 border-yellow-400/30 hover:bg-yellow-500/25";
-  if (d === "Hard") return "bg-red-500/20 text-red-200 border-red-400/30 hover:bg-red-500/25";
-  return "bg-white/5 text-white/70 border-white/10 hover:bg-white/10";
+function clampPreferenceStars(n: any): PreferenceStars | undefined {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return undefined;
+  if (x < 1 || x > 5) return undefined;
+  return x as PreferenceStars;
 }
 
 function todayISO() {
@@ -97,13 +93,60 @@ export default function TrackerPage() {
 
   useEffect(() => subscribeToDataModeChanges(setDataMode), []);
 
+  const normalizeApps = (list: any[]): TrackerApp[] => {
+    return (Array.isArray(list) ? list : []).map((a: any) => {
+      const out: any = { ...a };
+      const pref = clampPreferenceStars(out?.preferenceStars);
+      if (pref) out.preferenceStars = pref;
+      else delete out.preferenceStars;
+      // Drop old difficulty field (no longer shown)
+      if (out.difficulty !== undefined) delete out.difficulty;
+      return out as TrackerApp;
+    });
+  };
+
+  const setPreferenceStars = (appId: string, stars: PreferenceStars | undefined) => {
+    setApplications((prev) =>
+      prev.map((a) => (a.id === appId ? { ...a, preferenceStars: stars } : a))
+    );
+  };
+
+  const renderPreferencePicker = (app: TrackerApp) => {
+    const cur = clampPreferenceStars((app as any)?.preferenceStars);
+    const stars = [1, 2, 3, 4, 5] as PreferenceStars[];
+    return (
+      <div className="inline-flex items-center gap-0.5 rounded-md border border-white/10 bg-black/20 px-2 py-1">
+        {stars.map((s) => {
+          const filled = (cur || 0) >= s;
+          return (
+            <button
+              key={`pref_${app.id}_${s}`}
+              type="button"
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setPreferenceStars(app.id, cur === s ? undefined : s);
+              }}
+              className={`text-[14px] leading-none ${filled ? "text-yellow-300" : "text-white/25"} hover:text-yellow-200`}
+              aria-label={`Set preference to ${s} star${s === 1 ? "" : "s"}`}
+              title={`Preference: ${s}/5`}
+            >
+              ★
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+
   useEffect(() => {
     if (dataMode === 'demo') {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         const parsed = raw ? JSON.parse(raw) : null;
         if (Array.isArray(parsed) && parsed.length) {
-          setApplications(parsed);
+          setApplications(normalizeApps(parsed));
           setHasLoaded(true);
           return;
         }
@@ -115,7 +158,7 @@ export default function TrackerPage() {
         appliedDate: String(a.appliedDate || todayISO()),
         lastContact: String(a.lastContact || todayISO()),
       })) as TrackerApp[];
-      setApplications(seeded);
+      setApplications(normalizeApps(seeded as any));
       setHasLoaded(true);
     } else {
       // Live mode - for now we still use local storage as primary UI state
@@ -123,7 +166,7 @@ export default function TrackerPage() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         const parsed = raw ? JSON.parse(raw) : [];
-        setApplications(Array.isArray(parsed) ? parsed : []);
+        setApplications(normalizeApps(Array.isArray(parsed) ? parsed : []));
       } catch {}
       setHasLoaded(true);
     }
@@ -136,7 +179,7 @@ export default function TrackerPage() {
         const raw = localStorage.getItem(STORAGE_KEY);
         const parsed = raw ? JSON.parse(raw) : null;
         if (Array.isArray(parsed)) {
-          setApplications(parsed as any);
+          setApplications(normalizeApps(parsed as any));
         }
       } catch {
         // ignore
@@ -225,11 +268,11 @@ export default function TrackerPage() {
   };
 
   const exportCSV = () => {
-    const headers = ['Company', 'Role', 'Difficulty', 'Status', 'Applied Date', 'Last Contact', 'Reply Status'];
+    const headers = ['Company', 'Role', 'Preference (1-5)', 'Status', 'Applied Date', 'Last Contact', 'Reply Status'];
     const rows = applications.map(app => [
       app.company.name,
       app.role,
-      (app.difficulty || ''),
+      String(clampPreferenceStars((app as any)?.preferenceStars) || ''),
       app.status,
       app.appliedDate,
       app.lastContact,
@@ -344,23 +387,7 @@ export default function TrackerPage() {
                             <div className="text-xs text-slate-400 truncate">{formatCompanyName(app.company.name)}</div>
                           </div>
                           <div className="shrink-0">
-                            <button
-                              type="button"
-                              title="How difficult do you expect this job will be to get? (Self‑reported.)"
-                              onMouseDown={(e) => e.stopPropagation()}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setApplications((prev) =>
-                                  prev.map((a) =>
-                                    a.id === app.id ? { ...a, difficulty: cycleDifficulty(a.difficulty) } : a
-                                  )
-                                );
-                              }}
-                              className={`rounded-md border px-2 py-1 text-[11px] font-extrabold transition-colors ${difficultyClass(app.difficulty)}`}
-                            >
-                              {app.difficulty ?? "Difficulty"}
-                            </button>
+                            {renderPreferencePicker(app)}
                           </div>
                         </div>
                         
@@ -412,7 +439,7 @@ export default function TrackerPage() {
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-400">Company</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-400">Role</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-400">Difficulty</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-400">Preference</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-400">Status</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-400">Applied</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-400">Last Contact</th>
@@ -426,18 +453,7 @@ export default function TrackerPage() {
                     <td className="px-4 py-3">{formatCompanyName(app.company.name)}</td>
                     <td className="px-4 py-3">{app.role}</td>
                     <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        title="How difficult do you expect this job will be to get? (Self‑reported.)"
-                        onClick={() =>
-                          setApplications((prev) =>
-                            prev.map((a) => (a.id === app.id ? { ...a, difficulty: cycleDifficulty(a.difficulty) } : a))
-                          )
-                        }
-                        className={`rounded-md border px-2 py-1 text-[11px] font-extrabold transition-colors ${difficultyClass(app.difficulty)}`}
-                      >
-                        {app.difficulty ?? "Difficulty"}
-                      </button>
+                      {renderPreferencePicker(app)}
                     </td>
                     <td className="px-4 py-3">
                       <select

@@ -29,8 +29,8 @@ function extractJargon(text: string): string[] {
   return found.map((p) => p.replace(/^\w/, (c) => c.toUpperCase()));
 }
 
-type Difficulty = "Easy" | "Stretch" | "Hard";
 type FavoriteRank = number; // 1..N (unique across the visible jobs)
+type PreferenceStars = 1 | 2 | 3 | 4 | 5;
 
 interface JobDescription {
   id: string;
@@ -51,10 +51,11 @@ interface JobDescription {
   jdJargon: string[];
   // New: user-selected preference rank (unique across the visible jobs).
   favoriteRank?: FavoriteRank;
-  // Legacy (kept for back-compat only)
-  difficulty?: Difficulty;
-  // Back-compat: older caches used "grade" (Shoo-in/Stretch/Ideal). We'll migrate to difficulty.
-  grade?: 'Shoo-in' | 'Stretch' | 'Ideal';
+  // New: user-selected preference (how much you want this job) as 1..5 stars.
+  preferenceStars?: PreferenceStars;
+  // Legacy (kept for back-compat reads only; dropped on load/persist)
+  difficulty?: any;
+  grade?: any;
   parsedAt: string;
 }
 
@@ -102,19 +103,11 @@ type JobRecommendation = {
   created_at?: string;
 };
 
-function migrateGradeToDifficulty(grade?: JobDescription["grade"]): Difficulty | undefined {
-  if (!grade) return undefined;
-  if (grade === "Shoo-in") return "Easy";
-  if (grade === "Stretch") return "Stretch";
-  return "Hard";
-}
-
-function cycleDifficulty(cur?: Difficulty): Difficulty | undefined {
-  // undefined == "Difficulty" (unset)
-  if (!cur) return "Easy";
-  if (cur === "Easy") return "Stretch";
-  if (cur === "Stretch") return "Hard";
-  return undefined;
+function clampPreferenceStars(n: any): PreferenceStars | undefined {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return undefined;
+  if (x < 1 || x > 5) return undefined;
+  return x as PreferenceStars;
 }
 
 function normalizeFavoriteRanks(list: JobDescription[]): JobDescription[] {
@@ -177,11 +170,12 @@ export default function JobDescriptionsPage() {
           return !isOldDemoId && !isOldDemoContent;
         });
 
-        // Migrate legacy grade -> difficulty, and drop legacy grade from persisted data.
+        // Drop legacy "difficulty/grade" (replaced by preferenceStars) and normalize ranks.
         const cleaned = normalizeFavoriteRanks(cleanedRaw.map((jd) => {
-          const difficulty = jd.difficulty ?? migrateGradeToDifficulty(jd.grade);
-          const { grade: _legacyGrade, ...rest } = jd as any;
-          return { ...rest, difficulty } as JobDescription;
+          const { grade: _legacyGrade, difficulty: _legacyDifficulty, ...rest } = jd as any;
+          const preferenceStars = clampPreferenceStars((jd as any)?.preferenceStars);
+          if (preferenceStars) return { ...rest, preferenceStars } as JobDescription;
+          return { ...rest } as JobDescription;
         }));
 
         setJobDescriptions(cleaned);
@@ -241,7 +235,7 @@ export default function JobDescriptionsPage() {
           requirements: (jd.requirements || undefined) as any,
           benefits: (jd.benefits || undefined) as any,
           jdJargon: extractJargon(jd.content || ""),
-          grade: undefined,
+          preferenceStars: undefined,
           parsedAt: jd.parsed_at || new Date().toISOString(),
         }));
 
@@ -305,11 +299,42 @@ export default function JobDescriptionsPage() {
     });
   };
 
-  const handleDifficultyChange = (id: string, difficulty?: Difficulty) => {
-    setJobDescriptions(prev => {
-      const next = prev.map(jd =>
-        jd.id === id ? { ...jd, difficulty } : jd
-      );
+  const renderPreferencePicker = (jd: JobDescription) => {
+    const cur = clampPreferenceStars((jd as any)?.preferenceStars);
+    const stars = [1, 2, 3, 4, 5] as PreferenceStars[];
+    return (
+      <div className="flex flex-col items-end gap-1">
+        <div className="text-[10px] font-semibold text-white/60">Preference</div>
+        <div className="inline-flex items-center gap-0.5 rounded-md border border-white/10 bg-black/20 px-2 py-1">
+          {stars.map((s) => {
+            const filled = (cur || 0) >= s;
+            return (
+              <button
+                key={`pref_${jd.id}_${s}`}
+                type="button"
+                onClick={() => handlePreferenceStarsChange(jd.id, cur === s ? null : s)}
+                className={`text-[14px] leading-none ${filled ? "text-yellow-300" : "text-white/25"} hover:text-yellow-200`}
+                aria-label={`Set preference to ${s} star${s === 1 ? "" : "s"}`}
+                title={`Preference: ${s}/5`}
+              >
+                ★
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const handlePreferenceStarsChange = (id: string, stars: PreferenceStars | null) => {
+    setJobDescriptions((prev) => {
+      const next = prev.map((jd) => {
+        if (jd.id !== id) return jd;
+        const out: JobDescription = { ...jd };
+        if (!stars) delete (out as any).preferenceStars;
+        else out.preferenceStars = stars;
+        return out;
+      });
       try { localStorage.setItem("job_descriptions", JSON.stringify(next)); } catch {}
       return next;
     });
@@ -387,6 +412,7 @@ export default function JobDescriptionsPage() {
         },
         role: jd.title,
         favoriteRank: jd.favoriteRank ?? null,
+        preferenceStars: jd.preferenceStars ?? null,
         status: "saved",
         appliedDate: new Date().toISOString().slice(0, 10),
         lastContact: new Date().toISOString().slice(0, 10),
@@ -748,6 +774,7 @@ export default function JobDescriptionsPage() {
                       )}
                     </div>
                     <div className="flex items-center space-x-4">
+                      {renderPreferencePicker(jd)}
                       {(() => {
                         const maxRank = jobDescriptions.length;
                         const current = Number((jd as any).favoriteRank);
