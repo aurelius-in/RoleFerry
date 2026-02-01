@@ -3,7 +3,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
-import HealthIndicator from "./HealthIndicator";
 import DataModal from "./DataModal";
 import ToolsModal from "./ToolsModal";
 import { DataMode, getCurrentDataMode, setCurrentDataMode } from "@/lib/dataMode";
@@ -112,7 +111,6 @@ export default function Navbar() {
           <div className="flex items-center gap-1.5">
             <ModeToggle />
             <DataModeToggle />
-            <HealthIndicator />
             <ThemeToggle />
             <button
               aria-label="Tools"
@@ -130,6 +128,19 @@ export default function Navbar() {
               {/* Hamburger icon */}
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>
             </Link>
+
+            {/* User + logout (moved up so it doesn't collide with step pills) */}
+            {user && (
+              <div className="hidden sm:flex items-center gap-2 ml-1 pl-2 border-l border-white/10">
+                <span className="text-[11px] text-white/70 whitespace-nowrap">Hi, {user.first_name}</span>
+                <button
+                  onClick={logout}
+                  className="text-[11px] font-bold text-red-300/90 hover:text-red-200 whitespace-nowrap"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -185,18 +196,6 @@ export default function Navbar() {
 
           {/* Right: utilities that should NOT look like steps */}
           <div className="flex items-center gap-1.5 shrink-0">
-            {user && (
-              <div className="flex items-center gap-2 mr-2">
-                <span className="text-[10px] text-white/50">Hi, {user.first_name}</span>
-                <button 
-                  onClick={logout}
-                  className="text-[10px] font-bold text-red-400/80 hover:text-red-300 uppercase tracking-wider"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-            <NavPill href="/settings" pathname={pathname} kind="utility" size="md">Settings</NavPill>
             <NavPill href="/help" pathname={pathname} kind="utility" size="md">Help</NavPill>
           </div>
         </nav>
