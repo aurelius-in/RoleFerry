@@ -201,9 +201,9 @@ export default function Settings() {
               <Link className="underline" href="/replies">
                 Go to Replies tester
               </Link>
-              <a className="underline" href="/api/metrics" target="_blank">
+              <Link className="underline" href="/metrics">
                 Metrics
-              </a>
+              </Link>
             </div>
           </>
         ) : (
@@ -251,32 +251,64 @@ function Citizenship() {
     localStorage.setItem("rf_citizenship_country", citizen);
     localStorage.setItem("rf_citizenship_status", status);
   }, [citizen, status]);
+
+  const RESIDENCE_OPTIONS: Array<{ value: string; label: string }> = [
+    { value: "US", label: "United States" },
+    { value: "CA", label: "Canada" },
+    { value: "UK", label: "United Kingdom" },
+    { value: "EU", label: "European Union" },
+    { value: "SG", label: "Singapore" },
+    { value: "AU", label: "Australia" },
+    { value: "IN", label: "India" },
+    { value: "BR", label: "Brazil" },
+  ];
+  const CITIZENSHIP_OPTIONS: Array<{ value: string; label: string }> = [
+    { value: "Citizen", label: "Citizen" },
+    { value: "Permanent Resident", label: "Permanent Resident" },
+    { value: "Work Visa", label: "Work Visa" },
+    { value: "Student Visa", label: "Student Visa" },
+    { value: "Other", label: "Other" },
+  ];
+
+  const cycle = (current: string, options: Array<{ value: string }>) => {
+    const idx = Math.max(0, options.findIndex((o) => o.value === current));
+    const next = options[(idx + 1) % options.length]?.value;
+    return next || options[0]?.value || current;
+  };
+
+  const citizenLabel = (RESIDENCE_OPTIONS.find((o) => o.value === citizen)?.label || citizen);
+  const statusLabel = (CITIZENSHIP_OPTIONS.find((o) => o.value === status)?.label || status);
+
   return (
     <div className="rounded-lg p-4 bg-white/5 border border-white/10 space-y-2">
       <div className="text-sm font-medium">Citizenship</div>
+      <div className="text-xs opacity-70">
+        Click a toggle to rotate through options.
+      </div>
       <div className="flex gap-3">
         <div>
-          <div className="text-xs opacity-70">Country</div>
-          <select className="px-3 py-2 rounded bg-white/5 border border-white/10" value={citizen} onChange={(e) => setCitizen(e.target.value)}>
-            <option value="US">United States</option>
-            <option value="CA">Canada</option>
-            <option value="UK">United Kingdom</option>
-            <option value="EU">European Union</option>
-            <option value="SG">Singapore</option>
-            <option value="AU">Australia</option>
-            <option value="IN">India</option>
-            <option value="BR">Brazil</option>
-          </select>
+          <div className="text-xs opacity-70">Residence</div>
+          <button
+            type="button"
+            onClick={() => setCitizen((v: string) => cycle(v, RESIDENCE_OPTIONS))}
+            className="px-3 py-2 rounded bg-white/5 border border-white/10 hover:bg-white/10 inline-flex items-center gap-2"
+            title="Click to rotate"
+          >
+            <span className="text-sm">{citizenLabel}</span>
+            <span className="text-xs opacity-70">↻</span>
+          </button>
         </div>
         <div>
-          <div className="text-xs opacity-70">Status</div>
-          <select className="px-3 py-2 rounded bg-white/5 border border-white/10" value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option>Citizen</option>
-            <option>Permanent Resident</option>
-            <option>Work Visa</option>
-            <option>Student Visa</option>
-            <option>Other</option>
-          </select>
+          <div className="text-xs opacity-70">Citizenship</div>
+          <button
+            type="button"
+            onClick={() => setStatus((v: string) => cycle(v, CITIZENSHIP_OPTIONS))}
+            className="px-3 py-2 rounded bg-white/5 border border-white/10 hover:bg-white/10 inline-flex items-center gap-2"
+            title="Click to rotate"
+          >
+            <span className="text-sm">{statusLabel}</span>
+            <span className="text-xs opacity-70">↻</span>
+          </button>
         </div>
       </div>
       <div className="text-xs opacity-70">Saved locally for personalization and compliance hints.</div>
