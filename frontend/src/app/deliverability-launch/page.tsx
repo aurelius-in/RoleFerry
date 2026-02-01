@@ -22,6 +22,22 @@ interface LaunchResult {
   errors?: string[];
 }
 
+interface DeliverabilityCheck {
+  overall_health_score: number;
+  summary?: string;
+  reports: Array<{
+    step_number: number;
+    health_score: number;
+    spam_risk: 'low' | 'medium' | 'high';
+    issues: string[];
+    warnings: string[];
+    subject_variants: string[];
+    copy_tweaks: string[];
+    improved_subject?: string | null;
+    improved_body?: string | null;
+  }>;
+}
+
 type WarmupProvider =
   | "roleferry"
   | "warmbox"
@@ -50,6 +66,9 @@ export default function DeliverabilityLaunchPage() {
   const router = useRouter();
   const [mode, setMode] = useState<'job-seeker' | 'recruiter'>('job-seeker');
   const [campaign, setCampaign] = useState<any>(null);
+  const [deliverabilityCheck, setDeliverabilityCheck] = useState<DeliverabilityCheck | null>(null);
+  const [isCheckingDeliverability, setIsCheckingDeliverability] = useState(false);
+  const [activeDeliverabilityStep, setActiveDeliverabilityStep] = useState<number | null>(null);
   const [preFlightChecks, setPreFlightChecks] = useState<PreFlightCheck[]>([]);
   const [isRunningChecks, setIsRunningChecks] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
@@ -81,6 +100,77 @@ export default function DeliverabilityLaunchPage() {
   const [rfSelected, setRfSelected] = useState<Record<string, boolean>>({});
   const [rfLoading, setRfLoading] = useState(false);
   const [rfNotice, setRfNotice] = useState<string | null>(null);
+
+  const getHealthScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const applyDeliverabilityFix = (stepNumber: number) => {
+    if (!campaign || !deliverabilityCheck) return;
+    const report = deliverabilityCheck.reports.find((r) => r.step_number === stepNumber);
+    if (!report) return;
+    const improvedSubject = String(report.improved_subject || "").trim();
+    const improvedBody = String(report.improved_body || "").trim();
+    if (!improvedSubject && !improvedBody) return;
+
+    const emails = Array.isArray(campaign?.emails) ? campaign.emails : [];
+    const nextEmails = emails.map((e: any) => {
+      if (Number(e?.step_number) !== Number(stepNumber)) return e;
+      return { ...e, subject: improvedSubject || e.subject, body: improvedBody || e.body };
+    });
+    const nextCampaign = { ...(campaign || {}), emails: nextEmails, updated_at: new Date().toISOString() };
+    setCampaign(nextCampaign);
+    try {
+      localStorage.setItem("campaign_data", JSON.stringify(nextCampaign));
+    } catch {}
+  };
+
+  const runDeliverabilityCheck = async () => {
+    if (!campaign) return;
+    setError(null);
+    setIsCheckingDeliverability(true);
+    try {
+      const contacts = (() => {
+        try {
+          return JSON.parse(localStorage.getItem("selected_contacts") || "[]");
+        } catch {
+          return [];
+        }
+      })();
+
+      const emails = Array.isArray(campaign?.emails) ? campaign.emails : [];
+      const resp = await api<any>("/deliverability-launch/check", "POST", {
+        emails: emails.map((e: any) => ({
+          id: e.id,
+          step_number: e.step_number,
+          subject: String(e.subject || ""),
+          body: String(e.body || ""),
+          delay_days: Number(e.delay_days || 0) || 0,
+        })),
+        contacts,
+        user_mode: mode,
+      });
+
+      if (!resp?.success) throw new Error(resp?.message || "Deliverability check failed");
+      const nextCheck = {
+        overall_health_score: Number(resp.overall_health_score ?? 0) || 0,
+        summary: resp.summary || "",
+        reports: Array.isArray(resp.reports) ? resp.reports : [],
+      };
+      setDeliverabilityCheck(nextCheck);
+      if (Array.isArray(nextCheck.reports) && nextCheck.reports.length) {
+        setActiveDeliverabilityStep(Number(nextCheck.reports[0]?.step_number || 1) || 1);
+      }
+    } catch (e: any) {
+      setError(String(e?.message || "Failed to run deliverability check."));
+      setDeliverabilityCheck(null);
+      setActiveDeliverabilityStep(null);
+    } finally {
+      setIsCheckingDeliverability(false);
+    }
+  };
 
   const persistChannel = (next: OutreachChannel) => {
     setChannel(next);
@@ -669,8 +759,8 @@ export default function DeliverabilityLaunchPage() {
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-4">
-        <a href="/bio-page" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
-          <span className="mr-2">←</span> Back to Bio Page
+        <a href="/campaign" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+          <span className="mr-2">←</span> Back to Campaign
           </a>
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
@@ -805,6 +895,150 @@ export default function DeliverabilityLaunchPage() {
                   );
                 })()}
               </div>
+
+              {/* Email deliverability (moved from Campaign) */}
+              {channel === "email" ? (
+                <div className="bg-black/20 border border-white/10 rounded-lg p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h2 className="text-xl font-semibold text-white">Email deliverability check</h2>
+                      <p className="mt-1 text-sm text-white/70">
+                        Check each email step for spam risk and get suggested fixes. Results show on the left by step.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={runDeliverabilityCheck}
+                      disabled={!campaign || isCheckingDeliverability}
+                      className="px-4 py-2 rounded-md bg-orange-600 text-white font-semibold hover:bg-orange-700 disabled:opacity-50"
+                    >
+                      {isCheckingDeliverability ? "Checking..." : "Check deliverability"}
+                    </button>
+                  </div>
+
+                  {deliverabilityCheck ? (
+                    <div className="mt-4">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                        <div>
+                          <div className={`text-2xl font-bold ${getHealthScoreColor(deliverabilityCheck.overall_health_score)}`}>
+                            {deliverabilityCheck.overall_health_score}%
+                          </div>
+                          <div className="text-sm text-white/70">Overall health score</div>
+                        </div>
+                        {deliverabilityCheck.summary ? (
+                          <div className="text-sm text-white/70 md:max-w-2xl">
+                            <span className="font-semibold text-white/80">Summary:</span> {deliverabilityCheck.summary}
+                          </div>
+                        ) : null}
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                        {/* Left: steps checked */}
+                        <div className="lg:col-span-4">
+                          <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                            <div className="text-sm font-semibold text-white/85">Emails checked</div>
+                            <div className="mt-2 space-y-2">
+                              {(deliverabilityCheck.reports || []).map((r) => {
+                                const isActive = Number(activeDeliverabilityStep || 0) === Number(r.step_number);
+                                return (
+                                  <button
+                                    key={`dl_${r.step_number}`}
+                                    type="button"
+                                    onClick={() => setActiveDeliverabilityStep(Number(r.step_number))}
+                                    className={`w-full text-left rounded-md border px-3 py-2 transition-colors ${
+                                      isActive ? "border-orange-400/50 bg-orange-500/10" : "border-white/10 bg-black/20 hover:bg-white/10"
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between gap-3">
+                                      <div className="text-sm font-semibold text-white/85">Step {r.step_number}</div>
+                                      <div className="text-xs text-white/70">
+                                        <span className={getHealthScoreColor(Number(r.health_score || 0) || 0)}>
+                                          {Number(r.health_score || 0) || 0}%
+                                        </span>{" "}
+                                        <span className="text-white/50">({r.spam_risk})</span>
+                                      </div>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right: details */}
+                        <div className="lg:col-span-8">
+                          {(() => {
+                            const step = Number(activeDeliverabilityStep || 0) || Number(deliverabilityCheck.reports?.[0]?.step_number || 1) || 1;
+                            const r = (deliverabilityCheck.reports || []).find((x) => Number(x.step_number) === step) || null;
+                            if (!r) return <div className="text-sm text-white/70">No details available.</div>;
+                            return (
+                              <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div>
+                                    <div className="text-sm font-semibold text-white">
+                                      Step {r.step_number} •{" "}
+                                      <span className={getHealthScoreColor(Number(r.health_score || 0) || 0)}>{Number(r.health_score || 0) || 0}%</span>{" "}
+                                      <span className="text-white/60">({r.spam_risk} risk)</span>
+                                    </div>
+                                    {(r.issues?.length || r.warnings?.length) ? (
+                                      <ul className="mt-2 text-sm text-white/70 list-disc list-inside space-y-1">
+                                        {(r.issues || []).slice(0, 6).map((x, i) => (
+                                          <li key={`i_${r.step_number}_${i}`} className="text-red-200">{x}</li>
+                                        ))}
+                                        {(r.warnings || []).slice(0, 6).map((x, i) => (
+                                          <li key={`w_${r.step_number}_${i}`}>{x}</li>
+                                        ))}
+                                      </ul>
+                                    ) : (
+                                      <div className="mt-2 text-sm text-white/70">No major issues detected.</div>
+                                    )}
+
+                                    {r.subject_variants?.length ? (
+                                      <div className="mt-3 text-sm text-white/70">
+                                        <div className="font-semibold text-white/80 mb-1">Safer subject variants</div>
+                                        <ul className="list-disc list-inside space-y-1">
+                                          {r.subject_variants.slice(0, 4).map((s, i) => (
+                                            <li key={`sv_${r.step_number}_${i}`}>{s}</li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    ) : null}
+
+                                    {r.copy_tweaks?.length ? (
+                                      <div className="mt-3 text-sm text-white/70">
+                                        <div className="font-semibold text-white/80 mb-1">Copy tweaks</div>
+                                        <ul className="list-disc list-inside space-y-1">
+                                          {r.copy_tweaks.slice(0, 6).map((t, i) => (
+                                            <li key={`ct_${r.step_number}_${i}`}>{t}</li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    ) : null}
+                                  </div>
+
+                                  {(r.improved_subject || r.improved_body) ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => applyDeliverabilityFix(r.step_number)}
+                                      className="shrink-0 px-3 py-2 rounded-md bg-green-600 text-white text-sm font-semibold hover:bg-green-700"
+                                    >
+                                      Apply fixes
+                                    </button>
+                                  ) : null}
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-4 text-sm text-white/70">
+                      Click <span className="font-semibold text-white/80">Check deliverability</span> to analyze your sequence.
+                    </div>
+                  )}
+                </div>
+              ) : null}
 
               {/* Outreach Channel */}
               <div className="bg-black/20 border border-white/10 rounded-lg p-6">

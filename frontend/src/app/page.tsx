@@ -26,8 +26,8 @@ const STONES: StoneConfig[] = [
   // Consolidated: Offer + Compose live on /compose (before Bio).
   { step: 9, tab: "compose", label: "Compose", icon: "✍️", href: "/compose" },
   { step: 10, tab: "bio-page", label: "Bio Page", icon: "🌐", href: "/bio-page" },
-  { step: 11, tab: "deliverability-launch", label: "Deliverability + Launch", icon: "🚀", href: "/deliverability-launch" },
-  { step: 12, tab: "campaign", label: "Campaign", icon: "📧", href: "/campaign" },
+  { step: 11, tab: "campaign", label: "Campaign", icon: "📧", href: "/campaign" },
+  { step: 12, tab: "launch", label: "Launch", icon: "🚀", href: "/deliverability-launch" },
 ];
 
 const LEFT_FOOT_SRC = "/wireframes/assets/left-foot.gif";
@@ -254,33 +254,6 @@ export default function Home() {
           })}
         </div>
 
-        {(() => {
-          const hasAllSteps = (() => {
-            for (let i = 1; i <= 12; i++) if (!completed.has(i)) return false;
-            return true;
-          })();
-          const disabled = isAnimating || !hasAllSteps;
-          return (
-            <div className="mt-3 flex justify-center">
-              <button
-                type="button"
-                disabled={disabled}
-                onClick={() => {
-                  if (disabled) return;
-                  router.push("/deliverability-launch");
-                }}
-                className={`w-full max-w-[900px] rounded-2xl border px-6 py-5 text-xl font-extrabold tracking-wide transition-colors ${
-                  disabled
-                    ? "bg-white/5 border-white/10 text-white/40"
-                    : "bg-emerald-500/20 border-emerald-400/40 text-emerald-200 hover:bg-emerald-500/25"
-                }`}
-                title={disabled ? "Complete all 12 steps above to unlock Warm-up + Launch" : "Warm-up + Launch"}
-              >
-                🚀 Warm-up + Launch
-              </button>
-            </div>
-          );
-        })()}
       </div>
     </div>
   );

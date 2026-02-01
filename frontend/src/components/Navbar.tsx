@@ -42,8 +42,8 @@ export default function Navbar() {
         if (path === "/compose" || path.startsWith("/compose/")) return 9;
         if (path === "/bio-page" || path.startsWith("/bio-page/")) return 10;
         if (path === "/bio/preview" || path.startsWith("/bio/preview/")) return 10;
-        if (path === "/deliverability-launch" || path.startsWith("/deliverability-launch/")) return 11;
-        if (path === "/campaign" || path.startsWith("/campaign/")) return 12;
+        if (path === "/campaign" || path.startsWith("/campaign/")) return 11;
+        if (path === "/deliverability-launch" || path.startsWith("/deliverability-launch/")) return 12;
         return null;
       };
 
@@ -146,16 +146,41 @@ export default function Navbar() {
             <NavPill href="/job-descriptions" pathname={pathname}>Jobs</NavPill>
             <NavPill href="/gap-analysis" pathname={pathname}>Gaps</NavPill>
             <NavPill href="/painpoint-match" pathname={pathname}>Match</NavPill>
+            <NavPill href="/company-research" pathname={pathname}>Research</NavPill>
             <NavPill href="/find-contact" pathname={pathname}>Contact</NavPill>
-            <NavPill href="/context-research" pathname={pathname}>Research</NavPill>
-            <NavPill href="/bio-page" pathname={pathname}>Bio</NavPill>
+            <NavPill href="/context-research" pathname={pathname}>Context</NavPill>
             <NavPill href="/compose" pathname={pathname}>Compose</NavPill>
+            <NavPill href="/bio-page" pathname={pathname}>Bio</NavPill>
             <NavPill href="/campaign" pathname={pathname}>Campaign</NavPill>
-            <span className="mx-2 h-4 w-px bg-white/10" />
-            <NavPill href="/analytics" pathname={pathname} kind="utility">Analytics</NavPill>
-            <NavPill href="/tracker" pathname={pathname} kind="utility">Tracker</NavPill>
-            <NavPill href="/deliverability-launch" pathname={pathname} kind="utility">Launch</NavPill>
-            <NavPill href="/inbox" pathname={pathname} kind="utility">Inbox</NavPill>
+            <NavPill href="/deliverability-launch" pathname={pathname}>Launch</NavPill>
+
+            {/* Big spacing: steps vs non-step utilities */}
+            <span className="mx-5 h-5 w-px bg-white/20" />
+
+            <NavPill href="/analytics" pathname={pathname} kind="utility" size="lg">
+              <span className="inline-flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M3 3h2v18H3V3zm16 8h2v10h-2V11zM11 13h2v8h-2v-8zM7 9h2v12H7V9zm8-6h2v18h-2V3z"/>
+                </svg>
+                <span>Analytics</span>
+              </span>
+            </NavPill>
+            <NavPill href="/tracker" pathname={pathname} kind="utility" size="lg">
+              <span className="inline-flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M7 2h2v2h6V2h2v2h3v18H4V4h3V2zm13 6H6v12h14V8z"/>
+                </svg>
+                <span>Tracker</span>
+              </span>
+            </NavPill>
+            <NavPill href="/inbox" pathname={pathname} kind="utility" size="lg">
+              <span className="inline-flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/>
+                </svg>
+                <span>Inbox</span>
+              </span>
+            </NavPill>
           </div>
 
           {/* Right: utilities that should NOT look like steps */}
@@ -194,13 +219,15 @@ function NavPill({
   pathname: string | null;
   children: React.ReactNode;
   kind?: "primary" | "utility";
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
 }) {
   const active = pathname === href || (href !== "/" && pathname?.startsWith(href));
   const base = "inline-flex items-center justify-center rounded-full border font-semibold tracking-normal transition-colors select-none";
   const sizing =
     size === "md"
       ? "px-2.5 py-1 text-[11px] leading-4"
+      : size === "lg"
+        ? "px-3 py-1.5 text-[12px] leading-4"
       : "px-1.5 py-0.5 text-[10px] leading-4";
   const inactive =
     kind === "utility"

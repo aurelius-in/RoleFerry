@@ -57,6 +57,129 @@ function joinNews(news: any[]): string {
   return lines.join("\n");
 }
 
+function safeText(v: any): string {
+  return String(v ?? "").replace(/\s+/g, " ").trim();
+}
+
+function extractHiringSignals(sections: any, news: any[]): CompanyResearch["hiring_signals"] {
+  const sec = Array.isArray(sections) ? sections : [];
+  const hiringText =
+    pickSectionText(sec, "hiring") ||
+    pickSectionText(sec, "team growth") ||
+    pickSectionText(sec, "headcount") ||
+    pickSectionText(sec, "layoffs");
+
+  const newsItems = Array.isArray(news) ? news : [];
+  const newsLines = newsItems
+    .slice(0, 8)
+    .map((n) => `${safeText(n?.title)} ${safeText(n?.summary)}`.trim())
+    .filter(Boolean);
+
+  const corpus = [hiringText, ...newsLines].filter(Boolean).join("\n");
+  const out: CompanyResearch["hiring_signals"] = [];
+
+  const push = (label: string, detail: string) => {
+    const d = safeText(detail);
+    if (!d) return;
+    out.push({ label, status: "good", detail: d });
+  };
+
+  // Open roles / openings
+  (() => {
+    const patterns: RegExp[] = [
+      /\b(\d{1,4})\+?\s+(open\s+roles|open\s+positions|job\s+openings|openings|roles\s+open)\b/i,
+      /\b(\d{1,4})\+?\s+jobs\b/i,
+    ];
+    for (const re of patterns) {
+      const m = corpus.match(re);
+      if (m && m[1]) {
+        push(
+          "Open roles",
+          `${m[1]} openings mentioned. This usually signals active hiring (and urgency to fill key roles).`
+        );
+        return;
+      }
+    }
+  })();
+
+  // Funding / financing
+  (() => {
+    const hit = newsItems.find((n) => /funding|raised|series\s+[a-e]|seed|financing|investor/i.test(`${n?.title || ""} ${n?.summary || ""}`));
+    if (hit) {
+      const title = safeText(hit?.title);
+      const summary = safeText(hit?.summary);
+      push(
+        "Funding / runway signal",
+        `${title || "Funding/news"}${summary ? ` — ${summary}` : ""} Fresh capital often correlates with headcount growth or new team build-outs.`
+      );
+    }
+  })();
+
+  // Expansion / growth signal
+  (() => {
+    const hit = newsItems.find((n) =>
+      /expan(d|sion)|opening\s+(a\s+)?new\s+office|new\s+market|international|scale|hypergrowth|growth\s+plan/i.test(
+        `${n?.title || ""} ${n?.summary || ""}`
+      )
+    );
+    if (hit) {
+      const title = safeText(hit?.title);
+      const summary = safeText(hit?.summary);
+      push(
+        "Expansion signal",
+        `${title || "Growth/news"}${summary ? ` — ${summary}` : ""} Expansion usually means new goals + staffing needs (good timing to reach out).`
+      );
+    }
+  })();
+
+  // Leadership changes
+  (() => {
+    const hit = newsItems.find((n) =>
+      /appointed|named|joins?\s+as|new\s+(ceo|cto|cpo|cmo|cfo|vp)|leadership\s+change/i.test(`${n?.title || ""} ${n?.summary || ""}`)
+    );
+    if (hit) {
+      const title = safeText(hit?.title);
+      const summary = safeText(hit?.summary);
+      push(
+        "Leadership change",
+        `${title || "Leadership update"}${summary ? ` — ${summary}` : ""} Leadership changes often reset priorities and create new hiring/initiative budgets.`
+      );
+    }
+  })();
+
+  // Layoffs / restructuring (caution but still a signal)
+  (() => {
+    const hit = newsItems.find((n) =>
+      /layoff|restructur|headcount\s+reduc|hiring\s+freeze|downsiz/i.test(`${n?.title || ""} ${n?.summary || ""}`)
+    );
+    if (hit) {
+      const title = safeText(hit?.title);
+      const summary = safeText(hit?.summary);
+      push(
+        "Restructuring signal",
+        `${title || "Restructuring/news"}${summary ? ` — ${summary}` : ""} This can indicate tighter budgets or role realignment—target outreach to high-priority teams.`
+      );
+    }
+  })();
+
+  // If we have a dedicated hiring section body, use it as an extra high-signal note (but only if it isn't redundant).
+  if (safeText(hiringText) && out.length < 5) {
+    const trimmed = safeText(hiringText);
+    if (trimmed.length > 40) {
+      push("Hiring context", trimmed);
+    }
+  }
+
+  // Deduplicate by label (keep first)
+  const seen = new Set<string>();
+  return out.filter((s) => {
+    const k = safeText(s.label).toLowerCase();
+    if (!k || seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}
+
 function toCsvRow(cols: string[]): string {
   const esc = (v: string) => `"${String(v ?? "").replaceAll('"', '""')}"`;
   return cols.map(esc).join(",");
@@ -70,6 +193,7 @@ export default function CompanyResearchPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<CompanyResearch | null>(null);
+  const [savedByCompany, setSavedByCompany] = useState<Record<string, CompanyResearch>>({});
 
   const companyOptions = useMemo(() => {
     const companies = new Set<string>();
@@ -96,6 +220,7 @@ export default function CompanyResearchPage() {
     // Restore last company + saved research
     const savedActive = String(localStorage.getItem(STORAGE_ACTIVE_COMPANY) || "").trim();
     const by = safeJson<Record<string, CompanyResearch>>(localStorage.getItem(STORAGE_BY_COMPANY), {});
+    setSavedByCompany(by);
     const pick = savedActive && by?.[savedActive] ? savedActive : "";
     if (pick) {
       setActiveCompany(pick);
@@ -140,13 +265,7 @@ export default function CompanyResearchPage() {
       const overview = String(companySummary?.description || "").trim();
       const culture = pickSectionText(sections, "culture") || pickSectionText(sections, "values");
       const market = pickSectionText(sections, "market") || pickSectionText(sections, "product") || pickSectionText(sections, "moves");
-      const hiring = pickSectionText(sections, "hiring") || pickSectionText(sections, "team growth");
-
-      const signals: CompanyResearch["hiring_signals"] = [
-        { label: "Hiring / team growth", status: hiring ? "good" : "unknown", detail: hiring || "No clear hiring signal found yet." },
-        { label: "Recent news", status: Array.isArray(news) && news.length ? "good" : "unknown", detail: Array.isArray(news) && news.length ? "Recent items found." : "No recent items found yet." },
-        { label: "Company culture / values", status: culture ? "good" : "unknown", detail: culture || "No clear culture signal found yet." },
-      ];
+      const signals: CompanyResearch["hiring_signals"] = extractHiringSignals(sections, news as any[]);
 
       const next: CompanyResearch = {
         company_name: company,
@@ -178,6 +297,7 @@ export default function CompanyResearchPage() {
     const by = safeJson<Record<string, CompanyResearch>>(localStorage.getItem(STORAGE_BY_COMPANY), {});
     by[draft.company_name] = { ...draft, updated_at: new Date().toISOString() };
     localStorage.setItem(STORAGE_BY_COMPANY, JSON.stringify(by));
+    setSavedByCompany(by);
     localStorage.setItem(STORAGE_ACTIVE_COMPANY, draft.company_name);
     localStorage.setItem("company_research", JSON.stringify(by[draft.company_name])); // single active snapshot
     localStorage.setItem("selected_company_name", draft.company_name);
@@ -211,7 +331,29 @@ export default function CompanyResearchPage() {
     URL.revokeObjectURL(url);
   }
 
-  const canContinue = Boolean(draft?.company_name);
+  const isSavedActive = Boolean(draft?.company_name && savedByCompany?.[draft.company_name]);
+  const canContinue = Boolean(draft?.company_name && isSavedActive);
+
+  const savedCompanies = useMemo(() => {
+    const list = Object.values(savedByCompany || {}).filter((x) => x && x.company_name);
+    return list.sort((a, b) => String(b.updated_at || "").localeCompare(String(a.updated_at || "")));
+  }, [savedByCompany]);
+
+  const fmtUpdated = (iso: string) => {
+    try {
+      const t = new Date(iso);
+      if (Number.isNaN(t.getTime())) return "";
+      const mins = Math.round((Date.now() - t.getTime()) / 60000);
+      if (mins < 1) return "just now";
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.round(mins / 60);
+      if (hrs < 48) return `${hrs}h ago`;
+      const days = Math.round(hrs / 24);
+      return `${days}d ago`;
+    } catch {
+      return "";
+    }
+  };
 
   return (
     <div className="min-h-screen py-8 text-slate-100">
@@ -302,48 +444,95 @@ export default function CompanyResearchPage() {
           </div>
 
           {/* Hiring Signals */}
-          {draft ? (
-            <div className="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
-              <div className="text-sm font-bold text-white mb-1">Hiring Signals</div>
-              <div className="text-xs text-white/60 mb-3">
-                Quick, outreach-relevant signals for <span className="font-semibold text-white/80">{activeCompanyDisplay}</span>.
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
-                  <thead>
-                    <tr className="text-left text-white/70 text-[11px] uppercase tracking-wider">
-                      <th className="border-b border-white/10 py-2 pr-3">Signal</th>
-                      <th className="border-b border-white/10 py-2 pr-3">Status</th>
-                      <th className="border-b border-white/10 py-2">Detail</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(draft.hiring_signals || []).map((s, idx) => (
-                      <tr key={`sig_${idx}`} className="align-top">
-                        <td className="border-b border-white/10 py-2 pr-3 font-semibold text-white/85">{s.label}</td>
-                        <td className="border-b border-white/10 py-2 pr-3">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold border ${
-                              s.status === "good"
-                                ? "bg-emerald-500/15 text-emerald-200 border-emerald-400/25"
-                                : "bg-white/5 text-white/60 border-white/10"
-                            }`}
-                          >
-                            {s.status === "good" ? "Signal" : "Unknown"}
-                          </span>
-                        </td>
-                        <td className="border-b border-white/10 py-2 text-white/75 whitespace-pre-wrap">{s.detail}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left: Saved library */}
+            <div className="lg:col-span-3">
+              <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="text-sm font-bold text-white">Saved research</div>
+                    <div className="text-xs text-white/60">Click a company to load its saved briefing.</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const by = safeJson<Record<string, CompanyResearch>>(localStorage.getItem(STORAGE_BY_COMPANY), {});
+                      setSavedByCompany(by);
+                      setNotice("Saved library refreshed.");
+                      window.setTimeout(() => setNotice(null), 1200);
+                    }}
+                    className="text-xs underline text-white/70 hover:text-white"
+                  >
+                    Refresh
+                  </button>
+                </div>
+
+                {savedCompanies.length ? (
+                  <div className="mt-3 space-y-2 max-h-[520px] overflow-auto pr-1">
+                    {savedCompanies.slice(0, 30).map((c) => {
+                      const name = String(c.company_name || "").trim();
+                      const isActive = name && name === String(draft?.company_name || "").trim();
+                      return (
+                        <button
+                          key={`saved_${name}`}
+                          type="button"
+                          onClick={() => {
+                            if (!name) return;
+                            setActiveCompany(name);
+                            setCompanyQuery(name);
+                            setDraft(c);
+                            localStorage.setItem(STORAGE_ACTIVE_COMPANY, name);
+                            localStorage.setItem("selected_company_name", name);
+                          }}
+                          className={`w-full text-left rounded-md border px-3 py-2 transition-colors ${
+                            isActive ? "border-blue-400/60 bg-blue-500/10" : "border-white/10 bg-white/5 hover:bg-white/10"
+                          }`}
+                        >
+                          <div className="text-sm font-semibold text-white/85 truncate">{formatCompanyName(name)}</div>
+                          <div className="mt-1 text-[11px] text-white/55">
+                            {c.updated_at ? `updated ${fmtUpdated(c.updated_at)}` : ""}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="mt-3 text-sm text-white/60">No saved companies yet. Run research, then click “Save research”.</div>
+                )}
               </div>
             </div>
-          ) : null}
 
-          {/* Company Briefing */}
-          {draft ? (
-            <div className="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
+            {/* Right: Draft details */}
+            <div className="lg:col-span-9">
+              {draft ? (
+                <>
+                  {!isSavedActive ? (
+                    <div className="mb-4 rounded-md border border-yellow-500/20 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-100">
+                      Draft generated but <span className="font-semibold">not saved</span> yet. Click <span className="font-semibold">Save research</span> to add it to the library.
+                    </div>
+                  ) : null}
+
+                  <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                    <div className="text-sm font-bold text-white mb-1">Hiring Signals</div>
+                    <div className="text-xs text-white/60 mb-3">
+                      Quick, outreach-relevant signals for <span className="font-semibold text-white/80">{activeCompanyDisplay}</span>.
+                    </div>
+                    {(draft.hiring_signals || []).length ? (
+                      <div className="space-y-2">
+                        {(draft.hiring_signals || []).slice(0, 8).map((s, idx) => (
+                          <div key={`sig_${idx}`} className="rounded-md border border-white/10 bg-white/5 p-3">
+                            <div className="text-sm font-semibold text-white/85">{s.label}</div>
+                            <div className="mt-1 text-sm text-white/75 whitespace-pre-wrap">{s.detail}</div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-white/60">No hiring signals captured in this run yet. Try Live mode for richer results.</div>
+                    )}
+                  </div>
+
+                  {/* Company Briefing */}
+                  <div className="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-sm font-bold text-white">Company Briefing</div>
@@ -450,19 +639,27 @@ export default function CompanyResearchPage() {
                 </div>
               ) : null}
             </div>
-          ) : null}
+                </>
+              ) : (
+                <div className="rounded-lg border border-white/10 bg-black/20 p-6 text-sm text-white/70">
+                  Pick a company above and click <span className="font-semibold text-white">Run Company Research</span>.
+                </div>
+              )}
 
-          <div className="mt-8 flex justify-end gap-3">
-            <button
-              type="button"
-              disabled={!canContinue}
-              onClick={() => router.push("/find-contact")}
-              className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-              title={!canContinue ? "Run and save company research first." : "Continue to Decision Makers"}
-            >
-              Continue to Decision Makers →
-            </button>
+              <div className="mt-8 flex justify-end gap-3">
+                <button
+                  type="button"
+                  disabled={!canContinue}
+                  onClick={() => router.push("/find-contact")}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  title={!canContinue ? "Save company research first." : "Continue to Decision Makers"}
+                >
+                  Continue to Decision Makers →
+                </button>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     </div>
