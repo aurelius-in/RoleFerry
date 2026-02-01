@@ -4,9 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import placeholderPat from "@/profile-pat.png";
+import { BIO_BG_OPTIONS, BIO_BULLET_STYLES, BIO_SLOGAN_PRESETS, computeBioColors, normalizeBioTheme, bulletGlyph } from "@/lib/bioTheme";
 
 type BioPageTheme = {
   accent: string;
+  bg_top?: string;
+  bg_bottom?: string;
+  bullet_style?: string;
+  slogan_line?: string;
 };
 
 type BioPageDraft = {
@@ -88,6 +93,25 @@ export default function BioPageStep() {
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(next));
     } catch {}
+  };
+
+  const updateTheme = (patch: Partial<BioPageTheme>) => {
+    const cur = draft || ({} as any);
+    const base = { ...(cur.theme || {}) };
+    const mergedTheme: any = { ...base, ...(patch || {}) };
+    // Enforce a single readable "mode" (both backgrounds light or both dark).
+    if (patch?.bg_top) {
+      const topKind = normalizeBioTheme({ bg_top: String(patch.bg_top), bg_bottom: String(mergedTheme.bg_bottom || "") }).kind;
+      const bottomKind = normalizeBioTheme({ bg_top: String(mergedTheme.bg_bottom || patch.bg_top), bg_bottom: String(mergedTheme.bg_bottom || patch.bg_top) }).kind;
+      if (bottomKind !== topKind) mergedTheme.bg_bottom = String(patch.bg_top);
+    }
+    if (patch?.bg_bottom) {
+      const bottomKind = normalizeBioTheme({ bg_top: String(mergedTheme.bg_top || patch.bg_bottom), bg_bottom: String(patch.bg_bottom) }).kind;
+      const topKind = normalizeBioTheme({ bg_top: String(mergedTheme.bg_top || patch.bg_bottom), bg_bottom: String(mergedTheme.bg_top || patch.bg_bottom) }).kind;
+      if (topKind !== bottomKind) mergedTheme.bg_top = String(patch.bg_bottom);
+    }
+    const norm = normalizeBioTheme(mergedTheme);
+    persistDraft({ ...cur, theme: { ...mergedTheme, ...norm } } as any);
   };
 
   useEffect(() => {
@@ -259,6 +283,10 @@ export default function BioPageStep() {
           calendly_url: safeStr(draft?.calendly_url) || safeStr(res.draft.calendly_url),
           video_url: safeStr(draft?.video_url) || safeStr(res.draft.video_url),
           profile_image_url: profileImageUrl || res.draft.profile_image_url || "",
+          theme: {
+            ...(res.draft.theme || {}),
+            ...(draft?.theme || {}),
+          },
         };
         persistDraft(merged);
       }
@@ -328,8 +356,11 @@ export default function BioPageStep() {
 
   const asArr = (v: any) => (Array.isArray(v) ? v : []);
 
+  const colors = useMemo(() => computeBioColors(draft?.theme || null), [draft]);
+  const bullet = useMemo(() => bulletGlyph((draft?.theme as any)?.bullet_style), [draft]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-blue-950 text-white py-8">
+    <div className="min-h-screen py-8" style={{ background: "linear-gradient(to bottom, #020617, #0B1020)", color: "#FFFFFF" }}>
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-start justify-between gap-3 mb-6">
           <div>
@@ -397,6 +428,91 @@ export default function BioPageStep() {
                 ) : null}
               </div>
               {msg ? <div className="mt-3 text-xs text-white/70 break-all">{msg}</div> : null}
+            </div>
+
+            <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+              <div className="text-sm font-bold">Style</div>
+              <div className="text-xs text-white/60 mt-1">
+                Pick backgrounds + bullet style. We automatically choose readable text colors.
+              </div>
+
+              <div className="mt-3 space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
+                    Slogan line (optional)
+                  </label>
+                  <select
+                    value={safeStr((draft?.theme as any)?.slogan_line)}
+                    onChange={(e) => updateTheme({ slogan_line: e.target.value })}
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">None</option>
+                    {BIO_SLOGAN_PRESETS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
+                      Top background
+                    </label>
+                    <select
+                      value={colors.bg_top}
+                      onChange={(e) => updateTheme({ bg_top: e.target.value })}
+                      className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {BIO_BG_OPTIONS.map((o) => (
+                        <option key={o.id} value={o.hex}>
+                          {o.kind === "dark" ? "Dark" : "Light"} · {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
+                      Bottom background
+                    </label>
+                    <select
+                      value={colors.bg_bottom}
+                      onChange={(e) => updateTheme({ bg_bottom: e.target.value })}
+                      className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {BIO_BG_OPTIONS.map((o) => (
+                        <option key={o.id} value={o.hex}>
+                          {o.kind === "dark" ? "Dark" : "Light"} · {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
+                    Bullet icon
+                  </label>
+                  <select
+                    value={safeStr((draft?.theme as any)?.bullet_style) || "dot"}
+                    onChange={(e) => updateTheme({ bullet_style: e.target.value })}
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {BIO_BULLET_STYLES.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.glyph} · {b.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+                  <div className="text-xs text-white/70">
+                    Preview mode: <span className="font-semibold">{colors.kind === "dark" ? "Dark" : "Light"}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
@@ -521,7 +637,14 @@ export default function BioPageStep() {
                   Click <span className="font-semibold text-white">Generate</span> to create your first Bio Page draft.
                 </div>
               ) : (
-                <div className="mt-4 rounded-lg border border-white/10 bg-black/20 p-6">
+                <div
+                  className="mt-4 rounded-lg border p-6"
+                  style={{
+                    background: `linear-gradient(to bottom, ${colors.bg_top}, ${colors.bg_bottom})`,
+                    borderColor: colors.border,
+                    color: colors.fg,
+                  }}
+                >
                   <div className="flex flex-col items-center text-center">
                     <input
                       ref={profileInputRef}
@@ -533,7 +656,8 @@ export default function BioPageStep() {
                     <button
                       type="button"
                       onClick={onPickProfilePhoto}
-                      className="group rounded-full border border-white/10 bg-white/5 p-1 hover:bg-white/10 transition-colors"
+                      className="group rounded-full border p-1 transition-colors"
+                      style={{ borderColor: colors.border, background: colors.card }}
                       aria-label="Upload profile picture"
                       title="Upload profile picture"
                     >
@@ -543,65 +667,83 @@ export default function BioPageStep() {
                         className="h-24 w-24 rounded-full object-cover"
                       />
                     </button>
-                    <div className="mt-2 text-xs text-white/50">upload your own profile picture.</div>
+                    <div className="mt-2 text-xs font-semibold">upload your own profile picture.</div>
                   </div>
 
-                  <div className="text-xs text-white/50 mb-2">CTA</div>
+                  <div className="text-xs font-semibold mb-2">CTA</div>
                   <div className="flex flex-wrap gap-2">
-                    <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm">
+                    <div className="px-3 py-2 rounded-lg border text-sm" style={{ borderColor: colors.border, background: colors.card }}>
                       Setup an interview with <span className="font-semibold">{draft.display_name || "you"}</span>
                     </div>
-                    <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm">
+                    <div className="px-3 py-2 rounded-lg border text-sm" style={{ borderColor: colors.border, background: colors.card }}>
                       Let’s connect on LinkedIn
                     </div>
                   </div>
 
                   <div className="mt-6">
                     <div className="text-2xl font-extrabold">{draft.headline || "Your headline"}</div>
-                    <div className="text-white/70 mt-2">{draft.subheadline || "Your subheadline"}</div>
+                    {safeStr((draft.theme as any)?.slogan_line) ? (
+                      <div className="mt-3 inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold"
+                        style={{ borderColor: colors.border, background: colors.cardStrong }}
+                      >
+                        {safeStr((draft.theme as any)?.slogan_line)}
+                      </div>
+                    ) : null}
+                    <div className="mt-2">{draft.subheadline || "Your subheadline"}</div>
                   </div>
 
                   {safeStr(draft.video_url || videoUrl) ? (
                     <div className="mt-6">
-                      <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">
+                      <div className="text-xs font-semibold uppercase tracking-wider mb-2">
                         Intro video
                       </div>
                       <video
-                        className="w-full rounded-xl border border-white/10 bg-black/30"
+                        className="w-full rounded-xl border"
                         controls
                         playsInline
                         src={safeStr(draft.video_url || videoUrl)}
+                        style={{ borderColor: colors.border, background: colors.cardStrong }}
                       />
                     </div>
                   ) : null}
 
                   <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="rounded-lg border border-white/10 bg-white/5 p-4">
-                      <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">
+                    <div className="rounded-lg border p-4" style={{ borderColor: colors.border, background: colors.card }}>
+                      <div className="text-xs font-semibold uppercase tracking-wider mb-2">
                         Proof
                       </div>
                       {draft.proof_points?.length ? (
-                        <ul className="text-sm text-white/80 list-disc list-inside space-y-1">
+                        <ul className="text-sm space-y-1">
                           {draft.proof_points.slice(0, 6).map((p, i) => (
-                            <li key={`pp_${i}`}>{p}</li>
+                            <li key={`pp_${i}`} className="flex gap-2">
+                              <span className="shrink-0 font-bold" aria-hidden="true">
+                                {bullet}
+                              </span>
+                              <span>{p}</span>
+                            </li>
                           ))}
                         </ul>
                       ) : (
-                        <div className="text-sm text-red-300 font-semibold">Missing details</div>
+                        <div className="text-sm font-semibold">Missing details</div>
                       )}
                     </div>
-                    <div className="rounded-lg border border-white/10 bg-white/5 p-4">
-                      <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">
+                    <div className="rounded-lg border p-4" style={{ borderColor: colors.border, background: colors.card }}>
+                      <div className="text-xs font-semibold uppercase tracking-wider mb-2">
                         Core strengths
                       </div>
                       {draft.fit_points?.length ? (
-                        <ul className="text-sm text-white/80 list-disc list-inside space-y-1">
+                        <ul className="text-sm space-y-1">
                           {draft.fit_points.slice(0, 6).map((p, i) => (
-                            <li key={`fp_${i}`}>{p}</li>
+                            <li key={`fp_${i}`} className="flex gap-2">
+                              <span className="shrink-0 font-bold" aria-hidden="true">
+                                {bullet}
+                              </span>
+                              <span>{p}</span>
+                            </li>
                           ))}
                         </ul>
                       ) : (
-                        <div className="text-sm text-red-300 font-semibold">Missing details</div>
+                        <div className="text-sm font-semibold">Missing details</div>
                       )}
                     </div>
                   </div>

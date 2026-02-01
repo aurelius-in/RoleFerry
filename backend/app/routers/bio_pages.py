@@ -28,6 +28,11 @@ def _now_iso() -> str:
 
 class BioPageTheme(BaseModel):
     accent: str = Field(default="emerald")  # simple token; frontend maps to colors
+    # The user only chooses background colors; the frontend computes readable text colors.
+    bg_top: str = Field(default="#050505")
+    bg_bottom: str = Field(default="#050505")
+    bullet_style: str = Field(default="dot")
+    slogan_line: str = Field(default="")
 
 
 class BioPageDraft(BaseModel):
