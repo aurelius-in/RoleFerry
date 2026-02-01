@@ -871,38 +871,56 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
     Uses OpenAI when configured; falls back to deterministic heuristics.
     """
     try:
-        prefs = GapAnalysisPreferences(**(req.preferences or {}))
-        resume = ResumeExtract(**(req.resume_extract or {}))
-        jobs = [GapJobDescription(**j) for j in (req.job_descriptions or [])]
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid payload: {e}")
+        try:
+            prefs = GapAnalysisPreferences(**(req.preferences or {}))
+            resume = ResumeExtract(**(req.resume_extract or {}))
+            jobs = [GapJobDescription(**j) for j in (req.job_descriptions or [])]
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid payload: {e}")
 
-    if not jobs:
-        return GapAnalysisResponse(success=True, message="No jobs to analyze", ranked=[], helper={"used_llm": False})
+        if not jobs:
+            return GapAnalysisResponse(success=True, message="No jobs to analyze", ranked=[], helper={"used_llm": False})
 
-    client = get_openai_client()
-    if not client.should_use_real_llm:
-        ranked = _safe_deterministic_rank(
-            prefs,
-            resume,
-            jobs,
-            personality_profile=req.personality_profile,
-            temperament_profile=req.temperament_profile,
-        )
-        return GapAnalysisResponse(
-            success=True,
-            message="Gap analysis complete (no LLM)",
-            ranked=ranked,
-            overall=None,
-            helper={
-                "used_llm": False,
-                "model": client.model,
-                "notes": ["OpenAI not configured or LLM_MODE!=openai; used deterministic heuristics."],
-            },
-        )
+        # get_openai_client() should be safe, but never allow config issues to 500 this endpoint.
+        try:
+            client = get_openai_client()
+        except Exception as e:
+            logger.exception("Failed to initialize OpenAI client; falling back to deterministic")
+            ranked = _safe_deterministic_rank(
+                prefs,
+                resume,
+                jobs,
+                personality_profile=req.personality_profile,
+                temperament_profile=req.temperament_profile,
+            )
+            return GapAnalysisResponse(
+                success=True,
+                message="Gap analysis complete (LLM init error; used deterministic scoring)",
+                ranked=ranked,
+                overall=None,
+                helper={"used_llm": False, "model": "unavailable", "notes": [f"LLM init error: {str(e)[:160]}"]},
+            )
+        if not client.should_use_real_llm:
+            ranked = _safe_deterministic_rank(
+                prefs,
+                resume,
+                jobs,
+                personality_profile=req.personality_profile,
+                temperament_profile=req.temperament_profile,
+            )
+            return GapAnalysisResponse(
+                success=True,
+                message="Gap analysis complete (no LLM)",
+                ranked=ranked,
+                overall=None,
+                helper={
+                    "used_llm": False,
+                    "model": client.model,
+                    "notes": ["OpenAI not configured or LLM_MODE!=openai; used deterministic heuristics."],
+                },
+            )
 
-    # LLM path
-    try:
+        # LLM path
         stub_ranked = [
             r.model_dump()
             for r in _safe_deterministic_rank(
@@ -1031,6 +1049,32 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
             ranked=ranked,
             overall=None,
             helper={"used_llm": False, "model": client.model, "notes": [f"LLM error: {str(e)[:160]}"]},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        # Ultimate safety net: never let the UI see a 500 for this endpoint.
+        logger.exception("Gap analysis crashed unexpectedly")
+        ranked: List[GapAnalysisItem] = []
+        try:
+            prefs = GapAnalysisPreferences(**(req.preferences or {}))
+            resume = ResumeExtract(**(req.resume_extract or {}))
+            jobs = [GapJobDescription(**j) for j in (req.job_descriptions or [])]
+            ranked = _safe_deterministic_rank(
+                prefs,
+                resume,
+                jobs,
+                personality_profile=req.personality_profile,
+                temperament_profile=req.temperament_profile,
+            )
+        except Exception:
+            ranked = []
+        return GapAnalysisResponse(
+            success=False,
+            message="Gap analysis failed unexpectedly (fallback returned instead of 500). Try refresh + re-run.",
+            ranked=ranked,
+            overall=None,
+            helper={"used_llm": False, "model": "unknown", "notes": [f"Internal error: {str(e)[:160]}"]},
         )
 
 

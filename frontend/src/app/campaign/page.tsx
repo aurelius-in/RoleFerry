@@ -807,12 +807,6 @@ export default function CampaignPage() {
                     </span>
                   </div>
                 </div>
-                <button
-                  onClick={runDeliverabilityCheck}
-                  className="bg-orange-600 text-white px-4 py-2 rounded-md font-medium hover:bg-orange-700 transition-colors"
-                >
-                  Check Deliverability
-                </button>
               </div>
 
               <div className="flex items-center justify-between gap-3">
@@ -828,91 +822,6 @@ export default function CampaignPage() {
                   Preview with values
                 </label>
               </div>
-
-              {/* Deliverability Check Results */}
-              {deliverabilityCheck && (
-                <div className="bg-black/20 border border-white/10 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold mb-4">Deliverability Check</h3>
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-                    <div>
-                      <div className={`text-2xl font-bold ${getHealthScoreColor(deliverabilityCheck.overall_health_score)}`}>
-                        {deliverabilityCheck.overall_health_score}%
-                      </div>
-                      <div className="text-sm text-white/70">Overall health score</div>
-                      <div className="mt-1">
-                        <StarRating value={deliverabilityCheck.overall_health_score} scale="percent" showNumeric />
-                      </div>
-                    </div>
-                    {deliverabilityCheck.summary ? (
-                      <div className="text-sm text-white/70 md:max-w-2xl">
-                        <span className="font-semibold text-white/80">Summary:</span> {deliverabilityCheck.summary}
-                      </div>
-                    ) : null}
-                  </div>
-
-                  {deliverabilityCheck.reports?.length ? (
-                    <div className="space-y-4">
-                      {deliverabilityCheck.reports.map((r) => (
-                        <div key={`rep_${r.step_number}`} className="rounded-lg border border-white/10 bg-black/20 p-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <div className="text-sm font-semibold text-white">
-                                Step {r.step_number} •{" "}
-                                <span className={getHealthScoreColor(r.health_score)}>{r.health_score}%</span>{" "}
-                                <span className="text-white/60">({r.spam_risk} risk)</span>
-                              </div>
-                              {(r.issues?.length || r.warnings?.length) ? (
-                                <ul className="mt-2 text-sm text-white/70 list-disc list-inside space-y-1">
-                                  {(r.issues || []).slice(0, 4).map((x, i) => (
-                                    <li key={`i_${r.step_number}_${i}`} className="text-red-200">{x}</li>
-                                  ))}
-                                  {(r.warnings || []).slice(0, 4).map((x, i) => (
-                                    <li key={`w_${r.step_number}_${i}`}>{x}</li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <div className="mt-2 text-sm text-white/70">No major issues detected.</div>
-                              )}
-
-                              {r.subject_variants?.length ? (
-                                <div className="mt-3 text-sm text-white/70">
-                                  <div className="font-semibold text-white/80 mb-1">Safer subject variants</div>
-                                  <ul className="list-disc list-inside space-y-1">
-                                    {r.subject_variants.slice(0, 3).map((s, i) => (
-                                      <li key={`sv_${r.step_number}_${i}`}>{s}</li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              ) : null}
-
-                              {r.copy_tweaks?.length ? (
-                                <div className="mt-3 text-sm text-white/70">
-                                  <div className="font-semibold text-white/80 mb-1">Copy tweaks</div>
-                                  <ul className="list-disc list-inside space-y-1">
-                                    {r.copy_tweaks.slice(0, 5).map((t, i) => (
-                                      <li key={`ct_${r.step_number}_${i}`}>{t}</li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              ) : null}
-                            </div>
-
-                            {(r.improved_subject || r.improved_body) ? (
-                              <button
-                                type="button"
-                                onClick={() => applyDeliverabilityFix(r.step_number)}
-                                className="shrink-0 px-3 py-2 rounded-md bg-green-600 text-white text-sm font-semibold hover:bg-green-700"
-                              >
-                                Apply fixes
-                              </button>
-                            ) : null}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              )}
 
               {/* Email Steps */}
               <div>

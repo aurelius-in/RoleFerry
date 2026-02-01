@@ -441,18 +441,29 @@ export default function BioPageStep() {
                   <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
                     Slogan line (optional)
                   </label>
-                  <select
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cur = safeStr((draft?.theme as any)?.slogan_line);
+                      const base = ["", ...BIO_SLOGAN_PRESETS];
+                      const cycle = cur && !base.includes(cur) ? [...base, cur] : base;
+                      const idx = Math.max(0, cycle.indexOf(cur));
+                      const next = cycle[(idx + 1) % cycle.length] || "";
+                      updateTheme({ slogan_line: next });
+                    }}
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white text-left hover:bg-black/40 outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {safeStr((draft?.theme as any)?.slogan_line) || "Click to pick a slogan…"}
+                  </button>
+                  <div className="mt-1 text-[11px] text-white/60">
+                    Tip: click the slogan above to cycle through options (including “none”).
+                  </div>
+                  <input
                     value={safeStr((draft?.theme as any)?.slogan_line)}
                     onChange={(e) => updateTheme({ slogan_line: e.target.value })}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">None</option>
-                    {BIO_SLOGAN_PRESETS.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Or write your own slogan…"
+                    className="mt-2 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -748,33 +759,33 @@ export default function BioPageStep() {
                     </div>
                   </div>
 
-                  <div className="mt-6 rounded-lg border border-white/10 bg-white/5 p-4">
-                    <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">
+                  <div className="mt-6 rounded-lg border p-4" style={{ borderColor: colors.border, background: colors.card }}>
+                    <div className="text-xs font-semibold uppercase tracking-wider mb-2">
                       Resume snapshot (from parsed resume)
                     </div>
                     {!resumeSnapshot ? (
-                      <div className="text-sm text-white/70">
+                      <div className="text-sm" style={{ opacity: 0.85 }}>
                         No resume data found yet. Go to{" "}
-                        <a href="/resume" className="underline text-white/80 hover:text-white">
+                        <a href="/resume" className="underline hover:opacity-90">
                           Resume
                         </a>{" "}
                         and upload a file to populate this section.
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        <div className="text-[11px] text-white/50">
-                          Source: <span className="text-white/70 font-mono">resume_extract</span>
+                        <div className="text-[11px]" style={{ opacity: 0.75 }}>
+                          Source: <span className="font-mono">resume_extract</span>
                           {safeStr(resumeMeta?.filename) ? (
-                            <span className="text-white/50"> • {safeStr(resumeMeta.filename)}</span>
+                            <span> • {safeStr(resumeMeta.filename)}</span>
                           ) : null}
                           {safeStr(resumeMeta?.updated_at) ? (
-                            <span className="text-white/50"> • updated {safeStr(resumeMeta.updated_at)}</span>
+                            <span> • updated {safeStr(resumeMeta.updated_at)}</span>
                           ) : null}
                         </div>
 
                         {/* Experience */}
                         <div>
-                          <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Experience</div>
+                          <div className="text-xs font-semibold uppercase tracking-wider mb-2">Experience</div>
                           {asArr((resumeSnapshot as any)?.positions).length ? (
                             <div className="space-y-2">
                               {asArr((resumeSnapshot as any)?.positions)
@@ -796,23 +807,27 @@ export default function BioPageStep() {
                                       : start || (current ? "Present" : end);
                                   const dates = range || "Dates not listed";
                                   return (
-                                    <div key={`pos_${i}`} className="rounded-md border border-white/10 bg-black/20 p-3">
-                                      <div className="text-sm text-white/85 font-semibold">
-                                        {company || "Company"}{title ? <span className="text-white/60"> • {title}</span> : null}
+                                    <div
+                                      key={`pos_${i}`}
+                                      className="rounded-md border p-3"
+                                      style={{ borderColor: colors.border, background: colors.cardStrong }}
+                                    >
+                                      <div className="text-sm font-semibold">
+                                        {company || "Company"}{title ? <span style={{ opacity: 0.75 }}> • {title}</span> : null}
                                       </div>
-                                      <div className="mt-1 text-xs text-white/55">{dates}</div>
+                                      <div className="mt-1 text-xs" style={{ opacity: 0.8 }}>{dates}</div>
                                     </div>
                                   );
                                 })}
                             </div>
                           ) : (
-                            <div className="text-sm text-white/60">No positions extracted.</div>
+                            <div className="text-sm" style={{ opacity: 0.75 }}>No positions extracted.</div>
                           )}
                         </div>
 
                         {/* Skills */}
                         <div>
-                          <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Skills</div>
+                          <div className="text-xs font-semibold uppercase tracking-wider mb-2">Skills</div>
                           {asArr((resumeSnapshot as any)?.skills).length ? (
                             <div className="flex flex-wrap gap-2">
                               {asArr((resumeSnapshot as any)?.skills)
@@ -820,23 +835,24 @@ export default function BioPageStep() {
                                 .map((s: any, i: number) => (
                                   <span
                                     key={`sk_${i}`}
-                                    className="px-2.5 py-1 rounded-full border border-white/10 bg-black/20 text-xs text-white/75"
+                                    className="px-2.5 py-1 rounded-full border text-xs"
+                                    style={{ borderColor: colors.border, background: colors.cardStrong, opacity: 0.95 }}
                                   >
                                     {safeStr(s) || "Skill"}
                                   </span>
                                 ))}
                             </div>
                           ) : (
-                            <div className="text-sm text-white/60">No skills extracted.</div>
+                            <div className="text-sm" style={{ opacity: 0.75 }}>No skills extracted.</div>
                           )}
                         </div>
 
                         {/* Highlights */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div className="rounded-lg border border-white/10 bg-black/20 p-3">
-                            <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Key metrics</div>
+                          <div className="rounded-lg border p-3" style={{ borderColor: colors.border, background: colors.cardStrong }}>
+                            <div className="text-xs font-semibold uppercase tracking-wider mb-2">Key metrics</div>
                             {asArr((resumeSnapshot as any)?.keyMetrics).length ? (
-                              <ul className="text-sm text-white/75 list-disc list-inside space-y-1">
+                              <ul className="text-sm space-y-1">
                                 {asArr((resumeSnapshot as any)?.keyMetrics)
                                   .slice(0, 4)
                                   .map((m: any, i: number) => (
@@ -846,13 +862,13 @@ export default function BioPageStep() {
                                   ))}
                               </ul>
                             ) : (
-                              <div className="text-sm text-white/60">No metrics extracted.</div>
+                              <div className="text-sm" style={{ opacity: 0.75 }}>No metrics extracted.</div>
                             )}
                           </div>
-                          <div className="rounded-lg border border-white/10 bg-black/20 p-3">
-                            <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Accomplishments</div>
+                          <div className="rounded-lg border p-3" style={{ borderColor: colors.border, background: colors.cardStrong }}>
+                            <div className="text-xs font-semibold uppercase tracking-wider mb-2">Accomplishments</div>
                             {asArr((resumeSnapshot as any)?.accomplishments).length ? (
-                              <ul className="text-sm text-white/75 list-disc list-inside space-y-1">
+                              <ul className="text-sm space-y-1">
                                 {asArr((resumeSnapshot as any)?.accomplishments)
                                   .slice(0, 4)
                                   .map((t: any, i: number) => (
@@ -860,16 +876,16 @@ export default function BioPageStep() {
                                   ))}
                               </ul>
                             ) : (
-                              <div className="text-sm text-white/60">No accomplishments extracted.</div>
+                              <div className="text-sm" style={{ opacity: 0.75 }}>No accomplishments extracted.</div>
                             )}
                           </div>
                         </div>
 
                         {/* Education */}
                         <div>
-                          <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Education</div>
+                          <div className="text-xs font-semibold uppercase tracking-wider mb-2">Education</div>
                           {asArr((resumeSnapshot as any)?.education).length ? (
-                            <ul className="text-sm text-white/75 list-disc list-inside space-y-1">
+                            <ul className="text-sm space-y-1">
                               {asArr((resumeSnapshot as any)?.education)
                                 .slice(0, 2)
                                 .map((e: any, i: number) => {
@@ -884,7 +900,7 @@ export default function BioPageStep() {
                                 })}
                             </ul>
                           ) : (
-                            <div className="text-sm text-white/60">No education extracted.</div>
+                            <div className="text-sm" style={{ opacity: 0.75 }}>No education extracted.</div>
                           )}
                         </div>
                       </div>
@@ -898,10 +914,10 @@ export default function BioPageStep() {
 
         <div className="mt-6 flex justify-end">
           <Link
-            href="/deliverability-launch"
+            href="/campaign"
             className="px-6 py-3 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700"
           >
-            Continue to Deliverability + Launch →
+            Plan Campaign Sequence →
           </Link>
         </div>
       </div>

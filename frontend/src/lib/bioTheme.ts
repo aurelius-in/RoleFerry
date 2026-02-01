@@ -18,18 +18,18 @@ export type BioThemePrefs = {
 
 export const BIO_BG_OPTIONS: BioBgOption[] = [
   // Dark (default-friendly)
-  { id: "black", label: "Black", hex: "#050505", kind: "dark" },
-  { id: "slate", label: "Slate", hex: "#020617", kind: "dark" },
-  { id: "navy", label: "Navy", hex: "#071A2B", kind: "dark" },
-  { id: "forest", label: "Forest", hex: "#071A12", kind: "dark" },
-  { id: "plum", label: "Plum", hex: "#18081F", kind: "dark" },
+  { id: "charcoal", label: "Charcoal", hex: "#0B0F14", kind: "dark" },
+  { id: "midnight", label: "Midnight Navy", hex: "#0A1330", kind: "dark" },
+  { id: "deep-teal", label: "Deep Teal", hex: "#062428", kind: "dark" },
+  { id: "aubergine", label: "Aubergine", hex: "#1A0F2E", kind: "dark" },
+  { id: "oxblood", label: "Oxblood", hex: "#2A0B10", kind: "dark" },
 
   // Light (high readability with dark text)
-  { id: "white", label: "White", hex: "#FFFFFF", kind: "light" },
-  { id: "paper", label: "Paper", hex: "#FAFAF9", kind: "light" },
-  { id: "mist", label: "Mist", hex: "#F5F5F4", kind: "light" },
-  { id: "sand", label: "Sand", hex: "#FFF7ED", kind: "light" },
-  { id: "ice", label: "Ice", hex: "#ECFEFF", kind: "light" },
+  { id: "cream", label: "Cream", hex: "#FFF8E7", kind: "light" },
+  { id: "sky", label: "Sky", hex: "#EAF4FF", kind: "light" },
+  { id: "mint", label: "Mint", hex: "#E9FFF4", kind: "light" },
+  { id: "lavender", label: "Lavender", hex: "#F3EEFF", kind: "light" },
+  { id: "rose", label: "Rose", hex: "#FFF0F3", kind: "light" },
 ];
 
 export const BIO_SLOGAN_PRESETS: string[] = [
@@ -118,8 +118,11 @@ export function computeBioColors(prefs: BioThemePrefs | null | undefined) {
   const t = normalizeBioTheme(prefs);
   const fg = t.kind === "dark" ? "#FFFFFF" : "#0B0B0B";
   const border = t.kind === "dark" ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.18)";
-  const card = t.kind === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)";
-  const cardStrong = t.kind === "dark" ? "rgba(0,0,0,0.22)" : "rgba(255,255,255,0.7)";
+  // Card surfaces should always increase contrast against the chosen background.
+  // - Dark bg → slightly lighter cards
+  // - Light bg → slightly whiter cards (NOT grey text on grey card)
+  const card = t.kind === "dark" ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.78)";
+  const cardStrong = t.kind === "dark" ? "rgba(0,0,0,0.24)" : "rgba(255,255,255,0.92)";
   const buttonBg = fg;
   const buttonFg = t.kind === "dark" ? "#0B0B0B" : "#FFFFFF";
 
