@@ -44,6 +44,9 @@ class BioPageDraft(BaseModel):
     calendly_url: str = ""
     linkedin_url: str = ""
 
+    # Intro/portfolio video: can be a URL or data URL (demo/localStorage).
+    video_url: str = ""
+
     # proof + positioning
     proof_points: List[str] = Field(default_factory=list)
     fit_points: List[str] = Field(default_factory=list)
@@ -157,6 +160,7 @@ def _build_deterministic_draft(
         profile_image_url=profile_image_url or "",
         calendly_url="",  # filled by profile vars later (or user)
         linkedin_url=linkedin_url or "",
+        video_url="",
         proof_points=proof[:6],
         fit_points=fit[:6],
         resume_extract=rx,
