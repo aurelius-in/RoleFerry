@@ -459,7 +459,9 @@ export default function BioPageStep() {
                     Tip: click the slogan above to cycle through options (including “none”).
                   </div>
                   <input
-                    value={safeStr((draft?.theme as any)?.slogan_line)}
+                    // IMPORTANT: don't trim here, or trailing spaces get removed while typing
+                    // and the user can't create spaces between words.
+                    value={String((draft?.theme as any)?.slogan_line ?? "")}
                     onChange={(e) => updateTheme({ slogan_line: e.target.value })}
                     placeholder="Or write your own slogan…"
                     className="mt-2 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"

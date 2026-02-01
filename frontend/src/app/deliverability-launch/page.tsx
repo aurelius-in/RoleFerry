@@ -278,7 +278,8 @@ export default function DeliverabilityLaunchPage() {
 
     // Prefer: personal + 1 line value + tiny CTA
     const pieces: string[] = [];
-    pieces.push(`Hi ${first} —`);
+    // Avoid em-dashes; they can read as "AI-written" in LinkedIn notes.
+    pieces.push(`Hi ${first},`);
     if (company) pieces.push(`I’m exploring ${jobTitle} at ${company}.`);
     else pieces.push(`I’m exploring ${jobTitle}.`);
 
@@ -1505,6 +1506,98 @@ export default function DeliverabilityLaunchPage() {
                       Checks TXT at <span className="font-mono">{`<selector>._domainkey.<domain>`}</span>
                     </div>
                   </div>
+                </div>
+
+                {/* Recipients (per-contact email verification status) */}
+                <div className="mb-4 bg-black/20 border border-white/10 rounded-lg p-4">
+                  {(() => {
+                    const contacts = loadSelectedContacts();
+                    const emailCheck = preFlightChecks.find((c) => c.name === "Email Verification");
+                    const verifiedContacts = (emailCheck?.meta?.verified_contacts as any[]) || [];
+                    const verifiedEmailSet = new Set(
+                      (Array.isArray(verifiedContacts) ? verifiedContacts : [])
+                        .map((c: any) => String(c?.email || "").trim().toLowerCase())
+                        .filter(Boolean)
+                    );
+                    const verifiedIdSet = new Set(
+                      (Array.isArray(verifiedContacts) ? verifiedContacts : [])
+                        .map((c: any) => String(c?.id || "").trim())
+                        .filter(Boolean)
+                    );
+
+                    const total = Array.isArray(contacts) ? contacts.length : 0;
+                    const withEmail = (Array.isArray(contacts) ? contacts : []).filter((c: any) => String(c?.email || "").trim()).length;
+                    const verified = (Array.isArray(contacts) ? contacts : []).filter((c: any) => {
+                      const id = String(c?.id || "").trim();
+                      const em = String(c?.email || "").trim().toLowerCase();
+                      if (!id && !em) return false;
+                      return (id && verifiedIdSet.has(id)) || (em && verifiedEmailSet.has(em));
+                    }).length;
+
+                    return (
+                      <>
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="text-sm font-semibold text-white">Recipients</div>
+                            <div className="mt-1 text-xs text-white/60">
+                              Deliverability (spam risk) is checked per <span className="font-semibold text-white/80">email step</span>.{" "}
+                              This table shows per-contact <span className="font-semibold text-white/80">email verification</span>.
+                            </div>
+                          </div>
+                          <div className="text-xs text-white/60">
+                            {emailCheck ? (
+                              <>
+                                Verified: <span className="text-emerald-200 font-semibold">{verified}</span> / {withEmail} with email
+                              </>
+                            ) : (
+                              <>Run pre-flight checks to verify emails</>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-3 rounded-md border border-white/10 overflow-hidden">
+                          <div className="grid grid-cols-12 gap-2 px-3 py-2 text-[11px] text-white/60 bg-white/5">
+                            <div className="col-span-4">Contact</div>
+                            <div className="col-span-5">Email</div>
+                            <div className="col-span-3 text-right">Status</div>
+                          </div>
+                          <div className="divide-y divide-white/10">
+                            {(Array.isArray(contacts) ? contacts : []).slice(0, 50).map((c: any) => {
+                              const name = String(c?.name || "Contact").trim();
+                              const company = String(c?.company || "").trim();
+                              const email = String(c?.email || "").trim();
+                              const id = String(c?.id || "").trim();
+                              const isVerified =
+                                Boolean((id && verifiedIdSet.has(id)) || (email && verifiedEmailSet.has(email.toLowerCase())));
+                              const status =
+                                !email
+                                  ? { label: "No email", cls: "text-white/60" }
+                                  : !emailCheck
+                                    ? { label: "Not checked", cls: "text-yellow-200" }
+                                    : isVerified
+                                      ? { label: "Verified", cls: "text-emerald-200" }
+                                      : { label: "Unverified", cls: "text-red-200" };
+                              return (
+                                <div key={`rcpt_${id || email || name}`} className="grid grid-cols-12 gap-2 px-3 py-2 text-xs text-white/80">
+                                  <div className="col-span-4 min-w-0">
+                                    <div className="truncate font-semibold text-white/85">{name}</div>
+                                    <div className="truncate text-[11px] text-white/50">{company || "—"}</div>
+                                  </div>
+                                  <div className="col-span-5 min-w-0 truncate font-mono text-[11px] text-white/70">
+                                    {email || "—"}
+                                  </div>
+                                  <div className={`col-span-3 text-right font-semibold ${status.cls}`}>{status.label}</div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        {total > 50 ? (
+                          <div className="mt-2 text-[11px] text-white/50">Showing 50 of {total} recipients.</div>
+                        ) : null}
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {preFlightChecks.length > 0 && (
