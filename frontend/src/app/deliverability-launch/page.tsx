@@ -266,7 +266,7 @@ export default function DeliverabilityLaunchPage() {
     // LinkedIn connection request notes have a tight limit (commonly ~300 chars). Keep it crisp.
     const name = String(c?.name || "").trim();
     const first = name ? name.split(" ")[0] : "there";
-    const company = String(c?.company || "").trim();
+    const company = formatCompanyName(String(c?.company || "").trim());
     const jd = (() => {
       try { return JSON.parse(localStorage.getItem("selected_job_description") || "null"); } catch { return null; }
     })();

@@ -132,7 +132,8 @@ export default function PainPointMatchPage() {
   const renderValueOrMissing = (raw: string, className: string) => {
     const v = sanitizeForUi(raw, "Missing details");
     if (v === "Missing details") {
-      return <span className="text-red-700 font-semibold">Missing details</span>;
+      // Needs to be readable on both light + dark sections of this page.
+      return <span className="text-white/60 font-semibold">Missing details</span>;
     }
     return <span className={className}>{v}</span>;
   };
@@ -510,26 +511,26 @@ export default function PainPointMatchPage() {
                             renderableAlignments(match).map((a) => (
                               <div
                                 key={`align_${index}_${a.n}`}
-                                className="rounded-lg p-4 border border-red-400/25 bg-red-500/10"
+                                className="rounded-lg p-4 border border-white/10 bg-white/5"
                               >
                                 <div className="flex items-start space-x-3">
                                   <div className="flex-shrink-0">
                                     <div className="w-8 h-8 bg-red-500/15 rounded-full flex items-center justify-center border border-red-400/25">
-                                      <span className="text-red-200 font-semibold">{a.n}</span>
+                                      <span className="text-white/85 font-semibold">{a.n}</span>
                                     </div>
                                   </div>
                                   <div className="flex-1">
-                                    <h4 className="font-semibold text-red-200 mb-2">Pain Point</h4>
+                                    <h4 className="font-semibold text-white/85 mb-2">Pain Point</h4>
                                     <p className="text-white/85 mb-3">{a.painpoint}</p>
                                     {String(a.jdEvidence || "").trim() ? (
                                       <div className="mb-3 text-xs text-white/75">
-                                        <span className="font-semibold text-red-200">From JD:</span>{" "}
+                                        <span className="font-semibold text-white/70">From JD:</span>{" "}
                                         <span className="italic text-white/85">“{sanitizeForUi(String(a.jdEvidence), "Missing details")}”</span>
                                       </div>
                                     ) : (
                                       <div className="mb-3 text-xs text-white/75">
-                                        <span className="font-semibold text-red-200">From JD:</span>{" "}
-                                        <span className="text-red-700 font-semibold">Missing details</span>
+                                        <span className="font-semibold text-white/70">From JD:</span>{" "}
+                                        <span className="text-white/60 font-semibold">Missing details</span>
                                       </div>
                                     )}
 
@@ -543,7 +544,7 @@ export default function PainPointMatchPage() {
                                     ) : (
                                       <div className="mb-3 text-xs text-white/75">
                                         <span className="font-semibold text-emerald-200">From resume:</span>{" "}
-                                        <span className="text-red-700 font-semibold">Missing details</span>
+                                        <span className="text-white/60 font-semibold">Missing details</span>
                                       </div>
                                     )}
                                     {String(a.overlap || "").trim() ? (
