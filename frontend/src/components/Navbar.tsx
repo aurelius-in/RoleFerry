@@ -34,11 +34,15 @@ export default function Navbar() {
         if (path === "/job-descriptions" || path.startsWith("/job-descriptions/")) return 4;
         if (path === "/gap-analysis" || path.startsWith("/gap-analysis/")) return 5;
         if (path === "/painpoint-match" || path.startsWith("/painpoint-match/")) return 6;
-        if (path === "/find-contact" || path.startsWith("/find-contact/")) return 7;
+        if (path === "/company-research" || path.startsWith("/company-research/")) return 7;
+        // Context research is part of the "Decision Makers" step in the wireframe flow.
+        if (path === "/find-contact" || path.startsWith("/find-contact/")) return 8;
         if (path === "/context-research" || path.startsWith("/context-research/")) return 8;
-        if (path === "/offer-creation" || path.startsWith("/offer-creation/")) return 9;
+        // Consolidated Offer + Compose lives on /compose.
+        if (path === "/compose" || path.startsWith("/compose/")) return 9;
         if (path === "/bio-page" || path.startsWith("/bio-page/")) return 10;
-        if (path === "/compose" || path.startsWith("/compose/")) return 11;
+        if (path === "/bio/preview" || path.startsWith("/bio/preview/")) return 10;
+        if (path === "/deliverability-launch" || path.startsWith("/deliverability-launch/")) return 11;
         if (path === "/campaign" || path.startsWith("/campaign/")) return 12;
         return null;
       };
@@ -144,7 +148,6 @@ export default function Navbar() {
             <NavPill href="/painpoint-match" pathname={pathname}>Match</NavPill>
             <NavPill href="/find-contact" pathname={pathname}>Contact</NavPill>
             <NavPill href="/context-research" pathname={pathname}>Research</NavPill>
-            <NavPill href="/offer-creation" pathname={pathname}>Offer</NavPill>
             <NavPill href="/bio-page" pathname={pathname}>Bio</NavPill>
             <NavPill href="/compose" pathname={pathname}>Compose</NavPill>
             <NavPill href="/campaign" pathname={pathname}>Campaign</NavPill>

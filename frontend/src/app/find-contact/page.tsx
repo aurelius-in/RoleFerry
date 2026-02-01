@@ -677,7 +677,7 @@ export default function FindContactPage() {
       return;
     }
     localStorage.setItem('selected_contacts', JSON.stringify(chosen));
-    router.push('/offer-creation');
+    router.push('/compose');
   };
 
   const runContactResearch = async () => {
