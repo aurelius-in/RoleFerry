@@ -612,7 +612,7 @@ export default function CampaignPage() {
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Campaign (Sequence)</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Email Campaign Sequence</h1>
             <p className="text-white/70">
               {mode === 'job-seeker' 
                 ? 'Your 3-email outreach sequence to land the job.'
