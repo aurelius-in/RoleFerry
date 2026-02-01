@@ -49,6 +49,8 @@ export default function FindContactPage() {
   const router = useRouter();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  // Company-first: make the company explicit, and keep an optional secondary query.
+  const [companyQuery, setCompanyQuery] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [companyOptions, setCompanyOptions] = useState<string[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
@@ -435,6 +437,17 @@ export default function FindContactPage() {
       );
       uniq.sort((a, b) => a.localeCompare(b));
       setCompanyOptions(uniq);
+      // Prefer the selected job's company if present; else default to the first known company.
+      if (!String(companyQuery || "").trim() && uniq.length) {
+        try {
+          const selectedJdRaw = localStorage.getItem("selected_job_description");
+          const jd = selectedJdRaw ? JSON.parse(selectedJdRaw) : null;
+          const c = String(jd?.company || "").trim();
+          setCompanyQuery(c || uniq[0] || "");
+        } catch {
+          setCompanyQuery(uniq[0] || "");
+        }
+      }
     } catch {
       // ignore
     }
@@ -471,7 +484,7 @@ export default function FindContactPage() {
   }, [userKey]);
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
+    if (!companyQuery.trim()) return;
     
     setIsSearching(true);
     setError(null);
@@ -495,8 +508,9 @@ export default function FindContactPage() {
       } catch {}
 
       const res = await api<ContactSearchResponse>("/find-contact/search", "POST", {
-        query: searchQuery,
-        company: searchQuery,
+        query: companyQuery,
+        company: companyQuery,
+        role: (searchQuery || "").trim() || undefined,
         target_job_title: targetJobTitle || undefined,
         candidate_title: candidateTitle || undefined,
       });
@@ -511,7 +525,7 @@ export default function FindContactPage() {
       setError(isNotFound ? "No decision makers found for that company. Try a more specific company name, or use the suggested targets below." : msg || "Search failed.");
 
       if (isNotFound) {
-        const company = searchQuery.trim();
+        const company = companyQuery.trim();
 
         // LinkedIn's internal people search often shows empty results unless you're logged in.
         // For demos, use a Google query that finds LinkedIn profiles reliably.
@@ -938,19 +952,22 @@ export default function FindContactPage() {
           <div className="mb-8">
             {companyOptions.length > 0 && (
               <div className="mb-6">
-                <div className="text-xs font-semibold text-white/70 mb-3 uppercase tracking-wider">Quick Search: Companies from previous steps</div>
+                <div className="text-xs font-semibold text-white/70 mb-3 uppercase tracking-wider">
+                  Companies from previous steps
+                </div>
+                <div className="text-[11px] text-white/60 mb-3">
+                  Pick a company first, then optionally add a role/title query.
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {companyOptions.map((c) => (
                     <button
                       key={c}
                       type="button"
                       onClick={() => {
-                        setSearchQuery(c);
-                        // Trigger search automatically when clicking a quick-option? 
-                        // Let's keep it manual for consistency unless asked.
+                        setCompanyQuery(c);
                       }}
                       className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
-                        searchQuery === c
+                        companyQuery === c
                           ? "brand-gradient text-black border-white/20 shadow-lg shadow-blue-500/20"
                           : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white"
                       }`}
@@ -961,19 +978,27 @@ export default function FindContactPage() {
                 </div>
               </div>
             )}
-            <div className="flex space-x-4">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+              <input
+                type="text"
+                value={companyQuery}
+                onChange={(e) => setCompanyQuery(e.target.value)}
+                placeholder="Company (required)…"
+                className="md:col-span-5 rounded-md border border-white/15 bg-black/30 px-4 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+              />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by company name, role, or LinkedIn URL..."
-                className="flex-1 rounded-md border border-white/15 bg-black/30 px-4 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                placeholder="Optional: role/title (e.g. recruiter, VP Eng) or LinkedIn URL…"
+                className="md:col-span-5 rounded-md border border-white/15 bg-black/30 px-4 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
               />
               <button
                 onClick={handleSearch}
-                disabled={isSearching || !searchQuery.trim()}
-                className="bg-blue-600 text-white px-6 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                disabled={isSearching || !companyQuery.trim()}
+                className="md:col-span-2 bg-blue-600 text-white px-6 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
                 {isSearching ? "Searching..." : "Search"}
               </button>

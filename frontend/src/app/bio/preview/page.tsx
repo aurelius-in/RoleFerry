@@ -5,6 +5,7 @@ import Link from "next/link";
 import placeholderPat from "@/profile-pat.png";
 import { formatCompanyName } from "@/lib/format";
 import { computeBioColors, bulletGlyph } from "@/lib/bioTheme";
+import { formatDateLike } from "@/lib/formatDateLike";
 
 type BioPageDraft = {
   display_name: string;
@@ -34,6 +35,7 @@ function safeStr(v: any) {
 
 export default function LocalBioPreview() {
   const [draft, setDraft] = useState<BioPageDraft | null>(null);
+  const [resumeExtractLocal, setResumeExtractLocal] = useState<any>(null);
 
   useEffect(() => {
     try {
@@ -41,6 +43,12 @@ export default function LocalBioPreview() {
       setDraft(raw ? JSON.parse(raw) : null);
     } catch {
       setDraft(null);
+    }
+    try {
+      const rawResume = localStorage.getItem("resume_extract");
+      setResumeExtractLocal(rawResume ? JSON.parse(rawResume) : null);
+    } catch {
+      setResumeExtractLocal(null);
     }
   }, []);
 
@@ -54,7 +62,7 @@ export default function LocalBioPreview() {
     return (placeholderPat as any).src || placeholderPat;
   }, [draft]);
 
-  const rx = draft?.resume_extract || {};
+  const rx = draft?.resume_extract || resumeExtractLocal || {};
   const positions = Array.isArray(rx?.positions) ? rx.positions : [];
   const skills = Array.isArray(rx?.skills) ? rx.skills : [];
   const education = Array.isArray(rx?.education) ? rx.education : [];
@@ -211,7 +219,8 @@ export default function LocalBioPreview() {
                           <span>@ {formatCompanyName(String(p?.company || "")) || "Company"}</span>
                         </div>
                         <div className="text-xs font-semibold mt-1">
-                          {safeStr(p?.start_date || p?.startDate) || "—"} – {safeStr(p?.end_date || p?.endDate) || (p?.current ? "Present" : "—")}
+                          {formatDateLike(p?.startDate ?? p?.start_date ?? p?.start ?? p?.from ?? p?.startYear ?? p?.start_year) || "—"} –{" "}
+                          {formatDateLike(p?.endDate ?? p?.end_date ?? p?.end ?? p?.to ?? p?.endYear ?? p?.end_year) || (p?.current ? "Present" : "—")}
                         </div>
                         {isNonEmpty(p?.description) ? (
                           <div className="text-sm mt-2">{String(p.description)}</div>

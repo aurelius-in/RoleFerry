@@ -305,7 +305,12 @@ export default function BioPageStep() {
     setMsg(null);
     try {
       const res = await api<{ slug: string; public_url: string }>("/bio-pages/publish", "POST", {
-        draft: { ...draft, profile_image_url: profileImageUrl || draft.profile_image_url || "" },
+        draft: {
+          ...draft,
+          profile_image_url: profileImageUrl || draft.profile_image_url || "",
+          // Ensure the public page renders the same Resume Snapshot as the editor/preview.
+          resume_extract: (draft as any)?.resume_extract ?? resumeExtract ?? null,
+        },
       });
       const url = safeStr(res?.public_url);
       if (url) {

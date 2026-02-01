@@ -305,17 +305,54 @@ export default function DeliverabilityLaunchPage() {
   };
 
   const generateLinkedinNotes = () => {
-    const contacts = loadSelectedContacts();
-    const by: Record<string, string> = {};
-    for (const c of contacts) {
-      const cid = String(c?.id || "").trim();
-      if (!cid) continue;
-      by[cid] = buildLinkedinNote(c);
-    }
-    setLinkedinNotesByContact(by);
-    persistLinkedinNotes(by);
-    setLinkedinNotice(`Generated ${Object.keys(by).length} LinkedIn note(s).`);
-    window.setTimeout(() => setLinkedinNotice(null), 2200);
+    (async () => {
+      const contacts = loadSelectedContacts();
+      const draftsById: Record<string, string> = {};
+      for (const c of contacts) {
+        const cid = String(c?.id || "").trim();
+        if (!cid) continue;
+        draftsById[cid] = buildLinkedinNote(c);
+      }
+
+      // Always attempt an LLM polish pass (with deterministic fallback on failure).
+      const polishedById: Record<string, string> = { ...draftsById };
+      try {
+        const jd = (() => {
+          try { return JSON.parse(localStorage.getItem("selected_job_description") || "null"); } catch { return null; }
+        })();
+        const jobTitle = String(jd?.title || "").trim();
+        const painpoint = readPainpoint();
+        const solution = readOfferSnippet();
+
+        await Promise.all(
+          contacts.map(async (c: any) => {
+            const cid = String(c?.id || "").trim();
+            if (!cid) return;
+            const draft = draftsById[cid] || "";
+            if (!draft) return;
+            const res = await api<{ note: string; used_ai?: boolean }>("/find-contact/improve-linkedin-note", "POST", {
+              note: draft,
+              contact_name: String(c?.name || "").trim() || undefined,
+              contact_title: String(c?.title || "").trim() || undefined,
+              contact_company: String(c?.company || "").trim() || undefined,
+              job_title: jobTitle || undefined,
+              painpoint: painpoint || undefined,
+              solution: solution || undefined,
+              limit: 280,
+            });
+            const improved = String(res?.note || "").replaceAll("—", "-").replaceAll("–", "-").replace(/\s+/g, " ").trim();
+            if (improved) polishedById[cid] = improved;
+          })
+        );
+      } catch {
+        // Keep deterministic drafts if the polish step fails.
+      }
+
+      setLinkedinNotesByContact(polishedById);
+      persistLinkedinNotes(polishedById);
+      setLinkedinNotice(`Generated ${Object.keys(polishedById).length} LinkedIn note(s).`);
+      window.setTimeout(() => setLinkedinNotice(null), 2200);
+    })();
   };
 
   const computeCampaignSummary = () => {

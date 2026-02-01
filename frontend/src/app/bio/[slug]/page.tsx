@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import placeholderPat from "@/profile-pat.png";
 import { formatCompanyName } from "@/lib/format";
 import { computeBioColors, bulletGlyph } from "@/lib/bioTheme";
+import { formatDateLike } from "@/lib/formatDateLike";
 
 type BioPageDraft = {
   display_name: string;
@@ -220,8 +221,8 @@ export default function PublicBioPage() {
                           <span>@ {formatCompanyName(String(p?.company || "")) || "Company"}</span>
                         </div>
                         <div className="text-xs font-semibold mt-1">
-                          {String(p?.start_date || "").trim() || "—"} –{" "}
-                          {String(p?.end_date || "").trim() || (p?.current ? "Present" : "—")}
+                          {formatDateLike(p?.startDate ?? p?.start_date ?? p?.start ?? p?.from ?? p?.startYear ?? p?.start_year) || "—"} –{" "}
+                          {formatDateLike(p?.endDate ?? p?.end_date ?? p?.end ?? p?.to ?? p?.endYear ?? p?.end_year) || (p?.current ? "Present" : "—")}
                         </div>
                         {isNonEmpty(p?.description) ? (
                           <div className="text-sm mt-2">{String(p.description)}</div>
@@ -269,7 +270,7 @@ export default function PublicBioPage() {
                           {String(e?.field || "").trim() ? ` · ${String(e.field)}` : ""}
                         </div>
                         <div className="text-xs font-semibold mt-1">
-                          {String(e?.start_year || "").trim() || "—"} – {String(e?.end_year || "").trim() || "—"}
+                          {formatDateLike(e?.startYear ?? e?.start_year) || "—"} – {formatDateLike(e?.endYear ?? e?.end_year) || "—"}
                         </div>
                       </div>
                     ))}
