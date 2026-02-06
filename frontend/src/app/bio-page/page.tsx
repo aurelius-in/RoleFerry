@@ -1162,7 +1162,7 @@ export default function BioPageStep() {
           ) : null}
           {bioUrl ? (
             <Link href="/campaign" className="px-6 py-3 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700">
-              Continue to Campaign →
+              Save &amp; Continue
             </Link>
           ) : (
             <button
@@ -1170,7 +1170,7 @@ export default function BioPageStep() {
               disabled
               className="px-6 py-3 rounded-lg bg-blue-600/40 text-white/60 font-bold cursor-not-allowed"
             >
-              Continue to Campaign →
+              Save &amp; Continue
             </button>
           )}
         </div>

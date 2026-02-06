@@ -479,7 +479,7 @@ export default function GapAnalysisPage() {
               onClick={() => router.push("/painpoint-match")}
               className="px-4 py-2 rounded-md bg-white/10 border border-white/10 text-white font-semibold hover:bg-white/15"
             >
-              Continue to Pain Point Match →
+              Save &amp; Continue
             </button>
           </div>
         </div>
