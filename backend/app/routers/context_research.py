@@ -17,7 +17,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Bump this when changing prompting/logic so cached results don't mask improvements.
-_PROMPT_VERSION = "2026-01-19-company-research-v3"
+_PROMPT_VERSION = "2026-02-06-contact-hooks-v1"
 
 # PDL can be expensive; default OFF unless explicitly enabled.
 _ENABLE_PDL = str(os.getenv("ROLEFERRY_ENABLE_PDL", "false")).lower() == "true"
@@ -65,6 +65,8 @@ class ContactBio(BaseModel):
     post_topics: List[str] = []
     opinions: List[str] = []
     other_interesting_facts: List[str] = []
+    # Preferred: structured "hooks" with sources (only include urls that exist in corpus).
+    interesting_facts: List[Dict[str, str]] = []
 
 class RecentNews(BaseModel):
     title: str
@@ -577,6 +579,7 @@ async def conduct_research(request: ResearchRequest):
                         "education": "Unknown",
                         "skills": skills,
                         "linkedin_url": c.linkedin_url,
+                        "interesting_facts": [],
                     }
                 ],
                 "recent_news": contact_news,
@@ -652,6 +655,10 @@ async def conduct_research(request: ResearchRequest):
                     "- company_recent_posts should be 3–8 bullets summarizing recent company posts (blog/press/LinkedIn topics) with URLs when available.\n"
                     "- company_publications should be 1–6 bullets summarizing notable publications (case studies, whitepapers, reports) with URLs when available.\n"
                     "- contact_bios.bio should be 1–2 sentences tailored to the contact's title/department.\n"
+                    "- If the corpus includes contact_serper_by_topic for a contact (posts/talks/linkedin) with real URLs, you MUST populate contact_bios[0].interesting_facts with 3–6 items.\n"
+                    "  - Each interesting_facts item must be { fact, source_title, source_url }.\n"
+                    "  - fact should be a punchy outreach hook (<= 140 chars), grounded in the snippet and safe to reference.\n"
+                    "  - source_url must be a real URL from the corpus for that contact. Do NOT fabricate.\n"
                     "- hooks should be 4–8 punchy, concrete outreach angles (no fluff), grounded in the job pain_points / success_metrics if present.\n\n"
                     "Grounding rules for the Contact Background Report:\n"
                     "- If resume_extract or painpoint_matches are provided, use them to make the report SPECIFIC.\n"
@@ -689,7 +696,7 @@ async def conduct_research(request: ResearchRequest):
                     "  Each value must be an object with keys:\n"
                     "  - company_summary: { name, description, industry, size, founded, headquarters, website, linkedin_url }\n"
                     "  - contact_bios: array of { name, title, company, bio, experience, education, skills, linkedin_url,\n"
-                    "      public_profile_highlights, publications, post_topics, opinions, other_interesting_facts }\n"
+                    "      public_profile_highlights, publications, post_topics, opinions, other_interesting_facts, interesting_facts }\n"
                     "  - theme: string\n"
                     "  - company_culture_values: string\n"
                     "  - company_market_position: string\n"
@@ -832,6 +839,15 @@ async def conduct_research(request: ResearchRequest):
                         post_topics=[str(x) for x in (b.get("post_topics") or [])][:10],
                         opinions=[str(x) for x in (b.get("opinions") or [])][:8],
                         other_interesting_facts=[str(x) for x in (b.get("other_interesting_facts") or [])][:8],
+                        interesting_facts=[
+                            {
+                                "fact": str((x or {}).get("fact") or "").strip(),
+                                "source_title": str((x or {}).get("source_title") or "").strip(),
+                                "source_url": str((x or {}).get("source_url") or "").strip(),
+                            }
+                            for x in (b.get("interesting_facts") or [])
+                            if isinstance(x, dict) and str((x or {}).get("fact") or "").strip()
+                        ][:8],
                     )
                     for b in bios
                     if isinstance(b, dict)

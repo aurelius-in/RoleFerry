@@ -11,7 +11,7 @@ export default function CopilotPanel() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "Hi! I'm your RoleFerry Copilot. Ask me anything about jobs, applications, or your search strategy."
+      content: "Hi! I'm your RoleFerry Copilot. Ask me anything about roles, applications, or your search strategy."
     }
   ]);
   const [input, setInput] = useState('');
@@ -21,15 +21,15 @@ export default function CopilotPanel() {
     const lower = query.toLowerCase();
     
     if (lower.includes('fit') || lower.includes('match')) {
-      return 'This job is a great fit for you! Your 6 years of PM experience aligns perfectly with the Senior PM role. Your track record of increasing engagement by 45% at TechCorp shows you can deliver results. The company is in SaaS (your target industry) and offers the remote flexibility you want.';
+      return 'This role is a great fit for you! Your 6 years of PM experience aligns perfectly with the Senior PM role. Your track record of increasing engagement by 45% at TechCorp shows you can deliver results. The company is in SaaS (your target industry) and offers the remote flexibility you want.';
     } else if (lower.includes('email') || lower.includes('write')) {
       return 'Here\'s a draft email:\n\nSubject: Quick question about Senior PM role\n\nHi [First Name],\n\nI came across the Senior PM role at [Company] and wanted to reach out directly. I have 6 years of PM experience, most recently at TechCorp where I increased engagement 45% and led a team of 8.\n\nWould love to chat for 15 minutes if you\'re open.\n\nBest,\nAlex';
     } else if (lower.includes('insider') || lower.includes('contact')) {
-      return 'I can help you find insider contacts! Click "Find Insiders" on the job detail page and I\'ll discover hiring managers and recruiters at the company. We\'ll verify their emails and help you reach out directly.';
+      return 'I can help you find insider contacts! Click "Find Insiders" on the role detail page and I\'ll discover hiring managers and recruiters at the company. We\'ll verify their emails and help you reach out directly.';
     } else if (lower.includes('improve') || lower.includes('better')) {
-      return 'To improve your job search:\n\n1. Apply to 5-10 jobs per week (consistency is key)\n2. Personalize each email (mention specific projects)\n3. Follow up after 3-5 days (persistence pays off)\n4. Keep your tracker organized (track every touchpoint)\n\nYour current reply rate is 17%, which is above the platform average of 15%!';
+      return 'To improve your role search:\n\n1. Apply to 5-10 roles per week (consistency is key)\n2. Personalize each email (mention specific projects)\n3. Follow up after 3-5 days (persistence pays off)\n4. Keep your tracker organized (track every touchpoint)\n\nYour current reply rate is 17%, which is above the platform average of 15%!';
     } else {
-      return 'I\'m here to help with your job search! I can:\n\n• Explain why jobs are good matches\n• Write personalized outreach emails\n• Find insider contacts at companies\n• Give job search strategy advice\n\nWhat would you like to know?';
+      return 'I\'m here to help with your role search! I can:\n\n• Explain why roles are good matches\n• Write personalized outreach emails\n• Find insider contacts at companies\n• Give role search strategy advice\n\nWhat would you like to know?';
     }
   };
 
@@ -52,7 +52,7 @@ export default function CopilotPanel() {
   };
 
   const suggestions = [
-    "Tell me why this job is a good fit",
+    "Tell me why this role is a good fit",
     "Write an email to the hiring manager",
     "Show potential insider contacts"
   ];

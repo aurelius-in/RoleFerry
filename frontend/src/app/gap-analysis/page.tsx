@@ -111,9 +111,9 @@ export default function GapAnalysisPage() {
   const canAnalyze = jobDescriptions.length > 0 && Boolean(preferences) && Boolean(resumeExtract);
   const missingSteps = useMemo(() => {
     const missing: Array<{ key: string; label: string; href: string }> = [];
-    if (!preferences) missing.push({ key: "prefs", label: "Job Preferences (Step 1)", href: "/job-preferences" });
+    if (!preferences) missing.push({ key: "prefs", label: "Role Preferences (Step 1)", href: "/job-preferences" });
     if (!resumeExtract) missing.push({ key: "resume", label: "Resume (Step 3)", href: "/resume" });
-    if (jobDescriptions.length === 0) missing.push({ key: "jobs", label: "Job Descriptions (Step 2)", href: "/job-descriptions" });
+    if (jobDescriptions.length === 0) missing.push({ key: "jobs", label: "Role Descriptions (Step 2)", href: "/job-descriptions" });
     return missing;
   }, [jobDescriptions.length, preferences, resumeExtract]);
 
@@ -204,7 +204,7 @@ export default function GapAnalysisPage() {
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4 mb-4">
         <a href="/job-descriptions" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
-          <span className="mr-2">←</span> Back to Job Descriptions
+          <span className="mr-2">←</span> Back to Role Descriptions
         </a>
       </div>
 
@@ -214,7 +214,7 @@ export default function GapAnalysisPage() {
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">Gap Analysis</h1>
               <p className="text-white/70">
-                Compare your preferences + resume against imported job descriptions to rank the best fits and highlight gaps.
+                Compare your preferences + resume against imported role descriptions to rank the best fits and highlight gaps.
               </p>
             </div>
             <div className="bg-gray-900/70 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-white/10">

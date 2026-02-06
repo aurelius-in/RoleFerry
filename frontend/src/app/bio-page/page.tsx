@@ -475,7 +475,7 @@ export default function BioPageStep() {
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
               <div className="text-sm font-bold">Work style</div>
               <div className="text-xs text-white/60 mt-1">
-                Pulled from your Job Preferences (used on the public page and as campaign context).
+                Pulled from your Role Preferences (used on the public page and as campaign context).
               </div>
               {(() => {
                 const pts = (Array.isArray((draft as any)?.work_style_points) && (draft as any).work_style_points.length)

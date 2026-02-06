@@ -60,7 +60,7 @@ export default function PersonasPage() {
 
               <div className="space-y-4">
                 <div>
-                  <div className="text-xs text-slate-500 mb-2 font-semibold uppercase">Job Titles ({persona.titles.length})</div>
+                  <div className="text-xs text-slate-500 mb-2 font-semibold uppercase">Role Titles ({persona.titles.length})</div>
                   <div className="flex flex-wrap gap-2">
                     {persona.titles.map((title, idx) => (
                       <span key={idx} className="px-3 py-1 bg-blue-500/20 border border-blue-500/40 rounded-md text-xs">
@@ -157,7 +157,7 @@ export default function PersonasPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Job Titles (comma-separated)</label>
+                  <label className="block text-sm font-semibold mb-2">Role Titles (comma-separated)</label>
                   <input 
                     type="text" 
                     placeholder="Product Manager, Senior PM, Director of Product"

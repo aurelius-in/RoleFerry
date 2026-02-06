@@ -14,7 +14,7 @@ const ITEMS: { key: DataKey; label: string }[] = [
   { key: "deliverability", label: "Deliverability" },
   { key: "compliance", label: "Compliance" },
   { key: "ijps", label: "IJPs" },
-  { key: "jobs", label: "Jobs" },
+  { key: "jobs", label: "Roles" },
   { key: "candidates", label: "Candidates" },
   { key: "contacts", label: "Contacts" },
   { key: "matches", label: "Matches" },

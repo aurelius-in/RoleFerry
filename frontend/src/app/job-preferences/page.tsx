@@ -207,6 +207,7 @@ const US_STATES = [
 export default function JobPreferencesPage() {
   const router = useRouter();
   const [mode, setMode] = useState<"job-seeker" | "recruiter">("job-seeker");
+  const [isSaving, setIsSaving] = useState(false);
   const [preferences, setPreferences] = useState<JobPreferences>({
     values: [],
     roleCategories: [],
@@ -332,6 +333,8 @@ export default function JobPreferencesPage() {
   };
 
   const handleSave = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
     localStorage.setItem("job_preferences", JSON.stringify(preferences));
 
     try {
@@ -383,7 +386,7 @@ export default function JobPreferencesPage() {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">
               {mode === "job-seeker"
-                ? "Job Preferences"
+                ? "Role Preferences"
                 : "Ideal Client Profile (ICP)"}
             </h1>
             <p className="text-white/70">
@@ -621,10 +624,10 @@ export default function JobPreferencesPage() {
               />
             </div>
 
-            {/* Job Search Status */}
+            {/* Role Search Status */}
             <div>
               <h2 className="text-xl font-semibold mb-4">
-                Lastly, what's the status of your job search?
+                Lastly, what's the status of your role search?
               </h2>
               <div className="space-y-2">
                 {JOB_SEARCH_STATUS.map((status) => (
@@ -693,9 +696,24 @@ export default function JobPreferencesPage() {
               )}
               <button
                 onClick={handleSave}
-                className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
+                disabled={isSaving}
+                className={`px-6 py-3 rounded-md font-medium transition-colors inline-flex items-center gap-2 ${
+                  isSaving
+                    ? "bg-blue-700 text-white/90 cursor-not-allowed shadow-inner"
+                    : "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 active:translate-y-[1px]"
+                }`}
               >
-                Save & Continue
+                {isSaving ? (
+                  <>
+                    <span
+                      aria-hidden="true"
+                      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
+                    />
+                    <span>Saving…</span>
+                  </>
+                ) : (
+                  "Save & Continue"
+                )}
               </button>
             </div>
           </div>

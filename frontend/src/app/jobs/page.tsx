@@ -87,8 +87,8 @@ export default function JobsPage() {
       <div className="max-w-7xl mx-auto py-8 px-4">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Jobs</h1>
-            <p className="text-slate-400 mt-1">Showing {jobs.length} jobs matched to your profile</p>
+            <h1 className="text-3xl font-bold">Roles</h1>
+            <p className="text-slate-400 mt-1">Showing {jobs.length} roles matched to your profile</p>
           </div>
           <button className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors">
             Refine Preferences

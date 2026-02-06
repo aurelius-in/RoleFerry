@@ -73,14 +73,14 @@ const TEMPERAMENT_QUESTIONS: TemperamentQuestion[] = [
   {
     id: "t2",
     axis: "communication",
-    prompt: "In a new job, you feel most grounded by…",
+    prompt: "In a new role, you feel most grounded by…",
     leftLabel: "Clear steps and concrete tasks",
     rightLabel: "A clear vision and direction",
   },
   {
     id: "t3",
     axis: "communication",
-    prompt: "When reading a job description, you pay more attention to…",
+    prompt: "When reading a role description, you pay more attention to…",
     leftLabel: "Specific responsibilities",
     rightLabel: "The mission and strategy",
   },
@@ -143,7 +143,7 @@ const TEMPERAMENT_BLURBS: Record<TemperamentId, string> = {
 };
 
 // Keirsey-style labels + common 4-letter shorthand people recognize online.
-// We keep this lightweight and job-focused (no copied descriptions).
+// We keep this lightweight and role-focused (no copied descriptions).
 const TEMPERAMENT_SUBTYPES: Record<TemperamentId, Array<{ label: string; code: string; job_angle: string }>> = {
   Artisan: [
     { label: "Promoter", code: "ESTP", job_angle: "Fast action, persuasion, closing, fieldwork" },
@@ -171,7 +171,7 @@ const TEMPERAMENT_SUBTYPES: Record<TemperamentId, Array<{ label: string; code: s
   ],
 };
 
-// Job Fit questions: written in role-oriented, job-search-task language (unofficial/condensed).
+// Role Fit questions: written in role-oriented, role-search-task language (unofficial/condensed).
 const QUESTIONS: Question[] = [
   {
     id: "q1",
@@ -183,7 +183,7 @@ const QUESTIONS: Question[] = [
   {
     id: "q2",
     axis: "energy",
-    prompt: "For networking (job search), your best channel is…",
+    prompt: "For networking (role search), your best channel is…",
     leftLabel: "Small, targeted 1:1 conversations",
     rightLabel: "High-volume networking + events",
   },
@@ -218,7 +218,7 @@ const QUESTIONS: Question[] = [
   {
     id: "q7",
     axis: "structure",
-    prompt: "Your ideal workday (and job-search routine) is…",
+    prompt: "Your ideal workday (and role-search routine) is…",
     leftLabel: "Planned and predictable",
     rightLabel: "Flexible and adaptive",
   },
@@ -239,7 +239,7 @@ const QUESTIONS: Question[] = [
   {
     id: "q10",
     axis: "info",
-    prompt: "When you’re stuck (at work or in your job search), you…",
+    prompt: "When you’re stuck (at work or in your role search), you…",
     leftLabel: "Look for proven playbooks",
     rightLabel: "Invent a new approach",
   },
@@ -451,7 +451,7 @@ function computeJobFitFromScores(scores: Record<AxisId, number>): PersonalityRes
           ],
   });
   action_steps.push({
-    title: "Planning your weekly job-search routine",
+    title: "Planning your weekly role-search routine",
     bullets:
       JP === "J"
         ? [
@@ -482,6 +482,7 @@ function computeJobFitFromScores(scores: Record<AxisId, number>): PersonalityRes
 export default function PersonalityPage() {
   const router = useRouter();
   const [activeTest, setActiveTest] = useState<"temperaments" | "jobfit">("temperaments");
+  const [isSaving, setIsSaving] = useState(false);
 
   const [temperamentAnswers, setTemperamentAnswers] = useState<Record<string, Choice>>({});
   const [temperamentResult, setTemperamentResult] = useState<TemperamentResult | null>(null);
@@ -651,6 +652,38 @@ export default function PersonalityPage() {
     } catch {}
   };
 
+  const saveAndContinue = () => {
+    if (isSaving) return;
+    setIsSaving(true);
+
+    // Always persist raw answers (useful for future improvements; doesn’t affect downstream steps today).
+    try {
+      localStorage.setItem("personality_answers_v1", JSON.stringify(answers || {}));
+    } catch {}
+    try {
+      localStorage.setItem("temperament_answers_v1", JSON.stringify(temperamentAnswers || {}));
+    } catch {}
+
+    // Persist computed profiles when complete so downstream steps can use them reliably.
+    try {
+      if (isComplete) {
+        const next = computeResult(answers);
+        setResult(next);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      }
+    } catch {}
+
+    try {
+      if (tIsComplete) {
+        const next = computeTemperamentResult(temperamentAnswers);
+        setTemperamentResult(next);
+        localStorage.setItem(TEMPERAMENT_STORAGE_KEY, JSON.stringify(next));
+      }
+    } catch {}
+
+    router.push("/job-descriptions");
+  };
+
   const renderLikert = (opts: {
     questionId: string;
     value: Choice | null;
@@ -753,9 +786,9 @@ export default function PersonalityPage() {
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Personality (Job Fit)</h1>
+              <h1 className="text-3xl font-bold text-white mb-2">Personality (Role Fit)</h1>
               <p className="text-white/70">
-                Use personality to align your job search, outreach strategy, and confidence—especially helpful if you’re early-career or pivoting.
+                Use personality to align your role search, outreach strategy, and confidence—especially helpful if you’re early-career or pivoting.
               </p>
             </div>
             <div className="bg-gray-900/70 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-white/10">
@@ -768,7 +801,7 @@ export default function PersonalityPage() {
               <div>
                 <div className="text-sm font-bold text-white">Choose a test</div>
                 <div className="mt-1 text-xs text-white/60">
-                  These are RoleFerry’s condensed, job-focused assessments (unofficial).
+                  These are RoleFerry’s condensed, role-focused assessments (unofficial).
                 </div>
               </div>
               <div className="inline-flex rounded-full border border-white/10 bg-black/25 p-1">
@@ -790,7 +823,7 @@ export default function PersonalityPage() {
                     activeTest === "jobfit" ? "brand-gradient text-black" : "text-white/80 hover:bg-white/10"
                   }`}
                 >
-                  Job Fit
+                  Role Fit
                 </button>
               </div>
             </div>
@@ -1026,10 +1059,25 @@ export default function PersonalityPage() {
               </button>
               <button
                 type="button"
-                onClick={() => router.push("/job-descriptions")}
-                className="bg-white/10 text-white px-4 py-2 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
+                onClick={saveAndContinue}
+                disabled={isSaving}
+                className={`px-4 py-2 rounded-md font-medium transition-colors border inline-flex items-center gap-2 ${
+                  isSaving
+                    ? "border-white/10 bg-white/5 text-white/50 cursor-not-allowed shadow-inner"
+                    : "border-white/10 bg-white/10 text-white hover:bg-white/15 active:bg-white/20 active:translate-y-[1px]"
+                }`}
               >
-                Continue to Jobs →
+                {isSaving ? (
+                  <>
+                    <span
+                      aria-hidden="true"
+                      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white/80"
+                    />
+                    <span>Saving…</span>
+                  </>
+                ) : (
+                  <span>Save &amp; Continue to Role Search →</span>
+                )}
               </button>
             </div>
           </div>
@@ -1099,7 +1147,7 @@ export default function PersonalityPage() {
                 <div className="rounded-lg border border-white/10 bg-black/20 p-4">
                   <div className="text-xs font-semibold text-white/70 mb-2">Your 4 role patterns (within this temperament)</div>
                   <div className="text-[11px] text-white/60 mb-3">
-                    These labels help you describe strengths in a job-search context. The 4-letter codes are common shorthand people recognize online.
+                    These labels help you describe strengths in a role-search context. The 4-letter codes are common shorthand people recognize online.
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
@@ -1144,7 +1192,7 @@ export default function PersonalityPage() {
               <div className="mt-5 rounded-lg border border-white/10 bg-black/20 p-4">
                 <div className="text-sm font-bold text-white mb-2">Available Variables from this Step</div>
                 <div className="text-xs text-white/60 mb-3">
-                  These variables are available for downstream steps (Jobs/Gaps/Campaign):
+                  These variables are available for downstream steps (Roles/Gaps/Campaign):
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
@@ -1168,7 +1216,7 @@ export default function PersonalityPage() {
             <div className="mt-8 rounded-lg border border-white/10 bg-black/20 p-5">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <div className="text-sm font-bold text-white">Job Fit Playbook</div>
+                  <div className="text-sm font-bold text-white">Role Fit Playbook</div>
                   <div className="mt-1 text-xs text-white/60">
                     Role-oriented guidance based on your answers. (The 4-letter code is common shorthand, not an official instrument.)
                   </div>

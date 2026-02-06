@@ -838,7 +838,7 @@ export default function DeliverabilityLaunchPage() {
             <h1 className="text-3xl font-bold text-white mb-2">Deliverability / Launch</h1>
             <p className="text-white/70">
               {mode === 'job-seeker' 
-                ? 'Final checks before launching your job application campaign.'
+                ? 'Final checks before launching your role application campaign.'
                 : 'Final checks before launching your candidate pitch campaign.'
               }
             </p>
@@ -941,13 +941,13 @@ export default function DeliverabilityLaunchPage() {
                   </div>
 
                   <div className="md:col-span-2 rounded-lg border border-white/10 bg-black/20 p-4">
-                    <div className="text-sm font-semibold text-white">Jobs step context (not sends)</div>
+                    <div className="text-sm font-semibold text-white">Roles step context (not sends)</div>
                     <div className="mt-1 text-xs text-white/60">
-                      These come from your imported job descriptions and are used for targeting, not for counting sent emails.
+                      These come from your imported role descriptions and are used for targeting, not for counting sent emails.
                     </div>
                     <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                       <div className="rounded-md border border-white/10 bg-white/5 p-3">
-                        <div className="text-xs text-white/60">Job descriptions imported</div>
+                        <div className="text-xs text-white/60">Role descriptions imported</div>
                         <div className="text-white font-semibold">{targetJobsCount}</div>
                       </div>
                       <div className="rounded-md border border-white/10 bg-white/5 p-3">
@@ -1153,7 +1153,7 @@ export default function DeliverabilityLaunchPage() {
                     <div>
                       <h2 className="text-xl font-semibold text-white">LinkedIn connection request notes</h2>
                       <p className="mt-1 text-sm text-white/70">
-                        These are short, copy-ready notes for connection requests. They use your existing job context, offer, and saved research (when available).
+                        These are short, copy-ready notes for connection requests. They use your existing role context, offer, and saved research (when available).
                       </p>
                     </div>
                     <button

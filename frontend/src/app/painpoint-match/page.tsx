@@ -221,7 +221,7 @@ export default function PainPointMatchPage() {
     setSelectedJD(null);
 
     try {
-      setProgress({ done: 0, total: jobDescriptions.length, current: "Generating matches for all jobs…" });
+      setProgress({ done: 0, total: jobDescriptions.length, current: "Generating matches for all roles…" });
 
       const resp = await api<BatchPainPointMatchResponse>("/painpoint-match/generate-batch", "POST", {
         resume_extract_id: "latest",
@@ -257,7 +257,7 @@ export default function PainPointMatchPage() {
 
       if (resp?.errors_by_job_id && Object.keys(resp.errors_by_job_id).length) {
         // Keep it short; this is a UX hint, not a hard stop.
-        setError("Some jobs failed to generate matches. You can re-run to try again.");
+        setError("Some roles failed to generate matches. You can re-run to try again.");
       }
 
       setProgress({ done: jobDescriptions.length, total: jobDescriptions.length });
@@ -283,13 +283,13 @@ export default function PainPointMatchPage() {
     // still navigate, but show a clear message when we truly can't.
     const jd = selectedJD;
     if (!jd) {
-      setError("Select a job before continuing.");
+      setError("Select a role before continuing.");
       return;
     }
 
     const saved = matchesByJobId[jd.id] || matches;
     if (!saved || saved.length === 0) {
-      setError("Generate pain point matches for this job before continuing.");
+      setError("Generate pain point matches for this role before continuing.");
       return;
     }
 
@@ -356,14 +356,14 @@ export default function PainPointMatchPage() {
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-4">
           <a href="/job-descriptions" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
-            <span className="mr-2">←</span> Back to Jobs
+            <span className="mr-2">←</span> Back to Roles
           </a>
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Pain Point Match</h1>
             <p className="text-white/70">
-              Compare your solutions to the job's pain points to find the best alignment.
+              Compare your solutions to the role's pain points to find the best alignment.
             </p>
           </div>
 
@@ -382,7 +382,7 @@ export default function PainPointMatchPage() {
               </div>
               <h3 className="text-lg font-medium text-white mb-2">Missing Data</h3>
               <p className="text-white/70 mb-6">
-                Please complete the Resume and Job Descriptions steps first.
+                Please complete the Resume and Role Descriptions steps first.
               </p>
               <div className="space-x-4">
                 <button
@@ -395,7 +395,7 @@ export default function PainPointMatchPage() {
                   onClick={() => router.push('/job-descriptions')}
                   className="bg-white/10 text-white px-6 py-3 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
                 >
-                  Go to Job Descriptions
+                  Go to Role Descriptions
                 </button>
               </div>
             </div>
@@ -405,7 +405,7 @@ export default function PainPointMatchPage() {
                 <div>
                   <div className="text-sm font-semibold text-white/80">Pain Point Match Analysis</div>
                   <div className="text-xs text-white/60">
-                    Starts blank. Click Run to generate matches for all jobs.
+                    Starts blank. Click Run to generate matches for all roles.
                   </div>
                 </div>
                 <button
@@ -440,7 +440,7 @@ export default function PainPointMatchPage() {
                   <div className="text-lg font-semibold text-white mb-2">Ready when you are</div>
                   <div className="text-white/70">
                     Click <span className="font-semibold text-white">Run Pain Point Match Analysis</span> to generate
-                    pain-point alignments for all {jobDescriptions.length} job{jobDescriptions.length === 1 ? "" : "s"}.
+                    pain-point alignments for all {jobDescriptions.length} role{jobDescriptions.length === 1 ? "" : "s"}.
                   </div>
                 </div>
               ) : null}
@@ -477,25 +477,25 @@ export default function PainPointMatchPage() {
                                   ? "border-emerald-400/30 bg-emerald-500/15 text-emerald-200"
                                   : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
                               }`}
-                              title="Select this job for downstream steps (Research, Contact, Bio, Campaign)"
+                              title="Select this role for downstream steps (Research, Contact, Bio, Campaign)"
                             >
-                              {isSelected ? "Selected" : "Use this job"}
+                              {isSelected ? "Selected" : "Use this role"}
                             </button>
                           </div>
                         </div>
 
                         {jobMatches.length === 0 ? (
                           <div className="mt-4 text-sm text-white/60 italic">
-                            No matches generated for this job yet.
+                            No matches generated for this role yet.
                           </div>
                         ) : (
                           <div className="mt-5 space-y-6">
                             {jobMatches.map((match, index) => (
                               <div key={`match_${jd.id}_${index}`} className="rounded-lg border border-white/10 bg-white/5 p-4">
-                                <div className="text-xs text-white/60 mb-3">Showing up to 3 best matches for this job.</div>
+                                <div className="text-xs text-white/60 mb-3">Showing up to 3 best matches for this role.</div>
                                 <div className="space-y-6">
                                   {renderableAlignments(match).length === 0 ? (
-                                    <div className="text-sm text-white/60 italic">No alignments were found for this job.</div>
+                                    <div className="text-sm text-white/60 italic">No alignments were found for this role.</div>
                                   ) : (
                                     renderableAlignments(match).map((a) => (
                                       <div

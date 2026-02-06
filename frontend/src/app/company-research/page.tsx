@@ -485,7 +485,7 @@ export default function CompanyResearchPage() {
             <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
               <div>
                 <div className="text-sm font-bold text-white">Company</div>
-                <div className="text-xs text-white/60">Pick a company from your imported jobs (or type one).</div>
+                <div className="text-xs text-white/60">Pick a company from your imported roles (or type one).</div>
               </div>
               <div className="flex gap-2">
                 <button

@@ -190,13 +190,13 @@ function toneLabel(t: Tone) {
 function layerLabel(id: ContextLayerId) {
   switch (id) {
     case "job_prefs":
-      return "Job Prefs";
+      return "Role Prefs";
     case "resume":
       return "Resume";
     case "personality":
       return "Personality";
     case "job":
-      return "Job";
+      return "Role";
     case "gaps":
       return "Gaps";
     case "painpoint_match":
