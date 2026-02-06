@@ -14,6 +14,7 @@ export type RFCampaignContextV1 = {
   resume_extract?: any;
   personality_profile?: any;
   temperament_profile?: any;
+  offer?: any;
   selected_job_description?: any;
   selected_job_description_id?: string;
   gap_analysis?: any;
@@ -78,6 +79,7 @@ export function buildCampaignContextV1(contactId: string): RFCampaignContextV1 {
   const resumeExtract = safeJson<any>(lsGet("resume_extract"), null);
   const personalityProfile = safeJson<any>(lsGet("personality_profile"), null);
   const temperamentProfile = safeJson<any>(lsGet("temperament_profile"), null);
+  const offer = safeJson<any>(lsGet("rf_offer_v1"), null);
   const selectedJob = safeJson<any>(lsGet("selected_job_description"), null);
   const selectedJobId = String(lsGet("selected_job_description_id") || "").trim();
 
@@ -125,6 +127,7 @@ export function buildCampaignContextV1(contactId: string): RFCampaignContextV1 {
     resume_extract: resumeExtract,
     personality_profile: personalityProfile,
     temperament_profile: temperamentProfile,
+    offer,
     selected_job_description: selectedJob,
     selected_job_description_id: selectedJobId,
     gap_analysis: gapResults,

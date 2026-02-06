@@ -360,6 +360,7 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             f"{tone_line}\n"
             f"Tone guardrails: {_tone_guardrails(tone)}\n\n"
             "Personalization rules:\n"
+            "- If context contains offer (value prop), use its one-liner and 1 proof point to avoid generic claims.\n"
             "- If context contains company_research or contact_research, reference at least ONE concrete, non-creepy detail from it.\n"
             "- If no research is present, reference the role and one pain point (from painpoint_matches or gap_analysis or job text).\n"
             "- Use at most 1-2 research details total (avoid overstuffing).\n"

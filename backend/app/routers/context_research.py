@@ -841,10 +841,12 @@ async def conduct_research(request: ResearchRequest):
                 # Only fill market_position when we had web sources; otherwise keep empty (the UI can prompt to configure SERPER).
                 if not market_position and corpus.get("serper_hits"):
                     market_position = ""
+                # Do not inject "mode" guidance strings into data fields.
+                # If we don't have web sources, keep these best-effort and derived from provided context only.
                 if not product_launches:
-                    product_launches = "No product launch details captured in this run. Try Live mode with SERPER configured."
+                    product_launches = ""
                 if not leadership_changes:
-                    leadership_changes = "No leadership change details captured in this run. Try Live mode with SERPER configured."
+                    leadership_changes = ""
                 if not other_hiring_signals:
                     role_bullets = _signals_from_role_description(corpus)
                     if role_bullets:
@@ -852,9 +854,13 @@ async def conduct_research(request: ResearchRequest):
                     else:
                         other_hiring_signals = ""
                 if not recent_posts:
-                    recent_posts = "No recent posts captured in this run. Try Live mode with SERPER configured."
+                    role_bullets = _signals_from_role_description(corpus)
+                    recent_posts = (
+                        "Suggested topics to reference (derived from the imported role description, no external web sources in this run):\n- "
+                        + "\n- ".join(role_bullets[:6])
+                    ).strip() if role_bullets else ""
                 if not publications:
-                    publications = "No publications captured in this run. Try Live mode with SERPER configured."
+                    publications = ""
             except Exception:
                 pass
 

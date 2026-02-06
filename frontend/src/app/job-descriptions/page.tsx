@@ -444,15 +444,15 @@ export default function JobDescriptionsPage() {
   return (
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4 mb-4">
-        <a href="/personality" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
-          <span className="mr-2">←</span> Back to Personality
+          <a href="/offer" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+            <span className="mr-2">←</span> Back to Offer
         </a>
       </div>
       <div className="max-w-6xl mx-auto px-4">
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Role Descriptions</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Role Search</h1>
               <p className="text-white/70">
                 Import role descriptions (job postings) to extract business challenges, required skills, and success metrics.
               </p>
@@ -679,7 +679,7 @@ export default function JobDescriptionsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">No Role Descriptions</h3>
+              <h3 className="text-lg font-medium text-white mb-2">No Roles Yet</h3>
               <p className="text-white/70 mb-6">
                 Import role descriptions from URLs or paste text to get started.
               </p>
@@ -1032,7 +1032,7 @@ export default function JobDescriptionsPage() {
           {jobDescriptions.length > 0 && (
             <div className="mt-8 flex justify-end space-x-4">
               <button
-                onClick={() => router.push('/resume')}
+                onClick={() => router.push('/offer')}
                 className="bg-white/10 text-white px-6 py-3 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
               >
                 Back

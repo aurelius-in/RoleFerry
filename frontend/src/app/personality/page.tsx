@@ -681,7 +681,7 @@ export default function PersonalityPage() {
       }
     } catch {}
 
-    router.push("/job-descriptions");
+    router.push("/offer");
   };
 
   const renderLikert = (opts: {

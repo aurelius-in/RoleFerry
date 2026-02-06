@@ -42,14 +42,13 @@ export default function Navbar() {
         if (path === "/job-preferences" || path.startsWith("/job-preferences/")) return 1;
         if (path === "/resume" || path.startsWith("/resume/")) return 2;
         if (path === "/personality" || path.startsWith("/personality/")) return 3;
-        if (path === "/job-descriptions" || path.startsWith("/job-descriptions/")) return 4;
-        if (path === "/gap-analysis" || path.startsWith("/gap-analysis/")) return 5;
-        if (path === "/painpoint-match" || path.startsWith("/painpoint-match/")) return 6;
-        if (path === "/company-research" || path.startsWith("/company-research/")) return 7;
+        if (path === "/offer" || path.startsWith("/offer/")) return 4;
+        if (path === "/job-descriptions" || path.startsWith("/job-descriptions/")) return 5;
+        if (path === "/gap-analysis" || path.startsWith("/gap-analysis/")) return 6;
+        if (path === "/painpoint-match" || path.startsWith("/painpoint-match/")) return 7;
+        if (path === "/company-research" || path.startsWith("/company-research/")) return 8;
         // Context research is part of the "Decision Makers" step in the wireframe flow.
-        if (path === "/find-contact" || path.startsWith("/find-contact/")) return 8;
-        // Compose/Context removed: flow is Contact → Bio → Campaign → Launch.
-        // We keep historical numbering where Bio=10, Campaign=11, Launch=12 (step 9 is retired).
+        if (path === "/find-contact" || path.startsWith("/find-contact/")) return 9;
         if (path === "/bio-page" || path.startsWith("/bio-page/")) return 10;
         if (path === "/bio/preview" || path.startsWith("/bio/preview/")) return 10;
         if (path === "/campaign" || path.startsWith("/campaign/")) return 11;
@@ -74,7 +73,8 @@ export default function Navbar() {
       }
       const next = Array.from(new Set([...(steps || []).filter((n) => Number.isFinite(n)), step]))
         .filter((n) => n >= 1 && n <= 12);
-      window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 2, steps: next }));
+      // v3: Offer step inserted at 4; Role Search shifted to 5; Contact shifted to 9.
+      window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 3, steps: next }));
       window.dispatchEvent(new CustomEvent("roleferry-progress-updated", { detail: { step } }));
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -163,7 +163,8 @@ export default function Navbar() {
             <NavPill href="/job-preferences" pathname={pathname}>Role Prefs</NavPill>
             <NavPill href="/resume" pathname={pathname}>Resume</NavPill>
             <NavPill href="/personality" pathname={pathname}>Personality</NavPill>
-            <NavPill href="/job-descriptions" pathname={pathname}>Roles</NavPill>
+            <NavPill href="/offer" pathname={pathname}>Offer</NavPill>
+            <NavPill href="/job-descriptions" pathname={pathname}>Role Search</NavPill>
             <NavPill href="/gap-analysis" pathname={pathname}>Gaps</NavPill>
             <NavPill href="/painpoint-match" pathname={pathname}>Match</NavPill>
             <NavPill href="/company-research" pathname={pathname}>Research</NavPill>

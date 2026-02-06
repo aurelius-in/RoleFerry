@@ -420,6 +420,27 @@ export default function DeliverabilityLaunchPage() {
       kebab(work?.[0]),
     ].filter(Boolean);
 
+    const baseSlug = nameParts.join("-");
+    const has3DigitSuffix = (s: string) => /_\d{3}$/.test(String(s || "").trim());
+    const random3 = () => String(Math.floor(100 + Math.random() * 900)); // 100..999
+
+    // Always append a random 3-digit suffix to avoid accidental duplicates across very similar runs.
+    // Keep it stable if we already have a generated name stored on the campaign object.
+    const existingName = String(campaign?.name || "").trim();
+    const campaignName = (() => {
+      if (!baseSlug) {
+        return existingName || `campaign_${random3()}`;
+      }
+      if (existingName === baseSlug && !has3DigitSuffix(existingName)) {
+        return `${baseSlug}_${random3()}`;
+      }
+      if (!existingName) {
+        return `${baseSlug}_${random3()}`;
+      }
+      // Respect user-edited names; only ensure suffix when the name equals the computed base slug.
+      return existingName;
+    })();
+
     const selectedContacts = loadSelectedContacts();
     const recipients = selectedContacts.length;
 
@@ -463,7 +484,8 @@ export default function DeliverabilityLaunchPage() {
 
     return {
       // Slug-style name: no spaces, no ampersands, no extra filler.
-      campaignName: nameParts.join("-"),
+      campaignName,
+      baseSlug,
       recipients,
       sequenceSteps,
       plannedSends,
@@ -475,6 +497,25 @@ export default function DeliverabilityLaunchPage() {
       targetCompanies,
     };
   };
+
+  useEffect(() => {
+    // Persist a unique campaign name for this launch so it doesn't change across renders.
+    // Only auto-set when the current name is blank or exactly equals the computed base slug.
+    if (!campaign) return;
+    try {
+      const { campaignName, baseSlug } = computeCampaignSummary();
+      const cur = String(campaign?.name || "").trim();
+      if (!campaignName) return;
+      if (!cur || (baseSlug && cur === baseSlug)) {
+        const nextCampaign = { ...(campaign || {}), name: campaignName, updated_at: new Date().toISOString() };
+        setCampaign(nextCampaign);
+        localStorage.setItem("campaign_data", JSON.stringify(nextCampaign));
+      }
+    } catch {
+      // ignore persistence failures
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [campaign?.id]);
 
   const loadSelectedContacts = (): any[] => {
     try {

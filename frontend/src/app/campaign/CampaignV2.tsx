@@ -34,6 +34,7 @@ type ContextLayerId =
   | "job_prefs"
   | "resume"
   | "personality"
+  | "offer"
   | "job"
   | "gaps"
   | "painpoint_match"
@@ -105,6 +106,7 @@ function defaultLayers(): ContextLayers {
     job_prefs: true,
     resume: true,
     personality: true,
+    offer: true,
     job: true,
     gaps: true,
     painpoint_match: true,
@@ -196,6 +198,8 @@ function layerLabel(id: ContextLayerId) {
       return "Resume";
     case "personality":
       return "Personality";
+    case "offer":
+      return "Offer (Value Prop)";
     case "job":
       return "Role";
     case "gaps":
@@ -227,6 +231,7 @@ function filterContextByLayers(ctx: any, layers: ContextLayers) {
     out.personality_profile = ctx.personality_profile;
     out.temperament_profile = ctx.temperament_profile;
   }
+  if (layers.offer) out.offer = ctx.offer;
   if (layers.job) out.selected_job_description = ctx.selected_job_description;
   if (layers.gaps) out.gap_analysis = ctx.gap_analysis;
   if (layers.painpoint_match) out.painpoint_matches = ctx.painpoint_matches;

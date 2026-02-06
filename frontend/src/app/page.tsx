@@ -17,13 +17,14 @@ const STONES: StoneConfig[] = [
   { step: 1, tab: "job-preferences", label: "Role Preferences", icon: "🎯", href: "/job-preferences" },
   { step: 2, tab: "candidate-profile", label: "Your Resume", icon: "📄", href: "/resume" },
   { step: 3, tab: "personality", label: "Personality", icon: "🧠", href: "/personality" },
-  { step: 4, tab: "job-descriptions", label: "Role Descriptions", icon: "📋", href: "/job-descriptions" },
-  { step: 5, tab: "gap-analysis", label: "Gap Analysis", icon: "🧩", href: "/gap-analysis" },
-  { step: 6, tab: "pain-point-match", label: "Pain Point Match", icon: "🔗", href: "/painpoint-match" },
-  // Flow order (per wireframes): company research first, then decision makers.
-  { step: 7, tab: "company-research", label: "Company Research", icon: "🏢", href: "/company-research" },
-  { step: 8, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
-  // Compose removed: Bio → Campaign.
+  { step: 4, tab: "offer", label: "Offer (Value Prop)", icon: "✨", href: "/offer" },
+  { step: 5, tab: "job-descriptions", label: "Role Search", icon: "🔎", href: "/job-descriptions" },
+  { step: 6, tab: "gap-analysis", label: "Gap Analysis", icon: "🧩", href: "/gap-analysis" },
+  { step: 7, tab: "pain-point-match", label: "Pain Point Match", icon: "🔗", href: "/painpoint-match" },
+  // Flow order: company research first, then decision makers.
+  { step: 8, tab: "company-research", label: "Company Research", icon: "🏢", href: "/company-research" },
+  { step: 9, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
+  // Bio → Campaign → Launch.
   { step: 10, tab: "bio-page", label: "Bio Page", icon: "🌐", href: "/bio-page" },
   { step: 11, tab: "campaign", label: "Campaign", icon: "📧", href: "/campaign" },
   { step: 12, tab: "launch", label: "Launch", icon: "🚀", href: "/deliverability-launch" },
@@ -68,10 +69,27 @@ export default function Home() {
             ? (parsed as any).steps
             : [];
 
-        // New format (v2): already uses the current 12-step flow (10=Bio, 11=Campaign, 12=Launch).
+        // New format (v3): Offer inserted at step 4; Role Search shifted to 5; Contact shifted to 9.
         // IMPORTANT: do not run legacy remaps or we can accidentally drop step 12 and never unlock Launch.
-        if (version >= 2) {
+        if (version >= 3) {
           const final = Array.from(new Set((steps || []).filter((n) => Number.isFinite(n) && n >= 1 && n <= 12)));
+          setCompleted(new Set(final));
+          return;
+        }
+
+        // v2 → v3 remap:
+        // v2: 1 prefs, 2 resume, 3 personality, 4 roles, 5 gaps, 6 match, 7 research, 8 contact, 10 bio, 11 campaign, 12 launch
+        // v3: 1 prefs, 2 resume, 3 personality, 4 offer, 5 role search, 6 gaps, 7 match, 8 research, 9 contact, 10 bio, 11 campaign, 12 launch
+        if (version === 2) {
+          const remapped = (steps || []).map((n) => {
+            if (n === 4) return 5;
+            if (n === 5) return 6;
+            if (n === 6) return 7;
+            if (n === 7) return 8;
+            if (n === 8) return 9;
+            return n;
+          });
+          const final = Array.from(new Set(remapped.filter((n) => Number.isFinite(n) && n >= 1 && n <= 12)));
           setCompleted(new Set(final));
           return;
         }

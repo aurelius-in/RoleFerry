@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { getCurrentDataMode, subscribeToDataModeChanges } from "@/lib/dataMode";
 import InlineSpinner from "@/components/InlineSpinner";
 
 type OutreachSend = {
@@ -47,9 +47,9 @@ const DEMO_ANALYTICS: OverviewResp = {
 };
 
 export default function Analytics() {
-  // Initialize from storage immediately to avoid a 1st-render flash showing "Demo".
-  const [mode, setMode] = useState(() => getCurrentDataMode());
+  const router = useRouter();
   const [data, setData] = useState<OverviewResp | null>(null);
+  const [showingSample, setShowingSample] = useState(false);
   const [error, setError] = useState<
     | null
     | {
@@ -63,16 +63,10 @@ export default function Analytics() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiExplanation, setAiExplanation] = useState<any | null>(null);
 
-  const loadForMode = async (nextMode: DataMode) => {
-    setMode(nextMode);
+  const loadLive = async () => {
     setError(null);
+    setShowingSample(false);
     setAiExplanation(null);
-
-    if (nextMode === "demo") {
-      setLoading(false);
-      setData(DEMO_ANALYTICS);
-      return;
-    }
 
     setLoading(true);
     try {
@@ -87,14 +81,11 @@ export default function Analytics() {
       const body = (m?.[3] ? String(m[3]) : msg).trim();
 
       if (status === 401) {
-        setError({
-          headline: "We couldn’t load live metrics (not authenticated).",
-          details:
-            "Your session cookie wasn’t accepted by the backend. Log in again, then refresh this page. "
-            + "Live analytics requires an authenticated session.",
-          status,
-          endpoint,
-        });
+        // In many deployments, analytics endpoints are authenticated. Treat 401 as a "soft failure":
+        // show sample metrics so the page isn't dead, and present a clear login CTA.
+        setShowingSample(true);
+        setData(DEMO_ANALYTICS);
+        setError(null);
       } else if (status === 500) {
         setError({
           headline: "We couldn’t load live metrics (backend error).",
@@ -124,13 +115,7 @@ export default function Analytics() {
   };
 
   useEffect(() => {
-    const initial = getCurrentDataMode();
-    loadForMode(initial);
-
-    const unsubscribe = subscribeToDataModeChanges((next) => {
-      loadForMode(next);
-    });
-    return unsubscribe;
+    loadLive();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -177,15 +162,24 @@ export default function Analytics() {
         <div>
           <h1 className="text-2xl font-semibold">Analytics</h1>
           <p className="text-xs text-white/70 mt-1">
-            {mode === "demo"
-              ? "Showing a richly populated demo campaign so you can feel the flow before going live."
-              : "Showing live analytics from your backend. If there’s a problem, you’ll see a clear explanation below."}
+            {showingSample
+              ? "Showing sample analytics. Log in to see live metrics."
+              : "Showing live analytics from your backend."}
           </p>
         </div>
-        {/* Live/Demo mode is no longer a visible UI concept. */}
+        {showingSample ? (
+          <button
+            type="button"
+            onClick={() => router.push("/login")}
+            className="rounded-md border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/15"
+            title="Log in to view live analytics"
+          >
+            Log in
+          </button>
+        ) : null}
       </div>
 
-      {mode === "live" && error ? (
+      {error ? (
         <div className="rounded-lg p-4 bg-red-900/40 border border-red-500/60 space-y-2 text-sm">
           <div className="font-semibold">{error.headline}</div>
           {typeof error.status === "number" ? (
@@ -200,7 +194,7 @@ export default function Analytics() {
           <div className="flex items-center justify-end gap-2 pt-1">
             <button
               type="button"
-              onClick={() => window.location.reload()}
+              onClick={() => loadLive()}
               className="rounded-md border border-white/15 bg-black/30 px-3 py-2 text-xs font-semibold text-white hover:bg-black/40"
             >
               Refresh
