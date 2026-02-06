@@ -93,10 +93,6 @@ class DocumentationService:
                         "content": "Generate personalized offers that provide value before asking for anything."
                     },
                     {
-                        "title": "Compose",
-                        "content": "AI-powered email composition with variable substitution and jargon clarity."
-                    },
-                    {
                         "title": "Campaign",
                         "content": "Create multi-step email campaigns with automated follow-ups and deliverability checks."
                     },

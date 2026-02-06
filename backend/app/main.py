@@ -30,7 +30,6 @@ from .routers import (
     find_contact,
     context_research,
     offer_creation,
-    compose,
     deliverability_launch,
     conditional_logic,
     confidence_scoring,
@@ -169,7 +168,6 @@ def create_app() -> FastAPI:
     app.include_router(find_contact.router, prefix="/find-contact", tags=["find-contact"])
     app.include_router(context_research.router, prefix="/context-research", tags=["context-research"])
     app.include_router(offer_creation.router, prefix="/offer-creation", tags=["offer-creation"])
-    app.include_router(compose.router, prefix="/compose", tags=["compose"])
     app.include_router(deliverability_launch.router, prefix="/deliverability-launch", tags=["deliverability-launch"])
     app.include_router(conditional_logic.router, prefix="/conditional-logic", tags=["conditional-logic"])
     app.include_router(confidence_scoring.router, prefix="/confidence-scoring", tags=["confidence-scoring"])

@@ -208,6 +208,47 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
 
         client = get_openai_client()
 
+        def _compact_context(obj: Any, *, max_depth: int = 4, max_list: int = 10, max_str: int = 1800) -> Any:
+            """
+            Reduce context size deterministically so the model stays focused and we avoid token blowups.
+            - Limits recursion depth
+            - Caps list sizes
+            - Trims long strings
+            """
+            if max_depth <= 0:
+                return None
+            if obj is None:
+                return None
+            if isinstance(obj, (int, float, bool)):
+                return obj
+            if isinstance(obj, str):
+                s = " ".join(obj.split()).strip()
+                if len(s) <= max_str:
+                    return s
+                cut = s.rfind(" ", 0, max_str)
+                if cut < 80:
+                    cut = max_str
+                return s[:cut].rstrip() + "…"
+            if isinstance(obj, list):
+                out = []
+                for it in obj[: max_list]:
+                    out.append(_compact_context(it, max_depth=max_depth - 1, max_list=max_list, max_str=max_str))
+                return out
+            if isinstance(obj, dict):
+                out: Dict[str, Any] = {}
+                # Keep key order stable (Python 3.7+ preserves insertion order, but we also sort).
+                for k in sorted(obj.keys(), key=lambda x: str(x)):
+                    kk = str(k)
+                    if not kk:
+                        continue
+                    out[kk] = _compact_context(obj.get(k), max_depth=max_depth - 1, max_list=max_list, max_str=max_str)
+                return out
+            # fallback for other types
+            return str(obj)
+
+        # For the LLM path, compact the context to avoid huge payloads.
+        llm_ctx = _compact_context(ctx)
+
         # Deterministic fallback: decent but basic.
         def _fallback() -> tuple[str, str]:
             contact = ctx.get("contact") if isinstance(ctx, dict) else {}
@@ -278,6 +319,14 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
                 helper={"used_llm": False},
             )
 
+        # Step-specific intent to reduce generic output.
+        step_intent = {
+            1: "Primary cold email. Strong opener + one clear idea + one proof + simple CTA.",
+            2: "Short follow-up. Add one new helpful detail, do not repeat the whole pitch.",
+            3: "Different angle. Offer a tiny 2-3 bullet plan or alternate proof. Keep it warm and specific.",
+            4: "Breakup / last follow-up. Respectful, easy out, easy yes. Can be playful but workplace-safe.",
+        }.get(step, "Email step")
+
         system = (
             "You are RoleFerry's outreach copilot. Draft ONE email step in a 4-email sequence.\n\n"
             "Hard style constraints:\n"
@@ -288,13 +337,14 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             "- Use real names/companies ONLY if provided in the context JSON. Do not invent.\n"
             "- Do NOT output template placeholders like {{first_name}}.\n\n"
             f"Sequence step: {step} of 4.\n"
-            "Step intent:\n"
-            "- Step 1: primary message (best foot forward).\n"
-            "- Step 2: short follow-up.\n"
-            "- Step 3: different angle / additional proof.\n"
-            "- Step 4: 'breakup' / last resort (can be playful, but respectful).\n\n"
+            f"Step intent: {step_intent}\n\n"
             f"Tone: {tone}.\n"
             f"Tone guardrails: {_tone_guardrails(tone)}\n\n"
+            "Personalization rules:\n"
+            "- If context contains company_research or contact_research, reference at least ONE concrete, non-creepy detail from it.\n"
+            "- If no research is present, reference the role and one pain point (from painpoint_matches or gap_analysis or job text).\n"
+            "- Use at most 1-2 research details total (avoid overstuffing).\n"
+            "- Do not mention that you used AI or 'research'.\n\n"
             "Special instructions (must follow):\n"
             + (special if special else "(none)") +
             "\n\n"
@@ -303,7 +353,7 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
 
         messages = [
             {"role": "system", "content": system},
-            {"role": "user", "content": f"Context JSON:\n{ctx}"},
+            {"role": "user", "content": f"Context JSON:\n{llm_ctx}"},
         ]
 
         raw = client.run_chat_completion(

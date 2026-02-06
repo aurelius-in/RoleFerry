@@ -38,6 +38,9 @@ class CampaignLaunchRequest(BaseModel):
     campaign_id: str
     emails: List[Dict[str, Any]]
     contacts: List[Dict[str, Any]]
+    # Optional: when Campaign generates per-contact emails, include a map of contact_id -> {subject, body}
+    # so "launch" can record the correct primary message per contact.
+    primary_by_contact_id: Optional[Dict[str, Dict[str, Any]]] = None
     # Optional: sender domain info for real DNS checks (SPF/DMARC; DKIM requires selector).
     sending_domain: Optional[str] = None
     dkim_selector: Optional[str] = None
@@ -889,19 +892,30 @@ async def launch_campaign(request: CampaignLaunchRequest, http_request: Request)
             raise HTTPException(status_code=400, detail="At least one email template is required")
 
         primary_email = request.emails[0]
-        subject = str(primary_email.get("subject") or "")
-        body = str(primary_email.get("body") or "")
+        default_subject = str(primary_email.get("subject") or "")
+        default_body = str(primary_email.get("body") or "")
 
         emails_sent = 0
         for contact in request.contacts:
+            cid = str(contact.get("id") or contact.get("contact_id") or "").strip()
             to_addr = contact.get("email")
             if not to_addr:
                 continue
             variant = contact.get("variant") or ""
+            subj = default_subject
+            body = default_body
+            try:
+                by = request.primary_by_contact_id or {}
+                if cid and isinstance(by.get(cid), dict):
+                    subj = str(by[cid].get("subject") or subj)
+                    body = str(by[cid].get("body") or body)
+            except Exception:
+                subj = default_subject
+                body = default_body
             await record_outreach_send(
                 campaign_id=request.campaign_id,
                 contact_email=to_addr,
-                subject=subject,
+                subject=subj,
                 body=body,
                 user_id=user_id,
                 variant=variant,

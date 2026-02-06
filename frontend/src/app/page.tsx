@@ -68,7 +68,7 @@ export default function Home() {
             ? (parsed as any).steps
             : [];
 
-        // New format (v2): already uses the current 12-step flow (10=Bio, 11=Compose, 12=Campaign).
+        // New format (v2): already uses the current 12-step flow (10=Bio, 11=Campaign, 12=Launch).
         // IMPORTANT: do not run legacy remaps or we can accidentally drop step 12 and never unlock Launch.
         if (version >= 2) {
           const final = Array.from(new Set((steps || []).filter((n) => Number.isFinite(n) && n >= 1 && n <= 12)));
@@ -92,18 +92,19 @@ export default function Home() {
           out = remapped;
         }
 
-        // Next legacy change: Bio Page inserted at step 10 and Campaign became step 12.
+        // Next legacy change: Bio Page inserted at step 10 and Campaign became step 11.
         // Old (pre-change): 10=Compose, 11=Launch, 12=Tracker
-        // New: 10=Bio, 11=Compose, 12=Campaign
+        // New (before Compose removal): 10=Bio, 11=Compose, 12=Campaign
         //
         // For migration, if the user reached Compose/Launch/Tracker in the old flow,
-        // we treat Bio as completed (otherwise Launch can stay locked forever).
+        // we treat Bio as completed (otherwise downstream steps can stay locked forever).
         const hadEndOfFlow = out.some((n) => n === 10 || n === 11 || n === 12);
         const remapped2: number[] = [];
         for (const n of out) {
-          if (n === 10) remapped2.push(11); // old Compose -> new Compose
-          else if (n === 11) remapped2.push(12); // old Launch -> new Campaign (final step)
-          else if (n === 12) remapped2.push(12); // old Tracker -> new Campaign (final step)
+          // Compose removed: treat legacy Compose/Launch/Tracker as "end-of-flow reached" and map to Campaign/Launch.
+          if (n === 10) remapped2.push(11); // old Compose -> new Campaign
+          else if (n === 11) remapped2.push(12); // old Launch -> new Launch
+          else if (n === 12) remapped2.push(12); // old Tracker -> new Launch
           else remapped2.push(n);
         }
         if (hadEndOfFlow) remapped2.push(10); // new Bio
