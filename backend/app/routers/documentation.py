@@ -139,12 +139,6 @@ async def get_wireframe_documentation() -> Dict[str, Any]:
                 "features": ["Tone selection", "Content generation", "Editable offers", "Format options"],
                 "file": "docs/wireframes/offer-creation.html"
             },
-            "compose": {
-                "title": "Compose Wireframe",
-                "description": "Email composition and editing interface",
-                "features": ["Email generation", "Variable substitution", "Jargon clarity", "Tone selection"],
-                "file": "docs/wireframes/compose.html"
-            },
             "campaign": {
                 "title": "Campaign Wireframe",
                 "description": "Email campaign creation and management interface",
@@ -262,15 +256,15 @@ async def get_workflow_documentation() -> Dict[str, Any]:
                 },
                 {
                     "step": 8,
-                    "title": "Compose Email",
-                    "description": "Compose personalized email using offer and context",
-                    "actions": ["Select email tone", "Review generated email", "Edit content", "Use jargon clarity"]
+                    "title": "Bio Page",
+                    "description": "Generate a shareable public bio page link",
+                    "actions": ["Generate draft", "Customize theme", "Publish bio page", "Copy link"]
                 },
                 {
                     "step": 9,
                     "title": "Campaign",
                     "description": "Create follow-up email campaign",
-                    "actions": ["Review generated emails", "Edit content", "Set timing", "Check deliverability"]
+                    "actions": ["Generate 4 emails", "Select context layers", "Adjust tone/instructions", "Regenerate per step"]
                 },
                 {
                     "step": 10,
@@ -328,15 +322,15 @@ async def get_workflow_documentation() -> Dict[str, Any]:
                 },
                 {
                     "step": 8,
-                    "title": "Compose Email",
-                    "description": "Compose personalized email using offer and context",
-                    "actions": ["Select email tone", "Review generated email", "Edit content", "Use jargon clarity"]
+                    "title": "Bio Page",
+                    "description": "Generate a shareable public bio page link",
+                    "actions": ["Generate draft", "Customize theme", "Publish bio page", "Copy link"]
                 },
                 {
                     "step": 9,
                     "title": "Campaign",
                     "description": "Create follow-up email campaign",
-                    "actions": ["Review generated emails", "Edit content", "Set timing", "Check deliverability"]
+                    "actions": ["Generate 4 emails", "Select context layers", "Adjust tone/instructions", "Regenerate per step"]
                 },
                 {
                     "step": 10,
@@ -433,8 +427,8 @@ async def get_api_reference() -> Dict[str, Any]:
                 },
                 {
                     "method": "POST",
-                    "path": "/compose/generate",
-                    "description": "Generate email content"
+                    "path": "/campaign/generate-step",
+                    "description": "Generate one email step for a contact"
                 },
                 {
                     "method": "POST",

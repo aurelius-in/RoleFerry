@@ -66,6 +66,7 @@ export default function DeliverabilityLaunchPage() {
   const router = useRouter();
   const [mode, setMode] = useState<'job-seeker' | 'recruiter'>('job-seeker');
   const [campaign, setCampaign] = useState<any>(null);
+  const [campaignByContactV2, setCampaignByContactV2] = useState<Record<string, any>>({});
   const [deliverabilityCheck, setDeliverabilityCheck] = useState<DeliverabilityCheck | null>(null);
   const [isCheckingDeliverability, setIsCheckingDeliverability] = useState(false);
   const [activeDeliverabilityStep, setActiveDeliverabilityStep] = useState<number | null>(null);
@@ -462,10 +463,34 @@ export default function DeliverabilityLaunchPage() {
       setMode('recruiter');
     }
     
-    // Load campaign data from previous step
-    const campaignData = localStorage.getItem('campaign_data');
-    if (campaignData) {
-      setCampaign(JSON.parse(campaignData));
+    // Load per-contact sequences generated in Campaign
+    try {
+      const raw = localStorage.getItem("rf_campaign_by_contact_v2");
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (parsed && typeof parsed === "object") setCampaignByContactV2(parsed);
+    } catch {}
+
+    // Pick a canonical campaign (for checks/UI preview) from the first selected contact.
+    try {
+      const contacts = loadSelectedContacts();
+      const firstId = String((Array.isArray(contacts) ? contacts[0]?.id : "") || "").trim();
+      const camp = firstId ? (parsed: any) => (parsed && typeof parsed === "object" ? parsed[firstId] : null) : () => null;
+      const raw = localStorage.getItem("rf_campaign_by_contact_v2");
+      const by = raw ? JSON.parse(raw) : null;
+      const c0 = camp(by);
+      if (c0?.emails?.length) {
+        setCampaign(c0);
+      } else {
+        // Legacy fallback: older builds stored a single campaign template.
+        const campaignData = localStorage.getItem("campaign_data");
+        if (campaignData) setCampaign(JSON.parse(campaignData));
+      }
+    } catch {
+      // Legacy fallback
+      try {
+        const campaignData = localStorage.getItem("campaign_data");
+        if (campaignData) setCampaign(JSON.parse(campaignData));
+      } catch {}
     }
 
     // Load channel + previously generated LinkedIn notes
@@ -623,18 +648,10 @@ export default function DeliverabilityLaunchPage() {
 
     try {
       if (!campaign) {
-        // Fallback: try to rebuild campaign from local storage if the state was lost on refresh
-        const saved = localStorage.getItem("campaign_data");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          setCampaign(parsed);
-          // continue with parsed
-        } else {
-          throw new Error("No campaign data available");
-        }
+        throw new Error("No campaign data available");
       }
 
-      const campaignToUse = campaign || JSON.parse(localStorage.getItem("campaign_data") || "{}");
+      const campaignToUse = campaign;
 
       const payload = {
         campaign_id: campaignToUse.id || "manual_launch",
@@ -685,10 +702,25 @@ export default function DeliverabilityLaunchPage() {
           ? verifiedContacts
           : selectedContacts;
 
+      // Provide per-contact primary email (step 1) if available (Campaign generates unique copy per person).
+      const primaryByContactId: Record<string, { subject: string; body: string }> = {};
+      try {
+        for (const c of Array.isArray(contactsForLaunch) ? contactsForLaunch : []) {
+          const cid = String(c?.id || "").trim();
+          if (!cid) continue;
+          const seq = campaignByContactV2?.[cid];
+          const e1 = Array.isArray(seq?.emails) ? seq.emails.find((e: any) => Number(e?.step_number) === 1) : null;
+          const subject = String(e1?.subject || "").trim();
+          const body = String(e1?.body || "").trim();
+          if (subject || body) primaryByContactId[cid] = { subject, body };
+        }
+      } catch {}
+
       const payload = {
         campaign_id: campaign.id,
         emails: campaign.emails,
         contacts: contactsForLaunch,
+        primary_by_contact_id: Object.keys(primaryByContactId).length ? primaryByContactId : undefined,
         warmup_plan: warmupPlan,
       };
       const result = await api<LaunchResult>(
@@ -712,7 +744,7 @@ export default function DeliverabilityLaunchPage() {
               name: c.company || "Unknown",
               logo: c.company ? `https://logo.clearbit.com/${String(c.company).toLowerCase().replace(/\s+/g, "")}.com` : undefined
             },
-            role: campaignToUse.name || "Applied Role",
+            role: campaign?.name || "Applied Role",
             status: mode === "job-seeker" ? "applied" : "applied", // In recruiter mode it maps to 'Contacted' via statusMap
             appliedDate: new Date().toISOString().slice(0, 10),
             lastContact: new Date().toISOString().slice(0, 10),

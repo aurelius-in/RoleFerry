@@ -163,22 +163,20 @@ class UserTestingService:
                 ),
                 TestTask(
                     task_id="js_007",
-                    name="Compose Email",
-                    description="Compose a personalized email using the offer and context",
+                    name="Create Bio Page",
+                    description="Generate and publish a shareable bio page link",
                     expected_actions=[
-                        "Navigate to Compose tab",
-                        "Select email tone",
-                        "Review generated email",
-                        "Edit email content",
-                        "Use jargon clarity if needed",
-                        "Save the email"
+                        "Navigate to Bio Page tab",
+                        "Generate draft",
+                        "Customize theme",
+                        "Publish bio page",
+                        "Copy the public link"
                     ],
                     success_criteria=[
-                        "Email is generated",
-                        "User can select tone",
-                        "User can edit content",
-                        "Jargon clarity works",
-                        "Email is saved"
+                        "Draft is generated",
+                        "Theme customization works",
+                        "Bio page is published",
+                        "Public URL is saved and copyable"
                     ],
                     difficulty="medium",
                     time_limit=600
@@ -349,22 +347,20 @@ class UserTestingService:
                 ),
                 TestTask(
                     task_id="rec_007",
-                    name="Compose Email",
-                    description="Compose a personalized email using the offer and context",
+                    name="Create Bio Page",
+                    description="Generate and publish a shareable bio page link",
                     expected_actions=[
-                        "Navigate to Compose tab",
-                        "Select email tone",
-                        "Review generated email",
-                        "Edit email content",
-                        "Use jargon clarity if needed",
-                        "Save the email"
+                        "Navigate to Bio Page tab",
+                        "Generate draft",
+                        "Customize theme",
+                        "Publish bio page",
+                        "Copy the public link"
                     ],
                     success_criteria=[
-                        "Email is generated",
-                        "User can select tone",
-                        "User can edit content",
-                        "Jargon clarity works",
-                        "Email is saved"
+                        "Draft is generated",
+                        "Theme customization works",
+                        "Bio page is published",
+                        "Public URL is saved and copyable"
                     ],
                     difficulty="medium",
                     time_limit=600
