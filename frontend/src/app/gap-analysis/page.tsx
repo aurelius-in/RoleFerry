@@ -194,8 +194,8 @@ export default function GapAnalysisPage() {
   const missingSteps = useMemo(() => {
     const missing: Array<{ key: string; label: string; href: string }> = [];
     if (!preferences) missing.push({ key: "prefs", label: "Role Preferences (Step 1)", href: "/job-preferences" });
-    if (!resumeExtract) missing.push({ key: "resume", label: "Resume (Step 3)", href: "/resume" });
-    if (jobDescriptions.length === 0) missing.push({ key: "jobs", label: "Role Descriptions (Step 2)", href: "/job-descriptions" });
+    if (!resumeExtract) missing.push({ key: "resume", label: "Resume (Step 2)", href: "/resume" });
+    if (jobDescriptions.length === 0) missing.push({ key: "jobs", label: "Role Search (Step 5)", href: "/job-descriptions" });
     return missing;
   }, [jobDescriptions.length, preferences, resumeExtract]);
 
@@ -287,7 +287,7 @@ export default function GapAnalysisPage() {
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4 mb-4">
         <a href="/job-descriptions" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
-          <span className="mr-2">←</span> Back to Role Descriptions
+          <span className="mr-2">←</span> Back to Role Search
         </a>
       </div>
 

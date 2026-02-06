@@ -68,6 +68,18 @@ function safeText(v: any): string {
   return String(v ?? "").replace(/\s+/g, " ").trim();
 }
 
+function scrubModePlaceholders(raw: string): string {
+  const s = String(raw || "").trim();
+  if (!s) return "";
+  const lower = s.toLowerCase();
+  // Never show mode/config instructional strings inside user-facing "data" fields.
+  if (lower.includes("try live mode")) return "";
+  if (lower.includes("serper configured")) return "";
+  if (lower.includes("serper_api_key")) return "";
+  if (lower.startsWith("no ") && lower.includes("captured in this run")) return "";
+  return s;
+}
+
 function extractHiringSignals(sections: any, news: any[]): CompanyResearch["hiring_signals"] {
   const sec = Array.isArray(sections) ? sections : [];
   const hiringText =
@@ -275,11 +287,11 @@ export default function CompanyResearchPage() {
       const overview = String(companySummary?.description || "").trim();
       const cultureFromModel = String(entry?.company_culture_values || "").trim();
       const marketFromModel = String(entry?.company_market_position || "").trim();
-      const productLaunchesFromModel = String(entry?.company_product_launches || "").trim();
-      const leadershipChangesFromModel = String(entry?.company_leadership_changes || "").trim();
-      const otherHiringSignalsFromModel = String(entry?.company_other_hiring_signals || "").trim();
-      const recentPostsFromModel = String(entry?.company_recent_posts || "").trim();
-      const publicationsFromModel = String(entry?.company_publications || "").trim();
+      const productLaunchesFromModel = scrubModePlaceholders(String(entry?.company_product_launches || ""));
+      const leadershipChangesFromModel = scrubModePlaceholders(String(entry?.company_leadership_changes || ""));
+      const otherHiringSignalsFromModel = scrubModePlaceholders(String(entry?.company_other_hiring_signals || ""));
+      const recentPostsFromModel = scrubModePlaceholders(String(entry?.company_recent_posts || ""));
+      const publicationsFromModel = scrubModePlaceholders(String(entry?.company_publications || ""));
       const culture = cultureFromModel || pickSectionText(sections, "culture") || pickSectionText(sections, "values");
       // Market position should be sourced. If we don't have web sources (SERPER), avoid generic "likely/may" output.
       const market = hasWebSources
@@ -643,9 +655,7 @@ export default function CompanyResearchPage() {
                           </div>
                         ))}
                       </div>
-                    ) : (
-                      <div className="text-sm text-white/60">No hiring signals captured in this run yet. Try Live mode for richer results.</div>
-                    )}
+                    ) : null}
 
                   <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
@@ -653,7 +663,7 @@ export default function CompanyResearchPage() {
                         Recent posts (blog/press/LinkedIn topics)
                       </div>
                       <textarea
-                        value={draft.recent_posts || ""}
+                        value={scrubModePlaceholders(draft.recent_posts || "")}
                         onChange={(e) => setDraft({ ...draft, recent_posts: e.target.value })}
                         rows={6}
                         className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
@@ -671,7 +681,7 @@ export default function CompanyResearchPage() {
                         Publications (case studies / reports)
                       </div>
                       <textarea
-                        value={draft.publications || ""}
+                        value={scrubModePlaceholders(draft.publications || "")}
                         onChange={(e) => setDraft({ ...draft, publications: e.target.value })}
                         rows={6}
                         className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
@@ -784,7 +794,7 @@ export default function CompanyResearchPage() {
                 <div>
                   <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Product launches</div>
                   <textarea
-                    value={draft.product_launches}
+                    value={scrubModePlaceholders(draft.product_launches)}
                     onChange={(e) => setDraft({ ...draft, product_launches: e.target.value })}
                     rows={6}
                     className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
@@ -801,7 +811,7 @@ export default function CompanyResearchPage() {
                 <div>
                   <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Leadership changes</div>
                   <textarea
-                    value={draft.leadership_changes}
+                    value={scrubModePlaceholders(draft.leadership_changes)}
                     onChange={(e) => setDraft({ ...draft, leadership_changes: e.target.value })}
                     rows={6}
                     className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
@@ -818,7 +828,7 @@ export default function CompanyResearchPage() {
                 <div className="lg:col-span-2">
                   <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Other hiring signals</div>
                   <textarea
-                    value={draft.other_hiring_signals}
+                    value={scrubModePlaceholders(draft.other_hiring_signals)}
                     onChange={(e) => setDraft({ ...draft, other_hiring_signals: e.target.value })}
                     rows={6}
                     className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
