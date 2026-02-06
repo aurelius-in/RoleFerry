@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { DataMode, getCurrentDataMode, setCurrentDataMode, subscribeToDataModeChanges } from "@/lib/dataMode";
+import { getCurrentDataMode, subscribeToDataModeChanges } from "@/lib/dataMode";
 import InlineSpinner from "@/components/InlineSpinner";
 
 type OutreachSend = {
@@ -48,7 +48,7 @@ const DEMO_ANALYTICS: OverviewResp = {
 
 export default function Analytics() {
   // Initialize from storage immediately to avoid a 1st-render flash showing "Demo".
-  const [mode, setMode] = useState<DataMode>(() => getCurrentDataMode());
+  const [mode, setMode] = useState(() => getCurrentDataMode());
   const [data, setData] = useState<OverviewResp | null>(null);
   const [error, setError] = useState<
     | null
@@ -182,9 +182,7 @@ export default function Analytics() {
               : "Showing live analytics from your backend. If there’s a problem, you’ll see a clear explanation below."}
           </p>
         </div>
-        <span className="inline-flex items-center rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-wide">
-          Mode: <span className="ml-1 font-semibold">{mode === "demo" ? "Demo (mock data)" : "Live (API)"}</span>
-        </span>
+        {/* Live/Demo mode is no longer a visible UI concept. */}
       </div>
 
       {mode === "live" && error ? (
@@ -206,13 +204,6 @@ export default function Analytics() {
               className="rounded-md border border-white/15 bg-black/30 px-3 py-2 text-xs font-semibold text-white hover:bg-black/40"
             >
               Refresh
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentDataMode("demo")}
-              className="rounded-md border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/15"
-            >
-              Switch to Demo mode
             </button>
           </div>
         </div>
