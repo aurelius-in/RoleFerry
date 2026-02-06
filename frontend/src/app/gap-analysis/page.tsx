@@ -79,6 +79,74 @@ function safeJson<T>(raw: string | null, fallback: T): T {
   }
 }
 
+function safeJsonUnknown(raw: string | null): any {
+  try {
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function buildMinimalPersonalityProfileFromAnswers(rawAnswers: any): PersonalityProfile | null {
+  // `personality_answers_v1` is stored as a map: { q1: -2..2, q2: ..., ... }.
+  if (!rawAnswers || typeof rawAnswers !== "object") return null;
+  const asNum = (v: any) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const axisByQ: Record<string, "energy" | "info" | "decisions" | "structure"> = {
+    q1: "energy",
+    q2: "energy",
+    q3: "info",
+    q4: "info",
+    q5: "decisions",
+    q6: "decisions",
+    q7: "structure",
+    q8: "structure",
+    q9: "energy",
+    q10: "info",
+    q11: "decisions",
+    q12: "structure",
+  };
+  const scores: Record<string, number> = { energy: 0, info: 0, decisions: 0, structure: 0 };
+  let hasAny = false;
+  for (const [qid, axis] of Object.entries(axisByQ)) {
+    if (!(qid in rawAnswers)) continue;
+    hasAny = true;
+    scores[axis] += asNum((rawAnswers as any)[qid]);
+  }
+  if (!hasAny) return null;
+  return { version: "answers-v1", completed_at: new Date().toISOString(), scores };
+}
+
+function buildMinimalTemperamentProfileFromAnswers(rawAnswers: any): TemperamentProfile | null {
+  // `temperament_answers_v1` is stored as a map: { t1: -2..2, ... }.
+  if (!rawAnswers || typeof rawAnswers !== "object") return null;
+  const asNum = (v: any) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const axisByQ: Record<string, "communication" | "action"> = {
+    t1: "communication",
+    t2: "communication",
+    t3: "communication",
+    t4: "communication",
+    t5: "action",
+    t6: "action",
+    t7: "action",
+    t8: "action",
+  };
+  const scores: Record<string, number> = { communication: 0, action: 0 };
+  let hasAny = false;
+  for (const [qid, axis] of Object.entries(axisByQ)) {
+    if (!(qid in rawAnswers)) continue;
+    hasAny = true;
+    scores[axis] += asNum((rawAnswers as any)[qid]);
+  }
+  if (!hasAny) return null;
+  return { version: "answers-v1", completed_at: new Date().toISOString(), scores };
+}
+
 function pillColor(rec: GapAnalysisItem["recommendation"]) {
   if (rec === "pursue") return "bg-emerald-500/15 border-emerald-500/30 text-emerald-200";
   if (rec === "maybe") return "bg-yellow-500/15 border-yellow-500/30 text-yellow-200";
@@ -103,8 +171,21 @@ export default function GapAnalysisPage() {
     setJobDescriptions(safeJson<JobDescription[]>(localStorage.getItem("job_descriptions"), []));
     setPreferences(safeJson<JobPreferences | null>(localStorage.getItem("job_preferences"), null));
     setResumeExtract(safeJson<ResumeExtract | null>(localStorage.getItem("resume_extract"), null));
-    setPersonalityProfile(safeJson<PersonalityProfile | null>(localStorage.getItem("personality_profile"), null));
-    setTemperamentProfile(safeJson<TemperamentProfile | null>(localStorage.getItem("temperament_profile"), null));
+    const p = safeJson<PersonalityProfile | null>(localStorage.getItem("personality_profile"), null);
+    const t = safeJson<TemperamentProfile | null>(localStorage.getItem("temperament_profile"), null);
+
+    // If the user didn't finish the full quiz, we still persist raw answers.
+    // Build a minimal profile from those answers so Gap Analysis can genuinely cross-reference personality.
+    const pFromAnswers = p || buildMinimalPersonalityProfileFromAnswers(safeJsonUnknown(localStorage.getItem("personality_answers_v1")));
+    const tFromAnswers = t || buildMinimalTemperamentProfileFromAnswers(safeJsonUnknown(localStorage.getItem("temperament_answers_v1")));
+    setPersonalityProfile(pFromAnswers);
+    setTemperamentProfile(tFromAnswers);
+    try {
+      if (!p && pFromAnswers) localStorage.setItem("personality_profile", JSON.stringify(pFromAnswers));
+    } catch {}
+    try {
+      if (!t && tFromAnswers) localStorage.setItem("temperament_profile", JSON.stringify(tFromAnswers));
+    } catch {}
   }, []);
 
   // Allow analysis even without personality; personality gaps will be empty in that case.
@@ -141,7 +222,8 @@ export default function GapAnalysisPage() {
             skills: preferences.skills || [],
             minimum_salary: preferences.minimumSalary || "",
             job_search_status: preferences.jobSearchStatus || "",
-            state: preferences.state || null,
+            // Only send state when the Role Preferences UI could have collected it (In-Person selected).
+            state: (preferences.locationPreferences || []).includes("In-Person") ? (preferences.state || null) : null,
             user_mode: "job-seeker",
           }
         : null;
