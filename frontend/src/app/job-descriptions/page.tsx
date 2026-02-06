@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { formatCompanyName } from "@/lib/format";
+import InlineSpinner from "@/components/InlineSpinner";
 
 const JARGON_PHRASES = [
   "fast-paced environment",
@@ -625,9 +626,16 @@ export default function JobDescriptionsPage() {
                       isImporting ||
                       (importType === "url" ? !importUrl.trim() : !importText.trim())
                     }
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
                   >
-                    {isImporting ? "Parsing..." : "Import"}
+                    {isImporting ? (
+                      <>
+                        <InlineSpinner />
+                        <span>Parsing</span>
+                      </>
+                    ) : (
+                      "Import"
+                    )}
                   </button>
                 </div>
               </div>

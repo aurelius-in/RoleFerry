@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import InlineSpinner from "@/components/InlineSpinner";
 
 type AskResponse = {
   answer: string;
@@ -38,7 +39,14 @@ export default function AskBox() {
         />
         <div className="mt-2">
           <button onClick={send} disabled={loading} className="px-4 py-2 rounded brand-gradient text-black font-medium">
-            {loading ? "Thinking..." : "ASK"}
+            {loading ? (
+              <span className="inline-flex items-center gap-2">
+                <InlineSpinner className="border-black/25 border-t-black/80" />
+                <span>Thinking</span>
+              </span>
+            ) : (
+              "ASK"
+            )}
           </button>
         </div>
       </div>

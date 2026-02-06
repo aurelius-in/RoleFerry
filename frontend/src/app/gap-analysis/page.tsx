@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import StarRating from "@/components/StarRating";
 import { formatCompanyName } from "@/lib/format";
+import InlineSpinner from "@/components/InlineSpinner";
 
 type JobPreferences = {
   values: string[];
@@ -327,9 +328,16 @@ export default function GapAnalysisPage() {
               type="button"
               onClick={runAnalysis}
               disabled={!canAnalyze || isAnalyzing}
-              className="px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 inline-flex items-center gap-2"
             >
-              {isAnalyzing ? "Analyzing…" : "Run Gap Analysis"}
+              {isAnalyzing ? (
+                <>
+                  <InlineSpinner />
+                  <span>Analyzing</span>
+                </>
+              ) : (
+                "Run Gap Analysis"
+              )}
             </button>
 
             {topSummary ? (

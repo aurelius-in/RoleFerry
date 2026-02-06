@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import InlineSpinner from "@/components/InlineSpinner";
 
 type Mode = "login" | "register";
 
@@ -276,9 +277,16 @@ export default function LoginPage() {
             <button
               onClick={submit}
               disabled={loading}
-              className="w-full rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              className="w-full rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60 inline-flex items-center justify-center gap-2"
             >
-              {loading ? "Working…" : primaryCta}
+              {loading ? (
+                <>
+                  <InlineSpinner className="h-3.5 w-3.5" />
+                  <span>Working</span>
+                </>
+              ) : (
+                primaryCta
+              )}
             </button>
 
             <div className="text-xs text-white/50">

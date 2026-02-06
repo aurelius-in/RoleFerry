@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import StarRating from "@/components/StarRating";
 import { formatCompanyName } from "@/lib/format";
+import InlineSpinner from "@/components/InlineSpinner";
 
 interface PainPointMatch {
   painpoint_1: string;
@@ -412,9 +413,16 @@ export default function PainPointMatchPage() {
                   type="button"
                   onClick={runPainPointMatchAnalysis}
                   disabled={isGenerating}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
                 >
-                  {isGenerating ? "Running…" : "Run Pain Point Match Analysis"}
+                  {isGenerating ? (
+                    <>
+                      <InlineSpinner />
+                      <span>Running</span>
+                    </>
+                  ) : (
+                    "Run Pain Point Match Analysis"
+                  )}
                 </button>
               </div>
 

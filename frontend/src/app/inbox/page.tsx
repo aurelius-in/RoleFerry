@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
+import InlineSpinner from "@/components/InlineSpinner";
 
 type Reply = {
   id?: string;
@@ -108,9 +109,16 @@ export default function InboxPage() {
               type="button"
               onClick={load}
               disabled={loading}
-              className="px-4 py-2 rounded-full border border-white/10 bg-black/20 text-white/80 hover:bg-white/10 font-semibold text-sm disabled:opacity-50"
+              className="px-4 py-2 rounded-full border border-white/10 bg-black/20 text-white/80 hover:bg-white/10 font-semibold text-sm disabled:opacity-50 inline-flex items-center gap-2"
             >
-              {loading ? "Refreshing..." : "Refresh"}
+              {loading ? (
+                <>
+                  <InlineSpinner className="h-3.5 w-3.5" />
+                  <span>Refreshing</span>
+                </>
+              ) : (
+                "Refresh"
+              )}
             </button>
           </div>
 
