@@ -81,6 +81,39 @@ export default function BioPageStep() {
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [userDisplayName, setUserDisplayName] = useState<string>("");
   const [jobPrefs, setJobPrefs] = useState<any>(null);
+  const openPublicPage = (url: string) => {
+    const u = safeStr(url);
+    if (!u) return;
+    try {
+      window.open(u, "_blank", "noopener,noreferrer");
+    } catch {}
+  };
+
+  const extractBioSlug = (url: string): string | null => {
+    const raw = safeStr(url);
+    if (!raw) return null;
+    try {
+      // Accept absolute or relative URLs.
+      const u = new URL(raw, window.location.origin);
+      const parts = u.pathname.split("/").filter(Boolean);
+      // Expected: /bio/:slug
+      if (parts.length >= 2 && parts[0] === "bio" && parts[1]) return parts[1];
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  const validatePublishedSlug = async (slug: string): Promise<boolean> => {
+    const s = safeStr(slug);
+    if (!s) return false;
+    try {
+      await api<any>(`/bio-pages/${encodeURIComponent(s)}`, "GET");
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   useEffect(() => {
     // Load cached draft if available for quick UX
@@ -354,7 +387,7 @@ export default function BioPageStep() {
     }
   };
 
-  const publish = async () => {
+  const publish = async (): Promise<string> => {
     if (!draft) return;
     setBusy("publish");
     setMsg(null);
@@ -379,12 +412,36 @@ export default function BioPageStep() {
         setBioUrl(url);
       }
       setMsg(url ? "Published." : "Published (no URL returned).");
+      return url;
     } catch (e: any) {
       setMsg(String(e?.message || "Failed to publish"));
+      return "";
     } finally {
       setBusy(null);
       setTimeout(() => setMsg(null), 2500);
     }
+  };
+
+  const ensureOpenPublicPage = async () => {
+    // If we have a cached URL, validate it first. If it 404s (common in demo/in-memory),
+    // republish to get a fresh slug, then open the new URL.
+    const existingUrl = safeStr(bioUrl || localStorage.getItem(BIO_URL_KEY));
+    const existingSlug = existingUrl ? extractBioSlug(existingUrl) : null;
+    if (existingUrl && existingSlug) {
+      const ok = await validatePublishedSlug(existingSlug);
+      if (ok) {
+        openPublicPage(existingUrl);
+        return;
+      }
+      // Stale/broken link: clear it so we publish below.
+      try {
+        localStorage.removeItem(BIO_URL_KEY);
+      } catch {}
+      setBioUrl("");
+    }
+
+    const url = await publish();
+    if (url) openPublicPage(url);
   };
 
   const copyLink = async () => {
@@ -445,18 +502,10 @@ export default function BioPageStep() {
                   disabled={busy === "generate"}
                   className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-yellow-400 text-black font-bold hover:shadow-md disabled:opacity-60"
                 >
-                  {busy === "generate" ? "Generating..." : "Generate / Regenerate"}
+                  {busy === "generate" ? "Generating..." : (draft ? "Regenerate" : "Generate")}
                 </button>
                 <button
-                  onClick={() => {
-                    if (bioUrl) {
-                      try {
-                        window.open(bioUrl, "_blank", "noopener,noreferrer");
-                      } catch {}
-                      return;
-                    }
-                    publish();
-                  }}
+                  onClick={ensureOpenPublicPage}
                   disabled={busy === "publish" || (!bioUrl && !draft)}
                   className="w-full px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 font-bold hover:bg-emerald-500/25 disabled:opacity-50"
                 >
@@ -475,7 +524,7 @@ export default function BioPageStep() {
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
               <div className="text-sm font-bold">Work style</div>
               <div className="text-xs text-white/60 mt-1">
-                Pulled from your Job Preferences (used on the public page and as campaign context).
+                Pulled from your Role Preferences (used on the public page and as campaign context).
               </div>
               {(() => {
                 const pts = (Array.isArray((draft as any)?.work_style_points) && (draft as any).work_style_points.length)

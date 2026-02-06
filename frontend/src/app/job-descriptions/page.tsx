@@ -421,7 +421,7 @@ export default function JobDescriptionsPage() {
       };
 
       localStorage.setItem(key, JSON.stringify([nextItem, ...list]));
-      setTrackerNotice(`Added to Job Tracker: ${jd.title} @ ${formatCompanyName(jd.company)}`);
+      setTrackerNotice(`Added to Role Tracker: ${jd.title} @ ${formatCompanyName(jd.company)}`);
       window.setTimeout(() => setTrackerNotice(null), 2500);
 
       // Notify other screens (Tracker) in the same SPA session.
@@ -435,7 +435,7 @@ export default function JobDescriptionsPage() {
       if (trackerPulseTimer.current) window.clearTimeout(trackerPulseTimer.current);
       trackerPulseTimer.current = window.setTimeout(() => setTrackerPulseId(null), 900);
     } catch {
-      setTrackerNotice("Couldn’t add to Job Tracker.");
+      setTrackerNotice("Couldn’t add to Role Tracker.");
       window.setTimeout(() => setTrackerNotice(null), 2500);
     }
   };
@@ -451,9 +451,9 @@ export default function JobDescriptionsPage() {
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Job Descriptions</h1>
+              <h1 className="text-3xl font-bold text-white mb-2">Role Descriptions</h1>
               <p className="text-white/70">
-                Import job descriptions to extract business challenges, required skills, and success metrics.
+                Import role descriptions (job postings) to extract business challenges, required skills, and success metrics.
               </p>
             </div>
             <div className="bg-gray-900/70 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-white/10">
@@ -468,14 +468,14 @@ export default function JobDescriptionsPage() {
           )}
 
           <div className="mb-6 rounded-lg border border-white/10 bg-black/20 p-4">
-            <div className="text-sm font-bold text-white">Websites to find job descriptions</div>
+            <div className="text-sm font-bold text-white">Websites to find role descriptions</div>
             <div className="mt-1 text-xs text-white/60">
-              Open a site, find a posting, then paste the URL or job text below.
+              Open a site, find a posting, then paste the URL or posting text below.
             </div>
 
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="rounded-md border border-white/10 bg-white/5 p-4">
-                <div className="text-xs font-semibold text-white/70 mb-2">General job boards</div>
+                <div className="text-xs font-semibold text-white/70 mb-2">General boards</div>
                 <ul className="space-y-1 text-sm">
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.linkedin.com/jobs/" target="_blank" rel="noopener noreferrer">LinkedIn Jobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.indeed.com/" target="_blank" rel="noopener noreferrer">Indeed</a></li>
@@ -509,7 +509,7 @@ export default function JobDescriptionsPage() {
               </div>
 
               <div className="rounded-md border border-white/10 bg-white/5 p-4">
-                <div className="text-xs font-semibold text-white/70 mb-2">Tech jobs</div>
+                <div className="text-xs font-semibold text-white/70 mb-2">Tech boards</div>
                 <ul className="space-y-1 text-sm">
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.builtin.com/jobs" target="_blank" rel="noopener noreferrer">Built In (Tech)</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.dice.com/" target="_blank" rel="noopener noreferrer">Dice</a></li>
@@ -577,12 +577,12 @@ export default function JobDescriptionsPage() {
 
                   {importType === "url" ? (
                     <>
-                      <div className="text-xs text-white/70 mb-1">Paste a job URL</div>
+                      <div className="text-xs text-white/70 mb-1">Paste a role URL</div>
                       <input
                         type="url"
                         value={importUrl}
                         onChange={(e) => setImportUrl(e.target.value)}
-                        placeholder="Paste a job URL (or a listing URL) and import"
+                        placeholder="Paste a role URL (or a listing URL) and import"
                         className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       <div className="mt-1 text-xs text-white/60">
@@ -602,11 +602,11 @@ export default function JobDescriptionsPage() {
                     </>
                   ) : (
                     <>
-                      <div className="text-xs text-white/70 mb-1">Paste Job description</div>
+                      <div className="text-xs text-white/70 mb-1">Paste role description</div>
                       <textarea
                         value={importText}
                         onChange={(e) => setImportText(e.target.value)}
-                        placeholder="Paste Job description"
+                        placeholder="Paste role description"
                         className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500 min-h-[280px] resize-y"
                       />
                     </>
@@ -634,14 +634,33 @@ export default function JobDescriptionsPage() {
             </div>
             
             {hasMounted && jobDescriptions.length > 0 && (
-              <select 
-                value={sortBy} 
-                onChange={(e) => setSortBy(e.target.value as 'date' | 'favoriteRank')}
-                className="rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="date">Sort by Date</option>
-                <option value="favoriteRank">Sort by Favorite Rank</option>
-              </select>
+              <div className="flex items-center gap-2">
+                <div className="text-[11px] font-semibold text-white/60">Sort</div>
+                <div className="inline-flex items-center rounded-full border border-white/10 bg-black/20 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setSortBy("date")}
+                    aria-pressed={sortBy === "date"}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                      sortBy === "date" ? "brand-gradient text-black" : "text-white/80 hover:bg-white/10"
+                    }`}
+                    title="Sort by newest import"
+                  >
+                    Date
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSortBy("favoriteRank")}
+                    aria-pressed={sortBy === "favoriteRank"}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                      sortBy === "favoriteRank" ? "brand-gradient text-black" : "text-white/80 hover:bg-white/10"
+                    }`}
+                    title="Sort by Favorite Rank (1..N)"
+                  >
+                    Rank
+                  </button>
+                </div>
+              </div>
             )}
           </div>
 
@@ -652,9 +671,9 @@ export default function JobDescriptionsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">No Job Descriptions</h3>
+              <h3 className="text-lg font-medium text-white mb-2">No Role Descriptions</h3>
               <p className="text-white/70 mb-6">
-                Import job descriptions from URLs or paste text to get started.
+                Import role descriptions from URLs or paste text to get started.
               </p>
             </div>
           ) : (
@@ -846,7 +865,7 @@ export default function JobDescriptionsPage() {
                         onClick={() => addToTracker(jd)}
                         className="text-white/80 hover:text-white text-sm underline"
                       >
-                        Add to Job Tracker
+                        Add to Role Tracker
                         {trackerPulseId === jd.id ? (
                           <span className="ml-1 inline-flex items-center text-green-300" aria-label="Added">
                             ✅

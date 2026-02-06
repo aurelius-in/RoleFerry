@@ -150,10 +150,10 @@ export default function Navbar() {
             <NavPill href="/" pathname={pathname} kind="utility" size="md">Dashboard</NavPill>
             <span className="mx-2 h-4 w-px bg-white/15" />
 
-            <NavPill href="/job-preferences" pathname={pathname}>Job Prefs</NavPill>
+            <NavPill href="/job-preferences" pathname={pathname}>Role Prefs</NavPill>
             <NavPill href="/resume" pathname={pathname}>Resume</NavPill>
             <NavPill href="/personality" pathname={pathname}>Personality</NavPill>
-            <NavPill href="/job-descriptions" pathname={pathname}>Jobs</NavPill>
+            <NavPill href="/job-descriptions" pathname={pathname}>Roles</NavPill>
             <NavPill href="/gap-analysis" pathname={pathname}>Gaps</NavPill>
             <NavPill href="/painpoint-match" pathname={pathname}>Match</NavPill>
             <NavPill href="/company-research" pathname={pathname}>Research</NavPill>
@@ -269,7 +269,7 @@ function ModeToggle() {
             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
         }`}
       >
-        Job Seeker
+        Role Seeker
       </button>
       <button
         onClick={toggle}

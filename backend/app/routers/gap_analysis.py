@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from starlette.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional, Literal
 import logging
@@ -921,8 +922,8 @@ def _safe_deterministic_rank(
         return ranked
 
 
-@router.post("/analyze", response_model=GapAnalysisResponse)
-async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
+@router.post("/analyze")
+async def analyze_gap(req: GapAnalysisRequest):
     """
     Rank imported job descriptions and highlight gaps:
     - preferences ↔ jobs
@@ -957,7 +958,8 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
         pass
 
     if not jobs:
-        return GapAnalysisResponse(success=True, message="No jobs to analyze", ranked=[], helper={"used_llm": False})
+        # Avoid response-model validation errors by returning raw JSON.
+        return JSONResponse({"success": True, "message": "No roles to analyze", "ranked": [], "overall": None, "helper": {"used_llm": False}})
 
     try:
         # get_openai_client() should be safe, but never allow config issues to 500 this endpoint.
@@ -972,12 +974,14 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
                 personality_profile=req.personality_profile,
                 temperament_profile=req.temperament_profile,
             )
-            return GapAnalysisResponse(
-                success=True,
-                message="Gap analysis complete (LLM init error; used deterministic scoring)",
-                ranked=ranked,
-                overall=None,
-                helper={"used_llm": False, "model": "unavailable", "notes": [f"LLM init error: {str(e)[:160]}"]},
+            return JSONResponse(
+                {
+                    "success": True,
+                    "message": "Gap analysis complete (LLM init error; used deterministic scoring)",
+                    "ranked": [r.model_dump() for r in ranked],
+                    "overall": None,
+                    "helper": {"used_llm": False, "model": "unavailable", "notes": [f"LLM init error: {str(e)[:160]}"]},
+                }
             )
 
         if not getattr(client, "should_use_real_llm", False):
@@ -988,16 +992,18 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
                 personality_profile=req.personality_profile,
                 temperament_profile=req.temperament_profile,
             )
-            return GapAnalysisResponse(
-                success=True,
-                message="Gap analysis complete (no LLM)",
-                ranked=ranked,
-                overall=None,
-                helper={
-                    "used_llm": False,
-                    "model": getattr(client, "model", "unavailable"),
-                    "notes": ["OpenAI not configured or LLM_MODE!=openai; used deterministic heuristics."],
-                },
+            return JSONResponse(
+                {
+                    "success": True,
+                    "message": "Gap analysis complete (no LLM)",
+                    "ranked": [r.model_dump() for r in ranked],
+                    "overall": None,
+                    "helper": {
+                        "used_llm": False,
+                        "model": getattr(client, "model", "unavailable"),
+                        "notes": ["OpenAI not configured or LLM_MODE!=openai; used deterministic heuristics."],
+                    },
+                }
             )
 
         # LLM path
@@ -1109,12 +1115,14 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
             ranked.extend(fill)
             ranked.sort(key=lambda x: x.score, reverse=True)
 
-        return GapAnalysisResponse(
-            success=True,
-            message="Gap analysis complete",
-            ranked=ranked,
-            overall=overall,
-            helper={"used_llm": True, "model": getattr(client, "model", "unavailable"), "notes": notes},
+        return JSONResponse(
+            {
+                "success": True,
+                "message": "Gap analysis complete",
+                "ranked": [r.model_dump() for r in ranked],
+                "overall": overall,
+                "helper": {"used_llm": True, "model": getattr(client, "model", "unavailable"), "notes": notes},
+            }
         )
     except HTTPException:
         raise
@@ -1128,12 +1136,14 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
             personality_profile=req.personality_profile,
             temperament_profile=req.temperament_profile,
         )
-        return GapAnalysisResponse(
-            success=True,
-            message="Gap analysis complete (internal error; used deterministic scoring)",
-            ranked=ranked,
-            overall=None,
-            helper={"used_llm": False, "model": getattr(client, "model", "unavailable"), "notes": [f"Internal error: {str(e)[:160]}"]},
+        return JSONResponse(
+            {
+                "success": True,
+                "message": "Gap analysis complete (internal error; used deterministic scoring)",
+                "ranked": [r.model_dump() for r in ranked],
+                "overall": None,
+                "helper": {"used_llm": False, "model": getattr(client, "model", "unavailable"), "notes": [f"Internal error: {str(e)[:160]}"]},
+            }
         )
 
 

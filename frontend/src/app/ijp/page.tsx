@@ -73,8 +73,8 @@ export default function IJPPage() {
     <div className="min-h-screen bg-gradient-to-b from-slate-950 to-blue-950 text-white py-8">
       <div className="max-w-4xl mx-auto px-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Job Preferences</h1>
-          <p className="text-slate-400">Help us find the perfect jobs for you</p>
+          <h1 className="text-3xl font-bold mb-2">Role Preferences</h1>
+          <p className="text-slate-400">Help us find the perfect roles for you</p>
         </div>
 
         {/* Progress Bar */}

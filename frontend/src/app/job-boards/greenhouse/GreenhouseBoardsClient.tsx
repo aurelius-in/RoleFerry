@@ -40,17 +40,17 @@ export default function GreenhouseBoardsClient() {
       <div className="max-w-4xl mx-auto px-4">
         <div className="mb-4 flex items-center justify-between gap-3">
           <Link href="/job-preferences" className="text-white/70 hover:text-white text-sm underline">
-            ← Back to Job Preferences
+            ← Back to Role Preferences
           </Link>
           <Link href="/job-descriptions" className="text-white/70 hover:text-white text-sm underline">
-            Go to Jobs →
+            Go to Roles →
           </Link>
         </div>
 
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-6 shadow-2xl shadow-black/20">
           <h1 className="text-2xl font-bold text-white">Greenhouse boards</h1>
           <div className="mt-1 text-sm text-white/70">
-            In-app search for company job boards hosted on Greenhouse. Query:{" "}
+            In-app search for company role boards hosted on Greenhouse. Query:{" "}
             <span className="font-semibold text-white">{queryLabel}</span>
           </div>
 

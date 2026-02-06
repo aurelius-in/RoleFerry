@@ -14,10 +14,10 @@ type StoneConfig = {
 };
 
 const STONES: StoneConfig[] = [
-  { step: 1, tab: "job-preferences", label: "Job Preferences", icon: "🎯", href: "/job-preferences" },
+  { step: 1, tab: "job-preferences", label: "Role Preferences", icon: "🎯", href: "/job-preferences" },
   { step: 2, tab: "candidate-profile", label: "Your Resume", icon: "📄", href: "/resume" },
   { step: 3, tab: "personality", label: "Personality", icon: "🧠", href: "/personality" },
-  { step: 4, tab: "job-descriptions", label: "Job Descriptions", icon: "📋", href: "/job-descriptions" },
+  { step: 4, tab: "job-descriptions", label: "Role Descriptions", icon: "📋", href: "/job-descriptions" },
   { step: 5, tab: "gap-analysis", label: "Gap Analysis", icon: "🧩", href: "/gap-analysis" },
   { step: 6, tab: "pain-point-match", label: "Pain Point Match", icon: "🔗", href: "/painpoint-match" },
   // Flow order (per wireframes): company research first, then decision makers.
@@ -211,7 +211,7 @@ export default function Home() {
             <img src="/ani-sm.gif" alt="RoleFerry Animation" className="animated-logo" />
           </div>
           <h1 className="keypad-title">The Path to Your Next Role</h1>
-          <p className="keypad-subtitle">Transform your job search with intelligent automation</p>
+          <p className="keypad-subtitle">Transform your role search with intelligent automation</p>
         </div>
 
         <div className="path-container" id="pathContainer">

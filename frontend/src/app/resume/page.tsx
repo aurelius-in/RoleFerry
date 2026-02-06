@@ -164,6 +164,7 @@ export default function ResumePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [extract, setExtract] = useState<ResumeExtract | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -356,7 +357,9 @@ export default function ResumePage() {
   };
 
   const handleSave = () => {
+    if (isSaving) return;
     if (extract) {
+      setIsSaving(true);
       const withNumbered: ResumeExtract = {
         ...extract,
         numbered: {
@@ -407,7 +410,7 @@ export default function ResumePage() {
     <div className="min-h-screen py-8">
       <div className="max-w-4xl mx-auto px-4 mb-4">
         <a href="/job-preferences" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
-          <span className="mr-2">←</span> Back to Job Prefs
+          <span className="mr-2">←</span> Back to Role Prefs
         </a>
       </div>
       <div className="max-w-4xl mx-auto px-4">
@@ -854,9 +857,24 @@ export default function ResumePage() {
                 </button>
                 <button
                   onClick={handleSave}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
+                  disabled={isUploading || isSaving || !extract}
+                  className={`px-6 py-3 rounded-md font-medium transition-colors inline-flex items-center gap-2 ${
+                    isUploading || isSaving || !extract
+                      ? "bg-blue-700 text-white/90 cursor-not-allowed shadow-inner opacity-80"
+                      : "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 active:translate-y-[1px]"
+                  }`}
                 >
-                  Save & Continue
+                  {isSaving ? (
+                    <>
+                      <span
+                        aria-hidden="true"
+                        className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
+                      />
+                      <span>Saving…</span>
+                    </>
+                  ) : (
+                    "Save & Continue"
+                  )}
                 </button>
               </div>
             </div>

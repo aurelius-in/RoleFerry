@@ -80,8 +80,6 @@ export default function FindContactPage() {
   };
   const [outreachDrafts, setOutreachDrafts] = useState<Record<string, OutreachDraft>>({});
   const [activeDraftContactId, setActiveDraftContactId] = useState<string>("");
-  const [isImprovingNote, setIsImprovingNote] = useState(false);
-  const [improveNoteError, setImproveNoteError] = useState<string | null>(null);
   const [isResearching, setIsResearching] = useState(false);
   const [researchNotice, setResearchNotice] = useState<string | null>(null);
   const [researchByContact, setResearchByContact] = useState<Record<string, any>>({});
@@ -302,29 +300,45 @@ export default function FindContactPage() {
     return null;
   };
 
-  const getInterestingFactsForContact = (contactId: string): string[] => {
+  const getInterestingFactsForContact = (
+    contactId: string
+  ): Array<{ text: string; url?: string; source_title?: string }> => {
     const r = readResearchForContact(contactId) || {};
     const bio = Array.isArray(r?.contact_bios) ? r.contact_bios[0] : null;
-    const lists: any[] = [
-      bio?.public_profile_highlights,
-      bio?.post_topics,
-      bio?.publications,
-      bio?.opinions,
-      bio?.other_interesting_facts,
-    ];
-    const out: string[] = [];
+    const out: Array<{ text: string; url?: string; source_title?: string }> = [];
     const seen = new Set<string>();
+
+    // Prefer structured facts with sources (newer research shape).
+    const structured = Array.isArray((bio as any)?.interesting_facts) ? (bio as any).interesting_facts : [];
+    for (const it of structured) {
+      const text = String(it?.fact || it?.text || "").trim();
+      const url = String(it?.source_url || it?.url || "").trim();
+      const sourceTitle = String(it?.source_title || it?.title || "").trim();
+      if (!text) continue;
+      const k = text.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push({ text, url: url || undefined, source_title: sourceTitle || undefined });
+    }
+
+    const lists: any[] = [
+      (bio as any)?.public_profile_highlights,
+      (bio as any)?.post_topics,
+      (bio as any)?.publications,
+      (bio as any)?.opinions,
+      (bio as any)?.other_interesting_facts,
+    ];
     for (const lst of lists) {
       for (const item of (Array.isArray(lst) ? lst : [])) {
-        const s = String(item || "").trim();
-        if (!s) continue;
-        const k = s.toLowerCase();
+        const text = String(item || "").trim();
+        if (!text) continue;
+        const k = text.toLowerCase();
         if (seen.has(k)) continue;
         seen.add(k);
-        out.push(s);
+        out.push({ text });
       }
     }
-    return out.slice(0, 6);
+    return out.slice(0, 8);
   };
 
   const buildDefaultDraft = (c: Contact): OutreachDraft => {
@@ -425,40 +439,6 @@ export default function FindContactPage() {
       linkedin_note: li,
       updated_at: new Date().toISOString(),
     };
-  };
-
-  const improveActiveLinkedInNote = async (active: Contact, draft: OutreachDraft) => {
-    if (!active?.id) return;
-    setImproveNoteError(null);
-    setIsImprovingNote(true);
-    try {
-      const jd = loadSelectedJob();
-      const m0 = loadPainpointMatch();
-      const payload = {
-        note: String(draft?.linkedin_note || ""),
-        contact_name: String(active?.name || ""),
-        contact_title: String(active?.title || ""),
-        contact_company: formatCompanyName(String(active?.company || jd?.company || "")),
-        job_title: String(jd?.title || ""),
-        painpoint: String(m0?.painpoint_1 || ""),
-        solution: String(m0?.solution_1 || ""),
-        metric: String(m0?.metric_1 || ""),
-        limit: LINKEDIN_NOTE_LIMIT,
-      };
-
-      const res = await api<{ note: string; used_ai?: boolean }>("/find-contact/improve-linkedin-note", "POST", payload);
-      const improvedRaw = String(res?.note || "").trim();
-      const improved = trimToChars(improvedRaw.replaceAll("—", "-").replaceAll("–", "-"), LINKEDIN_NOTE_LIMIT);
-      if (!improved) throw new Error("Empty improved note");
-
-      const next = { ...(outreachDrafts || {}) };
-      next[active.id] = { ...draft, linkedin_note: improved, updated_at: new Date().toISOString() };
-      persistOutreachDrafts(next);
-    } catch (e: any) {
-      setImproveNoteError(String(e?.message || "Failed to improve note"));
-    } finally {
-      setIsImprovingNote(false);
-    }
   };
 
   const ensureDraftsForContacts = (list: Contact[]) => {
@@ -587,7 +567,7 @@ export default function FindContactPage() {
       }
     }
 
-    // Carry over company names from previous steps (Job Descriptions + selected JD + selected contacts).
+    // Carry over company names from previous steps (Role Descriptions + selected JD + selected contacts).
     try {
       const companies: string[] = [];
       const jdsRaw = localStorage.getItem("job_descriptions");
@@ -1169,7 +1149,7 @@ export default function FindContactPage() {
                               if (!facts.length) return "No highlights yet (run research, or switch contacts).";
                               return facts.map((f, idx) => (
                                 <div key={`f_${idx}`} className="mt-1 truncate">
-                                  • {trimToChars(f, 96)}
+                                  • {trimToChars(f.text, 96)}
                                 </div>
                               ));
                             })()}
@@ -1274,25 +1254,27 @@ export default function FindContactPage() {
               <div className="mt-4 space-y-4">
                 {TITLE_FILTER_OPTIONS.map((g) => (
                   <div key={g.group}>
-                    <div className="text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-2">
+                    <div className="text-[10px] font-semibold text-white/65 uppercase tracking-wider mb-1.5">
                       {g.group}
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5">
                       {g.options.map((t) => {
                         const checked = titleFilters.includes(t);
                         return (
-                          <label
+                          <button
                             key={`${g.group}_${t}`}
-                            className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white/80 hover:bg-white/10 cursor-pointer"
+                            type="button"
+                            aria-pressed={checked}
+                            onClick={() => toggleTitleFilter(t)}
+                            className={`w-full text-left rounded-md border px-2 py-1.5 text-[11px] leading-tight font-semibold transition-colors ${
+                              checked
+                                ? "border-blue-400/40 bg-blue-500/15 text-blue-100"
+                                : "border-white/10 bg-white/5 text-white/75 hover:bg-white/10 hover:text-white"
+                            }`}
+                            title={t}
                           >
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() => toggleTitleFilter(t)}
-                              className="rounded border-white/20 bg-black/30 text-blue-500 focus:ring-blue-500"
-                            />
-                            <span className="min-w-0 truncate">{t}</span>
-                          </label>
+                            <span className="block min-w-0 truncate">{t}</span>
+                          </button>
                         );
                       })}
                     </div>
@@ -1376,29 +1358,11 @@ export default function FindContactPage() {
                             LinkedIn request note
                           </div>
                           <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              disabled={isImprovingNote}
-                              onClick={() => improveActiveLinkedInNote(active, draft)}
-                              className={`rounded-md border px-2 py-1 text-xs font-semibold transition-colors ${
-                                isImprovingNote
-                                  ? "border-white/10 bg-white/5 text-white/40 cursor-not-allowed"
-                                  : "border-white/10 bg-black/20 text-white/80 hover:bg-white/10"
-                              }`}
-                              title="Rewrite to sound more human (casual, warm, professional)."
-                            >
-                              {isImprovingNote ? "Improving…" : "Improve with Smart"}
-                            </button>
                             <div className={`text-xs ${draft.linkedin_note.length > LINKEDIN_NOTE_LIMIT ? "text-red-300" : "text-white/60"}`}>
                               {draft.linkedin_note.length}/{LINKEDIN_NOTE_LIMIT}
                             </div>
                           </div>
                         </div>
-                        {improveNoteError ? (
-                          <div className="mb-2 text-xs text-red-200">
-                            {improveNoteError}
-                          </div>
-                        ) : null}
                         {!active.linkedin_url ? (
                           <div className="mb-2 text-xs text-amber-200">
                             Missing LinkedIn URL for this contact - you can still copy the note, but you’ll need to find their profile manually.
@@ -1422,14 +1386,29 @@ export default function FindContactPage() {
                           return (
                             <div className="mt-3 rounded-md border border-amber-400/25 bg-amber-500/10 p-3">
                               <div className="text-xs font-semibold text-amber-200 uppercase tracking-wider">
-                                Interesting facts found
+                                Interesting facts found (for email hooks)
                               </div>
                               {facts.length ? (
-                                <ul className="mt-2 list-disc list-inside space-y-1 text-sm text-white/80">
-                                  {facts.map((f, idx) => (
-                                    <li key={`fact_${active.id}_${idx}`}>{f}</li>
+                                <div className="mt-2 space-y-1.5 text-sm text-white/80">
+                                  {facts.slice(0, 6).map((f, idx) => (
+                                    <div key={`fact_${active.id}_${idx}`} className="flex items-start justify-between gap-2">
+                                      <div className="min-w-0">
+                                        <span aria-hidden="true">• </span>
+                                        <span>{f.text}</span>
+                                      </div>
+                                      {f.url ? (
+                                        <a
+                                          href={f.url}
+                                          target="_blank"
+                                          className="shrink-0 text-[11px] underline text-white/60 hover:text-white"
+                                          title={f.source_title ? f.source_title : f.url}
+                                        >
+                                          source
+                                        </a>
+                                      ) : null}
+                                    </div>
                                   ))}
-                                </ul>
+                                </div>
                               ) : (
                                 <div className="mt-2 text-xs text-white/65">
                                   No facts yet. Click{" "}
@@ -1483,6 +1462,7 @@ export default function FindContactPage() {
                 {contacts.map((contact) => {
                   const badge = getVerificationBadge(contact.verification_status, contact.verification_score);
                   const isSelected = selectedContacts.includes(contact.id);
+                  const hooks = getInterestingFactsForContact(contact.id);
                   
                   return (
                     <div
@@ -1499,6 +1479,12 @@ export default function FindContactPage() {
                           <h3 className="font-semibold text-white">{contact.name}</h3>
                           <p className="text-gray-600 text-sm">{formatTitleCase(contact.title)}</p>
                           <p className="text-gray-500 text-xs">{formatCompanyName(contact.company)}</p>
+                          {hooks.length ? (
+                            <div className="mt-2 text-[11px] text-white/70">
+                              <span className="font-semibold text-white/80">Hook:</span>{" "}
+                              <span className="text-white/70">{trimToChars(hooks[0].text, 120)}</span>
+                            </div>
+                          ) : null}
                         </div>
                         <div className="flex items-center space-x-2">
                           {badge.label !== "Unknown" ? (

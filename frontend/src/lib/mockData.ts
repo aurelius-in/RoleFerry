@@ -63,13 +63,13 @@ export function getMockTable(key: DataKey): TableData {
     case "ijps":
       return { title: "IJP Filters", columns: ["id", "titles", "levels", "locations", "skills_must"], rows: [{ id: "ijp_1", titles: "PM, Sr PM", levels: "Senior", locations: "SF, Remote", skills_must: "PLG, SQL" }] };
     case "jobs":
-      return { title: "Jobs", columns: ["id", "title", "company", "location", "jd_url"], rows: [{ id: "job_101", title: "Senior PM", company: "Acme", location: "SF", jd_url: "https://indeed.com/abc" }] };
+      return { title: "Roles", columns: ["id", "title", "company", "location", "role_url"], rows: [{ id: "role_101", title: "Senior PM", company: "Acme", location: "SF", role_url: "https://indeed.com/abc" }] };
     case "candidates":
       return { title: "Candidates", columns: ["id", "name", "email", "seniority", "domains"], rows: [{ id: "cand_1", name: "Alex Kim", email: "alex@example.com", seniority: "Senior", domains: "PLG, SaaS" }] };
     case "contacts":
       return { title: "Contacts", columns: ["id", "company", "name", "title", "email", "verification_status"], rows: [{ id: "ct_1", company: "Acme", name: "Jordan Blake", title: "VP Product", email: "jordan@acme.com", verification_status: "valid" }] };
     case "matches":
-      return { title: "Matches", columns: ["candidate", "job", "score", "reasons"], rows: [{ candidate: "Alex Kim", job: "Senior PM @ Acme", score: 87, reasons: "PLG + enterprise rollout" }] };
+      return { title: "Matches", columns: ["candidate", "role", "score", "reasons"], rows: [{ candidate: "Alex Kim", role: "Senior PM @ Acme", score: 87, reasons: "PLG + enterprise rollout" }] };
     case "offers":
       return { title: "Offers", columns: ["id", "candidate", "portfolio_url", "deck_url"], rows: [{ id: "off_1", candidate: "Alex Kim", portfolio_url: "https://portfolio.example.com/alex", deck_url: "https://docs.example.com/deck" }] };
   }

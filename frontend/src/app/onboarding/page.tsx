@@ -1,7 +1,7 @@
 export default function Onboarding() {
   const steps = [
     { label: "Set ENV keys (APIFY, INSTANTLY, MV)", href: "/settings" },
-    { label: "Import job descriptions", href: "/job-descriptions" },
+    { label: "Import role descriptions", href: "/job-descriptions" },
     { label: "Upload resume / candidate profile", href: "/resume" },
     { label: "Match pain points", href: "/painpoint-match" },
     { label: "Company research", href: "/company-research" },
