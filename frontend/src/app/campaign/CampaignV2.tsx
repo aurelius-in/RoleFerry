@@ -285,10 +285,17 @@ export default function CampaignV2() {
   const ensureCampaignForContact = (contact: any) => {
     const cid = String(contact?.id || "").trim();
     if (!cid) return;
-    if (campaignByContact?.[cid]) return;
-    const next = { ...(campaignByContact || {}) };
-    next[cid] = buildEmptyCampaign(contact);
-    persist(next);
+    // IMPORTANT: use a functional update so we don't overwrite when looping contacts.
+    setCampaignByContact((prev) => {
+      const cur = prev || {};
+      if (cur?.[cid]) return cur;
+      const next = { ...cur };
+      next[cid] = buildEmptyCampaign(contact);
+      try {
+        localStorage.setItem(STORAGE_V2, JSON.stringify(next || {}));
+      } catch {}
+      return next;
+    });
     // Also snapshot structured context so generation has a single canonical blob.
     try {
       persistCampaignContextV1(cid);
@@ -470,7 +477,10 @@ export default function CampaignV2() {
             <div className="lg:col-span-9">
               {!activeCampaign || !activeContact ? (
                 <div className="rounded-lg border border-white/10 bg-black/20 p-6 text-sm text-white/70">
-                  Select a contact to start.
+                  <div className="text-white/80 font-semibold">Select a contact to start campaign.</div>
+                  <div className="mt-2">
+                    After you select someone, click <span className="font-semibold text-white/85">Generate all 4</span> to draft their sequence.
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4">

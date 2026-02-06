@@ -358,10 +358,50 @@ export default function DeliverabilityLaunchPage() {
 
   const computeCampaignSummary = () => {
     const d = new Date();
-    const yyyy = d.getFullYear();
+    const yy = String(d.getFullYear()).slice(-2);
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const dd = String(d.getDate()).padStart(2, "0");
-    const datePrefix = `${yyyy}-${mm}-${dd}`;
+    // Short year; avoid "20xx-" prefix in the UI.
+    const datePrefix = `${yy}-${mm}-${dd}`;
+
+    const kebab = (raw: any) => {
+      const s = String(raw ?? "").trim().toLowerCase();
+      if (!s) return "";
+      // Replace common symbols and collapse whitespace.
+      let t = s.replace(/&/g, " and ").replace(/\s+/g, " ").trim();
+      // Keep only alnum and spaces/hyphens, then kebab-case.
+      t = t.replace(/[^a-z0-9\s-]/g, " ").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-+|-+$/g, "");
+      return t;
+    };
+
+    const shortIndustry = (raw: any) => {
+      const s = String(raw ?? "").trim();
+      if (!s) return "";
+      // Tighten common long labels (demo-friendly).
+      let t = s;
+      t = t.replace(/&/g, "and");
+      t = t.replace(/\bmachine learning\b/gi, "ML");
+      t = t.replace(/\bartificial intelligence\b/gi, "AI");
+      t = t.replace(/\bai\b/gi, "AI");
+      // "AI and ML" → "AI ML"
+      t = t.replace(/\band\b/gi, " ");
+      t = t.replace(/\s+/g, " ").trim();
+      // Hard cap to avoid huge tokens.
+      if (t.length > 28) t = t.slice(0, 28).trim();
+      return kebab(t);
+    };
+
+    const shortSize = (raw: any) => {
+      const s = String(raw ?? "").trim();
+      if (!s) return "";
+      // Prefer numeric range like "51-200" and label it so it's self-explanatory.
+      const m = s.match(/(\d[\d,]*)\s*[-–—]\s*(\d[\d,]*)/);
+      if (!m) return "";
+      const a = String(m[1] || "").replace(/,/g, "");
+      const b = String(m[2] || "").replace(/,/g, "");
+      if (!a || !b) return "";
+      return kebab(`size-${a}-${b}`);
+    };
 
     // Pull top filters from Job Prefs (best-effort)
     let prefs: any = null;
@@ -372,20 +412,11 @@ export default function DeliverabilityLaunchPage() {
     const sizes = prefs?.companySize || prefs?.company_size || [];
     const work = prefs?.workType || prefs?.work_type || [];
 
-    // Offer format hint (text/link/video)
-    let offers: any[] = [];
-    try {
-      offers = JSON.parse(localStorage.getItem("created_offers") || "[]");
-    } catch {}
-    const last = Array.isArray(offers) && offers.length ? offers[offers.length - 1] : null;
-    const format = String(last?.format || "").trim();
-
     const nameParts = [
       datePrefix,
-      (industries?.[0] ? String(industries[0]) : ""),
-      (sizes?.[0] ? String(sizes[0]).split(" ")[0] : ""),
-      (work?.[0] ? String(work[0]) : ""),
-      (format ? `${format} intro` : ""),
+      shortIndustry(industries?.[0]),
+      shortSize(sizes?.[0]),
+      kebab(work?.[0]),
     ].filter(Boolean);
 
     const selectedContacts = loadSelectedContacts();
@@ -430,7 +461,8 @@ export default function DeliverabilityLaunchPage() {
     const firstStepSends = recipients;
 
     return {
-      campaignName: nameParts.join(" – "),
+      // Slug-style name: no spaces, no ampersands, no extra filler.
+      campaignName: nameParts.join("-"),
       recipients,
       sequenceSteps,
       plannedSends,
