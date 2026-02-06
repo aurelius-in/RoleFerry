@@ -154,15 +154,23 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
                 email=str(getattr(user, "email", "") or "").strip(),
             )
 
-        def _signature_block() -> str:
+        def _signature_block(bio_url: str = "") -> str:
             lines = [sender.full_name]
             if sender.phone:
                 lines.append(sender.phone)
+            # If the Campaign step enabled Bio Page, the frontend includes links.bio_page_url in the filtered context.
+            # Put it directly under the phone number, as a signature line.
+            if bio_url:
+                lines.append(bio_url)
             if sender.linkedin_url:
                 lines.append(sender.linkedin_url)
             return "\n".join([ln for ln in lines if str(ln).strip()]).strip()
 
-        signature = _signature_block()
+        # Bio URL is optional, and only present if the Campaign context layer "Bio Page" was enabled.
+        ctx_for_sig = payload.context or {}
+        links_for_sig = ctx_for_sig.get("links") if isinstance(ctx_for_sig, dict) else {}
+        bio_for_sig = str(((links_for_sig or {}).get("bio_page_url")) or "").strip()
+        signature = _signature_block(bio_for_sig)
 
         def _append_signature(msg_body: str) -> str:
             s = str(msg_body or "").rstrip()
@@ -327,6 +335,17 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             4: "Breakup / last follow-up. Respectful, easy out, easy yes. Can be playful but workplace-safe.",
         }.get(step, "Email step")
 
+        # Expand "custom" tone into concrete instructions for the model.
+        tone_line = f"Tone: {tone}."
+        if tone == "custom" and custom_tone:
+            # Keep this workplace-safe even if the user experiments (e.g., "wacky clown on drugs").
+            # We treat custom_tone as *style direction*, not permission to be inappropriate.
+            tone_line = (
+                "Tone: custom.\n"
+                f"Custom tone description (style-only, workplace-safe): {custom_tone}\n"
+                "Important: Do not mention drugs/alcohol/explicit content. Keep it professional and kind."
+            )
+
         system = (
             "You are RoleFerry's outreach copilot. Draft ONE email step in a 4-email sequence.\n\n"
             "Hard style constraints:\n"
@@ -338,7 +357,7 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             "- Do NOT output template placeholders like {{first_name}}.\n\n"
             f"Sequence step: {step} of 4.\n"
             f"Step intent: {step_intent}\n\n"
-            f"Tone: {tone}.\n"
+            f"{tone_line}\n"
             f"Tone guardrails: {_tone_guardrails(tone)}\n\n"
             "Personalization rules:\n"
             "- If context contains company_research or contact_research, reference at least ONE concrete, non-creepy detail from it.\n"
@@ -385,6 +404,8 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             body=body,
             helper={
                 "used_llm": True,
+                "tone": tone,
+                "custom_tone": custom_tone if tone == "custom" else "",
                 "rationale": str(data.get("rationale") or "").strip(),
             },
         )

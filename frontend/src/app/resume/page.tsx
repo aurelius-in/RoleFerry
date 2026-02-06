@@ -761,26 +761,26 @@ export default function ResumePage() {
                 </div>
 
                 <div className="mt-4 overflow-x-auto">
-                  <table className="w-full border-collapse text-[11px]">
+                  <table className="w-full table-fixed border-collapse text-[11px]">
                     <thead>
-                      <tr className="text-left text-white/70 text-[10px] leading-tight">
-                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-nowrap w-[1%]">
+                      <tr className="text-left text-white/70 text-[9px] leading-tight">
+                        <th className="border border-white/10 bg-black/30 px-1.5 py-1.5 align-top whitespace-nowrap w-[36px]">
                           #
                         </th>
-                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-normal">
-                          {"{{resume.key_metrics[]}}"}
+                        <th className="border border-white/10 bg-black/30 px-1.5 py-1.5 align-top whitespace-normal w-[16%]">
+                          <span className="font-semibold">{""}{"{{resume.key_metrics[]}}"}</span>
                         </th>
-                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-normal">
-                          {"{{resume.business_challenges[]}}"}
+                        <th className="border border-white/10 bg-black/30 px-1.5 py-1.5 align-top whitespace-normal w-[18%]">
+                          <span className="font-semibold">{""}{"{{resume.business_challenges[]}}"}</span>
                         </th>
-                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-normal">
-                          {"{{resume.accomplishments[]}}"}
+                        <th className="border border-white/10 bg-black/30 px-1.5 py-1.5 align-top whitespace-normal w-[18%]">
+                          <span className="font-semibold">{""}{"{{resume.accomplishments[]}}"}</span>
                         </th>
-                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-normal">
-                          {"{{resume.positions[]}}"}
+                        <th className="border border-white/10 bg-black/30 px-1.5 py-1.5 align-top whitespace-normal w-[16%]">
+                          <span className="font-semibold">{""}{"{{resume.positions[]}}"}</span>
                         </th>
-                        <th className="border border-white/10 bg-black/30 px-2 py-2 align-top whitespace-normal">
-                          {"{{resume.education[]}}"}
+                        <th className="border border-white/10 bg-black/30 px-1.5 py-1.5 align-top whitespace-normal w-[18%]">
+                          <span className="font-semibold">{""}{"{{resume.education[]}}"}</span>
                         </th>
                       </tr>
                     </thead>
@@ -821,22 +821,22 @@ export default function ResumePage() {
 
                         return (
                           <tr key={i} className="align-top">
-                            <td className="border border-white/10 px-2 py-2 text-white/50 tabular-nums whitespace-nowrap">
+                            <td className="border border-white/10 px-1.5 py-1.5 text-white/50 tabular-nums whitespace-nowrap">
                               {i + 1}
                             </td>
-                            <td className="border border-white/10 px-2 py-2 min-w-[145px]">
+                            <td className="border border-white/10 px-1.5 py-1.5 whitespace-normal break-words">
                               {kmText || <span className="text-white/30">—</span>}
                             </td>
-                            <td className="border border-white/10 px-2 py-2 min-w-[145px]">
+                            <td className="border border-white/10 px-1.5 py-1.5 whitespace-normal break-words">
                               {bc || <span className="text-white/30">—</span>}
                             </td>
-                            <td className="border border-white/10 px-2 py-2 min-w-[145px]">
+                            <td className="border border-white/10 px-1.5 py-1.5 whitespace-normal break-words">
                               {ac || <span className="text-white/30">—</span>}
                             </td>
-                            <td className="border border-white/10 px-2 py-2 min-w-[150px]">
+                            <td className="border border-white/10 px-1.5 py-1.5 whitespace-normal break-words">
                               {posText || <span className="text-white/30">—</span>}
                             </td>
-                            <td className="border border-white/10 px-2 py-2 min-w-[180px]">
+                            <td className="border border-white/10 px-1.5 py-1.5 whitespace-normal break-words">
                               {eduText || <span className="text-white/30">—</span>}
                             </td>
                           </tr>

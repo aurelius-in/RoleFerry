@@ -214,6 +214,7 @@ function layerLabel(id: ContextLayerId) {
 }
 
 function filterContextByLayers(ctx: any, layers: ContextLayers) {
+  const bioUrl = String(ctx?.links?.bio_page_url || "").trim();
   const out: any = {
     sender_profile: ctx?.sender_profile,
     contact: ctx?.contact,
@@ -231,14 +232,18 @@ function filterContextByLayers(ctx: any, layers: ContextLayers) {
   if (layers.painpoint_match) out.painpoint_matches = ctx.painpoint_matches;
   if (layers.company_research) out.company_research = ctx.company_research;
   if (layers.contact_research) out.contact_research = ctx.contact_research;
-  if (!layers.bio && out.links) {
-    // Strip the bio link specifically.
-    out.links = { ...(out.links || {}) };
-    delete out.links.bio_page_url;
-  }
   if (!layers.links_contact) {
     // Strip links/contact details entirely (but keep company_name/contact basics).
-    delete out.links;
+    // If Bio Page is enabled, still include the Bio URL so it can appear in the signature.
+    if (layers.bio && bioUrl) {
+      out.links = { bio_page_url: bioUrl };
+    } else {
+      delete out.links;
+    }
+  } else if (!layers.bio && out.links) {
+    // Links are allowed, but Bio Page is not: strip the bio link specifically.
+    out.links = { ...(out.links || {}) };
+    delete out.links.bio_page_url;
   }
   return out;
 }
@@ -680,9 +685,9 @@ export default function CampaignV2() {
                       disabled={!canContinueToLaunch}
                       onClick={() => router.push("/deliverability-launch")}
                       className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-                      title={!bioUrl ? "Publish your Bio Page first." : "Continue to Launch"}
+                      title={!bioUrl ? "Publish your Bio Page first." : "Save & Continue"}
                     >
-                      Continue to Launch →
+                      Save &amp; Continue
                     </button>
                   </div>
                 </div>

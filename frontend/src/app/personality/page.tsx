@@ -1076,7 +1076,7 @@ export default function PersonalityPage() {
                     <span>Saving…</span>
                   </>
                 ) : (
-                  <span>Save &amp; Continue to Role Search →</span>
+                  <span>Save &amp; Continue</span>
                 )}
               </button>
             </div>

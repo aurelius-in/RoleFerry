@@ -1631,7 +1631,6 @@ export default function FindContactPage() {
 
           {(() => {
             const canContinue = (savedVerified?.length || 0) > 0;
-            const continueLabel = `Continue to Research (${savedVerified.length} saved)`;
             return (
               <div className="mt-8 flex justify-end gap-3">
                 <button
@@ -1653,7 +1652,7 @@ export default function FindContactPage() {
                     disabled={!canContinue}
                     className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
-                    {continueLabel}
+                    Save &amp; Continue
                   </button>
                 </div>
               </div>

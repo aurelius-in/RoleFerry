@@ -876,9 +876,9 @@ export default function CompanyResearchPage() {
                   disabled={!canContinue}
                   onClick={() => router.push("/find-contact")}
                   className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-                  title={!canContinue ? "Save company research first." : "Continue to Decision Makers"}
+                  title={!canContinue ? "Save company research first." : "Save & Continue"}
                 >
-                  Continue to Decision Makers →
+                  Save &amp; Continue
                 </button>
               </div>
             </div>
