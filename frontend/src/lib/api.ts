@@ -17,8 +17,9 @@ export async function api<T>(path: string, method: HttpMethod = "GET", body?: un
   }
 
   // Client-side mock behavior:
-  // - If NEXT_PUBLIC_USE_CLIENT_MOCKS=true, prefer mocks (demo/fallback mode).
-  // - Otherwise, call the backend and surface errors (don't silently mask issues with mocks).
+  // - If NEXT_PUBLIC_USE_CLIENT_MOCKS=true, prefer mocks (explicit demo/dev mode).
+  // - Otherwise, call the backend and surface errors.
+  // - If the backend is DOWN/500s, we fall back to mocks (only when available) so demos don't hard-break.
   const normalizedPath = path.startsWith("/") ? path : "/" + path;
   const useClientMocks = !isServer && (process.env.NEXT_PUBLIC_USE_CLIENT_MOCKS || "").toLowerCase() === "true";
   const tryMock = () => (!isServer ? getMockResponse(normalizedPath, method, body) : undefined);
@@ -39,15 +40,26 @@ export async function api<T>(path: string, method: HttpMethod = "GET", body?: un
 
     if (!res.ok) {
       const text = await res.text();
+      // Internal fallback: if the backend returns a 5xx, allow a mock response when available.
+      if (!useClientMocks && res.status >= 500 && !isServer) {
+        const mock = tryMock();
+        if (mock !== undefined) {
+          console.warn(`[API] Falling back to mock for ${normalizedPath} due to ${res.status}.`);
+          return mock as T;
+        }
+      }
       throw new Error(`API ${method} ${url} failed: ${res.status} ${text}`);
     }
 
     return (await res.json()) as T;
   } catch (err) {
     // Network error / fetch failure → only allow mock fallback if explicitly enabled.
-    if (useClientMocks) {
+    if (!isServer) {
       const mock = tryMock();
-      if (mock !== undefined) return mock as T;
+      if (mock !== undefined) {
+        console.warn(`[API] Falling back to mock for ${normalizedPath} due to network/error.`);
+        return mock as T;
+      }
     }
     throw err;
   }

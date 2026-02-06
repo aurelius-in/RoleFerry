@@ -4,18 +4,9 @@ const STORAGE_KEY = "rf_data_mode";
 const EVENT_NAME = "dataModeChanged";
 
 export function getCurrentDataMode(): DataMode {
-  if (typeof window === "undefined") {
-    // Default to live in server-rendered contexts so API-backed demos "just work"
-    // without requiring the operator to toggle Demo/Live.
-    return "live";
-  }
-  try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    // Default to live unless the user explicitly chose demo.
-    return stored === "demo" ? "demo" : "live";
-  } catch {
-    return "live";
-  }
+  // We run RoleFerry in Live mode by default.
+  // "Demo" is an internal fallback used only when an API is down.
+  return "live";
 }
 
 export function setCurrentDataMode(mode: DataMode) {

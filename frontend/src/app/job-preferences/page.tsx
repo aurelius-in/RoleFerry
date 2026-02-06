@@ -384,15 +384,12 @@ export default function JobPreferencesPage() {
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">
-              {mode === "job-seeker"
-                ? "Role Preferences"
-                : "Ideal Client Profile (ICP)"}
-            </h1>
-            <p className="text-white/70">
-              {mode === "job-seeker"
-                ? "Tell us what you value in a new role and what you're looking for."
-                : "Define your ideal client profile for candidate sourcing."}
+            <div className="text-center text-[11px] font-semibold tracking-wide text-white/60">
+              Ideal Client Profile (ICP)
+            </div>
+            <h1 className="mt-2 text-center text-3xl font-bold text-white mb-2">Role Preferences</h1>
+            <p className="text-center text-white/70">
+              Tell us what you value in a new role and what you're looking for.
             </p>
           </div>
 

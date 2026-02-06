@@ -406,7 +406,7 @@ export default function PainPointMatchPage() {
                 <div>
                   <div className="text-sm font-semibold text-white/80">Pain Point Match Analysis</div>
                   <div className="text-xs text-white/60">
-                    Starts blank. Click Run to generate matches for all roles.
+                    Click Run to generate matches for all roles.
                   </div>
                 </div>
                 <button

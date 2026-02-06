@@ -5,7 +5,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import DataModal from "./DataModal";
 import ToolsModal from "./ToolsModal";
-import { DataMode, getCurrentDataMode, setCurrentDataMode } from "@/lib/dataMode";
 
 export default function Navbar() {
   const router = useRouter();
@@ -14,6 +13,19 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   
   useEffect(() => {
+    // RoleFerry is currently Role-Seeker only.
+    // Keep recruiter mode as a future fallback, but force the app into job-seeker mode now.
+    try {
+      localStorage.setItem("rf_mode", "job-seeker");
+      window.dispatchEvent(new CustomEvent("modeChanged", { detail: "job-seeker" }));
+    } catch {}
+
+    // Default to live mode. Demo remains an internal fallback when an API is down.
+    try {
+      localStorage.setItem("rf_data_mode", "live");
+      window.dispatchEvent(new CustomEvent("dataModeChanged", { detail: "live" }));
+    } catch {}
+
     const saved = localStorage.getItem("rf_user");
     if (saved) {
       try { setUser(JSON.parse(saved)); } catch {}
@@ -108,8 +120,6 @@ export default function Navbar() {
 
           {/* Right: utility + toggles (tight) */}
           <div className="flex items-center gap-1.5">
-            <ModeToggle />
-            <DataModeToggle />
             <ThemeToggle />
             <button
               aria-label="Tools"
@@ -238,79 +248,6 @@ function NavPill({
     <Link href={href} className={`${base} ${sizing} ${active ? activeCls : inactive}`}>
       {children}
     </Link>
-  );
-}
-
-function ModeToggle() {
-  const [mode, setMode] = useState<'job-seeker' | 'recruiter'>('job-seeker');
-  
-  useEffect(() => {
-    const stored = localStorage.getItem("rf_mode");
-    if (stored === 'recruiter') {
-      setMode('recruiter');
-    }
-  }, []);
-
-  const toggle = () => {
-    const newMode = mode === 'job-seeker' ? 'recruiter' : 'job-seeker';
-    setMode(newMode);
-    localStorage.setItem("rf_mode", newMode);
-    // Trigger re-render of components that depend on mode
-    window.dispatchEvent(new CustomEvent('modeChanged', { detail: newMode }));
-  };
-
-  return (
-    <div className="flex items-center gap-1">
-      <button
-        onClick={toggle}
-        className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors ${
-          mode === 'job-seeker' 
-            ? 'bg-blue-600 text-white' 
-            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-        }`}
-      >
-        Role Seeker
-      </button>
-      <button
-        onClick={toggle}
-        className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors ${
-          mode === 'recruiter' 
-            ? 'bg-blue-600 text-white' 
-            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-        }`}
-      >
-        Recruiter
-      </button>
-    </div>
-  );
-}
-
-function DataModeToggle() {
-  // Initialize from storage immediately to avoid a 1st-render flash showing "Demo".
-  const [mode, setMode] = useState<DataMode>(() => getCurrentDataMode());
-
-  const handleChange = (next: DataMode) => {
-    setMode(next);
-    setCurrentDataMode(next);
-  };
-
-  return (
-    <div className="hidden md:flex items-center text-[11px] font-semibold rounded-md border border-white/20 bg-black/40 overflow-hidden shadow-sm">
-      <button
-        type="button"
-        onClick={() => handleChange("demo")}
-        className={`px-2 py-0.5 transition-colors ${mode === "demo" ? "bg-white text-black" : "text-white/80 hover:bg-white/10"}`}
-      >
-        Demo
-      </button>
-      <button
-        type="button"
-        onClick={() => handleChange("live")}
-        className={`px-2 py-0.5 border-l border-white/20 transition-colors ${mode === "live" ? "bg-white text-black" : "text-white/80 hover:bg-white/10"}`}
-      >
-        Live
-      </button>
-    </div>
   );
 }
 

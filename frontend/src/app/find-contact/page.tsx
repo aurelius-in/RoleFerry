@@ -1281,10 +1281,10 @@ export default function FindContactPage() {
                             type="button"
                             aria-pressed={checked}
                             onClick={() => toggleTitleFilter(t)}
-                            className={`w-full text-left rounded-md border px-2 py-1.5 text-[11px] leading-tight font-semibold transition-colors ${
+                            className={`w-full text-left rounded-md border px-2 py-1.5 text-[11px] leading-tight font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/40 ${
                               checked
-                                ? "border-blue-400/40 bg-blue-500/15 text-blue-100"
-                                : "border-white/10 bg-white/5 text-white/75 hover:bg-white/10 hover:text-white"
+                                ? "border-green-400/50 bg-green-500/20 text-green-100 shadow-sm shadow-green-500/10"
+                                : "border-white/5 bg-white/[0.03] text-white/45 hover:bg-white/[0.06] hover:text-white/70"
                             }`}
                             title={t}
                           >
