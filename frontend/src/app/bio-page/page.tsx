@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import placeholderPat from "@/profile-pat.png";
 import { BIO_BG_OPTIONS, BIO_BULLET_STYLES, BIO_SLOGAN_PRESETS, computeBioColors, normalizeBioTheme, bulletGlyph } from "@/lib/bioTheme";
+import InlineSpinner from "@/components/InlineSpinner";
 
 type BioPageTheme = {
   accent: string;
@@ -500,16 +501,32 @@ export default function BioPageStep() {
                 <button
                   onClick={generate}
                   disabled={busy === "generate"}
-                  className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-yellow-400 text-black font-bold hover:shadow-md disabled:opacity-60"
+                  className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-yellow-400 text-black font-bold hover:shadow-md disabled:opacity-60 inline-flex items-center justify-center gap-2"
                 >
-                  {busy === "generate" ? "Generating..." : (draft ? "Regenerate" : "Generate")}
+                  {busy === "generate" ? (
+                    <>
+                      <InlineSpinner className="border-black/25 border-t-black/80" />
+                      <span>Generating</span>
+                    </>
+                  ) : (
+                    (draft ? "Regenerate" : "Generate")
+                  )}
                 </button>
                 <button
                   onClick={ensureOpenPublicPage}
                   disabled={busy === "publish" || (!bioUrl && !draft)}
-                  className="w-full px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 font-bold hover:bg-emerald-500/25 disabled:opacity-50"
+                  className="w-full px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 font-bold hover:bg-emerald-500/25 disabled:opacity-50 inline-flex items-center justify-center gap-2"
                 >
-                  {bioUrl ? "Open public page" : (busy === "publish" ? "Publishing..." : "Publish bio page")}
+                  {bioUrl ? (
+                    "Open public page"
+                  ) : busy === "publish" ? (
+                    <>
+                      <InlineSpinner className="border-emerald-200/25 border-t-emerald-200/80" />
+                      <span>Publishing</span>
+                    </>
+                  ) : (
+                    "Publish bio page"
+                  )}
                 </button>
                 <button
                   onClick={copyLink}

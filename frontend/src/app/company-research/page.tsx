@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { getCurrentDataMode } from "@/lib/dataMode";
 import { formatCompanyName } from "@/lib/format";
+import InlineSpinner from "@/components/InlineSpinner";
 
 type CompanyResearch = {
   company_name: string;
@@ -501,9 +502,16 @@ export default function CompanyResearchPage() {
                   type="button"
                   disabled={isRunning || !companyQuery.trim()}
                   onClick={() => runResearch(companyQuery)}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 inline-flex items-center gap-2"
                 >
-                  {isRunning ? "Researching…" : "Run Company Research"}
+                  {isRunning ? (
+                    <>
+                      <InlineSpinner />
+                      <span>Researching</span>
+                    </>
+                  ) : (
+                    "Run Company Research"
+                  )}
                 </button>
               </div>
             </div>

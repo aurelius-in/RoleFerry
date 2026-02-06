@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { DataMode, getCurrentDataMode, setCurrentDataMode, subscribeToDataModeChanges } from "@/lib/dataMode";
+import InlineSpinner from "@/components/InlineSpinner";
 
 type OutreachSend = {
   id: string;
@@ -337,9 +338,16 @@ export default function Analytics() {
               <button
                 onClick={askAiToExplain}
                 disabled={aiLoading}
-                className="rounded-md border border-white/15 bg-black/30 px-3 py-2 text-xs font-semibold text-white hover:bg-black/40 disabled:opacity-50"
+                className="rounded-md border border-white/15 bg-black/30 px-3 py-2 text-xs font-semibold text-white hover:bg-black/40 disabled:opacity-50 inline-flex items-center gap-2"
               >
-                {aiLoading ? "Asking Smart…" : "Ask Smart"}
+                {aiLoading ? (
+                  <>
+                    <InlineSpinner className="h-3.5 w-3.5" />
+                    <span>Asking Smart</span>
+                  </>
+                ) : (
+                  "Ask Smart"
+                )}
               </button>
             </div>
             {aiExplanation ? (

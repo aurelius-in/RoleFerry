@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { formatCompanyName } from "@/lib/format";
+import InlineSpinner from "@/components/InlineSpinner";
 
 interface PreFlightCheck {
   name: string;
@@ -1012,9 +1013,16 @@ export default function DeliverabilityLaunchPage() {
                       type="button"
                       onClick={runDeliverabilityCheck}
                       disabled={!campaign || isCheckingDeliverability}
-                      className="px-4 py-2 rounded-md bg-orange-600 text-white font-semibold hover:bg-orange-700 disabled:opacity-50"
+                      className="px-4 py-2 rounded-md bg-orange-600 text-white font-semibold hover:bg-orange-700 disabled:opacity-50 inline-flex items-center gap-2"
                     >
-                      {isCheckingDeliverability ? "Checking..." : "Check deliverability"}
+                      {isCheckingDeliverability ? (
+                        <>
+                          <InlineSpinner />
+                          <span>Checking</span>
+                        </>
+                      ) : (
+                        "Check deliverability"
+                      )}
                     </button>
                   </div>
 
@@ -1397,9 +1405,16 @@ export default function DeliverabilityLaunchPage() {
                             type="button"
                             onClick={loadRoleferryAccounts}
                             disabled={rfLoading}
-                            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-white text-xs font-bold hover:bg-white/10 disabled:opacity-50"
+                            className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-white text-xs font-bold hover:bg-white/10 disabled:opacity-50 inline-flex items-center gap-2"
                           >
-                            {rfLoading ? "Loading..." : "Load accounts"}
+                            {rfLoading ? (
+                              <>
+                                <InlineSpinner className="h-3.5 w-3.5" />
+                                <span>Loading</span>
+                              </>
+                            ) : (
+                              "Load accounts"
+                            )}
                           </button>
                         </div>
 
@@ -1576,9 +1591,16 @@ export default function DeliverabilityLaunchPage() {
                   <button
                     onClick={runPreFlightChecks}
                     disabled={isRunningChecks}
-                    className="bg-orange-600 text-white px-4 py-2 rounded-md font-medium hover:bg-orange-700 transition-colors disabled:opacity-50"
+                    className="bg-orange-600 text-white px-4 py-2 rounded-md font-medium hover:bg-orange-700 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
                   >
-                    {isRunningChecks ? "Running Checks..." : "Run Pre-Flight Checks"}
+                    {isRunningChecks ? (
+                      <>
+                        <InlineSpinner />
+                        <span>Running checks</span>
+                      </>
+                    ) : (
+                      "Run Pre-Flight Checks"
+                    )}
                   </button>
                 </div>
 
@@ -1795,9 +1817,16 @@ export default function DeliverabilityLaunchPage() {
                   <button
                     onClick={launchCampaign}
                     disabled={!canLaunch || isLaunching}
-                    className="bg-green-600 text-white px-8 py-3 rounded-md font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-green-600 text-white px-8 py-3 rounded-md font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                   >
-                    {isLaunching ? "Launching Campaign..." : "Launch Campaign"}
+                    {isLaunching ? (
+                      <>
+                        <InlineSpinner />
+                        <span>Launching</span>
+                      </>
+                    ) : (
+                      "Launch Campaign"
+                    )}
                   </button>
                 </div>
               )

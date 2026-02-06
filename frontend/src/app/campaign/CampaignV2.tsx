@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { persistCampaignContextV1 } from "@/lib/campaignContext";
 import { formatCompanyName } from "@/lib/format";
+import InlineSpinner from "@/components/InlineSpinner";
 
 type Mode = "job-seeker" | "recruiter";
 
@@ -497,10 +498,17 @@ export default function CampaignV2() {
                         type="button"
                         onClick={() => generateAllForContact(String(activeContactId || ""))}
                         disabled={Boolean(busyKey)}
-                        className="px-3 py-2 rounded-md bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 disabled:opacity-50"
+                        className="px-3 py-2 rounded-md bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 disabled:opacity-50 inline-flex items-center gap-2"
                         title="Generate (or regenerate) all 4 emails for this contact."
                       >
-                        {busyKey ? "Generating…" : "Generate all 4"}
+                        {busyKey ? (
+                          <>
+                            <InlineSpinner className="h-3.5 w-3.5" />
+                            <span>Generating</span>
+                          </>
+                        ) : (
+                          "Generate all 4"
+                        )}
                       </button>
                     </div>
                   </div>
@@ -525,9 +533,16 @@ export default function CampaignV2() {
                               type="button"
                               onClick={() => generateStep(String(activeContactId || ""), step)}
                               disabled={isBusy}
-                              className="px-3 py-2 rounded-md bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 disabled:opacity-50"
+                              className="px-3 py-2 rounded-md bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center gap-2"
                             >
-                              {isBusy ? "Generating…" : "Regenerate"}
+                              {isBusy ? (
+                                <>
+                                  <InlineSpinner className="h-3.5 w-3.5" />
+                                  <span>Generating</span>
+                                </>
+                              ) : (
+                                "Regenerate"
+                              )}
                             </button>
                           </div>
 

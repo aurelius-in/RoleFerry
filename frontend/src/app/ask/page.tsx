@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import InlineSpinner from "@/components/InlineSpinner";
 
 type AskResponse = { answer: string; insights?: Record<string, number>; actions?: { label: string; endpoint: string }[] };
 
@@ -24,7 +25,16 @@ export default function AskPage() {
       <h1 className="text-2xl font-semibold">Ask</h1>
       <div className="rounded-lg border border-white/10 p-4 space-y-3">
         <textarea className="w-full min-h-24 px-3 py-2 rounded bg-white/5 border border-white/10" value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="Ask anything about your data or tell RoleFerry what to do..." />
-        <button onClick={send} disabled={loading} className="px-4 py-2 rounded brand-gradient text-black font-medium">{loading ? "Thinking..." : "Send"}</button>
+        <button onClick={send} disabled={loading} className="px-4 py-2 rounded brand-gradient text-black font-medium inline-flex items-center gap-2">
+          {loading ? (
+            <>
+              <InlineSpinner className="border-black/25 border-t-black/80" />
+              <span>Thinking</span>
+            </>
+          ) : (
+            "Send"
+          )}
+        </button>
       </div>
       {resp ? (
         <div className="rounded-lg border border-white/10 p-4 space-y-3">

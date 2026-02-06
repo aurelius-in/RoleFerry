@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
+import InlineSpinner from "@/components/InlineSpinner";
 
 export default function FeedbackPage() {
   const [email, setEmail] = useState("");
@@ -148,9 +149,16 @@ export default function FeedbackPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2 rounded-md bg-gradient-to-r from-orange-500 to-yellow-400 text-black font-semibold text-sm shadow-md disabled:opacity-60"
+              className="px-6 py-2 rounded-md bg-gradient-to-r from-orange-500 to-yellow-400 text-black font-semibold text-sm shadow-md disabled:opacity-60 inline-flex items-center gap-2"
             >
-              {submitting ? "Submitting..." : "Submit & unlock discount"}
+              {submitting ? (
+                <>
+                  <InlineSpinner className="border-black/25 border-t-black/80" />
+                  <span>Submitting</span>
+                </>
+              ) : (
+                "Submit & unlock discount"
+              )}
             </button>
           </div>
         </form>

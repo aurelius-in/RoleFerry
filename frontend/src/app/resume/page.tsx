@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { formatCompanyName } from "@/lib/format";
+import InlineSpinner from "@/components/InlineSpinner";
 
 
 interface ResumeExtract {
@@ -458,9 +459,16 @@ export default function ResumePage() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
               >
-                {isUploading ? "Processing..." : "Choose File"}
+                {isUploading ? (
+                  <>
+                    <InlineSpinner />
+                    <span>Processing</span>
+                  </>
+                ) : (
+                  "Choose File"
+                )}
               </button>
               <div className="mt-4">
                 <button

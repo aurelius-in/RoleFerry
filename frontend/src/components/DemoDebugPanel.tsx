@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
+import InlineSpinner from "@/components/InlineSpinner";
 
 type LlmHealth = {
   configured: boolean;
@@ -111,7 +112,14 @@ export default function DemoDebugPanel() {
             className="px-3 py-2 rounded-md bg-white text-black font-bold hover:bg-white/90"
             disabled={loading}
           >
-            {loading ? "Refreshing..." : "Refresh"}
+            {loading ? (
+              <span className="inline-flex items-center gap-2">
+                <InlineSpinner className="border-black/25 border-t-black/80 h-3.5 w-3.5" />
+                <span>Refreshing</span>
+              </span>
+            ) : (
+              "Refresh"
+            )}
           </button>
           <button
             type="button"

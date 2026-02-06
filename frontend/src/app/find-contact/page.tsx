@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { formatCompanyName } from "@/lib/format";
 import { getCurrentDataMode } from "@/lib/dataMode";
+import InlineSpinner from "@/components/InlineSpinner";
 
 
 interface Contact {
@@ -1109,10 +1110,17 @@ export default function FindContactPage() {
                     type="button"
                     onClick={runContactResearch}
                     disabled={isResearching || (savedVerified?.length || 0) === 0}
-                    className="mt-3 w-full rounded-md bg-white/10 border border-white/15 px-3 py-2 text-sm font-semibold text-white/85 hover:bg-white/15 disabled:opacity-50"
+                    className="mt-3 w-full rounded-md bg-white/10 border border-white/15 px-3 py-2 text-sm font-semibold text-white/85 hover:bg-white/15 disabled:opacity-50 inline-flex items-center justify-center gap-2"
                     title="Run background research for saved contacts"
                   >
-                    {isResearching ? "Researching…" : "Run research for saved contacts"}
+                    {isResearching ? (
+                      <>
+                        <InlineSpinner className="h-3.5 w-3.5" />
+                        <span>Researching</span>
+                      </>
+                    ) : (
+                      "Run research for saved contacts"
+                    )}
                   </button>
 
                   {(savedVerified?.length || 0) > 0 ? (
@@ -1216,9 +1224,16 @@ export default function FindContactPage() {
               <button
                 onClick={handleSearch}
                 disabled={isSearching || !companyQuery.trim()}
-                className="md:col-span-2 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="md:col-span-2 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
               >
-                {isSearching ? "Searching..." : "Search"}
+                {isSearching ? (
+                  <>
+                    <InlineSpinner />
+                    <span>Searching</span>
+                  </>
+                ) : (
+                  "Search"
+                )}
               </button>
             </div>
 

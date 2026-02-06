@@ -2,6 +2,7 @@
 import { api } from "@/lib/api";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import InlineSpinner from "@/components/InlineSpinner";
 
 interface SubscriptionStatus {
   plan: string;
@@ -141,9 +142,16 @@ export default function Settings() {
                   <button
                     onClick={saveProfile}
                     disabled={profileSaving}
-                    className="px-3 py-2 rounded bg-white/10 border border-white/20 text-xs"
+                    className="px-3 py-2 rounded bg-white/10 border border-white/20 text-xs inline-flex items-center gap-2 disabled:opacity-50"
                   >
-                    {profileSaving ? "Saving..." : "Save profile"}
+                    {profileSaving ? (
+                      <>
+                        <InlineSpinner className="h-3.5 w-3.5" />
+                        <span>Saving</span>
+                      </>
+                    ) : (
+                      "Save profile"
+                    )}
                   </button>
                   {profileMsg ? <div className="text-xs opacity-80">{profileMsg}</div> : null}
                 </div>
@@ -179,16 +187,32 @@ export default function Settings() {
                   <button
                     onClick={handleUpgrade}
                     disabled={busy === "upgrade"}
-                    className="px-3 py-2 rounded bg-white/10 border border-white/20 text-xs"
+                    className="px-3 py-2 rounded bg-white/10 border border-white/20 text-xs inline-flex items-center gap-2 disabled:opacity-50"
                   >
-                    {busy === "upgrade" ? "Saving..." : sub.plan === "beta" ? "Request Pro Upgrade" : "Switch to Beta"}
+                    {busy === "upgrade" ? (
+                      <>
+                        <InlineSpinner className="h-3.5 w-3.5" />
+                        <span>Saving</span>
+                      </>
+                    ) : sub.plan === "beta" ? (
+                      "Request Pro Upgrade"
+                    ) : (
+                      "Switch to Beta"
+                    )}
                   </button>
                   <button
                     onClick={handleCancel}
                     disabled={busy === "cancel"}
-                    className="px-3 py-2 rounded bg-red-500/20 border border-red-500/40 text-xs"
+                    className="px-3 py-2 rounded bg-red-500/20 border border-red-500/40 text-xs inline-flex items-center gap-2 disabled:opacity-50"
                   >
-                    {busy === "cancel" ? "Saving..." : "Request Cancel"}
+                    {busy === "cancel" ? (
+                      <>
+                        <InlineSpinner className="h-3.5 w-3.5" />
+                        <span>Saving</span>
+                      </>
+                    ) : (
+                      "Request Cancel"
+                    )}
                   </button>
                 </div>
                 {subMessage && <div className="text-xs opacity-80 mt-1">{subMessage}</div>}
