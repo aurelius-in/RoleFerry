@@ -52,6 +52,24 @@ class MatchRequest(BaseModel):
     resume_extract: Optional[Dict[str, Any]] = None
 
 
+class BatchMatchRequest(BaseModel):
+    resume_extract_id: str = "latest"
+    # List of job_description dicts. Each item should include at least:
+    # - id
+    # - title, company (optional for matching, helpful for downstream)
+    # - pain_points/required_skills/success_metrics (and optional responsibilities/requirements)
+    job_descriptions: List[Dict[str, Any]]
+    # Optional fallback resume payload (preferred for demo/local flows).
+    resume_extract: Optional[Dict[str, Any]] = None
+
+
+class BatchPainPointMatchResponse(BaseModel):
+    success: bool
+    message: str
+    matches_by_job_id: Dict[str, List[PainPointMatch]]
+    errors_by_job_id: Optional[Dict[str, str]] = None
+
+
 def _tokenize(s: str) -> List[str]:
     return [t for t in re.split(r"[^a-z0-9]+", (s or "").lower()) if t and len(t) > 2]
 
@@ -154,44 +172,51 @@ async def generate_painpoint_matches(request: MatchRequest):
     Generate pain point matches between job description pain points and resume solutions.
     """
     try:
+        # If the client sent full job+resume payloads, skip DB queries entirely.
+        # This keeps demos fast and avoids failing when Postgres isn't available.
+        has_client_jd = isinstance(request.job_description, dict) and bool(request.job_description)
+        has_client_resume = isinstance(request.resume_extract, dict) and bool(request.resume_extract)
+        should_skip_db = has_client_jd and has_client_resume
+
         # Look up the selected job and the latest resume for the demo user.
         # In first-run demos Postgres may be unavailable; fall back to empty rows.
         job_row = None
         resume_row = None
-        try:
-            async with engine.begin() as conn:
-                if request.job_description_id:
-                    result = await conn.execute(
+        if not should_skip_db:
+            try:
+                async with engine.begin() as conn:
+                    if request.job_description_id:
+                        result = await conn.execute(
+                            sql_text(
+                                """
+                                SELECT id, parsed_json
+                                FROM job
+                                WHERE id = :job_id AND user_id = :user_id
+                                """
+                            ),
+                            {
+                                "job_id": request.job_description_id,
+                                "user_id": DEMO_USER_ID,
+                            },
+                        )
+                        job_row = result.first()
+
+                    res = await conn.execute(
                         sql_text(
                             """
                             SELECT id, parsed_json
-                            FROM job
-                            WHERE id = :job_id AND user_id = :user_id
+                            FROM resume
+                            WHERE user_id = :user_id
+                            ORDER BY created_at DESC
+                            LIMIT 1
                             """
                         ),
-                        {
-                            "job_id": request.job_description_id,
-                            "user_id": DEMO_USER_ID,
-                        },
+                        {"user_id": DEMO_USER_ID},
                     )
-                    job_row = result.first()
-
-                res = await conn.execute(
-                    sql_text(
-                        """
-                        SELECT id, parsed_json
-                        FROM resume
-                        WHERE user_id = :user_id
-                        ORDER BY created_at DESC
-                        LIMIT 1
-                        """
-                    ),
-                    {"user_id": DEMO_USER_ID},
-                )
-                resume_row = res.first()
-        except Exception:
-            job_row = None
-            resume_row = None
+                    resume_row = res.first()
+            except Exception:
+                job_row = None
+                resume_row = None
 
         # Prefer DB if available, otherwise use in-memory demo cache; finally accept client payload.
         if not job_row and request.job_description_id in store.demo_job_descriptions:
@@ -527,6 +552,49 @@ async def generate_painpoint_matches(request: MatchRequest):
         )
     except Exception as e:
         logger.exception("Error generating pain point matches")
+        raise HTTPException(status_code=500, detail="Failed to generate matches")
+
+
+@router.post("/generate-batch", response_model=BatchPainPointMatchResponse)
+async def generate_painpoint_matches_batch(request: BatchMatchRequest):
+    """
+    Generate pain point matches for multiple job descriptions in one call.
+    This avoids the frontend making N separate POST requests (presentation-friendly + lower overhead).
+    """
+    matches_by_job_id: Dict[str, List[PainPointMatch]] = {}
+    errors_by_job_id: Dict[str, str] = {}
+
+    try:
+        jobs = request.job_descriptions if isinstance(request.job_descriptions, list) else []
+        for j in jobs:
+            try:
+                job_id = str((j or {}).get("id") or "").strip()
+                if not job_id:
+                    continue
+                resp = await generate_painpoint_matches(
+                    MatchRequest(
+                        job_description_id=job_id,
+                        resume_extract_id=request.resume_extract_id or "latest",
+                        job_description=j,
+                        resume_extract=request.resume_extract,
+                    )
+                )
+                matches_by_job_id[job_id] = resp.matches or []
+            except HTTPException as he:
+                errors_by_job_id[job_id] = str(he.detail or "Failed to generate matches")
+                matches_by_job_id[job_id] = []
+            except Exception:
+                errors_by_job_id[job_id] = "Failed to generate matches"
+                matches_by_job_id[job_id] = []
+
+        return BatchPainPointMatchResponse(
+            success=True,
+            message="Pain point matches generated successfully",
+            matches_by_job_id=matches_by_job_id,
+            errors_by_job_id=errors_by_job_id or None,
+        )
+    except Exception:
+        logger.exception("Error generating pain point matches (batch)")
         raise HTTPException(status_code=500, detail="Failed to generate matches")
 
 @router.post("/save", response_model=PainPointMatchResponse)

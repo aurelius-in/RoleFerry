@@ -76,6 +76,17 @@ class RecentNews(BaseModel):
 class ResearchData(BaseModel):
     company_summary: CompanySummary
     contact_bios: List[ContactBio]
+    # Outreach "theme" guidance (not news): plausible priority + mini-plan
+    theme: str = ""
+    # Explicit company fields (LLM-filled). The UI uses these directly instead of scraping headings.
+    company_culture_values: str = ""
+    company_market_position: str = ""
+    # More company fields useful for job-seekers/outreach (LLM-filled, sourced when possible).
+    company_product_launches: str = ""
+    company_leadership_changes: str = ""
+    company_other_hiring_signals: str = ""
+    company_recent_posts: str = ""
+    company_publications: str = ""
     recent_news: List[RecentNews]
     shared_connections: List[str]
     # Report-style view (dynamic sections; omit low-signal headings)
@@ -246,11 +257,18 @@ async def conduct_research(request: ResearchRequest):
                 "news": f"{scope_target} recent news",
                 "funding": f"{scope_target} funding investors valuation",
                 "product": f"{scope_target} product launch partnership",
+                "product_launches": f"{scope_target} product launch release announcement",
                 "hiring": f"{scope_target} hiring growth layoffs",
+                "leadership": f"{scope_target} leadership changes new CEO CTO CPO CFO VP",
+                "culture": f"{scope_target} company culture values how it works",
+                "market": f"{scope_target} competitors market position",
+                "posts": f"{scope_target} blog posts engineering blog",
+                "publications": f"{scope_target} whitepaper case study report publication",
             }
             serper_hits = _serper(company_queries["overview"], num=6)
             for k, q in company_queries.items():
-                company_serper_by_topic[k] = _serper(q, num=5)
+                # Small but richer: multiple facets, keep bounded
+                company_serper_by_topic[k] = _serper(q, num=6)
 
             # Contacts: per-contact facets (keep bounded)
             for c in contacts:
@@ -514,6 +532,38 @@ async def conduct_research(request: ResearchRequest):
                         "website": corpus.get("website") or "Unknown",
                         "linkedin_url": corpus.get("linkedin_company") or None,
                 },
+                "theme": (
+                    "Theme: What the company likely cares about: Reference a plausible priority (customer experience, reliability, speed, cost) "
+                    "and offer a 2–3 bullet mini-plan—without claiming a specific news event.\n"
+                    "- Start with one concrete outcome tied to the role\n"
+                    "- Propose a low-risk first sprint (instrument → ship → measure)\n"
+                    "- Share a weekly reporting cadence"
+                ),
+                "company_culture_values": (
+                    "Likely values pragmatic execution, clear ownership, and tight feedback loops. "
+                    "For outreach, mirror their tone: concise, specific, and evidence-led. "
+                    "Ask about how teams prioritize week-to-week, how decisions are documented, and how cross-functional alignment happens."
+                ),
+                "company_market_position": (
+                    "Position this company based on what they sell and who they sell to (B2B vs B2C), then discuss what matters now: "
+                    "differentiation, speed of iteration, reliability, and cost. "
+                    "In outreach, reference a plausible competitive pressure and offer a small, measurable improvement you’d drive first."
+                ),
+                "company_product_launches": (
+                    "- Product launches: Not available in stub mode. In Live mode, this will summarize recent releases/announcements found on the web."
+                ),
+                "company_leadership_changes": (
+                    "- Leadership changes: Not available in stub mode. In Live mode, this will summarize recent leadership moves found on the web."
+                ),
+                "company_other_hiring_signals": (
+                    "- Other hiring signals: Not available in stub mode. In Live mode, this will summarize signals like expansions, new offices, funding, or org changes."
+                ),
+                "company_recent_posts": (
+                    "- Recent posts: Not available in stub mode. In Live mode, this will summarize recent blog/press/LinkedIn posts with links."
+                ),
+                "company_publications": (
+                    "- Publications: Not available in stub mode. In Live mode, this will summarize case studies/whitepapers/reports with links."
+                ),
                 "contact_bios": [
                     {
                         "name": c.name,
@@ -587,13 +637,20 @@ async def conduct_research(request: ResearchRequest):
                     "  - Populate industry/size/headquarters/website/linkedin_url ONLY if you are confident (well-known company) — otherwise 'Unknown'.\n"
                     "  - Never invent specific numbers (revenue, headcount) or specific dates.\n"
                     "  - Never invent 'recent_news' URLs.\n"
-                    "  - If no serper_hits, you MAY still include 1–3 outreach-useful timing themes in recent_news,\n"
-                    "    BUT you must set url to an empty string and source to 'general_knowledge' (clearly unsourced).\n"
-                    "    Use date=''. These should read like \"Themes to mention\" not claimed headlines.\n"
+                    "  - recent_news MUST be actual news items from the corpus serper hits (with real URLs). If you don't have serper sources, return recent_news: [].\n"
+                    "  - theme is NOT news. Always populate theme with safe, non-claiming outreach guidance using this exact sentence, then add a 2–3 bullet mini-plan:\n"
+                    "    \"Theme: What the company likely cares about: Reference a plausible priority (customer experience, reliability, speed, cost) and offer a 2–3 bullet mini-plan—without claiming a specific news event.\"\n"
                     "- If information is missing or uncertain, set fields to 'Unknown' or empty lists.\n"
                     "- shared_connections MUST be an empty array unless provided (it is empty in this corpus).\n\n"
                     "Quality bar:\n"
                     "- The company_summary.description should be 2–4 sentences and outreach-useful (what they do + why it matters + likely priorities).\n"
+                    "- company_culture_values should be 4–8 sentences: how they likely operate + values signals (avoid claiming a specific internal culture doc).\n"
+                    "- company_market_position should be 4–8 sentences: who they compete with / positioning / what matters now (avoid made-up numbers).\n"
+                    "- company_product_launches should be 3–8 bullet points about recent launches/releases/announcements (with URLs if available in corpus).\n"
+                    "- company_leadership_changes should be 2–6 bullet points on exec/VP changes or notable leadership moves (with URLs if available in corpus).\n"
+                    "- company_other_hiring_signals should be 3–8 bullet points on hiring momentum signals beyond generic 'open roles' (with URLs if available).\n"
+                    "- company_recent_posts should be 3–8 bullets summarizing recent company posts (blog/press/LinkedIn topics) with URLs when available.\n"
+                    "- company_publications should be 1–6 bullets summarizing notable publications (case studies, whitepapers, reports) with URLs when available.\n"
                     "- contact_bios.bio should be 1–2 sentences tailored to the contact's title/department.\n"
                     "- hooks should be 4–8 punchy, concrete outreach angles (no fluff), grounded in the job pain_points / success_metrics if present.\n\n"
                     "Grounding rules for the Contact Background Report:\n"
@@ -633,6 +690,14 @@ async def conduct_research(request: ResearchRequest):
                     "  - company_summary: { name, description, industry, size, founded, headquarters, website, linkedin_url }\n"
                     "  - contact_bios: array of { name, title, company, bio, experience, education, skills, linkedin_url,\n"
                     "      public_profile_highlights, publications, post_topics, opinions, other_interesting_facts }\n"
+                    "  - theme: string\n"
+                    "  - company_culture_values: string\n"
+                    "  - company_market_position: string\n"
+                    "  - company_product_launches: string\n"
+                    "  - company_leadership_changes: string\n"
+                    "  - company_other_hiring_signals: string\n"
+                    "  - company_recent_posts: string\n"
+                    "  - company_publications: string\n"
                     "  - recent_news: array of { title, summary, date, source, url }\n"
                     "  - shared_connections: array of strings\n"
                     "  - background_report_title: string\n"
@@ -659,57 +724,85 @@ async def conduct_research(request: ResearchRequest):
             cs = entry.get("company_summary") or {}
             bios = entry.get("contact_bios") or []
             news = entry.get("recent_news") or []
+            theme = str(entry.get("theme") or "").strip()
+            culture_values = str(entry.get("company_culture_values") or "").strip()
+            market_position = str(entry.get("company_market_position") or "").strip()
+            product_launches = str(entry.get("company_product_launches") or "").strip()
+            leadership_changes = str(entry.get("company_leadership_changes") or "").strip()
+            other_hiring_signals = str(entry.get("company_other_hiring_signals") or "").strip()
+            recent_posts = str(entry.get("company_recent_posts") or "").strip()
+            publications = str(entry.get("company_publications") or "").strip()
             connections = entry.get("shared_connections") or []
             report_title = str(entry.get("background_report_title") or "Contact Background Report").strip() or "Contact Background Report"
             report_sections = entry.get("background_report_sections") or []
             if not isinstance(report_sections, list):
                 report_sections = []
 
-            # If we have no Serper sources and the model returned no "recent_news",
-            # generate a few safe, unsourced timing themes so the UI isn't empty.
+            # Ensure theme is always populated (theme is NOT news).
             try:
-                if (not corpus.get("serper_hits")) and (not news):
+                if not theme:
                     pains = [str(x) for x in (corpus.get("job_pain_points") or []) if str(x).strip()]
-                    skills = [str(x) for x in (corpus.get("job_required_skills") or []) if str(x).strip()]
                     succ = [str(x) for x in (corpus.get("job_success_metrics") or []) if str(x).strip()]
+                    plan: List[str] = []
+                    if pains:
+                        plan.append(f"- Start with one concrete pain point: {pains[0]}")
+                    if succ:
+                        plan.append(f"- Tie it to a measurable outcome: {succ[0]}")
+                    plan.append("- Mini-plan: instrument → ship 1 improvement → measure → iterate")
+                    plan = plan[:3]
 
-                    themes: List[Dict[str, Any]] = []
-                    if pains or succ:
-                        themes.append(
-                            {
-                                "title": "Theme: Outcomes + metrics for this role",
-                                "summary": (
-                                    f"Tie your message to measurable outcomes ({', '.join(succ[:2])}) and the main pain points "
-                                    f"({', '.join(pains[:2])})."
-                                    if (succ or pains)
-                                    else "Tie your message to measurable outcomes and the main pain points for the role."
-                                ),
-                                "date": "",
-                                "source": "general_knowledge",
-                                "url": "",
-                            }
-                        )
-                    if skills:
-                        themes.append(
-                            {
-                                "title": "Theme: Implementation credibility",
-                                "summary": f"Lead with 1 concrete proof point using {', '.join(skills[:3])} and a real metric (latency, uptime, cost, adoption).",
-                                "date": "",
-                                "source": "general_knowledge",
-                                "url": "",
-                            }
-                        )
-                    # Always include one safe company theme (non-claiming).
-                    themes.append(
-                        {
-                            "title": "Theme: What the company likely cares about",
-                            "summary": "Reference a plausible priority (customer experience, reliability, speed, cost) and offer a 2–3 bullet mini-plan—without claiming a specific news event.",
-                            "date": "",
-                            "source": "general_knowledge",
-                            "url": "",
-                        }
+                    theme = (
+                        "Theme: What the company likely cares about: Reference a plausible priority (customer experience, reliability, speed, cost) "
+                        "and offer a 2–3 bullet mini-plan—without claiming a specific news event.\n"
+                        + "\n".join(plan)
+                    ).strip()
+            except Exception:
+                pass
+
+            # Enforce: recent_news should only contain actual news with real URLs.
+            cleaned_news: List[Dict[str, Any]] = []
+            try:
+                for n in (news if isinstance(news, list) else []):
+                    if not isinstance(n, dict):
+                        continue
+                    title = str(n.get("title") or "").strip()
+                    url = str(n.get("url") or "").strip()
+                    source = str(n.get("source") or "").strip()
+                    if title.lower().startswith("theme:"):
+                        continue
+                    if not url:
+                        continue
+                    if source.lower() == "general_knowledge":
+                        continue
+                    cleaned_news.append(n)
+            except Exception:
+                cleaned_news = []
+            news = cleaned_news
+
+            # Ensure culture + market are always populated in LLM mode (use safe, non-claiming defaults).
+            try:
+                if not culture_values:
+                    culture_values = (
+                        "Culture & values (best-effort): Based on public signals, describe how the company likely operates "
+                        "(speed vs rigor, autonomy vs process, customer focus, and decision-making). "
+                        "Avoid claiming specific internal policies; keep it as plausible, outreach-useful themes."
                     )
-                    news = themes[:3]
+                if not market_position:
+                    market_position = (
+                        "Market position (best-effort): Summarize who they serve, what they sell, and how they likely differentiate. "
+                        "Mention plausible competitive pressures and what the next 6–12 months may prioritize (reliability, speed, cost, growth). "
+                        "Avoid made-up numbers."
+                    )
+                if not product_launches:
+                    product_launches = "No product launch details captured in this run. Try Live mode with SERPER configured."
+                if not leadership_changes:
+                    leadership_changes = "No leadership change details captured in this run. Try Live mode with SERPER configured."
+                if not other_hiring_signals:
+                    other_hiring_signals = "No additional hiring signals captured in this run. Try Live mode with SERPER configured."
+                if not recent_posts:
+                    recent_posts = "No recent posts captured in this run. Try Live mode with SERPER configured."
+                if not publications:
+                    publications = "No publications captured in this run. Try Live mode with SERPER configured."
             except Exception:
                 pass
 
@@ -743,6 +836,14 @@ async def conduct_research(request: ResearchRequest):
                     for b in bios
                     if isinstance(b, dict)
                 ],
+                theme=theme,
+                company_culture_values=culture_values,
+                company_market_position=market_position,
+                company_product_launches=product_launches,
+                company_leadership_changes=leadership_changes,
+                company_other_hiring_signals=other_hiring_signals,
+                company_recent_posts=recent_posts,
+                company_publications=publications,
                 recent_news=[
                     RecentNews(
                         title=str(n.get("title") or ""),
@@ -830,6 +931,20 @@ async def get_research_data(user_id: str):
                     linkedin_url="https://linkedin.com/in/sarahjohnson"
                 )
             ],
+            theme=(
+                "Theme: What the company likely cares about: Reference a plausible priority (customer experience, reliability, speed, cost) "
+                "and offer a 2–3 bullet mini-plan—without claiming a specific news event.\n"
+                "- Start with a concrete customer outcome + one KPI\n"
+                "- Propose a low-risk first sprint (instrument → ship → measure)\n"
+                "- Close with a weekly reporting cadence"
+            ),
+            company_culture_values="Likely values execution, reliability, and clear ownership. Expect emphasis on measurable outcomes and crisp cross-functional communication.",
+            company_market_position="Competes in enterprise cloud infrastructure; differentiation likely centers on reliability, performance, and cost. Near-term priorities likely include scaling, reducing risk, and tightening customer experience.",
+            company_product_launches="- Example launch: New platform feature announced (replace with real sources in Live mode).",
+            company_leadership_changes="- Example: Leadership move noted (replace with real sources in Live mode).",
+            company_other_hiring_signals="- Example: Hiring signal noted (replace with real sources in Live mode).",
+            company_recent_posts="- Example post: Blog/press topic (replace with real sources in Live mode).",
+            company_publications="- Example publication: Case study/whitepaper (replace with real sources in Live mode).",
             recent_news=[
                 RecentNews(
                     title="TechCorp Announces $50M Series C Funding Round",
@@ -887,6 +1002,12 @@ async def get_available_variables(user_id: str):
             "company_summary": "Company description and key information",
             "contact_bio": "Contact's professional background and experience",
             "recent_news": "Latest news and updates about the company",
+            "company_theme": "Theme: what the company likely cares about + mini-plan (not news)",
+            "company_product_launches": "Recent product launches/releases (best-effort, sourced when possible)",
+            "company_leadership_changes": "Leadership changes / exec moves (best-effort, sourced when possible)",
+            "company_other_hiring_signals": "Other hiring signals beyond open roles (best-effort, sourced when possible)",
+            "company_recent_posts": "Recent company posts/topics (blog/press/LinkedIn) with links when possible",
+            "company_publications": "Publications (whitepapers/case studies/reports) with links when possible",
             "shared_connections": "Mutual connections and relationships",
             "company_industry": "Company's industry and sector",
             "company_size": "Number of employees and company size",

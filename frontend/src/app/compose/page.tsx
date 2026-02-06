@@ -473,6 +473,8 @@ export default function ComposePage() {
                   ? "A few things I’ve built:"
                   : toneToUse === "enterprise"
                     ? "Selected work samples (process + outcomes):"
+                  : toneToUse === "custom"
+                    ? "Work sample:"
                     : "Please see my work here:";
 
     const workLinkVal = String(variables.find((v) => v.name === "{{work_link}}")?.value || "").trim();
@@ -645,10 +647,15 @@ export default function ComposePage() {
       const variables = currentVariables;
       const toneToUse = toneOverrideEnabled ? selectedTone : offerTone;
 
+      if (toneToUse === "custom" && !String(customTone || "").trim()) {
+        setError("Custom tone is selected, but your custom tone description is empty.");
+        return;
+      }
+
       const buildFallback = (): EmailTemplate => buildStarterDraft(toneToUse, variables);
       const payload = {
         tone: toneToUse,
-        custom_tone: selectedTone === "custom" ? customTone : undefined,
+        custom_tone: toneToUse === "custom" ? String(customTone || "").trim() : undefined,
         user_mode: mode,
         variables,
         painpoint_matches:
@@ -989,12 +996,19 @@ export default function ComposePage() {
                     </button>
                   </div>
                   {selectedTone === "custom" ? (
-                    <input
-                      className="mt-2 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Describe your custom tone..."
-                      value={customTone}
-                      onChange={(e) => setCustomTone(e.target.value)}
-                    />
+                    <div className="mt-2">
+                      <input
+                        className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Describe your custom tone..."
+                        value={customTone}
+                        onChange={(e) => setCustomTone(e.target.value)}
+                      />
+                      <div className="mt-1 text-[11px] text-white/55">
+                        {canUseAiGenerate
+                          ? "This will guide AI regeneration on the Draft step."
+                          : "Custom tone only applies when AI regeneration is enabled (log in)."}
+                      </div>
+                    </div>
                   ) : null}
                 </div>
               ) : (

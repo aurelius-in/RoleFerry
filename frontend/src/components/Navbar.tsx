@@ -36,7 +36,6 @@ export default function Navbar() {
         if (path === "/company-research" || path.startsWith("/company-research/")) return 7;
         // Context research is part of the "Decision Makers" step in the wireframe flow.
         if (path === "/find-contact" || path.startsWith("/find-contact/")) return 8;
-        if (path === "/context-research" || path.startsWith("/context-research/")) return 8;
         // Consolidated Offer + Compose lives on /compose.
         if (path === "/compose" || path.startsWith("/compose/")) return 9;
         if (path === "/bio-page" || path.startsWith("/bio-page/")) return 10;
@@ -159,7 +158,6 @@ export default function Navbar() {
             <NavPill href="/painpoint-match" pathname={pathname}>Match</NavPill>
             <NavPill href="/company-research" pathname={pathname}>Research</NavPill>
             <NavPill href="/find-contact" pathname={pathname}>Contact</NavPill>
-            <NavPill href="/context-research" pathname={pathname}>Context</NavPill>
             <NavPill href="/compose" pathname={pathname}>Compose</NavPill>
             <NavPill href="/bio-page" pathname={pathname}>Bio</NavPill>
             <NavPill href="/campaign" pathname={pathname}>Campaign</NavPill>
@@ -289,11 +287,8 @@ function ModeToggle() {
 }
 
 function DataModeToggle() {
-  const [mode, setMode] = useState<DataMode>("demo");
-
-  useEffect(() => {
-    setMode(getCurrentDataMode());
-  }, []);
+  // Initialize from storage immediately to avoid a 1st-render flash showing "Demo".
+  const [mode, setMode] = useState<DataMode>(() => getCurrentDataMode());
 
   const handleChange = (next: DataMode) => {
     setMode(next);

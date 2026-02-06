@@ -33,6 +33,12 @@ function safeStr(v: any) {
   return String(v ?? "").trim();
 }
 
+function firstNameFromDisplayName(name: any) {
+  const t = String(name ?? "").trim();
+  if (!t) return "me";
+  return t.split(/\s+/).filter(Boolean)[0] || "me";
+}
+
 export default function LocalBioPreview() {
   const [draft, setDraft] = useState<BioPageDraft | null>(null);
   const [resumeExtractLocal, setResumeExtractLocal] = useState<any>(null);
@@ -123,7 +129,7 @@ export default function LocalBioPreview() {
               }}
               aria-disabled={!isNonEmpty(draft.calendly_url)}
             >
-              Setup an interview with {draft.display_name || "me"}
+              Setup an interview with {firstNameFromDisplayName(draft.display_name)}
             </a>
           </div>
         </div>

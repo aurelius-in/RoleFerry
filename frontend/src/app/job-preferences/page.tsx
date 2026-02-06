@@ -235,7 +235,11 @@ export default function JobPreferencesPage() {
     try {
       const cached = localStorage.getItem("job_preferences");
       if (cached) {
-        setPreferences(JSON.parse(cached));
+        const parsed = JSON.parse(cached);
+        // Only keep state when the UI could have collected it (In-Person selected).
+        const locs = Array.isArray(parsed?.locationPreferences) ? parsed.locationPreferences : [];
+        const hasInPerson = locs.includes("In-Person");
+        setPreferences({ ...parsed, state: hasInPerson ? String(parsed?.state || "") : "" });
       }
     } catch {
       // ignore malformed cache
@@ -249,6 +253,9 @@ export default function JobPreferencesPage() {
         );
         if (resp.preferences) {
           const p = resp.preferences;
+          const hasInPerson = Array.isArray(p.location_preferences)
+            ? p.location_preferences.includes("In-Person")
+            : false;
           const mapped: JobPreferences = {
             values: p.values || [],
             roleCategories: p.role_categories || [],
@@ -260,7 +267,7 @@ export default function JobPreferencesPage() {
             skills: p.skills || [],
             minimumSalary: p.minimum_salary || "",
             jobSearchStatus: p.job_search_status || "",
-            state: p.state || "",
+            state: hasInPerson ? (p.state || "") : "",
           };
           setPreferences(mapped);
         }
@@ -309,6 +316,13 @@ export default function JobPreferencesPage() {
       const newValues = currentValues.includes(value)
         ? currentValues.filter((v) => v !== value)
         : [...currentValues, value];
+
+      // If In-Person is not selected, clear state to avoid confusing downstream steps.
+      if (field === "locationPreferences") {
+        const hasInPerson = newValues.includes("In-Person");
+        return { ...prev, [field]: newValues, state: hasInPerson ? (prev.state || "") : "" };
+      }
+
       return { ...prev, [field]: newValues };
     });
   };

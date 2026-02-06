@@ -78,12 +78,25 @@ export default function BioPageStep() {
   const [profileImageUrl, setProfileImageUrl] = useState<string>("");
   const [resumeMeta, setResumeMeta] = useState<any>(null);
   const [videoUrl, setVideoUrl] = useState<string>("");
+  const [userDisplayName, setUserDisplayName] = useState<string>("");
 
   useEffect(() => {
     // Load cached draft if available for quick UX
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (raw) setDraft(JSON.parse(raw));
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    // Prefer the logged-in user's profile name for display + publish.
+    try {
+      const raw = localStorage.getItem("rf_user");
+      const u = raw ? JSON.parse(raw) : null;
+      const fullName =
+        String(u?.full_name || "").trim() ||
+        `${String(u?.first_name || "").trim()} ${String(u?.last_name || "").trim()}`.trim();
+      if (fullName) setUserDisplayName(fullName);
     } catch {}
   }, []);
 
@@ -94,6 +107,16 @@ export default function BioPageStep() {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(next));
     } catch {}
   };
+
+  const uiDisplayName = useMemo(() => {
+    return safeStr(userDisplayName) || safeStr(draft?.display_name) || "You";
+  }, [userDisplayName, draft]);
+
+  const uiFirstName = useMemo(() => {
+    const nm = safeStr(uiDisplayName);
+    const first = nm.split(/\s+/).filter(Boolean)[0] || "";
+    return first || "you";
+  }, [uiDisplayName]);
 
   const updateTheme = (patch: Partial<BioPageTheme>) => {
     const cur = draft || ({} as any);
@@ -279,6 +302,8 @@ export default function BioPageStep() {
         // Preserve user-entered URLs across regenerations.
         const merged = {
           ...res.draft,
+          // Prefer the user's real name (so the public link doesn't show placeholders like "Candidate User").
+          display_name: safeStr(userDisplayName) || safeStr(res.draft.display_name),
           linkedin_url: safeStr(draft?.linkedin_url) || safeStr(res.draft.linkedin_url),
           calendly_url: safeStr(draft?.calendly_url) || safeStr(res.draft.calendly_url),
           video_url: safeStr(draft?.video_url) || safeStr(res.draft.video_url),
@@ -307,6 +332,7 @@ export default function BioPageStep() {
       const res = await api<{ slug: string; public_url: string }>("/bio-pages/publish", "POST", {
         draft: {
           ...draft,
+          display_name: safeStr(userDisplayName) || safeStr(draft.display_name),
           profile_image_url: profileImageUrl || draft.profile_image_url || "",
           // Ensure the public page renders the same Resume Snapshot as the editor/preview.
           resume_extract: (draft as any)?.resume_extract ?? resumeExtract ?? null,
@@ -481,7 +507,7 @@ export default function BioPageStep() {
                     <select
                       value={colors.bg_top}
                       onChange={(e) => updateTheme({ bg_top: e.target.value })}
-                      className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
+                      className="rf-bio-select w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       {BIO_BG_OPTIONS.map((o) => (
                         <option key={o.id} value={o.hex}>
@@ -497,7 +523,7 @@ export default function BioPageStep() {
                     <select
                       value={colors.bg_bottom}
                       onChange={(e) => updateTheme({ bg_bottom: e.target.value })}
-                      className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
+                      className="rf-bio-select w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       {BIO_BG_OPTIONS.map((o) => (
                         <option key={o.id} value={o.hex}>
@@ -512,17 +538,51 @@ export default function BioPageStep() {
                   <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
                     Bullet icon
                   </label>
-                  <select
-                    value={safeStr((draft?.theme as any)?.bullet_style) || "dot"}
-                    onChange={(e) => updateTheme({ bullet_style: e.target.value })}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {BIO_BULLET_STYLES.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.glyph} · {b.label}
-                      </option>
-                    ))}
-                  </select>
+                  {(() => {
+                    const options = BIO_BULLET_STYLES;
+                    const cur = safeStr((draft?.theme as any)?.bullet_style) || "dot";
+                    const curIdx = Math.max(0, options.findIndex((o) => o.id === cur));
+                    const display = options[curIdx] || options[0];
+                    const cycle = (dir: -1 | 1) => {
+                      const idx = (curIdx + dir + options.length) % options.length;
+                      updateTheme({ bullet_style: options[idx].id });
+                    };
+                    return (
+                      <div
+                        className="inline-flex items-center gap-1 rounded-md border border-white/15 bg-black/30 px-1 py-1"
+                        title="Bullet icon: use ◀/▶ (or click the icon) to cycle."
+                      >
+                        <button
+                          type="button"
+                          onClick={() => cycle(-1)}
+                          className="h-8 w-9 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                          aria-label="Previous bullet icon"
+                        >
+                          ◀
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => cycle(1)}
+                          className="h-8 min-w-[140px] px-2 rounded-md border border-white/10 bg-white/5 text-white/85 hover:bg-white/10 text-sm font-semibold"
+                          aria-label={`Bullet icon: ${display.label}. Click to cycle.`}
+                          title={`${display.glyph} · ${display.label}`}
+                        >
+                          <span className="inline-flex items-center gap-2">
+                            <span className="text-base leading-none" aria-hidden="true">{display.glyph}</span>
+                            <span className="truncate">{display.label}</span>
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => cycle(1)}
+                          className="h-8 w-9 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                          aria-label="Next bullet icon"
+                        >
+                          ▶
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="rounded-lg border border-white/10 bg-black/20 p-3">
@@ -646,7 +706,7 @@ export default function BioPageStep() {
               <div className="flex items-center justify-between">
                 <div className="text-sm font-bold">Preview</div>
                 <div className="text-xs text-white/60">
-                  {draft ? `Draft ready for ${draft.display_name || "user"}` : "No draft yet"}
+                  {draft ? `Draft ready for ${uiDisplayName || "you"}` : "No draft yet"}
                 </div>
               </div>
 
@@ -691,7 +751,7 @@ export default function BioPageStep() {
                   <div className="text-xs font-semibold mb-2">CTA</div>
                   <div className="flex flex-wrap gap-2">
                     <div className="px-3 py-2 rounded-lg border text-sm" style={{ borderColor: colors.border, background: colors.card }}>
-                      Setup an interview with <span className="font-semibold">{draft.display_name || "you"}</span>
+                      Setup an interview with <span className="font-semibold">{uiFirstName}</span>
                     </div>
                     <div className="px-3 py-2 rounded-lg border text-sm" style={{ borderColor: colors.border, background: colors.card }}>
                       Let’s connect on LinkedIn

@@ -39,6 +39,12 @@ function fmtTitleCase(s: string) {
   return t;
 }
 
+function firstNameFromDisplayName(name: any) {
+  const t = String(name ?? "").trim();
+  if (!t) return "me";
+  return t.split(/\s+/).filter(Boolean)[0] || "me";
+}
+
 export default function PublicBioPage() {
   const params = useParams();
   const slug = useMemo(() => String((params as any)?.slug || ""), [params]);
@@ -127,7 +133,7 @@ export default function PublicBioPage() {
               }}
               aria-disabled={!isNonEmpty(d.calendly_url)}
             >
-              Setup an interview with {d.display_name || "me"}
+              Setup an interview with {firstNameFromDisplayName(d.display_name)}
             </a>
           </div>
         </div>

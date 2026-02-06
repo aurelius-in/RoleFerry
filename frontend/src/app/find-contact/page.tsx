@@ -51,7 +51,8 @@ export default function FindContactPage() {
   const [isSearching, setIsSearching] = useState(false);
   // Company-first: make the company explicit, and keep an optional secondary query.
   const [companyQuery, setCompanyQuery] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [otherQuery, setOtherQuery] = useState("");
+  const [titleFilters, setTitleFilters] = useState<string[]>([]);
   const [companyOptions, setCompanyOptions] = useState<string[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
@@ -83,6 +84,108 @@ export default function FindContactPage() {
   const [improveNoteError, setImproveNoteError] = useState<string | null>(null);
   const [isResearching, setIsResearching] = useState(false);
   const [researchNotice, setResearchNotice] = useState<string | null>(null);
+
+  const TITLE_FILTER_OPTIONS: Array<{ group: string; options: string[] }> = [
+    {
+      group: "Executive",
+      options: ["CEO", "COO", "CTO", "CPO", "CFO", "Founder", "President", "General Manager"],
+    },
+    {
+      group: "Engineering leadership",
+      options: [
+        "VP of Engineering",
+        "SVP Engineering",
+        "Head of Engineering",
+        "Director of Engineering",
+        "Engineering Manager",
+        "Head of Platform",
+        "Director of Platform",
+        "Head of Infrastructure",
+        "SRE Manager",
+        "Security Director",
+        "CISO",
+      ],
+    },
+    {
+      group: "Product & Growth",
+      options: [
+        "VP Product",
+        "Head of Product",
+        "Director of Product",
+        "Group Product Manager",
+        "Product Lead",
+        "VP Growth",
+        "Head of Growth",
+        "Growth Director",
+      ],
+    },
+    {
+      group: "People / Recruiting (hiring owners)",
+      options: [
+        "Chief People Officer",
+        "VP People",
+        "Head of People",
+        "HR Business Partner",
+        "Head of Talent Acquisition",
+        "Director of Talent Acquisition",
+        "Recruiting Manager",
+        "Technical Recruiter",
+        "Senior Recruiter",
+        "Talent Acquisition Partner",
+        "Recruiting Sourcer",
+      ],
+    },
+    {
+      group: "Design (if relevant)",
+      options: ["VP Design", "Head of Design", "Design Director", "UX Director"],
+    },
+    {
+      group: "Data (if relevant)",
+      options: ["VP Data", "Head of Data", "Director of Data", "Data Engineering Manager", "Head of Analytics"],
+    },
+  ];
+
+  const TITLE_FILTER_STORAGE_KEY = "rf_decision_maker_title_filters";
+
+  useEffect(() => {
+    // Restore title filters (nice UX: people often reuse these).
+    try {
+      const raw = localStorage.getItem(TITLE_FILTER_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (Array.isArray(parsed)) {
+        setTitleFilters(parsed.map((x) => String(x)).filter(Boolean));
+      }
+    } catch {}
+  }, []);
+
+  const toggleTitleFilter = (t: string) => {
+    const title = String(t || "").trim();
+    if (!title) return;
+    setTitleFilters((prev) => {
+      const has = prev.includes(title);
+      const next = has ? prev.filter((x) => x !== title) : [...prev, title];
+      try {
+        localStorage.setItem(TITLE_FILTER_STORAGE_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const clearTitleFilters = () => {
+    setTitleFilters([]);
+    try {
+      localStorage.removeItem(TITLE_FILTER_STORAGE_KEY);
+    } catch {}
+  };
+
+  const selectAllTitleFilters = () => {
+    const all = TITLE_FILTER_OPTIONS.flatMap((g) => g.options);
+    const uniq = Array.from(new Set(all));
+    setTitleFilters(uniq);
+    try {
+      localStorage.setItem(TITLE_FILTER_STORAGE_KEY, JSON.stringify(uniq));
+    } catch {}
+  };
 
   const formatTitleCase = (input?: string) => {
     const s = String(input || "").trim();
@@ -225,8 +328,86 @@ export default function FindContactPage() {
     const sol = String(m0?.solution_1 || "").trim();
     const metric = String(m0?.metric_1 || "").trim();
 
+    const cleanPhrase = (s: string) => {
+      let t = String(s || "").replace(/\s+/g, " ").trim();
+      t = t.replace(/^[\-\*\u2022\d\.\)\s]+/, "").trim();
+      t = t.replace(/\s*\.+\s*$/g, "").trim();
+      t = t.replace(/\s*,+\s*$/g, "").trim();
+      t = t.replace(/\s*;+\s*$/g, "").trim();
+      t = t.replace(/\s*:\s*$/g, "").trim();
+      return t;
+    };
+
+    const summarizePain = (raw: string) => {
+      let t = cleanPhrase(raw);
+      if (!t) return "";
+      const low = t.toLowerCase();
+      if (["a key priority", "key priority"].includes(low)) return "";
+
+      // If it's a long imperative responsibility line ("Define and implement ..."),
+      // drop common leading verbs so the phrase fits after "focus on".
+      const dropPrefixes = [
+        "define and implement ",
+        "design and implement ",
+        "build and implement ",
+        "develop and implement ",
+        "define and build ",
+        "design and build ",
+        "build ",
+        "develop ",
+        "define ",
+        "design ",
+        "implement ",
+        "lead ",
+        "own ",
+        "manage ",
+        "create ",
+        "drive ",
+      ];
+      for (const p of dropPrefixes) {
+        if (low.startsWith(p)) {
+          t = t.slice(p.length).trim();
+          break;
+        }
+      }
+
+      // Cap to a short phrase (LinkedIn note is only 200 chars).
+      return trimToChars(t, 70).replace(/\s*\.+\s*$/g, "").trim();
+    };
+
+    const withTheRole = (title: string) => {
+      const t = String(title || "").trim();
+      if (!t) return "the role";
+      const low = t.toLowerCase();
+      if (low.startsWith("the ")) return t;
+      if (low.endsWith(" role")) return `the ${t}`;
+      return `the ${t} role`;
+    };
+
+    const rolePhrase = withTheRole(jobTitle);
+    const painPhrase = summarizePain(pain);
+    const solPhrase = cleanPhrase(sol);
+    const metricPhrase = cleanPhrase(metric);
+
+    const parts: string[] = [];
+    parts.push(`Hi ${first}, I’m exploring ${rolePhrase} at ${company}.`);
+    if (painPhrase) parts.push(`The focus on ${painPhrase} stood out.`);
+
+    const proofLong = `I’ve worked on similar problems (${solPhrase || "relevant work"}${metricPhrase ? `; ${metricPhrase}` : ""}).`;
+    const proofShort = "I’ve worked on similar problems in this area.";
+    // Only include the detailed proof if it comfortably fits; otherwise keep it generic.
+    const base = parts.join(" ");
+    const remaining = LINKEDIN_NOTE_LIMIT - (base.length + 1 /* space */ + "Open to connect?".length);
+    if (remaining >= proofLong.length + 1) {
+      parts.push(proofLong);
+    } else if (remaining >= proofShort.length + 1) {
+      parts.push(proofShort);
+    }
+
+    parts.push("Open to connect?");
+
     const li = trimToChars(
-      `Hi ${first}, I’m exploring ${jobTitle} at ${company}. I noticed ${pain}. I’ve worked on similar problems (${sol || "relevant work"}${metric ? `; ${metric}` : ""}). Open to connect?`,
+      parts.join(" "),
       LINKEDIN_NOTE_LIMIT
     );
 
@@ -510,7 +691,8 @@ export default function FindContactPage() {
       const res = await api<ContactSearchResponse>("/find-contact/search", "POST", {
         query: companyQuery,
         company: companyQuery,
-        role: (searchQuery || "").trim() || undefined,
+        role: (otherQuery || "").trim() || undefined,
+        title_filters: titleFilters.length ? titleFilters : undefined,
         target_job_title: targetJobTitle || undefined,
         candidate_title: candidateTitle || undefined,
       });
@@ -563,7 +745,8 @@ export default function FindContactPage() {
           recruiting: ["Head of Talent Acquisition", "Recruiting Manager", "Talent Acquisition Partner", "Lead Recruiter", "VP People", "Chief People Officer"],
         };
 
-        const seedTitles = titlesByFn[fn] || titlesByFn.engineering;
+        const seedTitlesRaw = titlesByFn[fn] || titlesByFn.engineering;
+        const seedTitles = titleFilters.length ? seedTitlesRaw.filter((t) => titleFilters.includes(t)) : seedTitlesRaw;
 
         const fallback: Contact[] = seedTitles.slice(0, 6).map((title, idx) => ({
           id: `suggested_${fn}_${idx}_${Date.now() + idx}`,
@@ -956,7 +1139,7 @@ export default function FindContactPage() {
                   Companies from previous steps
                 </div>
                 <div className="text-[11px] text-white/60 mb-3">
-                  Pick a company first, then optionally add a role/title query.
+                  Pick a company first, then choose which decision-maker titles you want included.
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {companyOptions.map((c) => (
@@ -989,19 +1172,78 @@ export default function FindContactPage() {
               />
               <input
                 type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Optional: role/title (e.g. recruiter, VP Eng) or LinkedIn URL…"
+                value={otherQuery}
+                onChange={(e) => setOtherQuery(e.target.value)}
+                placeholder="Optional: extra keywords or LinkedIn URL…"
                 className="md:col-span-5 rounded-md border border-white/15 bg-black/30 px-4 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                 onKeyPress={(e) => e.key === "Enter" && handleSearch()}
               />
               <button
                 onClick={handleSearch}
                 disabled={isSearching || !companyQuery.trim()}
-                className="md:col-span-2 bg-blue-600 text-white px-6 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="md:col-span-2 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
                 {isSearching ? "Searching..." : "Search"}
               </button>
+            </div>
+
+            {/* Title filters (Apollo/SalesNav-style) */}
+            <div className="mt-4 rounded-lg border border-white/10 bg-black/20 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">
+                    Decision-maker titles to include
+                  </div>
+                  <div className="mt-1 text-[11px] text-white/60">
+                    Select the titles you want included in the search (we’ll match any of them).
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={selectAllTitleFilters}
+                    className="text-[11px] font-semibold rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-white/80 hover:bg-white/10"
+                  >
+                    Select all
+                  </button>
+                  <button
+                    type="button"
+                    onClick={clearTitleFilters}
+                    className="text-[11px] font-semibold rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-white/80 hover:bg-white/10"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-4">
+                {TITLE_FILTER_OPTIONS.map((g) => (
+                  <div key={g.group}>
+                    <div className="text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-2">
+                      {g.group}
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {g.options.map((t) => {
+                        const checked = titleFilters.includes(t);
+                        return (
+                          <label
+                            key={`${g.group}_${t}`}
+                            className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white/80 hover:bg-white/10 cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleTitleFilter(t)}
+                              className="rounded border-white/20 bg-black/30 text-blue-500 focus:ring-blue-500"
+                            />
+                            <span className="min-w-0 truncate">{t}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -1010,27 +1252,6 @@ export default function FindContactPage() {
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">Found Contacts</h2>
-                {selectedContacts.length > 0 && (() => {
-                  const verifiableCount = contacts.filter(
-                    (c) => selectedContacts.includes(c.id) && isRealEmail(c.email)
-                  ).length;
-                  const canVerify = verifiableCount > 0;
-                  const verifyLabel = `Verify emails (${verifiableCount}/${selectedContacts.length})`;
-
-                  return (
-                  <div className="flex items-center gap-2">
-                    {canVerify && (
-                      <button
-                        onClick={handleVerifyEmails}
-                        className="px-4 py-2 rounded-md font-medium transition-colors bg-green-600 text-white hover:bg-green-700"
-                      >
-                        {verifyLabel}
-                      </button>
-                    )}
-                    {/* Continue button lives at the bottom of the right column (single CTA) */}
-                  </div>
-                  );
-                })()}
               </div>
 
               {/* Outreach drafts (auto-generated) */}
@@ -1181,6 +1402,24 @@ export default function FindContactPage() {
                         </div>
                       </div>
                     </div>
+                  </div>
+                );
+              })()}
+
+              {selectedContacts.length > 0 && (() => {
+                const verifiableCount = contacts.filter((c) => selectedContacts.includes(c.id) && isRealEmail(c.email)).length;
+                const canVerify = verifiableCount > 0;
+                const verifyLabel = `Verify emails (${verifiableCount}/${selectedContacts.length})`;
+                if (!canVerify) return null;
+                return (
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleVerifyEmails}
+                      className="px-4 py-2 rounded-md font-medium transition-colors bg-green-600 text-white hover:bg-green-700"
+                      title="Verify the selected contacts’ emails (Valid contacts get saved on the left)."
+                    >
+                      {verifyLabel}
+                    </button>
                   </div>
                 );
               })()}
@@ -1346,14 +1585,21 @@ export default function FindContactPage() {
                 >
                   Back
                 </button>
-                <button
-                  type="button"
-                  onClick={handleContinue}
-                  disabled={!canContinue}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  {continueLabel}
-                </button>
+                <div className="flex items-center gap-2">
+                  {!canContinue ? (
+                    <div className="text-[11px] text-white/60">
+                      Verify emails to continue
+                    </div>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={handleContinue}
+                    disabled={!canContinue}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    {continueLabel}
+                  </button>
+                </div>
               </div>
             );
           })()}

@@ -788,27 +788,56 @@ export default function JobDescriptionsPage() {
                         return (
                           <div className="flex flex-col items-end gap-1">
                             <div className="text-[10px] font-semibold text-white/60">Favorite Rank</div>
-                            <select
-                              value={currentOk ? String(current) : ""}
-                              onChange={(e) => {
-                                const v = String(e.target.value || "");
-                                if (!v) {
+                            {(() => {
+                              const available: Array<number | null> = [
+                                null,
+                                ...Array.from({ length: maxRank }, (_, i) => i + 1).filter((n) => !used.has(n)),
+                              ];
+                              const cur: number | null = currentOk ? current : null;
+                              const curIdx = Math.max(0, available.indexOf(cur));
+                              const display = cur === null ? "—" : String(cur);
+
+                              const cycle = (dir: -1 | 1) => {
+                                if (!available.length) {
                                   handleFavoriteRankChange(jd.id, null);
                                   return;
                                 }
-                                const n = Number(v);
-                                handleFavoriteRankChange(jd.id, Number.isFinite(n) ? n : null);
-                              }}
-                              title="Favorite Rank: unique per job (1..N). Pick an unused rank."
-                              className="rounded-md border border-white/10 bg-black/20 px-3 py-1 text-sm font-semibold text-white/80 hover:bg-white/10 outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                              <option value="">—</option>
-                              {Array.from({ length: maxRank }, (_, i) => i + 1).map((n) => (
-                                <option key={`rank_${jd.id}_${n}`} value={String(n)} disabled={used.has(n)}>
-                                  {n}
-                                </option>
-                              ))}
-                            </select>
+                                const nextIdx = (curIdx + dir + available.length) % available.length;
+                                handleFavoriteRankChange(jd.id, available[nextIdx]);
+                              };
+
+                              return (
+                                <div
+                                  className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/20 px-1 py-1"
+                                  title="Favorite Rank: unique per job (1..N). Use ◀/▶ or click the rank to cycle unused values."
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => cycle(-1)}
+                                    className="rounded-md px-2 py-0.5 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white outline-none focus:ring-2 focus:ring-blue-500"
+                                    aria-label="Previous favorite rank"
+                                  >
+                                    ◀
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => cycle(1)}
+                                    className="min-w-[2.25rem] rounded-md px-2 py-0.5 text-sm font-semibold tabular-nums text-white/80 hover:bg-white/10 hover:text-white outline-none focus:ring-2 focus:ring-blue-500"
+                                    aria-label={`Favorite rank: ${display}. Click to cycle.`}
+                                  >
+                                    {display}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => cycle(1)}
+                                    className="rounded-md px-2 py-0.5 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white outline-none focus:ring-2 focus:ring-blue-500"
+                                    aria-label="Next favorite rank"
+                                  >
+                                    ▶
+                                  </button>
+                                </div>
+                              );
+                            })()}
                           </div>
                         );
                       })()}

@@ -34,6 +34,25 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Ensure native form controls (esp. <select> dropdown menus on Windows)
+   render in a dark scheme instead of the browser's default light menu UI. */
+html {
+  color-scheme: dark;
+}
+select,
+input,
+textarea {
+  color-scheme: dark;
+}
+
+/* Bio page: Windows sometimes shows a light native menu while inheriting white text,
+   which makes options unreadable. Force readable option text/bg for that page’s selects. */
+select.rf-bio-select option,
+select.rf-bio-select optgroup {
+  color: #0b0b0b;
+  background-color: #f8fafc;
+}
+
 a {
   color: rgba(186, 215, 255, 0.95);
 }

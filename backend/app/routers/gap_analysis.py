@@ -291,6 +291,28 @@ def _deterministic_personality_gaps(
     needs_detail = any(k in txt for k in ["requirements", "details", "detail-oriented", "documentation", "docs", "spec", "specification"])
     needs_people = any(k in txt for k in ["coach", "ment", "culture", "values", "relationships", "people-first", "people first", "feedback", "collaboration"])
 
+    def _signal_list() -> List[str]:
+        """
+        Human-readable job work-style signals we detected from text.
+        This is used for evidence and to tailor screening questions when we don't find a direct mismatch.
+        """
+        sig: List[str] = []
+        if needs_alignment:
+            sig.append("stakeholder/cross-functional alignment")
+        if needs_autonomy:
+            sig.append("high autonomy / ambiguity (0→1 / self-directed)")
+        if high_process:
+            sig.append("process/regulatory/compliance emphasis")
+        if fast_paced:
+            sig.append("fast-paced execution / tight deadlines")
+        if needs_strategy:
+            sig.append("strategy/vision framing")
+        if needs_detail:
+            sig.append("detail/specs/documentation heavy")
+        if needs_people:
+            sig.append("people/culture/relationships emphasis")
+        return sig
+
     t = temperament_profile or {}
     t_scores = (t.get("scores") if isinstance(t, dict) else {}) or {}
     action = None
@@ -448,12 +470,48 @@ def _deterministic_personality_gaps(
                 )
             )
         else:
+            # Make the fallback visibly dependent on BOTH the profile and the job text,
+            # so users can tell we're actually cross-referencing their selections.
+            sigs = _signal_list()
+
+            profile_bits: List[str] = []
+            if action is not None or communication is not None:
+                profile_bits.append(f"Temperament scores: action={action}, communication={communication}")
+            if energy is not None or info is not None or decisions is not None or structure is not None:
+                profile_bits.append(f"Personality scores: energy={energy}, info={info}, decisions={decisions}, structure={structure}")
+
+            # Tailor screening prompts by detected job signals (if any).
+            prompts: List[str] = []
+            if needs_alignment:
+                prompts.append("meeting cadence + stakeholder load (weekly hours in meetings, who owns decisions)")
+            if needs_autonomy:
+                prompts.append("ambiguity tolerance (how requirements are set when inputs are unclear)")
+            if fast_paced:
+                prompts.append("pace/deadlines (how often priorities shift; what 'urgent' means)")
+            if high_process:
+                prompts.append("process/compliance (docs required, approvals, audits, change control)")
+            if needs_detail:
+                prompts.append("expectations for specs/docs (who writes them; depth; review cycles)")
+            if needs_strategy:
+                prompts.append("strategy vs execution split (time spent on roadmap/vision vs delivery)")
+            if needs_people:
+                prompts.append("people leadership expectations (coaching, feedback, conflict handling)")
+            if not prompts:
+                prompts = ["meeting load, autonomy, and how work is prioritized week-to-week"]
+
             out.append(
                 GapDetail(
-                    gap="No obvious work-style conflicts detected from the job text.",
+                    gap=(
+                        "Work-style fit: no strong conflicts detected by heuristics; validate environment details in screening."
+                        + (f" (Job signals: {', '.join(sigs)})" if sigs else " (Job signals: none obvious in text)")
+                    ),
                     severity="low",
-                    evidence=["Checked for pace, autonomy, process, stakeholder load, and strategy/detail signals"],
-                    how_to_close="Validate in screening: ask about meeting load, ambiguity, and how work is prioritized week-to-week.",
+                    evidence=(
+                        ["Checked job text for pace, autonomy, process, stakeholder load, and strategy/detail signals"]
+                        + (profile_bits if profile_bits else ["Personality/temperament profile missing or unscorable"])
+                        + ([f"Detected job signals: {', '.join(sigs)}"] if sigs else ["Detected job signals: none obvious"])
+                    ),
+                    how_to_close="Validate in screening: ask about " + "; ".join(prompts) + ".",
                 )
             )
 
@@ -870,17 +928,24 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
     - resume ↔ jobs
     Uses OpenAI when configured; falls back to deterministic heuristics.
     """
+    # Defensive defaults: never reference locals that may not exist.
+    prefs: GapAnalysisPreferences | None = None
+    resume: ResumeExtract | None = None
+    jobs: List[GapJobDescription] = []
+    client = None
+
     try:
-        try:
-            prefs = GapAnalysisPreferences(**(req.preferences or {}))
-            resume = ResumeExtract(**(req.resume_extract or {}))
-            jobs = [GapJobDescription(**j) for j in (req.job_descriptions or [])]
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Invalid payload: {e}")
+        prefs = GapAnalysisPreferences(**(req.preferences or {}))
+        resume = ResumeExtract(**(req.resume_extract or {}))
+        jobs = [GapJobDescription(**j) for j in (req.job_descriptions or [])]
+    except Exception as e:
+        # This should be a 400, not a 500.
+        raise HTTPException(status_code=400, detail=f"Invalid payload: {e}")
 
-        if not jobs:
-            return GapAnalysisResponse(success=True, message="No jobs to analyze", ranked=[], helper={"used_llm": False})
+    if not jobs:
+        return GapAnalysisResponse(success=True, message="No jobs to analyze", ranked=[], helper={"used_llm": False})
 
+    try:
         # get_openai_client() should be safe, but never allow config issues to 500 this endpoint.
         try:
             client = get_openai_client()
@@ -900,7 +965,8 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
                 overall=None,
                 helper={"used_llm": False, "model": "unavailable", "notes": [f"LLM init error: {str(e)[:160]}"]},
             )
-        if not client.should_use_real_llm:
+
+        if not getattr(client, "should_use_real_llm", False):
             ranked = _safe_deterministic_rank(
                 prefs,
                 resume,
@@ -915,7 +981,7 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
                 overall=None,
                 helper={
                     "used_llm": False,
-                    "model": client.model,
+                    "model": getattr(client, "model", "unavailable"),
                     "notes": ["OpenAI not configured or LLM_MODE!=openai; used deterministic heuristics."],
                 },
             )
@@ -1003,33 +1069,29 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
 
         # If model output is empty/invalid, fall back.
         if not ranked:
-            ranked = _deterministic_rank(prefs, resume, jobs)
+            ranked = _safe_deterministic_rank(
+                prefs,
+                resume,
+                jobs,
+                personality_profile=req.personality_profile,
+                temperament_profile=req.temperament_profile,
+            )
             notes = ["GPT output could not be parsed; used deterministic scoring."]
             overall = None
         else:
             notes = _norm_list(data.get("notes"))[:6] or ["GPT-ranked analysis."]
             overall = data.get("overall") if isinstance(data.get("overall"), dict) else None
 
-        # Ensure personality gaps are populated when profile data exists.
-        try:
-            jobs_by_id = {j.id: j for j in jobs}
-            for idx in range(len(ranked)):
-                item = ranked[idx]
-                if item.personality_gaps:
-                    continue
-                j = jobs_by_id.get(item.job_id)
-                if not j:
-                    continue
-                filled = _deterministic_personality_gaps(req.personality_profile, req.temperament_profile, j)
-                if filled:
-                    item.personality_gaps = filled
-        except Exception:
-            pass
-
         # Ensure every imported job appears at least once (append missing with heuristic scores)
         seen = {r.job_id for r in ranked}
         if len(seen) < len(jobs):
-            fill = _deterministic_rank(prefs, resume, [j for j in jobs if j.id not in seen])
+            fill = _safe_deterministic_rank(
+                prefs,
+                resume,
+                [j for j in jobs if j.id not in seen],
+                personality_profile=req.personality_profile,
+                temperament_profile=req.temperament_profile,
+            )
             ranked.extend(fill)
             ranked.sort(key=lambda x: x.score, reverse=True)
 
@@ -1038,43 +1100,26 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
             message="Gap analysis complete",
             ranked=ranked,
             overall=overall,
-            helper={"used_llm": True, "model": client.model, "notes": notes},
-        )
-    except Exception as e:
-        logger.exception("Gap analysis failed")
-        ranked = _deterministic_rank(prefs, resume, jobs)
-        return GapAnalysisResponse(
-            success=True,
-            message="Gap analysis complete (LLM error; used deterministic scoring)",
-            ranked=ranked,
-            overall=None,
-            helper={"used_llm": False, "model": client.model, "notes": [f"LLM error: {str(e)[:160]}"]},
+            helper={"used_llm": True, "model": getattr(client, "model", "unavailable"), "notes": notes},
         )
     except HTTPException:
         raise
     except Exception as e:
         # Ultimate safety net: never let the UI see a 500 for this endpoint.
-        logger.exception("Gap analysis crashed unexpectedly")
-        ranked: List[GapAnalysisItem] = []
-        try:
-            prefs = GapAnalysisPreferences(**(req.preferences or {}))
-            resume = ResumeExtract(**(req.resume_extract or {}))
-            jobs = [GapJobDescription(**j) for j in (req.job_descriptions or [])]
-            ranked = _safe_deterministic_rank(
-                prefs,
-                resume,
-                jobs,
-                personality_profile=req.personality_profile,
-                temperament_profile=req.temperament_profile,
-            )
-        except Exception:
-            ranked = []
+        logger.exception("Gap analysis failed")
+        ranked = _safe_deterministic_rank(
+            prefs,
+            resume,
+            jobs,
+            personality_profile=req.personality_profile,
+            temperament_profile=req.temperament_profile,
+        )
         return GapAnalysisResponse(
-            success=False,
-            message="Gap analysis failed unexpectedly (fallback returned instead of 500). Try refresh + re-run.",
+            success=True,
+            message="Gap analysis complete (internal error; used deterministic scoring)",
             ranked=ranked,
             overall=None,
-            helper={"used_llm": False, "model": "unknown", "notes": [f"Internal error: {str(e)[:160]}"]},
+            helper={"used_llm": False, "model": getattr(client, "model", "unavailable"), "notes": [f"Internal error: {str(e)[:160]}"]},
         )
 
 
