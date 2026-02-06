@@ -300,10 +300,12 @@ export default function FindContactPage() {
     return null;
   };
 
-  const getInterestingFactsForContact = (contactId: string): Array<{ text: string; url?: string }> => {
+  const getInterestingFactsForContact = (
+    contactId: string
+  ): Array<{ text: string; url?: string; source_title?: string }> => {
     const r = readResearchForContact(contactId) || {};
     const bio = Array.isArray(r?.contact_bios) ? r.contact_bios[0] : null;
-    const out: Array<{ text: string; url?: string }> = [];
+    const out: Array<{ text: string; url?: string; source_title?: string }> = [];
     const seen = new Set<string>();
 
     // Prefer structured facts with sources (newer research shape).
@@ -311,11 +313,12 @@ export default function FindContactPage() {
     for (const it of structured) {
       const text = String(it?.fact || it?.text || "").trim();
       const url = String(it?.source_url || it?.url || "").trim();
+      const sourceTitle = String(it?.source_title || it?.title || "").trim();
       if (!text) continue;
       const k = text.toLowerCase();
       if (seen.has(k)) continue;
       seen.add(k);
-      out.push({ text, url: url || undefined });
+      out.push({ text, url: url || undefined, source_title: sourceTitle || undefined });
     }
 
     const lists: any[] = [
@@ -1251,25 +1254,27 @@ export default function FindContactPage() {
               <div className="mt-4 space-y-4">
                 {TITLE_FILTER_OPTIONS.map((g) => (
                   <div key={g.group}>
-                    <div className="text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-2">
+                    <div className="text-[10px] font-semibold text-white/65 uppercase tracking-wider mb-1.5">
                       {g.group}
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5">
                       {g.options.map((t) => {
                         const checked = titleFilters.includes(t);
                         return (
-                          <label
+                          <button
                             key={`${g.group}_${t}`}
-                            className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white/80 hover:bg-white/10 cursor-pointer"
+                            type="button"
+                            aria-pressed={checked}
+                            onClick={() => toggleTitleFilter(t)}
+                            className={`w-full text-left rounded-md border px-2 py-1.5 text-[11px] leading-tight font-semibold transition-colors ${
+                              checked
+                                ? "border-blue-400/40 bg-blue-500/15 text-blue-100"
+                                : "border-white/10 bg-white/5 text-white/75 hover:bg-white/10 hover:text-white"
+                            }`}
+                            title={t}
                           >
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() => toggleTitleFilter(t)}
-                              className="rounded border-white/20 bg-black/30 text-blue-500 focus:ring-blue-500"
-                            />
-                            <span className="min-w-0 truncate">{t}</span>
-                          </label>
+                            <span className="block min-w-0 truncate">{t}</span>
+                          </button>
                         );
                       })}
                     </div>
@@ -1396,6 +1401,7 @@ export default function FindContactPage() {
                                           href={f.url}
                                           target="_blank"
                                           className="shrink-0 text-[11px] underline text-white/60 hover:text-white"
+                                          title={f.source_title ? f.source_title : f.url}
                                         >
                                           source
                                         </a>
@@ -1456,6 +1462,7 @@ export default function FindContactPage() {
                 {contacts.map((contact) => {
                   const badge = getVerificationBadge(contact.verification_status, contact.verification_score);
                   const isSelected = selectedContacts.includes(contact.id);
+                  const hooks = getInterestingFactsForContact(contact.id);
                   
                   return (
                     <div
@@ -1472,6 +1479,12 @@ export default function FindContactPage() {
                           <h3 className="font-semibold text-white">{contact.name}</h3>
                           <p className="text-gray-600 text-sm">{formatTitleCase(contact.title)}</p>
                           <p className="text-gray-500 text-xs">{formatCompanyName(contact.company)}</p>
+                          {hooks.length ? (
+                            <div className="mt-2 text-[11px] text-white/70">
+                              <span className="font-semibold text-white/80">Hook:</span>{" "}
+                              <span className="text-white/70">{trimToChars(hooks[0].text, 120)}</span>
+                            </div>
+                          ) : null}
                         </div>
                         <div className="flex items-center space-x-2">
                           {badge.label !== "Unknown" ? (

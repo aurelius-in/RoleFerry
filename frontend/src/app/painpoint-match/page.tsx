@@ -363,7 +363,7 @@ export default function PainPointMatchPage() {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Pain Point Match</h1>
             <p className="text-white/70">
-              Compare your solutions to the role's pain points to find the best alignment.
+              Compare your solutions to each role's pain points to find the best alignment.
             </p>
           </div>
 
@@ -446,132 +446,174 @@ export default function PainPointMatchPage() {
               ) : null}
 
               {Object.keys(matchesByJobId).length > 0 ? (
-                <div className="space-y-6">
-                  {jobDescriptions.map((jd) => {
-                    const jobMatches = matchesByJobId[jd.id] || [];
-                    const first = jobMatches[0] || null;
-                    const isSelected = selectedJD?.id === jd.id;
-                    const score = first?.alignment_score ?? null;
-                    return (
-                      <div key={`job_${jd.id}`} className="rounded-lg border border-white/10 bg-black/20 p-5">
-                        <div className="space-y-3">
-                          <div className="min-w-0">
-                            <div className="text-base font-bold text-white">{jd.title}</div>
-                            <div className="text-sm text-white/70">{formatCompanyName(jd.company)}</div>
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-3">
-                            {score === null ? (
-                              <div className="text-xs text-white/60">Alignment: —</div>
-                            ) : (
-                              <div className="inline-flex items-center gap-3 rounded-md border border-white/10 bg-white/5 px-3 py-2">
-                                <div className="text-sm font-bold text-white">{Math.round(score * 100)}%</div>
-                                <StarRating value={score} scale="fraction" showNumeric />
-                              </div>
-                            )}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                  {/* Left column: role list */}
+                  <div className="lg:col-span-4">
+                    <div className="rounded-lg border border-white/10 bg-black/20 overflow-hidden">
+                      <div className="px-3 py-2 border-b border-white/10 bg-white/5">
+                        <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">Roles</div>
+                      </div>
+                      <div className="max-h-[640px] overflow-auto">
+                        {jobDescriptions.map((jd) => {
+                          const jobMatches = matchesByJobId[jd.id] || [];
+                          const alignCount = jobMatches.reduce((sum, m) => sum + renderableAlignments(m).length, 0);
+                          const isSelected = selectedJD?.id === jd.id;
+                          return (
                             <button
+                              key={`role_row_${jd.id}`}
                               type="button"
-                              onClick={() => selectJobForDownstream(jd)}
-                              className={`rounded-md px-3 py-2 text-sm font-semibold border transition-colors ${
-                                isSelected
-                                  ? "border-emerald-400/30 bg-emerald-500/15 text-emerald-200"
-                                  : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                              onClick={() => {
+                                setSelectedJD(jd);
+                                // Also keep downstream selection consistent with the existing helper.
+                                try { selectJobForDownstream(jd); } catch {}
+                              }}
+                              className={`w-full text-left px-3 py-3 border-b border-white/10 hover:bg-white/5 transition-colors ${
+                                isSelected ? "bg-white/5" : ""
                               }`}
-                              title="Select this role for downstream steps (Research, Contact, Bio, Campaign)"
                             >
-                              {isSelected ? "Selected" : "Use this role"}
-                            </button>
-                          </div>
-                        </div>
-
-                        {jobMatches.length === 0 ? (
-                          <div className="mt-4 text-sm text-white/60 italic">
-                            No matches generated for this role yet.
-                          </div>
-                        ) : (
-                          <div className="mt-5 space-y-6">
-                            {jobMatches.map((match, index) => (
-                              <div key={`match_${jd.id}_${index}`} className="rounded-lg border border-white/10 bg-white/5 p-4">
-                                <div className="text-xs text-white/60 mb-3">Showing up to 3 best matches for this role.</div>
-                                <div className="space-y-6">
-                                  {renderableAlignments(match).length === 0 ? (
-                                    <div className="text-sm text-white/60 italic">No alignments were found for this role.</div>
-                                  ) : (
-                                    renderableAlignments(match).map((a) => (
-                                      <div
-                                        key={`align_${jd.id}_${index}_${a.n}`}
-                                        className="rounded-lg p-4 border border-white/10 bg-black/20"
-                                      >
-                                        <div className="flex items-start space-x-3">
-                                          <div className="flex-shrink-0">
-                                            <div className="w-8 h-8 bg-red-500/15 rounded-full flex items-center justify-center border border-red-400/25">
-                                              <span className="text-white/85 font-semibold">{a.n}</span>
-                                            </div>
-                                          </div>
-                                          <div className="flex-1">
-                                            <h4 className="font-semibold text-white/85 mb-2">Pain Point</h4>
-                                            <p className="text-white/85 mb-3">{a.painpoint}</p>
-                                            {String(a.jdEvidence || "").trim() ? (
-                                              <div className="mb-3 text-xs text-white/75">
-                                                <span className="font-semibold text-white/70">From JD:</span>{" "}
-                                                <span className="italic text-white/85">“{sanitizeForUi(String(a.jdEvidence), "Missing details")}”</span>
-                                              </div>
-                                            ) : (
-                                              <div className="mb-3 text-xs text-white/75">
-                                                <span className="font-semibold text-white/70">From JD:</span>{" "}
-                                                <span className="text-white/60 font-semibold">Missing details</span>
-                                              </div>
-                                            )}
-
-                                            <h4 className="font-semibold text-emerald-200 mb-2">Your Solution</h4>
-                                            <p className="mb-3">{renderValueOrMissing(String(a.solution || ""), "text-white/85")}</p>
-                                            {String(a.resumeEvidence || "").trim() ? (
-                                              <div className="mb-3 text-xs text-white/75">
-                                                <span className="font-semibold text-emerald-200">From resume:</span>{" "}
-                                                <span className="italic text-white/85">“{sanitizeForUi(String(a.resumeEvidence), "Missing details")}”</span>
-                                              </div>
-                                            ) : (
-                                              <div className="mb-3 text-xs text-white/75">
-                                                <span className="font-semibold text-emerald-200">From resume:</span>{" "}
-                                                <span className="text-white/60 font-semibold">Missing details</span>
-                                              </div>
-                                            )}
-                                            {String(a.overlap || "").trim() ? (
-                                              <div className="mb-3 text-xs text-white/75">
-                                                <span className="font-semibold text-white/85">Why it matches:</span>{" "}
-                                                <span className="text-white/80">{sanitizeForUi(String(a.overlap), "Missing details")}</span>
-                                              </div>
-                                            ) : null}
-
-                                            <h4 className="font-semibold text-sky-200 mb-2">Impact Metric</h4>
-                                            <p className="text-white/85">{renderValueOrMissing(String(a.metric || ""), "text-white/85")}</p>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))
-                                  )}
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <div className="text-sm font-bold text-white truncate">{jd.title}</div>
+                                  <div className="text-xs text-white/60 truncate">{formatCompanyName(jd.company)}</div>
+                                </div>
+                                <div className="shrink-0 text-right">
+                                  <div className="text-[11px] text-white/60">Pain points</div>
+                                  <div className="text-sm font-extrabold text-white tabular-nums">
+                                    {alignCount || 0}
+                                  </div>
                                 </div>
                               </div>
-                            ))}
-                          </div>
-                        )}
+                            </button>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
+                    </div>
+                  </div>
 
-                  <div className="flex justify-end space-x-4">
-                    <button
-                      onClick={() => router.push('/job-descriptions')}
-                      className="bg-white/10 text-white px-6 py-3 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
-                    >
-                      Back
-                    </button>
-                    <button
-                      onClick={handleContinue}
-                      className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
-                    >
-                      Continue to Research
-                    </button>
+                  {/* Middle: detailed report */}
+                  <div className="lg:col-span-8">
+                    {(() => {
+                      const jd = selectedJD || jobDescriptions[0] || null;
+                      if (!jd) return null;
+                      const jobMatches = matchesByJobId[jd.id] || [];
+                      const first = jobMatches[0] || null;
+                      const score = first?.alignment_score ?? null;
+                      return (
+                        <div className="rounded-lg border border-white/10 bg-black/20 p-5">
+                          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="text-xl font-extrabold text-white">{jd.title}</div>
+                              <div className="text-sm text-white/70">{formatCompanyName(jd.company)}</div>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-3">
+                              {score === null ? (
+                                <div className="text-xs text-white/60">Alignment: —</div>
+                              ) : (
+                                <div className="inline-flex items-center gap-3 rounded-md border border-white/10 bg-white/5 px-3 py-2">
+                                  <div className="text-sm font-bold text-white">{Math.round(score * 100)}%</div>
+                                  <StarRating value={score} scale="fraction" showNumeric />
+                                </div>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => selectJobForDownstream(jd)}
+                                className="rounded-md px-3 py-2 text-sm font-semibold border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 transition-colors"
+                                title="Select this role for downstream steps (Research, Contact, Bio, Campaign)"
+                              >
+                                Use this role downstream
+                              </button>
+                            </div>
+                          </div>
+
+                          {jobMatches.length === 0 ? (
+                            <div className="mt-4 text-sm text-white/60 italic">
+                              No matches generated for this role yet. Click <span className="font-semibold text-white/80">Run Pain Point Match Analysis</span> above.
+                            </div>
+                          ) : (
+                            <div className="mt-5 space-y-6">
+                              {jobMatches.map((match, index) => (
+                                <div key={`match_${jd.id}_${index}`} className="rounded-lg border border-white/10 bg-white/5 p-4">
+                                  <div className="text-xs text-white/60 mb-3">Showing up to 3 best matches for this role.</div>
+                                  <div className="space-y-6">
+                                    {renderableAlignments(match).length === 0 ? (
+                                      <div className="text-sm text-white/60 italic">No alignments were found for this role.</div>
+                                    ) : (
+                                      renderableAlignments(match).map((a) => (
+                                        <div
+                                          key={`align_${jd.id}_${index}_${a.n}`}
+                                          className="rounded-lg p-4 border border-white/10 bg-black/20"
+                                        >
+                                          <div className="flex items-start space-x-3">
+                                            <div className="flex-shrink-0">
+                                              <div className="w-8 h-8 bg-red-500/15 rounded-full flex items-center justify-center border border-red-400/25">
+                                                <span className="text-white/85 font-semibold">{a.n}</span>
+                                              </div>
+                                            </div>
+                                            <div className="flex-1">
+                                              <h4 className="font-semibold text-white/85 mb-2">Pain Point</h4>
+                                              <p className="text-white/85 mb-3">{a.painpoint}</p>
+                                              {String(a.jdEvidence || "").trim() ? (
+                                                <div className="mb-3 text-xs text-white/75">
+                                                  <span className="font-semibold text-white/70">From JD:</span>{" "}
+                                                  <span className="italic text-white/85">“{sanitizeForUi(String(a.jdEvidence), "Missing details")}”</span>
+                                                </div>
+                                              ) : (
+                                                <div className="mb-3 text-xs text-white/75">
+                                                  <span className="font-semibold text-white/70">From JD:</span>{" "}
+                                                  <span className="text-white/60 font-semibold">Missing details</span>
+                                                </div>
+                                              )}
+
+                                              <h4 className="font-semibold text-emerald-200 mb-2">Your Solution</h4>
+                                              <p className="mb-3">{renderValueOrMissing(String(a.solution || ""), "text-white/85")}</p>
+                                              {String(a.resumeEvidence || "").trim() ? (
+                                                <div className="mb-3 text-xs text-white/75">
+                                                  <span className="font-semibold text-emerald-200">From resume:</span>{" "}
+                                                  <span className="italic text-white/85">“{sanitizeForUi(String(a.resumeEvidence), "Missing details")}”</span>
+                                                </div>
+                                              ) : (
+                                                <div className="mb-3 text-xs text-white/75">
+                                                  <span className="font-semibold text-emerald-200">From resume:</span>{" "}
+                                                  <span className="text-white/60 font-semibold">Missing details</span>
+                                                </div>
+                                              )}
+                                              {String(a.overlap || "").trim() ? (
+                                                <div className="mb-3 text-xs text-white/75">
+                                                  <span className="font-semibold text-white/85">Why it matches:</span>{" "}
+                                                  <span className="text-white/80">{sanitizeForUi(String(a.overlap), "Missing details")}</span>
+                                                </div>
+                                              ) : null}
+
+                                              <h4 className="font-semibold text-sky-200 mb-2">Impact Metric</h4>
+                                              <p className="text-white/85">{renderValueOrMissing(String(a.metric || ""), "text-white/85")}</p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    <div className="mt-5 flex justify-end gap-3">
+                      <button
+                        onClick={() => router.push('/job-descriptions')}
+                        className="bg-white/10 text-white px-6 py-3 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
+                      >
+                        Back
+                      </button>
+                      <button
+                        onClick={handleContinue}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
+                      >
+                        Continue to Research
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : null}

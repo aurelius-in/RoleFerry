@@ -223,6 +223,46 @@ async def conduct_research(request: ResearchRequest):
                 out.append(s)
             return out
 
+        def _signals_from_role_description(corpus_obj: Dict[str, Any]) -> List[str]:
+            """
+            Produce outreach-safe "hiring signals" derived from the provided role description context.
+            This is NOT web research; it is grounded in the imported role/step context we already have.
+            """
+            try:
+                title = str(corpus_obj.get("job_title") or "").strip()
+                pains = [str(x).strip() for x in (corpus_obj.get("job_pain_points") or []) if str(x).strip()]
+                succ = [str(x).strip() for x in (corpus_obj.get("job_success_metrics") or []) if str(x).strip()]
+                skills = [str(x).strip() for x in (corpus_obj.get("job_required_skills") or []) if str(x).strip()]
+
+                bullets: List[str] = []
+                if title:
+                    bullets.append(f"Hiring for: {title}.")
+                if skills:
+                    top = ", ".join(skills[:8])
+                    bullets.append(f"Prioritizing skills: {top}.")
+                if pains:
+                    bullets.append(f"Current focus area: {pains[0]}.")
+                    if len(pains) > 1:
+                        bullets.append(f"Secondary focus area: {pains[1]}.")
+                if succ:
+                    bullets.append(f"Success will be measured by: {succ[0]}.")
+
+                # Keep it concise + demo-friendly.
+                out = []
+                seen = set()
+                for b in bullets:
+                    s = str(b or "").strip()
+                    if not s:
+                        continue
+                    k = s.lower()
+                    if k in seen:
+                        continue
+                    seen.add(k)
+                    out.append(s)
+                return out[:6]
+            except Exception:
+                return []
+
         contact_company_websites = _uniq_nonempty(
             [c.job_company_website for c in (request.contacts or []) if getattr(c, "job_company_website", None)]
         )
@@ -641,6 +681,7 @@ async def conduct_research(request: ResearchRequest):
                     "  - Never invent specific numbers (revenue, headcount) or specific dates.\n"
                     "  - Never invent 'recent_news' URLs.\n"
                     "  - recent_news MUST be actual news items from the corpus serper hits (with real URLs). If you don't have serper sources, return recent_news: [].\n"
+                    "  - IMPORTANT: company_market_position MUST be sourced. If serper_hits is empty, set company_market_position to an empty string.\n"
                     "  - theme is NOT news. Always populate theme with safe, non-claiming outreach guidance using this exact sentence, then add a 2–3 bullet mini-plan:\n"
                     "    \"Theme: What the company likely cares about: Reference a plausible priority (customer experience, reliability, speed, cost) and offer a 2–3 bullet mini-plan—without claiming a specific news event.\"\n"
                     "- If information is missing or uncertain, set fields to 'Unknown' or empty lists.\n"
@@ -648,7 +689,9 @@ async def conduct_research(request: ResearchRequest):
                     "Quality bar:\n"
                     "- The company_summary.description should be 2–4 sentences and outreach-useful (what they do + why it matters + likely priorities).\n"
                     "- company_culture_values should be 4–8 sentences: how they likely operate + values signals (avoid claiming a specific internal culture doc).\n"
-                    "- company_market_position should be 4–8 sentences: who they compete with / positioning / what matters now (avoid made-up numbers).\n"
+                    "- company_market_position should be 4–8 sentences: who they compete with / positioning / what matters now.\n"
+                    "  - Write assertively when sourced (no filler like 'likely', 'may', 'appears').\n"
+                    "  - If you don't have sources, leave it empty.\n"
                     "- company_product_launches should be 3–8 bullet points about recent launches/releases/announcements (with URLs if available in corpus).\n"
                     "- company_leadership_changes should be 2–6 bullet points on exec/VP changes or notable leadership moves (with URLs if available in corpus).\n"
                     "- company_other_hiring_signals should be 3–8 bullet points on hiring momentum signals beyond generic 'open roles' (with URLs if available).\n"
@@ -786,7 +829,8 @@ async def conduct_research(request: ResearchRequest):
                 cleaned_news = []
             news = cleaned_news
 
-            # Ensure culture + market are always populated in LLM mode (use safe, non-claiming defaults).
+            # Ensure culture is always populated in LLM mode (use safe, non-claiming defaults).
+            # Market position should be sourced; avoid generic "likely/may" filler in demos.
             try:
                 if not culture_values:
                     culture_values = (
@@ -794,18 +838,19 @@ async def conduct_research(request: ResearchRequest):
                         "(speed vs rigor, autonomy vs process, customer focus, and decision-making). "
                         "Avoid claiming specific internal policies; keep it as plausible, outreach-useful themes."
                     )
-                if not market_position:
-                    market_position = (
-                        "Market position (best-effort): Summarize who they serve, what they sell, and how they likely differentiate. "
-                        "Mention plausible competitive pressures and what the next 6–12 months may prioritize (reliability, speed, cost, growth). "
-                        "Avoid made-up numbers."
-                    )
+                # Only fill market_position when we had web sources; otherwise keep empty (the UI can prompt to configure SERPER).
+                if not market_position and corpus.get("serper_hits"):
+                    market_position = ""
                 if not product_launches:
                     product_launches = "No product launch details captured in this run. Try Live mode with SERPER configured."
                 if not leadership_changes:
                     leadership_changes = "No leadership change details captured in this run. Try Live mode with SERPER configured."
                 if not other_hiring_signals:
-                    other_hiring_signals = "No additional hiring signals captured in this run. Try Live mode with SERPER configured."
+                    role_bullets = _signals_from_role_description(corpus)
+                    if role_bullets:
+                        other_hiring_signals = "Signals from the imported role description:\n- " + "\n- ".join(role_bullets)
+                    else:
+                        other_hiring_signals = ""
                 if not recent_posts:
                     recent_posts = "No recent posts captured in this run. Try Live mode with SERPER configured."
                 if not publications:

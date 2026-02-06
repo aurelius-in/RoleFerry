@@ -268,6 +268,8 @@ export default function CompanyResearchPage() {
       const rawNews = entry?.recent_news || [];
       const themeRaw = String(entry?.theme || "").trim();
       const sections = entry?.background_report_sections || [];
+      const serperHits = (resp as any)?.helper?.corpus_preview?.serper_hits;
+      const hasWebSources = Array.isArray(serperHits) && serperHits.length > 0;
 
       const overview = String(companySummary?.description || "").trim();
       const cultureFromModel = String(entry?.company_culture_values || "").trim();
@@ -278,7 +280,10 @@ export default function CompanyResearchPage() {
       const recentPostsFromModel = String(entry?.company_recent_posts || "").trim();
       const publicationsFromModel = String(entry?.company_publications || "").trim();
       const culture = cultureFromModel || pickSectionText(sections, "culture") || pickSectionText(sections, "values");
-      const market = marketFromModel || pickSectionText(sections, "market") || pickSectionText(sections, "product") || pickSectionText(sections, "moves");
+      // Market position should be sourced. If we don't have web sources (SERPER), avoid generic "likely/may" output.
+      const market = hasWebSources
+        ? (marketFromModel || pickSectionText(sections, "market") || pickSectionText(sections, "product") || pickSectionText(sections, "moves"))
+        : "";
       const realNews = Array.isArray(rawNews)
         ? rawNews.filter((n: any) => {
             const title = String(n?.title || "").trim().toLowerCase();
@@ -326,12 +331,16 @@ export default function CompanyResearchPage() {
         updated_at: new Date().toISOString(),
       };
 
+      if (!hasWebSources) {
+        setNotice("Research generated, but web sources are unavailable (SERPER_API_KEY not configured). Market position / recent posts/news will be limited.");
+      }
+
       setDraft(next);
       setActiveCompany(company);
       setCompanyQuery(company);
       localStorage.setItem(STORAGE_ACTIVE_COMPANY, company);
       localStorage.setItem("selected_company_name", company);
-      setNotice("Company research generated. Review/edit, then Save.");
+      if (hasWebSources) setNotice("Company research generated. Review/edit, then Save.");
       window.setTimeout(() => setNotice(null), 2500);
     } catch (e: any) {
       setError(String(e?.message || "Failed to run company research."));
