@@ -7,8 +7,8 @@ export default function OfferCreationRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    // Offer Creation has been consolidated into Compose.
-    router.replace("/compose");
+    // Offer Creation has been consolidated into Campaign.
+    router.replace("/campaign");
   }, [router]);
 
   return (
@@ -18,8 +18,8 @@ export default function OfferCreationRedirect() {
           <div className="text-lg font-semibold text-white">Redirecting…</div>
           <div className="mt-2 text-sm text-white/70">
             Offer Creation is now part of{" "}
-            <a className="underline" href="/compose">
-              Compose
+            <a className="underline" href="/campaign">
+              Campaign
             </a>
             .
           </div>

@@ -9,9 +9,15 @@ import { formatCompanyName } from "@/lib/format";
 type CompanyResearch = {
   company_name: string;
   overview: string;
+  theme: string;
   recent_news: string;
   culture: string;
   market_position: string;
+  product_launches: string;
+  leadership_changes: string;
+  other_hiring_signals: string;
+  recent_posts: string;
+  publications: string;
   hiring_signals: Array<{ label: string; status: "good" | "unknown"; detail: string }>;
   hooks?: string[];
   updated_at: string;
@@ -259,20 +265,62 @@ export default function CompanyResearchPage() {
       const byContact = resp.research_by_contact || {};
       const entry = byContact["company"] || Object.values(byContact)[0] || {};
       const companySummary = entry?.company_summary || {};
-      const news = entry?.recent_news || [];
+      const rawNews = entry?.recent_news || [];
+      const themeRaw = String(entry?.theme || "").trim();
       const sections = entry?.background_report_sections || [];
 
       const overview = String(companySummary?.description || "").trim();
-      const culture = pickSectionText(sections, "culture") || pickSectionText(sections, "values");
-      const market = pickSectionText(sections, "market") || pickSectionText(sections, "product") || pickSectionText(sections, "moves");
-      const signals: CompanyResearch["hiring_signals"] = extractHiringSignals(sections, news as any[]);
+      const cultureFromModel = String(entry?.company_culture_values || "").trim();
+      const marketFromModel = String(entry?.company_market_position || "").trim();
+      const productLaunchesFromModel = String(entry?.company_product_launches || "").trim();
+      const leadershipChangesFromModel = String(entry?.company_leadership_changes || "").trim();
+      const otherHiringSignalsFromModel = String(entry?.company_other_hiring_signals || "").trim();
+      const recentPostsFromModel = String(entry?.company_recent_posts || "").trim();
+      const publicationsFromModel = String(entry?.company_publications || "").trim();
+      const culture = cultureFromModel || pickSectionText(sections, "culture") || pickSectionText(sections, "values");
+      const market = marketFromModel || pickSectionText(sections, "market") || pickSectionText(sections, "product") || pickSectionText(sections, "moves");
+      const realNews = Array.isArray(rawNews)
+        ? rawNews.filter((n: any) => {
+            const title = String(n?.title || "").trim().toLowerCase();
+            const url = String(n?.url || "").trim();
+            const source = String(n?.source || "").trim().toLowerCase();
+            if (!url) return false;
+            if (!title) return false;
+            if (title.startsWith("theme:")) return false;
+            if (source === "general_knowledge") return false;
+            return true;
+          })
+        : [];
+      const themeFromNews =
+        Array.isArray(rawNews)
+          ? rawNews
+              .filter((n: any) => String(n?.title || "").trim().toLowerCase().startsWith("theme:"))
+              .map((n: any) => {
+                const t = String(n?.title || "").trim();
+                const s = String(n?.summary || "").trim();
+                return `- ${t}${s ? `: ${s}` : ""}`;
+              })
+              .filter(Boolean)
+              .join("\n")
+          : "";
+
+      const signals: CompanyResearch["hiring_signals"] = extractHiringSignals(sections, realNews as any[]);
 
       const next: CompanyResearch = {
         company_name: company,
         overview: overview || `${formatCompanyName(company)} overview (add a few lines here).`,
-        recent_news: joinNews(news as any[]) || "",
+        theme:
+          themeRaw ||
+          themeFromNews ||
+          "Theme: What the company likely cares about: Reference a plausible priority (customer experience, reliability, speed, cost) and offer a 2–3 bullet mini-plan—without claiming a specific news event.\n- \n- \n- ",
+        recent_news: joinNews(realNews as any[]) || "",
         culture: culture || "",
         market_position: market || "",
+        product_launches: productLaunchesFromModel || "",
+        leadership_changes: leadershipChangesFromModel || "",
+        other_hiring_signals: otherHiringSignalsFromModel || "",
+        recent_posts: recentPostsFromModel || "",
+        publications: publicationsFromModel || "",
         hiring_signals: signals,
         hooks: Array.isArray(resp?.helper?.hooks) ? resp.helper!.hooks : undefined,
         updated_at: new Date().toISOString(),
@@ -306,25 +354,74 @@ export default function CompanyResearchPage() {
   }
 
   function exportCsv() {
-    if (!draft) return;
+    // Export ALL saved research rows (library), not just the active draft.
+    const by = safeJson<Record<string, CompanyResearch>>(localStorage.getItem(STORAGE_BY_COMPANY), {});
+    const rows = Object.values(by || {}).filter((x) => x && x.company_name);
+    if (!rows.length) return;
+
+    const serializeSignals = (signals: CompanyResearch["hiring_signals"] | undefined) => {
+      const list = Array.isArray(signals) ? signals : [];
+      return list
+        .slice(0, 20)
+        .map((s) => `${safeText(s?.label)}: ${safeText(s?.detail)}`.trim())
+        .filter(Boolean)
+        .join("\n");
+    };
+    const serializeHooks = (hooks: string[] | undefined) => {
+      const list = Array.isArray(hooks) ? hooks : [];
+      return list
+        .slice(0, 30)
+        .map((h) => safeText(h))
+        .filter(Boolean)
+        .map((h) => `- ${h}`)
+        .join("\n");
+    };
+
+    const header = [
+      "company_name",
+      "overview",
+      "theme",
+      "recent_news",
+      "culture",
+      "market_position",
+      "product_launches",
+      "leadership_changes",
+      "other_hiring_signals",
+      "recent_posts",
+      "publications",
+      "hiring_signals",
+      "hooks",
+      "updated_at",
+    ];
     const csv =
-      [
-        toCsvRow(["company_name", "overview", "recent_news", "culture", "market_position", "updated_at"]),
-        toCsvRow([
-          draft.company_name,
-          draft.overview,
-          draft.recent_news,
-          draft.culture,
-          draft.market_position,
-          draft.updated_at,
-        ]),
-      ].join("\n") + "\n";
+      [toCsvRow(header)].concat(
+        rows
+          .sort((a, b) => String(b.updated_at || "").localeCompare(String(a.updated_at || "")))
+          .map((r) =>
+            toCsvRow([
+              String(r.company_name || ""),
+              String(r.overview || ""),
+              String((r as any).theme || ""),
+              String(r.recent_news || ""),
+              String(r.culture || ""),
+              String(r.market_position || ""),
+              String((r as any).product_launches || ""),
+              String((r as any).leadership_changes || ""),
+              String((r as any).other_hiring_signals || ""),
+              String((r as any).recent_posts || ""),
+              String((r as any).publications || ""),
+              serializeSignals((r as any).hiring_signals),
+              serializeHooks((r as any).hooks),
+              String(r.updated_at || ""),
+            ])
+          )
+      ).join("\n") + "\n";
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `company-research_${draft.company_name.toLowerCase().replace(/\s+/g, "-")}.csv`;
+    a.download = `company-research_all-saved_${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -399,14 +496,6 @@ export default function CompanyResearchPage() {
                 >
                   {isRunning ? "Researching…" : "Run Company Research"}
                 </button>
-                <button
-                  type="button"
-                  disabled={!draft}
-                  onClick={exportCsv}
-                  className="rounded-md border border-white/10 bg-black/20 px-4 py-2 text-sm font-semibold text-white/80 hover:bg-white/10 disabled:opacity-50"
-                >
-                  Export CSV
-                </button>
               </div>
             </div>
 
@@ -453,18 +542,29 @@ export default function CompanyResearchPage() {
                     <div className="text-sm font-bold text-white">Saved research</div>
                     <div className="text-xs text-white/60">Click a company to load its saved briefing.</div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const by = safeJson<Record<string, CompanyResearch>>(localStorage.getItem(STORAGE_BY_COMPANY), {});
-                      setSavedByCompany(by);
-                      setNotice("Saved library refreshed.");
-                      window.setTimeout(() => setNotice(null), 1200);
-                    }}
-                    className="text-xs underline text-white/70 hover:text-white"
-                  >
-                    Refresh
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      disabled={!savedCompanies.length}
+                      onClick={exportCsv}
+                      className="text-xs font-semibold rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-white/80 hover:bg-white/10 disabled:opacity-50"
+                      title="Downloads all saved company research rows as a CSV."
+                    >
+                      Export all CSV
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const by = safeJson<Record<string, CompanyResearch>>(localStorage.getItem(STORAGE_BY_COMPANY), {});
+                        setSavedByCompany(by);
+                        setNotice("Saved library refreshed.");
+                        window.setTimeout(() => setNotice(null), 1200);
+                      }}
+                      className="text-xs underline text-white/70 hover:text-white"
+                    >
+                      Refresh
+                    </button>
+                  </div>
                 </div>
 
                 {savedCompanies.length ? (
@@ -529,6 +629,45 @@ export default function CompanyResearchPage() {
                     ) : (
                       <div className="text-sm text-white/60">No hiring signals captured in this run yet. Try Live mode for richer results.</div>
                     )}
+
+                  <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
+                        Recent posts (blog/press/LinkedIn topics)
+                      </div>
+                      <textarea
+                        value={draft.recent_posts || ""}
+                        onChange={(e) => setDraft({ ...draft, recent_posts: e.target.value })}
+                        rows={6}
+                        className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="- Post/topic: … (include URL when possible)"
+                      />
+                      <div className="mt-2 text-[11px] text-white/60">
+                        Variable:{" "}
+                        <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
+                          {"{{company_recent_posts}}"}
+                        </code>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
+                        Publications (case studies / reports)
+                      </div>
+                      <textarea
+                        value={draft.publications || ""}
+                        onChange={(e) => setDraft({ ...draft, publications: e.target.value })}
+                        rows={6}
+                        className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="- Publication: … (include URL when possible)"
+                      />
+                      <div className="mt-2 text-[11px] text-white/60">
+                        Variable:{" "}
+                        <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
+                          {"{{company_publications}}"}
+                        </code>
+                      </div>
+                    </div>
+                  </div>
                   </div>
 
                   {/* Company Briefing */}
@@ -575,13 +714,30 @@ export default function CompanyResearchPage() {
                 </div>
 
                 <div>
-                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Recent News</div>
+                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Theme (not news)</div>
+                  <textarea
+                    value={draft.theme}
+                    onChange={(e) => setDraft({ ...draft, theme: e.target.value })}
+                    rows={6}
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="- Theme + mini-plan…"
+                  />
+                  <div className="mt-2 text-[11px] text-white/60">
+                    Variable:{" "}
+                    <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
+                      {"{{company_theme}}"}
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Recent News (actual)</div>
                   <textarea
                     value={draft.recent_news}
                     onChange={(e) => setDraft({ ...draft, recent_news: e.target.value })}
                     rows={6}
                     className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="- News item…"
+                    placeholder="- Headline: short summary"
                   />
                   <div className="mt-2 text-[11px] text-white/60">
                     Variable:{" "}
@@ -609,6 +765,57 @@ export default function CompanyResearchPage() {
                 </div>
 
                 <div>
+                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Product launches</div>
+                  <textarea
+                    value={draft.product_launches}
+                    onChange={(e) => setDraft({ ...draft, product_launches: e.target.value })}
+                    rows={6}
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="- Launch: … (include URL when possible)"
+                  />
+                  <div className="mt-2 text-[11px] text-white/60">
+                    Variable:{" "}
+                    <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
+                      {"{{company_product_launches}}"}
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Leadership changes</div>
+                  <textarea
+                    value={draft.leadership_changes}
+                    onChange={(e) => setDraft({ ...draft, leadership_changes: e.target.value })}
+                    rows={6}
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="- Change: … (include URL when possible)"
+                  />
+                  <div className="mt-2 text-[11px] text-white/60">
+                    Variable:{" "}
+                    <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
+                      {"{{company_leadership_changes}}"}
+                    </code>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-2">
+                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Other hiring signals</div>
+                  <textarea
+                    value={draft.other_hiring_signals}
+                    onChange={(e) => setDraft({ ...draft, other_hiring_signals: e.target.value })}
+                    rows={6}
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="- Signal: … (include URL when possible)"
+                  />
+                  <div className="mt-2 text-[11px] text-white/60">
+                    Variable:{" "}
+                    <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
+                      {"{{company_other_hiring_signals}}"}
+                    </code>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-2">
                   <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Market Position</div>
                   <textarea
                     value={draft.market_position}

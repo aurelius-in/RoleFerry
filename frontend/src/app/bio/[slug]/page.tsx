@@ -17,6 +17,7 @@ type BioPageDraft = {
   video_url?: string;
   proof_points: string[];
   fit_points: string[];
+  work_style_points?: string[];
   resume_extract: any;
   portfolio_url: string;
   profile_image_url?: string;
@@ -37,6 +38,12 @@ function fmtTitleCase(s: string) {
   const t = String(s || "").trim();
   if (!t) return "";
   return t;
+}
+
+function firstNameFromDisplayName(name: any) {
+  const t = String(name ?? "").trim();
+  if (!t) return "me";
+  return t.split(/\s+/).filter(Boolean)[0] || "me";
 }
 
 export default function PublicBioPage() {
@@ -127,7 +134,7 @@ export default function PublicBioPage() {
               }}
               aria-disabled={!isNonEmpty(d.calendly_url)}
             >
-              Setup an interview with {d.display_name || "me"}
+              Setup an interview with {firstNameFromDisplayName(d.display_name)}
             </a>
           </div>
         </div>
@@ -157,6 +164,22 @@ export default function PublicBioPage() {
               </div>
             ) : null}
             <p className="mt-4 text-lg">{d.subheadline}</p>
+
+            {(d as any)?.work_style_points?.length ? (
+              <div className="mt-8">
+                <h2 className="text-sm font-bold uppercase tracking-wider">
+                  Work style
+                </h2>
+                <ul className="mt-3 space-y-2">
+                  {(d as any).work_style_points.slice(0, 6).map((p: string, i: number) => (
+                    <li key={`ws_${i}`} className="flex gap-2">
+                      <span className="font-bold" aria-hidden="true">{bullet}</span>
+                      <span>{p}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
 
             {isNonEmpty(d.video_url) ? (
               <div className="mt-6">

@@ -1144,7 +1144,7 @@ export default function PersonalityPage() {
               <div className="mt-5 rounded-lg border border-white/10 bg-black/20 p-4">
                 <div className="text-sm font-bold text-white mb-2">Available Variables from this Step</div>
                 <div className="text-xs text-white/60 mb-3">
-                  These variables are available for downstream steps (Jobs/Gaps/Compose/Campaign):
+                  These variables are available for downstream steps (Jobs/Gaps/Campaign):
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
@@ -1223,7 +1223,7 @@ export default function PersonalityPage() {
               <div className="mt-5 rounded-lg border border-white/10 bg-black/20 p-4">
                 <div className="text-sm font-bold text-white mb-2">Available Variables from this Step</div>
                 <div className="text-xs text-white/60 mb-3">
-                  These variables are available for downstream steps (Gaps/Compose/Campaign):
+                  These variables are available for downstream steps (Gaps/Campaign):
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">

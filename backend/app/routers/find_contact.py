@@ -393,6 +393,9 @@ class ContactSearchRequest(BaseModel):
     query: str
     company: Optional[str] = None
     role: Optional[str] = None
+    # Optional: explicit title filters (Apollo/SalesNav-style). When provided, we try to return
+    # decision makers whose titles match ANY of these options.
+    title_filters: Optional[List[str]] = None
     level: Optional[str] = None
     # Context from upstream steps so we can pick ONLY relevant decision makers for the role being applied for.
     target_job_title: Optional[str] = None
@@ -450,8 +453,50 @@ def _sanitize_linkedin_note(note: str, limit: int) -> str:
     s = (note or "").replace("—", "-").replace("–", "-")
     # De-noise whitespace.
     s = re.sub(r"\s+", " ", s).strip()
+    # Basic punctuation cleanup (avoid double periods, space-before-punct).
+    s = re.sub(r"\s+([,.;?!])", r"\1", s)
+    s = re.sub(r"\.{2,}", ".", s)
+    s = s.replace("..", ".")
     # Keep within character budget.
     return _trim_to_chars(s, limit)
+
+
+def _painpoint_phrase(pain: str) -> str:
+    """
+    Turn a long imperative job line into a short phrase that fits after "focus on".
+    Example:
+      "Define and implement a scalable, secure data architecture on Azure."
+      -> "a scalable, secure data architecture on Azure"
+    """
+    t = re.sub(r"\s+", " ", str(pain or "")).strip()
+    t = re.sub(r"^[\-\*\u2022\d\.\)\s]+", "", t).strip()
+    t = re.sub(r"\s*\.+\s*$", "", t).strip()
+    low = t.lower()
+    if low in {"a key priority", "key priority"}:
+        return ""
+    drop = [
+        "define and implement ",
+        "design and implement ",
+        "build and implement ",
+        "develop and implement ",
+        "define and build ",
+        "design and build ",
+        "build ",
+        "develop ",
+        "define ",
+        "design ",
+        "implement ",
+        "lead ",
+        "own ",
+        "manage ",
+        "create ",
+        "drive ",
+    ]
+    for p in drop:
+        if low.startswith(p):
+            t = t[len(p) :].strip()
+            break
+    return _trim_to_chars(t, 70).strip().rstrip(".")
 
 
 def _deterministic_improve_linkedin_note(req: ImproveLinkedInNoteRequest) -> str:
@@ -465,14 +510,17 @@ def _deterministic_improve_linkedin_note(req: ImproveLinkedInNoteRequest) -> str
 
     # Keep it warm/casual but professional; avoid over-selling and avoid em dashes.
     bits: List[str] = [f"Hi {first},"]
-    bits.append(f"I’m reaching out about the {job_title} role at {company}.")
-    if pain and pain.lower() not in {"a key priority", "key priority"}:
-        bits.append(f"I noticed {pain}.")
-    if sol:
-        if metric:
-            bits.append(f"I’ve done similar work ({sol}; {metric}).")
+    bits.append(f"I’m exploring the {job_title} role at {company}.")
+    pain_phrase = _painpoint_phrase(pain)
+    if pain_phrase:
+        bits.append(f"The focus on {pain_phrase} stood out.")
+    if sol and len(sol) <= 64:
+        if metric and len(metric) <= 44:
+            bits.append(f"I’ve worked on similar problems ({sol}; {metric}).")
         else:
-            bits.append(f"I’ve done similar work ({sol}).")
+            bits.append(f"I’ve worked on similar problems ({sol}).")
+    else:
+        bits.append("I’ve worked on similar problems in this area.")
     bits.append("Open to connect?")
     return " ".join([b.strip() for b in bits if b.strip()])
 
@@ -489,13 +537,35 @@ async def search_contacts(request: ContactSearchRequest):
 
         target_job_title = (request.target_job_title or request.role or "").strip()
         job_fn = _infer_job_function(target_job_title)
+        title_filters = [str(x).strip() for x in (request.title_filters or []) if str(x).strip()]
+
+        def _norm_title(s: str) -> str:
+            low = (s or "").strip().lower()
+            low = low.replace("vice president", "vp")
+            low = re.sub(r"\s+", " ", low).strip()
+            return low
+
+        def _matches_title_filters(title: str) -> bool:
+            if not title_filters:
+                return True
+            t = _norm_title(title)
+            for f in title_filters:
+                ff = _norm_title(f)
+                if not ff:
+                    continue
+                # All tokens in filter must appear somewhere in title (order-agnostic).
+                toks = [x for x in ff.split(" ") if x]
+                if toks and all(tok in t for tok in toks):
+                    return True
+            return False
 
         # 0) Prefer People Data Labs if configured (real people data)
         if settings.pdl_api_key:
             try:
                 pdl = PDLClient(settings.pdl_api_key)
                 # best-effort: treat query as company name
-                raw = pdl.person_search(company=q, size=12)
+                # Use a larger pool when title filters are active, so we can satisfy the selection.
+                raw = pdl.person_search(company=q, size=28 if title_filters else 12)
                 people = pdl.extract_people(raw)
 
                 def _score_person(title: str) -> int:
@@ -590,7 +660,9 @@ async def search_contacts(request: ContactSearchRequest):
                     if len(picked) >= 8:
                         break
 
-                people = picked[:8]
+                # Apply explicit title filters (if provided) and keep a slightly larger set.
+                filtered = [p for p in picked if _matches_title_filters(p.title)]
+                people = (filtered if filtered else picked)[:10]
                 contacts: List[Contact] = []
                 for p in people:
                     # If we don't have a real email, leave it blank and let the UI hide it.
@@ -710,6 +782,8 @@ async def search_contacts(request: ContactSearchRequest):
             if fetched:
                 page_text = _html_to_text(fetched["html"])
                 contacts = _extract_contacts_from_text(page_text, company=company, domain=domain, source_url=fetched["url"], job_fn=job_fn)
+                if title_filters:
+                    contacts = [c for c in contacts if _matches_title_filters(c.title)]
 
         # 3) If we still have nothing, try OpenAI as a final backup to identify public personas
         if not contacts and settings.openai_api_key:
@@ -718,14 +792,18 @@ async def search_contacts(request: ContactSearchRequest):
                 # Ask GPT to identify likely decision makers based on its training data (broad knowledge).
                 # We strictly ask for name, title, and LinkedIn search URL.
                 target = (request.target_job_title or request.role or "").strip()
-                prompt = (
-                    f"Identify 3-6 REAL hiring decision makers for the role '{target or 'this role'}' at the company '{company}'.\n\n"
-                    f"Rules:\n"
-                    f"- Only include people who would plausibly be involved in hiring for that role (hiring manager, functional leader, talent acquisition/recruiting).\n"
-                    f"- EXCLUDE irrelevant functions (e.g., buyers, e-commerce, marketing leaders for an engineering role, etc.).\n"
-                    f"- EXCLUDE individual contributors like 'Principal Engineer' / 'Staff Engineer' unless they are also a Manager/Director/Head/VP.\n"
-                    f"- Provide name and exact title.\n\n"
-                    f"Return ONLY a JSON object with key 'people': array of {{name, title}}."
+                filters = [str(x).strip() for x in (request.title_filters or []) if str(x).strip()]
+                prompt = "".join(
+                    [
+                        f"Identify 3-6 REAL hiring decision makers for the role '{target or 'this role'}' at the company '{company}'.\n\n",
+                        "Rules:\n",
+                        "- Only include people who would plausibly be involved in hiring for that role (hiring manager, functional leader, talent acquisition/recruiting).\n",
+                        "- EXCLUDE irrelevant functions (e.g., buyers, e-commerce, marketing leaders for an engineering role, etc.).\n",
+                        "- EXCLUDE individual contributors like 'Principal Engineer' / 'Staff Engineer' unless they are also a Manager/Director/Head/VP.\n",
+                        (f"- Preferred titles (must match at least one): {', '.join(filters[:18])}.\n" if filters else ""),
+                        "- Provide name and exact title.\n\n",
+                        "Return ONLY a JSON object with key 'people': array of {name, title}.",
+                    ]
                 )
                 messages = [{"role": "user", "content": prompt}]
                 raw_gpt = client.run_chat_completion(messages, temperature=0.1, max_tokens=500)
@@ -738,7 +816,7 @@ async def search_contacts(request: ContactSearchRequest):
                     for p in gpt_people:
                         nm = str(p.get("name") or "").strip()
                         ttl = str(p.get("title") or "").strip()
-                        if nm and ttl and _is_relevant_decision_maker_for_job(ttl, job_fn):
+                        if nm and ttl and _is_relevant_decision_maker_for_job(ttl, job_fn) and _matches_title_filters(ttl):
                             cid = hashlib.sha256(f"gpt_backup:{nm}:{ttl}".encode("utf-8")).hexdigest()[:12]
                             contacts.append(
                                 Contact(
@@ -966,6 +1044,11 @@ async def improve_linkedin_note(request: ImproveLinkedInNoteRequest) -> ImproveL
                     "- Do NOT include clichés like 'I hope you're doing well'.\n"
                     "- Do NOT mention that you are an AI.\n"
                     "- Do NOT fabricate facts.\n\n"
+                    "Rewrite rules:\n"
+                    "- You may rewrite from scratch. Do NOT preserve awkward grammar from the input note.\n"
+                    "- Use a clean opening like: 'Hi <first>, I’m exploring the <job_title> role at <company>.'\n"
+                    "- If you reference painpoint, PARAPHRASE it into a short noun phrase (<= 8 words). Do NOT copy raw job bullets.\n"
+                    "- Avoid 'I noticed <imperative sentence>'. Prefer 'The focus on <phrase> stood out.'\n\n"
                     "Style:\n"
                     "- Keep it simple: greeting + why you’re reaching out + 1 specific tie-in + soft close.\n"
                     "- Use 1–2 short sentences if possible.\n"

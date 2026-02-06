@@ -25,11 +25,11 @@ export const BIO_BG_OPTIONS: BioBgOption[] = [
   { id: "oxblood", label: "Oxblood", hex: "#2A0B10", kind: "dark" },
 
   // Light (high readability with dark text)
-  { id: "cream", label: "Cream", hex: "#FFF8E7", kind: "light" },
-  { id: "sky", label: "Sky", hex: "#EAF4FF", kind: "light" },
-  { id: "mint", label: "Mint", hex: "#E9FFF4", kind: "light" },
-  { id: "lavender", label: "Lavender", hex: "#F3EEFF", kind: "light" },
-  { id: "rose", label: "Rose", hex: "#FFF0F3", kind: "light" },
+  { id: "cream", label: "Cream", hex: "#FFF1D6", kind: "light" },
+  { id: "sky", label: "Sky", hex: "#D9ECFF", kind: "light" },
+  { id: "mint", label: "Mint", hex: "#D7FBEA", kind: "light" },
+  { id: "lavender", label: "Lavender", hex: "#E6DDFF", kind: "light" },
+  { id: "rose", label: "Rose", hex: "#FFDDE6", kind: "light" },
 ];
 
 export const BIO_SLOGAN_PRESETS: string[] = [

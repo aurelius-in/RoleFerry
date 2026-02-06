@@ -46,7 +46,8 @@ const DEMO_ANALYTICS: OverviewResp = {
 };
 
 export default function Analytics() {
-  const [mode, setMode] = useState<DataMode>("demo");
+  // Initialize from storage immediately to avoid a 1st-render flash showing "Demo".
+  const [mode, setMode] = useState<DataMode>(() => getCurrentDataMode());
   const [data, setData] = useState<OverviewResp | null>(null);
   const [error, setError] = useState<
     | null

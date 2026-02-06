@@ -85,6 +85,13 @@ interface PainPointMatchResponse {
   matches: BackendPainPointMatch[];
 }
 
+interface BatchPainPointMatchResponse {
+  success: boolean;
+  message: string;
+  matches_by_job_id: Record<string, BackendPainPointMatch[]>;
+  errors_by_job_id?: Record<string, string> | null;
+}
+
 interface ResumeExtract {
   positions: Array<{
     company: string;
@@ -108,6 +115,7 @@ export default function PainPointMatchPage() {
   const [matchesByJobId, setMatchesByJobId] = useState<Record<string, PainPointMatch[]>>({});
   const [selectedJD, setSelectedJD] = useState<JobDescription | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number; current?: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const looksLikePdfGarbage = (s: string) => {
@@ -143,17 +151,12 @@ export default function PainPointMatchPage() {
     try {
       const savedJDs = typeof window !== "undefined" ? localStorage.getItem("job_descriptions") : null;
       const savedResume = typeof window !== "undefined" ? localStorage.getItem("resume_extract") : null;
-      const savedByJob = typeof window !== "undefined" ? localStorage.getItem("painpoint_matches_by_job") : null;
 
       if (savedJDs) {
         setJobDescriptions(JSON.parse(savedJDs));
       }
       if (savedResume) {
         setResumeExtract(JSON.parse(savedResume));
-      }
-      if (savedByJob) {
-        const parsed = JSON.parse(savedByJob);
-        if (parsed && typeof parsed === "object") setMatchesByJobId(parsed);
       }
     } catch {
       // ignore malformed cache
@@ -167,78 +170,111 @@ export default function PainPointMatchPage() {
     setMatches(existing);
   }, [selectedJD, matchesByJobId]);
 
-  const generateMatches = async () => {
-    if (!selectedJD || !resumeExtract) return;
-    
+  const mapBackendMatch = (m: BackendPainPointMatch): PainPointMatch => {
+    return {
+      painpoint_1: m.painpoint_1,
+      jd_evidence_1: m.jd_evidence_1 || "",
+      solution_1: m.solution_1,
+      resume_evidence_1: m.resume_evidence_1 || "",
+      metric_1: m.metric_1,
+      overlap_1: m.overlap_1 || "",
+      painpoint_2: m.painpoint_2,
+      jd_evidence_2: m.jd_evidence_2 || "",
+      solution_2: m.solution_2,
+      resume_evidence_2: m.resume_evidence_2 || "",
+      metric_2: m.metric_2,
+      overlap_2: m.overlap_2 || "",
+      painpoint_3: m.painpoint_3,
+      jd_evidence_3: m.jd_evidence_3 || "",
+      solution_3: m.solution_3,
+      resume_evidence_3: m.resume_evidence_3 || "",
+      metric_3: m.metric_3,
+      overlap_3: m.overlap_3 || "",
+      alignment_score: m.alignment_score,
+    };
+  };
+
+  const selectJobForDownstream = (jd: JobDescription) => {
+    const saved = matchesByJobId[jd.id] || [];
+    setSelectedJD(jd);
+    setMatches(saved);
+    try {
+      localStorage.setItem("selected_job_description", JSON.stringify(jd));
+      localStorage.setItem("selected_job_description_id", jd.id);
+      localStorage.setItem("painpoint_matches", JSON.stringify(saved));
+      localStorage.setItem("painpoint_matches_by_job", JSON.stringify(matchesByJobId));
+    } catch {
+      // ignore storage failures
+    }
+  };
+
+  const runPainPointMatchAnalysis = async () => {
+    if (!resumeExtract || jobDescriptions.length === 0) return;
+
     setIsGenerating(true);
     setError(null);
+    setProgress({ done: 0, total: jobDescriptions.length });
+
+    // Start blank every time until the user runs it (presentation-friendly).
+    setMatches([]);
+    setMatchesByJobId({});
+    setSelectedJD(null);
 
     try {
-      // Persist the selected JD for downstream steps (Offer/Compose context).
-      if (typeof window !== "undefined" && selectedJD) {
-        localStorage.setItem("selected_job_description", JSON.stringify(selectedJD));
-        localStorage.setItem("selected_job_description_id", selectedJD.id);
+      setProgress({ done: 0, total: jobDescriptions.length, current: "Generating matches for all jobs…" });
+
+      const resp = await api<BatchPainPointMatchResponse>("/painpoint-match/generate-batch", "POST", {
+        resume_extract_id: "latest",
+        job_descriptions: jobDescriptions.map((jd) => ({
+          id: jd.id,
+          title: jd.title,
+          company: jd.company,
+          pain_points: jd.painPoints || [],
+          required_skills: jd.requiredSkills || [],
+          success_metrics: jd.successMetrics || [],
+          responsibilities: jd.responsibilities || [],
+          requirements: jd.requirements || [],
+        })),
+        resume_extract: {
+          positions: resumeExtract.positions || [],
+          skills: resumeExtract.skills || [],
+          accomplishments: resumeExtract.accomplishments || [],
+          keyMetrics: resumeExtract.keyMetrics || [],
+        },
+      });
+
+      const nextByJob: Record<string, PainPointMatch[]> = {};
+      const rawMap = resp?.matches_by_job_id || {};
+      for (const jd of jobDescriptions) {
+        const rawMatches = rawMap[jd.id] || [];
+        nextByJob[jd.id] = rawMatches.map(mapBackendMatch);
       }
 
-      const resp = await api<PainPointMatchResponse>("/painpoint-match/generate", "POST", {
-        job_description_id: selectedJD.id,
-        resume_extract_id: "latest",
-        job_description: {
-          title: selectedJD.title,
-          company: selectedJD.company,
-          pain_points: selectedJD.painPoints || [],
-          required_skills: selectedJD.requiredSkills || [],
-          success_metrics: selectedJD.successMetrics || [],
-          responsibilities: selectedJD.responsibilities || [],
-          requirements: selectedJD.requirements || [],
-        },
-        resume_extract: resumeExtract
-          ? {
-              positions: resumeExtract.positions || [],
-              skills: resumeExtract.skills || [],
-              accomplishments: resumeExtract.accomplishments || [],
-              keyMetrics: resumeExtract.keyMetrics || [],
-            }
-          : undefined,
-      });
-      const backendMatches = resp.matches || [];
-      const mapped: PainPointMatch[] = backendMatches.map((m) => ({
-        painpoint_1: m.painpoint_1,
-        jd_evidence_1: m.jd_evidence_1 || "",
-        solution_1: m.solution_1,
-        resume_evidence_1: m.resume_evidence_1 || "",
-        metric_1: m.metric_1,
-        overlap_1: m.overlap_1 || "",
-        painpoint_2: m.painpoint_2,
-        jd_evidence_2: m.jd_evidence_2 || "",
-        solution_2: m.solution_2,
-        resume_evidence_2: m.resume_evidence_2 || "",
-        metric_2: m.metric_2,
-        overlap_2: m.overlap_2 || "",
-        painpoint_3: m.painpoint_3,
-        jd_evidence_3: m.jd_evidence_3 || "",
-        solution_3: m.solution_3,
-        resume_evidence_3: m.resume_evidence_3 || "",
-        metric_3: m.metric_3,
-        overlap_3: m.overlap_3 || "",
-        alignment_score: m.alignment_score,
-      }));
-      setMatches(mapped);
-      setMatchesByJobId((prev) => {
-        const next = { ...prev, [selectedJD.id]: mapped };
-        if (typeof window !== "undefined") {
-          localStorage.setItem("painpoint_matches_by_job", JSON.stringify(next));
-        }
-        return next;
-      });
-      if (typeof window !== "undefined") {
-        // Keep the existing single-key for downstream steps (represents CURRENT selected job).
-        localStorage.setItem("painpoint_matches", JSON.stringify(mapped));
+      setMatchesByJobId(nextByJob);
+      try {
+        localStorage.setItem("painpoint_matches_by_job", JSON.stringify(nextByJob));
+      } catch {}
+
+      if (resp?.errors_by_job_id && Object.keys(resp.errors_by_job_id).length) {
+        // Keep it short; this is a UX hint, not a hard stop.
+        setError("Some jobs failed to generate matches. You can re-run to try again.");
       }
-    } catch (e: any) {
-      setError("Failed to generate matches. Please try again.");
+
+      setProgress({ done: jobDescriptions.length, total: jobDescriptions.length });
+
+      const first = jobDescriptions[0] || null;
+      if (first) {
+        setSelectedJD(first);
+        setMatches(nextByJob[first.id] || []);
+        try {
+          localStorage.setItem("painpoint_matches", JSON.stringify(nextByJob[first.id] || []));
+        } catch {}
+      }
+    } catch {
+      setError("Failed to run pain point match analysis. Please try again.");
     } finally {
       setIsGenerating(false);
+      setProgress(null);
     }
   };
 
@@ -364,212 +400,169 @@ export default function PainPointMatchPage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Left: persistent saved pain points across jobs */}
-              <aside className="lg:col-span-4">
-                <div className="rounded-lg border border-white/10 bg-black/20 p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-sm font-bold text-white">Saved pain points</h2>
-                    <div className="text-xs text-white/60">
-                      {Object.keys(matchesByJobId).length} jobs
-                    </div>
-                  </div>
-                  <div className="space-y-3 max-h-[520px] overflow-auto pr-1">
-                    {jobDescriptions.map((jd) => {
-                      const saved = matchesByJobId[jd.id]?.[0];
-                      const alignments = saved ? renderableAlignments(saved) : [];
-                      const isSel = selectedJD?.id === jd.id;
-                      return (
-                        <button
-                          key={`sidebar_${jd.id}`}
-                          type="button"
-                          onClick={() => setSelectedJD(jd)}
-                          className={`w-full text-left rounded-md border px-3 py-2 transition-colors ${
-                            isSel ? "border-blue-500 bg-blue-500/10" : "border-white/10 hover:border-white/20 bg-black/10"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="text-xs font-semibold text-white truncate">{jd.title}</div>
-                              <div className="text-[11px] text-white/60 truncate">{formatCompanyName(jd.company)}</div>
-                            </div>
-                            <div className="shrink-0 text-[11px] text-white/60">
-                              {saved ? `${Math.round((saved.alignment_score || 0) * 100)}%` : "—"}
-                            </div>
-                          </div>
-                          {saved ? (
-                            alignments.length > 0 ? (
-                              <ul className="mt-2 space-y-1">
-                                {alignments.slice(0, 3).map((a) => (
-                                  <li key={`pp_${jd.id}_${a.n}`} className="text-[11px] text-white/75 line-clamp-2">
-                                    - {a.painpoint}
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <div className="mt-2 text-[11px] text-white/50 italic">
-                                Saved match found, but no alignments were generated for this job.
-                              </div>
-                            )
-                          ) : (
-                            <div className="mt-2 text-[11px] text-white/45">No matches generated yet</div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="mt-3 text-[11px] text-white/50">
-                    Tip: Click any job to revisit its saved matches.
+            <div className="space-y-6">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold text-white/80">Pain Point Match Analysis</div>
+                  <div className="text-xs text-white/60">
+                    Starts blank. Click Run to generate matches for all jobs.
                   </div>
                 </div>
-              </aside>
+                <button
+                  type="button"
+                  onClick={runPainPointMatchAnalysis}
+                  disabled={isGenerating}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {isGenerating ? "Running…" : "Run Pain Point Match Analysis"}
+                </button>
+              </div>
 
-              {/* Right: selection + generation + results */}
-              <div className="lg:col-span-8 space-y-8">
-                {/* Job Description Selection */}
-                <div>
-                  <h2 className="text-xl font-semibold mb-4">Select Job Description</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {jobDescriptions.map((jd) => (
-                      <div
-                        key={jd.id}
-                        className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                          selectedJD?.id === jd.id
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-white/10 hover:border-white/20 bg-black/20'
-                        }`}
-                        onClick={() => setSelectedJD(jd)}
-                      >
-                        <h3 className="font-semibold text-white">{jd.title}</h3>
-                        <p className="text-white/70">{formatCompanyName(jd.company)}</p>
-                        {matchesByJobId[jd.id]?.length ? (
-                          <div className="mt-2 flex items-center gap-2">
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-300 border border-green-500/20">
-                              Saved matches
-                            </span>
-                            <span className="text-xs text-white/60">
-                              {Math.round((matchesByJobId[jd.id][0]?.alignment_score ?? 0) * 100)}%
-                            </span>
+              {isGenerating && progress ? (
+                <div className="rounded-lg border border-white/10 bg-black/20 p-4 text-sm text-white/80">
+                  <div className="font-semibold">Generating matches…</div>
+                  <div className="mt-1 text-white/70">
+                    {progress.current ? (
+                      <>
+                        {progress.current} ({progress.done + 1}/{progress.total})
+                      </>
+                    ) : (
+                      <>
+                        {progress.done}/{progress.total}
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+
+              {Object.keys(matchesByJobId).length === 0 && !isGenerating ? (
+                <div className="rounded-lg border border-white/10 bg-black/20 p-8 text-center">
+                  <div className="text-lg font-semibold text-white mb-2">Ready when you are</div>
+                  <div className="text-white/70">
+                    Click <span className="font-semibold text-white">Run Pain Point Match Analysis</span> to generate
+                    pain-point alignments for all {jobDescriptions.length} job{jobDescriptions.length === 1 ? "" : "s"}.
+                  </div>
+                </div>
+              ) : null}
+
+              {Object.keys(matchesByJobId).length > 0 ? (
+                <div className="space-y-6">
+                  {jobDescriptions.map((jd) => {
+                    const jobMatches = matchesByJobId[jd.id] || [];
+                    const first = jobMatches[0] || null;
+                    const isSelected = selectedJD?.id === jd.id;
+                    const score = first?.alignment_score ?? null;
+                    return (
+                      <div key={`job_${jd.id}`} className="rounded-lg border border-white/10 bg-black/20 p-5">
+                        <div className="space-y-3">
+                          <div className="min-w-0">
+                            <div className="text-base font-bold text-white">{jd.title}</div>
+                            <div className="text-sm text-white/70">{formatCompanyName(jd.company)}</div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-3">
+                            {score === null ? (
+                              <div className="text-xs text-white/60">Alignment: —</div>
+                            ) : (
+                              <div className="inline-flex items-center gap-3 rounded-md border border-white/10 bg-white/5 px-3 py-2">
+                                <div className="text-sm font-bold text-white">{Math.round(score * 100)}%</div>
+                                <StarRating value={score} scale="fraction" showNumeric />
+                              </div>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => selectJobForDownstream(jd)}
+                              className={`rounded-md px-3 py-2 text-sm font-semibold border transition-colors ${
+                                isSelected
+                                  ? "border-emerald-400/30 bg-emerald-500/15 text-emerald-200"
+                                  : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                              }`}
+                              title="Select this job for downstream steps (Research, Contact, Bio, Campaign)"
+                            >
+                              {isSelected ? "Selected" : "Use this job"}
+                            </button>
+                          </div>
+                        </div>
+
+                        {jobMatches.length === 0 ? (
+                          <div className="mt-4 text-sm text-white/60 italic">
+                            No matches generated for this job yet.
                           </div>
                         ) : (
-                          <div className="mt-2 text-xs text-white/50">No matches yet</div>
-                        )}
-                        <div className="mt-2">
-                          <p className="text-sm text-white/60">
-                            {jd.painPoints.length} pain points identified
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                          <div className="mt-5 space-y-6">
+                            {jobMatches.map((match, index) => (
+                              <div key={`match_${jd.id}_${index}`} className="rounded-lg border border-white/10 bg-white/5 p-4">
+                                <div className="text-xs text-white/60 mb-3">Showing up to 3 best matches for this job.</div>
+                                <div className="space-y-6">
+                                  {renderableAlignments(match).length === 0 ? (
+                                    <div className="text-sm text-white/60 italic">No alignments were found for this job.</div>
+                                  ) : (
+                                    renderableAlignments(match).map((a) => (
+                                      <div
+                                        key={`align_${jd.id}_${index}_${a.n}`}
+                                        className="rounded-lg p-4 border border-white/10 bg-black/20"
+                                      >
+                                        <div className="flex items-start space-x-3">
+                                          <div className="flex-shrink-0">
+                                            <div className="w-8 h-8 bg-red-500/15 rounded-full flex items-center justify-center border border-red-400/25">
+                                              <span className="text-white/85 font-semibold">{a.n}</span>
+                                            </div>
+                                          </div>
+                                          <div className="flex-1">
+                                            <h4 className="font-semibold text-white/85 mb-2">Pain Point</h4>
+                                            <p className="text-white/85 mb-3">{a.painpoint}</p>
+                                            {String(a.jdEvidence || "").trim() ? (
+                                              <div className="mb-3 text-xs text-white/75">
+                                                <span className="font-semibold text-white/70">From JD:</span>{" "}
+                                                <span className="italic text-white/85">“{sanitizeForUi(String(a.jdEvidence), "Missing details")}”</span>
+                                              </div>
+                                            ) : (
+                                              <div className="mb-3 text-xs text-white/75">
+                                                <span className="font-semibold text-white/70">From JD:</span>{" "}
+                                                <span className="text-white/60 font-semibold">Missing details</span>
+                                              </div>
+                                            )}
 
-              {/* Generate Matches Button */}
-              {selectedJD && (
-                <div className="text-center">
-                  <button
-                    onClick={generateMatches}
-                    disabled={isGenerating}
-                    className="bg-blue-600 text-white px-8 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-                  >
-                    {isGenerating ? "Generating Matches..." : "Generate Pain Point Matches"}
-                  </button>
-                </div>
-              )}
+                                            <h4 className="font-semibold text-emerald-200 mb-2">Your Solution</h4>
+                                            <p className="mb-3">{renderValueOrMissing(String(a.solution || ""), "text-white/85")}</p>
+                                            {String(a.resumeEvidence || "").trim() ? (
+                                              <div className="mb-3 text-xs text-white/75">
+                                                <span className="font-semibold text-emerald-200">From resume:</span>{" "}
+                                                <span className="italic text-white/85">“{sanitizeForUi(String(a.resumeEvidence), "Missing details")}”</span>
+                                              </div>
+                                            ) : (
+                                              <div className="mb-3 text-xs text-white/75">
+                                                <span className="font-semibold text-emerald-200">From resume:</span>{" "}
+                                                <span className="text-white/60 font-semibold">Missing details</span>
+                                              </div>
+                                            )}
+                                            {String(a.overlap || "").trim() ? (
+                                              <div className="mb-3 text-xs text-white/75">
+                                                <span className="font-semibold text-white/85">Why it matches:</span>{" "}
+                                                <span className="text-white/80">{sanitizeForUi(String(a.overlap), "Missing details")}</span>
+                                              </div>
+                                            ) : null}
 
-              {/* Matches Results */}
-              {matches.length > 0 && (
-                <div className="space-y-6">
-                  <div className="text-center">
-                    <h2 className="text-2xl font-semibold text-gray-900 mb-2">Match Results</h2>
-                    <div className="flex items-center justify-center space-x-4">
-                      <div className="text-3xl font-bold text-blue-600">
-                        {Math.round(matches[0].alignment_score * 100)}%
-                      </div>
-                      <div>
-                        <div className={`font-semibold ${getScoreColor(matches[0].alignment_score)}`}>
-                          {getScoreLabel(matches[0].alignment_score)}
-                        </div>
-                        <div className="text-sm text-gray-500">Alignment Score</div>
-                            <div className="mt-1 flex justify-center">
-                              <StarRating value={matches[0].alignment_score} scale="fraction" showNumeric />
-                            </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    {matches.map((match, index) => (
-                      <div key={index} className="border border-gray-200 rounded-lg p-6">
-                        <h3 className="text-lg font-semibold mb-1">Alignments</h3>
-                        <div className="text-xs text-gray-500 mb-4">Showing up to 3 best matches for this job.</div>
-                        
-                        <div className="space-y-6">
-                          {renderableAlignments(match).length === 0 ? (
-                            <div className="text-sm text-gray-600 italic">No alignments were found for this job.</div>
-                          ) : (
-                            renderableAlignments(match).map((a) => (
-                              <div
-                                key={`align_${index}_${a.n}`}
-                                className="rounded-lg p-4 border border-white/10 bg-white/5"
-                              >
-                                <div className="flex items-start space-x-3">
-                                  <div className="flex-shrink-0">
-                                    <div className="w-8 h-8 bg-red-500/15 rounded-full flex items-center justify-center border border-red-400/25">
-                                      <span className="text-white/85 font-semibold">{a.n}</span>
-                                    </div>
-                                  </div>
-                                  <div className="flex-1">
-                                    <h4 className="font-semibold text-white/85 mb-2">Pain Point</h4>
-                                    <p className="text-white/85 mb-3">{a.painpoint}</p>
-                                    {String(a.jdEvidence || "").trim() ? (
-                                      <div className="mb-3 text-xs text-white/75">
-                                        <span className="font-semibold text-white/70">From JD:</span>{" "}
-                                        <span className="italic text-white/85">“{sanitizeForUi(String(a.jdEvidence), "Missing details")}”</span>
+                                            <h4 className="font-semibold text-sky-200 mb-2">Impact Metric</h4>
+                                            <p className="text-white/85">{renderValueOrMissing(String(a.metric || ""), "text-white/85")}</p>
+                                          </div>
+                                        </div>
                                       </div>
-                                    ) : (
-                                      <div className="mb-3 text-xs text-white/75">
-                                        <span className="font-semibold text-white/70">From JD:</span>{" "}
-                                        <span className="text-white/60 font-semibold">Missing details</span>
-                                      </div>
-                                    )}
-
-                                    <h4 className="font-semibold text-emerald-200 mb-2">Your Solution</h4>
-                                    <p className="mb-3">{renderValueOrMissing(String(a.solution || ""), "text-green-800")}</p>
-                                    {String(a.resumeEvidence || "").trim() ? (
-                                      <div className="mb-3 text-xs text-white/75">
-                                        <span className="font-semibold text-emerald-200">From resume:</span>{" "}
-                                        <span className="italic text-white/85">“{sanitizeForUi(String(a.resumeEvidence), "Missing details")}”</span>
-                                      </div>
-                                    ) : (
-                                      <div className="mb-3 text-xs text-white/75">
-                                        <span className="font-semibold text-emerald-200">From resume:</span>{" "}
-                                        <span className="text-white/60 font-semibold">Missing details</span>
-                                      </div>
-                                    )}
-                                    {String(a.overlap || "").trim() ? (
-                                      <div className="mb-3 text-xs text-white/75">
-                                        <span className="font-semibold text-white/85">Why it matches:</span>{" "}
-                                        <span className="text-white/80">{sanitizeForUi(String(a.overlap), "Missing details")}</span>
-                                      </div>
-                                    ) : null}
-
-                                    <h4 className="font-semibold text-sky-200 mb-2">Impact Metric</h4>
-                                    <p className="text-white/85">{renderValueOrMissing(String(a.metric || ""), "text-white/85")}</p>
-                                  </div>
+                                    ))
+                                  )}
                                 </div>
                               </div>
-                            ))
-                          )}
-                        </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
 
                   <div className="flex justify-end space-x-4">
                     <button
                       onClick={() => router.push('/job-descriptions')}
-                      className="bg-gray-100 text-gray-700 px-6 py-3 rounded-md font-medium hover:bg-gray-200 transition-colors"
+                      className="bg-white/10 text-white px-6 py-3 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
                     >
                       Back
                     </button>
@@ -581,8 +574,7 @@ export default function PainPointMatchPage() {
                     </button>
                   </div>
                 </div>
-              )}
-              </div>
+              ) : null}
             </div>
           )}
         </div>

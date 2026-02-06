@@ -158,6 +158,7 @@ async def generate_email(request: ComposeRequest, http_request: Request):
             "solution_1": "{{solution_1}}",
             "metric_1": "{{metric_1}}",
             "company_summary": "{{company_summary}}",
+            "company_theme": "{{company_theme}}",
             "recent_news": "{{recent_news}}",
             "contact_bio": "{{contact_bio}}",
             "offer_title": "{{offer_title}}",
@@ -394,6 +395,7 @@ async def get_available_variables():
             Variable(name="{{solution_1}}", value="", description="Your solution to challenge 1"),
             Variable(name="{{metric_1}}", value="", description="Key metric for solution 1"),
             Variable(name="{{company_summary}}", value="", description="Company overview"),
+            Variable(name="{{company_theme}}", value="", description="Theme: what the company likely cares about + mini-plan (not news)"),
             Variable(name="{{recent_news}}", value="", description="Recent company news"),
             Variable(name="{{contact_bio}}", value="", description="Contact's background")
         ]

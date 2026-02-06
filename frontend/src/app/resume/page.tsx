@@ -737,7 +737,7 @@ export default function ResumePage() {
               <div className="rounded-lg border border-white/10 bg-black/20 p-4">
                 <div className="text-sm font-bold text-white mb-2">Available Variables from this Step</div>
                 <div className="text-xs text-white/60 mb-3">
-                  These variables are now available for downstream steps (Compose/Campaign):
+                  These variables are now available for downstream steps (Bio/Campaign):
                 </div>
                 <div className="text-[12px] text-white/80">
                   <div className="flex flex-wrap items-center gap-2">

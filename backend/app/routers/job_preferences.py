@@ -911,6 +911,14 @@ async def get_job_preferences(user_id: str):
         if row and row[0]:
             # row[0] is a JSON/JSONB object
             prefs_obj = JobPreferences(**row[0])
+            # Only keep state when the UI could have collected it (In-Person selected).
+            try:
+                locs = [str(x).strip().lower() for x in (prefs_obj.location_preferences or []) if str(x).strip()]
+                has_in_person = any(("in-person" in x) or ("in person" in x) for x in locs)
+                if not has_in_person:
+                    prefs_obj = prefs_obj.model_copy(update={"state": None})
+            except Exception:
+                pass
             return JobPreferencesResponse(
                 success=True,
                 message="Job preferences retrieved successfully",
@@ -924,6 +932,14 @@ async def get_job_preferences(user_id: str):
     if store.demo_job_preferences:
         try:
             prefs_obj = JobPreferences(**store.demo_job_preferences)
+            # Only keep state when the UI could have collected it (In-Person selected).
+            try:
+                locs = [str(x).strip().lower() for x in (prefs_obj.location_preferences or []) if str(x).strip()]
+                has_in_person = any(("in-person" in x) or ("in person" in x) for x in locs)
+                if not has_in_person:
+                    prefs_obj = prefs_obj.model_copy(update={"state": None})
+            except Exception:
+                pass
             return JobPreferencesResponse(
                 success=True,
                 message="Job preferences retrieved successfully",
@@ -950,7 +966,7 @@ async def get_job_preferences(user_id: str):
         skills=["Python", "JavaScript", "React"],
         minimum_salary="$80,000",
         job_search_status="Actively looking",
-        state="California",
+        state=None,
         user_mode="job-seeker",
     )
 

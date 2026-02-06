@@ -55,6 +55,9 @@ class BioPageDraft(BaseModel):
     # proof + positioning
     proof_points: List[str] = Field(default_factory=list)
     fit_points: List[str] = Field(default_factory=list)
+    # Work style section (user preferences distilled). Frontend may compute this deterministically
+    # from `job_preferences` and attach it before publishing.
+    work_style_points: List[str] = Field(default_factory=list)
 
     # deterministic resume section (rendered client-side from resume_extract)
     # we keep the extract here for convenience, but do not invent anything.
@@ -113,15 +116,12 @@ def _build_deterministic_draft(
     od = offer_draft or {}
 
     title = str(jd.get("title") or jd.get("role") or "").strip()
-    company = str(jd.get("company") or "").strip()
     tone_hint = ""
     if od:
         tone_hint = str(od.get("tone") or od.get("custom_tone") or "").strip()
 
     headline = f"{display_name} — job seeker bio page"
-    if title and company:
-        headline = f"{display_name} — {title} candidate for {company}"
-    elif title:
+    if title:
         headline = f"{display_name} — {title} candidate"
 
     subheadline = "A concise overview of experience, proof points, and fit."
@@ -205,15 +205,23 @@ async def generate_bio_page(payload: GenerateBioPageRequest, http_request: Reque
         if client.should_use_real_llm:
             try:
                 # Keep the model scoped: generate only hero + bullets, grounded in provided data.
+                # NOTE: Bio page is multi-use (sent to multiple people/companies). Do not mention a specific employer.
+                selected_job = payload.selected_job_description or {}
+                if isinstance(selected_job, dict) and selected_job:
+                    selected_job = dict(selected_job)
+                    for k in ["company", "company_name", "employer", "org", "organization"]:
+                        if k in selected_job:
+                            selected_job[k] = ""
                 prompt = {
                     "display_name": deterministic.display_name,
-                    "selected_job": payload.selected_job_description or {},
+                    "selected_job": selected_job,
                     "resume_extract": payload.resume_extract or {},
                     "painpoint_matches": (payload.painpoint_matches or [])[:3],
                     "offer_draft": payload.offer_draft or {},
                     "rules": {
                         "no_invented_numbers": True,
                         "no_external_claims": True,
+                        "no_company_specificity": True,
                         "output_json_only": True,
                     },
                 }
@@ -223,6 +231,9 @@ async def generate_bio_page(payload: GenerateBioPageRequest, http_request: Reque
                         "content": (
                             "You write job-seeker bio landing page copy.\n"
                             "Use ONLY the provided JSON input. Do not invent facts or numbers.\n"
+                            "IMPORTANT: This bio page must be reusable across multiple companies.\n"
+                            "- Do NOT mention any specific company name (including the selected job's company).\n"
+                            "- Do NOT say 'applying to X' or 'candidate for X'.\n"
                             "Return ONLY valid JSON with keys:\n"
                             "- headline: string\n"
                             "- subheadline: string\n"

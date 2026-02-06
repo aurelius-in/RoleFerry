@@ -1959,7 +1959,6 @@ def demo_bootstrap():
         "skills": ["Python", "SQL", "AWS", "Experimentation", "Stakeholder Management"],
         "minimum_salary": "$160,000",
         "job_search_status": "Actively looking",
-        "state": "California",
         "user_mode": "job-seeker",
     }
     store.demo_job_preferences = prefs
