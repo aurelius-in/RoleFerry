@@ -23,6 +23,7 @@ type BioPageDraft = {
   video_url?: string;
   proof_points: string[];
   fit_points: string[];
+  work_style_points?: string[];
   resume_extract: any;
   portfolio_url: string;
   profile_image_url?: string;
@@ -79,6 +80,7 @@ export default function BioPageStep() {
   const [resumeMeta, setResumeMeta] = useState<any>(null);
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [userDisplayName, setUserDisplayName] = useState<string>("");
+  const [jobPrefs, setJobPrefs] = useState<any>(null);
 
   useEffect(() => {
     // Load cached draft if available for quick UX
@@ -147,6 +149,13 @@ export default function BioPageStep() {
     }
 
     try {
+      const rawPrefs = localStorage.getItem("job_preferences");
+      setJobPrefs(rawPrefs ? JSON.parse(rawPrefs) : null);
+    } catch {
+      setJobPrefs(null);
+    }
+
+    try {
       const metaRaw = localStorage.getItem("resume_extract_meta");
       setResumeMeta(metaRaw ? JSON.parse(metaRaw) : null);
     } catch {
@@ -192,6 +201,23 @@ export default function BioPageStep() {
       setVideoUrl("");
     }
   }, []);
+
+  const workStylePoints = useMemo(() => {
+    const p = jobPrefs || {};
+    const values = (Array.isArray(p?.values) ? p.values : []).map((x: any) => safeStr(x)).filter(Boolean);
+    const workType = (Array.isArray(p?.work_type) ? p.work_type : Array.isArray(p?.workType) ? p.workType : []).map((x: any) => safeStr(x)).filter(Boolean);
+    const roleType = (Array.isArray(p?.role_type) ? p.role_type : Array.isArray(p?.roleType) ? p.roleType : []).map((x: any) => safeStr(x)).filter(Boolean);
+    const companySize = (Array.isArray(p?.company_size) ? p.company_size : Array.isArray(p?.companySize) ? p.companySize : []).map((x: any) => safeStr(x)).filter(Boolean);
+    const location = safeStr(p?.state) || safeStr((Array.isArray(p?.location_preferences) ? p.location_preferences[0] : ""));
+
+    const out: string[] = [];
+    if (workType.length) out.push(`Preferred setup: ${workType.join(" / ")}`);
+    if (roleType.length) out.push(`Role type: ${roleType.join(" / ")}`);
+    if (companySize.length) out.push(`Company size: ${companySize.slice(0, 2).join(" / ")}`);
+    if (location) out.push(`Location: ${location}`);
+    if (values.length) out.push(`Values: ${values.slice(0, 3).join(", ")}`);
+    return out.slice(0, 5);
+  }, [jobPrefs]);
 
   const onPickProfilePhoto = () => {
     profileInputRef.current?.click();
@@ -308,6 +334,10 @@ export default function BioPageStep() {
           calendly_url: safeStr(draft?.calendly_url) || safeStr(res.draft.calendly_url),
           video_url: safeStr(draft?.video_url) || safeStr(res.draft.video_url),
           profile_image_url: profileImageUrl || res.draft.profile_image_url || "",
+          work_style_points:
+            (Array.isArray((draft as any)?.work_style_points) && (draft as any).work_style_points.length > 0)
+              ? (draft as any).work_style_points
+              : workStylePoints,
           theme: {
             ...(res.draft.theme || {}),
             ...(draft?.theme || {}),
@@ -334,6 +364,10 @@ export default function BioPageStep() {
           ...draft,
           display_name: safeStr(userDisplayName) || safeStr(draft.display_name),
           profile_image_url: profileImageUrl || draft.profile_image_url || "",
+          work_style_points:
+            (Array.isArray((draft as any)?.work_style_points) && (draft as any).work_style_points.length > 0)
+              ? (draft as any).work_style_points
+              : workStylePoints,
           // Ensure the public page renders the same Resume Snapshot as the editor/preview.
           resume_extract: (draft as any)?.resume_extract ?? resumeExtract ?? null,
         },
@@ -368,16 +402,6 @@ export default function BioPageStep() {
       setTimeout(() => setMsg(null), 2500);
     }
   };
-
-  const previewHref = useMemo(() => {
-    if (bioUrl) return bioUrl;
-    // If not published, we can still preview using a local-only route in this step (below)
-    return "";
-  }, [bioUrl, draft]);
-
-  const localPreviewHref = useMemo(() => {
-    return draft ? "/bio/preview" : "";
-  }, [draft]);
 
   const resumeSnapshot = useMemo(() => {
     // Prefer the parsed resume from the Resume step (source of truth for public rendering).
@@ -416,18 +440,6 @@ export default function BioPageStep() {
                 Click Generate to draft your bio page. Publish to get a permanent URL.
               </div>
               <div className="mt-3 flex flex-col gap-2">
-                <a
-                  href={localPreviewHref || undefined}
-                  target="_blank"
-                  className={`w-full px-4 py-2 rounded-lg border font-semibold text-center ${
-                    localPreviewHref
-                      ? "bg-white/5 border-white/10 hover:bg-white/10"
-                      : "bg-white/5 border-white/10 text-white/40 cursor-not-allowed"
-                  }`}
-                  aria-disabled={!localPreviewHref}
-                >
-                  Preview (local)
-                </a>
                 <button
                   onClick={generate}
                   disabled={busy === "generate"}
@@ -436,11 +448,19 @@ export default function BioPageStep() {
                   {busy === "generate" ? "Generating..." : "Generate / Regenerate"}
                 </button>
                 <button
-                  onClick={publish}
-                  disabled={!draft || busy === "publish"}
+                  onClick={() => {
+                    if (bioUrl) {
+                      try {
+                        window.open(bioUrl, "_blank", "noopener,noreferrer");
+                      } catch {}
+                      return;
+                    }
+                    publish();
+                  }}
+                  disabled={busy === "publish" || (!bioUrl && !draft)}
                   className="w-full px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 font-bold hover:bg-emerald-500/25 disabled:opacity-50"
                 >
-                  {busy === "publish" ? "Publishing..." : "Publish"}
+                  {bioUrl ? "Open public page" : (busy === "publish" ? "Publishing..." : "Publish bio page")}
                 </button>
                 <button
                   onClick={copyLink}
@@ -448,17 +468,33 @@ export default function BioPageStep() {
                 >
                   Copy link
                 </button>
-                {previewHref ? (
-                  <a
-                    href={previewHref}
-                    target="_blank"
-                    className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 font-semibold text-center"
-                  >
-                    Open public page
-                  </a>
-                ) : null}
               </div>
               {msg ? <div className="mt-3 text-xs text-white/70 break-all">{msg}</div> : null}
+            </div>
+
+            <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+              <div className="text-sm font-bold">Work style</div>
+              <div className="text-xs text-white/60 mt-1">
+                Pulled from your Job Preferences (used on the public page and as campaign context).
+              </div>
+              {(() => {
+                const pts = (Array.isArray((draft as any)?.work_style_points) && (draft as any).work_style_points.length)
+                  ? ((draft as any).work_style_points as string[])
+                  : workStylePoints;
+                if (!pts.length) {
+                  return <div className="mt-3 text-sm text-white/60">No preferences found yet.</div>;
+                }
+                return (
+                  <ul className="mt-3 space-y-2 text-sm text-white/80">
+                    {pts.slice(0, 6).map((p, idx) => (
+                      <li key={`ws_${idx}`} className="flex gap-2">
+                        <span className="font-bold" aria-hidden="true">{bullet}</span>
+                        <span>{p}</span>
+                      </li>
+                    ))}
+                  </ul>
+                );
+              })()}
             </div>
 
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
@@ -499,40 +535,119 @@ export default function BioPageStep() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
-                      Top background
-                    </label>
-                    <select
-                      value={colors.bg_top}
-                      onChange={(e) => updateTheme({ bg_top: e.target.value })}
-                      className="rf-bio-select w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      {BIO_BG_OPTIONS.map((o) => (
-                        <option key={o.id} value={o.hex}>
-                          {o.kind === "dark" ? "Dark" : "Light"} · {o.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
-                      Bottom background
-                    </label>
-                    <select
-                      value={colors.bg_bottom}
-                      onChange={(e) => updateTheme({ bg_bottom: e.target.value })}
-                      className="rf-bio-select w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      {BIO_BG_OPTIONS.map((o) => (
-                        <option key={o.id} value={o.hex}>
-                          {o.kind === "dark" ? "Dark" : "Light"} · {o.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                {/* Mode/Theme toggle + background cyclers (no dropdowns) */}
+                {(() => {
+                  const kind = colors.kind === "dark" ? "dark" : "light";
+                  const pool = BIO_BG_OPTIONS.filter((o) => o.kind === kind);
+                  const labelFor = (hex: string) => pool.find((o) => o.hex === hex)?.label || "Color";
+                  const cycle = (curHex: string, dir: -1 | 1) => {
+                    const idx = Math.max(0, pool.findIndex((o) => o.hex === curHex));
+                    return pool[(idx + dir + pool.length) % pool.length] || pool[0];
+                  };
+                  const setKind = (nextKind: "dark" | "light") => {
+                    const nextPool = BIO_BG_OPTIONS.filter((o) => o.kind === nextKind);
+                    const top = nextPool[0]?.hex || colors.bg_top;
+                    const bottom = nextPool[1]?.hex || top;
+                    updateTheme({ bg_top: top, bg_bottom: bottom });
+                  };
+                  return (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
+                          Mode / Theme
+                        </label>
+                        <div className="inline-flex items-center rounded-md border border-white/15 bg-black/30 p-1">
+                          <button
+                            type="button"
+                            onClick={() => setKind("dark")}
+                            className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors ${
+                              kind === "dark" ? "bg-white/10 text-white" : "text-white/70 hover:text-white hover:bg-white/5"
+                            }`}
+                            title="Dark mode"
+                          >
+                            ☾ Dark
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setKind("light")}
+                            className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors ${
+                              kind === "light" ? "bg-white/10 text-white" : "text-white/70 hover:text-white hover:bg-white/5"
+                            }`}
+                            title="Light mode"
+                          >
+                            ☀ Light
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
+                            Top background
+                          </label>
+                          <div className="inline-flex w-full items-center gap-1 rounded-md border border-white/15 bg-black/30 px-1 py-1">
+                            <button
+                              type="button"
+                              onClick={() => updateTheme({ bg_top: cycle(colors.bg_top, -1).hex })}
+                              className="h-8 w-9 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                              aria-label="Previous top background"
+                            >
+                              ◀
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => updateTheme({ bg_top: cycle(colors.bg_top, 1).hex })}
+                              className="h-8 flex-1 px-2 rounded-md border border-white/10 bg-white/5 text-white/85 hover:bg-white/10 text-sm font-semibold text-left"
+                              title="Click to cycle"
+                            >
+                              {labelFor(colors.bg_top)}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => updateTheme({ bg_top: cycle(colors.bg_top, 1).hex })}
+                              className="h-8 w-9 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                              aria-label="Next top background"
+                            >
+                              ▶
+                            </button>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
+                            Bottom background
+                          </label>
+                          <div className="inline-flex w-full items-center gap-1 rounded-md border border-white/15 bg-black/30 px-1 py-1">
+                            <button
+                              type="button"
+                              onClick={() => updateTheme({ bg_bottom: cycle(colors.bg_bottom, -1).hex })}
+                              className="h-8 w-9 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                              aria-label="Previous bottom background"
+                            >
+                              ◀
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => updateTheme({ bg_bottom: cycle(colors.bg_bottom, 1).hex })}
+                              className="h-8 flex-1 px-2 rounded-md border border-white/10 bg-white/5 text-white/85 hover:bg-white/10 text-sm font-semibold text-left"
+                              title="Click to cycle"
+                            >
+                              {labelFor(colors.bg_bottom)}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => updateTheme({ bg_bottom: cycle(colors.bg_bottom, 1).hex })}
+                              className="h-8 w-9 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                              aria-label="Next bottom background"
+                            >
+                              ▶
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <div>
                   <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
@@ -585,11 +700,7 @@ export default function BioPageStep() {
                   })()}
                 </div>
 
-                <div className="rounded-lg border border-white/10 bg-black/20 p-3">
-                  <div className="text-xs text-white/70">
-                    Preview mode: <span className="font-semibold">{colors.kind === "dark" ? "Dark" : "Light"}</span>
-                  </div>
-                </div>
+                {/* Removed: Preview mode text (Mode toggle makes it obvious). */}
               </div>
             </div>
 
@@ -979,13 +1090,23 @@ export default function BioPageStep() {
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end">
-          <Link
-            href="/campaign"
-            className="px-6 py-3 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700"
-          >
-            Plan Campaign Sequence →
-          </Link>
+        <div className="mt-6 flex justify-end items-center gap-3">
+          {!bioUrl ? (
+            <div className="text-xs text-white/60">Publish your bio page to continue.</div>
+          ) : null}
+          {bioUrl ? (
+            <Link href="/campaign" className="px-6 py-3 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700">
+              Continue to Campaign →
+            </Link>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="px-6 py-3 rounded-lg bg-blue-600/40 text-white/60 font-bold cursor-not-allowed"
+            >
+              Continue to Campaign →
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -84,6 +84,7 @@ export default function FindContactPage() {
   const [improveNoteError, setImproveNoteError] = useState<string | null>(null);
   const [isResearching, setIsResearching] = useState(false);
   const [researchNotice, setResearchNotice] = useState<string | null>(null);
+  const [researchByContact, setResearchByContact] = useState<Record<string, any>>({});
 
   const TITLE_FILTER_OPTIONS: Array<{ group: string; options: string[] }> = [
     {
@@ -155,6 +156,15 @@ export default function FindContactPage() {
       if (Array.isArray(parsed)) {
         setTitleFilters(parsed.map((x) => String(x)).filter(Boolean));
       }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    // Restore research results for UI visibility (Campaign also reads this key).
+    try {
+      const rawBy = localStorage.getItem("context_research_by_contact");
+      const by = rawBy ? JSON.parse(rawBy) : null;
+      if (by && typeof by === "object") setResearchByContact(by);
     } catch {}
   }, []);
 
@@ -874,7 +884,7 @@ export default function FindContactPage() {
       return;
     }
     localStorage.setItem('selected_contacts', JSON.stringify(chosen));
-    router.push('/compose');
+    router.push('/bio-page');
   };
 
   const runContactResearch = async () => {
@@ -954,6 +964,7 @@ export default function FindContactPage() {
 
       localStorage.setItem("context_research_history", JSON.stringify(nextHist));
       localStorage.setItem("context_research_by_contact", JSON.stringify(byContact));
+      setResearchByContact(byContact);
       const activeId = String(chosen?.[0]?.id || "").trim();
       if (activeId) localStorage.setItem("context_research_active_contact_id", activeId);
       if (activeId && byContact?.[activeId]) {
@@ -1107,7 +1118,7 @@ export default function FindContactPage() {
                     Contact research (Smart)
                   </div>
                   <div className="mt-1 text-[11px] text-white/60">
-                    This runs background research for your saved contacts and stores it for Offer/Compose.
+                    This runs background research for your saved contacts and stores it for Campaign personalization.
                   </div>
                   {researchNotice ? (
                     <div className="mt-2 rounded-md border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-100">
@@ -1123,6 +1134,50 @@ export default function FindContactPage() {
                   >
                     {isResearching ? "Researching…" : "Run research for saved contacts"}
                   </button>
+
+                  {(savedVerified?.length || 0) > 0 ? (
+                    <div className="mt-3">
+                      <div className="text-[11px] text-white/60">
+                        Researched:{" "}
+                        <span className="text-white/80 font-semibold">
+                          {(savedVerified || []).filter((c) => Boolean(researchByContact?.[String(c?.id || "")])).length}/{savedVerified.length}
+                        </span>
+                      </div>
+                      <div className="mt-2 space-y-1">
+                        {(savedVerified || []).slice(0, 6).map((c) => {
+                          const cid = String(c?.id || "").trim();
+                          const has = Boolean(researchByContact?.[cid]);
+                          return (
+                            <div key={`r_${cid}`} className="flex items-center justify-between gap-2 text-[11px]">
+                              <div className="min-w-0 truncate text-white/75">
+                                {String(c?.name || "Contact")}
+                              </div>
+                              <div className={`shrink-0 ${has ? "text-emerald-200" : "text-white/35"}`}>
+                                {has ? "✓ ready" : "—"}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {activeDraftContactId ? (
+                        <div className="mt-3 rounded-md border border-white/10 bg-black/20 p-2.5">
+                          <div className="text-[11px] font-semibold text-white/80">Insights preview</div>
+                          <div className="mt-1 text-[11px] text-white/60">
+                            {(() => {
+                              const facts = getInterestingFactsForContact(activeDraftContactId);
+                              if (!facts.length) return "No highlights yet (run research, or switch contacts).";
+                              return facts.map((f, idx) => (
+                                <div key={`f_${idx}`} className="mt-1 truncate">
+                                  • {trimToChars(f, 96)}
+                                </div>
+                              ));
+                            })()}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
 
                 {/* Continue button lives at the bottom of the right column (single CTA) */}

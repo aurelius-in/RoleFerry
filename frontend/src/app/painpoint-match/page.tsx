@@ -477,7 +477,7 @@ export default function PainPointMatchPage() {
                                   ? "border-emerald-400/30 bg-emerald-500/15 text-emerald-200"
                                   : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
                               }`}
-                              title="Select this job for downstream steps (Research, Compose, etc.)"
+                              title="Select this job for downstream steps (Research, Contact, Bio, Campaign)"
                             >
                               {isSelected ? "Selected" : "Use this job"}
                             </button>

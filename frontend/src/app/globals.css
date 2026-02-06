@@ -45,6 +45,14 @@ textarea {
   color-scheme: dark;
 }
 
+/* Global safety: on Windows, native <select> menus can render light backgrounds while inheriting white text.
+   Force readable option text/bg app-wide (better ugly than unreadable). */
+select option,
+select optgroup {
+  color: #0b0b0b;
+  background-color: #f8fafc;
+}
+
 /* Bio page: Windows sometimes shows a light native menu while inheriting white text,
    which makes options unreadable. Force readable option text/bg for that page’s selects. */
 select.rf-bio-select option,

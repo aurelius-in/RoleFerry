@@ -6,7 +6,6 @@ export default function Onboarding() {
     { label: "Match pain points", href: "/painpoint-match" },
     { label: "Company research", href: "/company-research" },
     { label: "Find contacts (Email or LinkedIn)", href: "/find-contact" },
-    { label: "Compose (Offer + outreach)", href: "/compose" },
     { label: "Bio page (shareable link)", href: "/bio-page" },
     { label: "Build a campaign", href: "/campaign" },
     { label: "Track analytics", href: "/analytics" },

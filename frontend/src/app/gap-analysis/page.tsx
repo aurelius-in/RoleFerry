@@ -107,20 +107,15 @@ export default function GapAnalysisPage() {
     setTemperamentProfile(safeJson<TemperamentProfile | null>(localStorage.getItem("temperament_profile"), null));
   }, []);
 
-  // Personality gaps require personality/temperament context; don't run without it.
-  const canAnalyze =
-    jobDescriptions.length > 0 &&
-    Boolean(preferences) &&
-    Boolean(resumeExtract) &&
-    (Boolean(personalityProfile) || Boolean(temperamentProfile));
+  // Allow analysis even without personality; personality gaps will be empty in that case.
+  const canAnalyze = jobDescriptions.length > 0 && Boolean(preferences) && Boolean(resumeExtract);
   const missingSteps = useMemo(() => {
     const missing: Array<{ key: string; label: string; href: string }> = [];
     if (!preferences) missing.push({ key: "prefs", label: "Job Preferences (Step 1)", href: "/job-preferences" });
     if (!resumeExtract) missing.push({ key: "resume", label: "Resume (Step 3)", href: "/resume" });
     if (jobDescriptions.length === 0) missing.push({ key: "jobs", label: "Job Descriptions (Step 2)", href: "/job-descriptions" });
-    if (!personalityProfile) missing.push({ key: "personality", label: "Personality (Step 3)", href: "/personality" });
     return missing;
-  }, [jobDescriptions.length, preferences, resumeExtract, personalityProfile]);
+  }, [jobDescriptions.length, preferences, resumeExtract]);
 
   const topSummary = useMemo(() => {
     const top = ranked[0];

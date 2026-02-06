@@ -55,6 +55,9 @@ class BioPageDraft(BaseModel):
     # proof + positioning
     proof_points: List[str] = Field(default_factory=list)
     fit_points: List[str] = Field(default_factory=list)
+    # Work style section (user preferences distilled). Frontend may compute this deterministically
+    # from `job_preferences` and attach it before publishing.
+    work_style_points: List[str] = Field(default_factory=list)
 
     # deterministic resume section (rendered client-side from resume_extract)
     # we keep the extract here for convenience, but do not invent anything.

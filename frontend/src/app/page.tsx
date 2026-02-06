@@ -23,8 +23,7 @@ const STONES: StoneConfig[] = [
   // Flow order (per wireframes): company research first, then decision makers.
   { step: 7, tab: "company-research", label: "Company Research", icon: "🏢", href: "/company-research" },
   { step: 8, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
-  // Consolidated: Offer + Compose live on /compose (before Bio).
-  { step: 9, tab: "compose", label: "Compose", icon: "✍️", href: "/compose" },
+  // Compose removed: Bio → Campaign.
   { step: 10, tab: "bio-page", label: "Bio Page", icon: "🌐", href: "/bio-page" },
   { step: 11, tab: "campaign", label: "Campaign", icon: "📧", href: "/campaign" },
   { step: 12, tab: "launch", label: "Launch", icon: "🚀", href: "/deliverability-launch" },

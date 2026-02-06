@@ -33,9 +33,10 @@ class ResumeExtract(BaseModel):
 
 
 class GapJobDescription(BaseModel):
-    id: str
-    title: str
-    company: str
+    # Be permissive: upstream parsers sometimes omit fields. We'll fill safe defaults.
+    id: str = ""
+    title: str = ""
+    company: str = ""
     url: Optional[str] = None
     content: Optional[str] = None
     painPoints: Optional[List[str]] = None
@@ -941,6 +942,19 @@ async def analyze_gap(req: GapAnalysisRequest) -> GapAnalysisResponse:
     except Exception as e:
         # This should be a 400, not a 500.
         raise HTTPException(status_code=400, detail=f"Invalid payload: {e}")
+
+    # Fill safe defaults so one malformed job doesn't break the whole run.
+    try:
+        fixed: List[GapJobDescription] = []
+        for idx, j in enumerate(jobs):
+            jid = str(j.id or "").strip() or f"job_{idx + 1}"
+            title = str(j.title or "").strip() or "Job"
+            company = str(j.company or "").strip() or "Company"
+            fixed.append(j.model_copy(update={"id": jid, "title": title, "company": company}))
+        jobs = fixed
+    except Exception:
+        # If this fails, keep original list and let deterministic ranking handle it.
+        pass
 
     if not jobs:
         return GapAnalysisResponse(success=True, message="No jobs to analyze", ranked=[], helper={"used_llm": False})
