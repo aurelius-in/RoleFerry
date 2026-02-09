@@ -395,7 +395,7 @@ export default function JobPreferencesPage() {
           <div className="mb-8">
             <h1 className="mt-2 text-center text-3xl font-bold text-white mb-2">Role Preferences</h1>
             <p className="text-center text-white/70">
-              Tell us what you value in a new role and we&apos;ll help you deine your ideal job profile (IDP).
+              Tell us what you value in a new role and we&apos;ll help you define your ideal job profile (IJP).
             </p>
           </div>
 
