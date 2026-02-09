@@ -30,6 +30,25 @@ type JobDescription = {
   title: string;
   company: string;
   url?: string;
+  content?: string;
+  painPoints?: string[];
+  requiredSkills?: string[];
+  successMetrics?: string[];
+  responsibilities?: string[];
+  requirements?: string[];
+};
+
+type PainPointMatchLite = {
+  painpoint_1?: string;
+  solution_1?: string;
+  metric_1?: string;
+  painpoint_2?: string;
+  solution_2?: string;
+  metric_2?: string;
+  painpoint_3?: string;
+  solution_3?: string;
+  metric_3?: string;
+  alignment_score?: number;
 };
 
 function nowIso() {
@@ -97,6 +116,10 @@ export default function OfferPage() {
   const prefs = useMemo(() => safeJson<any>(typeof window !== "undefined" ? localStorage.getItem("job_preferences") : null, null), []);
   const selectedRole = useMemo(() => safeJson<any>(typeof window !== "undefined" ? localStorage.getItem("selected_job_description") : null, null), []);
   const selectedRoleId = useMemo(() => String(typeof window !== "undefined" ? localStorage.getItem("selected_job_description_id") : "" || "").trim(), []);
+  const painpointByJob = useMemo(
+    () => safeJson<Record<string, PainPointMatchLite[]>>(typeof window !== "undefined" ? localStorage.getItem("painpoint_matches_by_job") : null, {}),
+    []
+  );
 
   const activeRole = useMemo(() => {
     const id = String(activeRoleId || "").trim();
@@ -129,21 +152,102 @@ export default function OfferPage() {
     const title = String(activeRole?.title || selectedRole?.title || "").trim();
     const company = String(activeRole?.company || selectedRole?.company || "").trim();
     const industry = Array.isArray(prefs?.industries) ? String(prefs.industries[0] || "").trim() : "";
+    const roleSkills = (Array.isArray(activeRole?.requiredSkills) ? activeRole?.requiredSkills : [])
+      .map((x) => String(x || "").trim())
+      .filter(Boolean)
+      .slice(0, 4);
+    const resumeSkills = Array.isArray(resume?.skills) ? resume.skills.map((x: any) => String(x || "").trim()).filter(Boolean) : [];
+    const overlap = roleSkills.filter((s) => resumeSkills.some((r: string) => r.toLowerCase() === s.toLowerCase())).slice(0, 2);
+    const painpoints = (Array.isArray(activeRole?.painPoints) ? activeRole?.painPoints : [])
+      .map((x) => String(x || "").trim())
+      .filter(Boolean)
+      .slice(0, 2);
+    const outcome = painpoints[0] ? clampLines(painpoints[0], 90) : "get important work done faster";
+
     const seed = [
-      title ? `I help teams win in ${title} roles${company ? ` at companies like ${company}` : ""}.` : "",
-      industry ? `I’m especially strong in ${industry} contexts.` : "",
+      title ? `For ${title}${company ? ` at ${company}` : ""}: I help teams ${outcome}.` : "",
+      overlap.length ? `Strengths: ${overlap.join(" + ")}.` : roleSkills.length ? `Strengths: ${roleSkills.slice(0, 2).join(" + ")}.` : "",
+      industry ? `Context: ${industry}.` : "",
     ]
       .filter(Boolean)
       .join(" ");
     setOneLiner(seed);
-    setProofPoints(["", "", ""]);
+
+    // Seed proof points with resume metrics (role-specific flavor).
+    const km = Array.isArray(resume?.keyMetrics) ? resume.keyMetrics : [];
+    const metricLines = km
+      .slice(0, 2)
+      .map((m: any) => [m?.metric, m?.value, m?.context].filter(Boolean).join(" — "))
+      .map((s: string) => clampLines(s, 140))
+      .filter(Boolean);
+    const pp3 = roleSkills.length ? `Relevant skills: ${roleSkills.slice(0, 3).join(", ")}.` : "";
+    const nextProof = [metricLines[0] || "", metricLines[1] || "", pp3 || ""].filter((_, i) => i < 3);
+    while (nextProof.length < 3) nextProof.push("");
+    setProofPoints(nextProof.slice(0, 3));
+
+    // Seed a micro-case-study from Pain Point Match (if available for this role).
+    const m0 = (painpointByJob as any)?.[String(activeRoleId || "")]?.[0] as PainPointMatchLite | undefined;
     setCaseStudies([
-      { title: "Case study 1", problem: "", actions: "", impact: "" },
+      {
+        title: "Case study 1",
+        problem: clampLines(String(m0?.painpoint_1 || ""), 180),
+        actions: clampLines(String(m0?.solution_1 || ""), 180),
+        impact: clampLines(String(m0?.metric_1 || ""), 140),
+      },
       { title: "Case study 2", problem: "", actions: "", impact: "" },
     ]);
     setCredibility([]);
     setDefaultCta("Open to a 10-minute chat this week?");
   }
+
+  const roleSignals = useMemo(() => {
+    const r = activeRole;
+    const skills = (Array.isArray(r?.requiredSkills) ? r?.requiredSkills : []).map((x) => String(x || "").trim()).filter(Boolean).slice(0, 8);
+    const pains = (Array.isArray(r?.painPoints) ? r?.painPoints : []).map((x) => String(x || "").trim()).filter(Boolean).slice(0, 6);
+    const metrics = (Array.isArray(r?.successMetrics) ? r?.successMetrics : []).map((x) => String(x || "").trim()).filter(Boolean).slice(0, 6);
+    const match0 = (activeRoleId && (painpointByJob as any)?.[activeRoleId]?.[0]) ? ((painpointByJob as any)[activeRoleId][0] as PainPointMatchLite) : null;
+    return { skills, pains, metrics, match0 };
+  }, [activeRole, activeRoleId, painpointByJob]);
+
+  const persistOfferForRole = (roleId: string, payload: OfferV1, opts?: { updateLegacy?: boolean }) => {
+    const rid = String(roleId || "").trim() || "default";
+    const byJob = safeJson<Record<string, OfferV1>>(localStorage.getItem(STORAGE_BY_JOB_KEY), {});
+    const nextBy = { ...(byJob || {}), [rid]: payload };
+    localStorage.setItem(STORAGE_BY_JOB_KEY, JSON.stringify(nextBy));
+    if (opts?.updateLegacy) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      localStorage.setItem("offer_snippet", payload.snippet);
+    }
+  };
+
+  const saveDraftToCurrentRole = (opts?: { silent?: boolean; updateLegacy?: boolean }) => {
+    try {
+      const rid = String(activeRoleId || "").trim() || String(activeRole?.id || "").trim() || "default";
+      const payload: OfferV1 = {
+        version: 1,
+        updated_at: nowIso(),
+        one_liner: String(oneLiner || "").trim(),
+        proof_points: (proofPoints || []).map((x) => String(x || "").trim()).filter(Boolean).slice(0, 6),
+        case_studies: (caseStudies || [])
+          .map((c) => ({
+            title: String(c?.title || "").trim() || "Case study",
+            problem: String(c?.problem || "").trim(),
+            actions: String(c?.actions || "").trim(),
+            impact: String(c?.impact || "").trim(),
+          }))
+          .filter((c) => c.problem || c.actions || c.impact)
+          .slice(0, 2),
+        credibility: (credibility || []).map((x) => String(x || "").trim()).filter(Boolean).slice(0, 10),
+        default_cta: String(defaultCta || "").trim(),
+        snippet,
+      };
+      persistOfferForRole(rid, payload, { updateLegacy: Boolean(opts?.updateLegacy) });
+      if (!opts?.silent) {
+        setNotice("Saved offer for this role.");
+        window.setTimeout(() => setNotice(null), 1600);
+      }
+    } catch {}
+  };
 
   useEffect(() => {
     try {
@@ -232,15 +336,8 @@ export default function OfferPage() {
         default_cta: String(defaultCta || "").trim(),
         snippet,
       };
-      // Persist per-role offer.
-      const byJob = safeJson<Record<string, OfferV1>>(localStorage.getItem(STORAGE_BY_JOB_KEY), {});
       const key = String(activeRoleId || "").trim() || String(activeRole?.id || "").trim() || "default";
-      const nextBy = { ...(byJob || {}), [key]: payload };
-      localStorage.setItem(STORAGE_BY_JOB_KEY, JSON.stringify(nextBy));
-
-      // Keep legacy keys updated for backward compatibility (store the active role's offer).
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      localStorage.setItem("offer_snippet", payload.snippet);
+      persistOfferForRole(key, payload, { updateLegacy: true });
       setNotice("Saved offer for this role.");
     } catch {
       // ignore storage failures
@@ -298,7 +395,16 @@ export default function OfferPage() {
                       <button
                         key={`offer_role_${r.id}`}
                         type="button"
-                        onClick={() => setActiveRoleId(String(r.id || ""))}
+                        onClick={() => {
+                          const nextId = String(r.id || "");
+                          if (nextId && nextId !== activeRoleId) {
+                            // Prevent "oops I switched roles and lost my work".
+                            saveDraftToCurrentRole({ silent: true, updateLegacy: false });
+                            setActiveRoleId(nextId);
+                            setNotice("Switched roles.");
+                            window.setTimeout(() => setNotice(null), 900);
+                          }
+                        }}
                         className={`w-full text-left px-3 py-3 border-b border-white/10 hover:bg-white/5 transition-colors ${
                           isActive ? "bg-white/5" : ""
                         }`}
@@ -323,6 +429,122 @@ export default function OfferPage() {
             </div>
 
             <div className="lg:col-span-8 space-y-6">
+              {(roleSignals.skills.length || roleSignals.pains.length || roleSignals.metrics.length) ? (
+                <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                  <div className="text-[11px] font-semibold text-white/70 uppercase tracking-wider">Role signals (from this posting)</div>
+                  <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <div className="text-[10px] text-white/60 font-semibold mb-1">Pain points</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {roleSignals.pains.slice(0, 4).map((p) => (
+                          <button
+                            key={`rp_${p}`}
+                            type="button"
+                            onClick={() =>
+                              setCaseStudies((prev) => {
+                                const next = [...(prev || [])];
+                                const c0 = next[0] || { title: "Case study 1", problem: "", actions: "", impact: "" };
+                                if (!String(c0.problem || "").trim()) next[0] = { ...c0, problem: p };
+                                else {
+                                  // fallback: add as a proof point
+                                  setProofPoints((pps) => {
+                                    const arr = [...(pps || [])];
+                                    const idx = arr.findIndex((x) => !String(x || "").trim());
+                                    const t = idx >= 0 ? idx : Math.min(arr.length - 1, 5);
+                                    arr[t] = `Pain point: ${clampLines(p, 120)}`;
+                                    return arr.slice(0, 6);
+                                  });
+                                }
+                                return next;
+                              })
+                            }
+                            className="px-2 py-1 rounded-full border border-white/10 bg-black/30 text-[10px] text-white/80 hover:bg-black/40"
+                            title="Insert"
+                          >
+                            + {clampLines(p, 36)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-white/60 font-semibold mb-1">Required skills</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {roleSignals.skills.slice(0, 6).map((s) => (
+                          <button
+                            key={`rs_${s}`}
+                            type="button"
+                            onClick={() =>
+                              setProofPoints((prev) => {
+                                const next = [...(prev || [])];
+                                const idx = next.findIndex((x) => !String(x || "").trim());
+                                const t = idx >= 0 ? idx : Math.min(next.length - 1, 5);
+                                next[t] = String(next[t] || "").trim() ? next[t] : `Relevant: ${s}`;
+                                return next.slice(0, 6);
+                              })
+                            }
+                            className="px-2 py-1 rounded-full border border-white/10 bg-black/30 text-[10px] text-white/80 hover:bg-black/40"
+                            title="Insert into proof points"
+                          >
+                            + {clampLines(s, 22)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-white/60 font-semibold mb-1">Success metrics</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {roleSignals.metrics.slice(0, 4).map((m) => (
+                          <button
+                            key={`rm_${m}`}
+                            type="button"
+                            onClick={() =>
+                              setCaseStudies((prev) => {
+                                const next = [...(prev || [])];
+                                const c0 = next[0] || { title: "Case study 1", problem: "", actions: "", impact: "" };
+                                if (!String(c0.impact || "").trim()) next[0] = { ...c0, impact: m };
+                                else setDefaultCta((x) => x); // no-op; keep UX consistent
+                                return next;
+                              })
+                            }
+                            className="px-2 py-1 rounded-full border border-white/10 bg-black/30 text-[10px] text-white/80 hover:bg-black/40"
+                            title="Insert into case study impact"
+                          >
+                            + {clampLines(m, 28)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {roleSignals.match0 ? (
+                    <div className="mt-3 text-[11px] text-white/60">
+                      Tip: we found a Pain Point Match for this role.{" "}
+                      <button
+                        type="button"
+                        className="underline font-semibold text-white/80 hover:text-white"
+                        onClick={() =>
+                          setCaseStudies((prev) => {
+                            const next = [...(prev || [])];
+                            const m0 = roleSignals.match0!;
+                            const c0 = next[0] || { title: "Case study 1", problem: "", actions: "", impact: "" };
+                            next[0] = {
+                              ...c0,
+                              problem: String(c0.problem || "").trim() || clampLines(String(m0.painpoint_1 || ""), 180),
+                              actions: String(c0.actions || "").trim() || clampLines(String(m0.solution_1 || ""), 180),
+                              impact: String(c0.impact || "").trim() || clampLines(String(m0.metric_1 || ""), 140),
+                            };
+                            return next;
+                          })
+                        }
+                      >
+                        Use it to prefill Case study 1
+                      </button>
+                      .
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
               <div className="rounded-lg border border-white/10 bg-black/20 p-5">
                 <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">One-liner</div>
                 <textarea
@@ -330,7 +552,7 @@ export default function OfferPage() {
                   onChange={(e) => setOneLiner(e.target.value)}
                   rows={3}
                   className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Example: I help data teams ship reliable analytics faster by building pragmatic pipelines and crisp stakeholder alignment."
+                  placeholder="Example: I help data teams deliver reliable analytics faster by building pragmatic pipelines and clear stakeholder alignment."
                 />
                 <div className="mt-2 text-[11px] text-white/55">
                   Variable:{" "}

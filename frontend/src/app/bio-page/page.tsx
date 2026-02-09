@@ -22,6 +22,7 @@ type BioPageDraft = {
   calendly_url: string;
   linkedin_url: string;
   video_url?: string;
+  video_script?: string;
   proof_points: string[];
   fit_points: string[];
   work_style_points?: string[];
@@ -71,6 +72,7 @@ export default function BioPageStep() {
   const videoInputRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<BioPageDraft | null>(null);
   const [busy, setBusy] = useState<"generate" | "publish" | null>(null);
+  const [busyScript, setBusyScript] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [resumeExtract, setResumeExtract] = useState<any>(null);
   const [selectedJob, setSelectedJob] = useState<any>(null);
@@ -82,12 +84,13 @@ export default function BioPageStep() {
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [userDisplayName, setUserDisplayName] = useState<string>("");
   const [jobPrefs, setJobPrefs] = useState<any>(null);
-  const openPublicPage = (url: string) => {
+  const openPublicPage = (url: string): Window | null => {
     const u = safeStr(url);
-    if (!u) return;
+    if (!u) return null;
     try {
-      window.open(u, "_blank", "noopener,noreferrer");
+      return window.open(u, "_blank", "noopener,noreferrer");
     } catch {}
+    return null;
   };
 
   const extractBioSlug = (url: string): string | null => {
@@ -261,6 +264,31 @@ export default function BioPageStep() {
     videoInputRef.current?.click();
   };
 
+  const generateOneMinuteVideoScript = async () => {
+    setBusyScript(true);
+    setMsg(null);
+    try {
+      const res = await api<{ script: string }>("/bio-pages/generate-video-script", "POST", {
+        resume_extract: resumeExtract,
+        selected_job_description: selectedJob,
+        painpoint_matches: Array.isArray(painpointMatches) ? painpointMatches : [],
+        offer_draft: offerDraft,
+        display_name: safeStr(userDisplayName) || safeStr(draft?.display_name),
+      });
+      const script = safeStr(res?.script);
+      if (!script) throw new Error("No script returned");
+      const next = { ...(draft || ({} as any)), video_script: script };
+      persistDraft(next as any);
+      setMsg("Script generated.");
+      setTimeout(() => setMsg(null), 1800);
+    } catch (e: any) {
+      setMsg(String(e?.message || "Failed to generate script"));
+      setTimeout(() => setMsg(null), 2500);
+    } finally {
+      setBusyScript(false);
+    }
+  };
+
   const onProfilePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -300,6 +328,35 @@ export default function BioPageStep() {
     } catch {}
   };
 
+  const getVideoDurationSeconds = (file: File): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      try {
+        const url = URL.createObjectURL(file);
+        const v = document.createElement("video");
+        v.preload = "metadata";
+        v.onloadedmetadata = () => {
+          try {
+            const d = Number(v.duration || 0);
+            URL.revokeObjectURL(url);
+            resolve(d);
+          } catch (err) {
+            URL.revokeObjectURL(url);
+            reject(err);
+          }
+        };
+        v.onerror = () => {
+          try {
+            URL.revokeObjectURL(url);
+          } catch {}
+          reject(new Error("Failed to read video metadata"));
+        };
+        v.src = url;
+      } catch (err) {
+        reject(err);
+      }
+    });
+  };
+
   const onVideoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -313,11 +370,27 @@ export default function BioPageStep() {
       return;
     }
 
-    // IMPORTANT: localStorage is small. Keep this strict or it will fail silently.
-    // If you need larger videos, paste a hosted URL below instead.
-    const MAX_BYTES = 4.5 * 1024 * 1024; // ~4.5MB
-    if (file.size > MAX_BYTES) {
-      setMsg("Video too large for in-app upload. Please upload to Loom/Drive and paste the URL instead.");
+    // Enforce the real product constraint: <= 2 minutes.
+    try {
+      const dur = await getVideoDurationSeconds(file);
+      if (!Number.isFinite(dur) || dur <= 0) {
+        setMsg("Couldn’t read the video length. Try exporting as MP4 and re-uploading.");
+        setTimeout(() => setMsg(null), 3200);
+        try {
+          e.target.value = "";
+        } catch {}
+        return;
+      }
+      if (dur > 120) {
+        setMsg("Please upload a video that is 2 minutes or shorter.");
+        setTimeout(() => setMsg(null), 3200);
+        try {
+          e.target.value = "";
+        } catch {}
+        return;
+      }
+    } catch {
+      setMsg("Couldn’t read the video length. Try exporting as MP4 and re-uploading.");
       setTimeout(() => setMsg(null), 3200);
       try {
         e.target.value = "";
@@ -325,23 +398,53 @@ export default function BioPageStep() {
       return;
     }
 
-    const reader = new FileReader();
-    const dataUrl: string = await new Promise((resolve, reject) => {
-      reader.onerror = () => reject(new Error("Failed to read file"));
-      reader.onload = () => resolve(String(reader.result || ""));
-      reader.readAsDataURL(file);
-    });
-
-    setVideoUrl(dataUrl);
-    try {
-      localStorage.setItem(VIDEO_KEY, dataUrl);
-    } catch {
-      setMsg("Couldn’t save the video (storage limit). Please paste a hosted video URL instead.");
+    // Upload to backend (don’t store data URLs in localStorage).
+    const MAX_BYTES = 80 * 1024 * 1024; // keep aligned with backend cap
+    if (file.size > MAX_BYTES) {
+      setMsg("Video too large. Please upload a smaller clip (<= 2 minutes) or paste a hosted video URL.");
       setTimeout(() => setMsg(null), 3500);
+      try {
+        e.target.value = "";
+      } catch {}
+      return;
     }
 
+    setMsg("Uploading video…");
+    let uploadedUrl = "";
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const resp = await fetch("/api/bio-pages/upload-video", {
+        method: "POST",
+        body: fd,
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error(text || `Upload failed (${resp.status})`);
+      }
+      const json = (await resp.json()) as any;
+      uploadedUrl = String(json?.url || "").trim();
+      if (!uploadedUrl) throw new Error("Upload succeeded but no URL returned.");
+    } catch (err: any) {
+      setMsg(String(err?.message || "Failed to upload video. Please paste a hosted video URL instead."));
+      setTimeout(() => setMsg(null), 3800);
+      try {
+        e.target.value = "";
+      } catch {}
+      return;
+    }
+
+    setVideoUrl(uploadedUrl);
+    try {
+      localStorage.setItem(VIDEO_KEY, uploadedUrl);
+    } catch {}
+
     // Keep draft in sync so it publishes/loads on the public page.
-    persistDraft({ ...(draft || ({} as any)), video_url: dataUrl } as any);
+    persistDraft({ ...(draft || ({} as any)), video_url: uploadedUrl } as any);
+    setMsg("Video uploaded.");
+    setTimeout(() => setMsg(null), 1800);
 
     try {
       e.target.value = "";
@@ -424,6 +527,30 @@ export default function BioPageStep() {
   };
 
   const ensureOpenPublicPage = async () => {
+    // IMPORTANT: open a window synchronously so popup blockers don't prevent it.
+    // We'll navigate it once we know the final URL (after validation/publish).
+    const win = openPublicPage("about:blank");
+    const navigate = (rawUrl: string) => {
+      const u = safeStr(rawUrl);
+      if (!u) return;
+      try {
+        const absolute = new URL(u, window.location.origin).toString();
+        if (win && !win.closed) {
+          win.location.href = absolute;
+        } else {
+          openPublicPage(absolute);
+        }
+      } catch {
+        if (win && !win.closed) {
+          try {
+            win.location.href = u;
+          } catch {}
+        } else {
+          openPublicPage(u);
+        }
+      }
+    };
+
     // If we have a cached URL, validate it first. If it 404s (common in demo/in-memory),
     // republish to get a fresh slug, then open the new URL.
     const existingUrl = safeStr(bioUrl || localStorage.getItem(BIO_URL_KEY));
@@ -431,7 +558,7 @@ export default function BioPageStep() {
     if (existingUrl && existingSlug) {
       const ok = await validatePublishedSlug(existingSlug);
       if (ok) {
-        openPublicPage(existingUrl);
+        navigate(existingUrl);
         return;
       }
       // Stale/broken link: clear it so we publish below.
@@ -442,7 +569,15 @@ export default function BioPageStep() {
     }
 
     const url = await publish();
-    if (url) openPublicPage(url);
+    if (url) {
+      navigate(url);
+      return;
+    }
+
+    // No URL: close the blank tab we opened.
+    try {
+      if (win && !win.closed) win.close();
+    } catch {}
   };
 
   const copyLink = async () => {
@@ -773,7 +908,7 @@ export default function BioPageStep() {
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
               <div className="text-sm font-bold">Intro video</div>
               <div className="text-xs text-white/60 mt-1">
-                Upload a small MP4 (under ~4.5MB) or paste a hosted video URL.
+                Upload an MP4/MOV/WebM that’s <span className="font-semibold">2 minutes or shorter</span>, or paste a hosted video URL.
               </div>
               <div className="mt-3 space-y-2">
                 <input ref={videoInputRef} type="file" accept="video/*" onChange={onVideoChange} className="hidden" />
@@ -828,6 +963,130 @@ export default function BioPageStep() {
                 ) : (
                   <div className="text-xs text-white/60">No video selected.</div>
                 )}
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-sm font-bold">1-minute bio video script</div>
+                  <div className="text-xs text-white/60 mt-1">
+                    Generates a tight script you can read in ~60 seconds (bio-page safe: no company-specific mentions).
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={generateOneMinuteVideoScript}
+                  disabled={busyScript}
+                  className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-white text-xs font-bold hover:bg-white/10 disabled:opacity-60"
+                >
+                  {busyScript ? (
+                    <span className="inline-flex items-center gap-2">
+                      <InlineSpinner />
+                      Generating…
+                    </span>
+                  ) : (
+                    "Generate 1 minute bio script"
+                  )}
+                </button>
+              </div>
+
+              <div className="mt-3">
+                <textarea
+                  value={safeStr(draft?.video_script)}
+                  onChange={(e) => {
+                    const next = { ...(draft || ({} as any)), video_script: e.target.value };
+                    persistDraft(next as any);
+                  }}
+                  rows={8}
+                  placeholder="Click “Generate 1 minute bio script” to create a script you can read on camera…"
+                  className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <div className="text-[11px] text-white/55">
+                    Tip: aim for ~130–160 words. Smile, keep energy up, and end with a clear CTA.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const text = safeStr(draft?.video_script);
+                      if (!text) return;
+                      try {
+                        await navigator.clipboard.writeText(text);
+                        setMsg("Copied script.");
+                        setTimeout(() => setMsg(null), 1300);
+                      } catch {}
+                    }}
+                    className="px-3 py-2 rounded-md bg-white/5 border border-white/10 text-white/80 text-xs font-bold hover:bg-white/10"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+              <div className="text-sm font-bold">Record your video (free tools)</div>
+              <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
+                <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+                  <div className="text-xs font-bold text-white">OBS Studio</div>
+                  <div className="text-xs text-white/60 mt-1">
+                    Best quality + control. Great if you want a clean, repeatable setup.
+                  </div>
+                  <a
+                    href="https://obsproject.com/download"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex text-xs font-semibold text-sky-200 hover:text-sky-100 underline"
+                  >
+                    Download OBS
+                  </a>
+                  <ul className="mt-2 text-[11px] text-white/60 space-y-1 list-disc list-inside">
+                    <li>Scene: add “Video Capture Device” (camera) + “Audio Input Capture” (mic).</li>
+                    <li>Start Recording → talk through the script.</li>
+                    <li>Stop Recording → upload the saved MP4 here.</li>
+                  </ul>
+                </div>
+
+                <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+                  <div className="text-xs font-bold text-white">Loom</div>
+                  <div className="text-xs text-white/60 mt-1">
+                    Fastest: record + get a share link immediately.
+                  </div>
+                  <a
+                    href="https://www.loom.com/download"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex text-xs font-semibold text-sky-200 hover:text-sky-100 underline"
+                  >
+                    Download Loom
+                  </a>
+                  <ul className="mt-2 text-[11px] text-white/60 space-y-1 list-disc list-inside">
+                    <li>Record “Camera only” (or camera + screen).</li>
+                    <li>Keep it under 1 minute.</li>
+                    <li>Paste the Loom share URL into “Video URL”.</li>
+                  </ul>
+                </div>
+
+                <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+                  <div className="text-xs font-bold text-white">Zoom</div>
+                  <div className="text-xs text-white/60 mt-1">
+                    Simple fallback if you already have it installed.
+                  </div>
+                  <a
+                    href="https://zoom.us/download"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex text-xs font-semibold text-sky-200 hover:text-sky-100 underline"
+                  >
+                    Download Zoom
+                  </a>
+                  <ul className="mt-2 text-[11px] text-white/60 space-y-1 list-disc list-inside">
+                    <li>Start a new meeting (solo).</li>
+                    <li>More → Record on this computer.</li>
+                    <li>Use the MP4 output and upload it here.</li>
+                  </ul>
+                </div>
               </div>
             </div>
 

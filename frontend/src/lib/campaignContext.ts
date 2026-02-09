@@ -59,6 +59,35 @@ function lsSet(key: string, value: string) {
   } catch {}
 }
 
+function humanizeOfferText(s: any): string {
+  const t = String(s ?? "");
+  if (!t) return "";
+  // De-jargonize a common default phrase that leaks into emails.
+  // (We only rewrite the specific phrase; user-entered wording is otherwise preserved.)
+  return t.replace(/ship outcomes/gi, "get important work done");
+}
+
+function humanizeOffer(offer: any): any {
+  if (!offer || typeof offer !== "object") return offer;
+  try {
+    const next: any = { ...(offer as any) };
+    if ("one_liner" in next) next.one_liner = humanizeOfferText(next.one_liner);
+    if ("snippet" in next) next.snippet = humanizeOfferText(next.snippet);
+    if (Array.isArray(next.proof_points)) next.proof_points = next.proof_points.map(humanizeOfferText);
+    if (Array.isArray(next.case_studies)) {
+      next.case_studies = next.case_studies.map((c: any) => ({
+        ...(c || {}),
+        problem: humanizeOfferText(c?.problem),
+        actions: humanizeOfferText(c?.actions),
+        impact: humanizeOfferText(c?.impact),
+      }));
+    }
+    return next;
+  } catch {
+    return offer;
+  }
+}
+
 function senderProfileFromLs() {
   const sender = safeJson<any>(lsGet("rf_user"), null);
   const full =
@@ -133,7 +162,7 @@ export function buildCampaignContextV1(contactId: string): RFCampaignContextV1 {
     resume_extract: resumeExtract,
     personality_profile: personalityProfile,
     temperament_profile: temperamentProfile,
-    offer,
+    offer: humanizeOffer(offer),
     selected_job_description: selectedJob,
     selected_job_description_id: selectedJobId,
     gap_analysis: gapResults,

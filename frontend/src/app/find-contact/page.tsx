@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { formatCompanyName } from "@/lib/format";
@@ -85,67 +85,206 @@ export default function FindContactPage() {
   const [researchNotice, setResearchNotice] = useState<string | null>(null);
   const [researchByContact, setResearchByContact] = useState<Record<string, any>>({});
 
-  const TITLE_FILTER_OPTIONS: Array<{ group: string; options: string[] }> = [
-    {
-      group: "Executive",
-      options: ["CEO", "COO", "CTO", "CPO", "CFO", "Founder", "President", "General Manager"],
-    },
-    {
-      group: "Engineering leadership",
-      options: [
-        "VP of Engineering",
-        "SVP Engineering",
-        "Head of Engineering",
-        "Director of Engineering",
-        "Engineering Manager",
-        "Head of Platform",
-        "Director of Platform",
-        "Head of Infrastructure",
-        "SRE Manager",
-        "Security Director",
-        "CISO",
-      ],
-    },
-    {
-      group: "Product & Growth",
-      options: [
-        "VP Product",
-        "Head of Product",
-        "Director of Product",
-        "Group Product Manager",
-        "Product Lead",
-        "VP Growth",
-        "Head of Growth",
-        "Growth Director",
-      ],
-    },
-    {
-      group: "People / Recruiting (hiring owners)",
-      options: [
-        "Chief People Officer",
-        "VP People",
-        "Head of People",
-        "HR Business Partner",
-        "Head of Talent Acquisition",
-        "Director of Talent Acquisition",
-        "Recruiting Manager",
-        "Technical Recruiter",
-        "Senior Recruiter",
-        "Talent Acquisition Partner",
-        "Recruiting Sourcer",
-      ],
-    },
-    {
-      group: "Design (if relevant)",
-      options: ["VP Design", "Head of Design", "Design Director", "UX Director"],
-    },
-    {
-      group: "Data (if relevant)",
-      options: ["VP Data", "Head of Data", "Director of Data", "Data Engineering Manager", "Head of Analytics"],
-    },
-  ];
+  type RoleDomain =
+    | "engineering"
+    | "data"
+    | "product"
+    | "design"
+    | "marketing"
+    | "sales"
+    | "finance"
+    | "supply_chain"
+    | "writing_comms"
+    | "construction"
+    | "operations"
+    | "recruiting"
+    | "other";
+
+  const inferRoleDomainFromSelectedJob = (jd: any): RoleDomain => {
+    try {
+      const title = String(jd?.title || "").toLowerCase();
+      const companyIndustry = String(jd?.industry || jd?.company_industry || "").toLowerCase();
+      const skills = Array.isArray(jd?.required_skills) ? jd.required_skills : [];
+      const skillsStr = skills.map((s: any) => String(s || "")).join(" ").toLowerCase();
+      const body = String(jd?.raw_text || jd?.text || jd?.description || "").toLowerCase();
+      const hay = [title, companyIndustry, skillsStr, body].filter(Boolean).join(" ");
+
+      const has = (re: RegExp) => re.test(hay);
+
+      if (has(/\b(supply\s*chain|logistics|warehouse|procurement|inventory|transport|freight|shipping|distribution)\b/)) return "supply_chain";
+      if (has(/\b(finance|financial|accounting|controller|cpa|audit|tax|fp&a|treasury|bookkeep|accounts payable|accounts receivable)\b/)) return "finance";
+      if (has(/\b(construction|superintendent|foreman|general contractor|civil|mep|site manager|jobsite|project executive)\b/)) return "construction";
+      if (has(/\b(communications|comms|public relations|pr\b|content strategist|copywriter|writer|editor|journalist|technical writer)\b/)) return "writing_comms";
+      if (has(/\b(sales|account executive|ae\b|bdr\b|sdr\b|business development|revenue|quota|pipeline|customer success)\b/)) return "sales";
+      if (has(/\b(marketing|demand gen|growth marketing|seo\b|paid search|paid social|brand|content marketing|lifecycle)\b/)) return "marketing";
+      if (has(/\b(product manager|product\b|growth\b|monetization|pricing|product ops)\b/)) return "product";
+      if (has(/\b(design|ux\b|ui\b|product designer|visual designer|researcher)\b/)) return "design";
+      if (has(/\b(data scientist|data engineer|analytics|bi\b|machine learning|ml\b|ai\b|model|statistic)\b/)) return "data";
+      if (has(/\b(recruit|recruiting|talent acquisition|sourcer|hr\b|people ops)\b/)) return "recruiting";
+      if (has(/\b(engineer|engineering|software|developer|sre\b|devops|platform|infrastructure|cloud|security)\b/)) return "engineering";
+      if (has(/\b(operations|ops\b|program manager|project manager|pm\b|implementation|support|customer support|delivery|supply)\b/)) return "operations";
+
+      return title ? "other" : "engineering";
+    } catch {
+      return "engineering";
+    }
+  };
+
+  const roleLeadershipGroupForDomain = (domain: RoleDomain): { group: string; options: string[] } => {
+    const groups: Record<RoleDomain, { group: string; options: string[] }> = {
+      engineering: {
+        group: "Engineering leadership",
+        options: [
+          "VP of Engineering",
+          "SVP Engineering",
+          "Head of Engineering",
+          "Director of Engineering",
+          "Engineering Manager",
+          "Head of Platform",
+          "Director of Platform",
+          "Head of Infrastructure",
+          "SRE Manager",
+          "Security Director",
+          "CISO",
+        ],
+      },
+      data: {
+        group: "Data & Analytics leadership",
+        options: ["Chief Data Officer", "VP Data", "Head of Data", "Director of Data", "Head of Analytics", "Director of Analytics", "Data Engineering Manager"],
+      },
+      product: {
+        group: "Product leadership",
+        options: ["CPO", "VP Product", "Head of Product", "Director of Product", "Group Product Manager", "Product Lead", "Head of Product Operations"],
+      },
+      design: {
+        group: "Design leadership",
+        options: ["Chief Design Officer", "VP Design", "Head of Design", "Design Director", "UX Director", "Head of Research"],
+      },
+      marketing: {
+        group: "Marketing leadership",
+        options: ["CMO", "VP of Marketing", "Head of Marketing", "Marketing Director", "Head of Growth", "VP Growth", "Demand Gen Director", "Brand Director"],
+      },
+      sales: {
+        group: "Sales leadership",
+        options: ["CRO", "VP of Sales", "Head of Sales", "Sales Director", "VP Revenue", "Head of Revenue Operations", "Customer Success Director"],
+      },
+      finance: {
+        group: "Finance & Accounting leadership",
+        options: ["CFO", "VP Finance", "Head of Finance", "Finance Director", "Controller", "Director of Accounting", "Head of Accounting", "FP&A Director"],
+      },
+      supply_chain: {
+        group: "Supply chain & Logistics leadership",
+        options: ["VP Supply Chain", "Head of Supply Chain", "Director of Supply Chain", "Logistics Director", "Head of Logistics", "Procurement Director", "Head of Procurement", "VP Operations"],
+      },
+      writing_comms: {
+        group: "Communications & Content leadership",
+        options: [
+          "Chief Communications Officer",
+          "VP Communications",
+          "Head of Communications",
+          "Director of Communications",
+          "PR Director",
+          "Content Director",
+          "Editorial Director",
+          "Head of Content",
+        ],
+      },
+      construction: {
+        group: "Construction leadership",
+        options: ["VP Construction", "Head of Construction", "Director of Construction", "Construction Manager", "Project Executive", "General Superintendent", "Director of Operations"],
+      },
+      operations: {
+        group: "Operations leadership",
+        options: ["COO", "VP Operations", "Head of Operations", "Director of Operations", "Business Operations Director", "Program Director", "PMO Director"],
+      },
+      recruiting: {
+        group: "People / Talent leadership",
+        options: ["Chief People Officer", "VP People", "Head of People", "Head of Talent Acquisition", "Director of Talent Acquisition", "Recruiting Manager", "HR Business Partner"],
+      },
+      other: {
+        group: "Role-area leadership",
+        options: ["VP", "Head of Department", "Director", "Senior Manager", "Hiring Manager", "Functional Lead"],
+      },
+    };
+    return groups[domain] || groups.engineering;
+  };
+
+  const [roleDomain, setRoleDomain] = useState<RoleDomain>("engineering");
+
+  useEffect(() => {
+    // Drive the 2nd title tier from the *selected role*.
+    try {
+      const raw = localStorage.getItem("selected_job_description");
+      const jd = raw ? JSON.parse(raw) : null;
+      setRoleDomain(inferRoleDomainFromSelectedJob(jd));
+    } catch {
+      setRoleDomain("engineering");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const TITLE_FILTER_OPTIONS: Array<{ group: string; options: string[] }> = useMemo(() => {
+    const base: Array<{ group: string; options: string[] }> = [
+      {
+        group: "Executive",
+        options: ["CEO", "COO", "CTO", "CPO", "CFO", "Founder", "President", "General Manager"],
+      },
+      roleLeadershipGroupForDomain(roleDomain),
+      {
+        group: "People / Recruiting (hiring owners)",
+        options: [
+          "Chief People Officer",
+          "VP People",
+          "Head of People",
+          "HR Business Partner",
+          "Head of Talent Acquisition",
+          "Director of Talent Acquisition",
+          "Recruiting Manager",
+          "Technical Recruiter",
+          "Senior Recruiter",
+          "Talent Acquisition Partner",
+          "Recruiting Sourcer",
+        ],
+      },
+    ];
+
+    // Only show cross-functional "Product & Growth" when it’s plausibly relevant.
+    // (For finance/supply-chain/construction/comms/ops roles this tends to add noise.)
+    const showProductGrowth = ["engineering", "data", "product", "design", "marketing", "sales", "recruiting", "other"].includes(roleDomain);
+    if (showProductGrowth) {
+      base.splice(2, 0, {
+        group: "Product & Growth",
+        options: [
+          "VP Product",
+          "Head of Product",
+          "Director of Product",
+          "Group Product Manager",
+          "Product Lead",
+          "VP Growth",
+          "Head of Growth",
+          "Growth Director",
+        ],
+      });
+    }
+
+    return base;
+  }, [roleDomain]);
 
   const TITLE_FILTER_STORAGE_KEY = "rf_decision_maker_title_filters";
+
+  useEffect(() => {
+    // Prevent "hidden" titles from previous roles from affecting search.
+    const allowed = new Set(TITLE_FILTER_OPTIONS.flatMap((g) => g.options));
+    setTitleFilters((prev) => {
+      const next = (prev || []).filter((t) => allowed.has(t));
+      if (next.length === (prev || []).length) return prev;
+      try {
+        localStorage.setItem(TITLE_FILTER_STORAGE_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [TITLE_FILTER_OPTIONS]);
 
   useEffect(() => {
     // Restore title filters (nice UX: people often reuse these).
@@ -722,6 +861,11 @@ export default function FindContactPage() {
           if (t.includes("design") || t.includes("ux") || t.includes("ui")) return "design";
           if (t.includes("marketing") || t.includes("seo") || t.includes("demand gen")) return "marketing";
           if (t.includes("sales") || t.includes("account executive") || t.includes("customer success")) return "sales";
+          if (t.includes("finance") || t.includes("accounting") || t.includes("controller") || t.includes("fp&a")) return "finance";
+          if (t.includes("supply chain") || t.includes("logistics") || t.includes("procurement")) return "supply_chain";
+          if (t.includes("construction") || t.includes("superintendent") || t.includes("foreman")) return "construction";
+          if (t.includes("communications") || t.includes("writer") || t.includes("copywriter") || t.includes("editor")) return "writing_comms";
+          if (t.includes("operations") || t.includes("program manager") || t.includes("project manager")) return "operations";
           if (t.includes("engineer") || t.includes("software") || t.includes("developer") || t.includes("data") || t.includes("ml") || t.includes("ai")) return "engineering";
           return "engineering";
         };
@@ -734,6 +878,11 @@ export default function FindContactPage() {
           marketing: ["VP of Marketing", "Head of Marketing", "Marketing Director", "CMO", "Head of Talent Acquisition", "Recruiting Manager"],
           sales: ["VP of Sales", "Head of Sales", "Sales Director", "CRO", "Head of Talent Acquisition", "Recruiting Manager"],
           recruiting: ["Head of Talent Acquisition", "Recruiting Manager", "Talent Acquisition Partner", "Lead Recruiter", "VP People", "Chief People Officer"],
+          finance: ["Controller", "Finance Director", "VP Finance", "CFO", "Head of Talent Acquisition", "Recruiting Manager"],
+          supply_chain: ["Director of Supply Chain", "Head of Supply Chain", "Logistics Director", "VP Operations", "Head of Talent Acquisition", "Recruiting Manager"],
+          construction: ["VP Construction", "Director of Construction", "Construction Manager", "Project Executive", "Head of Talent Acquisition", "Recruiting Manager"],
+          writing_comms: ["Head of Communications", "Director of Communications", "Content Director", "VP Communications", "Head of Talent Acquisition", "Recruiting Manager"],
+          operations: ["VP Operations", "Director of Operations", "COO", "Business Operations Director", "Head of Talent Acquisition", "Recruiting Manager"],
         };
 
         const seedTitlesRaw = titlesByFn[fn] || titlesByFn.engineering;
@@ -774,10 +923,10 @@ export default function FindContactPage() {
 
   const handleVerifyEmails = async () => {
     const selected = contacts.filter(c => selectedContacts.includes(c.id));
+    // Always allow a verification attempt. Some contacts won't have an email yet,
+    // but the backend can still do best-effort guessing/enrichment.
     const emailsToVerify = selected.map(c => c.email).filter((e) => isRealEmail(e));
-    
-    if (emailsToVerify.length === 0) return;
-    
+
     setVerifyingEmails(emailsToVerify);
     setShowVerificationModal(true);
 
@@ -1242,7 +1391,7 @@ export default function FindContactPage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">
-                    Decision-maker titles to include
+                    Decision-maker titles to search
                   </div>
                   <div className="mt-1 text-[11px] text-white/60">
                     Select the titles you want included in the search (we’ll match any of them).
@@ -1457,15 +1606,17 @@ export default function FindContactPage() {
 
               {selectedContacts.length > 0 && (() => {
                 const verifiableCount = contacts.filter((c) => selectedContacts.includes(c.id) && isRealEmail(c.email)).length;
-                const canVerify = verifiableCount > 0;
                 const verifyLabel = `Verify emails (${verifiableCount}/${selectedContacts.length})`;
-                if (!canVerify) return null;
+                const hint =
+                  verifiableCount === 0
+                    ? "No emails detected yet — we’ll still try a best-effort verification/guess when you click."
+                    : "Verify the selected contacts’ emails (Valid contacts get saved on the left).";
                 return (
                   <div className="flex justify-end">
                     <button
                       onClick={handleVerifyEmails}
                       className="px-4 py-2 rounded-md font-medium transition-colors bg-green-600 text-white hover:bg-green-700"
-                      title="Verify the selected contacts’ emails (Valid contacts get saved on the left)."
+                      title={hint}
                     >
                       {verifyLabel}
                     </button>

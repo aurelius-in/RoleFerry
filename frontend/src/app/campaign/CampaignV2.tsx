@@ -145,9 +145,10 @@ function defaultInstructions(step: 1 | 2 | 3 | 4) {
     ].join("\n");
   }
   return [
-    "Final follow-up. This is a respectful 'breakup' message.",
-    "If tone is playful/wacky, keep it workplace-safe: no sexual content, no insults, no guilt, no manipulation.",
-    "Give them an easy out (reply 'no') and an easy yes (quick chat).",
+    "Final follow-up: get their attention with something unexpected/off-the-wall.",
+    "Do NOT rehash the whole story. Keep it very short (2-5 sentences).",
+    "Be provocative in a playful way (workplace-safe). No insults, no sexual content, no threats.",
+    "End with an easy yes/no question.",
   ].join("\n");
 }
 
@@ -342,8 +343,9 @@ export default function CampaignV2() {
   };
 
   const toneOptionsForStep = (step: 1 | 2 | 3 | 4): Tone[] => {
-    if (step === 4) return [...BASE_TONES, ...EMAIL4_EXTRA_TONES];
-    return BASE_TONES;
+    // Make the "attention-grabbing" tones available for all steps (not just email 4).
+    // Keep base tones first so the cycle starts in sane territory.
+    return [...BASE_TONES, ...EMAIL4_EXTRA_TONES];
   };
 
   const cycleTone = (contactId: string, step: EmailStepV2, dir: -1 | 1) => {
@@ -551,7 +553,7 @@ export default function CampaignV2() {
                                   <span>Generating</span>
                                 </>
                               ) : (
-                                "Regenerate"
+                                "Generate"
                               )}
                             </button>
                           </div>
@@ -575,7 +577,6 @@ export default function CampaignV2() {
                                 title="Click to cycle tones"
                               >
                                 {toneLabel(toneDisplay)}
-                                {step.step_number === 4 ? <span className="ml-2 text-xs text-white/50">(hail mary allowed)</span> : null}
                               </button>
                               <button
                                 type="button"

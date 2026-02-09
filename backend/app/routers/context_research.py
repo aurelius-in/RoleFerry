@@ -17,7 +17,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Bump this when changing prompting/logic so cached results don't mask improvements.
-_PROMPT_VERSION = "2026-02-06-contact-hooks-v1"
+_PROMPT_VERSION = "2026-02-09-company-signals-serper-fallback-v1"
 
 # PDL can be expensive; default OFF unless explicitly enabled.
 _ENABLE_PDL = str(os.getenv("ROLEFERRY_ENABLE_PDL", "false")).lower() == "true"
@@ -138,6 +138,37 @@ def _cache_get(key: str) -> Optional[Dict[str, Any]]:
 
 def _cache_set(key: str, value: Dict[str, Any]) -> None:
     _CTX_CACHE[key] = {"ts": time.time(), "value": value}
+
+
+def _bullets_from_serper_hits(hits: Any, *, max_items: int = 6, label: str | None = None) -> str:
+    """
+    Convert Serper hits into outreach-safe bullets with real URLs.
+    """
+    out: List[str] = []
+    try:
+        for h in (hits or [])[: max(0, int(max_items))]:
+            if not isinstance(h, dict):
+                continue
+            title = str(h.get("title") or "").strip()
+            url = str(h.get("link") or h.get("url") or "").strip()
+            snippet = str(h.get("snippet") or "").strip()
+            if not url:
+                continue
+            if not title and not snippet:
+                continue
+            bit = title or snippet[:140]
+            if snippet and title and snippet.lower() not in title.lower():
+                bit = f"{title} — {snippet[:180]}"
+            # Keep it short; always include source URL.
+            out.append(f"- {bit} ({url})")
+    except Exception:
+        out = []
+
+    if not out:
+        return ""
+    if label:
+        return f"{label}:\n" + "\n".join(out)
+    return "\n".join(out)
 
 @router.post("/research", response_model=ResearchResponse)
 async def conduct_research(request: ResearchRequest):
@@ -293,24 +324,105 @@ async def conduct_research(request: ResearchRequest):
                 return []
 
         if want_live and settings.serper_api_key:
+            # Derive a likely company domain for site-restricted searches (press/blog/newsroom).
+            def _domain_from_url(u: str) -> str:
+                try:
+                    from urllib.parse import urlparse
+                    host = (urlparse(u).hostname or "").strip().lower()
+                    if host.startswith("www."):
+                        host = host[4:]
+                    return host
+                except Exception:
+                    return ""
+
+            website_guess = contact_company_websites[0] if contact_company_websites else ""
+            domain_guess = _domain_from_url(website_guess)
+
+            def _gather(queries: List[str], *, per_query: int = 6, cap: int = 12) -> List[Dict[str, Any]]:
+                """
+                Run multiple Serper queries and dedupe results by URL.
+                """
+                seen: set[str] = set()
+                out: List[Dict[str, Any]] = []
+                for q in queries:
+                    q = str(q or "").strip()
+                    if not q:
+                        continue
+                    for h in (_serper(q, num=per_query) or []):
+                        if not isinstance(h, dict):
+                            continue
+                        url = str(h.get("link") or h.get("url") or "").strip()
+                        key = url.lower()
+                        if not url or key in seen:
+                            continue
+                        seen.add(key)
+                        out.append(h)
+                        if len(out) >= cap:
+                            return out
+                return out
+
             # Company: multiple facets
-            company_queries = {
-                "overview": f"{scope_target} company overview what they do",
-                "news": f"{scope_target} recent news",
-                "funding": f"{scope_target} funding investors valuation",
-                "product": f"{scope_target} product launch partnership",
-                "product_launches": f"{scope_target} product launch release announcement",
-                "hiring": f"{scope_target} hiring growth layoffs",
-                "leadership": f"{scope_target} leadership changes new CEO CTO CPO CFO VP",
-                "culture": f"{scope_target} company culture values how it works",
-                "market": f"{scope_target} competitors market position",
-                "posts": f"{scope_target} blog posts engineering blog",
-                "publications": f"{scope_target} whitepaper case study report publication",
+            company_queries: Dict[str, List[str]] = {
+                "overview": [f"{scope_target} company overview what they do", f"{scope_target} website"],
+                "news": [
+                    f"{scope_target} recent news",
+                    f"{scope_target} press release",
+                    f"site:prnewswire.com {scope_target}",
+                    f"site:businesswire.com {scope_target}",
+                ],
+                "funding": [
+                    f"{scope_target} funding investors valuation",
+                    f"site:techcrunch.com {scope_target} funding",
+                    f"site:crunchbase.com {scope_target} funding",
+                ],
+                "product": [f"{scope_target} product launch partnership", f"{scope_target} release notes"],
+                "product_launches": [
+                    f"{scope_target} product launch release announcement",
+                    f"{scope_target} announces new product",
+                ],
+                "hiring": [
+                    f"{scope_target} hiring growth layoffs",
+                    f"{scope_target} hiring freeze layoffs",
+                    f"site:layoffs.fyi {scope_target}",
+                ],
+                "leadership": [
+                    f"{scope_target} leadership changes new CEO CTO CPO CFO VP",
+                    f"{scope_target} appointed CEO CTO",
+                ],
+                "culture": [f"{scope_target} company culture values how it works", f"{scope_target} careers values"],
+                "market": [f"{scope_target} competitors market position", f"{scope_target} alternative competitors"],
+                "posts": [
+                    f"{scope_target} blog posts engineering blog",
+                    f"{scope_target} newsroom blog",
+                    f"site:medium.com {scope_target}",
+                    f"site:substack.com {scope_target}",
+                ],
+                "publications": [
+                    f"{scope_target} whitepaper case study report publication",
+                    f"{scope_target} case study pdf",
+                    f"{scope_target} whitepaper pdf",
+                ],
+                # "Tea" / extra signals to verify (always source-backed; avoid defamation).
+                "signals": [f"{scope_target} acquisition reorg restructuring outage breach incident lawsuit controversy"],
             }
-            serper_hits = _serper(company_queries["overview"], num=6)
-            for k, q in company_queries.items():
-                # Small but richer: multiple facets, keep bounded
-                company_serper_by_topic[k] = _serper(q, num=6)
+
+            # Add site-restricted sources when we have a domain guess.
+            if domain_guess:
+                company_queries["news"].append(f"site:{domain_guess} (press OR newsroom OR announcement OR release)")
+                company_queries["product_launches"].append(f"site:{domain_guess} (launch OR released OR announces OR new) (product OR feature)")
+                company_queries["leadership"].append(f"site:{domain_guess} (appointed OR joins OR named) (CEO OR CTO OR CPO OR CFO OR VP)")
+                company_queries["publications"].append(f"site:{domain_guess} (whitepaper OR case study OR report OR pdf)")
+                company_queries["posts"].append(f"site:{domain_guess} (blog OR engineering OR insights)")
+
+            # Run overview separately as the general corpus anchor.
+            serper_hits = _gather(company_queries["overview"], per_query=6, cap=10)
+
+            # Topic buckets: multiple queries + dedupe.
+            for k, qs in company_queries.items():
+                if k == "overview":
+                    company_serper_by_topic[k] = serper_hits
+                    continue
+                company_serper_by_topic[k] = _gather(qs, per_query=6, cap=12)
 
             # Contacts: per-contact facets (keep bounded)
             for c in contacts:
@@ -385,7 +497,14 @@ async def conduct_research(request: ResearchRequest):
         # Convert Serper hits (when present) into a simple recent_news_raw list.
         # If Serper is not enabled/available, keep this empty (no fabricated URLs).
         try:
-            for hit in (serper_hits or [])[:4]:
+            # Prefer explicit "news" topic hits, otherwise fall back to overview hits.
+            news_hits = []
+            try:
+                news_hits = (company_serper_by_topic.get("news") or []) if isinstance(company_serper_by_topic, dict) else []
+            except Exception:
+                news_hits = []
+
+            for hit in (news_hits or serper_hits or [])[:6]:
                 if not isinstance(hit, dict):
                     continue
                 title = str(hit.get("title") or "").strip()
@@ -795,16 +914,14 @@ async def conduct_research(request: ResearchRequest):
                     succ = [str(x) for x in (corpus.get("job_success_metrics") or []) if str(x).strip()]
                     plan: List[str] = []
                     if pains:
-                        plan.append(f"- Start with one concrete pain point: {pains[0]}")
+                        plan.append(f"- Priority: {pains[0]}")
                     if succ:
-                        plan.append(f"- Tie it to a measurable outcome: {succ[0]}")
-                    plan.append("- Mini-plan: instrument → ship 1 improvement → measure → iterate")
+                        plan.append(f"- Outcome: {succ[0]}")
+                    plan.append("- Mini-plan: diagnose → ship 1 quick win → measure → iterate")
                     plan = plan[:3]
 
                     theme = (
-                        "Theme: What the company likely cares about: Reference a plausible priority (customer experience, reliability, speed, cost) "
-                        "and offer a 2–3 bullet mini-plan—without claiming a specific news event.\n"
-                        + "\n".join(plan)
+                        f"Likely priorities (based on the role context, not specific news):\n" + "\n".join(plan)
                     ).strip()
             except Exception:
                 pass
@@ -842,25 +959,52 @@ async def conduct_research(request: ResearchRequest):
                 if not market_position and corpus.get("serper_hits"):
                     market_position = ""
                 # Do not inject "mode" guidance strings into data fields.
-                # If we don't have web sources, keep these best-effort and derived from provided context only.
-                if not product_launches:
-                    product_launches = ""
-                if not leadership_changes:
-                    leadership_changes = ""
-                if not other_hiring_signals:
-                    role_bullets = _signals_from_role_description(corpus)
-                    if role_bullets:
-                        other_hiring_signals = "Signals from the imported role description:\n- " + "\n- ".join(role_bullets)
-                    else:
+                # If we have web sources, ensure these fields are populated from Serper even if the LLM left them blank.
+                has_serper = bool(corpus.get("serper_hits")) or bool(corpus.get("company_serper_by_topic"))
+                if has_serper:
+                    topics = corpus.get("company_serper_by_topic") or {}
+                    if not product_launches:
+                        product_launches = _bullets_from_serper_hits(
+                            (topics.get("product_launches") or topics.get("product") or []),
+                            max_items=6,
+                            label="Recent product launches / announcements (source-backed)",
+                        )
+                    if not leadership_changes:
+                        leadership_changes = _bullets_from_serper_hits(
+                            (topics.get("leadership") or []),
+                            max_items=6,
+                            label="Leadership moves (source-backed)",
+                        )
+                    if not publications:
+                        publications = _bullets_from_serper_hits(
+                            (topics.get("publications") or topics.get("posts") or []),
+                            max_items=6,
+                            label="Publications / case studies / reports (source-backed)",
+                        )
+                    if not other_hiring_signals:
+                        # "Other hiring signals" should come from the internet ("tea") — not the role description.
+                        other_hiring_signals = _bullets_from_serper_hits(
+                            (topics.get("signals") or topics.get("hiring") or topics.get("funding") or []),
+                            max_items=8,
+                            label="Other hiring signals to verify (source-backed)",
+                        )
+                else:
+                    # No web sources available → keep blank (better than role-description-derived guesses).
+                    if not product_launches:
+                        product_launches = ""
+                    if not leadership_changes:
+                        leadership_changes = ""
+                    if not publications:
+                        publications = ""
+                    if not other_hiring_signals:
                         other_hiring_signals = ""
+
                 if not recent_posts:
                     role_bullets = _signals_from_role_description(corpus)
                     recent_posts = (
                         "Suggested topics to reference (derived from the imported role description, no external web sources in this run):\n- "
                         + "\n- ".join(role_bullets[:6])
                     ).strip() if role_bullets else ""
-                if not publications:
-                    publications = ""
             except Exception:
                 pass
 

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, UploadFile, File
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
 import re
 import uuid
+import os
+import shutil
 from datetime import datetime, timezone
 
 from ..auth import get_current_user_optional
@@ -13,6 +16,25 @@ from ..storage import store
 
 
 router = APIRouter()
+
+
+_BIO_UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "uploads", "bio")
+_BIO_UPLOAD_DIR = os.path.abspath(_BIO_UPLOAD_DIR)
+os.makedirs(_BIO_UPLOAD_DIR, exist_ok=True)
+
+# Allow “2 minutes or shorter” clips with realistic file sizes.
+# (We enforce duration on the frontend; backend enforces a hard size cap.)
+_MAX_VIDEO_BYTES = 80 * 1024 * 1024  # 80MB
+
+
+def _safe_media_key(k: str) -> str:
+    t = str(k or "").strip()
+    if not t:
+        return ""
+    # only allow URL-safe keys we generate (uuid hex)
+    if not re.fullmatch(r"[a-f0-9]{16,64}", t):
+        return ""
+    return t
 
 
 def _safe_slug(s: str) -> str:
@@ -51,6 +73,9 @@ class BioPageDraft(BaseModel):
 
     # Intro/portfolio video: can be a URL or data URL (demo/localStorage).
     video_url: str = ""
+    # A short script to help the user record a 1-minute intro video.
+    # This is never required for the public page; it’s purely a creation aid.
+    video_script: str = ""
 
     # proof + positioning
     proof_points: List[str] = Field(default_factory=list)
@@ -98,6 +123,18 @@ class GetBioPageResponse(BaseModel):
     slug: str
     published_at: str
     draft: BioPageDraft
+
+
+class GenerateVideoScriptRequest(BaseModel):
+    resume_extract: Optional[Dict[str, Any]] = None
+    selected_job_description: Optional[Dict[str, Any]] = None
+    painpoint_matches: Optional[List[Dict[str, Any]]] = None
+    offer_draft: Optional[Dict[str, Any]] = None
+    display_name: Optional[str] = None
+
+
+class GenerateVideoScriptResponse(BaseModel):
+    script: str
 
 
 def _build_deterministic_draft(
@@ -336,4 +373,221 @@ async def get_bio_page(slug: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to load bio page: {str(e)}")
+
+
+@router.post("/bio-pages/generate-video-script", response_model=GenerateVideoScriptResponse)
+async def generate_video_script(payload: GenerateVideoScriptRequest, http_request: Request):
+    """
+    Generate a ~1 minute intro video script for the user.
+    This is a creation aid for the private Bio Page editor (not the public page).
+    """
+    try:
+        user = await get_current_user_optional(http_request)
+
+        # Keep it role-agnostic (bio is reusable) but use role *type* for framing.
+        jd = payload.selected_job_description or {}
+        if isinstance(jd, dict) and jd:
+            jd = dict(jd)
+            for k in ["company", "company_name", "employer", "org", "organization"]:
+                if k in jd:
+                    jd[k] = ""
+
+        display_name = (str(payload.display_name or "").strip() or (str(getattr(user, "first_name", "") or "").strip() if user else "") or "I")
+        # Avoid "I" being used as the display name in the greeting.
+        first = display_name.split()[0] if display_name and display_name != "I" else ""
+
+        rx = payload.resume_extract or {}
+        pms = payload.painpoint_matches or []
+        od = payload.offer_draft or {}
+
+        # Deterministic fallback script (if LLM is unavailable).
+        headline = str(jd.get("title") or jd.get("role") or "").strip() or "roles"
+        kms = rx.get("key_metrics") or rx.get("KeyMetrics") or []
+        metric_line = ""
+        if isinstance(kms, list) and kms:
+            m0 = kms[0]
+            if isinstance(m0, dict):
+                metric = str(m0.get("metric") or "").strip()
+                value = str(m0.get("value") or "").strip()
+                metric_line = " — ".join([x for x in [metric, value] if x]).strip()
+            else:
+                metric_line = str(m0).strip()
+        pm0 = pms[0] if (isinstance(pms, list) and pms and isinstance(pms[0], dict)) else {}
+        pain = str(pm0.get("painpoint_1") or "").strip()
+        sol = str(pm0.get("solution_1") or "").strip()
+        cta = str(od.get("cta") or "If it sounds useful, I’d love to chat.").strip()
+
+        fallback = "\n".join(
+            [
+                f"Hi{', ' + first if first else ''} — I’m {display_name}.",
+                f"I build and lead work that drives outcomes, and I’m exploring {headline}.",
+                (f"A recent win: {metric_line}." if metric_line else "A recent win: I’ve delivered measurable improvements across teams and systems."),
+                (f"I’m especially strong at tackling problems like: {pain}." if pain else "I’m especially strong at tackling messy, high-impact problems and turning them into clear execution plans."),
+                (f"My approach: {sol}." if sol else "My approach: clarify the goal, map constraints, ship an MVP fast, then iterate with feedback."),
+                cta,
+            ]
+        ).strip()
+
+        client = get_openai_client()
+        if not client.should_use_real_llm:
+            return GenerateVideoScriptResponse(script=fallback[:1200])
+
+        prompt = {
+            "display_name": display_name,
+            "selected_job": jd,
+            "resume_extract": rx,
+            "painpoint_matches": (pms or [])[:2],
+            "offer_draft": od,
+            "constraints": {
+                "seconds": 60,
+                "no_company_specificity": True,
+                "no_external_claims": True,
+                "friendly_confident": True,
+                "structure": ["hook", "who_i_am", "proof", "what_i_like_solving", "cta"],
+            },
+        }
+
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You write a short first-person script for a job-seeker’s 1-minute intro video.\n"
+                    "IMPORTANT:\n"
+                    "- This bio page is reusable across multiple companies: DO NOT mention any specific employer.\n"
+                    "- Use ONLY the provided JSON; do not invent facts or numbers.\n"
+                    "- Keep it ~60 seconds when read aloud (roughly 110–160 words).\n"
+                    "- Keep sentences short and natural.\n"
+                    "Return ONLY JSON: { script: string }"
+                ),
+            },
+            {"role": "user", "content": str(prompt)},
+        ]
+        raw = client.run_chat_completion(
+            messages,
+            temperature=0.25,
+            max_tokens=420,
+            stub_json={"script": fallback},
+        )
+        choices = raw.get("choices") or []
+        msg = (choices[0].get("message") if choices else {}) or {}
+        content_str = str(msg.get("content") or "")
+        parsed = extract_json_from_text(content_str) or {}
+        script = str(parsed.get("script") or fallback).strip()
+        script = re.sub(r"\n{3,}", "\n\n", script).strip()
+        return GenerateVideoScriptResponse(script=script[:1600])
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate video script: {str(e)}")
+
+
+class UploadBioVideoResponse(BaseModel):
+    success: bool = True
+    url: str
+
+
+@router.post("/bio-pages/upload-video", response_model=UploadBioVideoResponse)
+async def upload_bio_video(http_request: Request, file: UploadFile = File(...)):
+    """
+    Upload an intro video and return a URL that can be used in `draft.video_url`.
+    The frontend enforces a <=2 minute duration; we enforce size + mime type here.
+    """
+    try:
+        # Bio pages are demo-friendly and can run without auth; still attribute if present.
+        user = await get_current_user_optional(http_request)
+        user_id = user.id if user else "anon"
+
+        ct = str(file.content_type or "").lower().strip()
+        if not ct.startswith("video/"):
+            raise HTTPException(status_code=422, detail="Please upload a video file.")
+
+        # Pick an extension for serving; prefer known formats.
+        ext = ""
+        name = str(file.filename or "")
+        if "." in name:
+            ext = "." + name.split(".")[-1].lower().strip()
+        if ext not in [".mp4", ".mov", ".webm", ".m4v", ".ogg"]:
+            ext = ".mp4" if ct in ["video/mp4", "video/m4v"] else (".webm" if ct == "video/webm" else ".mp4")
+
+        key = uuid.uuid4().hex  # 32 chars
+        out_path = os.path.join(_BIO_UPLOAD_DIR, f"{key}{ext}")
+
+        # Stream copy with a hard cap.
+        written = 0
+        try:
+            with open(out_path, "wb") as f:
+                while True:
+                    chunk = await file.read(1024 * 1024)  # 1MB
+                    if not chunk:
+                        break
+                    written += len(chunk)
+                    if written > _MAX_VIDEO_BYTES:
+                        raise HTTPException(status_code=413, detail="Video too large. Please upload a shorter/smaller clip (<= 2 minutes).")
+                    f.write(chunk)
+        finally:
+            try:
+                await file.close()
+            except Exception:
+                pass
+
+        # Store a tiny index for later lookup (optional, but helps future cleanup).
+        if not hasattr(store, "bio_video_index"):
+            store.bio_video_index = {}  # type: ignore[attr-defined]
+        try:
+            store.bio_video_index[key] = {  # type: ignore[attr-defined]
+                "path": out_path,
+                "content_type": ct,
+                "user_id": user_id,
+                "uploaded_at": _now_iso(),
+            }
+        except Exception:
+            pass
+
+        # IMPORTANT: use /api-prefixed URL so it works on the public bio page.
+        return UploadBioVideoResponse(success=True, url=f"/api/bio-pages/media/{key}")
+    except HTTPException:
+        # cleanup partial file if present
+        try:
+            if "out_path" in locals() and isinstance(out_path, str) and os.path.exists(out_path):
+                os.remove(out_path)
+        except Exception:
+            pass
+        raise
+    except Exception as e:
+        try:
+            if "out_path" in locals() and isinstance(out_path, str) and os.path.exists(out_path):
+                os.remove(out_path)
+        except Exception:
+            pass
+        raise HTTPException(status_code=500, detail=f"Failed to upload video: {str(e)}")
+
+
+@router.get("/bio-pages/media/{key}")
+async def get_bio_video(key: str):
+    safe = _safe_media_key(key)
+    if not safe:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    # Prefer index lookup; fallback to scanning known extensions.
+    path = ""
+    ct = "video/mp4"
+    try:
+        rec = (getattr(store, "bio_video_index", {}) or {}).get(safe)  # type: ignore[attr-defined]
+        if isinstance(rec, dict):
+            path = str(rec.get("path") or "")
+            ct = str(rec.get("content_type") or ct)
+    except Exception:
+        path = ""
+
+    if not path:
+        for ext in [".mp4", ".mov", ".webm", ".m4v", ".ogg"]:
+            candidate = os.path.join(_BIO_UPLOAD_DIR, f"{safe}{ext}")
+            if os.path.exists(candidate):
+                path = candidate
+                break
+
+    if not path or not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Not found")
+
+    return FileResponse(path, media_type=ct, filename=os.path.basename(path))
 

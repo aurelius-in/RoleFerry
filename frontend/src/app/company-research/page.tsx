@@ -77,7 +77,107 @@ function scrubModePlaceholders(raw: string): string {
   if (lower.includes("serper configured")) return "";
   if (lower.includes("serper_api_key")) return "";
   if (lower.startsWith("no ") && lower.includes("captured in this run")) return "";
+  // Never show theme prompt-instructions in the Theme field.
+  if (lower.startsWith("theme: what the company likely cares about")) return "";
+  if (lower.includes("what the company likely cares about") && lower.includes("mini-plan")) return "";
   return s;
+}
+
+function scrubRecentNews(raw: string): string {
+  const s = String(raw || "").trim();
+  if (!s) return "";
+  const lines = s.split(/\r?\n/).map((l) => String(l || "").trim());
+  const cleaned = lines.filter((l) => {
+    const low = l.toLowerCase();
+    // Never show theme-instruction text inside Recent News.
+    if (low.startsWith("- theme:")) return false;
+    if (low.startsWith("theme:")) return false;
+    if (low.includes("what the company likely cares about") && low.includes("mini-plan")) return false;
+    return Boolean(l);
+  });
+  return cleaned.join("\n").trim();
+}
+
+function buildThemeFallback(input: {
+  company: string;
+  selectedJD: any;
+  painpointMatches: any[];
+  resumeExtract: any;
+}): string {
+  const company = formatCompanyName(String(input.company || "").trim());
+  const jd = input.selectedJD || {};
+  const title = String(jd?.title || "").trim();
+  const pains =
+    (Array.isArray(jd?.painPoints) ? jd.painPoints : [])
+      .map((x: any) => String(x || "").trim())
+      .filter(Boolean)
+      .slice(0, 3);
+
+  const match0 = Array.isArray(input.painpointMatches) ? input.painpointMatches[0] : null;
+  const matchPains = [match0?.painpoint_1, match0?.painpoint_2, match0?.painpoint_3]
+    .map((x: any) => String(x || "").trim())
+    .filter(Boolean)
+    .slice(0, 2);
+  const matchSolutions = [match0?.solution_1, match0?.solution_2, match0?.solution_3]
+    .map((x: any) => String(x || "").trim())
+    .filter(Boolean)
+    .slice(0, 2);
+
+  const skills =
+    (Array.isArray(jd?.requiredSkills) ? jd.requiredSkills : [])
+      .map((x: any) => String(x || "").trim())
+      .filter(Boolean)
+      .slice(0, 4);
+
+  const succ =
+    (Array.isArray(jd?.successMetrics) ? jd.successMetrics : [])
+      .map((x: any) => String(x || "").trim())
+      .filter(Boolean)
+      .slice(0, 2);
+
+  const km = Array.isArray(input.resumeExtract?.keyMetrics) ? input.resumeExtract.keyMetrics : [];
+  const metricLine = km
+    .slice(0, 1)
+    .map((m: any) => [m?.metric, m?.value, m?.context].filter(Boolean).join(" — "))
+    .map((s: string) => safeText(s))
+    .filter(Boolean)[0];
+
+  const priorities = (matchPains.length ? matchPains : pains).slice(0, 2);
+  const roleHint = title ? `for the ${title} role` : "for this role";
+
+  const lines: string[] = [];
+  lines.push(`Likely priorities at ${company} ${roleHint}:`);
+  if (priorities.length) {
+    for (const p of priorities) lines.push(`- ${p}`);
+  } else {
+    lines.push(`- Execution speed + measurable impact (based on the role requirements)`);
+  }
+
+  lines.push("");
+  lines.push("Mini-plan (no specific news claims):");
+  if (matchSolutions.length) {
+    for (const s of matchSolutions.slice(0, 3)) lines.push(`- ${s}`);
+  } else {
+    if (skills.length) lines.push(`- Align on success metrics, then de-risk delivery using ${skills.slice(0, 2).join(" + ")}.`);
+    if (succ.length) lines.push(`- Define what “good” looks like (${succ[0]}), then ship a quick-win in the first 2–3 weeks.`);
+    lines.push(`- Build a tight stakeholder cadence (weekly priorities + blockers) to keep momentum.`);
+  }
+
+  if (metricLine) {
+    lines.push("");
+    lines.push(`Proof angle to reference: ${metricLine}`);
+  }
+
+  return lines.join("\n").trim();
+}
+
+function sanitizeDraft(d: CompanyResearch | null): CompanyResearch | null {
+  if (!d) return null;
+  return {
+    ...d,
+    theme: scrubModePlaceholders(String(d.theme || "")) || "",
+    recent_news: scrubRecentNews(String(d.recent_news || "")) || "",
+  };
 }
 
 function extractHiringSignals(sections: any, news: any[]): CompanyResearch["hiring_signals"] {
@@ -244,7 +344,7 @@ export default function CompanyResearchPage() {
     if (pick) {
       setActiveCompany(pick);
       setCompanyQuery(pick);
-      setDraft(by[pick]);
+      setDraft(sanitizeDraft(by[pick]));
       localStorage.setItem("selected_company_name", pick);
     }
   }, []);
@@ -328,10 +428,11 @@ export default function CompanyResearchPage() {
         company_name: company,
         overview: overview || `${formatCompanyName(company)} overview (add a few lines here).`,
         theme:
-          themeRaw ||
-          themeFromNews ||
-          "Theme: What the company likely cares about: Reference a plausible priority (customer experience, reliability, speed, cost) and offer a 2–3 bullet mini-plan—without claiming a specific news event.\n- \n- \n- ",
-        recent_news: joinNews(realNews as any[]) || "",
+          scrubModePlaceholders(themeRaw) ||
+          scrubModePlaceholders(themeFromNews) ||
+          buildThemeFallback({ company, selectedJD, painpointMatches, resumeExtract }) ||
+          "",
+        recent_news: scrubRecentNews(joinNews(realNews as any[])) || "",
         culture: culture || "",
         market_position: market || "",
         product_launches: productLaunchesFromModel || "",
@@ -348,7 +449,7 @@ export default function CompanyResearchPage() {
         setNotice("Research generated, but web sources are unavailable (SERPER_API_KEY not configured). Market position / recent posts/news will be limited.");
       }
 
-      setDraft(next);
+      setDraft(sanitizeDraft(next));
       setActiveCompany(company);
       setCompanyQuery(company);
       localStorage.setItem(STORAGE_ACTIVE_COMPANY, company);
@@ -546,7 +647,7 @@ export default function CompanyResearchPage() {
                     setActiveCompany(v);
                     setCompanyQuery(v);
                     const by = safeJson<Record<string, CompanyResearch>>(localStorage.getItem(STORAGE_BY_COMPANY), {});
-                    if (by?.[v]) setDraft(by[v]);
+                    if (by?.[v]) setDraft(sanitizeDraft(by[v]));
                   }}
                   className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
                 >
@@ -609,7 +710,7 @@ export default function CompanyResearchPage() {
                             if (!name) return;
                             setActiveCompany(name);
                             setCompanyQuery(name);
-                            setDraft(c);
+                            setDraft(sanitizeDraft(c));
                             localStorage.setItem(STORAGE_ACTIVE_COMPANY, name);
                             localStorage.setItem("selected_company_name", name);
                           }}
