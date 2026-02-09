@@ -220,6 +220,8 @@ class OpenAIClient:
         temperature: float = 0.2,
         max_tokens: int = 512,
         stub_json: Dict[str, Any] | None = None,
+        timeout_seconds: float | None = None,
+        max_retries: int | None = None,
         **extra: Any,
     ) -> Dict[str, Any]:
         """
@@ -243,9 +245,14 @@ class OpenAIClient:
         # IMPORTANT: we do NOT generally retry 429 because for many demo failures it's
         # "insufficient_quota" (billing), which will never succeed and just adds latency.
         retry_statuses = {500, 502, 503, 504}
-        backoffs = [0.8, 1.6, 3.2]
+        base_backoffs = [0.8, 1.6, 3.2]
+        # Allow callers (endpoints) to bound total time spent here to avoid platform/request timeouts.
+        # max_retries = number of retries after the first attempt (0 => no retries).
+        retries = 3 if max_retries is None else max(0, int(max_retries))
+        backoffs = base_backoffs[:retries]
+        effective_timeout = float(timeout_seconds) if timeout_seconds is not None else float(self.timeout_seconds)
         try:
-            with httpx.Client(base_url=self.base_url, timeout=self.timeout_seconds) as client:
+            with httpx.Client(base_url=self.base_url, timeout=effective_timeout) as client:
                 last_status: int | None = None
                 for attempt, backoff in enumerate([0.0] + backoffs):
                     if backoff:
