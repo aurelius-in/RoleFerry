@@ -23,6 +23,14 @@ type OfferV1 = {
 };
 
 const STORAGE_KEY = "rf_offer_v1";
+const STORAGE_BY_JOB_KEY = "rf_offer_v1_by_job";
+
+type JobDescription = {
+  id: string;
+  title: string;
+  company: string;
+  url?: string;
+};
 
 function nowIso() {
   return new Date().toISOString();
@@ -69,6 +77,10 @@ function buildSnippet(d: {
 export default function OfferPage() {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const [roles, setRoles] = useState<JobDescription[]>([]);
+  const [activeRoleId, setActiveRoleId] = useState<string>("");
 
   const [oneLiner, setOneLiner] = useState("");
   const [proofPoints, setProofPoints] = useState<string[]>(["", "", ""]);
@@ -84,42 +96,93 @@ export default function OfferPage() {
   const resume = useMemo(() => safeJson<any>(typeof window !== "undefined" ? localStorage.getItem("resume_extract") : null, null), []);
   const prefs = useMemo(() => safeJson<any>(typeof window !== "undefined" ? localStorage.getItem("job_preferences") : null, null), []);
   const selectedRole = useMemo(() => safeJson<any>(typeof window !== "undefined" ? localStorage.getItem("selected_job_description") : null, null), []);
+  const selectedRoleId = useMemo(() => String(typeof window !== "undefined" ? localStorage.getItem("selected_job_description_id") : "" || "").trim(), []);
+
+  const activeRole = useMemo(() => {
+    const id = String(activeRoleId || "").trim();
+    return roles.find((r) => String(r.id || "") === id) || roles[0] || null;
+  }, [roles, activeRoleId]);
+
+  function loadOfferToState(saved: OfferV1 | null) {
+    if (saved?.version === 1) {
+      setOneLiner(String(saved.one_liner || ""));
+      setProofPoints(Array.isArray(saved.proof_points) && saved.proof_points.length ? saved.proof_points : ["", "", ""]);
+      setCaseStudies(
+        Array.isArray(saved.case_studies) && saved.case_studies.length
+          ? saved.case_studies.slice(0, 2).map((c, idx) => ({
+              title: String(c?.title || `Case study ${idx + 1}`),
+              problem: String(c?.problem || ""),
+              actions: String(c?.actions || ""),
+              impact: String(c?.impact || ""),
+            }))
+          : [
+              { title: "Case study 1", problem: "", actions: "", impact: "" },
+              { title: "Case study 2", problem: "", actions: "", impact: "" },
+            ]
+      );
+      setCredibility(Array.isArray(saved.credibility) ? saved.credibility : []);
+      setDefaultCta(String(saved.default_cta || "Open to a 10-minute chat this week?"));
+      return;
+    }
+
+    // First-time helpful defaults (role-specific).
+    const title = String(activeRole?.title || selectedRole?.title || "").trim();
+    const company = String(activeRole?.company || selectedRole?.company || "").trim();
+    const industry = Array.isArray(prefs?.industries) ? String(prefs.industries[0] || "").trim() : "";
+    const seed = [
+      title ? `I help teams win in ${title} roles${company ? ` at companies like ${company}` : ""}.` : "",
+      industry ? `I’m especially strong in ${industry} contexts.` : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    setOneLiner(seed);
+    setProofPoints(["", "", ""]);
+    setCaseStudies([
+      { title: "Case study 1", problem: "", actions: "", impact: "" },
+      { title: "Case study 2", problem: "", actions: "", impact: "" },
+    ]);
+    setCredibility([]);
+    setDefaultCta("Open to a 10-minute chat this week?");
+  }
 
   useEffect(() => {
     try {
-      const saved = safeJson<OfferV1 | null>(localStorage.getItem(STORAGE_KEY), null);
-      if (saved?.version === 1) {
-        setOneLiner(String(saved.one_liner || ""));
-        setProofPoints(Array.isArray(saved.proof_points) && saved.proof_points.length ? saved.proof_points : ["", "", ""]);
-        setCaseStudies(
-          Array.isArray(saved.case_studies) && saved.case_studies.length
-            ? saved.case_studies.slice(0, 2).map((c, idx) => ({
-                title: String(c?.title || `Case study ${idx + 1}`),
-                problem: String(c?.problem || ""),
-                actions: String(c?.actions || ""),
-                impact: String(c?.impact || ""),
-              }))
-            : [
-                { title: "Case study 1", problem: "", actions: "", impact: "" },
-                { title: "Case study 2", problem: "", actions: "", impact: "" },
-              ]
-        );
-        setCredibility(Array.isArray(saved.credibility) ? saved.credibility : []);
-        setDefaultCta(String(saved.default_cta || "Open to a 10-minute chat this week?"));
-      } else {
-        // First-time helpful defaults.
-        const title = String(selectedRole?.title || "").trim();
-        const industry = Array.isArray(prefs?.industries) ? String(prefs.industries[0] || "").trim() : "";
-        const seed = [title ? `I help teams ship outcomes in roles like ${title}.` : "", industry ? `I’m especially strong in ${industry} contexts.` : ""]
-          .filter(Boolean)
-          .join(" ");
-        if (seed) setOneLiner(seed);
+      const jds = safeJson<JobDescription[]>(localStorage.getItem("job_descriptions"), []);
+      setRoles(Array.isArray(jds) ? jds : []);
+
+      // Choose initial active role:
+      const fallbackId = String((jds?.[0] as any)?.id || "").trim();
+      const init = selectedRoleId || String(selectedRole?.id || "").trim() || fallbackId;
+      if (init) setActiveRoleId(init);
+
+      // Migrate legacy single-offer into per-role store (best-effort).
+      const legacy = safeJson<OfferV1 | null>(localStorage.getItem(STORAGE_KEY), null);
+      const byJob = safeJson<Record<string, OfferV1>>(localStorage.getItem(STORAGE_BY_JOB_KEY), {});
+      if (legacy?.version === 1) {
+        const key = init || "default";
+        if (key && !(byJob as any)[key]) {
+          const nextBy = { ...(byJob || {}), [key]: legacy };
+          localStorage.setItem(STORAGE_BY_JOB_KEY, JSON.stringify(nextBy));
+        }
       }
     } catch {
       // ignore
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Load offer for active role (role-specific).
+  useEffect(() => {
+    if (!activeRoleId) return;
+    try {
+      const byJob = safeJson<Record<string, OfferV1>>(localStorage.getItem(STORAGE_BY_JOB_KEY), {});
+      const saved = (byJob as any)?.[activeRoleId] || null;
+      loadOfferToState(saved);
+    } catch {
+      loadOfferToState(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeRoleId]);
 
   const snippet = useMemo(
     () => buildSnippet({ one_liner: oneLiner, proof_points: proofPoints, case_studies: caseStudies, default_cta: defaultCta }),
@@ -169,9 +232,16 @@ export default function OfferPage() {
         default_cta: String(defaultCta || "").trim(),
         snippet,
       };
+      // Persist per-role offer.
+      const byJob = safeJson<Record<string, OfferV1>>(localStorage.getItem(STORAGE_BY_JOB_KEY), {});
+      const key = String(activeRoleId || "").trim() || String(activeRole?.id || "").trim() || "default";
+      const nextBy = { ...(byJob || {}), [key]: payload };
+      localStorage.setItem(STORAGE_BY_JOB_KEY, JSON.stringify(nextBy));
+
+      // Keep legacy keys updated for backward compatibility (store the active role's offer).
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      // Convenience for downstream features that already read offer_snippet.
       localStorage.setItem("offer_snippet", payload.snippet);
+      setNotice("Saved offer for this role.");
     } catch {
       // ignore storage failures
     } finally {
@@ -198,10 +268,61 @@ export default function OfferPage() {
               This is the core story RoleFerry uses in your emails. It’s not your resume. It’s the{" "}
               <span className="font-semibold text-white/80">why you</span>, in plain language.
             </p>
+            <div className="mt-3 text-sm text-white/70">
+              {activeRole ? (
+                <>
+                  Editing offer for: <span className="font-semibold text-white">{activeRole.title}</span>{" "}
+                  <span className="text-white/50">@</span>{" "}
+                  <span className="font-semibold text-white">{String(activeRole.company || "").trim() || "—"}</span>
+                </>
+              ) : (
+                <>Select a role on the left to write a role-specific offer.</>
+              )}
+            </div>
+            {notice ? <div className="mt-2 text-[11px] text-emerald-200/90">{notice}</div> : null}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-7 space-y-6">
+            <div className="lg:col-span-4">
+              <div className="rounded-lg border border-white/10 bg-black/20 overflow-hidden">
+                <div className="px-3 py-2 border-b border-white/10 bg-white/5">
+                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">Roles</div>
+                  <div className="mt-1 text-[11px] text-white/60">
+                    Pick a role, then write an offer tailored to that role.
+                  </div>
+                </div>
+                <div className="max-h-[640px] overflow-auto">
+                  {(roles || []).map((r) => {
+                    const isActive = String(activeRoleId) === String(r.id);
+                    return (
+                      <button
+                        key={`offer_role_${r.id}`}
+                        type="button"
+                        onClick={() => setActiveRoleId(String(r.id || ""))}
+                        className={`w-full text-left px-3 py-3 border-b border-white/10 hover:bg-white/5 transition-colors ${
+                          isActive ? "bg-white/5" : ""
+                        }`}
+                      >
+                        <div className="text-sm font-bold text-white truncate">{r.title}</div>
+                        <div className="text-xs text-white/60 truncate">{String(r.company || "").trim() || "—"}</div>
+                        {String(r.id || "") === (selectedRoleId || "") ? (
+                          <div className="mt-1 inline-flex items-center rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-200">
+                            Saved role (from Gaps)
+                          </div>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                  {!roles?.length ? (
+                    <div className="p-4 text-sm text-white/60">
+                      No roles found yet. Go back to <a className="underline" href="/job-descriptions">Role Search</a>.
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-8 space-y-6">
               <div className="rounded-lg border border-white/10 bg-black/20 p-5">
                 <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">One-liner</div>
                 <textarea

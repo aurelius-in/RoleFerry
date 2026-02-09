@@ -15,7 +15,7 @@ class GapAnalysisPreferences(BaseModel):
     values: List[str] = Field(default_factory=list)
     role_categories: List[str] = Field(default_factory=list)
     location_preferences: List[str] = Field(default_factory=list)
-    location_text: str = ""
+    location_text: Optional[str] = None
     work_type: List[str] = Field(default_factory=list)
     role_type: List[str] = Field(default_factory=list)
     company_size: List[str] = Field(default_factory=list)

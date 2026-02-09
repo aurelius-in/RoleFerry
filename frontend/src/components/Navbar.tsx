@@ -150,7 +150,7 @@ export default function Navbar() {
             <NavPill href="/" pathname={pathname} kind="utility" size="md">Dashboard</NavPill>
             <span className="mx-2 h-4 w-px bg-white/15" />
 
-            <NavPill href="/job-preferences" pathname={pathname}>Prefs</NavPill>
+            <NavPill href="/job-preferences" pathname={pathname}>Preferences</NavPill>
             <NavPill href="/resume" pathname={pathname}>Resume</NavPill>
             <NavPill href="/personality" pathname={pathname}>Personality</NavPill>
             <NavPill href="/job-descriptions" pathname={pathname}>Roles</NavPill>

@@ -164,7 +164,6 @@ export default function GapAnalysisPage() {
   const [temperamentProfile, setTemperamentProfile] = useState<TemperamentProfile | null>(null);
 
   const [ranked, setRanked] = useState<GapAnalysisItem[]>([]);
-  const [rankedDisplay, setRankedDisplay] = useState<GapAnalysisItem[]>([]);
   const [helper, setHelper] = useState<GapAnalysisResponse["helper"] | null>(null);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -203,33 +202,31 @@ export default function GapAnalysisPage() {
   }, [jobDescriptions.length, preferences, resumeExtract]);
 
   const topSummary = useMemo(() => {
-    const top = rankedDisplay[0];
+    const top = ranked[0];
     if (!top) return null;
-    return `${top.title} @ ${formatCompanyName(top.company)} (${top.score}/100)`;
-  }, [rankedDisplay]);
+    return `${top.title} @ ${formatCompanyName(top.company)}`;
+  }, [ranked]);
 
-  function normalizeScores(items: GapAnalysisItem[]): GapAnalysisItem[] {
-    const list = Array.isArray(items) ? items : [];
-    if (!list.length) return [];
-    const scores = list.map((x) => Number(x.score)).filter((n) => Number.isFinite(n));
-    if (!scores.length) return list;
-
-    // Friendly display scale: worst ~30, best ~90, preserve ranking order.
-    const minS = Math.min(...scores);
-    const maxS = Math.max(...scores);
-    const lo = 30;
-    const hi = 90;
-    const denom = Math.max(1, maxS - minS);
-
-    return list.map((it) => {
-      const raw = Number(it.score);
-      if (!Number.isFinite(raw)) return it;
-      const t = (raw - minS) / denom; // 0..1
-      const scaled = Math.round(lo + t * (hi - lo));
-      const clamped = Math.max(lo, Math.min(hi, scaled));
-      return { ...it, score: clamped };
-    });
+  function starsForRank(idx: number, total: number): 2 | 3 | 4 | 5 {
+    const n = Math.max(0, Number(total) || 0);
+    if (n <= 1) return 5;
+    if (n === 2) return idx === 0 ? 5 : 3; // default: best 5, other 3
+    if (n === 3) return idx === 0 ? 5 : idx === 1 ? 4 : 3;
+    // n > 3: top 2 => 5, 3rd => 4, rest => 2
+    if (idx <= 1) return 5;
+    if (idx === 2) return 4;
+    return 2;
   }
+
+  const rankedUi = useMemo(() => {
+    const list = Array.isArray(ranked) ? ranked : [];
+    const n = list.length;
+    return list.map((r, idx) => ({
+      ...r,
+      ui_stars: starsForRank(idx, n),
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ranked]);
 
   async function runAnalysis() {
     setError(null);
@@ -242,7 +239,8 @@ export default function GapAnalysisPage() {
             values: preferences.values || [],
             role_categories: preferences.roleCategories || [],
             location_preferences: preferences.locationPreferences || [],
-            location_text: String(preferences.locationText || "").trim() || null,
+            // Omit when blank; backend accepts null/empty but this avoids validation issues.
+            location_text: String(preferences.locationText || "").trim() || undefined,
             work_type: preferences.workType || [],
             role_type: preferences.roleType || [],
             company_size: preferences.companySize || [],
@@ -266,7 +264,6 @@ export default function GapAnalysisPage() {
       if (!resp.success) throw new Error(resp.message || "Analysis failed");
       const rawRanked = resp.ranked || [];
       setRanked(rawRanked);
-      setRankedDisplay(normalizeScores(rawRanked));
       setHelper(resp.helper || null);
       const firstId = (rawRanked || [])[0]?.job_id || null;
       setSelectedJobId(firstId);
@@ -277,10 +274,10 @@ export default function GapAnalysisPage() {
     }
   }
 
-  const selected = useMemo(
-    () => rankedDisplay.find((r) => r.job_id === selectedJobId) || rankedDisplay[0] || null,
-    [rankedDisplay, selectedJobId]
-  );
+  const selected = useMemo(() => {
+    const list = rankedUi;
+    return list.find((r) => r.job_id === selectedJobId) || list[0] || null;
+  }, [rankedUi, selectedJobId]);
 
   const getJobById = (jobId: string) => {
     const id = String(jobId || "");
@@ -309,14 +306,13 @@ export default function GapAnalysisPage() {
       } catch {}
       return next;
     });
-    // Remove from ranked lists (current view).
-    setRanked((prev) => (prev || []).filter((r) => String(r.job_id || "") !== id));
-    setRankedDisplay((prev) => (prev || []).filter((r) => String(r.job_id || "") !== id));
-    // If we dropped the selected role, move selection to the next one.
-    if (selectedJobId === id) {
-      const remaining = rankedDisplay.filter((r) => String(r.job_id || "") !== id);
-      setSelectedJobId(remaining[0]?.job_id || null);
-    }
+    // Remove from ranked list (current view).
+    setRanked((prev) => {
+      const next = (prev || []).filter((r) => String(r.job_id || "") !== id);
+      // If we dropped the selected role, move selection to the next one.
+      if (selectedJobId === id) setSelectedJobId(next[0]?.job_id || null);
+      return next;
+    });
     // If we dropped the persisted selected role, clear it.
     try {
       const cur = String(localStorage.getItem("selected_job_description_id") || "");
@@ -436,7 +432,7 @@ export default function GapAnalysisPage() {
             </div>
           ) : null}
 
-          {rankedDisplay.length > 0 ? (
+          {rankedUi.length > 0 ? (
             <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-4">
               <div className="lg:col-span-4">
                 <div className="rounded-lg border border-white/10 bg-black/20 p-2">
@@ -447,7 +443,7 @@ export default function GapAnalysisPage() {
                     </div>
                   ) : null}
                   <div className="max-h-[560px] overflow-auto">
-                    {rankedDisplay.map((r) => (
+                    {rankedUi.map((r) => (
                       <div
                         key={r.job_id}
                         role="button"
@@ -464,7 +460,7 @@ export default function GapAnalysisPage() {
                               <div className="text-xs text-white/60 truncate">{formatCompanyName(r.company)}</div>
                           </div>
                           <div className="text-right shrink-0">
-                            <div className="text-white font-bold text-xs">{r.score}/100</div>
+                            <StarRating value={r.ui_stars / 5} scale="fraction" showNumeric={false} className="text-[10px]" />
                             <div className={`mt-1 inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] ${pillColor(r.recommendation)}`}>
                               {r.recommendation}
                             </div>
@@ -511,8 +507,7 @@ export default function GapAnalysisPage() {
                         <div className="text-xl font-bold text-white">{selected.title}</div>
                         <div className="text-sm text-white/70">{formatCompanyName(selected.company)}</div>
                         <div className="mt-2 flex items-center gap-3">
-                          <div className="text-white font-bold">{selected.score}/100</div>
-                          <StarRating value={selected.score} scale="percent" showNumeric={false} className="text-[10px]" />
+                          <StarRating value={(selected as any).ui_stars / 5} scale="fraction" showNumeric={false} className="text-[10px]" />
                           <div className={`inline-flex items-center px-2 py-1 rounded-full border text-xs ${pillColor(selected.recommendation)}`}>
                             {selected.recommendation}
                           </div>
