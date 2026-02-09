@@ -133,6 +133,33 @@ function normalizeFavoriteRanks(list: JobDescription[]): JobDescription[] {
   return out;
 }
 
+function analyzeIndeedUrl(raw: string): {
+  isIndeed: boolean;
+  isSearchShare: boolean;
+  jobKey?: string;
+  normalizedViewJobUrl?: string;
+} {
+  const s = String(raw || "").trim();
+  if (!s) return { isIndeed: false, isSearchShare: false };
+  try {
+    const u = new URL(s);
+    const host = String(u.hostname || "").toLowerCase();
+    const isIndeed = host.includes("indeed.");
+    if (!isIndeed) return { isIndeed: false, isSearchShare: false };
+
+    const path = String(u.pathname || "");
+    const jobKey = String(u.searchParams.get("jk") || u.searchParams.get("vjk") || "").trim();
+    const isSearchShare = path === "/jobs" || path.startsWith("/jobs");
+    const normalizedViewJobUrl =
+      isSearchShare && jobKey
+        ? `${u.origin}/viewjob?jk=${encodeURIComponent(jobKey)}`
+        : undefined;
+    return { isIndeed: true, isSearchShare, jobKey: jobKey || undefined, normalizedViewJobUrl };
+  } catch {
+    return { isIndeed: false, isSearchShare: false };
+  }
+}
+
 export default function JobDescriptionsPage() {
   const router = useRouter();
   // Important: avoid reading localStorage during the initial render to prevent
@@ -209,6 +236,23 @@ export default function JobDescriptionsPage() {
     setIsImporting(true);
 
     try {
+      // Guard: Indeed "share/search" URLs are often not the actual application page.
+      // If we can, normalize them to a direct viewjob link; otherwise instruct the user to copy the apply URL.
+      if (importType === "url") {
+        const rawUrl = importUrl.trim();
+        const indeed = analyzeIndeedUrl(rawUrl);
+        if (indeed.isIndeed && indeed.isSearchShare) {
+          if (indeed.normalizedViewJobUrl) {
+            setImportUrl(indeed.normalizedViewJobUrl);
+          } else {
+            setImportError(
+              "That looks like an Indeed search/share URL. Please open the job, click “Apply” / “Apply on company site”, then copy the URL from the application page (or paste the role text instead)."
+            );
+            return;
+          }
+        }
+      }
+
       const payload = {
         url: hasUrl ? importUrl.trim() : null,
         text: hasText ? importText.trim() : null,
@@ -458,7 +502,7 @@ export default function JobDescriptionsPage() {
               </p>
             </div>
             <div className="bg-gray-900/70 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-white/10">
-              Step 4 of 12
+              Step 5 of 12
             </div>
           </div>
 
@@ -586,6 +630,32 @@ export default function JobDescriptionsPage() {
                         placeholder="Paste a role URL (or a listing URL) and import"
                         className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
                       />
+                      {(() => {
+                        const indeed = analyzeIndeedUrl(importUrl);
+                        if (!indeed.isIndeed) return null;
+                        if (!indeed.isSearchShare) return null;
+                        return (
+                          <div className="mt-2 rounded-md border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-100">
+                            <div className="font-semibold">Indeed tip</div>
+                            <div className="mt-1 text-amber-100/90">
+                              Don’t paste the “share/search” URL from the results page. Open the job, click{" "}
+                              <span className="font-semibold">Apply</span> /{" "}
+                              <span className="font-semibold">Apply on company site</span>, then copy the URL from that
+                              application page (often not on `indeed.com`). You can also use “Paste text”.
+                            </div>
+                            {indeed.normalizedViewJobUrl ? (
+                              <button
+                                type="button"
+                                className="mt-2 underline font-semibold hover:text-white"
+                                onClick={() => setImportUrl(indeed.normalizedViewJobUrl || "")}
+                                title="Use a direct Indeed viewjob URL"
+                              >
+                                Use direct link: {indeed.normalizedViewJobUrl}
+                              </button>
+                            ) : null}
+                          </div>
+                        );
+                      })()}
                       <div className="mt-1 text-xs text-white/60">
                         Suggested:{" "}
                         <button

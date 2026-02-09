@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import DataModal from "./DataModal";
-import ToolsModal from "./ToolsModal";
 
 export default function Navbar() {
   const router = useRouter();
@@ -88,7 +87,6 @@ export default function Navbar() {
       router.refresh();
     } catch {}
   }
-  const [toolsOpen, setToolsOpen] = useState(false);
   const hideOnAuth = pathname === "/login";
   if (hideOnAuth) return null;
 
@@ -121,14 +119,6 @@ export default function Navbar() {
           {/* Right: utility + toggles (tight) */}
           <div className="flex items-center gap-1.5">
             <ThemeToggle />
-            <button
-              aria-label="Tools"
-              className="w-8 h-8 rounded-md flex items-center justify-center border bg-black text-white border-white/20"
-              onClick={() => setToolsOpen(true)}
-            >
-              {/* Wrench icon */}
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22.7 19.3l-6.4-6.4a6.5 6.5 0 01-8.1-8.1l4.1 4.1 2.8-.7.7-2.8L11.7 1a6.5 6.5 0 008.1 8.1l6.4 6.4-3.5 3.5zM2 22l6-6 2 2-6 6H2v-2z"/></svg>
-            </button>
             <Link
               href="/settings"
               aria-label="Settings"
@@ -209,7 +199,6 @@ export default function Navbar() {
         </nav>
 
         <DataModal open={dataOpen} onClose={() => setDataOpen(false)} />
-        <ToolsModal open={toolsOpen} onClose={() => setToolsOpen(false)} />
       </div>
     </header>
   );
