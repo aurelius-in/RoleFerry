@@ -343,8 +343,9 @@ export default function CampaignV2() {
   };
 
   const toneOptionsForStep = (step: 1 | 2 | 3 | 4): Tone[] => {
-    if (step === 4) return [...BASE_TONES, ...EMAIL4_EXTRA_TONES];
-    return BASE_TONES;
+    // Make the "attention-grabbing" tones available for all steps (not just email 4).
+    // Keep base tones first so the cycle starts in sane territory.
+    return [...BASE_TONES, ...EMAIL4_EXTRA_TONES];
   };
 
   const cycleTone = (contactId: string, step: EmailStepV2, dir: -1 | 1) => {
@@ -576,7 +577,6 @@ export default function CampaignV2() {
                                 title="Click to cycle tones"
                               >
                                 {toneLabel(toneDisplay)}
-                                {step.step_number === 4 ? <span className="ml-2 text-xs text-white/50">(hail mary allowed)</span> : null}
                               </button>
                               <button
                                 type="button"

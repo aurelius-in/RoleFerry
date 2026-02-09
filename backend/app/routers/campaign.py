@@ -176,9 +176,90 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             s = str(msg_body or "").rstrip()
             if not signature:
                 return s
-            if sender.full_name and sender.full_name.lower() in s.lower():
-                return s
             return (s + "\n\nBest,\n" + signature + "\n").strip() + "\n"
+
+        def _strip_existing_signature(msg_body: str) -> str:
+            """
+            Prevent duplicate signatures. If the model already wrote a closing/signature,
+            strip it and let us append one canonical signature block.
+
+            Conservative rules:
+            - Only strip if we see at least one known signature line (name/phone/linkedin/bio)
+              near the end, OR a common closing followed by the sender name.
+            """
+            raw = str(msg_body or "").rstrip()
+            if not raw:
+                return raw
+
+            sig_lines = [sender.full_name, sender.phone, sender.linkedin_url, bio_for_sig]
+            sig_lines = [str(x).strip() for x in sig_lines if str(x).strip()]
+            if not sig_lines:
+                return raw
+
+            lines = raw.splitlines()
+            if not lines:
+                return raw
+
+            # Look only at the tail to reduce false positives.
+            tail_window = 14
+            start = max(0, len(lines) - tail_window)
+            tail = lines[start:]
+            tail_norm = [str(ln).strip().lower() for ln in tail]
+            sig_norm = [s.lower() for s in sig_lines]
+
+            # Find any direct signature line hit in the tail.
+            hit_idx = None
+            for i, ln in enumerate(tail_norm):
+                if not ln:
+                    continue
+                if any(ln == s for s in sig_norm):
+                    hit_idx = i
+                    break
+
+            # If no direct hit, allow "closing + name" pattern.
+            if hit_idx is None and sender.full_name:
+                sender_first = str(sender.full_name).strip().split(" ")[0].lower()
+                closing_tokens = {
+                    "best",
+                    "best,",
+                    "thanks",
+                    "thanks,",
+                    "thank you",
+                    "thank you,",
+                    "sincerely",
+                    "sincerely,",
+                    "regards",
+                    "regards,",
+                    "cheers",
+                    "cheers,",
+                }
+                # Scan tail for a closing token followed by sender name/first name within 1-3 lines.
+                for i, ln in enumerate(tail_norm):
+                    if ln in closing_tokens:
+                        for j in range(i + 1, min(i + 4, len(tail_norm))):
+                            nm = tail_norm[j]
+                            if not nm:
+                                continue
+                            if nm == sender.full_name.lower() or (sender_first and nm == sender_first):
+                                hit_idx = i
+                                break
+                    if hit_idx is not None:
+                        break
+
+            if hit_idx is None:
+                return raw
+
+            # Back up to include preceding blank line(s).
+            cut_tail_idx = hit_idx
+            while cut_tail_idx > 0 and tail_norm[cut_tail_idx - 1] == "":
+                cut_tail_idx -= 1
+
+            cut_global = start + cut_tail_idx
+            kept = lines[:cut_global]
+            # Trim trailing blank lines in kept.
+            while kept and str(kept[-1]).strip() == "":
+                kept.pop()
+            return "\n".join(kept).rstrip()
 
         def _no_em_dashes(s: str) -> str:
             return str(s or "").replace("—", "-").replace("–", "-")
@@ -392,7 +473,7 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
         body = str(data.get("body") or "").strip() or _fallback()[1]
 
         # Enforce quality rules even if the model drifts.
-        body = _append_signature(_strip_fluff_openers(body))
+        body = _append_signature(_strip_existing_signature(_strip_fluff_openers(body)))
         body = _no_em_dashes(body)
         subject = _no_em_dashes(subject)
 
