@@ -45,6 +45,7 @@ from .routers import (
     beta_feedback,
     demo_reset,
     subscription,
+    leads_capture,
 )
 
 
@@ -97,6 +98,7 @@ def create_app() -> FastAPI:
             or path.startswith("/docs")
             or path.startswith("/openapi.json")
             or path.startswith("/bio-pages")
+            or path.startswith("/leads")
         ):
             return await call_next(request)
 
@@ -158,6 +160,7 @@ def create_app() -> FastAPI:
     app.include_router(tracker.router, tags=["tracker"])
     app.include_router(livepages.router, tags=["livepages"])
     app.include_router(bio_pages.router, tags=["bio-pages"])
+    app.include_router(leads_capture.router, tags=["leads"])
     app.include_router(personas.router, tags=["personas"])
     app.include_router(job_preferences.router, prefix="/job-preferences", tags=["job-preferences"])
     app.include_router(gap_analysis.router, prefix="/gap-analysis", tags=["gap-analysis"])

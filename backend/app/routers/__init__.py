@@ -62,6 +62,7 @@ from . import (
     onboarding,
     compliance,
     deliverability,
+    leads_capture,
 )
 
 __all__ = [
@@ -126,4 +127,5 @@ __all__ = [
     "onboarding",
     "compliance",
     "deliverability",
+    "leads_capture",
 ]
