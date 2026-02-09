@@ -41,10 +41,10 @@ export default function Navbar() {
         if (path === "/job-preferences" || path.startsWith("/job-preferences/")) return 1;
         if (path === "/resume" || path.startsWith("/resume/")) return 2;
         if (path === "/personality" || path.startsWith("/personality/")) return 3;
-        if (path === "/offer" || path.startsWith("/offer/")) return 4;
-        if (path === "/job-descriptions" || path.startsWith("/job-descriptions/")) return 5;
-        if (path === "/gap-analysis" || path.startsWith("/gap-analysis/")) return 6;
-        if (path === "/painpoint-match" || path.startsWith("/painpoint-match/")) return 7;
+        if (path === "/job-descriptions" || path.startsWith("/job-descriptions/")) return 4;
+        if (path === "/gap-analysis" || path.startsWith("/gap-analysis/")) return 5;
+        if (path === "/painpoint-match" || path.startsWith("/painpoint-match/")) return 6;
+        if (path === "/offer" || path.startsWith("/offer/")) return 7;
         if (path === "/company-research" || path.startsWith("/company-research/")) return 8;
         // Context research is part of the "Decision Makers" step in the wireframe flow.
         if (path === "/find-contact" || path.startsWith("/find-contact/")) return 9;
@@ -72,8 +72,8 @@ export default function Navbar() {
       }
       const next = Array.from(new Set([...(steps || []).filter((n) => Number.isFinite(n)), step]))
         .filter((n) => n >= 1 && n <= 12);
-      // v3: Offer step inserted at 4; Role Search shifted to 5; Contact shifted to 9.
-      window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 3, steps: next }));
+      // v4: Offer step moved to 7 (between Match and Research). Roles=4, Gaps=5, Match=6.
+      window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 4, steps: next }));
       window.dispatchEvent(new CustomEvent("roleferry-progress-updated", { detail: { step } }));
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -150,13 +150,13 @@ export default function Navbar() {
             <NavPill href="/" pathname={pathname} kind="utility" size="md">Dashboard</NavPill>
             <span className="mx-2 h-4 w-px bg-white/15" />
 
-            <NavPill href="/job-preferences" pathname={pathname}>Role Prefs</NavPill>
+            <NavPill href="/job-preferences" pathname={pathname}>Prefs</NavPill>
             <NavPill href="/resume" pathname={pathname}>Resume</NavPill>
             <NavPill href="/personality" pathname={pathname}>Personality</NavPill>
-            <NavPill href="/offer" pathname={pathname}>Offer</NavPill>
-            <NavPill href="/job-descriptions" pathname={pathname}>Role Search</NavPill>
+            <NavPill href="/job-descriptions" pathname={pathname}>Roles</NavPill>
             <NavPill href="/gap-analysis" pathname={pathname}>Gaps</NavPill>
             <NavPill href="/painpoint-match" pathname={pathname}>Match</NavPill>
+            <NavPill href="/offer" pathname={pathname}>Offer</NavPill>
             <NavPill href="/company-research" pathname={pathname}>Research</NavPill>
             <NavPill href="/find-contact" pathname={pathname}>Contact</NavPill>
             <NavPill href="/bio-page" pathname={pathname}>Bio</NavPill>

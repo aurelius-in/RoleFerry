@@ -11,6 +11,7 @@ type JobPreferences = {
   values: string[];
   roleCategories: string[];
   locationPreferences: string[];
+  locationText?: string;
   workType: string[];
   roleType: string[];
   companySize: string[];
@@ -163,10 +164,12 @@ export default function GapAnalysisPage() {
   const [temperamentProfile, setTemperamentProfile] = useState<TemperamentProfile | null>(null);
 
   const [ranked, setRanked] = useState<GapAnalysisItem[]>([]);
+  const [rankedDisplay, setRankedDisplay] = useState<GapAnalysisItem[]>([]);
   const [helper, setHelper] = useState<GapAnalysisResponse["helper"] | null>(null);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     setJobDescriptions(safeJson<JobDescription[]>(localStorage.getItem("job_descriptions"), []));
@@ -195,15 +198,38 @@ export default function GapAnalysisPage() {
     const missing: Array<{ key: string; label: string; href: string }> = [];
     if (!preferences) missing.push({ key: "prefs", label: "Role Preferences (Step 1)", href: "/job-preferences" });
     if (!resumeExtract) missing.push({ key: "resume", label: "Resume (Step 2)", href: "/resume" });
-    if (jobDescriptions.length === 0) missing.push({ key: "jobs", label: "Role Search (Step 5)", href: "/job-descriptions" });
+    if (jobDescriptions.length === 0) missing.push({ key: "jobs", label: "Role Search (Step 4)", href: "/job-descriptions" });
     return missing;
   }, [jobDescriptions.length, preferences, resumeExtract]);
 
   const topSummary = useMemo(() => {
-    const top = ranked[0];
+    const top = rankedDisplay[0];
     if (!top) return null;
     return `${top.title} @ ${formatCompanyName(top.company)} (${top.score}/100)`;
-  }, [ranked]);
+  }, [rankedDisplay]);
+
+  function normalizeScores(items: GapAnalysisItem[]): GapAnalysisItem[] {
+    const list = Array.isArray(items) ? items : [];
+    if (!list.length) return [];
+    const scores = list.map((x) => Number(x.score)).filter((n) => Number.isFinite(n));
+    if (!scores.length) return list;
+
+    // Friendly display scale: worst ~30, best ~90, preserve ranking order.
+    const minS = Math.min(...scores);
+    const maxS = Math.max(...scores);
+    const lo = 30;
+    const hi = 90;
+    const denom = Math.max(1, maxS - minS);
+
+    return list.map((it) => {
+      const raw = Number(it.score);
+      if (!Number.isFinite(raw)) return it;
+      const t = (raw - minS) / denom; // 0..1
+      const scaled = Math.round(lo + t * (hi - lo));
+      const clamped = Math.max(lo, Math.min(hi, scaled));
+      return { ...it, score: clamped };
+    });
+  }
 
   async function runAnalysis() {
     setError(null);
@@ -216,6 +242,7 @@ export default function GapAnalysisPage() {
             values: preferences.values || [],
             role_categories: preferences.roleCategories || [],
             location_preferences: preferences.locationPreferences || [],
+            location_text: String(preferences.locationText || "").trim() || null,
             work_type: preferences.workType || [],
             role_type: preferences.roleType || [],
             company_size: preferences.companySize || [],
@@ -237,9 +264,11 @@ export default function GapAnalysisPage() {
         job_descriptions: jobDescriptions,
       });
       if (!resp.success) throw new Error(resp.message || "Analysis failed");
-      setRanked(resp.ranked || []);
+      const rawRanked = resp.ranked || [];
+      setRanked(rawRanked);
+      setRankedDisplay(normalizeScores(rawRanked));
       setHelper(resp.helper || null);
-      const firstId = (resp.ranked || [])[0]?.job_id || null;
+      const firstId = (rawRanked || [])[0]?.job_id || null;
       setSelectedJobId(firstId);
     } catch (e: any) {
       setError(e?.message || "Failed to run gap analysis.");
@@ -248,7 +277,55 @@ export default function GapAnalysisPage() {
     }
   }
 
-  const selected = useMemo(() => ranked.find((r) => r.job_id === selectedJobId) || ranked[0] || null, [ranked, selectedJobId]);
+  const selected = useMemo(
+    () => rankedDisplay.find((r) => r.job_id === selectedJobId) || rankedDisplay[0] || null,
+    [rankedDisplay, selectedJobId]
+  );
+
+  const getJobById = (jobId: string) => {
+    const id = String(jobId || "");
+    return jobDescriptions.find((j) => String(j.id || "") === id) || null;
+  };
+
+  const persistSelectedRole = (jobId: string) => {
+    const jd = getJobById(jobId);
+    if (!jd) return false;
+    try {
+      localStorage.setItem("selected_job_description", JSON.stringify(jd));
+      localStorage.setItem("selected_job_description_id", String(jd.id || ""));
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const dropRole = (jobId: string) => {
+    const id = String(jobId || "");
+    // Remove from job descriptions (source of truth) and persist.
+    setJobDescriptions((prev) => {
+      const next = (prev || []).filter((j) => String(j.id || "") !== id);
+      try {
+        localStorage.setItem("job_descriptions", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+    // Remove from ranked lists (current view).
+    setRanked((prev) => (prev || []).filter((r) => String(r.job_id || "") !== id));
+    setRankedDisplay((prev) => (prev || []).filter((r) => String(r.job_id || "") !== id));
+    // If we dropped the selected role, move selection to the next one.
+    if (selectedJobId === id) {
+      const remaining = rankedDisplay.filter((r) => String(r.job_id || "") !== id);
+      setSelectedJobId(remaining[0]?.job_id || null);
+    }
+    // If we dropped the persisted selected role, clear it.
+    try {
+      const cur = String(localStorage.getItem("selected_job_description_id") || "");
+      if (cur && cur === id) {
+        localStorage.removeItem("selected_job_description");
+        localStorage.removeItem("selected_job_description_id");
+      }
+    } catch {}
+  };
 
   function severityPill(sev: "low" | "medium" | "high") {
     if (sev === "high") return "bg-red-500/15 border-red-500/30 text-red-200";
@@ -301,7 +378,7 @@ export default function GapAnalysisPage() {
               </p>
             </div>
             <div className="bg-gray-900/70 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-white/10">
-              Step 4 of 12
+              Step 5 of 12
             </div>
           </div>
 
@@ -359,18 +436,25 @@ export default function GapAnalysisPage() {
             </div>
           ) : null}
 
-          {ranked.length > 0 ? (
+          {rankedDisplay.length > 0 ? (
             <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-4">
               <div className="lg:col-span-4">
                 <div className="rounded-lg border border-white/10 bg-black/20 p-2">
                   <div className="text-xs font-semibold text-white/70 px-2 py-2">Ranked jobs</div>
+                  {notice ? (
+                    <div className="px-2 pb-2 text-[11px] text-white/70">
+                      {notice}
+                    </div>
+                  ) : null}
                   <div className="max-h-[560px] overflow-auto">
-                    {ranked.map((r) => (
-                      <button
+                    {rankedDisplay.map((r) => (
+                      <div
                         key={r.job_id}
-                        type="button"
+                        role="button"
+                        tabIndex={0}
                         onClick={() => setSelectedJobId(r.job_id)}
-                        className={`w-full text-left px-3 py-3 border-t border-white/10 hover:bg-white/5 transition-colors ${
+                        onKeyDown={(e) => e.key === "Enter" && setSelectedJobId(r.job_id)}
+                        className={`w-full text-left px-3 py-3 border-t border-white/10 hover:bg-white/5 transition-colors cursor-pointer ${
                           selectedJobId === r.job_id ? "bg-white/5" : ""
                         }`}
                       >
@@ -386,7 +470,34 @@ export default function GapAnalysisPage() {
                             </div>
                           </div>
                         </div>
-                      </button>
+
+                        <div className="mt-2 flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            className="px-2 py-1 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 text-[10px] font-semibold"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const ok = persistSelectedRole(r.job_id);
+                              setNotice(ok ? "Saved role for downstream steps." : "Couldn’t save role (storage blocked).");
+                              window.setTimeout(() => setNotice(null), 1600);
+                            }}
+                          >
+                            Save Role
+                          </button>
+                          <button
+                            type="button"
+                            className="px-2 py-1 rounded-md border border-red-500/25 bg-red-500/10 text-red-200 hover:bg-red-500/15 text-[10px] font-semibold"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              dropRole(r.job_id);
+                              setNotice("Dropped role from your list.");
+                              window.setTimeout(() => setNotice(null), 1600);
+                            }}
+                          >
+                            Drop Role
+                          </button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>

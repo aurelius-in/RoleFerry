@@ -304,7 +304,7 @@ export default function PainPointMatchPage() {
       // Ignore storage failures (private mode/quota); navigation still works.
     }
 
-    router.push("/company-research");
+    router.push("/offer");
   };
 
   const getScoreColor = (score: number) => {
@@ -356,8 +356,8 @@ export default function PainPointMatchPage() {
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-4">
-          <a href="/job-descriptions" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
-            <span className="mr-2">←</span> Back to Roles
+          <a href="/gap-analysis" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+            <span className="mr-2">←</span> Back to Gaps
           </a>
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">

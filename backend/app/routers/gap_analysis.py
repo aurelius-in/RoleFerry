@@ -15,6 +15,7 @@ class GapAnalysisPreferences(BaseModel):
     values: List[str] = Field(default_factory=list)
     role_categories: List[str] = Field(default_factory=list)
     location_preferences: List[str] = Field(default_factory=list)
+    location_text: str = ""
     work_type: List[str] = Field(default_factory=list)
     role_type: List[str] = Field(default_factory=list)
     company_size: List[str] = Field(default_factory=list)
@@ -773,7 +774,12 @@ def _deterministic_rank(
                 )
 
         # Location preferences (soft): if user selected specific places, check job location when available.
+        # Note: location_preferences typically contains work-mode values (Remote/Hybrid/In-Person). We also accept a freeform
+        # location_text field from the Role Preferences page for "US only", "NYC", "PST", etc.
         loc_prefs = [x.strip() for x in _norm_list(preferences.location_preferences) if str(x).strip()]
+        loc_text = str(getattr(preferences, "location_text", "") or "").strip()
+        if loc_text:
+            loc_prefs.append(loc_text)
         loc_floor = str(preferences.state or "").strip()
         job_loc = _job_location(j)
         if loc_prefs or loc_floor:

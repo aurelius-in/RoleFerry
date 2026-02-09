@@ -178,7 +178,7 @@ export default function OfferPage() {
       setIsSaving(false);
     }
     if (next?.goNext) {
-      router.push("/job-descriptions");
+      router.push("/company-research");
     }
   };
 
@@ -186,8 +186,8 @@ export default function OfferPage() {
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-4">
-          <a href="/personality" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
-            <span className="mr-2">←</span> Back to Personality
+          <a href="/painpoint-match" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+            <span className="mr-2">←</span> Back to Match
           </a>
         </div>
 
