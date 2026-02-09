@@ -195,19 +195,8 @@ export default function PainPointMatchPage() {
     };
   };
 
-  const selectJobForDownstream = (jd: JobDescription) => {
-    const saved = matchesByJobId[jd.id] || [];
-    setSelectedJD(jd);
-    setMatches(saved);
-    try {
-      localStorage.setItem("selected_job_description", JSON.stringify(jd));
-      localStorage.setItem("selected_job_description_id", jd.id);
-      localStorage.setItem("painpoint_matches", JSON.stringify(saved));
-      localStorage.setItem("painpoint_matches_by_job", JSON.stringify(matchesByJobId));
-    } catch {
-      // ignore storage failures
-    }
-  };
+  // Note: we intentionally do NOT let users pick a single "downstream role" here.
+  // Dropping roles happens in Gap Analysis; this step carries all roles forward.
 
   const runPainPointMatchAnalysis = async () => {
     if (!resumeExtract || jobDescriptions.length === 0) return;
@@ -280,26 +269,31 @@ export default function PainPointMatchPage() {
   };
 
   const handleContinue = () => {
-    // Be permissive: if localStorage is blocked or something is missing,
-    // still navigate, but show a clear message when we truly can't.
-    const jd = selectedJD;
-    if (!jd) {
-      setError("Select a role before continuing.");
-      return;
-    }
-
-    const saved = matchesByJobId[jd.id] || matches;
-    if (!saved || saved.length === 0) {
-      setError("Generate pain point matches for this role before continuing.");
+    // At this stage we carry ALL roles forward. Gaps is where you drop roles.
+    // Still block if they haven't generated any matches yet.
+    const hasAny =
+      Object.keys(matchesByJobId || {}).some((k) => Array.isArray((matchesByJobId as any)[k]) && (matchesByJobId as any)[k].length > 0);
+    if (!hasAny) {
+      setError("Run Pain Point Match Analysis before continuing.");
       return;
     }
 
     try {
-      // Persist "current" selection for downstream steps AND keep the per-job map.
-      localStorage.setItem("selected_job_description", JSON.stringify(jd));
-      localStorage.setItem("selected_job_description_id", jd.id);
-      localStorage.setItem("painpoint_matches", JSON.stringify(saved));
+      // Keep the per-role map for downstream steps.
       localStorage.setItem("painpoint_matches_by_job", JSON.stringify(matchesByJobId));
+
+      // Convenience: also persist a "current" selection, but do NOT override what the user saved in Gaps.
+      const existingId = String(localStorage.getItem("selected_job_description_id") || "").trim();
+      const fallback = selectedJD || jobDescriptions[0] || null;
+      if (!existingId && fallback) {
+        localStorage.setItem("selected_job_description", JSON.stringify(fallback));
+        localStorage.setItem("selected_job_description_id", String(fallback.id || ""));
+      }
+
+      // Keep painpoint_matches populated for older downstream components (uses selected role).
+      const selectedId = existingId || String(fallback?.id || "");
+      const forSelected = selectedId ? (matchesByJobId as any)[selectedId] || [] : [];
+      localStorage.setItem("painpoint_matches", JSON.stringify(forSelected));
     } catch {
       // Ignore storage failures (private mode/quota); navigation still works.
     }
@@ -472,8 +466,6 @@ export default function PainPointMatchPage() {
                               type="button"
                               onClick={() => {
                                 setSelectedJD(jd);
-                                // Also keep downstream selection consistent with the existing helper.
-                                try { selectJobForDownstream(jd); } catch {}
                               }}
                               className={`w-full text-left px-3 py-3 border-b border-white/10 hover:bg-white/5 transition-colors ${
                                 isSelected ? "bg-white/5" : ""
@@ -522,14 +514,7 @@ export default function PainPointMatchPage() {
                                   <StarRating value={score} scale="fraction" showNumeric />
                                 </div>
                               )}
-                              <button
-                                type="button"
-                                onClick={() => selectJobForDownstream(jd)}
-                                className="rounded-md px-3 py-2 text-sm font-semibold border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 transition-colors"
-                                title="Select this role for downstream steps (Research, Contact, Bio, Campaign)"
-                              >
-                                Use this role downstream
-                              </button>
+                              {/* Removed: per-role downstream selection. Roles are dropped in Gaps, not here. */}
                             </div>
                           </div>
 

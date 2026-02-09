@@ -79,9 +79,15 @@ export function buildCampaignContextV1(contactId: string): RFCampaignContextV1 {
   const resumeExtract = safeJson<any>(lsGet("resume_extract"), null);
   const personalityProfile = safeJson<any>(lsGet("personality_profile"), null);
   const temperamentProfile = safeJson<any>(lsGet("temperament_profile"), null);
-  const offer = safeJson<any>(lsGet("rf_offer_v1"), null);
   const selectedJob = safeJson<any>(lsGet("selected_job_description"), null);
   const selectedJobId = String(lsGet("selected_job_description_id") || "").trim();
+
+  // Offer is role-specific: prefer the offer saved for the selected role id.
+  const offerByJob = safeJson<Record<string, any>>(lsGet("rf_offer_v1_by_job"), {});
+  const offer =
+    (selectedJobId && offerByJob && (offerByJob as any)[selectedJobId])
+      ? (offerByJob as any)[selectedJobId]
+      : safeJson<any>(lsGet("rf_offer_v1"), null);
 
   const painpointByJob = safeJson<Record<string, any[]>>(lsGet("painpoint_matches_by_job"), {});
   const painpointMatches =
