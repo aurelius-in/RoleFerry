@@ -507,7 +507,18 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
         body = str(data.get("body") or "").strip() or _fallback()[1]
 
         # Enforce quality rules even if the model drifts.
-        body = _append_signature(_strip_existing_signature(_strip_fluff_openers(body)))
+        # IMPORTANT: Never return an email that is only a signature block.
+        body_core = _strip_existing_signature(_strip_fluff_openers(body)).strip()
+        if len(body_core) < 40:
+            # Model likely returned only a closing/signature (or we stripped everything).
+            # Fall back to a deterministic, non-empty body so the UI always shows an actual email.
+            fb_subj, fb_body = _fallback()
+            if not subject:
+                subject = fb_subj
+            # _fallback() already includes signature; strip it back to core then append canonical signature below.
+            body_core = _strip_existing_signature(_strip_fluff_openers(fb_body)).strip()
+
+        body = _append_signature(body_core)
         body = _no_em_dashes(body)
         subject = _no_em_dashes(subject)
 
