@@ -17,10 +17,10 @@ const STONES: StoneConfig[] = [
   { step: 1, tab: "job-preferences", label: "Role Preferences", icon: "🎯", href: "/job-preferences" },
   { step: 2, tab: "candidate-profile", label: "Your Resume", icon: "📄", href: "/resume" },
   { step: 3, tab: "personality", label: "Personality", icon: "🧠", href: "/personality" },
-  { step: 4, tab: "offer", label: "Offer (Value Prop)", icon: "✨", href: "/offer" },
-  { step: 5, tab: "job-descriptions", label: "Role Search", icon: "🔎", href: "/job-descriptions" },
-  { step: 6, tab: "gap-analysis", label: "Gap Analysis", icon: "🧩", href: "/gap-analysis" },
-  { step: 7, tab: "pain-point-match", label: "Pain Point Match", icon: "🔗", href: "/painpoint-match" },
+  { step: 4, tab: "job-descriptions", label: "Role Search", icon: "🔎", href: "/job-descriptions" },
+  { step: 5, tab: "gap-analysis", label: "Gap Analysis", icon: "🧩", href: "/gap-analysis" },
+  { step: 6, tab: "pain-point-match", label: "Pain Point Match", icon: "🔗", href: "/painpoint-match" },
+  { step: 7, tab: "offer", label: "Offer (Value Prop)", icon: "✨", href: "/offer" },
   // Flow order: company research first, then decision makers.
   { step: 8, tab: "company-research", label: "Company Research", icon: "🏢", href: "/company-research" },
   { step: 9, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
@@ -69,11 +69,31 @@ export default function Home() {
             ? (parsed as any).steps
             : [];
 
-        // New format (v3): Offer inserted at step 4; Role Search shifted to 5; Contact shifted to 9.
+        // New format (v4): Offer moved to step 7 (between Match and Research).
         // IMPORTANT: do not run legacy remaps or we can accidentally drop step 12 and never unlock Launch.
-        if (version >= 3) {
+        if (version >= 4) {
           const final = Array.from(new Set((steps || []).filter((n) => Number.isFinite(n) && n >= 1 && n <= 12)));
           setCompleted(new Set(final));
+          return;
+        }
+
+        // v3 → v4 remap:
+        // v3: 1 prefs, 2 resume, 3 personality, 4 offer, 5 role search, 6 gaps, 7 match, 8 research, 9 contact, 10 bio, 11 campaign, 12 launch
+        // v4: 1 prefs, 2 resume, 3 personality, 4 role search, 5 gaps, 6 match, 7 offer, 8 research, 9 contact, 10 bio, 11 campaign, 12 launch
+        if (version === 3) {
+          const remapped = (steps || []).map((n) => {
+            if (n === 4) return 7; // offer moved later
+            if (n === 5) return 4; // roles moved earlier
+            if (n === 6) return 5; // gaps shifted
+            if (n === 7) return 6; // match shifted
+            return n;
+          });
+          const final = Array.from(new Set(remapped.filter((n) => Number.isFinite(n) && n >= 1 && n <= 12)));
+          setCompleted(new Set(final));
+          // Persist upgraded version so we don't re-map repeatedly.
+          try {
+            window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 4, steps: final }));
+          } catch {}
           return;
         }
 
@@ -153,7 +173,7 @@ export default function Home() {
   }, []);
 
   function saveProgress(next: Set<number>) {
-    window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 2, steps: Array.from(next) }));
+    window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 4, steps: Array.from(next) }));
   }
 
   function playFootstepSequence(targetStep: number, onComplete: () => void) {

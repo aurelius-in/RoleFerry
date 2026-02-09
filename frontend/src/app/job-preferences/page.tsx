@@ -8,6 +8,7 @@ interface JobPreferences {
   values: string[];
   roleCategories: string[];
   locationPreferences: string[];
+  locationText?: string;
   workType: string[];
   roleType: string[];
   companySize: string[];
@@ -22,6 +23,7 @@ interface BackendJobPreferences {
   values: string[];
   role_categories: string[];
   location_preferences: string[];
+  location_text?: string;
   work_type: string[];
   role_type: string[];
   company_size: string[];
@@ -212,6 +214,7 @@ export default function JobPreferencesPage() {
     values: [],
     roleCategories: [],
     locationPreferences: [],
+    locationText: "",
     workType: [],
     roleType: [],
     companySize: [],
@@ -240,7 +243,11 @@ export default function JobPreferencesPage() {
         // Only keep state when the UI could have collected it (In-Person selected).
         const locs = Array.isArray(parsed?.locationPreferences) ? parsed.locationPreferences : [];
         const hasInPerson = locs.includes("In-Person");
-        setPreferences({ ...parsed, state: hasInPerson ? String(parsed?.state || "") : "" });
+        setPreferences({
+          ...parsed,
+          locationText: String(parsed?.locationText || ""),
+          state: hasInPerson ? String(parsed?.state || "") : "",
+        });
       }
     } catch {
       // ignore malformed cache
@@ -261,6 +268,7 @@ export default function JobPreferencesPage() {
             values: p.values || [],
             roleCategories: p.role_categories || [],
             locationPreferences: p.location_preferences || [],
+            locationText: String((p as any)?.location_text || ""),
             workType: p.work_type || [],
             roleType: p.role_type || [],
             companySize: p.company_size || [],
@@ -342,6 +350,7 @@ export default function JobPreferencesPage() {
         values: preferences.values,
         role_categories: preferences.roleCategories,
         location_preferences: preferences.locationPreferences,
+        location_text: String(preferences.locationText || "").trim() || undefined,
         work_type: preferences.workType,
         role_type: preferences.roleType,
         company_size: preferences.companySize,
@@ -470,6 +479,19 @@ export default function JobPreferencesPage() {
                         <span>{pref}</span>
                       </label>
                     ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-medium mb-3">Preferred location (optional)</h3>
+                  <input
+                    value={preferences.locationText || ""}
+                    onChange={(e) => handleSingleSelect("locationText", e.target.value)}
+                    placeholder='Examples: "New York, NY", "US only", "PST time zone", "London / Remote"'
+                    className="w-full max-w-xl border border-gray-300 rounded-md px-3 py-2"
+                  />
+                  <div className="mt-1 text-xs text-white/70">
+                    Used for gap analysis + personalization. Leave blank if you’re fully flexible.
                   </div>
                 </div>
 

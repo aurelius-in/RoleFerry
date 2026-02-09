@@ -655,7 +655,7 @@ export default function BioPageStep() {
                             <button
                               type="button"
                               onClick={() => updateTheme({ bg_top: cycle(colors.bg_top, -1).hex })}
-                              className="h-8 w-9 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                              className="h-8 w-8 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
                               aria-label="Previous top background"
                             >
                               ◀
@@ -663,7 +663,7 @@ export default function BioPageStep() {
                             <button
                               type="button"
                               onClick={() => updateTheme({ bg_top: cycle(colors.bg_top, 1).hex })}
-                              className="h-8 flex-1 px-2 rounded-md border border-white/10 bg-white/5 text-white/85 hover:bg-white/10 text-sm font-semibold text-left"
+                              className="h-8 flex-1 px-2.5 rounded-md border border-white/10 bg-white/5 text-white/85 hover:bg-white/10 text-[12px] leading-4 font-semibold text-left whitespace-nowrap truncate"
                               title="Click to cycle"
                             >
                               {labelFor(colors.bg_top)}
@@ -671,7 +671,7 @@ export default function BioPageStep() {
                             <button
                               type="button"
                               onClick={() => updateTheme({ bg_top: cycle(colors.bg_top, 1).hex })}
-                              className="h-8 w-9 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                              className="h-8 w-8 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
                               aria-label="Next top background"
                             >
                               ▶
@@ -687,7 +687,7 @@ export default function BioPageStep() {
                             <button
                               type="button"
                               onClick={() => updateTheme({ bg_bottom: cycle(colors.bg_bottom, -1).hex })}
-                              className="h-8 w-9 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                              className="h-8 w-8 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
                               aria-label="Previous bottom background"
                             >
                               ◀
@@ -695,7 +695,7 @@ export default function BioPageStep() {
                             <button
                               type="button"
                               onClick={() => updateTheme({ bg_bottom: cycle(colors.bg_bottom, 1).hex })}
-                              className="h-8 flex-1 px-2 rounded-md border border-white/10 bg-white/5 text-white/85 hover:bg-white/10 text-sm font-semibold text-left"
+                              className="h-8 flex-1 px-2.5 rounded-md border border-white/10 bg-white/5 text-white/85 hover:bg-white/10 text-[12px] leading-4 font-semibold text-left whitespace-nowrap truncate"
                               title="Click to cycle"
                             >
                               {labelFor(colors.bg_bottom)}
@@ -703,7 +703,7 @@ export default function BioPageStep() {
                             <button
                               type="button"
                               onClick={() => updateTheme({ bg_bottom: cycle(colors.bg_bottom, 1).hex })}
-                              className="h-8 w-9 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                              className="h-8 w-8 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
                               aria-label="Next bottom background"
                             >
                               ▶

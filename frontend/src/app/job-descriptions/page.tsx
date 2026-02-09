@@ -488,8 +488,8 @@ export default function JobDescriptionsPage() {
   return (
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4 mb-4">
-          <a href="/offer" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
-            <span className="mr-2">←</span> Back to Offer
+          <a href="/personality" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+            <span className="mr-2">←</span> Back to Personality
         </a>
       </div>
       <div className="max-w-6xl mx-auto px-4">
@@ -502,7 +502,7 @@ export default function JobDescriptionsPage() {
               </p>
             </div>
             <div className="bg-gray-900/70 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg border border-white/10">
-              Step 5 of 12
+              Step 4 of 12
             </div>
           </div>
 
@@ -532,7 +532,7 @@ export default function JobDescriptionsPage() {
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.simplyhired.com/" target="_blank" rel="noopener noreferrer">SimplyHired</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.themuse.com/jobs" target="_blank" rel="noopener noreferrer">The Muse</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.usajobs.gov/" target="_blank" rel="noopener noreferrer">USAJOBS (US Government)</a></li>
-                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://joinhandshake.com/" target="_blank" rel="noopener noreferrer">Handshake (Early career)</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://joinhandshake.com/" target="_blank" rel="noopener noreferrer">Handshake (Students)</a></li>
                 </ul>
               </div>
 
@@ -547,7 +547,6 @@ export default function JobDescriptionsPage() {
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://remote.co/remote-jobs/" target="_blank" rel="noopener noreferrer">Remote.co</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.workingnomads.com/jobs" target="_blank" rel="noopener noreferrer">Working Nomads</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://himalayas.app/jobs" target="_blank" rel="noopener noreferrer">Himalayas</a></li>
-                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.flexjobs.com/" target="_blank" rel="noopener noreferrer">FlexJobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://app.welcometothejungle.com/" target="_blank" rel="noopener noreferrer">Welcome to the Jungle (formerly Otta)</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.ventureloop.com/" target="_blank" rel="noopener noreferrer">VentureLoop (Startups)</a></li>
                 </ul>
@@ -559,13 +558,9 @@ export default function JobDescriptionsPage() {
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.builtin.com/jobs" target="_blank" rel="noopener noreferrer">Built In (Tech)</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.dice.com/" target="_blank" rel="noopener noreferrer">Dice</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.techcareers.com/" target="_blank" rel="noopener noreferrer">TechCareers</a></li>
-                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.techfetch.com/" target="_blank" rel="noopener noreferrer">TechFetch</a></li>
-                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.levels.fyi/jobs/" target="_blank" rel="noopener noreferrer">Levels.fyi Jobs</a></li>
-                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://hnhiring.com/" target="_blank" rel="noopener noreferrer">HN Hiring</a></li>
-                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://authenticjobs.com/" target="_blank" rel="noopener noreferrer">Authentic Jobs (Tech + Design)</a></li>
+                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.levels.fyi/jobs/" target="_blank" rel="noopener noreferrer">Levels.fyi Jobs (Salary Data)</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://simplify.jobs/" target="_blank" rel="noopener noreferrer">Simplify.jobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://jobright.ai/" target="_blank" rel="noopener noreferrer">Jobright.ai</a></li>
-                  <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.hired.com/jobs" target="_blank" rel="noopener noreferrer">Hired (Tech hiring marketplace)</a></li>
                 </ul>
               </div>
 
