@@ -551,7 +551,7 @@ export default function CampaignV2() {
                                   <span>Generating</span>
                                 </>
                               ) : (
-                                "Regenerate"
+                                "Generate"
                               )}
                             </button>
                           </div>

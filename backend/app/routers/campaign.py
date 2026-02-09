@@ -353,6 +353,7 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             "- Hard ban: no canned openers like 'I hope you're doing well'.\n"
             "- After any greeting, the next sentence must be value-first (offer/painpoint/proof/ask).\n"
             "- Keep it plain-language and specific.\n"
+            "- Avoid startup jargon (e.g., 'ship outcomes', 'drive impact', 'move the needle'). Prefer human phrasing.\n"
             "- Use real names/companies ONLY if provided in the context JSON. Do not invent.\n"
             "- Do NOT output template placeholders like {{first_name}}.\n\n"
             f"Sequence step: {step} of 4.\n"

@@ -564,8 +564,8 @@ async def search_contacts(request: ContactSearchRequest):
             try:
                 pdl = PDLClient(settings.pdl_api_key)
                 # best-effort: treat query as company name
-                # Use a larger pool when title filters are active, so we can satisfy the selection.
-                raw = pdl.person_search(company=q, size=28 if title_filters else 12)
+                # Use a larger pool when title filters are active, so we can satisfy broad selections.
+                raw = pdl.person_search(company=q, size=60 if title_filters else 14)
                 people = pdl.extract_people(raw)
 
                 def _score_person(title: str) -> int:
@@ -648,21 +648,35 @@ async def search_contacts(request: ContactSearchRequest):
                 talent_dm = [p for _, p in scored if _is_recruiting(p.title)]
                 others = [p for _, p in scored if p not in fn_dm and p not in talent_dm and _is_relevant_decision_maker_for_job(p.title, job_fn)]
 
-                picked: List[Any] = []
-                for p in fn_dm[:4]:
-                    picked.append(p)
-                for p in talent_dm[:3]:
-                    if p not in picked:
-                        picked.append(p)
-                for p in others:
-                    if p not in picked:
-                        picked.append(p)
-                    if len(picked) >= 8:
-                        break
+                # When users select many title filters, they expect MANY more hits.
+                # So: widen selection aggressively when filters are provided.
+                desired = 24 if title_filters else 10
 
-                # Apply explicit title filters (if provided) and keep a slightly larger set.
-                filtered = [p for p in picked if _matches_title_filters(p.title)]
-                people = (filtered if filtered else picked)[:10]
+                if title_filters:
+                    filtered_pool = [
+                        p
+                        for _, p in scored
+                        if _is_relevant_decision_maker_for_job(p.title, job_fn) and _matches_title_filters(p.title)
+                    ]
+                    if filtered_pool:
+                        people = filtered_pool[:desired]
+                    else:
+                        # Fall back to relevance-only if filters were too specific.
+                        rel_pool = [p for _, p in scored if _is_relevant_decision_maker_for_job(p.title, job_fn)]
+                        people = rel_pool[:desired]
+                else:
+                    picked: List[Any] = []
+                    for p in fn_dm[:4]:
+                        picked.append(p)
+                    for p in talent_dm[:3]:
+                        if p not in picked:
+                            picked.append(p)
+                    for p in others:
+                        if p not in picked:
+                            picked.append(p)
+                        if len(picked) >= 8:
+                            break
+                    people = picked[:desired]
                 contacts: List[Contact] = []
                 for p in people:
                     # If we don't have a real email, leave it blank and let the UI hide it.
@@ -901,6 +915,13 @@ async def search_contacts(request: ContactSearchRequest):
             except Exception:
                 logger.exception("LLM contact relevance audit failed (non-blocking)")
 
+        # Hard cap for UI sanity: avoid overwhelming lists.
+        # (Users can widen title filters to change *which* contacts show, not how many.)
+        try:
+            contacts = (contacts or [])[:24]
+        except Exception:
+            pass
+
         # GPT helper: decision-maker talking points + outreach angles per contact.
         helper_context = {
             "query": request.query,
@@ -965,6 +986,26 @@ async def verify_contacts(request: ContactVerificationRequest):
     try:
         verified_contacts: List[Contact] = []
 
+        def _is_placeholder_email(email: str) -> bool:
+            e = (email or "").strip().lower()
+            if not e:
+                return True
+            if e == "unknown@example.com":
+                return True
+            if e.endswith("@example.com"):
+                return True
+            return False
+
+        def _domain_from_url(u: str) -> str:
+            try:
+                from urllib.parse import urlparse
+                host = (urlparse(u).hostname or "").strip().lower()
+                if host.startswith("www."):
+                    host = host[4:]
+                return host
+            except Exception:
+                return ""
+
         contacts_by_id: Dict[str, Contact] = {}
         for c in (request.contacts or []):
             contacts_by_id[c.id] = c
@@ -984,6 +1025,21 @@ async def verify_contacts(request: ContactVerificationRequest):
                     department="Engineering",
                     level="Director",
                 )
+
+            # If we don't have a real email yet, try to infer a company domain and guess one.
+            try:
+                if _is_placeholder_email(str(base.email or "")):
+                    domain = _domain_from_url(str(getattr(base, "job_company_website", "") or ""))
+                    if not domain:
+                        resolved = await _clearbit_company_suggest(str(base.company or "").strip())
+                        domain = (resolved or {}).get("domain") or ""
+                    if domain:
+                        guessed = _guess_email(str(base.name or "").strip(), domain)
+                        if guessed:
+                            base.email = guessed
+            except Exception:
+                # best-effort only
+                pass
 
             verification_result = await verify_email_async(base.email)
             base.verification_status = verification_result.get("status", "unknown")
