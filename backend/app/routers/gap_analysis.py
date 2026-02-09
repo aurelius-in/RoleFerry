@@ -1082,7 +1082,16 @@ async def analyze_gap(req: GapAnalysisRequest):
             },
         ]
 
-        resp = client.run_chat_completion(messages, temperature=0.2, max_tokens=900, stub_json=stub_json)
+        # IMPORTANT: Bound LLM time so the endpoint never hits platform timeouts and returns a generic 500.
+        # If OpenAI is slow/unavailable, OpenAIClient will return a stub response quickly and we’ll fall back.
+        resp = client.run_chat_completion(
+            messages,
+            temperature=0.2,
+            max_tokens=900,
+            stub_json=stub_json,
+            timeout_seconds=18.0,
+            max_retries=0,
+        )
         content = (((resp or {}).get("choices") or [{}])[0].get("message") or {}).get("content") or ""
         data = extract_json_from_text(str(content)) or {}
         items = data.get("ranked") or []

@@ -6,6 +6,9 @@ import re
 import time
 import hashlib
 import os
+import httpx
+from urllib.parse import quote as _urlquote
+import xml.etree.ElementTree as ET
 
 router = APIRouter()
 from ..clients.openai_client import get_openai_client, extract_json_from_text
@@ -119,6 +122,61 @@ class ResearchResponse(BaseModel):
 # Simple in-process TTL cache (good enough for demo/dev; resets on restart).
 _CTX_CACHE: Dict[str, Dict[str, Any]] = {}
 _CTX_CACHE_TTL_SECONDS = 60 * 30  # 30 minutes
+
+
+def _strip_html(s: str) -> str:
+    try:
+        t = re.sub(r"<[^>]+>", " ", str(s or ""))
+        t = re.sub(r"\s+", " ", t).strip()
+        return t
+    except Exception:
+        return str(s or "").strip()
+
+
+def _google_news_rss_hits(query: str, *, num: int = 6) -> List[Dict[str, Any]]:
+    """
+    Free, keyless "web search" fallback using Google News RSS.
+    Returns Serper-like hit dicts: { title, link, snippet }.
+    """
+    q = str(query or "").strip()
+    if not q:
+        return []
+    # Keep requests small + resilient; this runs in live mode when SERPER isn't configured.
+    url = (
+        "https://news.google.com/rss/search?q="
+        + _urlquote(q)
+        + "&hl=en-US&gl=US&ceid=US:en"
+    )
+    headers = {"User-Agent": "Mozilla/5.0 (RoleFerry; +https://roleferry.com)"}
+    try:
+        with httpx.Client(timeout=10.0, follow_redirects=True, headers=headers) as client:
+            r = client.get(url)
+            if r.status_code != 200:
+                return []
+            xml = r.text or ""
+    except Exception:
+        return []
+
+    try:
+        root = ET.fromstring(xml)
+    except Exception:
+        return []
+
+    hits: List[Dict[str, Any]] = []
+    for item in root.findall(".//item")[: max(1, int(num)) * 2]:
+        try:
+            title = _strip_html(item.findtext("title") or "")
+            link = str(item.findtext("link") or "").strip()
+            desc = _strip_html(item.findtext("description") or "")
+            snippet = desc or ""
+            if not link:
+                continue
+            hits.append({"title": title, "link": link, "snippet": snippet})
+            if len(hits) >= max(1, int(num)):
+                break
+        except Exception:
+            continue
+    return hits
 
 
 def _contact_facts_from_hits(hits: Any, *, max_items: int = 4) -> List[Dict[str, str]]:
@@ -503,6 +561,52 @@ async def conduct_research(request: ResearchRequest):
                     "publications": hits_pubs,
                     "linkedin": hits_li,
                 }
+        elif want_live and not settings.serper_api_key:
+            # Keyless fallback: use Google News RSS so we still populate "recent news",
+            # and can often extract leadership changes / launches / publications / market-position signals.
+            def _gather_rss(queries: List[str], *, per_query: int = 6, cap: int = 12) -> List[Dict[str, Any]]:
+                seen: set[str] = set()
+                out: List[Dict[str, Any]] = []
+                for q in queries or []:
+                    q = str(q or "").strip()
+                    if not q:
+                        continue
+                    for h in (_google_news_rss_hits(q, num=per_query) or []):
+                        if not isinstance(h, dict):
+                            continue
+                        url = str(h.get("link") or h.get("url") or "").strip()
+                        key = url.lower()
+                        if not url or key in seen:
+                            continue
+                        seen.add(key)
+                        out.append(h)
+                        if len(out) >= cap:
+                            return out
+                return out
+
+            company_queries: Dict[str, List[str]] = {
+                "overview": [f"{scope_target} company overview", f"{scope_target} what is {scope_target}"],
+                "news": [f"{scope_target} recent news", f"{scope_target} announcement"],
+                "product_launches": [f"{scope_target} product launch", f"{scope_target} launched new"],
+                "leadership": [f"{scope_target} leadership changes", f"{scope_target} appointed CEO CTO CPO CFO VP"],
+                "publications": [f"{scope_target} report whitepaper case study", f"{scope_target} publication"],
+                "market": [f"{scope_target} competitors market position", f"{scope_target} competitor"],
+                "culture": [f"{scope_target} culture values", f"{scope_target} careers values"],
+                "signals": [f"{scope_target} acquisition reorg restructuring outage breach lawsuit"],
+            }
+
+            serper_hits = _gather_rss(company_queries["overview"], per_query=6, cap=10)
+            for k, qs in company_queries.items():
+                if k == "overview":
+                    company_serper_by_topic[k] = serper_hits
+                else:
+                    company_serper_by_topic[k] = _gather_rss(qs, per_query=6, cap=12)
+
+            # Keep compatibility: feed RSS hits into the same corpus keys the model expects.
+            # This flips has_serper=true downstream so we can populate market/news fields.
+            if not serper_hits:
+                # At minimum, treat "news" as the main corpus if overview is empty.
+                serper_hits = company_serper_by_topic.get("news") or []
 
         # PDL company enrichment (best effort, but OFF by default due to cost)
         pdl_company: Dict[str, Any] = {}
