@@ -145,9 +145,10 @@ function defaultInstructions(step: 1 | 2 | 3 | 4) {
     ].join("\n");
   }
   return [
-    "Final follow-up. This is a respectful 'breakup' message.",
-    "If tone is playful/wacky, keep it workplace-safe: no sexual content, no insults, no guilt, no manipulation.",
-    "Give them an easy out (reply 'no') and an easy yes (quick chat).",
+    "Final follow-up: get their attention with something unexpected/off-the-wall.",
+    "Do NOT rehash the whole story. Keep it very short (2-5 sentences).",
+    "Be provocative in a playful way (workplace-safe). No insults, no sexual content, no threats.",
+    "End with an easy yes/no question.",
   ].join("\n");
 }
 
