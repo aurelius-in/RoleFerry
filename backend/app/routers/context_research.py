@@ -120,6 +120,57 @@ class ResearchResponse(BaseModel):
 _CTX_CACHE: Dict[str, Dict[str, Any]] = {}
 _CTX_CACHE_TTL_SECONDS = 60 * 30  # 30 minutes
 
+
+def _contact_facts_from_hits(hits: Any, *, max_items: int = 4) -> List[Dict[str, str]]:
+    """
+    Deterministically derive outreach-safe 'interesting_facts' from Serper hits.
+    Only uses title/snippet/url (no invention).
+    """
+    out: List[Dict[str, str]] = []
+    seen: set[str] = set()
+    try:
+        for h in (hits or [])[: 30]:
+            if not isinstance(h, dict):
+                continue
+            title = str(h.get("title") or "").strip()
+            url = str(h.get("link") or h.get("url") or "").strip()
+            snippet = str(h.get("snippet") or "").strip()
+            if not url:
+                continue
+            fact = ""
+            if snippet:
+                fact = snippet
+            elif title:
+                fact = title
+            fact = " ".join(str(fact).split()).strip()
+            if not fact:
+                continue
+            # Keep it short + outreach-safe.
+            fact = fact[:140].rstrip()
+            k = (fact.lower() + "|" + url.lower()).strip()
+            if k in seen:
+                continue
+            seen.add(k)
+            out.append({"fact": fact, "source_title": title[:140], "source_url": url})
+            if len(out) >= max(1, int(max_items)):
+                break
+    except Exception:
+        return []
+    return out
+
+
+def _best_linkedin_from_hits(hits: Any) -> str:
+    try:
+        for h in (hits or [])[: 40]:
+            if not isinstance(h, dict):
+                continue
+            url = str(h.get("link") or h.get("url") or "").strip()
+            if "linkedin.com/in/" in url:
+                return url
+    except Exception:
+        return ""
+    return ""
+
 def _cache_key(payload: Dict[str, Any]) -> str:
     try:
         s = json.dumps(payload, sort_keys=True, ensure_ascii=True)
@@ -425,27 +476,31 @@ async def conduct_research(request: ResearchRequest):
                 company_serper_by_topic[k] = _gather(qs, per_query=6, cap=12)
 
             # Contacts: per-contact facets (keep bounded)
-            for c in contacts:
+            max_contacts = 8
+            for c in contacts[:max_contacts]:
                 nm = str(c.name or "").strip()
                 co = str(c.company or company).strip()
                 if not nm:
                     continue
-                # one general query + 2 topic queries (posts/writing + talks/interviews)
+                # one general query + a few facet queries (posts/writing + talks/interviews + publications)
                 q_general = f"{nm} {co} {c.title or ''}".strip()
                 q_posts = f"{nm} {co} posts articles blog LinkedIn"
                 q_talks = f"{nm} {co} podcast interview conference talk"
+                q_pubs = f"{nm} {co} publication paper whitepaper guest post"
                 # If we have an explicit LinkedIn URL, bias a query toward it (public snippets only).
                 li = str(getattr(c, "linkedin_url", "") or "").strip()
                 q_li = f"{li} {nm} {co}".strip() if li else f'site:linkedin.com/in "{nm}" {co}'
-                hits_general = _serper(q_general, num=5)
-                hits_posts = _serper(q_posts, num=5)
-                hits_talks = _serper(q_talks, num=5)
-                hits_li = _serper(q_li, num=5)
+                hits_general = _serper(q_general, num=6)
+                hits_posts = _serper(q_posts, num=6)
+                hits_talks = _serper(q_talks, num=6)
+                hits_pubs = _serper(q_pubs, num=6)
+                hits_li = _serper(q_li, num=6)
                 contact_serper_hits[c.id] = hits_general
                 contact_serper_by_topic[c.id] = {
                     "general": hits_general,
                     "posts": hits_posts,
                     "talks": hits_talks,
+                    "publications": hits_pubs,
                     "linkedin": hits_li,
                 }
 
@@ -907,6 +962,31 @@ async def conduct_research(request: ResearchRequest):
             if not isinstance(report_sections, list):
                 report_sections = []
 
+            # If the model didn't populate interesting_facts, fill a few from serper hits (source-backed).
+            try:
+                topics_for_contact = {}
+                try:
+                    topics_for_contact = (corpus.get("contact_serper_by_topic") or {}).get(str(cid), {}) if isinstance(corpus, dict) else {}
+                except Exception:
+                    topics_for_contact = {}
+                all_hits = []
+                if isinstance(topics_for_contact, dict):
+                    for k in ["posts", "talks", "publications", "linkedin", "general"]:
+                        all_hits.extend(topics_for_contact.get(k) or [])
+                li_best = _best_linkedin_from_hits(all_hits)
+                facts_fallback = _contact_facts_from_hits(all_hits, max_items=4)
+                if bios and isinstance(bios, list) and isinstance(bios[0], dict):
+                    b0 = bios[0]
+                    cur_facts = b0.get("interesting_facts") or []
+                    if (not isinstance(cur_facts, list)) or (len(cur_facts) == 0):
+                        if facts_fallback:
+                            b0["interesting_facts"] = facts_fallback
+                    # Fill linkedin_url if missing and we found one.
+                    if li_best and not str(b0.get("linkedin_url") or "").strip():
+                        b0["linkedin_url"] = li_best
+            except Exception:
+                pass
+
             # Ensure theme is always populated (theme is NOT news).
             try:
                 if not theme:
@@ -963,6 +1043,18 @@ async def conduct_research(request: ResearchRequest):
                 has_serper = bool(corpus.get("serper_hits")) or bool(corpus.get("company_serper_by_topic"))
                 if has_serper:
                     topics = corpus.get("company_serper_by_topic") or {}
+                    if not market_position:
+                        market_position = _bullets_from_serper_hits(
+                            (topics.get("market") or []),
+                            max_items=7,
+                            label="Market position / competitors (source-backed)",
+                        )
+                    if not culture_values:
+                        culture_values = _bullets_from_serper_hits(
+                            (topics.get("culture") or topics.get("overview") or []),
+                            max_items=7,
+                            label="Culture / values signals (source-backed)",
+                        )
                     if not product_launches:
                         product_launches = _bullets_from_serper_hits(
                             (topics.get("product_launches") or topics.get("product") or []),
@@ -998,6 +1090,10 @@ async def conduct_research(request: ResearchRequest):
                         publications = ""
                     if not other_hiring_signals:
                         other_hiring_signals = ""
+                    if not market_position:
+                        market_position = ""
+                    if not culture_values:
+                        culture_values = ""
 
                 if not recent_posts:
                     role_bullets = _signals_from_role_description(corpus)

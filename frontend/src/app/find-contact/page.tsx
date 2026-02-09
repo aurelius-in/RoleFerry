@@ -1629,6 +1629,10 @@ export default function FindContactPage() {
                   const badge = getVerificationBadge(contact.verification_status, contact.verification_score);
                   const isSelected = selectedContacts.includes(contact.id);
                   const hooks = getInterestingFactsForContact(contact.id);
+                  const research = readResearchForContact(contact.id) || {};
+                  const bio = Array.isArray(research?.contact_bios) ? research.contact_bios[0] : null;
+                  const topics = Array.isArray((bio as any)?.post_topics) ? ((bio as any).post_topics as any[]) : [];
+                  const pubs = Array.isArray((bio as any)?.publications) ? ((bio as any).publications as any[]) : [];
                   
                   return (
                     <div
@@ -1647,10 +1651,14 @@ export default function FindContactPage() {
                           <p className="text-gray-500 text-xs">{formatCompanyName(contact.company)}</p>
                           {hooks.length ? (
                             <div className="mt-2 text-[11px] text-white/70">
-                              <span className="font-semibold text-white/80">Hook:</span>{" "}
-                              <span className="text-white/70">{trimToChars(hooks[0].text, 120)}</span>
+                              <span className="font-semibold text-white/80">Personalization:</span>{" "}
+                              <span className="text-white/70">{trimToChars(hooks[0].text, 140)}</span>
                             </div>
-                          ) : null}
+                          ) : (
+                            <div className="mt-2 text-[11px] text-white/50">
+                              No personalization facts yet. Run research for saved contacts to populate these.
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center space-x-2">
                           {badge.label !== "Unknown" ? (
@@ -1698,6 +1706,32 @@ export default function FindContactPage() {
                             </a>
                           </div>
                         )}
+
+                        {topics.length ? (
+                          <div className="pt-1">
+                            <div className="text-[11px] font-semibold text-white/60 uppercase tracking-wider">Recent topics</div>
+                            <div className="mt-1 text-[11px] text-white/70">
+                              {topics.slice(0, 3).map((t: any, idx: number) => (
+                                <div key={`topic_${contact.id}_${idx}`} className="truncate">
+                                  - {String(t || "").trim()}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {pubs.length ? (
+                          <div className="pt-1">
+                            <div className="text-[11px] font-semibold text-white/60 uppercase tracking-wider">Publications</div>
+                            <div className="mt-1 text-[11px] text-white/70">
+                              {pubs.slice(0, 2).map((p: any, idx: number) => (
+                                <div key={`pub_${contact.id}_${idx}`} className="truncate">
+                                  - {String(p || "").trim()}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   );

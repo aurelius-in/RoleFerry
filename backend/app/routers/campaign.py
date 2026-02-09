@@ -39,6 +39,8 @@ class CampaignGenerateStepRequest(BaseModel):
     enabled_context_layers: Optional[Dict[str, bool]] = None
     # The structured context payload for THIS contact, already filtered to enabled layers.
     context: Dict[str, Any]
+    # Signature line preferences (name is always included; other lines optional).
+    signature_prefs: Optional[Dict[str, Any]] = None
     # Optional sender profile if user isn't logged in (demo/non-auth flow).
     sender_profile: Optional[SenderProfile] = None
 
@@ -154,16 +156,37 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
                 email=str(getattr(user, "email", "") or "").strip(),
             )
 
+        def _sig_bool(key: str, default: bool = True) -> bool:
+            try:
+                prefs = payload.signature_prefs or {}
+                v = prefs.get(key)
+                if v is None:
+                    return bool(default)
+                return bool(v)
+            except Exception:
+                return bool(default)
+
+        def _sig_str(key: str) -> str:
+            try:
+                prefs = payload.signature_prefs or {}
+                return str(prefs.get(key) or "").strip()
+            except Exception:
+                return ""
+
         def _signature_block(bio_url: str = "") -> str:
+            # Name is always included.
             lines = [sender.full_name]
-            if sender.phone:
+            if _sig_bool("include_phone", True) and sender.phone:
                 lines.append(sender.phone)
-            # If the Campaign step enabled Bio Page, the frontend includes links.bio_page_url in the filtered context.
-            # Put it directly under the phone number, as a signature line.
-            if bio_url:
+            if _sig_bool("include_email", True) and sender.email:
+                lines.append(sender.email)
+            if _sig_bool("include_bio_link", True) and bio_url:
                 lines.append(bio_url)
-            if sender.linkedin_url:
+            if _sig_bool("include_linkedin", True) and sender.linkedin_url:
                 lines.append(sender.linkedin_url)
+            other = _sig_str("other_link_url")
+            if _sig_bool("include_other_link", False) and other and (other.startswith("http://") or other.startswith("https://")):
+                lines.append(other)
             return "\n".join([ln for ln in lines if str(ln).strip()]).strip()
 
         # Bio URL is optional, and only present if the Campaign context layer "Bio Page" was enabled.
@@ -191,7 +214,18 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             if not raw:
                 return raw
 
-            sig_lines = [sender.full_name, sender.phone, sender.linkedin_url, bio_for_sig]
+        sig_lines = [sender.full_name]
+        if _sig_bool("include_phone", True) and sender.phone:
+            sig_lines.append(sender.phone)
+        if _sig_bool("include_email", True) and sender.email:
+            sig_lines.append(sender.email)
+        if _sig_bool("include_bio_link", True) and bio_for_sig:
+            sig_lines.append(bio_for_sig)
+        if _sig_bool("include_linkedin", True) and sender.linkedin_url:
+            sig_lines.append(sender.linkedin_url)
+        other = _sig_str("other_link_url")
+        if _sig_bool("include_other_link", False) and other:
+            sig_lines.append(other)
             sig_lines = [str(x).strip() for x in sig_lines if str(x).strip()]
             if not sig_lines:
                 return raw

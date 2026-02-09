@@ -39,9 +39,7 @@ type ContextLayerId =
   | "gaps"
   | "painpoint_match"
   | "company_research"
-  | "contact_research"
-  | "bio"
-  | "links_contact";
+  | "contact_research";
 
 type ContextLayers = Record<ContextLayerId, boolean>;
 
@@ -50,6 +48,15 @@ type SenderProfile = {
   phone?: string;
   linkedin_url?: string;
   email?: string;
+};
+
+type SignaturePrefs = {
+  include_phone: boolean;
+  include_email: boolean;
+  include_linkedin: boolean;
+  include_bio_link: boolean;
+  include_other_link: boolean;
+  other_link_url: string;
 };
 
 type EmailStepV2 = {
@@ -64,6 +71,7 @@ type EmailStepV2 = {
   custom_tone?: string;
   context_layers: ContextLayers;
   special_instructions: string;
+  signature_prefs?: SignaturePrefs;
 
   last_generated_at?: string;
 };
@@ -112,8 +120,17 @@ function defaultLayers(): ContextLayers {
     painpoint_match: true,
     company_research: true,
     contact_research: true,
-    bio: true,
-    links_contact: true,
+  };
+}
+
+function defaultSignaturePrefs(): SignaturePrefs {
+  return {
+    include_phone: true,
+    include_email: true,
+    include_linkedin: true,
+    include_bio_link: true,
+    include_other_link: false,
+    other_link_url: "",
   };
 }
 
@@ -168,6 +185,7 @@ function buildEmptyCampaign(contact: any): CampaignV2 {
     tone: defaultToneForStep(step),
     context_layers: defaultLayers(),
     special_instructions: defaultInstructions(step),
+    signature_prefs: defaultSignaturePrefs(),
   });
 
   return {
@@ -211,15 +229,10 @@ function layerLabel(id: ContextLayerId) {
       return "Company Research";
     case "contact_research":
       return "Contact Research";
-    case "bio":
-      return "Bio Page";
-    case "links_contact":
-      return "Links + Contact Info";
   }
 }
 
 function filterContextByLayers(ctx: any, layers: ContextLayers) {
-  const bioUrl = String(ctx?.links?.bio_page_url || "").trim();
   const out: any = {
     sender_profile: ctx?.sender_profile,
     contact: ctx?.contact,
@@ -238,19 +251,7 @@ function filterContextByLayers(ctx: any, layers: ContextLayers) {
   if (layers.painpoint_match) out.painpoint_matches = ctx.painpoint_matches;
   if (layers.company_research) out.company_research = ctx.company_research;
   if (layers.contact_research) out.contact_research = ctx.contact_research;
-  if (!layers.links_contact) {
-    // Strip links/contact details entirely (but keep company_name/contact basics).
-    // If Bio Page is enabled, still include the Bio URL so it can appear in the signature.
-    if (layers.bio && bioUrl) {
-      out.links = { bio_page_url: bioUrl };
-    } else {
-      delete out.links;
-    }
-  } else if (!layers.bio && out.links) {
-    // Links are allowed, but Bio Page is not: strip the bio link specifically.
-    out.links = { ...(out.links || {}) };
-    delete out.links.bio_page_url;
-  }
+  // Keep links in context by default; signature lines are controlled separately by signature_prefs.
   return out;
 }
 
@@ -376,6 +377,14 @@ export default function CampaignV2() {
       const ctx = persistCampaignContextV1(cid);
       const filtered = filterContextByLayers(ctx, step.context_layers || defaultLayers());
 
+      const sig = step.signature_prefs || defaultSignaturePrefs();
+      const bioUrl = String(ctx?.links?.bio_page_url || "").trim();
+      // Only pass bio URL if the signature prefs allow it (prevents the model from referencing it).
+      if (!sig.include_bio_link && filtered?.links) {
+        filtered.links = { ...(filtered.links || {}) };
+        delete filtered.links.bio_page_url;
+      }
+
       const payload = {
         step_number: step.step_number,
         tone: step.tone,
@@ -383,6 +392,14 @@ export default function CampaignV2() {
         special_instructions: step.special_instructions,
         enabled_context_layers: step.context_layers,
         context: filtered,
+        signature_prefs: {
+          include_phone: Boolean(sig.include_phone),
+          include_email: Boolean(sig.include_email),
+          include_linkedin: Boolean(sig.include_linkedin),
+          include_bio_link: Boolean(sig.include_bio_link && bioUrl),
+          include_other_link: Boolean(sig.include_other_link && String(sig.other_link_url || "").trim()),
+          other_link_url: String(sig.other_link_url || "").trim(),
+        },
         sender_profile: ctx.sender_profile as SenderProfile,
       };
 
@@ -628,6 +645,89 @@ export default function CampaignV2() {
                                     );
                                   })}
                                 </div>
+
+                                <div className="my-3 border-t border-white/10" />
+
+                                {(() => {
+                                  const sig = step.signature_prefs || defaultSignaturePrefs();
+                                  const setSig = (patch: Partial<SignaturePrefs>) =>
+                                    updateStep(String(activeContactId || ""), step.id, {
+                                      signature_prefs: { ...sig, ...patch },
+                                    });
+                                  const otherUrl = String(sig.other_link_url || "").trim();
+                                  const otherUrlOk = !otherUrl || otherUrl.startsWith("http://") || otherUrl.startsWith("https://");
+
+                                  return (
+                                    <div>
+                                      <div className="text-[11px] font-semibold text-white/60 uppercase tracking-wider mb-2">
+                                        Signature lines (shown under your name)
+                                      </div>
+                                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                        <label className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white/80 hover:bg-white/10 cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={Boolean(sig.include_phone)}
+                                            onChange={() => setSig({ include_phone: !sig.include_phone })}
+                                            className="rounded border-white/20 bg-black/30 text-blue-500 focus:ring-blue-500"
+                                          />
+                                          <span className="min-w-0 truncate">Phone</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white/80 hover:bg-white/10 cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={Boolean(sig.include_email)}
+                                            onChange={() => setSig({ include_email: !sig.include_email })}
+                                            className="rounded border-white/20 bg-black/30 text-blue-500 focus:ring-blue-500"
+                                          />
+                                          <span className="min-w-0 truncate">Email</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white/80 hover:bg-white/10 cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={Boolean(sig.include_linkedin)}
+                                            onChange={() => setSig({ include_linkedin: !sig.include_linkedin })}
+                                            className="rounded border-white/20 bg-black/30 text-blue-500 focus:ring-blue-500"
+                                          />
+                                          <span className="min-w-0 truncate">LinkedIn</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white/80 hover:bg-white/10 cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={Boolean(sig.include_bio_link)}
+                                            onChange={() => setSig({ include_bio_link: !sig.include_bio_link })}
+                                            className="rounded border-white/20 bg-black/30 text-blue-500 focus:ring-blue-500"
+                                          />
+                                          <span className="min-w-0 truncate">Bio link</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-white/80 hover:bg-white/10 cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={Boolean(sig.include_other_link)}
+                                            onChange={() => setSig({ include_other_link: !sig.include_other_link })}
+                                            className="rounded border-white/20 bg-black/30 text-blue-500 focus:ring-blue-500"
+                                          />
+                                          <span className="min-w-0 truncate">Other link</span>
+                                        </label>
+                                      </div>
+
+                                      {sig.include_other_link ? (
+                                        <div className="mt-2">
+                                          <input
+                                            value={String(sig.other_link_url || "")}
+                                            onChange={(e) => setSig({ other_link_url: e.target.value })}
+                                            placeholder="https://…"
+                                            className={`w-full rounded-md border bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500 ${
+                                              otherUrlOk ? "border-white/15" : "border-rose-400/60"
+                                            }`}
+                                          />
+                                          {!otherUrlOk ? (
+                                            <div className="mt-1 text-[11px] text-rose-200">Please start with http:// or https://</div>
+                                          ) : null}
+                                        </div>
+                                      ) : null}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             ) : null}
 
