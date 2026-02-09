@@ -51,6 +51,8 @@ type GapAnalysisItem = {
   title: string;
   company: string;
   score: number;
+  // UI-only: star rating assigned on first analysis run (should not re-scale when roles are dropped)
+  ui_stars?: 2 | 3 | 4 | 5;
   recommendation: "pursue" | "maybe" | "skip";
   matched_skills: string[];
   missing_skills: string[];
@@ -220,10 +222,10 @@ export default function GapAnalysisPage() {
 
   const rankedUi = useMemo(() => {
     const list = Array.isArray(ranked) ? ranked : [];
-    const n = list.length;
     return list.map((r, idx) => ({
       ...r,
-      ui_stars: starsForRank(idx, n),
+      // IMPORTANT: once assigned, keep static (dropping roles shouldn't re-scale stars)
+      ui_stars: (r as any)?.ui_stars ?? starsForRank(idx, list.length),
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ranked]);
@@ -263,9 +265,14 @@ export default function GapAnalysisPage() {
       });
       if (!resp.success) throw new Error(resp.message || "Analysis failed");
       const rawRanked = resp.ranked || [];
-      setRanked(rawRanked);
+      // Assign stars ONCE based on initial rank order.
+      const initial = (Array.isArray(rawRanked) ? rawRanked : []).map((r, idx, arr) => ({
+        ...r,
+        ui_stars: (r as any)?.ui_stars ?? starsForRank(idx, arr.length),
+      }));
+      setRanked(initial as any);
       setHelper(resp.helper || null);
-      const firstId = (rawRanked || [])[0]?.job_id || null;
+      const firstId = (initial || [])[0]?.job_id || null;
       setSelectedJobId(firstId);
     } catch (e: any) {
       setError(e?.message || "Failed to run gap analysis.");
