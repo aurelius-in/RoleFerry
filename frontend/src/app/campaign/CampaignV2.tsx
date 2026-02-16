@@ -173,10 +173,10 @@ function defaultInstructions(step: 1 | 2 | 3 | 4) {
     ].join("\n");
   }
   return [
-    "Final follow-up: get their attention with something unexpected/off-the-wall.",
-    "Do NOT rehash the whole story. Keep it very short (2-5 sentences).",
-    "Be very provocative in a very playful way.",
-    "End with an easy yes/no question.",
+    "Final follow-up. This is a respectful 'breakup' message.",
+    "If tone is playful/wacky.",
+    "Give them an easy out (reply 'no') and an easy yes (quick chat).",
+    "This is a first-person job seeker contacting a hiring decision maker.  It should should sound person, relatable, human, friendly, and not corporate, salesy or too canned.",
   ].join("\n");
 }
 
@@ -372,15 +372,22 @@ export default function CampaignV2() {
   const updateStep = (contactId: string, stepId: string, patch: Partial<EmailStepV2>) => {
     const cid = String(contactId || "").trim();
     if (!cid) return;
-    const next = { ...(campaignByContact || {}) };
-    const camp = next[cid];
-    if (!camp) return;
-    next[cid] = {
-      ...camp,
-      updated_at: nowIso(),
-      emails: (camp.emails || []).map((e) => (e.id === stepId ? ({ ...e, ...patch } as any) : e)),
-    };
-    persist(next);
+    // Use functional update to avoid stale-closure overwrites during sequential async generation.
+    setCampaignByContact((prev) => {
+      const cur = prev || {};
+      const camp = cur[cid];
+      if (!camp) return cur;
+      const next = { ...cur };
+      next[cid] = {
+        ...camp,
+        updated_at: nowIso(),
+        emails: (camp.emails || []).map((e) => (e.id === stepId ? ({ ...e, ...patch } as any) : e)),
+      };
+      try {
+        localStorage.setItem(STORAGE_V2, JSON.stringify(next || {}));
+      } catch {}
+      return next;
+    });
   };
 
   const toneOptionsForStep = (step: 1 | 2 | 3 | 4): Tone[] => {

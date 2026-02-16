@@ -20,7 +20,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Bump this when changing prompting/logic so cached results don't mask improvements.
-_PROMPT_VERSION = "2026-02-15-news-relevance-filter-v5"
+_PROMPT_VERSION = "2026-02-16-research-provider-normalization-v6"
 
 
 def _strip_likely_language(s: str) -> str:
@@ -253,6 +253,8 @@ def _is_company_relevant_hit(company_name: str, hit: Dict[str, Any], *, company_
     Keep only business/news hits that appear to reference the target company.
     This helps avoid ambiguous-name noise (e.g., NASA Galileo mission).
     """
+    if not isinstance(hit, dict):
+        return False
     title = str((hit or {}).get("title") or "").strip()
     snippet = str((hit or {}).get("snippet") or "").strip()
     link = str((hit or {}).get("link") or (hit or {}).get("url") or "").strip()
@@ -517,7 +519,15 @@ async def conduct_research(request: ResearchRequest):
 
         def _serper(q: str, *, num: int = 6) -> List[Dict[str, Any]]:
             try:
-                return serper_web_search(q, num=num) or []
+                raw = serper_web_search(q, num=num) or []
+                # Normalize provider shapes defensively to avoid runtime crashes.
+                if isinstance(raw, list):
+                    return [x for x in raw if isinstance(x, dict)]
+                if isinstance(raw, dict):
+                    organic = raw.get("organic")
+                    if isinstance(organic, list):
+                        return [x for x in organic if isinstance(x, dict)]
+                return []
             except Exception:
                 return []
 

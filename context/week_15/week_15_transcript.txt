@@ -1,0 +1,963 @@
+
+Transcript
+Everything we see.
+I can add to the title, if it’s being weird. So I’m going to say, um, it’s fine, whatever. I only use this app for our meeting, so I can just say company role fairy.
+And then role not important. Date attendees.
+Dave. March. There you go. Your person. And then I’m person. They’ve told me. All of our LSM. Okay.
+That’s all my list
+So there you go. So right now it’s actually transcribing. All right. If we click it, it’ll show everything I’ve said so far. See.
+Mark.
+Okay.
+Okay.
+I’m a chicken.
+I’m a chicken.
+I’m a chicken.
+There it is. So that’s going to be the going in the background. And at the end of the meeting, I’m going to feed it to this cursor guy. I’m going to say, is there anything we haven’t implemented yet? And it’s going to say.
+Oh, we haven’t done that before. I’m going to.
+Yeah. So anything usually we’re implementing most of the stuff during the meeting, but there’s it goes back through and it fixes a few more things that we didn’t get to.
+That’s great.
+All right So anything we talked about. By the end of the meeting, I’m so tired. I can’t remember if there’s anything that we talked about that I didn’t implement because my brain’s already tired from the meeting and it’s already late. It’s already midnight.
+Yeah.
+So I’m just like, go back through everything we talked about and implement anything we’ve forgotten. And it does. It finds a few more things that we didn’t. It usually fixes things after. That’s why I said that’s why I usually send you a text. It’s like super late. And I’m like, hey, Dave, I added some more stuff. And then that’s because I did that.
+A lot.
+So. Okay. Preferred naming format. So email one, two email three, email four, or email one initial, email two, follow-up, email three, follow-up, email four, final, Hail Mary.
+Definitely being.
+I like bee, but I think Hail Mary might be a problem for those that are like religious and stuff.
+Yeah. No, yeah. No, no, no.
+All is well, but for email four, it looks bee looks good. I don’t know why I said all is well.
+Bee looks good. But for email four,
+Hail Mary.
+May offend people for religious reasons. So think of something else.
+That communicates the same vibe.
+Yeah. Final The final email.
+The final countdown.
+Quirky, funny,
+so is it going to give me a good suggestion? Oh, it’s going to let me pick. Final playful, wildcard, pattern interrupt, final check-in, last touch. Those aren’t very fun. Final playful, maybe.
+That doesn’t necessarily playful. They’re not all going to be playful. Some people just don’t, don’t vibe with playful. They’re like, this is serious. I need a job.
+So last touch, pattern interrupt, wildcard. Final check-in. Final check-in, probably.
+Final check-in, probably.
+Yeah.
+Yeah. Some people are like not going to want the funny. They’re like, this is too serious. I need to beg them for a job at this point. It’s like, please, please, please. Hire me.
+Yeah.
+I can’t feed my family. I wrote you three other emails.
+Why don’t you love me All right.
+I get it I get a lot of those final check-ins.
+I’m also thinking about something else. Maybe down the road and I’ll have right now.
+But it could be interesting to somehow connect the kind of softwares that are out there right now that are auto calls as like an API or something to our job section. Or role section. So that
+you can constantly get new leads or, yeah, like new people or new jobs, I should say, into the system. So it’d be like a it’d be like a top of funnel kind of generation device.
+Like but it doesn’t actually send your resume. It just it just uses whatever technology it uses to fill the roles tab. So then I have to like manually put their roles in. That’d be an interesting thing.
+Okay. So we want to make the roles it’s probably a good idea, but for whatever reason, it was like it went over my head a little bit. So yeah.
+Yeah. No, it’s definitely complicated. My friend just told me about it just recently.
+Oh, okay.
+The whole idea is that like there’s these companies that are like auto calling people’s resumes and they’re just like shooting they’re doing a lot of like spray and pray.
+Kind of things.
+And, you know, that’s the the issue is that they’re just applying. To the ATS system.
+Yeah.
+That’s the problem.
+I’ve done that.
+But the good
+I’ve played a lot of jobs here in this shit bag for like weeks and finally like a half-assed responses.
+Yes, but the good thing is that like it’s finding a lot of different jobs. And those could all be really good, you know, matches. To put into our role section.
+And then if that if that found people roles very quickly and it’s just like a connection point. Like they handle that that piece. It just like it connects to us somehow.
+And then we send them emails instead of or they just maybe they do the apply and we send the emails. So like you can play partner up with them in some way. It could be an idea too.
+Okay.
+Cool.
+Yeah.
+So AI, make a note of what Dave just explained and save a note for like a maybe like a goal for, you know, a couple of months after we launch to try to integrate that.
+Create like a document regarding that. Unless we want to try to implement it now, is that something?
+I’d like to see the document that it generates.
+All right We’ll see what it does.
+So right now it’s kind of it’s creating a campaign python document. See what it’s doing.
+Yeah, so there’s like a lot of lines of code behind stuff.
+Yeah, it’s amazing.
+I mean, if you’re like really fast, you ain’t this fast.
+Right If you’re a software developer, like to deny the value of like AI coding is just silly.
+I mean, I’ve seen someone post and I thought it was interesting.
+And the post said once you realize you know how to code, you find out that coding is 5% of the problem.
+It’s like,
+5% of the problem.
+That’s what they’re saying.
+It is 5% of the problem.
+Oh, the problem of being a business owner, of being the problem of being like a business owner of like a software engineer. A company or something like that. Or some kind of like technology company that holds in that.
+Yeah.
+Code can be like a lot of work.
+Like it does. Like look at if you want to look at Role Fairy, like go to the GitHub. Look at how many hundreds and thousands of lines of code were written for this app so far. Like it looks pretty straightforward when you just look at the UI, you’re just seeing a couple of screens with some little bit of text. But this is hundreds of thousands of lines of code. And by before we’re done, it might be millions of lines. Lines. No, not characters. Lines. Rows of code. So I mean,
+it would have taken us a bit longer if we’d done this two years ago.
+You know what I mean Before we had Cursor and stuff, it would have taken us longer. We could have done it, but now is the better time because now there’s actually like for the same reason we’re able to do it fast, there’s going to be a lot of people looking for jobs.
+Right A lot of people whose jobs are being replaced by the same thing that’s helping us build this app. It’s kind of a perfect storm of like opportunity and well, I guess it’s opportunity on both ends for us.
+But for them, it’s crisis. It’s creating this huge demand for us. There’s going to be a huge demand for jobs. Even if there’s a hundred other apps to help you find jobs,
+you know, just like there’s a hundred dating apps, you know, there’s like five popular ones or something and then there’s a lot of others. And they have ones for the Jewish people and for the cowboys and the rich folks and.
+Yeah.
+They probably got one for Wiccans. I don’t know.
+Buddhists definitely do because they’re like a third of our world’s population. Right?
+Yeah.
+Buddhists are actually very small piece of the population. We’re only like 7% of the world population.
+How is that possible
+Very small
+I don’t get the math China is like a lot of people.
+Not everybody in China. Most people in China are not Buddhists.
+Oh, I didn’t know that.
+Yeah.
+But they were.
+Yeah.
+Buddhists are only 7% of the world population. So that’s news to me. Didn’t know that.
+Yeah. Buddhists are actually very, very small.
+They got Buddhism is like like if you go and talk about religion and everything, like one of the things that I got confused about and I went to church recently and I learned about, there was an actually really interesting thing.
+The names in the Bible. The names of the people. Change throughout the Bible. So there’s one guy his name was Levi.
+And then once Jesus called him to follow him,
+while he was at like a tax collecting booth,
+and you know, he accepted and like he became a disciple. It changed his name from Levi to Matthew.
+Well, people do have their baptized names.
+Yeah.
+I guess that makes sense.
+Well, it does create confusion.
+Because you’re like, oh, he’s the same guy? Oh, shit. He was trying to read this thing. Like I didn’t realize that.
+But it also like because things are told in like a biblical character stories,
+it’s like you know, you’re trying to understand about the character of this person, but he’s actually this person is the same person just called different names.
+So you know, in that respect of things, it’s not as straightforward as Buddhism. And that’s why Buddhism really says things really clearly and straightforwardly. And for that reason, it’s like it’s almost like a more pure, if you will.
+Of the religions.
+Yeah.
+But that doesn’t like create wars. Like Christianity or any other wants to do.
+And nobody’s created wars like the Christians, man. They’re all about that.
+Yeah. We don’t like.
+Make everybody Christian, which I think is dumb.
+Yeah. That’s what I’m saying. Like there’s not many Buddhists out there making other people Buddhists. They’re usually just sitting in a fucking mountain.
+Man, I want them to, dude. Why don’t they come to my door and be like, like, hey, do you know the way of Buddha?
+Nobody’s doing that.
+Just show up in like a toga or something.
+Nobody’s doing that No Buddhists doing that.
+Like, hey, you want to meditate with me? Let’s go meditate. But like, all right.
+They’re not coming out and talking to people.
+Because those Christians come knocking the door asking if you want to pray. So the Buddha’s got to be like, hey, you want to meditate? Let’s do this.
+That’s what I’m saying. There’s only 7% of the world population.
+They need to evangelize, man. They need to get out there.
+I didn’t know evangelization.
+When you get out there, they need to be like, hey,
+let’s do this.
+It’s time to find the center. I’m going to become one.
+And they just understand it and then they’re like, oh, I get it now. And they’re like,
+they can tell you anything very straightforward terms, but how Buddhism works is the complete opposite of how Christianity works almost. In the sense that Buddhism is all about seeking spirit. They’re not going to go out and evangelize. They’re going to wait for the person in the fucking mountain to come up with 10,000 stairs and ask a question.
+Yeah.
+That’s it That’s it
+I’m just sharing my screen so I can see what I’m up to here.
+In case you’re wondering. So I’ve got my email account. Logging out of my work account. Going over to the role ferry.
+I’m going to do commit and push to GitHub. I’m going to let Cursor do that for me because it’ll write me a nice commit message that’s explains what was done. If I do it, it’s going to be not as good of a commit message. So I’m going to let Cursor write the commit message. It’s actually GPT behind it. So you can pick your model. It doesn’t have to be GPT. You could go with things.
+In terms of like, you know.
+It’s probably switched to this one now I need to switch.
+But the context window, the context window is bigger.
+Use the context window
+Oh, sign it
+200
+No, this is 272. This is more. And then Opus is 200. Composer is 200. They just saw it. Yeah, 200. You can add models too, but yeah, they have a, I need to update the site. It was on 5.2. That’s like legacy already. They’ve already got 5.3 out, so. I didn’t even realize it. Glad I showed you that so I could fix it.
+So we just did committed it So now,
+cool.
+All right So I’m going to go now, I’m going to go to GitHub. There we go. Compare and pull requests.
+And so it says persist campaigns. It explains what it did. All right. And then I can create the pull request. Now at work, you have to create the pull request and let someone else do it. But I don’t have a second coder here to like review my code. All right. So that’s a good thing. It means I can move faster.
+And then hit work I would delete this branch because I would do one branch per commit, but I’m just doing everything on the dev branch here. So right now I’ve got everything there. So now if I go to railway, we can watch it do the next step that it has to do. It has to go show see it’s building it.
+But Postgres is the database and then we’ve got the front end and the back end basically.
+The sunny spirit thing is the front end where the UI is stored and the back end is where all the AI stuff that goes back and forth and all the functions behind the, you know,
+the pretty little cover thing that we interact with. So yeah, that’s the railway is cool, man. I’m digging it. It’s not expensive either. So that’s good.
+All right So now once that’s done, we can play around. If you want, you can wait till I guess we’ll just wait.
+All right Give that a second and then open up the open up role ferry.
+All right Let’s see here.
+All right
+It’s still building.
+Yeah. I’m just going to fill in this just filling in this role search area with more jobs. The speed that you can like fit in more jobs is the speed that you can send more jobs out. You know, with the with the campaigns.
+So what we’re looking for is a way to put more roles on the role screen more rapidly.
+Yep
+That makes sense. Yeah, that is a messy process. It’s okay to be able to do that. Like we want them to be able to manually add a job, but it’s not very automated. It’s not automated at all.
+Yeah.
+So one thing we might ask the AI to do right now, since it’s not really working on anything else,
+is suggest some automated ways we can collect and display roles to the users job seekers.
+So the don’t have to rely solely on copying and pasting URLs and scraping job descriptions.
+Off the pages. That we share on the role search screen.
+Okay.
+Yeah, that is that is a bottleneck that’s going to slow him down a lot.
+Because we generate the contacts pretty quick, right?
+Yeah.
+It’s not I want to improve what it collects for each contact somehow, but at least it generates some contacts pretty fast and it gives us good URLs for their LinkedIn. I think that’s pretty great.
+And it generates the what is the preference, the resume? It’s pretty good at scraping resumes now. The personality test is kind of fun. The roles, the match and the gaps is getting better. The offer,
+probably needs work. The contact screen, again, it like does pretty good at finding some people at least. The bio screen is kind of fun. The campaign screen is getting there, especially after I think we integrate those templates. I think we’re getting closer. And then the launch screen, we have to work on it, but I think it’s I think it’s going to be fairly relatively simple. I think the main thing the role search is a little cumbersome. I mean, it works. Like when you scrape it, it actually does a better job of parsing all the information now that we integrated AI into that process. Like it does a good job. It would just be better if, like you said, it was a more automated thing. So that is that is one step to improve.
+So here’s what the AI suggests. Am I sharing? No, you’re sharing, but let me share for a second.
+Oh, you told me to share here.
+Yeah, I did. I just wanted to wait.
+Let me go to this one. Go back to sharing my cursor screen. Okay.
+Okay. Yep.
+All right So here is this one.
+So here is some ideas. So all right. Hi. Do you see it on the right?
+I can see it
+Yeah. Do you want to read it or do you want me to? I don’t care either way.
+Yeah.
+Safe search Okay. Let users connect, supply
+safe search URLs from LinkedIn.
+Company career page watchlist.
+Users pick or review once.
+System privilege company careers page.
+We could try it. I don’t know if it’s going to work. Do you think it’ll work?
+Company career page watchlist. Almost like a yeah, almost like a that’s what happens now in a new job comes out. LinkedIn sends you an email. It’s kind of thing.
+Yeah, but it would be nice if it could scrape that info and then stick it on the page without us having to like click URLs and stuff.
+That’s interesting.
+Job board.
+I like the idea of giving them that option because it isn’t that much of a pain in the ass to scrape it. But to generate like a long list of them,
+it should be also an option.
+This I mean, if we can get it to work, like something like the company career page, or whatever, just like scraping directly, then it would make the other thing obsolete.
+Like you wouldn’t need to click any links.
+You might you might offer them just so they have that as like a backup, but.
+Yeah.
+I think I think that would I mean, if we can automate it here, right, that’s like way better.
+Yeah, that’s I mean, there’s a person on LinkedIn that just emailed me.
+Or messaged me. I just said about about like, hey, you know, you should meet this guy that I I just met. That does exactly what I’m telling you about right now.
+And and I’m like, oh, yeah. Okay. Tell me about it.
+And that’s how I gave you this idea. So it was just a timing of everything was really funny too.
+Yeah. I can see what he’s doing.
+Or at least get the website and then you can look at it and be like, all right, this is what he’s doing.
+Do you see what I’m typing See if I can even do that.
+You see anything I typed there? I like if there’s a way to scrape this info from career pages, we should already be doing it.
+Right It’s kind of like much I mean, if we’ll if we have to go the slow way, fine, but if there’s a way to do it, then there’s no way we should be doing this manually.
+I mean, at least, you know, I’m fine with having it.
+The main thing the main reason why we’re doing it manually is we want accuracy.
+I noticed that when you give it a URL, it does all right. Which is a hint. It tells me that we might be able to do the other thing.
+You know what I mean? Like if it was giving me really bad results for the jobs when I put the URL in, then I’d be like, oh, forget this. Right? But it’s not
+It’s actually giving me pretty good results when I put the URL in, which means it can it can like surf the web or whatever and like do this.
+I mean, we worked a long time on just making sure that you can read the URL right away.
+Yeah, yeah. So this is an extension of that. And an automated version. You know, they say that’s another principle in coding is like if, you know, it’s great to get your task kind of mastered, but, you know, once you can do it once right, then you can automate it and it should be, you know, it’s kind of that same idea of like great, let’s do this. Let’s do this a million times. We can do it once.
+Yeah.
+Yep Oh, I didn’t really tell it how many jobs we should make it generate.
+Wow Wow.
+Maybe 10 at a time or something.
+Yeah.
+Like how many should be in a campaign Oh, also the gaps, because there’s going to look at the gaps and they’re going to have more to weed through. They’re going to be able to look at the matches. They’re going to have some to weed through. They can always delete once they get to the gap screen.
+Like in a final campaign, after they’ve done the weeding, so to speak, they’ve taken out the ones they don’t want. What is what is a good number? Like you probably we probably want to contact. Let’s say you contacted like two people on average per role, three people, and then two or three people per role.
+And then if it’s 10 roles, that’s going to be like I mean, you know, 30 emails. Are we trying to generate 30 emails per campaign? That doesn’t that seems light to me.
+It is light Yeah. We definitely got to get those numbers up.
+So then we want it to generate how many jobs do we want it to to populate here?
+I mean, 100 100 would be like wow.
+Or like a.
+And then let’s make 20 at a time. 25, 20, something like that.
+Yeah, but you know what? Think about it in like a week, I think, instead of a day. And maybe like 20 a day or five days.
+That’s 100 So you’re planning like 400 companies a month.
+That could be good
+That’s cool. So the initial so each campaign, though, if we generate if we’re able to generate 20 not generate. We’re we’re like collecting. We’re not creating them. We’re collecting 20 jobs for them. And then for each of those jobs, we’re contacting two people. So they’re sent but also they’re going to remove a few when they get to the gap screen and they see that they’re not a good fit for a few of those. So out of that 20, they might only apply for 10 to 15 of those. Right?
+Yeah.
+And you know, they’re personality. They might be like I’m not messing with, you know, depending on the salaries too. Some of them salaries may not meet their expectations or whatever.
+Yeah.
+So after they look at the gaps and the salaries, they’re going to weed out like half.
+They’re going to probably have like 10 left. And then they’re going to get to that final screen and they’re going to be applying for 10 roles. We’re not applying to, you know, contacting the people who work at 10 role 10 different you know whatever. So 20, 25, maybe 25 seems like a good one.
+25
+Especially since you’re looking at 100 and you could do four campaigns. If they do like four campaigns a week, then they’re they’re applying for 100 jobs a week, which is pretty aggressive. Right?
+Yeah.
+Especially if they’re doing it in like a really smart way. Like like this. Like role fairy should be like a smart way.
+Yeah.
+Because they’re going to get a LinkedIn message. They’re going to get an email. They’re going to and they’re going to hopefully get a really good email that’s going to have some effect. Is 25 okay? 25?
+25 25. 30.
+30 Okay. So then we’ll just do 30. So we should try to scrape 30 jobs per jobs at a time from at least five different companies.
+No, because more like 10 different companies.
+No.
+From at least 10 different companies.
+How many jobs a company?
+Like three Max?
+One job.
+15
+20 One company. One job. No?
+Oh, okay. Fine.
+From at least 25 different companies.
+Yeah. So maybe let’s go 25 instead of 30. 25 is an easy math.
+Okay. Because four campaigns is like 100 jobs.
+Yeah. Easy math.
+Okay.
+If you say so. And it’s also I don’t know. I feel like it’s 30 feels like a lot. I don’t know. It’s more of a psychological thing. But we should try to scrape 20 from my sharing.
+I’m sure. I also like the multiple of 5 in the 25. So yeah.
+Yeah. So we should try to scrape 25 jobs at a time. From at least 25 companies.
+Yeah. I mean, 25 It’s going to be 25 a day. Right? For four days.
+Yeah. Campaign Not day.
+Oh, yeah. Campaign. Campaign.
+Campaign.
+Some which they may remove if the salary or gaps step persuades them to.
+So on the what is it? Rolls page? Rolls screen. We want we want the number that number of roles collected and displayed. To be 25 if possible. And with the option of adding additional roles by pasting a URL or job description as was previously implemented. Anything else? I’ll just leave it like that.
+Yeah. It seems to make sense. For now. And if it’s not right, we’ll fix it
+But right now it’s good Okay.
+By the way, I think I think we can probably look at our website now. We’ve made some changes that shouldn’t be working. Let’s see.
+Look at our it’s kind of website slash app. It’s a web app. Okay. So so let’s see. What do we do? We go to bio.
+Are you insane I can’t see the.
+Yeah. Sorry It’s because I’m using multiple screens. So we’ve got regenerate. Huh?
+Who’s that? Is that Pablo?
+Yeah. Raul. He was my he passed away.
+Then we’re going to save and continue.
+Sorry I’m not sharing the right screen. Let me share a screen to that is better to share because I’m using my small screen here.
+So I will share.
+Sorry There.
+Entire screen.
+Cool.
+And role fairy. Okay.
+Let’s try this again. Bam.
+Okay. So we’ll just click. So we’ve got saving continue.
+So we’ve still got my resume. Things are looking squared away. I’ve got my columns. They’re actually fitting in the columns now, which is good.
+That’s nice.
+Total years experience, 191. Save and continue.
+And then we’ve got my personality.
+Then we can save and continue. We’ve got this thing.
+Roles. They’re not showing up yet because we haven’t implemented that yet. So let’s see.
+Okay. So cool.
+So commit and push that. Cool. So it’s going to so we can move on to the next and come back to the screen because we haven’t applied the code. So we’re going to run the gap analysis.
+Hopefully, we don’t see that stupid post API error anymore.
+Now it’s stuck.
+It’s very annoying.
+It makes me want to.
+Go ahead. I’ll get a drink too.
+Hey.
+Yeah. So this this next commit that I’m putting in GitHub, it says, “Add career page discovery on the role search page with 25 role targets, salary aware filtering, and company
+diversity prioritization.” Which means more companies. Keep. Not not like we care about the diversity of the people within the company.
+Yeah.
+Keep keep manual URL text import unchanged. While surfacing discovered role links at the bottom of the existing URL.
+And now we have to go to railway. Which I have open somewhere else to me.
+But one of the problems with multiple screens is you end up with there it is.
+Yeah. I’m getting confused about what you have open already. Okay. Good. It’s initializing.
+And stick that up here.
+So then we can try that out But I think we can look at some other stuff first. So let’s go here.
+Yeah.
+So right now, I did the gap analysis. And I like that it’s showing a lot of stuff, right?
+Apparently, I don’t have C-sharp mentioned in my resume. Thought I did.
+That architecture design, data governance, data integration. Didn’t name those things specifically. But the gap analysis doesn’t force it to be removed. But it tells me about these gaps. And if I know I have these skills, I can either update my resume or just be like, “I’m fine.” Right? Personality gaps. This is interesting. So role may be detailed requirements heavy. Your style may lean more big picture. Which is actually true. I fucking hate details. And I am big picture. But now I’ve got AI. And it kind of does all the tedious shit. So it’s actually really nice time to be a coder. For someone like me.
+Yeah.
+So role may be detailed requirements heavy. So then the other thing is role appears process heavy. Regulatory. You may prefer faster iteration and flexibility.
+So prepare examples of delivery and regulated environments. This is actually pretty useful. Advice. This is great. I like this. It’s a low priority. Medium priority. I’m fine with those classifications. I don’t really know if they’re accurate or not. But I don’t think it matters. And then I’ve got my preference gap. It says role category fit not obvious. You know, one thing I might mention here is they could be a little more succinct.
+You know what I mean Like,
+I just feel like it’s just a little wordy. Especially the way the columns are.
+So the wording in the little wordy.
+Why don’t you put it in a format instead of being succinct?
+And the text could be a little smaller.
+Dude, why don’t you make it a different format though?
+It’s almost there. Like what?
+I think you should do it in horizontal instead of vertical. Because if you saw these horizontally, you wouldn’t think it’s going at all.
+Fine. Fine. Fine.
+Also, the vertical columns for the resume gaps personality gaps and preference gaps make the text annoying to read. So make these cards horizontal.
+You’re right I don’t know why I didn’t think of that. It’s actually kind of like a really like, I don’t want to say obvious. Because if it were obvious, I guess I would have seen it. But I guess I got I got used to this. I was like, “This is interesting.” But yeah, it’s it’s interesting. Because it’s stupid.
+You know what I mean? Like, huh. Cool page. Never seen one like this before. Like, that’s because it’s like really bad design.
+I am going to reduce. I asked it to be a little more succinct.
+And I asked it to be to be horizontal instead of vertical columns. And I asked it to reduce the text just a little bit.
+So all three things are going to happen.
+I think the preference gap is a little bit just like.
+The what gap?
+I don’t know. The role category. The preference gaps. The cards in there. They’re kind of like.
+Kind of meh
+Kind of meh. I don’t want to remove them. I want to refine them and improve them.
+Yeah. Yeah. I’m going to refine and improve them. But I mean.
+I’m trying to create a sense of value.
+You know what I mean
+Yeah. Yeah.
+You give them more. In fact, I might even add another category of gaps. I want them to feel like we really thought about it for them. Or the AI really thought about it. Like it really like analyzed it thoroughly so that they can delete the ones they need to delete. So right here,
+we drop this role. Let’s say we leave the drop this lead software because it only gets three stars. The other two remain. If we have 25 roles, we’ll have more to drop.
+Yeah.
+Yeah.
+All right One more notch.
+Is that mean Sorry. I’ll show you what I’m reacting to.
+So it like it said updated the gap screen with the exact polish you asked for. Copy is more succinct in the header. And readiness block. Text is slightly smaller in key pieces. Intro top recommendation. Company line gap details. Resume personally preference gap cards are now horizontally friendly. And then categories are stacked vertically. Easier gap item is now laid out horizontally. And then it says if you want, I can also do a second pass to tighten the ranked jobs left panel text by one more notch. For visual consistency. And I’m like, I don’t know what you mean by one more notch.
+Do you know what it means by one more notch?
+Yeah.
+No.
+Yeah. That’s just super vague. I’m like, I don’t want to approve a thing if it’s like.
+Here, I deleted your app. Because one more notch meant I’m going to delete your whole app.
+If you agreed to this.
+Who agreed to this
+Okay.
+Yeah.
+We’re just going to summarize somehow.
+What’s that
+No, I’m just saying.
+No.
+I’m looking forward.
+Yeah. Yeah.
+Let’s see. Make the left ranked jobs list text a little smaller too. Oh, okay.
+I don’t know What do you think No, I think it’s fine.
+I think it’s fine.
+It’s going to be there’s going to be 25 of them now is the theme.
+Don’t change it Don’t change it
+I’m just saying what? One, two, three, four, five, six, seven, eight, nine, ten. So by the time you get down to the bottom of the theme, you’ve already done ten. You want 25 here.
+Yeah. We actually should line them up. Why don’t we do this before? We actually should line them up.
+Or horizontal. And then for each one.
+There’s like bars on there. Look, I just can’t wait to see if you see it.
+Horizontal. It’s going to look so much better.
+It looks so much better.
+Yeah. Well,
+yeah.
+So that’s the gap analysis part. We’re definitely going to need that. That’s why we double verify it.
+Here we go. Just need to match.
+Offer research content.
+There’s a campaign updated.
+Campaign should be getting there because we committed those a while ago. So we’ll save and continue.
+Run the pain point analysis.
+Yeah. We’ve made several commits already. Like we’re moving.
+I just wanted to finish that gaps page for a second.
+So yeah, this is at least vertical. You know, horizontal or whatever. So it doesn’t have like three columns. Pain point one, two, three. Can you imagine one, two, three?
+Yeah.
+We’ll be like, I don’t like this. I think the text too big. All right. So then should we analyze what it actually says? Led lead and execute efforts to achieve and maintain compliance with NIST 800-553 and NIST whatever that means. So extensive experience evaluating IT controls. Against NIST.
+Okay.
+My fucking resume says this. I don’t think my resume says that.
+Oh, that’s from the job description. I was like,
+all right So it says your ensuring, oh, I ensured HIPAA compliance while deploying models. So that’s true. So I guess, I mean, it’s a type of compliance. So there’s some overlap. I guess you could say ensured compliance with regulatory standards. Oh, yeah. Fine.
+Yeah. A lot of times these guys are just like, well, he kind of gets it. And then
+The smallest font probably needs to be the biggest.
+Okay.
+The from JD is like the smallest font here. And that should be like-.
+Should we make the whole thing all the same font size?
+We should But I think that this should stand out. From JD should probably stand out through the biggest piece. And then your from resume should also be one of the biggest pieces that stand out. And then it should be like that.
+Okay. On the map screen.
+Your solution section should be like.
+All the pain points should be the same size except the from JD.
+And from resume.
+Sections.
+And from resume.
+Section.
+Should have a slightly larger font.
+The colors.
+For the from JD.
+And from resume.
+Should be different. Light colors. Than the your solution heading.
+Whatever. Let’s just see what it does with that
+Yeah.
+Save and continue. All right. Now we’re on the offer screen.
+It’s interesting. Not sure if we like it or not. So we’ve got senior.
+I mean, interesting is interesting.
+It’s interesting.
+Interesting is sometimes too interesting.
+So this is what the campaign step we reuse across emails. So across emails. So that means not just like one guy. I help teams ship outcomes and roles like IT security program manager.
+Oh, like that’s the role.
+I just don’t like how teams ship outcomes. I feel like it’s not how people talk.
+Okay.
+We don’t like the phrase I help I already copied it while I’m typing. I help teams ship outcomes.
+That is in the offer snippet on the offer page. And we put in the AI prompt. Never to use that specific phrase.
+All right Moving on from that.
+Yep.
+It’s not letting me edit it.
+It doesn’t let me edit it I can it’s just an offer snippet. I guess it is what it is. All right. So role signals from your this posting. Pain points.
+And then I help teams ship outcomes. Oh, it is here.
+One-liner.
+Yep
+I do good stuff. That’s much better.
+All right So the.
+Can we just take out the joint and dashes?
+What’s that
+Oh, yeah. The joint and dashes.
+Yeah.
+It’s so joint It’s so obvious.
+The offer.
+Screen.
+Uses M dashes.
+The proof points. It’s a proof point section.
+In the proof points and quick inserts.
+We don’t want M dashes. Because we believe people will think AI-generated text. When they see them.
+Use dot, dot, dot. Which is called ellipses? Yeah. When you have a dot, dot, dot, that’s that has a name. It’s called ellipses.
+And what else?
+Or commas.
+Or colons.
+As appropriate for each context.
+Okay.
+So they have this little section here.
+Which are probably requested at one point. Or maybe this was something that found that you said in the context. It’s got micro case studies.
+Problem. What was broken. Actions. What you did. Impact. So you can talk about stuff you did.
+Yeah. That’s cool.
+And then credibility hooks.
+Ex-Google is a big one. Yeah. If someone says ex-Google in the resume, they definitely that’s sexy. Like people are like, “Oh, yeah. Fuck yeah. We’ll hire that guy. He’s ex-Google.”
+Right
+That’s it’s hard to get those Google jobs, man. 12 rounds of interviews and shit. Like they’re crazy. And they pay good too. That’s the problem. Ex-Google guys is they’re going to demand like a pretty good salary.
+Yeah. That kind of credibility. You should use it.
+AWS cert. Built HIPAA pipeline.
+Yeah. It’s more like a trust signal. Credibility signal. It’s not really a hook.
+Okay. Well, then we want to retitle that.
+Yeah. Credibility.
+Retitle. The credibility hooks.
+To credibility slash trust signal.
+Yeah.
+Signals.
+Yeah. That’s what it is. You’re saying you trust this guy’s skill because of Google’s process. Of hiring.
+I think not everybody knows that CTA means call to action. So we should probably like spell it out for them. So I even forget sometimes like what’s CTA? Oh, yeah. So default CTA heading should be default call to action and then just remind them that that’s also called a CTA.
+Yeah.
+With a little parentheses thing.
+We’ll remind this thing on what page runs for on the offer.
+Screen.
+A subheading.
+Because okay.
+So what is our default CTA? You like it. Baby.
+You like it baby
+Yeah.
+Baby.
+Yeah.
+All right Then we save and continue.
+Oh, yeah.
+All right So let’s see if any of this shit works. So we got recent posts. So we get we got to try these. I’m going to click Dirk here. Run company research on Dirk.
+Some Dirk.
+I work at Dirk. Me, I’m a Dirk Dirk Dirk.
+I’m a Dirk for life.
+Work as a Dirker.
+I’m a Dirk worker.
+All right So oh, it actually like recent posts. Okay. At least it told us not available in step mode. What the fuck is step mode, dude?
+What the fuck is step mode? No, I’m not joking. Like it should not be in any kind of a step mode. What even is that?
+Step mode. What the fuck is step mode?
+No, not acceptable
+I don’t know what step mode is. What is the movie step? What kind of steps are we talking about?
+No, this is not cool. This is the scary thing for me right now. Not available in step mode in live mode. This will summarize reasonably.
+I would not live mode.
+I know I don’t understand why he’s saying that. I think it is in live mode. Right?
+Don’t scare me. There should not be a step mode.
+Like I’ve been past like step modes for a while now. What’s this step mode? What’s this step mode shit, man?
+I don’t know
+There should be there should not be a step mode.
+Come on Let’s do a step mode results.
+Not BS.
+Okay. What does it say down here? Dirk to introduce the next evolution of traffic. See, it’s got real stuff down here.
+Company overview. Dirk partners with Tassel LTD to expand AI traffic safety solutions across Canada. And don’t need this stuff. These just mean spaces.
+I’m seeing in the message text. Make sure that does not appear. In the messages.
+Okay.
+Production. Production. Not available in step mode either.
+Yeah. I don’t know why it’s saying it’s clearly pulling real information.
+Like those. But these two are in step mode still.
+Yeah. I don’t know why it changes in leadership changes. Like if it just can’t find the information, just say, “I can’t find it.”
+Maybe we should say that. If you can’t find the information. Maybe you tell it. Like if you don’t get any results.
+Don’t tell me about step mode. Say don’t get any results.
+See, no results found or yeah, no results. No. No data.
+All right I am upset by that screen, but I will move on.
+Should we focus on what’s good Leadership changes. So we’ve got the likely. What does likely values? What does this likely values pragmatic execution? Don’t tell me about what’s likely. I didn’t ask you to guess. Don’t use words okay.
+I don’t know Is this okay Do we like this? I don’t know. I don’t think I like that it’s saying likely.
+I don’t like likely.
+It’s like mirror their tone. It’s telling us what it’s doing, not giving us a result again.
+Let’s go back to our teams prioritize. Week to week.
+This result in company culture and values.
+Looks generic. And uses words like likely. And still seems to know nothing. About them. Specifically.
+On the research page.
+Okay.
+Well, let’s try a different company. Probably get the same shit, but try it. Who knows, man? Run company research.
+Still doing something.
+I see things spinning.
+Let’s see what happens.
+Galileo, Galileo.
+Make a lot of progress though.
+So it’s got the step mode shit in the same place as it did before.
+It seems to know who Galileo is.
+It’s got that thing in there, yeah.
+It’s also talking about likely up here too.
+So you got to give it some time to post and commit to code and all that kind of stuff.
+I don’t think we need the not news.
+The heading on the research page. Theme.
+Should not be theme. Not news.
+Not news.
+This is not news, guys.
+It’s because I told it before. It’s like, “Don’t put news.” I said theme, not news, but I didn’t want it to put it in the heading. Because it was giving me like, you know, it’s like, “No recent news.”
+And then here it says, “Recent news, actual this is the actual news.”
+Yeah, this is the actual news.
+This actually is the news, but this is the actual news.
+Yeah, we don’t need that And it’s results in the editable field. Use the word likely. Which we don’t want.
+Okay. Are these actual themes, though? Lead executive efforts and achieve to maintain. Yeah, this is actually stuff.
+The.
+What The theme
+Yeah, I don’t know what this is. I feel like it’s coming from the job description.
+Didn’t we see that same NIST 800-530?
+You’re right
+In the job description pain point match. I don’t think that I don’t think that’s news or theme.
+Perhaps.
+I’m fine with it taking some stuff from the job description, but I just don’t want anything to be like empty if it doesn’t need to be. Right here, it has the recent news, though. This was not in the job description. NASA Galileo mission points to ammonia at Europa. NASA’s Galileo. I don’t think this is the same Galileo.
+Southwestern Galileo bring rewards to depth doorstep. Payments.com. This is probably Galileo. These other two are like the Galileo is a mission, not a company.
+Okay.
+Look at the results for the recent news. We’ll say under the and tell me if you really think these are news bits for the company Galileo.
+NASA ones.
+There must be a way to make the news that shows up there. Relate only to the company Galileo that is being researched.
+Not everything with the word Galileo.
+You can also use the domain to verify if it’s the right company.
+Yeah, the AI should be able to give me better, smarter process for this. Okay.
+I need another layer of checking.
+Because right now if you asked it, “Do you really think these are all for the company Galileo?” It’s be like, “No.” So it needs that extra layer of checking to be like, “Oh, wait, these aren’t all for the Galileo company.” I suspect this one is.
+So Southwest and Galileo bring rewards to depth. So this is Galileo, the company. These are Galileo, the mission for NASA.
+Yeah, do something.
+Okay.
+All right. Well, we’re going to move on.
+Yeah.
+We actually we’re making some updates to that screen, by the way, so we’re not totally we’re not making backwards progress. We’re making forward progress. Okay. So we’re going to click on Mr. Romandi here. We’ve got some Castro and company. We’re going to do a search. Find some decision makers here.
+You can see up here it’s searching.
+What’s this right here
+This is the what?
+I’m just going to have to contact research smart.
+This?
+What are you looking at
+This On your screen, on the left side, in that oh, yeah, the research. Yeah, I’m still reading that. It says, “Contact research smart.”
+See what it does.
+So we’ve got Lisa.
+I’ve only got two people.
+Two people
+Verify these.
+It actually brings that screen
+I mean, I don’t hate the screen, but I’d rather it didn’t last for so long. But I guess it’s all right. It tells you something’s happening at least.
+Yeah.
+All right So we’ve got interesting facts found for email hooks. No facts yet.
+Okay.
+No, that’s not okay.
+You want to ask you facts?
+I want interesting facts.
+You should have some interesting facts.
+I mean, GPT was able to give me interesting facts. Oh, we got an API post. That might have something to do with it.
+Okay.
+API post
+I’m on the contacts screen.
+I got an error.
+And I’m not getting any interesting for any. Facts about these people. I do the research. What’s it called?
+The run research for saved contacts.
+I don’t know what made it crazy.
+I don’t know I guess just for the hell of it, I’ll click it again.
+And then I mean, it’s just giving me these two it’s the same message.
+We’re going to get there, man. This app is going to be great. Don’t get discouraged.
+Yeah. Yeah.
+Just things are not always if it was easy.
+Connect message, I can tell you. Best connect message is definitely something like my first name. Hi, first name. I reviewed your profile and wanted to connect. I post about whatever talk about yourself.
+And three things about yourself, and then let’s connect. That’s like your simplest one.
+Okay.
+Because you want people to connect with you so you can send more messages.
+You’re not trying to pack the connect message.
+You can slow down a little bit so I can actually make a change here. To the LinkedIn request note. So the LinkedIn request note. Tell me what I should just tell me something.
+The LinkedIn request note?
+Mm-hmm.
+You’re just going to talk about reviewed. I reviewed your profile and wanted to connect. Interested in and you say three things about yourself.
+Like I say I post about revenue acceleration, delays in AI marketing, and leadership theory skills. Three things about yourself. Let’s connect. It shouldn’t be about the role.
+Just something about you.
+You can say I reviewed your profile and wanted to connect. I post about software engineering.
+AI posts. And leadership coaching. Whatever.
+Those three things about yourself.
+And yeah.
+Okay.
+Like I try not to be friends with the person. Not trying to get something from them.
+Okay.
+Okay. Well, that changes in process here.
+And we will move on. So we’ll start this over. Upload a different picture.
+Let’s see. I have desktop.
+Where’s my desktop? Desktop. And we’ve got bio. We’ve got some bio pics here. I’ve got my wizard.
+All right Maybe this nerdy guy here.
+What do you think? Which dorky-looking kid should I put up there? Maybe this one?
+Yeah. Marks
+Did it actually do it? Where is it? I don’t see it.
+I don’t think Mark.
+There it is. Okay.
+So I’ve got my resume coming up here. I’ve got my skills, my education.
+I’ve got my video. Oh, remember we talked about this last time? Record your video. Again, with this vertical stuff.
+Why is it Mark?
+I don’t know I mean, it just kind of put it there. I mean, at first, you’re like, “Oh, interesting.” And then you’re like, “This is bad.” So record your video free tools.
+What’s wrong I like that. That’s interesting.
+The bio screen.
+Is three columns.
+But that makes the text harder to read.
+So make it horizontal.
+Okay. How about the content, though So we got OBS Studio. We can download OBS. What does it take us? It did take us to the correct page. And it has straight to the downloads. So that’s great.
+Download Loom.
+I love that it’s taken us to the right pages.
+Not in a good way. That’s a good thing.
+Very smart AI. And then Zoom. I don’t know how you’d make a video with Zoom. I mean, I use Zoom all the time, but I’ll take your word for it.
+Use your first job Start meeting your first job.
+That’s like an extra step. Start a new meeting. More record this computer. Use MP4 output to upload it for I mean, sure. People do it. You do it. It’s fine.
+All right So all right. So the content is fine.
+The links. It has my links.
+And so let me go back to the bio page. I want to regenerate. And open the public page.
+I’m having it open. It is a separate screen.
+So that it I don’t see my bio page here. Where is my bio page?
+So open public page.
+I like it in the darker. It’s so bright.
+Are you seeing your own public page What are you looking at?
+No. I’m just saying when you go to the whenever you press that button, the whole screen white.
+I saw that. Yeah. I did not see a bio page.
+I didn’t see a bio page either.
+That would be interesting if you did and I didn’t because it’s my screen that’s sharing.
+The bio screen I clicked open public page. And I just got about blank white screen. Nothing.
+What the fuck All right. Open public page. Yeah. Nothing.
+Oh, hold on The public page should not be specific. To the position.
+Oh, yeah. That too.
+Why is it specific There’s a proof point for that specific to this job.
+Okay. Where does it have a specific role thing? So I could point it out.
+No.
+Oh.
+It also like.
+But that’s my experience. Oh, well, it has expert in this. It’s okay that I’m an expert in this. I guess. Though I’m not.
+Is that your main thing?
+NIST What the fuck is that What is NIST
+I’m trying to say That was a job description.
+Whatever, man.
+Yeah. That’s a problem.
+And it’s been a while since I looked at my resume, but I don’t think it’s there.
+Yeah. It definitely wasn’t there.
+Do I have anything in my resume that references?
+NIST 800-53 or NIST 800-170?
+No.
+What the hell
+I’m just doing a sanity check here, man.
+Who knows, man I mean, there is some AI involved.
+Turns out I could do this.
+No, nothing. Okay. So it says then why on my bio page does it show that I am an expert in NIST 853 and NIST 800-171? That is not true. And it is not in the resume. I uploaded. It must be getting it must be getting confused from another step.
+From job description
+Yes. But then the job description is transferring it to another step that’s explaining my pain points and how I suit them. And then somehow it’s making it onto my bio page.
+Yeah. People are going to complain. They’re like, “What? Saying that I’m an expert in all this shit that I’m not. Are you trying to get me to lie?”
+Yeah.
+It’s slight exaggerations are expected, but fucking inventing. I don’t even know what NIST means.
+They’re going to get you an interview and then.
+It can’t be an expert or anything if I don’t know what the acronym stands for.
+So we heard you’re an expert in NIST.
+Yes. Please talk about NIST.
+We want to.
+We want you to see if you can solve this problem.
+It means not interested in said title because I will not be getting this job.
+All right Moving on to the next page. We got to fix some stuff on that one. All right. So we’ve got a campaign title.
+The campaign name. Oh, it’s letting us create our own campaign name. It’s like, “Okay. Let’s call this campaign.”
+The first 25
+Huh
+The first 25.
+First 25. Then I like to do this format. 26, 02, 15.
+Yeah.
+And then save campaign. And then I guess what the fuck can I probably post?
+On the campaign screen.
+I get fix that shit.
+Okay.
+All right Let’s see if it can generate an email without giving me an error. Better.
+Generate.
+It’s generating. And it did not.
+On the campaign screen.
+When I click generate. I now get that’s a bummer, dude.
+Okay.
+This is what I was most looking forward to right here. I wonder what broke. Hopefully, it fixes it quickly. Move past this. This is the part we’ve been looking forward to, man. This is what it’s been all about. All along.
+Since this.
+Yeah. They got the special instructions. Follow up again with a different angle. Alternative proof. Different benefit. And then these special instructions. Say something crazy. Get their attention. Embarrass yourself. Just kidding. Final follow-up. Get their attention with something unexpected off the wall. Do not rehash the whole story. Keep it very short. Two to five sentences. Be provocative in a playful way. Workspace safe. No insults. No sexual contents. No threats. End with an easy yes/no question.
+You give me a job
+We don’t need all this. We don’t need no insults. It’s ChatGPT. It’s not going to give you insults or threats.
+And we don’t need be provocative in workplace safe.
+I’m talking teachers. I’m talking teachers.
+It’s extra team.
+Be very provocative in a very playful way.
+There.
+Put this text and nothing else.
+And these special instructions for the email for final check.
+Done.
+Okay.
+All right The launch page.
+Didn’t we fix this shit already?
+Didn’t we?
+Summary. On the deliverability. Launch. Screen. Still has a campaign. Maybe I need to change it on this screen.
+Yeah. Well, yeah.
+This campaign. Oh, wait.
+Yeah.
+Well,
+the campaign name should be here.
+Yeah.
+Dude, we were really creating fucking nothing, man. It’s crazy.
+Yeah. It’s not as simple as just telling the AI what to do. You actually have to think about it, right? There’s a lot. Even with the AI doing the tedious code part, there’s still a ton of thought.
+Yeah. You think that code was the whole thing.
+No.
+Coding is only a small piece of the problem.
+It makes all of our dreams possible, though. As long as we can conceive of what we want and think intelligently about how to do it, the whole—
+Does this make the dream possible?
+—the campaign summary deliverable on screen still has a campaign name that is campaigns.
+Involve multiple roles. It’s only 11 for me. We can go another hour.
+Oh, shit.
+Just kidding.
+And multiple companies. So why would a campaign ever be that?
+Okay.
+We can look at my analytics.
+Real quick we can look at the tracker. It’s still working. Are you able to drag stuff around? Able to rate stuff from here.
+That’s cool. Show analytics and insights.
+All right I don’t know if we need an analytics and an analytics.
+But it’s there for now. And then the inbox is for later once we start doing all that. All right. Well, I’m a little frustrated that this isn’t working.
+Yeah.
+Well, let’s just one last shot here. Hail Mary or whatever.
+It’d be nice to see something working. Before we go to bed here. So push commit and push those changes.
+And then I will put them on or merge them into the code.
+Put them on the server. And then we will see.
+I think cool.
+Now refresh this.
+There it is.
+So it says what we did here. Am I still sharing? Yeah. So it says we this is what we did. Create the pull request. Harden campaign and company research flows by removing stub legacy wording preventing bad fallback claims fixing live mode errors and normalizing generated text summaries also improve LinkedIn note generation bio page UX behaviors and launch naming. So multi-contact campaigns are treated consistently.
+Okay. Successfully merged. We can go here and watch the magic.
+Queued it’s neat. So this thing this railway that I’m paying for, it checks GitHub frequently for recent updates. So the fact that I just pushed it to GitHub, it within a few seconds, it immediately knew, “Oh, got to update the server.” Isn’t that neat?
+So one of the things we’re paying for is for this thing to check that thing constantly.
+So anytime I make a change, in a couple of minutes later, it’s going to be online. So that’s great.
+Yeah. Actually, interesting.
+I know It’s nice.
+It means that you can have your web app live and just be making changes whenever you want and somebody could call you if your customer support. They can tell you about a problem with your web app. And you can have it fixed before the phone calls over.
+Be like, “Thanks for telling us. Thanks for telling us about that bug. Why don’t you go check it again? I just fixed it.” And you’re like, “Wow.” That’d be pretty neat.
+If this app is actually making money, you and I are going to be on the phone fixing bugs and then if it’s making a lot of money, that means we’ll have too many customers to answer the phones anymore. But at first,
+I mean, that’s what I’m trying to follow along here too so that I want to think in terms of I know what I’m doing.
+Yeah. It’ll be good. And your coaching services will fit right into this too. Because ultimately, they got a real problem that you’re going to be able to help them through. The big problem is they don’t have a job. Okay. It looks like it’s done. So now we can check Royal Ferry again. Let’s go back here.
+Saving continue.
+We didn’t really change anything on the resume screen today.
+So we don’t have to linger there. Personality page we didn’t change anything here, right? So we can save and continue.
+This screen we did Let’s scroll down. See if it’s got the stuff. Auto discovered roles from career pages. Technical roles unwell found. Startup focused roles that often list compensation bands. Use URL importer.
+What does this mean Happens if I click this.
+Right I don’t refresh. We tried to collect up to 25 roles at a time aiming for one role from each company. 25 roles when possible. Using your role preferences and salary target. Found three role links from career pages. This is not what I wanted.
+Well, you don’t have to wait for the results but I’m at least going to tell it. So what we wanted on the roles was 25 roles. But what we got was this.
+Yeah. You’re cool, dude. What else did we want to look at before you jump? There was one other thing. Well, more than one, but.
+I mean.
+Continue. So we know that that thing didn’t work. The gaps analysis. Oh, there we go. We can see if there’s a suggestion. So it’s horizontal now. That would be a nice thing.
+Yeah. I see that
+Okay.
+I want to see that.
+Horizontal. You like sleeping or something?
+Yeah. Do you?
+Yeah.
+It’s a little overrated. Oh, there it is. Boom.
+Okay.
+All right Run pain point match.
+Did we make any changes to this?
+I don’t think so.
+What did we change to the pain point match? Oh, yeah. We changed the fonts, right?
+Yeah. From resume is a lot bigger.
+All the fonts are the same size. This was bigger, like you said.
+Cool.
+I would even take out your solution.
+Okay.
+How would you do that?
+Let me just read it From JD,
+your solution.
+Yeah. I think your solution should definitely be well, first of all, from
+JD, then from resume.
+And then your solution and report metric if you want to keep it.
+I don’t even know if your solution works.
+I think all you need is from JD, from resume.
+And then maybe like.
+Yeah. It is a bit wordy. I think the impact metric is a good summation.
+Qualitative ensuring compliance with regulatory standards. I think that’s useful. You can use that as available variable.
+Yeah.
+Right
+Yeah. Your solution, I think you might want to take it out.
+Okay.
+So remove your solution and its corresponding solution.
+Line from the pain point match. Results on the match. Page.
+Okay. Done.
+We’ll do baby steps and then I just want to do I want all of our so this what did we do anything different here?
+I think you got the crazy.
+Oh, it did remove them.
+Yeah.
+Now it says, “I do good stuff in roles like IT programming.” All right. So we’ll figure out probably something a little better than that. It’s hard to beat that, but we’ll maybe come up with something.
+Hard to beat that.
+So just make it deploy efficiency. 500% improved efficiency. 500%. Why is it so many commas? What do you want there?
+Nothing. I don’t want no space.
+Employee efficiency by 100%. So by.
+Okay.
+Change this.
+Yeah. It’s actually just that one section above it.
+I mean, it’s the side of it really. All you need is we don’t need any of this before improve. Boosted or reduced.
+Okay.
+On the offer screen.
+Under proof points. And quick inserts.
+All right. Fine.
+So moving on. And come on, man. Come on. Rolling the dice here. Rolling the dice. Give me something. Don’t give me any API bullshit. Give me some actual results. Don’t talk about stubs. Come on.
+But the previous is done.
+Stub was a fallback when I was the first iteration of the page. Early, early, I was like, before the AI was connected to it, basically, or when the AI was only working like half the time, it had a stub fallback so I could see something. But I haven’t been using stubs for a while, man. So I shouldn’t be talking about stubs. This is a powerful AI tool already. Oh, fucking this bullshit already.
+Got it.
+Okay. On the research page, I’m still getting this fucking here. Okay.
+And we’ll just move on I’ll look at that no more. Okay. So then we’re going to do a search.
+Still got this Lisa and Guillermo guy.
+Verify the emails. A little faster that time. Saving. Oh, didn’t mean to do that.
+Well, we can look at this page. I’m still an expert in this NIST thing.
+So regenerate. Should have fixed that. Oh, there we go.
+No more NIST there.
+That’s good Does it actually open the public page now? Opening public page. There’s my page.
+That got broken for a minute but it’s working better now. Do we like my page?
+Yeah.
+Well, yeah. But do we like it? Better than another thing is not necessarily a good thing.
+A wasp sting is better than a scorpion sting.
+Yeah.
+I mean, it’s informative, I guess. I mean, if I’m looking for a candidate, there’s my candidate, I guess. I’m not super excited. I want to see something but it’s fine. I mean, if I had a role to fill and I had this information in front of me, I’d be like, “All right. There it is. There’s the info.”
+Yeah.
+I don’t need an animation or some weirdness. Oh, the video. Where’s my fucking video?
+Where’s the video
+That’s what I want to see. I want to see my video.
+See if we can add this video real quick Upload video.
+Videos. Captures.
+All files. No.
+No.
+There we go. We got some videos.
+Type.
+MVP demo. That’s going to be too long.
+Where’s that?
+There we go.
+Do this is me wearing a pirate costume playing guitar for Ralph. On Halloween.
+Come on
+I grabbed his guitar and started playing. He had schizophrenia. He was an interesting character. So we’re going to regenerate.
+Yeah.
+Page and where’s my video?
+Go back Okay. I’m not getting my goddamn video.
+Looks like I’ve got a problem here.
+Is there a reason I don’t see it?
+It’s showing up here.
+So regenerate.
+Maybe when I just forgot to add that. When I open the public, what is it called? Open public page. When I click open public page.
+On the bio screen. It doesn’t show my it doesn’t include my video. On the public one, even though it does show my video on the preview screen.
+Funny face All right.
+Moving on. Small improvements are happening. Moving on
+to this. All right. This is actually going to generate a fucking thing for me. Generate all four as it happens.
+Come. Come.
+Yeah. I’m seeing emails. I’m seeing emails.
+Okay.
+Where did it go Oh, it didn’t disappear. And it shows up. It disappears. And then it one at a time. One at a time. All right. Well, that’s stupid.
+And I click generate all four button on the cam pane screen.
+It shows me the generated email.
+Briefly,
+one then to then three.
+Then email four.
+Gotcha.
+That removes it. As it iterates. Removes each generated email.
+That was not the most useful feature.
+Okay. Let’s try this generating one.
+At least we know it can generate an email. Okay. We have it. All right. This fucking NIST thing is getting on my nerves. I’m not going to change that. Apply for a different job. Let’s go. There we go. Generate.
+Here we go.
+All right So Georgia, I see the wiser is focused on improving operational efficiency and compliance in your HR processes. Our team specializes our team. Our team specializes in helping organizations.
+With NIST standards.
+Not loving that. Okay. I’m just going to say the outgoing messages. What am I like? This would be a great sales app now, I guess. Or just selling shit to people.
+Yeah.
+Or selling our consulting services now. Messages, say, our team on this app is for individual people. Job seekers so it shouldn’t say our team. Fuck. Okay.
+Moving on to the second one. Maybe I can just pick a different person. Human resources consultant.
+Finance They just generate this next one.
+I wanted to touch base regarding our discussion on improving compliance efforts at Wiser. Our approach that might resonate is leveraging data analytics to streamline your IT control assessments. This could enhance your team’s efficiency.
+And ensure audit readiness more effectively. Would you be open to exploring this further? I just want to try a different email. Well, it’s better than the other bullshit. Hilarious. Let’s see what happens when I do hilarious.
+It’s better to be fucking funny, dude. I need to laugh Did it?
+There’s an exclamation point I wanted to follow up and see if you had a chance to think about how we can help Wiser improve candidate experience and speed up your hiring process. I don’t know, man.
+Not impressed. Let’s try silly.
+Suddenly, your recruiter.
+If you’re still juggling compliance projects and wanting to chat about how to keep them from turning into circus acts, I’m here.
+I promise I won’t bring a unicycle. Oh my God, this is not funny at all. It’s like such dad humor. If it’s now is not the right time just to reply no, and I’ll take this as a sign to stop juggling. See, you said you’re juggling, and now they’re juggling. You can’t juggle. It’s not good. Let’s do wacky. Let me wacky is better.
+Yeah. AI isn’t. You’re right AI is bad comedy. All right.
+I told you.
+AI is really bad. All right. Hey, Georgia. I’ll keep this brief. Like a one-act play with no intermission. If you’re still pondering how Dirk’s AI solutions can enhance safety and efficiency in transportation, I’d love to chat. Imagine a world where data analytics isn’t just a buzzword, but a superhero cape for reducing operational risk. It’s very salesy. If this sounds like something you’d want to explore, let’s hop on a quick call. Yeah. That’s way like canned. Yeah. We don’t like canned. Alarmist.
+Georgia, I know your time is valuable. So I’ll keep this brief. If ensuring compliance with NIST standards is on your radar, I’d love to share. How we can help with that. What is we? Should not be we.
+Yeah.
+Messages. Should be I. Not we. Because it is an individual job seeker.
+These are very salesy. I don’t know who they think they are all of a sudden, and they’ve forgotten that. Was it your templates? I didn’t really read through them. Were they like salesy third-party company templates? What is your templates do?
+No.
+They don’t use we Okay. I won’t blame you.
+No. They’re terrible with comedy.
+Well, that’s not even what I’m worried about. I’m like, it feels like you’re not even talking. Who am I talking to? I don’t even know this is a job applicant.
+I feel like it’s a company trying to.
+Yeah. The final touch was supposed to be like a one, two, three kind of thing. That’s how my.
+Yeah. Yeah. Well, I won’t blame your templates. I don’t know if it’s using them at all, to be honest. Final follow-up. This is a respectful breakout message. If tone, playful, wacky, kept it. No sexual content. I don’t need that, man. It’s not going to do that anyways.
+No guilt. No manipulation. I’m okay with a little bit of guilt and manipulation.
+Yeah. We don’t need to put that. We don’t need to keep a workspace safe.
+This is a first person. Job seeker.
+Contacting a hiring decision maker.
+Yeah. She’s like a one-on-one conversation.
+That should be. That should be. That’s it.
+Is she feeling like a one-on-one conversation?
+Yeah. It should sound personal. I don’t know how to spell should. Oh, I forgot the H. Should sound personal. Relatable. Human. Friendly. And not corporate. Salesy.
+Can’t fucking spell salesy. Salesy. Or salesy or too canned.
+These should be the special instructions for the fucking email three. Did I say email four or email three? Email four.
+Email four. Oh, yeah.
+Yeah.
+Fine. For the email four.
+All right Sorry. You said you wanted to go. I’m not trying to keep you on my list. Here we are. Check deliverability. We’ll have to work on this another day.
+Yeah, man. I think we got a lot of time.
+We did No doubt. We did, actually. We fixed it more than you think. We did, but I wish that we weren’t getting errors. At least that we got past the error on the campaign screen. We were able to see some generated messages. That’s positive.
+Feel good about that All right. I’ll count my wins, man.
+But we don’t need to do this only once a week. We need to try to squeeze in another day so we can hurry up and make some money before our respective loved ones start to wonder if this will ever make money. The thing is, there is a lot of money on the table because there is an increasing demand in the job market. And before that demand hits full force and there’s like 10 more competitors with AI apps for this, we need to get it out there.
+Yeah. Because the competitors are coming, man.
+Yeah. So let’s get our stuff on the market. But let’s maybe try to find another day of the week. I know it’s not you. It’s me, Morley. More than you, but let’s just try a second day. Just let me know your availability. If you’re free today, be like, “Hey, you want to try me tonight?” I’ll be like, “Yeah, let’s do it.”
+Yeah.
+This coming week, my parents are coming over.
+Okay.
+Might be a little rough but definitely something we can try to do.
+Okay. Well, if you want me to get your parents on the call, that’s fine too. They can help. Maybe they’ll have some ideas.
+It’s all ideas, man. AI is doing all the coding, so. Anybody’s ideas are welcome.
+We might even get another older generation perspective. They might think of someone’s like, “You know what people really want in their job search?”
+Not too many We need more people testing.
+Yeah, man.
+Have a good night
+Yeah. Peace
+Peace

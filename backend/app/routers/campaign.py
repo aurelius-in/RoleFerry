@@ -801,6 +801,26 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             t = t.replace("\r\n", "\n").replace("\r", "\n")
             t = re.sub(r"[ \t]+\n", "\n", t)
             t = re.sub(r"\n{3,}", "\n\n", t)
+            # Job-seeker voice normalization: first-person singular only.
+            swaps = [
+                (r"\bwe can\b", "I can"),
+                (r"\bwe will\b", "I will"),
+                (r"\bwe have\b", "I have"),
+                (r"\bwe've\b", "I've"),
+                (r"\bwe are\b", "I am"),
+                (r"\bwe're\b", "I'm"),
+                (r"\blet us\b", "let me"),
+                (r"\bour team\b", "my background"),
+                (r"\bour\b", "my"),
+                (r"\bus\b", "me"),
+                (r"\bwe\b", "I"),
+            ]
+            for pat, repl in swaps:
+                t = re.sub(pat, repl, t, flags=re.I)
+            # Fix common grammar artifacts after pronoun swaps.
+            t = re.sub(r"\bI has\b", "I have", t, flags=re.I)
+            t = re.sub(r"\bI are\b", "I am", t, flags=re.I)
+            t = re.sub(r"\bI do not have\b", "I don't have", t, flags=re.I)
             return t.strip()
 
         def _tone_guardrails(t: str) -> str:
@@ -974,6 +994,7 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             "- After any greeting, the next sentence must be value-first (offer/painpoint/proof/ask).\n"
             "- Keep it plain-language and specific.\n"
             "- Avoid startup jargon (e.g., 'ship outcomes', 'drive impact', 'move the needle'). Prefer human phrasing.\n"
+            "- Voice must be first-person singular for an individual job seeker: use I/me/my, not we/us/our.\n"
             "- Use real names/companies ONLY if provided in the context JSON. Do not invent.\n"
             "- Do NOT output template placeholders like {{first_name}}.\n\n"
             f"Sequence step: {step} of 4.\n"

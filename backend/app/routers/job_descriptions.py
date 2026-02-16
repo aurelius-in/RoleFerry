@@ -6,6 +6,7 @@ import json
 import re
 import html as html_lib
 import hashlib
+import httpx
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
@@ -2561,6 +2562,190 @@ def _load_job_preferences_best_effort() -> Dict[str, Any]:
     }
 
 
+def _role_tokens(role_query: str) -> List[str]:
+    raw = [x.lower() for x in re.findall(r"[A-Za-z]{3,}", str(role_query or ""))]
+    stop = {"and", "the", "with", "for", "role", "roles", "technical", "engineering", "machine", "learning"}
+    out = [x for x in raw if x not in stop]
+    if not out:
+        return ["engineer", "developer", "software", "data", "product", "analyst"]
+    return out[:10]
+
+
+def _looks_like_relevant_title(title: str, tokens: List[str]) -> bool:
+    t = str(title or "").lower().strip()
+    if not t:
+        return False
+    generic_bad = ["intern", "campus", "student", "volunteer", "contractor pool"]
+    if any(b in t for b in generic_bad):
+        return False
+    role_words = [
+        "engineer",
+        "developer",
+        "architect",
+        "manager",
+        "director",
+        "analyst",
+        "scientist",
+        "specialist",
+        "administrator",
+        "consultant",
+        "product",
+        "security",
+        "platform",
+        "infrastructure",
+    ]
+    if not tokens:
+        return any(w in t for w in role_words)
+    return any(tok in t for tok in tokens) or any(w in t for w in role_words)
+
+
+def _salary_from_greenhouse_metadata(meta: Any) -> Optional[str]:
+    try:
+        items = meta if isinstance(meta, list) else []
+        vals: List[str] = []
+        for m in items:
+            if not isinstance(m, dict):
+                continue
+            name = str(m.get("name") or "").lower()
+            value = str(m.get("value") or "").strip()
+            if not value:
+                continue
+            if any(k in name for k in ["salary", "compensation", "pay", "range"]):
+                vals.append(value)
+        if not vals:
+            return None
+        joined = " | ".join(vals)
+        return joined[:120]
+    except Exception:
+        return None
+
+
+def _company_from_slug(slug: str) -> str:
+    s = str(slug or "").strip().replace("-", " ")
+    return s.title() if s else "Unknown"
+
+
+async def _discover_roles_without_serper(
+    *,
+    role_query: str,
+    requested: int,
+    minimum_salary: Optional[int],
+) -> List[Dict[str, Any]]:
+    """
+    Keyless fallback: fetch real job links from public ATS APIs (Greenhouse + Lever).
+    This avoids returning only generic board links when Serper is unavailable.
+    """
+    tokens = _role_tokens(role_query)
+    cap = max(requested * 3, 60)
+    out: List[Dict[str, Any]] = []
+    seen_urls: set[str] = set()
+
+    greenhouse_boards = [
+        "stripe", "figma", "notion", "airtable", "plaid", "coinbase", "discord", "doordash", "datadog",
+        "openai", "anthropic", "perplexityai", "vanta", "ramp", "brex", "asana", "zapier", "gusto",
+        "canva", "mural", "intercom", "hubspot", "mongodb", "snowflake", "cloudflare", "palantir",
+        "instacart", "robinhood", "lyft", "reddit", "dropbox", "atlassian", "samsara", "scaleai",
+        "snyk", "hashicorp", "elastic", "unity", "checkr", "benchling", "chime", "loom", "optimizely",
+        "dataiku", "toast", "newrelic", "fivetran", "dbtlabs", "grafana", "sumologic", "tripactions",
+        "cruise", "affirm", "nuro", "udacity", "postman", "monday", "carta", "apolloio", "xai",
+    ]
+    lever_companies = [
+        "netlify", "sourcegraph", "improbable", "udemy", "eventbrite", "coursera", "gitlab", "robinhood",
+        "benchling", "sentry", "postman", "flexport", "segment", "calendly", "clearbit", "pilot", "n8n",
+        "render", "vercel", "mixpanel", "heap", "newrelic", "fivetran", "airbyte", "dbt-labs",
+        "supabase", "sonarqube", "clerk", "retool", "crunchbase", "planet", "duckduckgo", "codecov",
+        "launchdarkly", "algolia", "motive", "rippling", "webflow", "zapier", "hashicorp", "apollo",
+    ]
+
+    timeout = httpx.Timeout(6.0, connect=4.0)
+    headers = {"User-Agent": "RoleFerry/1.0 (+https://roleferry.app)"}
+    async with httpx.AsyncClient(timeout=timeout, headers=headers, follow_redirects=True) as client:
+        # Greenhouse public board API
+        for board in greenhouse_boards:
+            if len(out) >= cap:
+                break
+            try:
+                url = f"https://boards-api.greenhouse.io/v1/boards/{board}/jobs?content=true"
+                r = await client.get(url)
+                if r.status_code != 200:
+                    continue
+                jobs = (r.json() or {}).get("jobs") or []
+                for j in jobs:
+                    title = str((j or {}).get("title") or "").strip()
+                    if not _looks_like_relevant_title(title, tokens):
+                        continue
+                    link = str((j or {}).get("absolute_url") or "").strip()
+                    if not link or link in seen_urls:
+                        continue
+                    seen_urls.add(link)
+                    loc = str(((j or {}).get("location") or {}).get("name") or "").strip() or None
+                    salary = _salary_from_greenhouse_metadata((j or {}).get("metadata"))
+                    if not _salary_meets_floor(salary, minimum_salary):
+                        continue
+                    snippet = str((j or {}).get("updated_at") or "").strip()
+                    out.append(
+                        {
+                            "title": title,
+                            "url": link,
+                            "snippet": snippet,
+                            "company": _company_from_slug(board),
+                            "location": loc,
+                            "salary_range": salary,
+                            "source": "Greenhouse",
+                        }
+                    )
+                    if len(out) >= cap:
+                        break
+            except Exception:
+                continue
+
+        # Lever postings API
+        for company in lever_companies:
+            if len(out) >= cap:
+                break
+            try:
+                url = f"https://api.lever.co/v0/postings/{company}?mode=json"
+                r = await client.get(url)
+                if r.status_code != 200:
+                    continue
+                jobs = r.json() or []
+                if not isinstance(jobs, list):
+                    continue
+                for j in jobs:
+                    title = str((j or {}).get("text") or "").strip()
+                    if not _looks_like_relevant_title(title, tokens):
+                        continue
+                    link = str((j or {}).get("hostedUrl") or "").strip()
+                    if not link or link in seen_urls:
+                        continue
+                    seen_urls.add(link)
+                    cats = (j or {}).get("categories") or {}
+                    loc = str((cats or {}).get("location") or "").strip() or None
+                    salary = None
+                    if isinstance((j or {}).get("salaryRange"), str):
+                        salary = str((j or {}).get("salaryRange") or "").strip() or None
+                    if not _salary_meets_floor(salary, minimum_salary):
+                        continue
+                    snippet = str((j or {}).get("descriptionPlain") or "").strip()[:260]
+                    out.append(
+                        {
+                            "title": title,
+                            "url": link,
+                            "snippet": snippet,
+                            "company": _company_from_slug(company),
+                            "location": loc,
+                            "salary_range": salary,
+                            "source": "Lever",
+                        }
+                    )
+                    if len(out) >= cap:
+                        break
+            except Exception:
+                continue
+
+    return out
+
+
 @router.get("/scraped-roles", response_model=ScrapedRolesResponse)
 async def get_scraped_roles(limit: int = 25):
     """
@@ -2602,25 +2787,11 @@ async def get_scraped_roles(limit: int = 25):
 
     # Deterministic fallback when Serper isn't configured.
     if not found:
-        role_hint = role_query.split(" ")[0].strip() if role_query else "engineering"
-        fallback = [
-            {
-                "title": f"{role_hint.title()} roles on Greenhouse boards",
-                "url": f"/job-boards/greenhouse?q={role_hint}",
-                "snippet": "Use in-app Greenhouse board finder to discover active roles.",
-            },
-            {
-                "title": f"{role_hint.title()} roles on Wellfound",
-                "url": f"https://wellfound.com/jobs?search={role_hint}",
-                "snippet": "Startup-focused roles that often list compensation bands.",
-            },
-            {
-                "title": f"{role_hint.title()} roles on Built In",
-                "url": f"https://builtin.com/jobs?search={role_hint}",
-                "snippet": "Tech roles with frequent salary and location metadata.",
-            },
-        ]
-        found = fallback
+        found = await _discover_roles_without_serper(
+            role_query=role_query,
+            requested=requested,
+            minimum_salary=minimum_salary,
+        )
 
     # De-dupe + score + salary filter.
     seen_urls: set[str] = set()
@@ -2634,7 +2805,7 @@ async def get_scraped_roles(limit: int = 25):
 
         title = str(item.get("title") or "").strip()[:180] or "Role listing"
         snippet = str(item.get("snippet") or "").strip()[:420]
-        salary_range = _extract_salary_range_from_text(f"{title} {snippet}")
+        salary_range = str(item.get("salary_range") or "").strip() or _extract_salary_range_from_text(f"{title} {snippet}")
         if not _salary_meets_floor(salary_range, minimum_salary):
             continue
 
@@ -2647,7 +2818,7 @@ async def get_scraped_roles(limit: int = 25):
             score += 3
         score = max(0, min(100, score))
 
-        company = _company_from_result(url, title)
+        company = str(item.get("company") or "").strip() or _company_from_result(url, title)
         role_id = hashlib.sha1(f"{url}|{title}".encode("utf-8", errors="ignore")).hexdigest()[:16]
         roles.append(
             ScrapedRole(
@@ -2655,8 +2826,8 @@ async def get_scraped_roles(limit: int = 25):
                 title=title,
                 company=company,
                 url=url,
-                source=_source_from_url(url),
-                location="Remote" if "remote" in blob else None,
+                source=str(item.get("source") or _source_from_url(url)),
+                location=str(item.get("location") or "").strip() or ("Remote" if "remote" in blob else None),
                 salary_range=salary_range,
                 snippet=snippet,
                 match_score=score,
