@@ -104,6 +104,30 @@ type JobRecommendation = {
   created_at?: string;
 };
 
+type ScrapedRole = {
+  id: string;
+  title: string;
+  company: string;
+  url: string;
+  source: string;
+  location?: string | null;
+  salary_range?: string | null;
+  snippet?: string;
+  match_score?: number;
+};
+
+type ScrapedRolesResponse = {
+  success: boolean;
+  message: string;
+  roles: ScrapedRole[];
+  helper?: {
+    requested_roles?: number;
+    target_companies?: number;
+    unique_companies?: number;
+    [k: string]: any;
+  };
+};
+
 function clampPreferenceStars(n: any): PreferenceStars | undefined {
   const x = Number(n);
   if (!Number.isFinite(x)) return undefined;
@@ -179,6 +203,11 @@ export default function JobDescriptionsPage() {
   const [sortBy, setSortBy] = useState<'date' | 'favoriteRank'>('date');
   const [trackerNotice, setTrackerNotice] = useState<string | null>(null);
   const [trackerPulseId, setTrackerPulseId] = useState<string | null>(null);
+  const [scrapedRoles, setScrapedRoles] = useState<ScrapedRole[]>([]);
+  const [isLoadingScrapedRoles, setIsLoadingScrapedRoles] = useState(false);
+  const [scrapedRolesError, setScrapedRolesError] = useState<string | null>(null);
+  const [scrapedRolesMessage, setScrapedRolesMessage] = useState<string>("");
+  const [scrapedRolesMeta, setScrapedRolesMeta] = useState<{ requested_roles?: number; target_companies?: number; unique_companies?: number } | null>(null);
   const trackerPulseTimer = useRef<number | null>(null);
   const suggestedUrl =
     "https://www.google.com/about/careers/applications/jobs/results/?employment_type=FULL_TIME&degree=MASTERS&skills=software%2C%20architecture%2C%20ai";
@@ -214,6 +243,25 @@ export default function JobDescriptionsPage() {
     }
   }, []);
 
+  const loadScrapedRoles = async () => {
+    setScrapedRolesError(null);
+    setIsLoadingScrapedRoles(true);
+    try {
+      const res = await api<ScrapedRolesResponse>("/job-descriptions/scraped-roles?limit=25", "GET");
+      const roles = Array.isArray(res?.roles) ? res.roles : [];
+      setScrapedRoles(roles);
+      setScrapedRolesMessage(String(res?.message || ""));
+      setScrapedRolesMeta((res?.helper || null) as any);
+    } catch (e: any) {
+      setScrapedRoles([]);
+      setScrapedRolesError(String(e?.message || "Failed to load auto-discovered roles."));
+      setScrapedRolesMessage("");
+      setScrapedRolesMeta(null);
+    } finally {
+      setIsLoadingScrapedRoles(false);
+    }
+  };
+
   const persistJobDescriptions = (next: JobDescription[]) => {
     setJobDescriptions(next);
     try {
@@ -225,6 +273,12 @@ export default function JobDescriptionsPage() {
     return () => {
       if (trackerPulseTimer.current) window.clearTimeout(trackerPulseTimer.current);
     };
+  }, []);
+
+  useEffect(() => {
+    // Additive feed at the bottom of the screen; does not alter existing import flow.
+    loadScrapedRoles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleImport = async () => {
@@ -1093,6 +1147,122 @@ export default function JobDescriptionsPage() {
               ))}
             </div>
           )}
+
+          <div className="mt-8 rounded-lg border border-white/10 bg-black/20 p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Auto-discovered roles from career pages</h3>
+                <p className="mt-1 text-sm text-white/70">
+                  We try to collect up to 25 roles at a time, aiming for one role from each company (25 companies when possible), using your role preferences and salary target.
+                </p>
+                {scrapedRolesMessage ? (
+                  <p className="mt-1 text-xs text-white/50">{scrapedRolesMessage}</p>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                onClick={loadScrapedRoles}
+                disabled={isLoadingScrapedRoles}
+                className="shrink-0 rounded-md border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/15 disabled:opacity-50 inline-flex items-center gap-2"
+                title="Refresh auto-discovered role links"
+              >
+                {isLoadingScrapedRoles ? (
+                  <>
+                    <InlineSpinner className="h-3.5 w-3.5" />
+                    <span>Refreshing</span>
+                  </>
+                ) : (
+                  "Refresh"
+                )}
+              </button>
+            </div>
+
+            {scrapedRolesError ? (
+              <div className="mt-3 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200">
+                {scrapedRolesError}
+              </div>
+            ) : null}
+
+            {!isLoadingScrapedRoles && scrapedRoles.length === 0 && !scrapedRolesError ? (
+              <div className="mt-4 text-sm text-white/60">
+                No auto-discovered roles yet. Save your Job Preferences (including salary) and refresh.
+              </div>
+            ) : null}
+
+            {scrapedRoles.length > 0 ? (
+              <div className="mt-4">
+                <div className="mb-3 flex flex-wrap gap-2 text-[11px]">
+                  <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
+                    Roles shown: {scrapedRoles.length}
+                  </span>
+                  {typeof scrapedRolesMeta?.requested_roles === "number" ? (
+                    <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
+                      Target roles: {scrapedRolesMeta.requested_roles}
+                    </span>
+                  ) : null}
+                  {typeof scrapedRolesMeta?.unique_companies === "number" ? (
+                    <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
+                      Companies: {scrapedRolesMeta.unique_companies}
+                      {typeof scrapedRolesMeta?.target_companies === "number" ? ` / ${scrapedRolesMeta.target_companies}` : ""}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {scrapedRoles.map((r) => (
+                  <div key={r.id} className="rounded-md border border-white/10 bg-white/5 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-white break-words">{r.title}</div>
+                        <div className="text-xs text-white/70">{formatCompanyName(String(r.company || "Unknown"))}</div>
+                      </div>
+                      <div className="text-xs text-white/60 shrink-0">{String(r.source || "Career pages")}</div>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+                      {r.salary_range ? (
+                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
+                          {r.salary_range}
+                        </span>
+                      ) : null}
+                      {r.location ? (
+                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
+                          {r.location}
+                        </span>
+                      ) : null}
+                      {typeof r.match_score === "number" ? (
+                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
+                          Match {Math.max(0, Math.min(100, Number(r.match_score || 0)))}%
+                        </span>
+                      ) : null}
+                    </div>
+                    {r.snippet ? (
+                      <p className="mt-2 text-xs text-white/60 line-clamp-3">{r.snippet}</p>
+                    ) : null}
+                    <div className="mt-3 flex items-center gap-3">
+                      <a
+                        href={r.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-300 underline hover:text-blue-200"
+                      >
+                        Open role link
+                      </a>
+                      <button
+                        type="button"
+                        className="text-xs text-white/80 underline hover:text-white"
+                        onClick={() => {
+                          setImportType("url");
+                          setImportUrl(String(r.url || ""));
+                        }}
+                      >
+                        Use URL in importer
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
 
           {jobDescriptions.length > 0 && (
             <div className="mt-8 flex justify-end space-x-4">
