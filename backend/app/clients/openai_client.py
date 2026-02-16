@@ -607,6 +607,7 @@ class OpenAIClient:
                     "- The snippet must be a standalone paragraph or few sentences that can be inserted into a larger email template later.\n"
                     "- Focus immediately on the value (offer, pain point, proof, or question).\n"
                     "- Do NOT use em dashes or en dashes. Use commas/parentheses or simple hyphens.\n"
+                    "- Do NOT use this exact phrase: \"I help teams ship outcomes\".\n"
                     "- Length: 2–4 sentences, roughly 60–110 words.\n"
                     "- If metric_1 is missing/empty, do NOT write \"achieving\" with nothing after it. Use a qualitative metric sentence instead.\n"
                 ),

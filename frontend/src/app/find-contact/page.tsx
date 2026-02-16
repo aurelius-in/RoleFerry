@@ -482,15 +482,13 @@ export default function FindContactPage() {
   };
 
   const buildDefaultDraft = (c: Contact): OutreachDraft => {
-    const jd = loadSelectedJob();
-    const m0 = loadPainpointMatch();
     const first = safeFirstName(c?.name || "");
-    // Prefer the CONTACT's company (this screen is about reaching out to them).
-    const company = formatCompanyName(String(c?.company || jd?.company || "your team").trim());
-    const jobTitle = String(jd?.title || "the role").trim();
-    const pain = String(m0?.painpoint_1 || "a key priority").trim();
+    const company = formatCompanyName(String(c?.company || "your team").trim());
+    const title = formatTitleCase(String(c?.title || "").trim());
+    const m0 = loadPainpointMatch();
     const sol = String(m0?.solution_1 || "").trim();
     const metric = String(m0?.metric_1 || "").trim();
+    const facts = getInterestingFactsForContact(String(c?.id || ""));
 
     const cleanPhrase = (s: string) => {
       let t = String(s || "").replace(/\s+/g, " ").trim();
@@ -502,71 +500,19 @@ export default function FindContactPage() {
       return t;
     };
 
-    const summarizePain = (raw: string) => {
-      let t = cleanPhrase(raw);
-      if (!t) return "";
-      const low = t.toLowerCase();
-      if (["a key priority", "key priority"].includes(low)) return "";
-
-      // If it's a long imperative responsibility line ("Define and implement ..."),
-      // drop common leading verbs so the phrase fits after "focus on".
-      const dropPrefixes = [
-        "define and implement ",
-        "design and implement ",
-        "build and implement ",
-        "develop and implement ",
-        "define and build ",
-        "design and build ",
-        "build ",
-        "develop ",
-        "define ",
-        "design ",
-        "implement ",
-        "lead ",
-        "own ",
-        "manage ",
-        "create ",
-        "drive ",
-      ];
-      for (const p of dropPrefixes) {
-        if (low.startsWith(p)) {
-          t = t.slice(p.length).trim();
-          break;
-        }
-      }
-
-      // Cap to a short phrase (LinkedIn note is only 200 chars).
-      return trimToChars(t, 70).replace(/\s*\.+\s*$/g, "").trim();
-    };
-
-    const withTheRole = (title: string) => {
-      const t = String(title || "").trim();
-      if (!t) return "the role";
-      const low = t.toLowerCase();
-      if (low.startsWith("the ")) return t;
-      if (low.endsWith(" role")) return `the ${t}`;
-      return `the ${t} role`;
-    };
-
-    const rolePhrase = withTheRole(jobTitle);
-    const painPhrase = summarizePain(pain);
     const solPhrase = cleanPhrase(sol);
     const metricPhrase = cleanPhrase(metric);
+    const factPhrase = cleanPhrase(String(facts?.[0]?.text || ""));
 
     const parts: string[] = [];
-    parts.push(`Hi ${first}, I’m exploring ${rolePhrase} at ${company}.`);
-    if (painPhrase) parts.push(`The focus on ${painPhrase} stood out.`);
-
-    const proofLong = `I’ve worked on similar problems (${solPhrase || "relevant work"}${metricPhrase ? `; ${metricPhrase}` : ""}).`;
-    const proofShort = "I’ve worked on similar problems in this area.";
-    // Only include the detailed proof if it comfortably fits; otherwise keep it generic.
-    const base = parts.join(" ");
-    const remaining = LINKEDIN_NOTE_LIMIT - (base.length + 1 /* space */ + "Open to connect?".length);
-    if (remaining >= proofLong.length + 1) {
-      parts.push(proofLong);
-    } else if (remaining >= proofShort.length + 1) {
-      parts.push(proofShort);
-    }
+    parts.push(`Hi ${first}, I reviewed your profile and wanted to connect.`);
+    if (title && company) parts.push(`Your work as ${title} at ${company} stood out.`);
+    else if (company) parts.push(`Your work at ${company} stood out.`);
+    if (factPhrase) parts.push(`I liked your perspective on ${trimToChars(factPhrase, 56)}.`);
+    if (solPhrase && metricPhrase) parts.push(`About me: ${trimToChars(solPhrase, 48)}, ${trimToChars(metricPhrase, 32)}.`);
+    else if (solPhrase) parts.push(`About me: ${trimToChars(solPhrase, 68)}.`);
+    else if (metricPhrase) parts.push(`About me: ${trimToChars(metricPhrase, 68)}.`);
+    else parts.push("About me: I enjoy building practical, measurable solutions.");
 
     parts.push("Open to connect?");
 

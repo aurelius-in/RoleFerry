@@ -70,6 +70,24 @@ function clampLines(s: string, maxChars: number) {
   return t.slice(0, maxChars).trim();
 }
 
+function normalizeNoEmDash(s: string) {
+  // Em/en dashes can read as "AI-generated". Prefer commas/colons.
+  return String(s || "")
+    .replace(/[—–]+/g, ", ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function metricLine(metric: any, value: any, context: any) {
+  const m = normalizeNoEmDash(String(metric || ""));
+  const v = normalizeNoEmDash(String(value || ""));
+  const c = normalizeNoEmDash(String(context || ""));
+  if (m && v && c) return `${m}: ${v}, ${c}`;
+  if (m && v) return `${m}: ${v}`;
+  if (m && c) return `${m}: ${c}`;
+  return m || v || c;
+}
+
 function buildSnippet(d: {
   one_liner: string;
   proof_points: string[];
@@ -128,15 +146,19 @@ export default function OfferPage() {
 
   function loadOfferToState(saved: OfferV1 | null) {
     if (saved?.version === 1) {
-      setOneLiner(String(saved.one_liner || ""));
-      setProofPoints(Array.isArray(saved.proof_points) && saved.proof_points.length ? saved.proof_points : ["", "", ""]);
+      setOneLiner(normalizeNoEmDash(String(saved.one_liner || "")));
+      setProofPoints(
+        Array.isArray(saved.proof_points) && saved.proof_points.length
+          ? saved.proof_points.map((p) => normalizeNoEmDash(String(p || "")))
+          : ["", "", ""]
+      );
       setCaseStudies(
         Array.isArray(saved.case_studies) && saved.case_studies.length
           ? saved.case_studies.slice(0, 2).map((c, idx) => ({
               title: String(c?.title || `Case study ${idx + 1}`),
-              problem: String(c?.problem || ""),
-              actions: String(c?.actions || ""),
-              impact: String(c?.impact || ""),
+              problem: normalizeNoEmDash(String(c?.problem || "")),
+              actions: normalizeNoEmDash(String(c?.actions || "")),
+              impact: normalizeNoEmDash(String(c?.impact || "")),
             }))
           : [
               { title: "Case study 1", problem: "", actions: "", impact: "" },
@@ -177,7 +199,7 @@ export default function OfferPage() {
     const km = Array.isArray(resume?.keyMetrics) ? resume.keyMetrics : [];
     const metricLines = km
       .slice(0, 2)
-      .map((m: any) => [m?.metric, m?.value, m?.context].filter(Boolean).join(" — "))
+      .map((m: any) => metricLine(m?.metric, m?.value, m?.context))
       .map((s: string) => clampLines(s, 140))
       .filter(Boolean);
     const pp3 = roleSkills.length ? `Relevant skills: ${roleSkills.slice(0, 3).join(", ")}.` : "";
@@ -226,14 +248,14 @@ export default function OfferPage() {
       const payload: OfferV1 = {
         version: 1,
         updated_at: nowIso(),
-        one_liner: String(oneLiner || "").trim(),
-        proof_points: (proofPoints || []).map((x) => String(x || "").trim()).filter(Boolean).slice(0, 6),
+        one_liner: normalizeNoEmDash(String(oneLiner || "").trim()),
+        proof_points: (proofPoints || []).map((x) => normalizeNoEmDash(String(x || "").trim())).filter(Boolean).slice(0, 6),
         case_studies: (caseStudies || [])
           .map((c) => ({
             title: String(c?.title || "").trim() || "Case study",
-            problem: String(c?.problem || "").trim(),
-            actions: String(c?.actions || "").trim(),
-            impact: String(c?.impact || "").trim(),
+            problem: normalizeNoEmDash(String(c?.problem || "").trim()),
+            actions: normalizeNoEmDash(String(c?.actions || "").trim()),
+            impact: normalizeNoEmDash(String(c?.impact || "").trim()),
           }))
           .filter((c) => c.problem || c.actions || c.impact)
           .slice(0, 2),
@@ -297,7 +319,7 @@ export default function OfferPage() {
     const km = Array.isArray(resume?.keyMetrics) ? resume.keyMetrics : [];
     return km
       .slice(0, 6)
-      .map((m: any) => [m?.metric, m?.value, m?.context].filter(Boolean).join(" — "))
+      .map((m: any) => metricLine(m?.metric, m?.value, m?.context))
       .map((s: string) => clampLines(s, 140))
       .filter(Boolean);
   }, [resume]);
@@ -321,14 +343,14 @@ export default function OfferPage() {
       const payload: OfferV1 = {
         version: 1,
         updated_at: nowIso(),
-        one_liner: String(oneLiner || "").trim(),
-        proof_points: (proofPoints || []).map((x) => String(x || "").trim()).filter(Boolean).slice(0, 6),
+        one_liner: normalizeNoEmDash(String(oneLiner || "").trim()),
+        proof_points: (proofPoints || []).map((x) => normalizeNoEmDash(String(x || "").trim())).filter(Boolean).slice(0, 6),
         case_studies: (caseStudies || [])
           .map((c) => ({
             title: String(c?.title || "").trim() || "Case study",
-            problem: String(c?.problem || "").trim(),
-            actions: String(c?.actions || "").trim(),
-            impact: String(c?.impact || "").trim(),
+            problem: normalizeNoEmDash(String(c?.problem || "").trim()),
+            actions: normalizeNoEmDash(String(c?.actions || "").trim()),
+            impact: normalizeNoEmDash(String(c?.impact || "").trim()),
           }))
           .filter((c) => c.problem || c.actions || c.impact)
           .slice(0, 2),
@@ -719,7 +741,7 @@ export default function OfferPage() {
               </div>
 
               <div className="rounded-lg border border-white/10 bg-black/20 p-5">
-                <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Credibility hooks (optional)</div>
+                <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Credibility / Trust Signal(s) (optional)</div>
                 <div className="flex items-center gap-2">
                   <input
                     value={credInput}
@@ -767,7 +789,7 @@ export default function OfferPage() {
               </div>
 
               <div className="rounded-lg border border-white/10 bg-black/20 p-5">
-                <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Default CTA</div>
+                <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Default Call-to-Action (CTA)</div>
                 <input
                   value={defaultCta}
                   onChange={(e) => setDefaultCta(e.target.value)}

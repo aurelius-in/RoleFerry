@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 import csv
 import io
 import re
+import html
 
 from ..auth import get_current_user_optional
 from ..clients.openai_client import get_openai_client, extract_json_from_text, _strip_fluff_openers
@@ -128,10 +129,15 @@ class PersistedCampaignRowUpsertRequest(BaseModel):
     rows: List[Dict[str, Any]]
 
 
-def _require_user(user: Any) -> Any:
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return user
+def _resolve_user_id(user: Any) -> str:
+    """
+    Campaign persistence supports both authenticated and demo/anon sessions.
+    """
+    try:
+        uid = str(getattr(user, "id", "") or "").strip()
+        return uid or "anon"
+    except Exception:
+        return "anon"
 
 
 @router.get("/campaigns")
@@ -139,7 +145,7 @@ async def list_persisted_campaigns(http_request: Request):
     """
     List persisted campaigns for the current user (Postgres).
     """
-    user = _require_user(await get_current_user_optional(http_request))
+    user_id = _resolve_user_id(await get_current_user_optional(http_request))
     async with engine.begin() as conn:
         res = await conn.execute(
             sql_text(
@@ -151,7 +157,7 @@ async def list_persisted_campaigns(http_request: Request):
                 LIMIT 50
                 """
             ),
-            {"user_id": str(user.id)},
+            {"user_id": user_id},
         )
         items = [dict(r._mapping) for r in res.fetchall()]
         return {"campaigns": items}
@@ -159,7 +165,7 @@ async def list_persisted_campaigns(http_request: Request):
 
 @router.post("/campaigns")
 async def create_persisted_campaign(payload: PersistedCampaignCreateRequest, http_request: Request):
-    user = _require_user(await get_current_user_optional(http_request))
+    user_id = _resolve_user_id(await get_current_user_optional(http_request))
     name = str(payload.name or "").strip()
     status = str(payload.status or "draft").strip() or "draft"
     meta = payload.meta or {}
@@ -172,7 +178,7 @@ async def create_persisted_campaign(payload: PersistedCampaignCreateRequest, htt
                 RETURNING id::text, user_id, name, status, meta, created_at, updated_at
                 """
             ),
-            {"user_id": str(user.id), "name": name, "status": status, "meta": meta},
+            {"user_id": user_id, "name": name, "status": status, "meta": meta},
         )
         row = res.first()
         return {"campaign": dict(row._mapping) if row else None}
@@ -180,7 +186,7 @@ async def create_persisted_campaign(payload: PersistedCampaignCreateRequest, htt
 
 @router.patch("/campaigns/{campaign_id}")
 async def update_persisted_campaign(campaign_id: str, payload: PersistedCampaignUpdateRequest, http_request: Request):
-    user = _require_user(await get_current_user_optional(http_request))
+    user_id = _resolve_user_id(await get_current_user_optional(http_request))
     cid = str(campaign_id or "").strip()
     if not cid:
         raise HTTPException(status_code=400, detail="campaign_id is required")
@@ -201,7 +207,7 @@ async def update_persisted_campaign(campaign_id: str, payload: PersistedCampaign
                 RETURNING id::text, user_id, name, status, meta, created_at, updated_at
                 """
             ),
-            {"id": cid, "user_id": str(user.id), "name": name, "status": status, "meta": meta},
+            {"id": cid, "user_id": user_id, "name": name, "status": status, "meta": meta},
         )
         row = res.first()
         if not row:
@@ -211,7 +217,7 @@ async def update_persisted_campaign(campaign_id: str, payload: PersistedCampaign
 
 @router.get("/campaigns/{campaign_id}")
 async def get_persisted_campaign(campaign_id: str, http_request: Request):
-    user = _require_user(await get_current_user_optional(http_request))
+    user_id = _resolve_user_id(await get_current_user_optional(http_request))
     cid = str(campaign_id or "").strip()
     if not cid:
         raise HTTPException(status_code=400, detail="campaign_id is required")
@@ -225,7 +231,7 @@ async def get_persisted_campaign(campaign_id: str, http_request: Request):
                 LIMIT 1
                 """
             ),
-            {"id": cid, "user_id": str(user.id)},
+            {"id": cid, "user_id": user_id},
         )
         camp = res.first()
         if not camp:
@@ -262,7 +268,7 @@ async def get_persisted_campaign(campaign_id: str, http_request: Request):
                 ORDER BY created_at ASC
                 """
             ),
-            {"id": cid, "user_id": str(user.id)},
+            {"id": cid, "user_id": user_id},
         )
         rows = [dict(r._mapping) for r in res_rows.fetchall()]
         return {"campaign": dict(camp._mapping), "rows": rows}
@@ -310,7 +316,7 @@ def _row_params_from_dict(raw: Dict[str, Any]) -> Dict[str, Any]:
 @router.post("/campaigns/{campaign_id}/rows:upsert")
 @router.post("/campaigns/{campaign_id}/rows/upsert")
 async def upsert_campaign_rows(campaign_id: str, payload: PersistedCampaignRowUpsertRequest, http_request: Request):
-    user = _require_user(await get_current_user_optional(http_request))
+    user_id = _resolve_user_id(await get_current_user_optional(http_request))
     cid = str(campaign_id or "").strip()
     if not cid:
         raise HTTPException(status_code=400, detail="campaign_id is required")
@@ -324,7 +330,7 @@ async def upsert_campaign_rows(campaign_id: str, payload: PersistedCampaignRowUp
         # Validate campaign ownership first
         camp = await conn.execute(
             sql_text("SELECT 1 FROM campaign WHERE id = :id::uuid AND user_id = :user_id LIMIT 1"),
-            {"id": cid, "user_id": str(user.id)},
+            {"id": cid, "user_id": user_id},
         )
         if not camp.first():
             raise HTTPException(status_code=404, detail="Campaign not found")
@@ -333,7 +339,7 @@ async def upsert_campaign_rows(campaign_id: str, payload: PersistedCampaignRowUp
             raw = r if isinstance(r, dict) else {}
             rid = str(raw.get("id") or "").strip()
             params = _row_params_from_dict(raw)
-            params_base = {"campaign_id": cid, "user_id": str(user.id), **params}
+            params_base = {"campaign_id": cid, "user_id": user_id, **params}
 
             if rid:
                 res = await conn.execute(
@@ -437,7 +443,7 @@ async def export_campaign_csv(campaign_id: str, http_request: Request):
     Export persisted campaign rows as a CSV shaped like example_campaign_spreadsheet.csv
     (plus the ability to expand later).
     """
-    user = _require_user(await get_current_user_optional(http_request))
+    user_id = _resolve_user_id(await get_current_user_optional(http_request))
     cid = str(campaign_id or "").strip()
     if not cid:
         raise HTTPException(status_code=400, detail="campaign_id is required")
@@ -467,7 +473,7 @@ async def export_campaign_csv(campaign_id: str, http_request: Request):
                 ORDER BY created_at ASC
                 """
             ),
-            {"id": cid, "user_id": str(user.id)},
+            {"id": cid, "user_id": user_id},
         )
         rows = [dict(r._mapping) for r in res.fetchall()]
 
@@ -529,7 +535,7 @@ async def generate_email_for_campaign_row(
     payload: CampaignRowGenerateEmailRequest,
     http_request: Request,
 ):
-    user = _require_user(await get_current_user_optional(http_request))
+    user_id = _resolve_user_id(await get_current_user_optional(http_request))
     cid = str(campaign_id or "").strip()
     rid = str(row_id or "").strip()
     if not cid or not rid:
@@ -564,7 +570,7 @@ async def generate_email_for_campaign_row(
                 LIMIT 1
                 """
             ),
-            {"rid": rid, "cid": cid, "user_id": str(user.id)},
+            {"rid": rid, "cid": cid, "user_id": user_id},
         )
         row = res.first()
         if not row:
@@ -585,7 +591,7 @@ async def generate_email_for_campaign_row(
                 WHERE id = :rid::uuid AND campaign_id = :cid::uuid AND user_id = :user_id
                 """
             ),
-            {"emails": existing, "rid": rid, "cid": cid, "user_id": str(user.id)},
+            {"emails": existing, "rid": rid, "cid": cid, "user_id": user_id},
         )
 
     return result
@@ -697,19 +703,18 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             raw = str(msg_body or "").rstrip()
             if not raw:
                 return raw
-
-        sig_lines = [sender.full_name]
-        if _sig_bool("include_phone", True) and sender.phone:
-            sig_lines.append(sender.phone)
-        if _sig_bool("include_email", True) and sender.email:
-            sig_lines.append(sender.email)
-        if _sig_bool("include_bio_link", True) and bio_for_sig:
-            sig_lines.append(bio_for_sig)
-        if _sig_bool("include_linkedin", True) and sender.linkedin_url:
-            sig_lines.append(sender.linkedin_url)
-        other = _sig_str("other_link_url")
-        if _sig_bool("include_other_link", False) and other:
-            sig_lines.append(other)
+            sig_lines = [sender.full_name]
+            if _sig_bool("include_phone", True) and sender.phone:
+                sig_lines.append(sender.phone)
+            if _sig_bool("include_email", True) and sender.email:
+                sig_lines.append(sender.email)
+            if _sig_bool("include_bio_link", True) and bio_for_sig:
+                sig_lines.append(bio_for_sig)
+            if _sig_bool("include_linkedin", True) and sender.linkedin_url:
+                sig_lines.append(sender.linkedin_url)
+            other = _sig_str("other_link_url")
+            if _sig_bool("include_other_link", False) and other:
+                sig_lines.append(other)
             sig_lines = [str(x).strip() for x in sig_lines if str(x).strip()]
             if not sig_lines:
                 return raw
@@ -736,7 +741,8 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
 
             # If no direct hit, allow "closing + name" pattern.
             if hit_idx is None and sender.full_name:
-                sender_first = str(sender.full_name).strip().split(" ")[0].lower()
+                sender_full = str(sender.full_name or "").strip().lower()
+                sender_first = sender_full.split(" ")[0] if sender_full else ""
                 closing_tokens = {
                     "best",
                     "best,",
@@ -758,7 +764,7 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
                             nm = tail_norm[j]
                             if not nm:
                                 continue
-                            if nm == sender.full_name.lower() or (sender_first and nm == sender_first):
+                            if nm == sender_full or (sender_first and nm == sender_first):
                                 hit_idx = i
                                 break
                     if hit_idx is not None:
@@ -781,6 +787,21 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
 
         def _no_em_dashes(s: str) -> str:
             return str(s or "").replace("—", "-").replace("–", "-")
+
+        def _normalize_message_text(s: str) -> str:
+            """
+            Remove HTML entities/non-breaking spaces so raw markup never leaks
+            into user-visible message text.
+            """
+            t = str(s or "")
+            # Handle malformed entity variants first, then unescape standard HTML entities.
+            t = re.sub(r"&nbsp;?", " ", t, flags=re.I)
+            t = html.unescape(t)
+            t = t.replace("\u00A0", " ")
+            t = t.replace("\r\n", "\n").replace("\r", "\n")
+            t = re.sub(r"[ \t]+\n", "\n", t)
+            t = re.sub(r"\n{3,}", "\n\n", t)
+            return t.strip()
 
         def _tone_guardrails(t: str) -> str:
             """
@@ -921,8 +942,8 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             return CampaignGenerateStepResponse(
                 success=True,
                 message="Generated (deterministic fallback)",
-                subject=_no_em_dashes(subj),
-                body=_no_em_dashes(body),
+                subject=_normalize_message_text(_no_em_dashes(subj)),
+                body=_normalize_message_text(_no_em_dashes(body)),
                 helper={"used_llm": False},
             )
 
@@ -1005,6 +1026,8 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
         body = _append_signature(body_core)
         body = _no_em_dashes(body)
         subject = _no_em_dashes(subject)
+        body = _normalize_message_text(body)
+        subject = _normalize_message_text(subject)
 
         # Basic sanity: avoid accidental over-long subjects.
         subject = re.sub(r"\s+", " ", subject).strip()[:140]

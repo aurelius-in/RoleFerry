@@ -84,10 +84,13 @@ export default function BioPageStep() {
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [userDisplayName, setUserDisplayName] = useState<string>("");
   const [jobPrefs, setJobPrefs] = useState<any>(null);
-  const openPublicPage = (url: string): Window | null => {
+  const openPublicPage = (url: string, opts?: { preserveHandle?: boolean }): Window | null => {
     const u = safeStr(url);
     if (!u) return null;
     try {
+      // For about:blank placeholders we need a live handle so we can navigate it later.
+      // Some browsers return null handles when noopener/noreferrer is used.
+      if (opts?.preserveHandle) return window.open(u, "_blank");
       return window.open(u, "_blank", "noopener,noreferrer");
     } catch {}
     return null;
@@ -529,7 +532,14 @@ export default function BioPageStep() {
   const ensureOpenPublicPage = async () => {
     // IMPORTANT: open a window synchronously so popup blockers don't prevent it.
     // We'll navigate it once we know the final URL (after validation/publish).
-    const win = openPublicPage("about:blank");
+    const win = openPublicPage("about:blank", { preserveHandle: true });
+    try {
+      if (win && !win.closed) {
+        win.document.title = "Opening public page…";
+        win.document.body.innerHTML =
+          '<div style="font-family: Arial, sans-serif; padding: 24px; color: #111;">Opening public page…</div>';
+      }
+    } catch {}
     const navigate = (rawUrl: string) => {
       const u = safeStr(rawUrl);
       if (!u) return;
@@ -555,6 +565,11 @@ export default function BioPageStep() {
     // republish to get a fresh slug, then open the new URL.
     const existingUrl = safeStr(bioUrl || localStorage.getItem(BIO_URL_KEY));
     const existingSlug = existingUrl ? extractBioSlug(existingUrl) : null;
+    if (existingUrl && !existingSlug) {
+      // If URL doesn't match /bio/:slug, still try opening it directly rather than forcing republish.
+      navigate(existingUrl);
+      return;
+    }
     if (existingUrl && existingSlug) {
       const ok = await validatePublishedSlug(existingSlug);
       if (ok) {
@@ -578,6 +593,7 @@ export default function BioPageStep() {
     try {
       if (win && !win.closed) win.close();
     } catch {}
+    setMsg("Could not open public page. Please click Publish bio page first, then try again.");
   };
 
   const copyLink = async () => {
@@ -1027,65 +1043,77 @@ export default function BioPageStep() {
 
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
               <div className="text-sm font-bold">Record your video (free tools)</div>
-              <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div className="mt-2 space-y-2">
                 <div className="rounded-lg border border-white/10 bg-black/20 p-3">
-                  <div className="text-xs font-bold text-white">OBS Studio</div>
-                  <div className="text-xs text-white/60 mt-1">
-                    Best quality + control. Great if you want a clean, repeatable setup.
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                    <div className="md:col-span-3">
+                      <div className="text-xs font-bold text-white">OBS Studio</div>
+                      <div className="text-xs text-white/60 mt-1">
+                        Best quality + control. Great if you want a clean, repeatable setup.
+                      </div>
+                      <a
+                        href="https://obsproject.com/download"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 inline-flex text-xs font-semibold text-sky-200 hover:text-sky-100 underline"
+                      >
+                        Download OBS
+                      </a>
+                    </div>
+                    <ul className="md:col-span-9 text-[11px] text-white/60 space-y-1 list-disc list-inside">
+                      <li>Scene: add “Video Capture Device” (camera) + “Audio Input Capture” (mic).</li>
+                      <li>Start Recording → talk through the script.</li>
+                      <li>Stop Recording → upload the saved MP4 here.</li>
+                    </ul>
                   </div>
-                  <a
-                    href="https://obsproject.com/download"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 inline-flex text-xs font-semibold text-sky-200 hover:text-sky-100 underline"
-                  >
-                    Download OBS
-                  </a>
-                  <ul className="mt-2 text-[11px] text-white/60 space-y-1 list-disc list-inside">
-                    <li>Scene: add “Video Capture Device” (camera) + “Audio Input Capture” (mic).</li>
-                    <li>Start Recording → talk through the script.</li>
-                    <li>Stop Recording → upload the saved MP4 here.</li>
-                  </ul>
                 </div>
 
                 <div className="rounded-lg border border-white/10 bg-black/20 p-3">
-                  <div className="text-xs font-bold text-white">Loom</div>
-                  <div className="text-xs text-white/60 mt-1">
-                    Fastest: record + get a share link immediately.
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                    <div className="md:col-span-3">
+                      <div className="text-xs font-bold text-white">Loom</div>
+                      <div className="text-xs text-white/60 mt-1">
+                        Fastest: record + get a share link immediately.
+                      </div>
+                      <a
+                        href="https://www.loom.com/download"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 inline-flex text-xs font-semibold text-sky-200 hover:text-sky-100 underline"
+                      >
+                        Download Loom
+                      </a>
+                    </div>
+                    <ul className="md:col-span-9 text-[11px] text-white/60 space-y-1 list-disc list-inside">
+                      <li>Record “Camera only” (or camera + screen).</li>
+                      <li>Keep it under 1 minute.</li>
+                      <li>Paste the Loom share URL into “Video URL”.</li>
+                    </ul>
                   </div>
-                  <a
-                    href="https://www.loom.com/download"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 inline-flex text-xs font-semibold text-sky-200 hover:text-sky-100 underline"
-                  >
-                    Download Loom
-                  </a>
-                  <ul className="mt-2 text-[11px] text-white/60 space-y-1 list-disc list-inside">
-                    <li>Record “Camera only” (or camera + screen).</li>
-                    <li>Keep it under 1 minute.</li>
-                    <li>Paste the Loom share URL into “Video URL”.</li>
-                  </ul>
                 </div>
 
                 <div className="rounded-lg border border-white/10 bg-black/20 p-3">
-                  <div className="text-xs font-bold text-white">Zoom</div>
-                  <div className="text-xs text-white/60 mt-1">
-                    Simple fallback if you already have it installed.
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                    <div className="md:col-span-3">
+                      <div className="text-xs font-bold text-white">Zoom</div>
+                      <div className="text-xs text-white/60 mt-1">
+                        Simple fallback if you already have it installed.
+                      </div>
+                      <a
+                        href="https://zoom.us/download"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 inline-flex text-xs font-semibold text-sky-200 hover:text-sky-100 underline"
+                      >
+                        Download Zoom
+                      </a>
+                    </div>
+                    <ul className="md:col-span-9 text-[11px] text-white/60 space-y-1 list-disc list-inside">
+                      <li>Start a new meeting (solo).</li>
+                      <li>More → Record on this computer.</li>
+                      <li>Use the MP4 output and upload it here.</li>
+                    </ul>
                   </div>
-                  <a
-                    href="https://zoom.us/download"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 inline-flex text-xs font-semibold text-sky-200 hover:text-sky-100 underline"
-                  >
-                    Download Zoom
-                  </a>
-                  <ul className="mt-2 text-[11px] text-white/60 space-y-1 list-disc list-inside">
-                    <li>Start a new meeting (solo).</li>
-                    <li>More → Record on this computer.</li>
-                    <li>Use the MP4 output and upload it here.</li>
-                  </ul>
                 </div>
               </div>
             </div>

@@ -104,6 +104,16 @@ function safeJson<T>(raw: string | null, fallback: T): T {
   }
 }
 
+function cleanMessageText(v: any): string {
+  return String(v ?? "")
+    .replace(/&nbsp;?/gi, " ")
+    .replace(/&#160;?/gi, " ")
+    .replace(/\u00a0/g, " ")
+    .replace(/\r\n/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .trim();
+}
+
 function firstName(full: string) {
   const s = String(full || "").trim();
   if (!s) return "there";
@@ -165,7 +175,7 @@ function defaultInstructions(step: 1 | 2 | 3 | 4) {
   return [
     "Final follow-up: get their attention with something unexpected/off-the-wall.",
     "Do NOT rehash the whole story. Keep it very short (2-5 sentences).",
-    "Be provocative in a playful way (workplace-safe). No insults, no sexual content, no threats.",
+    "Be very provocative in a very playful way.",
     "End with an easy yes/no question.",
   ].join("\n");
 }
@@ -441,8 +451,8 @@ export default function CampaignV2() {
 
       if (!res?.success) throw new Error(res?.message || "Failed to generate email");
       updateStep(cid, step.id, {
-        subject: String(res.subject || "").trim(),
-        body: String(res.body || "").trim(),
+        subject: cleanMessageText(res.subject || ""),
+        body: cleanMessageText(res.body || ""),
         last_generated_at: nowIso(),
       });
     } catch (e: any) {
@@ -486,8 +496,8 @@ export default function CampaignV2() {
           if (n < 1 || n > 4) continue;
           emailsObj.emails[`email_${n}`] = {
             email_number: n,
-            subject: String(e?.subject || "").trim(),
-            body: String(e?.body || "").trim(),
+            subject: cleanMessageText(e?.subject || ""),
+            body: cleanMessageText(e?.body || ""),
             tone: String(e?.tone || "").trim(),
             custom_tone: String(e?.custom_tone || "").trim(),
             special_instructions: String(e?.special_instructions || "").trim(),
@@ -613,8 +623,8 @@ export default function CampaignV2() {
             if (!hit) return e;
             return {
               ...e,
-              subject: String(hit?.subject || e.subject || "").trim(),
-              body: String(hit?.body || e.body || "").trim(),
+              subject: cleanMessageText(hit?.subject || e.subject || ""),
+              body: cleanMessageText(hit?.body || e.body || ""),
               tone: (String(hit?.tone || e.tone || "manager").trim() as any) || e.tone,
               custom_tone: String(hit?.custom_tone || "").trim() || e.custom_tone,
               special_instructions: String(hit?.special_instructions || "").trim() || e.special_instructions,
