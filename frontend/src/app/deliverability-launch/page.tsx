@@ -63,6 +63,16 @@ interface WarmupPlan {
 
 type OutreachChannel = "email" | "linkedin";
 
+function cleanMessageText(v: any): string {
+  return String(v ?? "")
+    .replace(/&nbsp;?/gi, " ")
+    .replace(/&#160;?/gi, " ")
+    .replace(/\u00a0/g, " ")
+    .replace(/\r\n/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .trim();
+}
+
 export default function DeliverabilityLaunchPage() {
   const router = useRouter();
   const [mode, setMode] = useState<'job-seeker' | 'recruiter'>('job-seeker');
@@ -113,8 +123,8 @@ export default function DeliverabilityLaunchPage() {
     if (!campaign || !deliverabilityCheck) return;
     const report = deliverabilityCheck.reports.find((r) => r.step_number === stepNumber);
     if (!report) return;
-    const improvedSubject = String(report.improved_subject || "").trim();
-    const improvedBody = String(report.improved_body || "").trim();
+    const improvedSubject = cleanMessageText(report.improved_subject || "");
+    const improvedBody = cleanMessageText(report.improved_body || "");
     if (!improvedSubject && !improvedBody) return;
 
     const emails = Array.isArray(campaign?.emails) ? campaign.emails : [];
@@ -269,34 +279,24 @@ export default function DeliverabilityLaunchPage() {
     const name = String(c?.name || "").trim();
     const first = name ? name.split(" ")[0] : "there";
     const company = formatCompanyName(String(c?.company || "").trim());
-    const jd = (() => {
-      try { return JSON.parse(localStorage.getItem("selected_job_description") || "null"); } catch { return null; }
-    })();
-    const jobTitle = String(jd?.title || "a role").trim();
-    const pain = readPainpoint();
+    const title = String(c?.title || "").trim();
     const offer = readOfferSnippet();
     const r = readResearchForContact(String(c?.id || "")) || {};
-    const hook = String(r?.recent_news?.[0]?.summary || "").replace(/\s+/g, " ").trim();
+    const bio = Array.isArray(r?.contact_bios) ? r.contact_bios[0] : null;
+    const fact =
+      String((bio as any)?.interesting_facts?.[0]?.fact || (bio as any)?.post_topics?.[0] || "").replace(/\s+/g, " ").trim();
 
-    // Prefer: personal + 1 line value + tiny CTA
+    // Prefer: profile reference + 1-2 about-me details + tiny CTA
     const pieces: string[] = [];
     // Avoid em-dashes; they can read as "AI-written" in LinkedIn notes.
     pieces.push(`Hi ${first},`);
-    if (company) pieces.push(`I’m exploring ${jobTitle} at ${company}.`);
-    else pieces.push(`I’m exploring ${jobTitle}.`);
+    pieces.push("I reviewed your profile and wanted to connect.");
+    if (title && company) pieces.push(`Your work as ${title} at ${company} stood out.`);
+    else if (company) pieces.push(`Your work at ${company} stood out.`);
 
-    const valueLine =
-      offer
-        ? `I have a quick idea: ${offer}`
-        : pain
-          ? `Quick thought on ${pain}.`
-          : "";
-    if (valueLine) pieces.push(valueLine);
-    if (hook && hook.length >= 40) {
-      // Only include if it’s short enough to be meaningful in a note.
-      const shortHook = hook.length > 90 ? hook.slice(0, 90).trim() + "…" : hook;
-      pieces.push(`Also saw: ${shortHook}`);
-    }
+    if (fact) pieces.push(`I liked your perspective on ${fact.length > 70 ? fact.slice(0, 70).trim() + "…" : fact}.`);
+    if (offer) pieces.push(`About me: ${offer.length > 85 ? offer.slice(0, 85).trim() + "…" : offer}`);
+    else pieces.push("About me: I enjoy building practical, measurable solutions.");
     pieces.push("Open to connect?");
 
     let note = pieces.join(" ").replace(/\s+/g, " ").trim();
@@ -319,11 +319,6 @@ export default function DeliverabilityLaunchPage() {
       // Always attempt an LLM polish pass (with deterministic fallback on failure).
       const polishedById: Record<string, string> = { ...draftsById };
       try {
-        const jd = (() => {
-          try { return JSON.parse(localStorage.getItem("selected_job_description") || "null"); } catch { return null; }
-        })();
-        const jobTitle = String(jd?.title || "").trim();
-        const painpoint = readPainpoint();
         const solution = readOfferSnippet();
 
         await Promise.all(
@@ -337,8 +332,6 @@ export default function DeliverabilityLaunchPage() {
               contact_name: String(c?.name || "").trim() || undefined,
               contact_title: String(c?.title || "").trim() || undefined,
               contact_company: String(c?.company || "").trim() || undefined,
-              job_title: jobTitle || undefined,
-              painpoint: painpoint || undefined,
               solution: solution || undefined,
               limit: 280,
             });
@@ -427,7 +420,11 @@ export default function DeliverabilityLaunchPage() {
     // Always append a random 3-digit suffix to avoid accidental duplicates across very similar runs.
     // Keep it stable if we already have a generated name stored on the campaign object.
     const existingName = String(campaign?.name || "").trim();
+    const isLegacyPerContactName = (s: string) => /^sequence\s+for\s+/i.test(String(s || "").trim());
     const campaignName = (() => {
+      if (isLegacyPerContactName(existingName)) {
+        return baseSlug ? `${baseSlug}_${random3()}` : `campaign_${random3()}`;
+      }
       if (!baseSlug) {
         return existingName || `campaign_${random3()}`;
       }
@@ -506,7 +503,8 @@ export default function DeliverabilityLaunchPage() {
       const { campaignName, baseSlug } = computeCampaignSummary();
       const cur = String(campaign?.name || "").trim();
       if (!campaignName) return;
-      if (!cur || (baseSlug && cur === baseSlug)) {
+      const isLegacyPerContactName = (s: string) => /^sequence\s+for\s+/i.test(String(s || "").trim());
+      if (!cur || isLegacyPerContactName(cur) || (baseSlug && cur === baseSlug)) {
         const nextCampaign = { ...(campaign || {}), name: campaignName, updated_at: new Date().toISOString() };
         setCampaign(nextCampaign);
         localStorage.setItem("campaign_data", JSON.stringify(nextCampaign));
@@ -599,8 +597,8 @@ export default function DeliverabilityLaunchPage() {
                 out.push({
                   id: `${String(r?.id || contactIdForRow(r) || "row")}_e${n}`,
                   step_number: n,
-                  subject: String(hit?.subject || "").trim(),
-                  body: String(hit?.body || "").trim(),
+                  subject: cleanMessageText(hit?.subject || ""),
+                  body: cleanMessageText(hit?.body || ""),
                   delay_days: delaysByN[n] ?? 0,
                   stop_on_reply: true,
                 });
@@ -890,8 +888,8 @@ export default function DeliverabilityLaunchPage() {
           if (!cid) continue;
           const seq = campaignByContactV2?.[cid];
           const e1 = Array.isArray(seq?.emails) ? seq.emails.find((e: any) => Number(e?.step_number) === 1) : null;
-          const subject = String(e1?.subject || "").trim();
-          const body = String(e1?.body || "").trim();
+          const subject = cleanMessageText(e1?.subject || "");
+          const body = cleanMessageText(e1?.body || "");
           if (subject || body) primaryByContactId[cid] = { subject, body };
         }
       } catch {}
@@ -1340,7 +1338,7 @@ export default function DeliverabilityLaunchPage() {
                     <div>
                       <h2 className="text-xl font-semibold text-white">LinkedIn connection request notes</h2>
                       <p className="mt-1 text-sm text-white/70">
-                        These are short, copy-ready notes for connection requests. They use your existing role context, offer, and saved research (when available).
+                        These are short, copy-ready notes for connection requests. They focus on profile-based personalization plus 2-3 quick details about you.
                       </p>
                     </div>
                     <button

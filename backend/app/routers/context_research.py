@@ -7,7 +7,7 @@ import time
 import hashlib
 import os
 import httpx
-from urllib.parse import quote as _urlquote
+from urllib.parse import quote as _urlquote, urlparse
 import xml.etree.ElementTree as ET
 
 router = APIRouter()
@@ -20,7 +20,15 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Bump this when changing prompting/logic so cached results don't mask improvements.
-_PROMPT_VERSION = "2026-02-09-company-signals-serper-fallback-v1"
+_PROMPT_VERSION = "2026-02-15-news-relevance-filter-v5"
+
+
+def _strip_likely_language(s: str) -> str:
+    t = str(s or "")
+    t = re.sub(r"\blikely\b", "", t, flags=re.I)
+    t = re.sub(r"\s{2,}", " ", t)
+    t = re.sub(r":\s*\n", ":\n", t)
+    return t.strip()
 
 # PDL can be expensive; default OFF unless explicitly enabled.
 _ENABLE_PDL = str(os.getenv("ROLEFERRY_ENABLE_PDL", "false")).lower() == "true"
@@ -229,6 +237,67 @@ def _best_linkedin_from_hits(hits: Any) -> str:
         return ""
     return ""
 
+
+def _domain_from_url(u: str) -> str:
+    try:
+        host = (urlparse(str(u or "")).hostname or "").strip().lower()
+        if host.startswith("www."):
+            host = host[4:]
+        return host
+    except Exception:
+        return ""
+
+
+def _is_company_relevant_hit(company_name: str, hit: Dict[str, Any], *, company_domain: str = "") -> bool:
+    """
+    Keep only business/news hits that appear to reference the target company.
+    This helps avoid ambiguous-name noise (e.g., NASA Galileo mission).
+    """
+    title = str((hit or {}).get("title") or "").strip()
+    snippet = str((hit or {}).get("snippet") or "").strip()
+    link = str((hit or {}).get("link") or (hit or {}).get("url") or "").strip()
+    if not (title and link):
+        return False
+
+    text = f"{title} {snippet} {link}".lower()
+    domain = _domain_from_url(link)
+    target_domain = _domain_from_url(company_domain)
+    if target_domain and (domain == target_domain or domain.endswith("." + target_domain)):
+        return True
+
+    company = str(company_name or "").strip().lower()
+    company_tokens = [t for t in re.findall(r"[a-z0-9]{3,}", company) if t not in {"inc", "llc", "ltd", "co", "corp", "the"}]
+    token_hits = sum(1 for t in company_tokens if t in text)
+    if token_hits == 0:
+        return False
+
+    # Hard negatives for common ambiguous-name collisions.
+    space_noise = {
+        "nasa", "spacecraft", "astronomy", "europa", "jupiter", "saturn",
+        "orbiter", "planetary", "mission", "hubble", "rover", "cosmos",
+    }
+    if any(n in text for n in space_noise):
+        business_counter_signals = {
+            "company", "ceo", "cto", "cfo", "press release", "funding", "acquisition",
+            "partnership", "product", "launch", "customers", "revenue", "hiring",
+            "career", "fintech", "banking", "payment", "debit", "credit",
+            "prnewswire", "businesswire", "techcrunch", "forbes", "bloomberg",
+        }
+        if not any(b in text for b in business_counter_signals):
+            return False
+
+    # For one-word company names, require business context unless domain match already passed.
+    if len(company_tokens) <= 1:
+        business_terms = {
+            "company", "business", "ceo", "press release", "funding", "acquisition",
+            "partnership", "product", "platform", "customers", "hiring",
+            "fintech", "banking", "payment", "debit", "credit", "startup",
+        }
+        if not any(b in text for b in business_terms):
+            return False
+
+    return True
+
 def _cache_key(payload: Dict[str, Any]) -> str:
     try:
         s = json.dumps(payload, sort_keys=True, ensure_ascii=True)
@@ -419,6 +488,26 @@ async def conduct_research(request: ResearchRequest):
         data_mode = str(request.data_mode or "").strip().lower() or "demo"
         want_live = data_mode == "live"
 
+        # Build contacts early because live research paths use them.
+        contacts: List[SelectedContact] = []
+        if request.contacts:
+            contacts = request.contacts
+        else:
+            for cid in request.contact_ids:
+                contacts.append(
+                    SelectedContact(
+                        id=cid,
+                        name=f"Contact {cid}",
+                        title="Decision Maker",
+                        company=company,
+                    )
+                )
+
+        # Derive primary company web/link hints once so all branches can reuse safely.
+        website_guess = contact_company_websites[0] if contact_company_websites else ""
+        linkedin_guess = contact_company_linkedin[0] if contact_company_linkedin else ""
+        company_domain_guess = _domain_from_url(website_guess)
+
         # Web snippets via Serper (best effort). We keep a small query budget so this stays fast.
         # We gather a richer corpus and let GPT decide which headings have enough signal.
         serper_hits: List[Dict[str, Any]] = []
@@ -434,18 +523,7 @@ async def conduct_research(request: ResearchRequest):
 
         if want_live and settings.serper_api_key:
             # Derive a likely company domain for site-restricted searches (press/blog/newsroom).
-            def _domain_from_url(u: str) -> str:
-                try:
-                    from urllib.parse import urlparse
-                    host = (urlparse(u).hostname or "").strip().lower()
-                    if host.startswith("www."):
-                        host = host[4:]
-                    return host
-                except Exception:
-                    return ""
-
-            website_guess = contact_company_websites[0] if contact_company_websites else ""
-            domain_guess = _domain_from_url(website_guess)
+            domain_guess = company_domain_guess
 
             def _gather(queries: List[str], *, per_query: int = 6, cap: int = 12) -> List[Dict[str, Any]]:
                 """
@@ -474,10 +552,10 @@ async def conduct_research(request: ResearchRequest):
             company_queries: Dict[str, List[str]] = {
                 "overview": [f"{scope_target} company overview what they do", f"{scope_target} website"],
                 "news": [
-                    f"{scope_target} recent news",
-                    f"{scope_target} press release",
-                    f"site:prnewswire.com {scope_target}",
-                    f"site:businesswire.com {scope_target}",
+                    f"\"{scope_target}\" company recent news",
+                    f"\"{scope_target}\" company press release",
+                    f"site:prnewswire.com \"{scope_target}\" company",
+                    f"site:businesswire.com \"{scope_target}\" company",
                 ],
                 "funding": [
                     f"{scope_target} funding investors valuation",
@@ -531,7 +609,10 @@ async def conduct_research(request: ResearchRequest):
                 if k == "overview":
                     company_serper_by_topic[k] = serper_hits
                     continue
-                company_serper_by_topic[k] = _gather(qs, per_query=6, cap=12)
+                hits_k = _gather(qs, per_query=6, cap=12)
+                if k == "news":
+                    hits_k = [h for h in hits_k if _is_company_relevant_hit(scope_target, h, company_domain=domain_guess)]
+                company_serper_by_topic[k] = hits_k
 
             # Contacts: per-contact facets (keep bounded)
             max_contacts = 8
@@ -600,7 +681,32 @@ async def conduct_research(request: ResearchRequest):
                 if k == "overview":
                     company_serper_by_topic[k] = serper_hits
                 else:
-                    company_serper_by_topic[k] = _gather_rss(qs, per_query=6, cap=12)
+                    hits_k = _gather_rss(qs, per_query=6, cap=12)
+                    if k == "news":
+                        hits_k = [h for h in hits_k if _is_company_relevant_hit(scope_target, h, company_domain=company_domain_guess)]
+                    company_serper_by_topic[k] = hits_k
+
+            # Best-effort per-contact public snippets from RSS so we can still derive interesting facts.
+            max_contacts = 8
+            for c in contacts[:max_contacts]:
+                nm = str(c.name or "").strip()
+                co = str(c.company or company).strip()
+                if not nm:
+                    continue
+                q_general = f"\"{nm}\" {co}"
+                q_posts = f"\"{nm}\" {co} interview article post"
+                q_pubs = f"\"{nm}\" {co} publication report whitepaper"
+                hits_general = _gather_rss([q_general], per_query=5, cap=6)
+                hits_posts = _gather_rss([q_posts], per_query=5, cap=6)
+                hits_pubs = _gather_rss([q_pubs], per_query=5, cap=6)
+                contact_serper_hits[c.id] = hits_general
+                contact_serper_by_topic[c.id] = {
+                    "general": hits_general,
+                    "posts": hits_posts,
+                    "talks": [],
+                    "publications": hits_pubs,
+                    "linkedin": [],
+                }
 
             # Keep compatibility: feed RSS hits into the same corpus keys the model expects.
             # This flips has_serper=true downstream so we can populate market/news fields.
@@ -616,10 +722,6 @@ async def conduct_research(request: ResearchRequest):
                 pdl_company = pdl.company_enrich(contact_company_websites[0]) or {}
             except Exception:
                 pdl_company = {}
-
-        # Minimal fallback website/linkedin (prefer contact-derived)
-        website_guess = contact_company_websites[0] if contact_company_websites else ""
-        linkedin_guess = contact_company_linkedin[0] if contact_company_linkedin else ""
 
         corpus = {
             "company_name": company,
@@ -663,8 +765,11 @@ async def conduct_research(request: ResearchRequest):
             except Exception:
                 news_hits = []
 
-            for hit in (news_hits or serper_hits or [])[:6]:
+            website_domain = _domain_from_url(str(corpus.get("website") or ""))
+            for hit in (news_hits or serper_hits or [])[:12]:
                 if not isinstance(hit, dict):
+                    continue
+                if not _is_company_relevant_hit(scope_target, hit, company_domain=website_domain):
                     continue
                 title = str(hit.get("title") or "").strip()
                 link = str(hit.get("link") or hit.get("url") or "").strip()
@@ -680,23 +785,10 @@ async def conduct_research(request: ResearchRequest):
                         "url": link,
                     }
                 )
+                if len(corpus["recent_news_raw"]) >= 6:
+                    break
         except Exception:
             corpus["recent_news_raw"] = []
-
-        # Prefer full contact objects when available; otherwise derive placeholders from ids.
-        contacts: List[SelectedContact] = []
-        if request.contacts:
-            contacts = request.contacts
-        else:
-            for cid in request.contact_ids:
-                contacts.append(
-                    SelectedContact(
-                        id=cid,
-                        name=f"Contact {cid}",
-                        title="Decision Maker",
-                        company=company,
-                    )
-                )
 
         # Cache: key on company + scope + JD title + selected contacts (id/name/title/department).
         cache_payload = {
@@ -840,6 +932,47 @@ async def conduct_research(request: ResearchRequest):
                             }
                         )
 
+            has_sources = bool(corpus.get("serper_hits")) or bool(corpus.get("company_serper_by_topic"))
+            topics = corpus.get("company_serper_by_topic") or {}
+            product_launches = ""
+            leadership_changes = ""
+            other_hiring_signals = ""
+            recent_posts = ""
+            publications = ""
+            if has_sources and isinstance(topics, dict):
+                product_launches = _bullets_from_serper_hits(
+                    (topics.get("product_launches") or topics.get("product") or []),
+                    max_items=6,
+                )
+                leadership_changes = _bullets_from_serper_hits(
+                    (topics.get("leadership") or []),
+                    max_items=6,
+                )
+                other_hiring_signals = _bullets_from_serper_hits(
+                    (topics.get("signals") or topics.get("hiring") or topics.get("funding") or []),
+                    max_items=8,
+                )
+                recent_posts = _bullets_from_serper_hits(
+                    (topics.get("posts") or []),
+                    max_items=8,
+                )
+                publications = _bullets_from_serper_hits(
+                    (topics.get("publications") or []),
+                    max_items=6,
+                )
+            culture_values = _bullets_from_serper_hits(
+                (topics.get("culture") or topics.get("overview") or []) if isinstance(topics, dict) else [],
+                max_items=7,
+            ) if has_sources else ""
+            market_position = _bullets_from_serper_hits(
+                (topics.get("market") or []) if isinstance(topics, dict) else [],
+                max_items=7,
+            ) if has_sources else ""
+            if not culture_values:
+                culture_values = "No data found"
+            if not market_position:
+                market_position = "No data found"
+
             return {
                 "company_summary": {
                     "name": scope_target,
@@ -853,37 +986,19 @@ async def conduct_research(request: ResearchRequest):
                         "linkedin_url": corpus.get("linkedin_company") or None,
                 },
                 "theme": (
-                    "Theme: What the company likely cares about: Reference a plausible priority (customer experience, reliability, speed, cost) "
+                    "Theme: What the company cares about: Reference a plausible priority (customer experience, reliability, speed, cost) "
                     "and offer a 2–3 bullet mini-plan—without claiming a specific news event.\n"
                     "- Start with one concrete outcome tied to the role\n"
                     "- Propose a low-risk first sprint (instrument → ship → measure)\n"
                     "- Share a weekly reporting cadence"
                 ),
-                "company_culture_values": (
-                    "Likely values pragmatic execution, clear ownership, and tight feedback loops. "
-                    "For outreach, mirror their tone: concise, specific, and evidence-led. "
-                    "Ask about how teams prioritize week-to-week, how decisions are documented, and how cross-functional alignment happens."
-                ),
-                "company_market_position": (
-                    "Position this company based on what they sell and who they sell to (B2B vs B2C), then discuss what matters now: "
-                    "differentiation, speed of iteration, reliability, and cost. "
-                    "In outreach, reference a plausible competitive pressure and offer a small, measurable improvement you’d drive first."
-                ),
-                "company_product_launches": (
-                    "- Product launches: Not available in stub mode. In Live mode, this will summarize recent releases/announcements found on the web."
-                ),
-                "company_leadership_changes": (
-                    "- Leadership changes: Not available in stub mode. In Live mode, this will summarize recent leadership moves found on the web."
-                ),
-                "company_other_hiring_signals": (
-                    "- Other hiring signals: Not available in stub mode. In Live mode, this will summarize signals like expansions, new offices, funding, or org changes."
-                ),
-                "company_recent_posts": (
-                    "- Recent posts: Not available in stub mode. In Live mode, this will summarize recent blog/press/LinkedIn posts with links."
-                ),
-                "company_publications": (
-                    "- Publications: Not available in stub mode. In Live mode, this will summarize case studies/whitepapers/reports with links."
-                ),
+                "company_culture_values": culture_values,
+                "company_market_position": market_position,
+                "company_product_launches": product_launches,
+                "company_leadership_changes": leadership_changes,
+                "company_other_hiring_signals": other_hiring_signals,
+                "company_recent_posts": recent_posts,
+                "company_publications": publications,
                 "contact_bios": [
                     {
                         "name": c.name,
@@ -961,7 +1076,7 @@ async def conduct_research(request: ResearchRequest):
                     "  - recent_news MUST be actual news items from the corpus serper hits (with real URLs). If you don't have serper sources, return recent_news: [].\n"
                     "  - IMPORTANT: company_market_position MUST be sourced. If serper_hits is empty, set company_market_position to an empty string.\n"
                     "  - theme is NOT news. Always populate theme with safe, non-claiming outreach guidance using this exact sentence, then add a 2–3 bullet mini-plan:\n"
-                    "    \"Theme: What the company likely cares about: Reference a plausible priority (customer experience, reliability, speed, cost) and offer a 2–3 bullet mini-plan—without claiming a specific news event.\"\n"
+                    "    \"Theme: What the company cares about: Reference a plausible priority (customer experience, reliability, speed, cost) and offer a 2–3 bullet mini-plan—without claiming a specific news event.\"\n"
                     "- If information is missing or uncertain, set fields to 'Unknown' or empty lists.\n"
                     "- shared_connections MUST be an empty array unless provided (it is empty in this corpus).\n\n"
                     "Quality bar:\n"
@@ -1105,10 +1220,12 @@ async def conduct_research(request: ResearchRequest):
                     plan = plan[:3]
 
                     theme = (
-                        f"Likely priorities (based on the role context, not specific news):\n" + "\n".join(plan)
+                        f"Priorities (based on the role context, not specific news):\n" + "\n".join(plan)
                     ).strip()
             except Exception:
                 pass
+
+            theme = _strip_likely_language(theme)
 
             # Enforce: recent_news should only contain actual news with real URLs.
             cleaned_news: List[Dict[str, Any]] = []
@@ -1147,18 +1264,17 @@ async def conduct_research(request: ResearchRequest):
                 has_serper = bool(corpus.get("serper_hits")) or bool(corpus.get("company_serper_by_topic"))
                 if has_serper:
                     topics = corpus.get("company_serper_by_topic") or {}
-                    if not market_position:
-                        market_position = _bullets_from_serper_hits(
-                            (topics.get("market") or []),
-                            max_items=7,
-                            label="Market position / competitors (source-backed)",
-                        )
-                    if not culture_values:
-                        culture_values = _bullets_from_serper_hits(
-                            (topics.get("culture") or topics.get("overview") or []),
-                            max_items=7,
-                            label="Culture / values signals (source-backed)",
-                        )
+                    # Force source-backed output for these fields to avoid generic "likely" copy.
+                    market_position = _bullets_from_serper_hits(
+                        (topics.get("market") or []),
+                        max_items=7,
+                        label="Market position / competitors (source-backed)",
+                    )
+                    culture_values = _bullets_from_serper_hits(
+                        (topics.get("culture") or topics.get("overview") or []),
+                        max_items=7,
+                        label="Culture / values signals (source-backed)",
+                    )
                     if not product_launches:
                         product_launches = _bullets_from_serper_hits(
                             (topics.get("product_launches") or topics.get("product") or []),
@@ -1185,26 +1301,19 @@ async def conduct_research(request: ResearchRequest):
                             label="Other hiring signals to verify (source-backed)",
                         )
                 else:
-                    # No web sources available → keep blank (better than role-description-derived guesses).
-                    if not product_launches:
-                        product_launches = ""
-                    if not leadership_changes:
-                        leadership_changes = ""
-                    if not publications:
-                        publications = ""
-                    if not other_hiring_signals:
-                        other_hiring_signals = ""
-                    if not market_position:
-                        market_position = ""
-                    if not culture_values:
-                        culture_values = ""
+                    # No web sources available -> always use explicit "No data found".
+                    product_launches = "No data found"
+                    leadership_changes = "No data found"
+                    publications = "No data found"
+                    other_hiring_signals = "No data found"
+                    market_position = "No data found"
+                    culture_values = "No data found"
+                    recent_posts = "No data found"
 
-                if not recent_posts:
-                    role_bullets = _signals_from_role_description(corpus)
-                    recent_posts = (
-                        "Suggested topics to reference (derived from the imported role description, no external web sources in this run):\n- "
-                        + "\n- ".join(role_bullets[:6])
-                    ).strip() if role_bullets else ""
+                if not market_position:
+                    market_position = "No data found"
+                if not culture_values:
+                    culture_values = "No data found"
             except Exception:
                 pass
 
@@ -1343,7 +1452,7 @@ async def get_research_data(user_id: str):
                 )
             ],
             theme=(
-                "Theme: What the company likely cares about: Reference a plausible priority (customer experience, reliability, speed, cost) "
+                "Theme: What the company cares about: Reference a plausible priority (customer experience, reliability, speed, cost) "
                 "and offer a 2–3 bullet mini-plan—without claiming a specific news event.\n"
                 "- Start with a concrete customer outcome + one KPI\n"
                 "- Propose a low-risk first sprint (instrument → ship → measure)\n"

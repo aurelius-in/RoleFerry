@@ -48,6 +48,64 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _resume_corpus_text(rx: Dict[str, Any] | None) -> str:
+    """
+    Flatten resume extract into a lowercase text corpus used for claim validation.
+    """
+    try:
+        src = rx or {}
+        parts: List[str] = []
+        # Common top-level fields
+        for k in [
+            "summary",
+            "headline",
+            "objective",
+            "skills",
+            "Skills",
+            "key_metrics",
+            "KeyMetrics",
+            "work_experience",
+            "WorkExperience",
+            "projects",
+            "Projects",
+            "certifications",
+            "Certifications",
+            "education",
+            "Education",
+        ]:
+            if k in src:
+                parts.append(str(src.get(k)))
+        parts.append(str(src))
+        txt = " ".join(parts).lower()
+        txt = re.sub(r"\s+", " ", txt).strip()
+        return txt
+    except Exception:
+        return ""
+
+
+def _strip_unsupported_claims(text: str, resume_corpus: str) -> str:
+    """
+    Remove risky claims from generated bio copy when unsupported by resume evidence.
+    """
+    s = str(text or "").strip()
+    if not s:
+        return s
+
+    low = s.lower()
+    has_nist_claim = bool(re.search(r"\bnist\s*800-\d+\b", low))
+    resume_has_nist = bool(re.search(r"\bnist\s*800-\d+\b", str(resume_corpus or "").lower()))
+
+    # If the line claims NIST standards and resume corpus does not, drop the line.
+    if has_nist_claim and not resume_has_nist:
+        return ""
+
+    # De-risk sweeping expertise language in generated marketing copy.
+    if re.search(r"\bexpert(?:ise)?\b", low):
+        s = re.sub(r"\bexpert(?:ise)?\b", "experience", s, flags=re.I)
+        s = re.sub(r"\s{2,}", " ", s).strip()
+    return s
+
+
 class BioPageTheme(BaseModel):
     accent: str = Field(default="emerald")  # simple token; frontend maps to colors
     # The user only chooses background colors; the frontend computes readable text colors.
@@ -237,6 +295,7 @@ async def generate_bio_page(payload: GenerateBioPageRequest, http_request: Reque
             linkedin_url=linkedin_url,
             profile_image_url=str(payload.profile_image_url or "").strip(),
         )
+        resume_corpus = _resume_corpus_text(payload.resume_extract)
 
         client = get_openai_client()
         if client.should_use_real_llm:
@@ -271,6 +330,9 @@ async def generate_bio_page(payload: GenerateBioPageRequest, http_request: Reque
                             "IMPORTANT: This bio page must be reusable across multiple companies.\n"
                             "- Do NOT mention any specific company name (including the selected job's company).\n"
                             "- Do NOT say 'applying to X' or 'candidate for X'.\n"
+                            "- Do NOT claim expertise/certification in any tool, framework, or standard unless it appears in resume_extract.\n"
+                            "- Do NOT use the word 'expert' or 'expertise'.\n"
+                            "- If resume_extract does not include NIST standards, do NOT mention NIST 800-53 / NIST 800-171.\n"
                             "Return ONLY valid JSON with keys:\n"
                             "- headline: string\n"
                             "- subheadline: string\n"
@@ -307,6 +369,18 @@ async def generate_bio_page(payload: GenerateBioPageRequest, http_request: Reque
             except Exception:
                 # fall back to deterministic draft
                 pass
+
+        # Final safety pass: remove unsupported claims (e.g., NIST standards not present in resume extract).
+        deterministic.headline = _strip_unsupported_claims(deterministic.headline, resume_corpus)[:140] or deterministic.headline[:140]
+        deterministic.subheadline = _strip_unsupported_claims(deterministic.subheadline, resume_corpus)[:220] or deterministic.subheadline[:220]
+        deterministic.proof_points = [
+            p for p in [(_strip_unsupported_claims(str(x), resume_corpus)[:180]) for x in (deterministic.proof_points or [])]
+            if str(p).strip()
+        ][:8]
+        deterministic.fit_points = [
+            p for p in [(_strip_unsupported_claims(str(x), resume_corpus)[:160]) for x in (deterministic.fit_points or [])]
+            if str(p).strip()
+        ][:8]
 
         # Persist latest draft for this user (demo store)
         if not hasattr(store, "demo_bio_pages_by_user"):

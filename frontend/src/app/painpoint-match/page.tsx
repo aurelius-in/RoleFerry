@@ -543,42 +543,42 @@ export default function PainPointMatchPage() {
                                               </div>
                                             </div>
                                             <div className="flex-1">
-                                              <h4 className="font-semibold text-white/85 mb-2">Pain Point</h4>
-                                              <p className="text-white/85 mb-3">{a.painpoint}</p>
+                                              <h4 className="text-sm font-semibold text-white/85 mb-2">Pain Point</h4>
+                                              <p className="text-sm text-white/85 mb-3">{a.painpoint}</p>
                                               {String(a.jdEvidence || "").trim() ? (
-                                                <div className="mb-3 text-xs text-white/75">
-                                                  <span className="font-semibold text-white/70">From JD:</span>{" "}
-                                                  <span className="italic text-white/85">“{sanitizeForUi(String(a.jdEvidence), "Missing details")}”</span>
+                                                <div className="mb-3 text-sm text-white/85">
+                                                  <span className="text-[15px] font-semibold text-sky-200">From JD:</span>{" "}
+                                                  <span className="italic text-sm text-white/85">“{sanitizeForUi(String(a.jdEvidence), "Missing details")}”</span>
                                                 </div>
                                               ) : (
-                                                <div className="mb-3 text-xs text-white/75">
-                                                  <span className="font-semibold text-white/70">From JD:</span>{" "}
-                                                  <span className="text-white/60 font-semibold">Missing details</span>
+                                                <div className="mb-3 text-sm text-white/85">
+                                                  <span className="text-[15px] font-semibold text-sky-200">From JD:</span>{" "}
+                                                  <span className="text-sm text-white/60 font-semibold">Missing details</span>
                                                 </div>
                                               )}
 
-                                              <h4 className="font-semibold text-emerald-200 mb-2">Your Solution</h4>
-                                              <p className="mb-3">{renderValueOrMissing(String(a.solution || ""), "text-white/85")}</p>
+                                              <h4 className="text-sm font-semibold text-emerald-200 mb-2">Your Solution</h4>
+                                              <p className="text-sm mb-3">{renderValueOrMissing(String(a.solution || ""), "text-white/85")}</p>
                                               {String(a.resumeEvidence || "").trim() ? (
-                                                <div className="mb-3 text-xs text-white/75">
-                                                  <span className="font-semibold text-emerald-200">From resume:</span>{" "}
-                                                  <span className="italic text-white/85">“{sanitizeForUi(String(a.resumeEvidence), "Missing details")}”</span>
+                                                <div className="mb-3 text-sm text-white/85">
+                                                  <span className="text-[15px] font-semibold text-violet-200">From Resume:</span>{" "}
+                                                  <span className="italic text-sm text-white/85">“{sanitizeForUi(String(a.resumeEvidence), "Missing details")}”</span>
                                                 </div>
                                               ) : (
-                                                <div className="mb-3 text-xs text-white/75">
-                                                  <span className="font-semibold text-emerald-200">From resume:</span>{" "}
-                                                  <span className="text-white/60 font-semibold">Missing details</span>
+                                                <div className="mb-3 text-sm text-white/85">
+                                                  <span className="text-[15px] font-semibold text-violet-200">From Resume:</span>{" "}
+                                                  <span className="text-sm text-white/60 font-semibold">Missing details</span>
                                                 </div>
                                               )}
                                               {String(a.overlap || "").trim() ? (
-                                                <div className="mb-3 text-xs text-white/75">
+                                                <div className="mb-3 text-sm text-white/85">
                                                   <span className="font-semibold text-white/85">Why it matches:</span>{" "}
-                                                  <span className="text-white/80">{sanitizeForUi(String(a.overlap), "Missing details")}</span>
+                                                  <span className="text-sm text-white/80">{sanitizeForUi(String(a.overlap), "Missing details")}</span>
                                                 </div>
                                               ) : null}
 
-                                              <h4 className="font-semibold text-sky-200 mb-2">Impact Metric</h4>
-                                              <p className="text-white/85">{renderValueOrMissing(String(a.metric || ""), "text-white/85")}</p>
+                                              <h4 className="text-sm font-semibold text-sky-200 mb-2">Impact Metric</h4>
+                                              <p className="text-sm text-white/85">{renderValueOrMissing(String(a.metric || ""), "text-white/85")}</p>
                                             </div>
                                           </div>
                                         </div>

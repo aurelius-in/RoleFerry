@@ -503,24 +503,26 @@ def _deterministic_improve_linkedin_note(req: ImproveLinkedInNoteRequest) -> str
     name = (req.contact_name or "").strip()
     first = (name.split()[0] if name else "").strip() or "there"
     company = (req.contact_company or "").strip() or "your team"
-    job_title = (req.job_title or "").strip() or "the role"
-    pain = (req.painpoint or "").strip()
+    title = (req.contact_title or "").strip()
     sol = (req.solution or "").strip()
     metric = (req.metric or "").strip()
 
-    # Keep it warm/casual but professional; avoid over-selling and avoid em dashes.
+    # Keep it warm/casual but professional; no role/job language.
     bits: List[str] = [f"Hi {first},"]
-    bits.append(f"I’m exploring the {job_title} role at {company}.")
-    pain_phrase = _painpoint_phrase(pain)
-    if pain_phrase:
-        bits.append(f"The focus on {pain_phrase} stood out.")
-    if sol and len(sol) <= 64:
-        if metric and len(metric) <= 44:
-            bits.append(f"I’ve worked on similar problems ({sol}; {metric}).")
+    bits.append("I reviewed your profile and wanted to connect.")
+    if title and company:
+        bits.append(f"Your work as {title} at {company} stood out.")
+    elif company:
+        bits.append(f"Your work at {company} stood out.")
+    if sol and len(sol) <= 72:
+        if metric and len(metric) <= 42:
+            bits.append(f"A bit about me: {sol}, {metric}.")
         else:
-            bits.append(f"I’ve worked on similar problems ({sol}).")
+            bits.append(f"A bit about me: {sol}.")
+    elif metric and len(metric) <= 64:
+        bits.append(f"A bit about me: {metric}.")
     else:
-        bits.append("I’ve worked on similar problems in this area.")
+        bits.append("A bit about me: I enjoy building practical, measurable solutions.")
     bits.append("Open to connect?")
     return " ".join([b.strip() for b in bits if b.strip()])
 
@@ -1060,6 +1062,7 @@ async def improve_linkedin_note(request: ImproveLinkedInNoteRequest) -> ImproveL
     """
     Rewrite a LinkedIn connection request note to sound more human:
     casual/warm/personal but professional enough for first contact.
+    This note should be profile-based (no role/job application framing).
     Enforces the app constraints: <=200 chars (or request.limit) and no em dashes.
     """
     try:
@@ -1100,13 +1103,17 @@ async def improve_linkedin_note(request: ImproveLinkedInNoteRequest) -> ImproveL
                     "- Do NOT include clichés like 'I hope you're doing well'.\n"
                     "- Do NOT mention that you are an AI.\n"
                     "- Do NOT fabricate facts.\n\n"
+                    "- Do NOT mention applying for a role or job.\n"
+                    "- Do NOT mention 'job title', 'opening', 'application', or 'hiring process'.\n\n"
                     "Rewrite rules:\n"
                     "- You may rewrite from scratch. Do NOT preserve awkward grammar from the input note.\n"
-                    "- Use a clean opening like: 'Hi <first>, I’m exploring the <job_title> role at <company>.'\n"
-                    "- If you reference painpoint, PARAPHRASE it into a short noun phrase (<= 8 words). Do NOT copy raw job bullets.\n"
-                    "- Avoid 'I noticed <imperative sentence>'. Prefer 'The focus on <phrase> stood out.'\n\n"
+                    "- Use a clean opening like: 'Hi <first>, I reviewed your profile and wanted to connect.'\n"
+                    "- Include 2-3 short details total across:\n"
+                    "  (a) one profile-based mention about the contact, and\n"
+                    "  (b) one or two short 'about me' points from provided solution/metric context when available.\n"
+                    "- Keep it about the person and connection intent, not a job process.\n\n"
                     "Style:\n"
-                    "- Keep it simple: greeting + why you’re reaching out + 1 specific tie-in + soft close.\n"
+                    "- Keep it simple: greeting + profile tie-in + 1-2 about-me details + soft close.\n"
                     "- Use 1–2 short sentences if possible.\n"
                 ),
             },

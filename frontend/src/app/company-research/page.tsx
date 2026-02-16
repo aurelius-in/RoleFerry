@@ -73,10 +73,14 @@ function scrubModePlaceholders(raw: string): string {
   if (!s) return "";
   const lower = s.toLowerCase();
   // Never show mode/config instructional strings inside user-facing "data" fields.
-  if (lower.includes("try live mode")) return "";
-  if (lower.includes("serper configured")) return "";
-  if (lower.includes("serper_api_key")) return "";
-  if (lower.startsWith("no ") && lower.includes("captured in this run")) return "";
+  if (lower.includes("not available in stub mode")) return "No data found";
+  if (lower.includes("try live mode")) return "No data found";
+  if (lower.includes("serper configured")) return "No data found";
+  if (lower.includes("serper_api_key")) return "No data found";
+  if (lower.startsWith("no ") && lower.includes("captured in this run")) return "No data found";
+  if (lower.includes("replace with real sources in live mode")) return "No data found";
+  if (lower.includes("no external web sources in this run")) return "No data found";
+  if (lower.includes("live mode") && lower.includes("summarize")) return "No data found";
   // Never show theme prompt-instructions in the Theme field.
   if (lower.startsWith("theme: what the company likely cares about")) return "";
   if (lower.includes("what the company likely cares about") && lower.includes("mini-plan")) return "";
@@ -96,6 +100,16 @@ function scrubRecentNews(raw: string): string {
     return Boolean(l);
   });
   return cleaned.join("\n").trim();
+}
+
+function cleanThemeText(raw: string): string {
+  const s = String(raw || "").trim();
+  if (!s) return "";
+  return s
+    .replace(/\blikely\b/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/:\s*\n/g, ":\n")
+    .trim();
 }
 
 function buildThemeFallback(input: {
@@ -146,7 +160,7 @@ function buildThemeFallback(input: {
   const roleHint = title ? `for the ${title} role` : "for this role";
 
   const lines: string[] = [];
-  lines.push(`Likely priorities at ${company} ${roleHint}:`);
+  lines.push(`Priorities at ${company} ${roleHint}:`);
   if (priorities.length) {
     for (const p of priorities) lines.push(`- ${p}`);
   } else {
@@ -428,25 +442,25 @@ export default function CompanyResearchPage() {
         company_name: company,
         overview: overview || `${formatCompanyName(company)} overview (add a few lines here).`,
         theme:
-          scrubModePlaceholders(themeRaw) ||
-          scrubModePlaceholders(themeFromNews) ||
-          buildThemeFallback({ company, selectedJD, painpointMatches, resumeExtract }) ||
+          cleanThemeText(scrubModePlaceholders(themeRaw)) ||
+          cleanThemeText(scrubModePlaceholders(themeFromNews)) ||
+          cleanThemeText(buildThemeFallback({ company, selectedJD, painpointMatches, resumeExtract })) ||
           "",
         recent_news: scrubRecentNews(joinNews(realNews as any[])) || "",
         culture: culture || "",
         market_position: market || "",
-        product_launches: productLaunchesFromModel || "",
-        leadership_changes: leadershipChangesFromModel || "",
-        other_hiring_signals: otherHiringSignalsFromModel || "",
-        recent_posts: recentPostsFromModel || "",
-        publications: publicationsFromModel || "",
+        product_launches: productLaunchesFromModel || "No data found",
+        leadership_changes: leadershipChangesFromModel || "No data found",
+        other_hiring_signals: otherHiringSignalsFromModel || "No data found",
+        recent_posts: recentPostsFromModel || "No data found",
+        publications: publicationsFromModel || "No data found",
         hiring_signals: signals,
         hooks: Array.isArray(resp?.helper?.hooks) ? resp.helper!.hooks : undefined,
         updated_at: new Date().toISOString(),
       };
 
       if (!hasWebSources) {
-        setNotice("Research generated, but web sources are unavailable (SERPER_API_KEY not configured). Market position / recent posts/news will be limited.");
+        setNotice("Research generated. Some sections may show No data found.");
       }
 
       setDraft(sanitizeDraft(next));
@@ -842,10 +856,10 @@ export default function CompanyResearchPage() {
                 </div>
 
                 <div>
-                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Theme (not news)</div>
+                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Theme</div>
                   <textarea
-                    value={draft.theme}
-                    onChange={(e) => setDraft({ ...draft, theme: e.target.value })}
+                    value={cleanThemeText(draft.theme)}
+                    onChange={(e) => setDraft({ ...draft, theme: cleanThemeText(e.target.value) })}
                     rows={6}
                     className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="- Theme + mini-plan…"

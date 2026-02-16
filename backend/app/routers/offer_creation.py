@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import json
 import uuid
+import re
 from datetime import datetime, timezone
 
 from sqlalchemy import text as sql_text
@@ -137,6 +138,13 @@ async def create_offer(request: OfferCreationRequest):
                 rule_fallback = build_rule_based_offer()
                 title = str(title_val or rule_fallback.title)
                 body = _strip_fluff_openers(str(body_val or rule_fallback.content))
+                # Guardrail: avoid a repeated phrase that users found too generic.
+                body = re.sub(
+                    r"\bI help teams ship outcomes\b",
+                    "I help teams get important work done",
+                    body,
+                    flags=re.I,
+                )
                 # Guardrail: if GPT returns something too short/sparse, fall back to deterministic.
                 if len(body.split()) < 35:
                     body = rule_fallback.content
