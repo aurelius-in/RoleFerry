@@ -210,14 +210,13 @@ def _build_deterministic_draft(
     pms = painpoint_matches or []
     od = offer_draft or {}
 
-    title = str(jd.get("title") or jd.get("role") or "").strip()
     tone_hint = ""
     if od:
         tone_hint = str(od.get("tone") or od.get("custom_tone") or "").strip()
 
+    # Keep the public bio reusable across many applications.
+    # Never shape the headline around one selected role.
     headline = f"{display_name} — job seeker bio page"
-    if title:
-        headline = f"{display_name} — {title} candidate"
 
     subheadline = "A concise overview of experience, proof points, and fit."
     if tone_hint:
@@ -475,7 +474,6 @@ async def generate_video_script(payload: GenerateVideoScriptRequest, http_reques
         od = payload.offer_draft or {}
 
         # Deterministic fallback script (if LLM is unavailable).
-        headline = str(jd.get("title") or jd.get("role") or "").strip() or "roles"
         kms = rx.get("key_metrics") or rx.get("KeyMetrics") or []
         metric_line = ""
         if isinstance(kms, list) and kms:
@@ -494,7 +492,7 @@ async def generate_video_script(payload: GenerateVideoScriptRequest, http_reques
         fallback = "\n".join(
             [
                 f"Hi{', ' + first if first else ''} — I’m {display_name}.",
-                f"I build and lead work that drives outcomes, and I’m exploring {headline}.",
+                "I build and lead work that drives outcomes, and I am exploring roles where I can make a measurable impact.",
                 (f"A recent win: {metric_line}." if metric_line else "A recent win: I’ve delivered measurable improvements across teams and systems."),
                 (f"I’m especially strong at tackling problems like: {pain}." if pain else "I’m especially strong at tackling messy, high-impact problems and turning them into clear execution plans."),
                 (f"My approach: {sol}." if sol else "My approach: clarify the goal, map constraints, ship an MVP fast, then iterate with feedback."),
