@@ -160,6 +160,25 @@ export default function BioPageStep() {
     return first || "you";
   }, [uiDisplayName]);
 
+  const publishedFingerprint = useMemo(() => {
+    const workPts =
+      (Array.isArray((draft as any)?.work_style_points) && (draft as any).work_style_points.length > 0)
+        ? (draft as any).work_style_points
+        : workStylePoints;
+    const payloadForPublish = {
+      ...(draft || {}),
+      display_name: safeStr(userDisplayName) || safeStr(draft?.display_name),
+      profile_image_url: profileImageUrl || draft?.profile_image_url || "",
+      work_style_points: workPts,
+      resume_extract: (draft as any)?.resume_extract ?? resumeExtract ?? null,
+    };
+    try {
+      return JSON.stringify(payloadForPublish);
+    } catch {
+      return "";
+    }
+  }, [draft, userDisplayName, profileImageUrl, workStylePoints, resumeExtract]);
+
   const updateTheme = (patch: Partial<BioPageTheme>) => {
     const cur = draft || ({} as any);
     const base = { ...(cur.theme || {}) };
@@ -514,7 +533,7 @@ export default function BioPageStep() {
       });
       const url = safeStr(res?.public_url);
       if (url) {
-        localStorage.setItem(PUBLISHED_KEY, JSON.stringify(res));
+        localStorage.setItem(PUBLISHED_KEY, JSON.stringify({ ...(res || {}), draft_fingerprint: publishedFingerprint }));
         localStorage.setItem(BIO_URL_KEY, url);
         setBioUrl(url);
       }
@@ -564,6 +583,24 @@ export default function BioPageStep() {
     // If we have a cached URL, validate it first. If it 404s (common in demo/in-memory),
     // republish to get a fresh slug, then open the new URL.
     const existingUrl = safeStr(bioUrl || localStorage.getItem(BIO_URL_KEY));
+    const publishedMeta = (() => {
+      try {
+        return JSON.parse(localStorage.getItem(PUBLISHED_KEY) || "null");
+      } catch {
+        return null;
+      }
+    })();
+    const lastFingerprint = safeStr(publishedMeta?.draft_fingerprint);
+    const needsRepublish = Boolean(draft) && (!lastFingerprint || lastFingerprint !== publishedFingerprint);
+
+    if (needsRepublish) {
+      const nextUrl = await publish();
+      if (nextUrl) {
+        navigate(nextUrl);
+        return;
+      }
+    }
+
     const existingSlug = existingUrl ? extractBioSlug(existingUrl) : null;
     if (existingUrl && !existingSlug) {
       // If URL doesn't match /bio/:slug, still try opening it directly rather than forcing republish.

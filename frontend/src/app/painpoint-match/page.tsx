@@ -557,8 +557,6 @@ export default function PainPointMatchPage() {
                                                 </div>
                                               )}
 
-                                              <h4 className="text-sm font-semibold text-emerald-200 mb-2">Your Solution</h4>
-                                              <p className="text-sm mb-3">{renderValueOrMissing(String(a.solution || ""), "text-white/85")}</p>
                                               {String(a.resumeEvidence || "").trim() ? (
                                                 <div className="mb-3 text-sm text-white/85">
                                                   <span className="text-[15px] font-semibold text-violet-200">From Resume:</span>{" "}

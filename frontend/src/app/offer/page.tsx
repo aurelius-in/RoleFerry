@@ -82,9 +82,20 @@ function metricLine(metric: any, value: any, context: any) {
   const m = normalizeNoEmDash(String(metric || ""));
   const v = normalizeNoEmDash(String(value || ""));
   const c = normalizeNoEmDash(String(context || ""));
-  if (m && v && c) return `${m}: ${v}, ${c}`;
-  if (m && v) return `${m}: ${v}`;
-  if (m && c) return `${m}: ${c}`;
+  const endSentence = (s: string) => {
+    const t = String(s || "").trim();
+    if (!t) return "";
+    return /[.!?]$/.test(t) ? t : `${t}.`;
+  };
+  if (m && v && c) {
+    const byPart = /^by\b/i.test(v) ? `${m} ${v}` : `${m} by ${v}`;
+    return `${endSentence(byPart)} ${endSentence(c)}`.trim();
+  }
+  if (m && v) {
+    const byPart = /^by\b/i.test(v) ? `${m} ${v}` : `${m} by ${v}`;
+    return endSentence(byPart);
+  }
+  if (m && c) return `${endSentence(m)} ${endSentence(c)}`.trim();
   return m || v || c;
 }
 
