@@ -15,6 +15,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from ..db import get_engine
 from ..clients.openai_client import get_openai_client, extract_json_from_text
 from ..storage import store
+from ..services.serper_client import serper_web_search
 
 router = APIRouter()
 engine = get_engine()
@@ -54,6 +55,25 @@ class JobDescriptionsListResponse(BaseModel):
 class JobImportRequest(BaseModel):
     url: Optional[str] = None
     text: Optional[str] = None
+
+
+class ScrapedRole(BaseModel):
+    id: str
+    title: str
+    company: str
+    url: str
+    source: str
+    location: Optional[str] = None
+    salary_range: Optional[str] = None
+    snippet: str = ""
+    match_score: int = 0
+
+
+class ScrapedRolesResponse(BaseModel):
+    success: bool
+    message: str
+    roles: List[ScrapedRole]
+    helper: Optional[Dict[str, Any]] = None
 
 
 def _should_retry_jd_llm(content: str, data: Dict[str, Any], *, title: str, company: str) -> bool:
@@ -2383,6 +2403,319 @@ async def import_job_description(payload: JobImportRequest):
     except Exception as e:
         logger.exception("Error importing job description")
         raise HTTPException(status_code=500, detail="Failed to parse job description")
+
+def _parse_min_salary_to_int(raw: str | None) -> Optional[int]:
+    """
+    Parse strings like "$150,000", "150k", "120000" into an integer salary floor.
+    """
+    s = str(raw or "").strip().lower()
+    if not s:
+        return None
+    # 150k / 150 k
+    m_k = re.search(r"(\d{2,3}(?:\.\d+)?)\s*k\b", s)
+    if m_k:
+        try:
+            return int(float(m_k.group(1)) * 1000)
+        except Exception:
+            return None
+    # 120,000 / 120000
+    m_n = re.search(r"(\d[\d,]{3,})", s)
+    if m_n:
+        try:
+            return int(m_n.group(1).replace(",", ""))
+        except Exception:
+            return None
+    return None
+
+
+def _extract_salary_range_from_text(text: str) -> Optional[str]:
+    """
+    Best-effort salary extraction from title/snippet blobs.
+    """
+    s = str(text or "")
+    # "$130,000 - $180,000"
+    m = re.search(
+        r"(\$?\s*\d{2,3}(?:,\d{3})+)\s*(?:-|to|–|—)\s*(\$?\s*\d{2,3}(?:,\d{3})+)",
+        s,
+        flags=re.I,
+    )
+    if m:
+        a = m.group(1).replace(" ", "")
+        b = m.group(2).replace(" ", "")
+        if not a.startswith("$"):
+            a = "$" + a
+        if not b.startswith("$"):
+            b = "$" + b
+        return f"{a} - {b}"
+
+    # "$150k - $200k"
+    m_k = re.search(
+        r"(\$?\s*\d{2,3}(?:\.\d+)?\s*k)\s*(?:-|to|–|—)\s*(\$?\s*\d{2,3}(?:\.\d+)?\s*k)",
+        s,
+        flags=re.I,
+    )
+    if m_k:
+        return f"{m_k.group(1).replace(' ', '')} - {m_k.group(2).replace(' ', '')}"
+
+    # Single figure mention e.g. "$170k"
+    m_single = re.search(r"\$?\s*\d{2,3}(?:\.\d+)?\s*k\b", s, flags=re.I)
+    if m_single:
+        v = m_single.group(0).replace(" ", "")
+        return v if v.startswith("$") else "$" + v
+    return None
+
+
+def _salary_meets_floor(salary_text: Optional[str], minimum_salary: Optional[int]) -> bool:
+    if not minimum_salary:
+        return True
+    if not salary_text:
+        # keep unknown salaries but down-rank later; don't hard-drop
+        return True
+    nums = [int(x.replace(",", "")) for x in re.findall(r"(\d{2,3}(?:,\d{3})+)", salary_text)]
+    if nums:
+        return max(nums) >= minimum_salary
+    k_nums = []
+    for m in re.findall(r"(\d{2,3}(?:\.\d+)?)\s*k\b", salary_text.lower()):
+        try:
+            k_nums.append(int(float(m) * 1000))
+        except Exception:
+            continue
+    if k_nums:
+        return max(k_nums) >= minimum_salary
+    return True
+
+
+def _role_query_from_preferences(pref: Dict[str, Any]) -> str:
+    roles = [str(x).strip() for x in (pref.get("role_categories") or []) if str(x).strip()]
+    skills = [str(x).strip() for x in (pref.get("skills") or []) if str(x).strip()]
+    industries = [str(x).strip() for x in (pref.get("industries") or []) if str(x).strip()]
+    parts: List[str] = []
+    if roles:
+        parts.append(roles[0])
+    parts.extend(skills[:2])
+    if industries:
+        parts.append(industries[0])
+    q = " ".join(parts).strip()
+    if not q:
+        q = "software engineer data analytics product manager"
+    return " ".join(q.split())[:120]
+
+
+def _source_from_url(url: str) -> str:
+    u = str(url or "").lower()
+    if "boards.greenhouse.io" in u:
+        return "Greenhouse"
+    if "jobs.lever.co" in u:
+        return "Lever"
+    if "myworkdayjobs.com" in u:
+        return "Workday"
+    if "jobs.ashbyhq.com" in u:
+        return "Ashby"
+    if "/careers" in u or "careers." in u:
+        return "Company careers"
+    return "Career pages"
+
+
+def _company_from_result(url: str, title: str) -> str:
+    # Try URL first
+    try:
+        p = urlparse(url)
+        host = (p.hostname or "").lower()
+        if "boards.greenhouse.io" in host:
+            seg = [x for x in (p.path or "").split("/") if x]
+            if seg:
+                return seg[0].replace("-", " ").title()
+        if "jobs.lever.co" in host:
+            seg = [x for x in (p.path or "").split("/") if x]
+            if seg:
+                return seg[0].replace("-", " ").title()
+        if "jobs.ashbyhq.com" in host:
+            seg = [x for x in (p.path or "").split("/") if x]
+            if seg:
+                return seg[0].replace("-", " ").title()
+        if host:
+            root = host.split(".")
+            if len(root) >= 2:
+                return root[-2].replace("-", " ").title()
+    except Exception:
+        pass
+    # Fall back to title prefix conventions.
+    t = str(title or "")
+    if " - " in t:
+        maybe = t.split(" - ")[-1].strip()
+        if 1 <= len(maybe) <= 80:
+            return maybe
+    return "Unknown"
+
+
+def _load_job_preferences_best_effort() -> Dict[str, Any]:
+    # Prefer demo store cache
+    if isinstance(store.demo_job_preferences, dict) and store.demo_job_preferences:
+        return dict(store.demo_job_preferences)
+    # fallback defaults aligned to existing options
+    return {
+        "role_categories": ["Technical & Engineering"],
+        "skills": ["Python", "SQL"],
+        "industries": ["AI & Machine Learning"],
+        "minimum_salary": "$80,000",
+    }
+
+
+@router.get("/scraped-roles", response_model=ScrapedRolesResponse)
+async def get_scraped_roles(limit: int = 25):
+    """
+    Auto-discover role links from common career page ecosystems using user preferences.
+    This is additive to the existing manual URL import flow.
+    """
+    prefs = _load_job_preferences_best_effort()
+    role_query = _role_query_from_preferences(prefs)
+    minimum_salary = _parse_min_salary_to_int(str(prefs.get("minimum_salary") or ""))
+
+    requested = max(1, min(int(limit or 25), 40))
+    target_companies = min(25, requested)
+
+    # Keep query set focused on real career ecosystems while broadening enough to get
+    # role diversity (ideally >=25 companies when possible).
+    queries = [
+        f'site:boards.greenhouse.io/jobs "{role_query}"',
+        f'site:boards.greenhouse.io "{role_query}" remote',
+        f'site:boards.greenhouse.io "{role_query}" "united states"',
+        f'site:jobs.lever.co "{role_query}"',
+        f'site:jobs.lever.co "{role_query}" remote',
+        f'site:myworkdayjobs.com "{role_query}"',
+        f'site:myworkdayjobs.com "{role_query}" remote',
+        f'site:jobs.ashbyhq.com "{role_query}"',
+        f'site:jobs.ashbyhq.com "{role_query}" remote',
+        f'"{role_query}" "careers" "salary"',
+        f'"{role_query}" "careers" "job opening"',
+        f'"{role_query}" "apply now" "careers"',
+    ]
+
+    found: List[Dict[str, Any]] = []
+    for q in queries:
+        try:
+            found.extend(serper_web_search(q, num=10, gl="us", hl="en"))
+        except Exception:
+            continue
+
+    used_live = bool(found)
+
+    # Deterministic fallback when Serper isn't configured.
+    if not found:
+        role_hint = role_query.split(" ")[0].strip() if role_query else "engineering"
+        fallback = [
+            {
+                "title": f"{role_hint.title()} roles on Greenhouse boards",
+                "url": f"/job-boards/greenhouse?q={role_hint}",
+                "snippet": "Use in-app Greenhouse board finder to discover active roles.",
+            },
+            {
+                "title": f"{role_hint.title()} roles on Wellfound",
+                "url": f"https://wellfound.com/jobs?search={role_hint}",
+                "snippet": "Startup-focused roles that often list compensation bands.",
+            },
+            {
+                "title": f"{role_hint.title()} roles on Built In",
+                "url": f"https://builtin.com/jobs?search={role_hint}",
+                "snippet": "Tech roles with frequent salary and location metadata.",
+            },
+        ]
+        found = fallback
+
+    # De-dupe + score + salary filter.
+    seen_urls: set[str] = set()
+    roles: List[ScrapedRole] = []
+    q_tokens = [x.lower() for x in re.findall(r"[A-Za-z]{3,}", role_query)][:8]
+    for i, item in enumerate(found):
+        url = str(item.get("url") or "").strip()
+        if not url or url in seen_urls:
+            continue
+        seen_urls.add(url)
+
+        title = str(item.get("title") or "").strip()[:180] or "Role listing"
+        snippet = str(item.get("snippet") or "").strip()[:420]
+        salary_range = _extract_salary_range_from_text(f"{title} {snippet}")
+        if not _salary_meets_floor(salary_range, minimum_salary):
+            continue
+
+        blob = f"{title} {snippet}".lower()
+        token_hits = sum(1 for t in q_tokens if t in blob)
+        score = 45 + min(35, token_hits * 6)
+        if salary_range:
+            score += 10
+        if "remote" in blob:
+            score += 3
+        score = max(0, min(100, score))
+
+        company = _company_from_result(url, title)
+        role_id = hashlib.sha1(f"{url}|{title}".encode("utf-8", errors="ignore")).hexdigest()[:16]
+        roles.append(
+            ScrapedRole(
+                id=f"scr_{role_id}_{i}",
+                title=title,
+                company=company,
+                url=url,
+                source=_source_from_url(url),
+                location="Remote" if "remote" in blob else None,
+                salary_range=salary_range,
+                snippet=snippet,
+                match_score=score,
+            )
+        )
+
+    ranked = sorted(roles, key=lambda r: (r.match_score, bool(r.salary_range)), reverse=True)
+
+    # Prefer company diversity first: one role per company in pass 1.
+    selected: List[ScrapedRole] = []
+    used_companies: set[str] = set()
+    for r in ranked:
+        ckey = (r.company or "").strip().lower()
+        if not ckey or ckey == "unknown":
+            continue
+        if ckey in used_companies:
+            continue
+        selected.append(r)
+        used_companies.add(ckey)
+        if len(selected) >= requested:
+            break
+
+    # If we still don't have enough roles, fill from remaining ranked roles.
+    if len(selected) < requested:
+        selected_ids = {x.id for x in selected}
+        for r in ranked:
+            if r.id in selected_ids:
+                continue
+            selected.append(r)
+            if len(selected) >= requested:
+                break
+
+    roles_out = selected[:requested]
+    unique_companies = len({(r.company or "").strip().lower() for r in roles_out if (r.company or "").strip() and (r.company or "").strip().lower() != "unknown"})
+    diversity_note = (
+        "company diversity target met"
+        if unique_companies >= target_companies
+        else f"company diversity {unique_companies}/{target_companies}"
+    )
+    msg = (
+        f"Found {len(roles_out)} role links from career pages ({diversity_note})"
+        if roles_out
+        else "No role links found yet"
+    )
+    return ScrapedRolesResponse(
+        success=True,
+        message=msg,
+        roles=roles_out,
+        helper={
+            "minimum_salary": minimum_salary,
+            "role_query": role_query,
+            "used_serper": used_live,
+            "requested_roles": requested,
+            "target_companies": target_companies,
+            "unique_companies": unique_companies,
+            "raw_results": len(found),
+        },
+    )
+
 
 @router.post("/save", response_model=JobDescriptionResponse)
 async def save_job_description(job_description: JobDescription):
