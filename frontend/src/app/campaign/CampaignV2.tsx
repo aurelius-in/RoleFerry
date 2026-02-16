@@ -87,6 +87,7 @@ type CampaignV2 = {
 
 const STORAGE_V2 = "rf_campaign_by_contact_v2";
 const STORAGE_ACTIVE = "rf_campaign_active_contact_id";
+const STORAGE_PERSISTED = "rf_persisted_campaign_meta_v1"; // { id, name }
 
 const BASE_TONES: Tone[] = ["recruiter", "manager", "exec", "developer", "sales", "startup", "enterprise", "custom"];
 const EMAIL4_EXTRA_TONES: Tone[] = ["hilarious", "silly", "wacky", "alarmist", "flirty", "sad", "ridiculous"];
@@ -232,6 +233,12 @@ function layerLabel(id: ContextLayerId) {
   }
 }
 
+function emailLabelForNumber(n: number) {
+  if (n === 1) return "Initial";
+  if (n === 4) return "Final check-in";
+  return "Follow-up";
+}
+
 function filterContextByLayers(ctx: any, layers: ContextLayers) {
   const out: any = {
     sender_profile: ctx?.sender_profile,
@@ -267,6 +274,14 @@ export default function CampaignV2() {
 
   const [openAccordions, setOpenAccordions] = useState<Record<string, { layers: boolean; instructions: boolean }>>({});
 
+  // Persisted campaign (DB) metadata
+  const [persistedCampaignId, setPersistedCampaignId] = useState<string>("");
+  const [persistedCampaignName, setPersistedCampaignName] = useState<string>("");
+  const [loadCampaignId, setLoadCampaignId] = useState<string>("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
   const activeCampaign = activeContactId ? campaignByContact[activeContactId] || null : null;
   const activeContact = useMemo(() => contacts.find((c) => String(c?.id || "") === String(activeContactId || "")) || null, [contacts, activeContactId]);
 
@@ -286,7 +301,22 @@ export default function CampaignV2() {
     setActiveContactId(savedActive || fallback);
 
     setBioUrl(String(localStorage.getItem("bio_page_url") || "").trim());
+
+    const persisted = safeJson<any>(localStorage.getItem(STORAGE_PERSISTED), null);
+    const pid = String(persisted?.id || "").trim();
+    const pname = String(persisted?.name || "").trim();
+    setPersistedCampaignId(pid);
+    setPersistedCampaignName(pname);
+    setLoadCampaignId(pid);
   }, []);
+
+  const persistPersistedMeta = (next: { id: string; name: string }) => {
+    setPersistedCampaignId(String(next?.id || "").trim());
+    setPersistedCampaignName(String(next?.name || "").trim());
+    try {
+      localStorage.setItem(STORAGE_PERSISTED, JSON.stringify({ id: String(next?.id || "").trim(), name: String(next?.name || "").trim() }));
+    } catch {}
+  };
 
   const persist = (next: Record<string, CampaignV2>) => {
     setCampaignByContact(next);
@@ -431,6 +461,188 @@ export default function CampaignV2() {
     }
   };
 
+  const buildRowsForSave = () => {
+    const out: any[] = [];
+    for (const c of contacts || []) {
+      const cid = String(c?.id || "").trim();
+      if (!cid) continue;
+      const ctx = persistCampaignContextV1(cid);
+      const camp = campaignByContact?.[cid];
+
+      const full = String(c?.name || "").trim();
+      const parts = full.split(/\s+/).filter(Boolean);
+      const first = String(c?.first_name || c?.firstName || parts?.[0] || "").trim();
+      const last = String(c?.last_name || c?.lastName || (parts.length > 1 ? parts.slice(1).join(" ") : "") || "").trim();
+
+      const email = String(c?.email || cid).trim();
+      const appliedLink = String(ctx?.selected_job_description?.url || ctx?.selected_job_description?.link || "").trim();
+      const appliedTitle = String(ctx?.selected_job_description?.title || "").trim();
+      const personalized = String(ctx?.links?.bio_page_url || bioUrl || "").trim();
+
+      const emailsObj: any = { emails: {} };
+      if (camp?.emails?.length) {
+        for (const e of camp.emails) {
+          const n = Number(e?.step_number || 0) || 0;
+          if (n < 1 || n > 4) continue;
+          emailsObj.emails[`email_${n}`] = {
+            email_number: n,
+            subject: String(e?.subject || "").trim(),
+            body: String(e?.body || "").trim(),
+            tone: String(e?.tone || "").trim(),
+            custom_tone: String(e?.custom_tone || "").trim(),
+            special_instructions: String(e?.special_instructions || "").trim(),
+            last_generated_at: String(e?.last_generated_at || "").trim(),
+            delay_days: Number(e?.delay_days || 0) || 0,
+            stop_on_reply: Boolean(e?.stop_on_reply),
+            signature_prefs: e?.signature_prefs || {},
+          };
+        }
+      }
+
+      out.push({
+        email,
+        email_provider: String(c?.email_provider || c?.emailProvider || "").trim(),
+        lead_status: String(c?.lead_status || c?.leadStatus || "").trim(),
+        first_name: first,
+        last_name: last,
+        verification_status: String(c?.verification_status || c?.verificationStatus || "").trim(),
+        interest_status: String(c?.interest_status || c?.interestStatus || "").trim(),
+        website: String(c?.website || "").trim(),
+        job_title: String(c?.title || c?.jobTitle || "").trim(),
+        linkedin: String(c?.linkedin_url || c?.linkedin || c?.linkedIn || "").trim(),
+        employees: c?.employees ?? c?.Employees ?? null,
+        company_name: String(c?.company || ctx?.company_name || "").trim(),
+        applied_job_link: appliedLink,
+        applied_job_title: appliedTitle,
+        personalized_page: personalized,
+        context: ctx || {},
+        emails: emailsObj,
+        state: { contact_id: cid },
+      });
+    }
+    return out;
+  };
+
+  const savePersistedCampaign = async () => {
+    setError(null);
+    setNotice(null);
+    setIsSaving(true);
+    try {
+      const nm = String(persistedCampaignName || "").trim();
+      let id = String(persistedCampaignId || "").trim();
+      if (!id) {
+        const created = await api<{ campaign: any }>("/campaign/campaigns", "POST", { name: nm, status: "draft", meta: {} });
+        id = String(created?.campaign?.id || "").trim();
+        if (!id) throw new Error("Failed to create campaign");
+      } else {
+        // Keep persisted name in sync when saving again.
+        try {
+          await api<{ campaign: any }>(`/campaign/campaigns/${encodeURIComponent(id)}`, "PATCH", { name: nm });
+        } catch {
+          // Ignore name update failures; rows upsert can still succeed.
+        }
+      }
+
+      const rows = buildRowsForSave();
+      await api<{ row_ids: string[] }>(`/campaign/campaigns/${encodeURIComponent(id)}/rows:upsert`, "POST", { rows });
+
+      persistPersistedMeta({ id, name: nm });
+      setLoadCampaignId(id);
+      setNotice(`Saved campaign (${rows.length} row${rows.length === 1 ? "" : "s"}).`);
+      window.setTimeout(() => setNotice(null), 2200);
+    } catch (e: any) {
+      setError(String(e?.message || "Failed to save campaign."));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const loadPersistedCampaign = async () => {
+    setError(null);
+    setNotice(null);
+    setIsLoading(true);
+    try {
+      const id = String(loadCampaignId || "").trim();
+      if (!id) throw new Error("Enter a campaign ID to load.");
+      const res = await api<{ campaign: any; rows: any[] }>(`/campaign/campaigns/${encodeURIComponent(id)}`, "GET");
+      const camp = res?.campaign || null;
+      const rows = Array.isArray(res?.rows) ? res.rows : [];
+      if (!camp) throw new Error("Campaign not found.");
+
+      const nextContacts = rows.map((r: any) => {
+        const state = r?.state && typeof r.state === "object" ? r.state : {};
+        const cid = String(state?.contact_id || r?.email || r?.id || "").trim() || `c_${Date.now()}`;
+        const name = `${String(r?.first_name || "").trim()} ${String(r?.last_name || "").trim()}`.trim() || "Contact";
+        return {
+          id: cid,
+          email: String(r?.email || "").trim(),
+          name,
+          company: String(r?.company_name || "").trim(),
+          title: String(r?.job_title || "").trim(),
+          linkedin_url: String(r?.linkedin || "").trim(),
+          website: String(r?.website || "").trim(),
+          employees: r?.employees ?? null,
+          verification_status: String(r?.verification_status || "").trim(),
+        };
+      });
+
+      // Seed selected_contacts so other pages continue to work.
+      try {
+        localStorage.setItem("selected_contacts", JSON.stringify(nextContacts));
+      } catch {}
+      setContacts(nextContacts);
+
+      // Rebuild per-contact editable sequences from persisted row.emails.
+      const nextBy: Record<string, CampaignV2> = {};
+      for (const c of nextContacts) {
+        const cid = String(c?.id || "").trim();
+        if (!cid) continue;
+        const base = buildEmptyCampaign(c);
+        const row = rows.find((x: any) => {
+          const st = x?.state && typeof x.state === "object" ? x.state : {};
+          const rid = String(st?.contact_id || x?.email || "").trim();
+          return rid === cid;
+        });
+        const storedEmails = row?.emails && typeof row.emails === "object" ? row.emails : {};
+        const blob = storedEmails?.emails && typeof storedEmails.emails === "object" ? storedEmails.emails : {};
+        const patched = {
+          ...base,
+          emails: (base.emails || []).map((e) => {
+            const n = Number(e.step_number || 0);
+            const hit = blob?.[`email_${n}`] || null;
+            if (!hit) return e;
+            return {
+              ...e,
+              subject: String(hit?.subject || e.subject || "").trim(),
+              body: String(hit?.body || e.body || "").trim(),
+              tone: (String(hit?.tone || e.tone || "manager").trim() as any) || e.tone,
+              custom_tone: String(hit?.custom_tone || "").trim() || e.custom_tone,
+              special_instructions: String(hit?.special_instructions || "").trim() || e.special_instructions,
+              last_generated_at: String(hit?.last_generated_at || "").trim() || e.last_generated_at,
+              signature_prefs: hit?.signature_prefs || e.signature_prefs,
+            };
+          }),
+        } as CampaignV2;
+        nextBy[cid] = patched;
+      }
+      persist(nextBy);
+
+      const first = nextContacts?.[0]?.id ? String(nextContacts[0].id) : "";
+      setActiveContactId(first);
+      try {
+        localStorage.setItem(STORAGE_ACTIVE, first);
+      } catch {}
+
+      persistPersistedMeta({ id: String(camp?.id || id).trim(), name: String(camp?.name || "").trim() });
+      setNotice("Loaded campaign.");
+      window.setTimeout(() => setNotice(null), 2200);
+    } catch (e: any) {
+      setError(String(e?.message || "Failed to load campaign."));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const canContinueToLaunch = Boolean(bioUrl) && (contacts?.length || 0) > 0;
 
   return (
@@ -449,6 +661,86 @@ export default function CampaignV2() {
               Generate a 4-email sequence per decision maker. Each email can include different context layers, tone, and instructions.
             </p>
           </div>
+
+            <div className="mb-6 rounded-lg border border-white/10 bg-black/20 p-4">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
+                <div className="lg:col-span-6">
+                  <div className="text-xs font-semibold text-white/60 uppercase tracking-wider">Campaign name</div>
+                  <input
+                    value={persistedCampaignName}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setPersistedCampaignName(v);
+                      // Best-effort persist for reloads even before saving to DB.
+                      try {
+                        localStorage.setItem(STORAGE_PERSISTED, JSON.stringify({ id: String(persistedCampaignId || "").trim(), name: v }));
+                      } catch {}
+                    }}
+                    placeholder="e.g., 26-02-15-analytics-size-51-200-remote_123"
+                    className="mt-1 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <div className="mt-1 text-[11px] text-white/50">
+                    Stored in Postgres when you click Save. (Optional, but recommended so Launch can retrieve it later.)
+                  </div>
+                </div>
+                <div className="lg:col-span-3">
+                  <div className="text-xs font-semibold text-white/60 uppercase tracking-wider">Campaign ID</div>
+                  <div className="mt-1 rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/80 font-mono">
+                    {persistedCampaignId || "Not saved yet"}
+                  </div>
+                </div>
+                <div className="lg:col-span-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={savePersistedCampaign}
+                    disabled={isSaving || isLoading || (contacts?.length || 0) === 0}
+                    className="flex-1 px-3 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                    title="Create (if needed) and persist this campaign + rows to Postgres."
+                  >
+                    {isSaving ? (
+                      <>
+                        <InlineSpinner className="h-4 w-4" />
+                        <span>Saving</span>
+                      </>
+                    ) : (
+                      "Save campaign"
+                    )}
+                  </button>
+                </div>
+                <div className="lg:col-span-9">
+                  <div className="text-xs font-semibold text-white/60 uppercase tracking-wider">Load campaign by ID</div>
+                  <div className="mt-1 flex gap-2">
+                    <input
+                      value={loadCampaignId}
+                      onChange={(e) => setLoadCampaignId(e.target.value)}
+                      placeholder="Paste a campaign ID…"
+                      className="flex-1 rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={loadPersistedCampaign}
+                      disabled={isSaving || isLoading}
+                      className="px-3 py-2 rounded-md bg-white/10 text-white text-sm font-semibold hover:bg-white/15 disabled:opacity-50 inline-flex items-center gap-2"
+                    >
+                      {isLoading ? (
+                        <>
+                          <InlineSpinner className="h-4 w-4" />
+                          <span>Loading</span>
+                        </>
+                      ) : (
+                        "Load"
+                      )}
+                    </button>
+                  </div>
+                  <div className="mt-1 text-[11px] text-white/50">
+                    Loading replaces your selected contacts and restores saved email drafts for each recipient.
+                  </div>
+                </div>
+                <div className="lg:col-span-3 flex items-center justify-end">
+                  {notice ? <div className="text-xs font-semibold text-emerald-200">{notice}</div> : null}
+                </div>
+              </div>
+            </div>
 
           {error ? (
             <div className="mb-6 rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
@@ -549,11 +841,14 @@ export default function CampaignV2() {
                       const toneOptions = toneOptionsForStep(step.step_number);
                       const toneIdx = Math.max(0, toneOptions.indexOf(step.tone));
                       const toneDisplay = toneOptions[toneIdx] || toneOptions[0];
+                      const emailLabel = emailLabelForNumber(Number(step.step_number || 0));
                       return (
                         <div key={step.id} className="rounded-lg border border-white/10 bg-black/20 p-4">
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <div className="text-sm font-bold text-white">Email {step.step_number}</div>
+                              <div className="text-sm font-bold text-white">
+                                Email {step.step_number} ({emailLabel})
+                              </div>
                               <div className="mt-1 text-xs text-white/60">
                                 {step.last_generated_at ? `Updated ${new Date(step.last_generated_at).toLocaleString()}` : "Not generated yet"}
                               </div>
