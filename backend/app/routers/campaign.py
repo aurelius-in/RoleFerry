@@ -9,7 +9,12 @@ from ..auth import get_current_user_optional
 from ..clients.openai_client import get_openai_client, extract_json_from_text, _strip_fluff_openers
 from ..config import settings
 from ..clients.instantly import InstantlyClient
+from ..db import get_engine
 from ..storage import store
+from sqlalchemy import text as sql_text
+
+
+engine = get_engine()
 
 
 class CampaignExportRequest(BaseModel):
@@ -95,8 +100,8 @@ def list_runs():
     return {"runs": store.list_sequence_runs()}
 
 
-@router.get("/campaigns")
-def list_campaigns(status: str | None = None, variant: str | None = None, min_list: int | None = None):
+@router.get("/instantly-campaigns")
+def list_instantly_campaigns(status: str | None = None, variant: str | None = None, min_list: int | None = None):
     items = store.list_campaigns()
     if status:
         items = [c for c in items if (c.get("status") or "").lower() == status.lower()]
@@ -105,6 +110,485 @@ def list_campaigns(status: str | None = None, variant: str | None = None, min_li
     if min_list is not None:
         items = [c for c in items if int(c.get("list_size") or 0) >= int(min_list)]
     return {"campaigns": items}
+
+
+class PersistedCampaignCreateRequest(BaseModel):
+    name: str = ""
+    status: str = "draft"
+    meta: Dict[str, Any] = {}
+
+
+class PersistedCampaignUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    status: Optional[str] = None
+    meta: Optional[Dict[str, Any]] = None
+
+
+class PersistedCampaignRowUpsertRequest(BaseModel):
+    rows: List[Dict[str, Any]]
+
+
+def _require_user(user: Any) -> Any:
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return user
+
+
+@router.get("/campaigns")
+async def list_persisted_campaigns(http_request: Request):
+    """
+    List persisted campaigns for the current user (Postgres).
+    """
+    user = _require_user(await get_current_user_optional(http_request))
+    async with engine.begin() as conn:
+        res = await conn.execute(
+            sql_text(
+                """
+                SELECT id::text, user_id, name, status, meta, created_at, updated_at
+                FROM campaign
+                WHERE user_id = :user_id
+                ORDER BY created_at DESC
+                LIMIT 50
+                """
+            ),
+            {"user_id": str(user.id)},
+        )
+        items = [dict(r._mapping) for r in res.fetchall()]
+        return {"campaigns": items}
+
+
+@router.post("/campaigns")
+async def create_persisted_campaign(payload: PersistedCampaignCreateRequest, http_request: Request):
+    user = _require_user(await get_current_user_optional(http_request))
+    name = str(payload.name or "").strip()
+    status = str(payload.status or "draft").strip() or "draft"
+    meta = payload.meta or {}
+    async with engine.begin() as conn:
+        res = await conn.execute(
+            sql_text(
+                """
+                INSERT INTO campaign (user_id, name, status, meta)
+                VALUES (:user_id, :name, :status, :meta)
+                RETURNING id::text, user_id, name, status, meta, created_at, updated_at
+                """
+            ),
+            {"user_id": str(user.id), "name": name, "status": status, "meta": meta},
+        )
+        row = res.first()
+        return {"campaign": dict(row._mapping) if row else None}
+
+
+@router.patch("/campaigns/{campaign_id}")
+async def update_persisted_campaign(campaign_id: str, payload: PersistedCampaignUpdateRequest, http_request: Request):
+    user = _require_user(await get_current_user_optional(http_request))
+    cid = str(campaign_id or "").strip()
+    if not cid:
+        raise HTTPException(status_code=400, detail="campaign_id is required")
+    name = payload.name
+    status = payload.status
+    meta = payload.meta
+    async with engine.begin() as conn:
+        res = await conn.execute(
+            sql_text(
+                """
+                UPDATE campaign
+                SET
+                  name = COALESCE(:name, name),
+                  status = COALESCE(:status, status),
+                  meta = COALESCE(:meta, meta),
+                  updated_at = now()
+                WHERE id = :id::uuid AND user_id = :user_id
+                RETURNING id::text, user_id, name, status, meta, created_at, updated_at
+                """
+            ),
+            {"id": cid, "user_id": str(user.id), "name": name, "status": status, "meta": meta},
+        )
+        row = res.first()
+        if not row:
+            raise HTTPException(status_code=404, detail="Campaign not found")
+        return {"campaign": dict(row._mapping)}
+
+
+@router.get("/campaigns/{campaign_id}")
+async def get_persisted_campaign(campaign_id: str, http_request: Request):
+    user = _require_user(await get_current_user_optional(http_request))
+    cid = str(campaign_id or "").strip()
+    if not cid:
+        raise HTTPException(status_code=400, detail="campaign_id is required")
+    async with engine.begin() as conn:
+        res = await conn.execute(
+            sql_text(
+                """
+                SELECT id::text, user_id, name, status, meta, created_at, updated_at
+                FROM campaign
+                WHERE id = :id::uuid AND user_id = :user_id
+                LIMIT 1
+                """
+            ),
+            {"id": cid, "user_id": str(user.id)},
+        )
+        camp = res.first()
+        if not camp:
+            raise HTTPException(status_code=404, detail="Campaign not found")
+        res_rows = await conn.execute(
+            sql_text(
+                """
+                SELECT
+                  id::text,
+                  campaign_id::text,
+                  user_id,
+                  email,
+                  email_provider,
+                  lead_status,
+                  first_name,
+                  last_name,
+                  verification_status,
+                  interest_status,
+                  website,
+                  job_title,
+                  linkedin,
+                  employees,
+                  company_name,
+                  applied_job_link,
+                  applied_job_title,
+                  personalized_page,
+                  context,
+                  emails,
+                  state,
+                  created_at,
+                  updated_at
+                FROM campaign_row
+                WHERE campaign_id = :id::uuid AND user_id = :user_id
+                ORDER BY created_at ASC
+                """
+            ),
+            {"id": cid, "user_id": str(user.id)},
+        )
+        rows = [dict(r._mapping) for r in res_rows.fetchall()]
+        return {"campaign": dict(camp._mapping), "rows": rows}
+
+
+def _row_params_from_dict(raw: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Map a generic row dict (frontend payload) into campaign_row columns.
+    Accepts both snake_case and common CSV-like key variants.
+    """
+    def pick(*keys: str) -> Any:
+        for k in keys:
+            if k in raw:
+                return raw.get(k)
+        return None
+
+    employees = pick("employees", "Employees")
+    try:
+        employees_i = int(employees) if employees is not None and str(employees).strip() != "" else None
+    except Exception:
+        employees_i = None
+
+    return {
+        "email": pick("email", "Email"),
+        "email_provider": pick("email_provider", "emailProvider", "Email Provider"),
+        "lead_status": pick("lead_status", "leadStatus", "Lead Status"),
+        "first_name": pick("first_name", "firstName", "First Name"),
+        "last_name": pick("last_name", "lastName", "Last Name"),
+        "verification_status": pick("verification_status", "verificationStatus", "Verification Status"),
+        "interest_status": pick("interest_status", "interestStatus", "Interest Status"),
+        "website": pick("website", "Website"),
+        "job_title": pick("job_title", "jobTitle", "Job Title"),
+        "linkedin": pick("linkedin", "linkedIn", "LinkedIn"),
+        "employees": employees_i,
+        "company_name": pick("company_name", "companyName", "Company"),
+        "applied_job_link": pick("applied_job_link", "appliedJobLink", "Applied Job Link"),
+        "applied_job_title": pick("applied_job_title", "appliedJobTitle", "Applied Job Title"),
+        "personalized_page": pick("personalized_page", "personalizedPage", "Personalized page", "Personalized Page"),
+        "context": pick("context") or {},
+        "emails": pick("emails") or {},
+        "state": pick("state") or {},
+    }
+
+
+@router.post("/campaigns/{campaign_id}/rows:upsert")
+@router.post("/campaigns/{campaign_id}/rows/upsert")
+async def upsert_campaign_rows(campaign_id: str, payload: PersistedCampaignRowUpsertRequest, http_request: Request):
+    user = _require_user(await get_current_user_optional(http_request))
+    cid = str(campaign_id or "").strip()
+    if not cid:
+        raise HTTPException(status_code=400, detail="campaign_id is required")
+
+    rows_in = payload.rows or []
+    if not isinstance(rows_in, list):
+        raise HTTPException(status_code=400, detail="rows must be a list")
+
+    out_ids: List[str] = []
+    async with engine.begin() as conn:
+        # Validate campaign ownership first
+        camp = await conn.execute(
+            sql_text("SELECT 1 FROM campaign WHERE id = :id::uuid AND user_id = :user_id LIMIT 1"),
+            {"id": cid, "user_id": str(user.id)},
+        )
+        if not camp.first():
+            raise HTTPException(status_code=404, detail="Campaign not found")
+
+        for r in rows_in:
+            raw = r if isinstance(r, dict) else {}
+            rid = str(raw.get("id") or "").strip()
+            params = _row_params_from_dict(raw)
+            params_base = {"campaign_id": cid, "user_id": str(user.id), **params}
+
+            if rid:
+                res = await conn.execute(
+                    sql_text(
+                        """
+                        UPDATE campaign_row
+                        SET
+                          email = :email,
+                          email_provider = :email_provider,
+                          lead_status = :lead_status,
+                          first_name = :first_name,
+                          last_name = :last_name,
+                          verification_status = :verification_status,
+                          interest_status = :interest_status,
+                          website = :website,
+                          job_title = :job_title,
+                          linkedin = :linkedin,
+                          employees = :employees,
+                          company_name = :company_name,
+                          applied_job_link = :applied_job_link,
+                          applied_job_title = :applied_job_title,
+                          personalized_page = :personalized_page,
+                          context = :context,
+                          emails = :emails,
+                          state = :state,
+                          updated_at = now()
+                        WHERE id = :id::uuid AND campaign_id = :campaign_id::uuid AND user_id = :user_id
+                        RETURNING id::text
+                        """
+                    ),
+                    {"id": rid, **params_base},
+                )
+                row = res.first()
+                if row:
+                    out_ids.append(str(row[0]))
+                    continue
+
+            # Insert new row (or if update didn't match)
+            res2 = await conn.execute(
+                sql_text(
+                    """
+                    INSERT INTO campaign_row (
+                      campaign_id,
+                      user_id,
+                      email,
+                      email_provider,
+                      lead_status,
+                      first_name,
+                      last_name,
+                      verification_status,
+                      interest_status,
+                      website,
+                      job_title,
+                      linkedin,
+                      employees,
+                      company_name,
+                      applied_job_link,
+                      applied_job_title,
+                      personalized_page,
+                      context,
+                      emails,
+                      state
+                    )
+                    VALUES (
+                      :campaign_id::uuid,
+                      :user_id,
+                      :email,
+                      :email_provider,
+                      :lead_status,
+                      :first_name,
+                      :last_name,
+                      :verification_status,
+                      :interest_status,
+                      :website,
+                      :job_title,
+                      :linkedin,
+                      :employees,
+                      :company_name,
+                      :applied_job_link,
+                      :applied_job_title,
+                      :personalized_page,
+                      :context,
+                      :emails,
+                      :state
+                    )
+                    RETURNING id::text
+                    """
+                ),
+                params_base,
+            )
+            row2 = res2.first()
+            if row2:
+                out_ids.append(str(row2[0]))
+
+    return {"row_ids": out_ids}
+
+
+@router.get("/campaigns/{campaign_id}/export.csv")
+async def export_campaign_csv(campaign_id: str, http_request: Request):
+    """
+    Export persisted campaign rows as a CSV shaped like example_campaign_spreadsheet.csv
+    (plus the ability to expand later).
+    """
+    user = _require_user(await get_current_user_optional(http_request))
+    cid = str(campaign_id or "").strip()
+    if not cid:
+        raise HTTPException(status_code=400, detail="campaign_id is required")
+
+    async with engine.begin() as conn:
+        res = await conn.execute(
+            sql_text(
+                """
+                SELECT
+                  email,
+                  email_provider,
+                  lead_status,
+                  first_name,
+                  last_name,
+                  verification_status,
+                  interest_status,
+                  website,
+                  job_title,
+                  linkedin,
+                  employees,
+                  company_name,
+                  applied_job_link,
+                  applied_job_title,
+                  personalized_page
+                FROM campaign_row
+                WHERE campaign_id = :id::uuid AND user_id = :user_id
+                ORDER BY created_at ASC
+                """
+            ),
+            {"id": cid, "user_id": str(user.id)},
+        )
+        rows = [dict(r._mapping) for r in res.fetchall()]
+
+    # Match the example spreadsheet header naming/casing closely.
+    fieldnames = [
+        "Email",
+        "Email Provider",
+        "Lead Status",
+        "First Name",
+        "Last Name",
+        "Verification Status",
+        "Interest Status",
+        "website",
+        "jobTitle",
+        "linkedIn",
+        "Employees",
+        "companyName",
+        "Applied Job Link",
+        "Applied Job Title",
+        "Personalized page",
+    ]
+    buffer = io.StringIO()
+    writer = csv.DictWriter(buffer, fieldnames=fieldnames)
+    writer.writeheader()
+    for r in rows:
+        writer.writerow(
+            {
+                "Email": r.get("email") or "",
+                "Email Provider": r.get("email_provider") or "",
+                "Lead Status": r.get("lead_status") or "",
+                "First Name": r.get("first_name") or "",
+                "Last Name": r.get("last_name") or "",
+                "Verification Status": r.get("verification_status") or "",
+                "Interest Status": r.get("interest_status") or "",
+                "website": r.get("website") or "",
+                "jobTitle": r.get("job_title") or "",
+                "linkedIn": r.get("linkedin") or "",
+                "Employees": r.get("employees") or "",
+                "companyName": r.get("company_name") or "",
+                "Applied Job Link": r.get("applied_job_link") or "",
+                "Applied Job Title": r.get("applied_job_title") or "",
+                "Personalized page": r.get("personalized_page") or "",
+            }
+        )
+    return {"filename": f"campaign_{cid}.csv", "content": buffer.getvalue()}
+
+
+class CampaignRowGenerateEmailRequest(CampaignGenerateStepRequest):
+    """
+    Same shape as /campaign/generate-step, but persists results to campaign_row.emails.
+    """
+    pass
+
+
+@router.post("/campaigns/{campaign_id}/rows/{row_id}/generate-email", response_model=CampaignGenerateStepResponse)
+async def generate_email_for_campaign_row(
+    campaign_id: str,
+    row_id: str,
+    payload: CampaignRowGenerateEmailRequest,
+    http_request: Request,
+):
+    user = _require_user(await get_current_user_optional(http_request))
+    cid = str(campaign_id or "").strip()
+    rid = str(row_id or "").strip()
+    if not cid or not rid:
+        raise HTTPException(status_code=400, detail="campaign_id and row_id are required")
+
+    # Generate using the existing logic
+    result = await generate_campaign_step(payload, http_request)
+
+    # Persist into campaign_row.emails JSONB as emails.email_{n} = {...}
+    step_n = int(payload.step_number or 0)
+    if step_n < 1 or step_n > 4:
+        return result  # already validated by generate_campaign_step, but keep safe
+
+    entry = {
+        "email_number": step_n,
+        "subject": result.subject,
+        "body": result.body,
+        "tone": str(payload.tone or ""),
+        "custom_tone": str(payload.custom_tone or ""),
+        "special_instructions": str(payload.special_instructions or ""),
+        "generated_at": None,  # server time is implicit via updated_at; keep placeholder for later
+    }
+
+    async with engine.begin() as conn:
+        # Ensure ownership
+        res = await conn.execute(
+            sql_text(
+                """
+                SELECT emails
+                FROM campaign_row
+                WHERE id = :rid::uuid AND campaign_id = :cid::uuid AND user_id = :user_id
+                LIMIT 1
+                """
+            ),
+            {"rid": rid, "cid": cid, "user_id": str(user.id)},
+        )
+        row = res.first()
+        if not row:
+            raise HTTPException(status_code=404, detail="Campaign row not found")
+        existing = row[0] if row[0] is not None else {}
+        if not isinstance(existing, dict):
+            existing = {}
+        existing.setdefault("emails", {})
+        if not isinstance(existing.get("emails"), dict):
+            existing["emails"] = {}
+        existing["emails"][f"email_{step_n}"] = entry
+
+        await conn.execute(
+            sql_text(
+                """
+                UPDATE campaign_row
+                SET emails = :emails, updated_at = now()
+                WHERE id = :rid::uuid AND campaign_id = :cid::uuid AND user_id = :user_id
+                """
+            ),
+            {"emails": existing, "rid": rid, "cid": cid, "user_id": str(user.id)},
+        )
+
+    return result
 
 
 @router.post("/push")

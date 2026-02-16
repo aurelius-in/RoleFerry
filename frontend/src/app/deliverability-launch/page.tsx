@@ -544,28 +544,134 @@ export default function DeliverabilityLaunchPage() {
       if (parsed && typeof parsed === "object") setCampaignByContactV2(parsed);
     } catch {}
 
-    // Pick a canonical campaign (for checks/UI preview) from the first selected contact.
-    try {
-      const contacts = loadSelectedContacts();
-      const firstId = String((Array.isArray(contacts) ? contacts[0]?.id : "") || "").trim();
-      const camp = firstId ? (parsed: any) => (parsed && typeof parsed === "object" ? parsed[firstId] : null) : () => null;
-      const raw = localStorage.getItem("rf_campaign_by_contact_v2");
-      const by = raw ? JSON.parse(raw) : null;
-      const c0 = camp(by);
-      if (c0?.emails?.length) {
-        setCampaign(c0);
-      } else {
-        // Legacy fallback: older builds stored a single campaign template.
-        const campaignData = localStorage.getItem("campaign_data");
-        if (campaignData) setCampaign(JSON.parse(campaignData));
+    // Preferred: if a persisted campaign was saved, hydrate Launch from Postgres.
+    // Fallback: use localStorage (per-contact sequences) like older builds.
+    (async () => {
+      const persisted = (() => {
+        try {
+          return JSON.parse(localStorage.getItem("rf_persisted_campaign_meta_v1") || "null");
+        } catch {
+          return null;
+        }
+      })();
+      const persistedId = String(persisted?.id || "").trim();
+      if (persistedId) {
+        try {
+          const resp = await api<{ campaign: any; rows: any[] }>(`/campaign/campaigns/${encodeURIComponent(persistedId)}`, "GET");
+          const camp = resp?.campaign || null;
+          const rows = Array.isArray(resp?.rows) ? resp.rows : [];
+          if (camp && rows.length) {
+            const delaysByN: Record<number, number> = { 1: 0, 2: 3, 3: 7, 4: 14 };
+            const contactIdForRow = (r: any) => {
+              const st = r?.state && typeof r.state === "object" ? r.state : {};
+              return String(st?.contact_id || r?.email || r?.id || "").trim();
+            };
+            const toContacts = rows.map((r: any) => {
+              const cid = contactIdForRow(r) || `c_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+              const name = `${String(r?.first_name || "").trim()} ${String(r?.last_name || "").trim()}`.trim() || "Contact";
+              return {
+                id: cid,
+                email: String(r?.email || "").trim(),
+                name,
+                company: String(r?.company_name || "").trim(),
+                title: String(r?.job_title || "").trim(),
+                linkedin_url: String(r?.linkedin || "").trim(),
+                website: String(r?.website || "").trim(),
+                employees: r?.employees ?? null,
+                verification_status: String(r?.verification_status || "").trim(),
+              };
+            });
+
+            try {
+              localStorage.setItem("selected_contacts", JSON.stringify(toContacts));
+            } catch {}
+
+            const extractEmails = (r: any) => {
+              const stored = r?.emails && typeof r.emails === "object" ? r.emails : {};
+              // We store nested `{ emails: { email_1: ... } }` today; also tolerate flatter shapes.
+              const blob =
+                stored?.emails && typeof stored.emails === "object"
+                  ? stored.emails
+                  : stored;
+              const out: any[] = [];
+              for (const n of [1, 2, 3, 4]) {
+                const hit = (blob as any)?.[`email_${n}`] || null;
+                out.push({
+                  id: `${String(r?.id || contactIdForRow(r) || "row")}_e${n}`,
+                  step_number: n,
+                  subject: String(hit?.subject || "").trim(),
+                  body: String(hit?.body || "").trim(),
+                  delay_days: delaysByN[n] ?? 0,
+                  stop_on_reply: true,
+                });
+              }
+              return out;
+            };
+
+            const by: Record<string, any> = {};
+            for (const r of rows) {
+              const cid = contactIdForRow(r);
+              if (!cid) continue;
+              by[cid] = {
+                id: `camp_${cid}`,
+                name: String(camp?.name || "").trim() || "Campaign",
+                status: "draft",
+                emails: extractEmails(r),
+                created_at: String(camp?.created_at || new Date().toISOString()),
+                updated_at: String(camp?.updated_at || new Date().toISOString()),
+              };
+            }
+
+            setCampaignByContactV2(by);
+            try {
+              localStorage.setItem("rf_campaign_by_contact_v2", JSON.stringify(by || {}));
+            } catch {}
+
+            // Canonical sequence for deliverability checks: use the first row's 4 emails.
+            const c0 = rows[0];
+            const canonicalEmails = extractEmails(c0);
+            const canonical = {
+              id: String(camp?.id || persistedId).trim(),
+              name: String(camp?.name || "").trim() || "Campaign",
+              status: "draft",
+              emails: canonicalEmails,
+              created_at: String(camp?.created_at || new Date().toISOString()),
+              updated_at: String(camp?.updated_at || new Date().toISOString()),
+            };
+            setCampaign(canonical);
+            try {
+              localStorage.setItem("campaign_data", JSON.stringify(canonical));
+            } catch {}
+            return; // persisted path succeeded
+          }
+        } catch {
+          // fall through to localStorage fallback
+        }
       }
-    } catch {
-      // Legacy fallback
+
+      // Fallback: pick a canonical campaign (for checks/UI preview) from the first selected contact.
       try {
-        const campaignData = localStorage.getItem("campaign_data");
-        if (campaignData) setCampaign(JSON.parse(campaignData));
-      } catch {}
-    }
+        const contacts = loadSelectedContacts();
+        const firstId = String((Array.isArray(contacts) ? contacts[0]?.id : "") || "").trim();
+        const campPick = firstId ? (parsed: any) => (parsed && typeof parsed === "object" ? parsed[firstId] : null) : () => null;
+        const raw = localStorage.getItem("rf_campaign_by_contact_v2");
+        const by = raw ? JSON.parse(raw) : null;
+        const c0 = campPick(by);
+        if (c0?.emails?.length) {
+          setCampaign(c0);
+        } else {
+          // Legacy fallback: older builds stored a single campaign template.
+          const campaignData = localStorage.getItem("campaign_data");
+          if (campaignData) setCampaign(JSON.parse(campaignData));
+        }
+      } catch {
+        // Legacy fallback
+        try {
+          const campaignData = localStorage.getItem("campaign_data");
+          if (campaignData) setCampaign(JSON.parse(campaignData));
+        } catch {}
+      }
+    })();
 
     // Load channel + previously generated LinkedIn notes
     try {
@@ -927,7 +1033,7 @@ export default function DeliverabilityLaunchPage() {
               </div>
               <h3 className="text-lg font-medium text-white mb-2">No Campaign Data</h3>
               <p className="text-white/70 mb-6">
-                Please complete the Campaign step first to launch your sequence.
+                Please generate your Campaign emails first to launch your sequence.
               </p>
               <button
                 onClick={() => router.push('/campaign')}
@@ -962,7 +1068,7 @@ export default function DeliverabilityLaunchPage() {
                     <div className="font-semibold text-white">{campaignName || campaign.name}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-white/70">Sequence steps</div>
+                    <div className="text-sm text-white/70">Emails in sequence</div>
                     <div className="font-semibold text-white">{sequenceSteps}</div>
                   </div>
                   <div>
@@ -982,11 +1088,11 @@ export default function DeliverabilityLaunchPage() {
                     <div className="font-semibold text-white">{recipientCompanies} compan{recipientCompanies === 1 ? "y" : "ies"}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-white/70">Planned sends (all steps)</div>
+                    <div className="text-sm text-white/70">Planned sends (all emails)</div>
                     <div className="font-semibold text-white">{plannedSends} email{plannedSends === 1 ? "" : "s"}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-white/70">Step 1 sends</div>
+                    <div className="text-sm text-white/70">Email 1 sends</div>
                     <div className="font-semibold text-white">{firstStepSends} email{firstStepSends === 1 ? "" : "s"}</div>
                   </div>
                 </div>
@@ -1047,7 +1153,7 @@ export default function DeliverabilityLaunchPage() {
                     <div>
                       <h2 className="text-xl font-semibold text-white">Email deliverability check</h2>
                       <p className="mt-1 text-sm text-white/70">
-                        Check each email step for spam risk and get suggested fixes. Results show on the left by step.
+                        Check each email for spam risk and get suggested fixes. Results show on the left by email.
                       </p>
                     </div>
                     <button
@@ -1084,7 +1190,7 @@ export default function DeliverabilityLaunchPage() {
                       </div>
 
                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                        {/* Left: steps checked */}
+                        {/* Left: emails checked */}
                         <div className="lg:col-span-4">
                           <div className="rounded-lg border border-white/10 bg-white/5 p-3">
                             <div className="text-sm font-semibold text-white/85">Emails checked</div>
@@ -1101,7 +1207,7 @@ export default function DeliverabilityLaunchPage() {
                                     }`}
                                   >
                                     <div className="flex items-center justify-between gap-3">
-                                      <div className="text-sm font-semibold text-white/85">Step {r.step_number}</div>
+                                      <div className="text-sm font-semibold text-white/85">Email {r.step_number}</div>
                                       <div className="text-xs text-white/70">
                                         <span className={getHealthScoreColor(Number(r.health_score || 0) || 0)}>
                                           {Number(r.health_score || 0) || 0}%
@@ -1127,7 +1233,7 @@ export default function DeliverabilityLaunchPage() {
                                 <div className="flex items-start justify-between gap-3">
                                   <div>
                                     <div className="text-sm font-semibold text-white">
-                                      Step {r.step_number} •{" "}
+                                      Email {r.step_number} •{" "}
                                       <span className={getHealthScoreColor(Number(r.health_score || 0) || 0)}>{Number(r.health_score || 0) || 0}%</span>{" "}
                                       <span className="text-white/60">({r.spam_risk} risk)</span>
                                     </div>
@@ -1704,7 +1810,7 @@ export default function DeliverabilityLaunchPage() {
                           <div>
                             <div className="text-sm font-semibold text-white">Recipients</div>
                             <div className="mt-1 text-xs text-white/60">
-                              Deliverability (spam risk) is checked per <span className="font-semibold text-white/80">email step</span>.{" "}
+                              Deliverability (spam risk) is checked per <span className="font-semibold text-white/80">email</span>.{" "}
                               This table shows per-contact <span className="font-semibold text-white/80">email verification</span>.
                             </div>
                           </div>
