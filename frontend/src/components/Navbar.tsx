@@ -44,13 +44,14 @@ export default function Navbar() {
         if (path === "/job-descriptions" || path.startsWith("/job-descriptions/")) return 4;
         if (path === "/gap-analysis" || path.startsWith("/gap-analysis/")) return 5;
         if (path === "/painpoint-match" || path.startsWith("/painpoint-match/")) return 6;
-        if (path === "/offer" || path.startsWith("/offer/")) return 7;
-        if (path === "/company-research" || path.startsWith("/company-research/")) return 8;
+        if (path === "/apply" || path.startsWith("/apply/")) return 7;
+        if (path === "/offer" || path.startsWith("/offer/")) return 8;
+        if (path === "/company-research" || path.startsWith("/company-research/")) return 9;
         // Context research is part of the "Decision Makers" step in the wireframe flow.
-        if (path === "/find-contact" || path.startsWith("/find-contact/")) return 9;
-        if (path === "/bio-page" || path.startsWith("/bio-page/")) return 10;
-        if (path === "/bio/preview" || path.startsWith("/bio/preview/")) return 10;
-        if (path === "/campaign" || path.startsWith("/campaign/")) return 11;
+        if (path === "/find-contact" || path.startsWith("/find-contact/")) return 10;
+        if (path === "/bio-page" || path.startsWith("/bio-page/")) return 11;
+        if (path === "/bio/preview" || path.startsWith("/bio/preview/")) return 11;
+        if (path === "/campaign" || path.startsWith("/campaign/")) return 12;
         if (path === "/deliverability-launch" || path.startsWith("/deliverability-launch/")) return 12;
         return null;
       };
@@ -72,8 +73,8 @@ export default function Navbar() {
       }
       const next = Array.from(new Set([...(steps || []).filter((n) => Number.isFinite(n)), step]))
         .filter((n) => n >= 1 && n <= 12);
-      // v4: Offer step moved to 7 (between Match and Research). Roles=4, Gaps=5, Match=6.
-      window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 4, steps: next }));
+      // v5: Apply inserted at step 7; launch is post-completion action.
+      window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 5, steps: next }));
       window.dispatchEvent(new CustomEvent("roleferry-progress-updated", { detail: { step } }));
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -156,6 +157,7 @@ export default function Navbar() {
             <NavPill href="/job-descriptions" pathname={pathname}>Roles</NavPill>
             <NavPill href="/gap-analysis" pathname={pathname}>Gaps</NavPill>
             <NavPill href="/painpoint-match" pathname={pathname}>Match</NavPill>
+            <NavPill href="/apply" pathname={pathname}>Apply</NavPill>
             <NavPill href="/offer" pathname={pathname}>Offer</NavPill>
             <NavPill href="/company-research" pathname={pathname}>Research</NavPill>
             <NavPill href="/find-contact" pathname={pathname}>Contact</NavPill>

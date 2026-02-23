@@ -18,10 +18,17 @@ ApplyStatus = Literal["queued", "applied", "failed", "skipped", "interviewing", 
 
 
 class CandidateProfile(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
     linkedin_url: Optional[str] = None
     city: Optional[str] = None
     state: Optional[str] = None
     postal_code: Optional[str] = None
+    citizenship_country: Optional[str] = None
+    citizenship_status: Optional[str] = None
+    resume_present: Optional[bool] = None
 
 
 class ApplicationCreate(BaseModel):
@@ -64,12 +71,20 @@ def _now_iso() -> str:
 def _validate_auto_apply_profile(profile: Optional[CandidateProfile]) -> List[str]:
     p = profile or CandidateProfile()
     missing: List[str] = []
-    if not str(p.linkedin_url or "").strip():
-        missing.append("LinkedIn URL")
+    if not str(p.first_name or "").strip():
+        missing.append("First name")
+    if not str(p.last_name or "").strip():
+        missing.append("Last name")
+    if not str(p.email or "").strip():
+        missing.append("Email")
+    if not str(p.phone or "").strip():
+        missing.append("Phone")
     if not str(p.city or "").strip():
         missing.append("City")
     if not str(p.postal_code or "").strip():
         missing.append("Postal code")
+    if not bool(p.resume_present):
+        missing.append("Resume")
     return missing
 
 

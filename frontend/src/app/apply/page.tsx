@@ -37,6 +37,15 @@ type BulkApplyResponse = {
   summary: { applied: number; failed: number; skipped: number; queued: number };
 };
 
+type RequiredProfileKey =
+  | "first_name"
+  | "last_name"
+  | "email"
+  | "phone"
+  | "city"
+  | "postal_code"
+  | "resume";
+
 const TRACKER_KEY = "tracker_applications";
 
 function safeJson<T>(raw: string | null, fallback: T): T {
@@ -90,10 +99,17 @@ export default function ApplyPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [eligibleOnly, setEligibleOnly] = useState(true);
   const [autoApply, setAutoApply] = useState(true);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [city, setCity] = useState("");
   const [stateCode, setStateCode] = useState("");
   const [postalCode, setPostalCode] = useState("");
+  const [resumePresent, setResumePresent] = useState(false);
+  const [citizenshipCountry, setCitizenshipCountry] = useState("");
+  const [citizenshipStatus, setCitizenshipStatus] = useState("");
   const [appsByJobId, setAppsByJobId] = useState<Record<string, ApplicationRecord>>({});
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -116,10 +132,18 @@ export default function ApplyPage() {
     setSelectedIds(new Set(normalized.map((r) => r.id)));
 
     const user = safeJson<any>(localStorage.getItem("rf_user"), {});
+    setFirstName(String(user?.first_name || user?.firstName || ""));
+    setLastName(String(user?.last_name || user?.lastName || ""));
+    setEmail(String(user?.email || ""));
+    setPhone(String(user?.phone || ""));
     setLinkedinUrl(String(user?.linkedin_url || ""));
-    setCity(String(user?.city || ""));
-    setStateCode(String(user?.state || ""));
-    setPostalCode(String(user?.postal_code || user?.zip || ""));
+    const prefs = safeJson<any>(localStorage.getItem("job_preferences"), {});
+    setCity(String(user?.city || prefs?.city || ""));
+    setStateCode(String(user?.state || prefs?.state || ""));
+    setPostalCode(String(user?.postal_code || user?.zip || prefs?.postal_code || prefs?.zip || ""));
+    setCitizenshipCountry(String(localStorage.getItem("rf_citizenship_country") || ""));
+    setCitizenshipStatus(String(localStorage.getItem("rf_citizenship_status") || ""));
+    setResumePresent(Boolean(localStorage.getItem("resume_extract")));
 
     loadApplications().catch(() => {
       // If backend is unavailable, page remains usable for manual link opening.
@@ -151,13 +175,18 @@ export default function ApplyPage() {
     return summary;
   }, [filteredRoles, appsByJobId]);
 
-  const profileMissing = useMemo(() => {
-    const missing: string[] = [];
-    if (!linkedinUrl.trim()) missing.push("LinkedIn URL");
-    if (!city.trim()) missing.push("City");
-    if (!postalCode.trim()) missing.push("Postal code");
+  const missingRequiredFields = useMemo(() => {
+    const missing: Array<{ key: RequiredProfileKey; label: string }> = [];
+    if (!firstName.trim()) missing.push({ key: "first_name", label: "First name" });
+    if (!lastName.trim()) missing.push({ key: "last_name", label: "Last name" });
+    if (!email.trim()) missing.push({ key: "email", label: "Email" });
+    if (!phone.trim()) missing.push({ key: "phone", label: "Phone" });
+    if (!city.trim()) missing.push({ key: "city", label: "City" });
+    if (!postalCode.trim()) missing.push({ key: "postal_code", label: "Postal code" });
+    if (!resumePresent) missing.push({ key: "resume", label: "Resume" });
     return missing;
-  }, [linkedinUrl, city, postalCode]);
+  }, [firstName, lastName, email, phone, city, postalCode, resumePresent]);
+  const missingRequiredKeys = useMemo(() => new Set(missingRequiredFields.map((f) => f.key)), [missingRequiredFields]);
 
   const toggleSelected = (id: string) => {
     setSelectedIds((prev) => {
@@ -208,8 +237,8 @@ export default function ApplyPage() {
       setErr("Select at least one role to apply.");
       return;
     }
-    if (autoApply && profileMissing.length) {
-      setErr(`Auto-apply requires: ${profileMissing.join(", ")}.`);
+    if (autoApply && missingRequiredFields.length) {
+      setErr(`Auto-apply requires: ${missingRequiredFields.map((f) => f.label).join(", ")}.`);
       return;
     }
 
@@ -218,10 +247,17 @@ export default function ApplyPage() {
       const payload = {
         auto_apply: autoApply,
         profile: {
+          first_name: firstName.trim() || null,
+          last_name: lastName.trim() || null,
+          email: email.trim() || null,
+          phone: phone.trim() || null,
           linkedin_url: linkedinUrl.trim() || null,
           city: city.trim() || null,
           state: stateCode.trim() || null,
           postal_code: postalCode.trim() || null,
+          citizenship_country: citizenshipCountry.trim() || null,
+          citizenship_status: citizenshipStatus.trim() || null,
+          resume_present: resumePresent,
         },
         roles: selectedRoles.map((r) => ({
           jobId: r.id,
@@ -323,42 +359,108 @@ export default function ApplyPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div className="lg:col-span-4 rounded-lg border border-white/10 bg-black/20 p-4 space-y-3">
-              <div className="text-sm font-semibold text-white">Auto-Apply Requirements</div>
+              <div className="text-sm font-semibold text-white">Auto-Apply Readiness</div>
               <label className="flex items-center gap-2 text-sm text-white/85">
                 <input type="checkbox" checked={autoApply} onChange={(e) => setAutoApply(e.target.checked)} />
                 Enable auto-apply mode
               </label>
-              <input
-                value={linkedinUrl}
-                onChange={(e) => setLinkedinUrl(e.target.value)}
-                placeholder="LinkedIn URL"
-                className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-              />
-              <input
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="City"
-                className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-              />
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  value={stateCode}
-                  onChange={(e) => setStateCode(e.target.value)}
-                  placeholder="State"
-                  className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-                />
-                <input
-                  value={postalCode}
-                  onChange={(e) => setPostalCode(e.target.value)}
-                  placeholder="Postal code"
-                  className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-                />
-              </div>
-              {autoApply && profileMissing.length ? (
-                <div className="text-xs text-yellow-200 bg-yellow-500/10 border border-yellow-400/30 rounded-md p-2">
-                  Missing required profile fields: {profileMissing.join(", ")}.
+              {autoApply ? (
+                <div className="rounded-md border border-white/10 bg-white/5 p-2 text-xs">
+                  {missingRequiredFields.length === 0 ? (
+                    <div className="text-emerald-100">Ready for one-click auto-apply.</div>
+                  ) : (
+                    <div className="text-yellow-200">
+                      Missing required fields: {missingRequiredFields.map((f) => f.label).join(", ")}.
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-md border border-white/10 bg-white/5 p-2 text-xs text-white/70">
+                  Auto-apply is off. You can still open links and apply manually.
+                </div>
+              )}
+
+              {autoApply && missingRequiredFields.length > 0 ? (
+                <div className="space-y-2 rounded-md border border-yellow-400/30 bg-yellow-500/10 p-3">
+                  <div className="text-xs font-semibold text-yellow-100">Complete required fields</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {missingRequiredKeys.has("first_name") ? (
+                      <input
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="First name"
+                        className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
+                      />
+                    ) : null}
+                    {missingRequiredKeys.has("last_name") ? (
+                      <input
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Last name"
+                        className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
+                      />
+                    ) : null}
+                  </div>
+                  {missingRequiredKeys.has("email") ? (
+                    <input
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Email"
+                      className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
+                    />
+                  ) : null}
+                  {missingRequiredKeys.has("phone") ? (
+                    <input
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="Phone"
+                      className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
+                    />
+                  ) : null}
+                  {missingRequiredKeys.has("city") ? (
+                    <input
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="City"
+                      className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
+                    />
+                  ) : null}
+                  {missingRequiredKeys.has("postal_code") ? (
+                    <input
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                      placeholder="Postal code"
+                      className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
+                    />
+                  ) : null}
+                  {missingRequiredKeys.has("resume") ? (
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="inline-flex items-center gap-2 text-xs text-white/80">
+                        <input type="checkbox" checked={resumePresent} onChange={(e) => setResumePresent(e.target.checked)} />
+                        Resume uploaded
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => router.push("/resume")}
+                        className="px-2 py-1 rounded border border-white/10 bg-white/10 hover:bg-white/15 text-xs"
+                      >
+                        Go to Resume
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
+
+              <div className="text-[11px] text-white/55">
+                Auto-filled from your saved profile, preferences, and resume. Optional fields stay hidden.
+              </div>
+              <button
+                type="button"
+                onClick={() => router.push("/settings")}
+                className="w-full px-3 py-2 rounded-md border border-white/10 bg-white/10 hover:bg-white/15 text-xs"
+              >
+                Open Settings
+              </button>
               <div className="pt-2 border-t border-white/10">
                 <button
                   type="button"

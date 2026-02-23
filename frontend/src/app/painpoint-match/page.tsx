@@ -124,6 +124,26 @@ interface ResumeExtract {
   accomplishments: string[];
 }
 
+function normalizeJobDescriptions(raw: any[]): JobDescription[] {
+  const list = Array.isArray(raw) ? raw : [];
+  return list
+    .map((jd: any, idx: number) => {
+      const id = String(jd?.id || jd?.job_id || `${jd?.company || "company"}:${jd?.title || "role"}:${idx}`).trim();
+      if (!id) return null;
+      return {
+        id,
+        title: String(jd?.title || "").trim(),
+        company: String(jd?.company || "").trim(),
+        painPoints: Array.isArray(jd?.painPoints) ? jd.painPoints : Array.isArray(jd?.pain_points) ? jd.pain_points : [],
+        requiredSkills: Array.isArray(jd?.requiredSkills) ? jd.requiredSkills : Array.isArray(jd?.required_skills) ? jd.required_skills : [],
+        successMetrics: Array.isArray(jd?.successMetrics) ? jd.successMetrics : Array.isArray(jd?.success_metrics) ? jd.success_metrics : [],
+        responsibilities: Array.isArray(jd?.responsibilities) ? jd.responsibilities : [],
+        requirements: Array.isArray(jd?.requirements) ? jd.requirements : [],
+      } as JobDescription;
+    })
+    .filter((x): x is JobDescription => Boolean(x && x.id && x.title));
+}
+
 export default function PainPointMatchPage() {
   const router = useRouter();
   const [jobDescriptions, setJobDescriptions] = useState<JobDescription[]>([]);
@@ -170,7 +190,7 @@ export default function PainPointMatchPage() {
       const savedResume = typeof window !== "undefined" ? localStorage.getItem("resume_extract") : null;
 
       if (savedJDs) {
-        setJobDescriptions(JSON.parse(savedJDs));
+        setJobDescriptions(normalizeJobDescriptions(JSON.parse(savedJDs)));
       }
       if (savedResume) {
         setResumeExtract(JSON.parse(savedResume));
@@ -262,8 +282,41 @@ export default function PainPointMatchPage() {
       const nextByJob: Record<string, PainPointMatch[]> = {};
       const rawMap = resp?.matches_by_job_id || {};
       for (const jd of jobDescriptions) {
-        const rawMatches = rawMap[jd.id] || [];
+        const key = String(jd.id || "").trim();
+        const rawMatches = (key ? rawMap[key] : undefined) || [];
         nextByJob[jd.id] = rawMatches.map(mapBackendMatch);
+      }
+
+      // Safety fallback: if batch returned empty for everything, try per-role generate.
+      const hasAnyFromBatch = Object.values(nextByJob).some((arr) => Array.isArray(arr) && arr.length > 0);
+      if (!hasAnyFromBatch) {
+        for (const jd of jobDescriptions) {
+          try {
+            const single = await api<PainPointMatchResponse>("/painpoint-match/generate", "POST", {
+              job_description_id: String(jd.id || ""),
+              resume_extract_id: "latest",
+              job_description: {
+                id: jd.id,
+                title: jd.title,
+                company: jd.company,
+                pain_points: jd.painPoints || [],
+                required_skills: jd.requiredSkills || [],
+                success_metrics: jd.successMetrics || [],
+                responsibilities: jd.responsibilities || [],
+                requirements: jd.requirements || [],
+              },
+              resume_extract: {
+                positions: resumeExtract.positions || [],
+                skills: resumeExtract.skills || [],
+                accomplishments: resumeExtract.accomplishments || [],
+                keyMetrics: resumeExtract.keyMetrics || [],
+              },
+            });
+            nextByJob[jd.id] = Array.isArray(single?.matches) ? single.matches.map(mapBackendMatch) : [];
+          } catch {
+            nextByJob[jd.id] = nextByJob[jd.id] || [];
+          }
+        }
       }
 
       setMatchesByJobId(nextByJob);
