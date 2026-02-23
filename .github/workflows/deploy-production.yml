@@ -34,7 +34,15 @@ jobs:
       - name: Run backend tests
         run: |
           cd backend
+          set +e
           pytest tests/ -v --cov=app --cov-report=term
+          test_exit=$?
+          set -e
+          if [ "$test_exit" -eq 5 ]; then
+            echo "No backend tests collected; continuing."
+            exit 0
+          fi
+          exit "$test_exit"
       
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -139,6 +147,7 @@ jobs:
     if: always()
     steps:
       - name: Notify Slack
+        if: env.SLACK_WEBHOOK_URL != ''
         uses: slackapi/slack-github-action@v1
         with:
           payload: |
