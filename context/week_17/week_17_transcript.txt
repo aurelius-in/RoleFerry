@@ -1,0 +1,459 @@
+Hey Joseph,
+เอ่อ Yep, not able to get back, so.
+They’re in Florida as well, or somewhere else
+I’m in Charleston, South Carolina.
+Oh, that’s right Yeah, yeah, yeah.
+Yeah. I’m from New Jersey, so all my family I’m the only one that went to South Carolina. My whole family’s in New Jersey.
+Gotcha.
+Cool. So let’s do the I’m going to be nice to meet you Oliver. He’s here in all good things about you.
+Oh, thank you. Likewise.
+And let me get you set up with the crutches here.
+Counsel me.
+Yeah, like I said, I think it’s pretty exciting.
+What we got going on here In the sense of the different things that we’re trying to do?
+Yeah, perfect. So I threw I would like to do the onboarding calls I threw the credentials in the Google Meet here. So you go to that domain that URL. And then email is your login. And then there’s the password below there. So if you guys can both log in, it’ll let you both log in. And if one of you wants to share your screen, we’ll do we’ll just walk through adding a client in there.
+Can I just put in my email?
+It’s the email in the chat.
+Isn’t that Christian It’s in the Google Meet.
+The Google Meet messaging.
+Gotcha.
+Yeah, you got to go to a separate login. So you got to go to the URL I sent in the chat as well.
+Okay.
+All right Dave. You want to share your screen then?
+Yeah.
+I’m actually going to save this too so that I don’t lose it.
+Oh.
+Okay.
+Perfect.
+Yeah. So if you want to go to use your we’ll split the screen with the resume. But we can go to add client and just put in the information, and we’ll see how it works there.
+Add client Okay. So this is simulating onboarding a client that like a job seeker that we’re coaching.
+Yeah, yeah, exactly I mean, if you have their information already, like an actual client, you want to try it with them, great.
+That would be the preferred route. But you just want to put in a generic thing as well. It’d actually be his full name in that first one there. Yeah.
+Oh, okay. Full name? Okay.
+And then I’ll put my email address in just so that we can
+Oh, gotcha. So you have a client for this
+Huh
+You don’t have a client. You want to put in that you’re just going to put in a?
+Yeah, I don’t have a client that I’m working with right now. But I haven’t told them about what’s going on yet. So I put their email address. I’m going to be like, “What’s this?”
+Well, yeah. So if we can set them up and not have them apply to any jobs, you just see the matches.
+So whichever works for you.
+Yeah, I think I’m just going to set it up because I want to.
+You can just put me if you want. Just if you want to just use me as your resume client.
+Yeah, I’ll put you in.
+Yeah, because I can send the resume and all that stuff. Because I’m using myself as the example for our app development.
+Yeah.
+Perfect.
+Yeah, okay.
+Let me figure it out
+Oliver A. Ellison at gmail.com.
+There you go.
+Ellison.
+Cool. All right. Put your number in there.
+That’s fine. 540-500-3300.
+545-400?
+Yeah, 540-500-3300.
+3300
+That’s right.
+Yeah. And so we just won’t turn on auto-apply. So all this information is used for applying to the jobs, but we just won’t have auto-apply on, and we won’t send this out unless you turn it on. So then depending on what the resume is, like what sort of job you’re looking for, like AI engineer, software engineer, things like that.
+Software architect, let’s say.
+Solution engineer.
+Put principal. Something a little more senior.
+For instance principal software engineer?
+Yeah, principal engineer or whatever.
+Okay.
+Cool.
+Anything else
+I’ll put employee.
+All right Use experience.
+I like 10 plus.
+10 plus
+Mm-hmm.
+Yeah, let’s uncheck entry there.
+Then
+Let me see.
+How about a senior I mean, I’m okay with executive.
+Yeah, senior executive. Executive is probably more like director roles, but yeah, we’ll see what this comes back. Minimum salary. We’ll do.
+No, that’s not good.
+Yeah. Let’s bump down to 150. We’ll see what we get back.
+I would never apply Right now I’m making more than 200, so I wouldn’t do less than that.
+Oh, yeah. I mean, there’s a limited amount of roles available, but yeah, we’ll stick it up to 200 if you want.
+Yeah, let’s just change it.
+I’ve got 200
+Cool.
+State. So you’re looking for remote, hybrid, on-site.
+Just remote, probably.
+Remote? Do you want to pick up these two?
+Yeah, take them off And then we’ll do select the state. This is just for when we apply.
+I’m in Texas, by the way.
+Texas.
+Yeah, so you don’t need to put this in right now, especially if you’re on remote only. But when we apply for jobs, it is going to ask for city postal code a lot of times, especially on workday jobs.
+Do you want me to attach my resume to this thing?
+No.
+Well, let’s create the client first, and then you can go in and just adjust it.
+Okay. Okay. So if I put in a city address.
+Let’s skip that afterwards. Let’s go down. You can say professional details.
+Professional details, yeah. LinkedIn profile looks good, right?
+Yeah, it’s just hard for full auto-apply But we can just we’ll fill out the minimum education level is what bachelor’s, master’s.
+I have a master’s, sophomore.
+Okay. Cool. Current employer gets for us to not apply to those. So let’s do job matches.
+Yeah,
+Okay, that’s good.
+And then so the additional information section is a lot of coaches will have story banks. So we’ll recommend putting in some stories from a story bank. We answer soft questions. Why do you want to work here? Tell me about your time when. Things like that. We can do that afterwards. We could just scroll down to the bottom
+Okay.
+Yeah. Yeah. So what we’ll do is we will just leave all this off. And we’ll create the client.
+Okay. Okay.
+And not auto-apply those resumes. We’re not going to turn job matches unless there’s a resume uploaded.
+I like this part.
+I just emailed you my resume just so you’d have it handy.
+What happened
+You sent me a resume on the messaging or email?
+Well, I had trouble attaching it through the messaging here for some reason. It’s different than Teams. I didn’t see a plus sign. So I just emailed it to you. I’m not, no.
+Okay.
+I’m just watching.
+But yeah, I emailed it to you, Dave, if you want to upload it.
+Okay.
+Waiting for it to be sent. I do like this mass threshold here, John. I think this thing is super cool.
+Yep Yeah, yeah, yeah. So the idea is you don’t have to you just trust that we’re applying to relevant jobs only.
+And yeah, you don’t have to worry about it. So yeah, let’s see if you get the resume from the email that he sent you. We’ll upload that.
+And then I’ll create the client, and I’ll give it a kick on the back end to get kind of start finding jobs.
+Yeah. Let me download this real quick.
+Yeah, download it All right. And the form I’m going to get the resume, it doesn’t matter.
+Oh, I mean, how we said most normal formats. So PDF, DOCX, as long as you’re not uploading an image as a resume. It would be okay.
+Yeah, a PDF but the way that the PDF is formatted has a column on the right side.
+We accept that I strongly discourage that, though. But we’ll create the client for now.
+Yeah, I usually discourage it as well Okay. All right. I’m going to create a client.
+Perfect.
+All right I’m going to email this. All right.
+Just quick back. Yeah, I need to fix the validation in the field there. That’s okay.
+Okay, it’s creating a client.
+All right Client one. Okay, three spots available. Okay.
+Yep So let me just take it off the back end here.
+Add some jobs. In the interim, any sort of questions or feedback on that process is usually pretty straightforward.
+Yeah, I like this section where I’m able to put in details about the person because I do that all the time when I have different documents and stuff, which I use to kind of create proof points and go through their background. So they can answer any kind of questions and stuff. I typically do that through an intake document. So I think that’s really good because as you’re applying for jobs, you typically have those kind of questions. But I like that you put that in.
+It’s still running looking for jobs.
+Give another minute there.
+But yeah.
+So Oliver, you’re working with data to build automation, I guess, for the networking stuff that he’s been doing. I’m not remembering correctly.
+Yeah, yeah, we’re working on kind of a app for individual job seekers. To expedite their workflow for the whole job search process. So David has a coaching method where we gather his intel on the specific contacts for different companies and we’re trying to make a workflow that’s a little more automated for people to kind of gather that information. He already has a method that he uses, using Salesforce not Salesforce, what’s it called?
+Now Value.
+Sorry, sorry It’s a sales navigator on LinkedIn. Kind of go through and reach out to people through that, which is pretty effective. And I thought it’d make a great app and I develop apps. So we started together working together on a little project.
+So yeah, that’s what we’re doing. We’re trying to create a better tool to kind of automate his process.
+Awesome.
+Let’s see.
+Let me change real quick and kick this off again.
+Yeah. So this would be very additional to it because essentially what this does, this app, you have it fills the top of the funnel. It fills all the jobs that can be sent out for messages and LinkedIn or an email. So it’s like peanut butter and jelly, really. We’
+re talking about the same problem in different ways and then combining that would be the ultimate.
+Yeah, for sure. Sorry Let me open this again.
+Getting a few more jobs there.
+There we go.
+I suspect it’s going to be a little bit harder from the standpoint of the minimum 200,000 salary. Because there’s going to be.
+There’s not a ton of those posted recently. But yeah, let’s see if we can get back. We got a few back here.
+So we got one drawback. I think things are just slow this morning because I’m doing a whole bunch of stuff. But if you click on jobs, you’ll see at least the one job. The reason it’s.
+You want to refresh
+Yeah, if you want jobs there or their name.
+It doesn’t matter. It’ll bring you to the jobs page and refresh there. Yeah, click on that.
+And scroll down.
+I’m trying to find this. Okay.
+Yeah. So turn off the eligible only. You’ll see the job match that came back there. And what we normally do, we’ll fix up the keywords here. So you can click the dropdown for the keywords.
+Keywords, job keywords this one?
+Yeah. So we can play around with some of the keywords here.
+Actually, I need to run that to make it run historically.
+You got negative and positive. Am I going to clear out the negatives or the positives?
+Nope. This is just sort of what we’re looking for to help look for some of those jobs there.
+Okay.
+So artificial intelligence, machine learning, MLOps, we can add more. We would want to add more positives to get some more results there.
+Okay.
+Then we can click find more jobs at the top there once we do that. Or if you’re getting jobs in the back and they’re not relevant, you can delete those matches.
+Are you able to share Can you pull up the resume in a new tab as well? Can I see that?
+Yeah.
+Sure Okay. Yeah. The size, I definitely discourage, but it should be an issue for us. Just do the interview, right?
+Yeah.
+I also agree. The way I make resumes, I don’t have the sidebar either.
+Yeah. But yeah, this looks good overall. Just more engineer. Titles align. That’s good. Cool.
+Skills. So maybe I can use some of the keywords here under skills section?
+Mm-hmm. Yeah, exactly.
+All right Let’s see if we use this section.
+Now do I kind of do one at a time or all like that? How does it work?
+You can only do one at a time right now. So it’s a little bit of a pain.
+Okay. I’ll do that then.
+All right
+Paste them all and then delete all but one, and then just go through the probably the most efficient.
+I’m not going to be.
+No, enter.
+No, I don’t want to add.
+You say
+Oh, just press enter. Yeah.
+Yeah, press enter.
+Click the plus there.
+Maybe refresh it.
+Yeah, click cancel and go out.
+Okay. So let’s see. MLOps.
+But you click cancel on the top there?
+Yeah.
+Maybe I just type it in.
+Let me do something else here. Hold on.
+It’s showing at the top there.
+MLOps. It’s all lowercase in the fourth, but it showed up. Do you see it there, the fourth one?
+The fourth one Oh, it’s already in. Okay. That’s why it’s not coming up.
+Yeah, it’s lowercase. You didn’t see it because it looks different.
+It does look different. Because I’m used to seeing it with a capital. Let’s try ride agents. Ride agents isn’t in there, right?
+No.
+Okay.
+Okay, I get it now. It’s not adding because it’s already in there. Yeah, I get it.
+Yeah, I’m trying to find that.
+Okay. Yeah, it’s working.
+Let’s see. Reinforcement live chain. Maybe that’s a good one.
+Okay.
+Terraform Terraform. Okay.
+I’m looking at my own monitor. It’s a lot easier.
+We got that.
+Okay. Oh, it’s automatic, huh?
+Yeah. Well, yeah, refresh it. You can click save and refresh it too, too.
+Okay.
+And refresh this page.
+Refresh.
+And now we can see the matches that we get for all of our score now.
+Yeah, you got a lot.
+Oh, wow
+So just a little bit of time to search on the back end here.
+Wow
+So director of AI engineering, AI engineering, senior manager, data engineering.
+Right. So you have different companies. We have match percentages.
+Yeah, you can click that button on the right to open up the job listing itself as well.
+Apply
+No, don’t click. Well, it won’t. It shouldn’t let you apply, actually. I need to disable that because I was locked in. But that action button, the square with the arrow coming out.
+Okay. So it takes you directly to the job site.
+That we would apply on.
+It has it I like it.
+And right now job seekers, like your clients, would not see this at all.
+The whole thing would be automated It’s above that threshold and just apply to it onto 20, 30 jobs a day. Whatever basically whatever is out there. And yeah, the clients would get an email saying, “Hey, thanks for applying to this job. Yada, yada.” Then you would get an email if there’s an interview as well as an additional email for the client that comes from a third-party domain. So we’re forwarding all the emails to them, but it’s not coming from simple apply. It’s coming from just another domain that we have. So it’s not a true white label, but the service itself is white labeled. A lot of recruiters just say, “Hey, it comes from a vendor. Yada, yada.”
+Yeah. And when you’re saying the email is the email that the ATS is auto-sending, right?
+Yes, exactly We filter out rejection emails by default as well. But we can turn them on if you’d like. But generally, it’s just a lot of volume and people don’t like seeing all the negative there. So yeah, if you go back to the dashboard, you can see all the jobs again. And that’s pretty much the gist of it. So I add myself. I thought it was just good. I thought it got stuck for some reason, but you’ll see another set another client there. But yeah, that’s pretty much the gist of it.
+On the 69 jobs.
+Yeah. So it’s showing 69. So if you go back up to the top,
+it’ll sorry, not all the top. A little bit down, a little bit. And click on eligible only. It’ll actually show you more. So we’ll return jobs that we can’t apply to at the moment.
+And then it’ll probably say out of 100. And that’s because we’re limited to 100 jobs. It’s limited to 100 jobs per run. But it’ll probably get hundreds of jobs very, very quickly.
+It’s a large I mean, there’s a lot of things in this.
+So 200K salary would not have returned.
+I don’t get down to 150 to get some more in the back. But I mean, most of these director-level the salary is going to be dependent on how large the company is at this point, right? Because the job titles that are coming back, they should start 150 to 200. Director of AI engineering, senior engineering manager. We could check on some of them. But I did bump it down just to get more. But we’ll see.
+Yeah. I mean, we could so the way that you can also check this, if you go back up to the top there, it says the keywords again.
+You can technically nope, down a little bit, but the keyword section.
+Keyword.
+Yeah, you can delete all the matches. And then just rerun it by changing the profile.
+So it wouldn’t apply to those. But yeah, it’s sort of a it’s like we’re trying to make it self-service that we can learn and go through yourself in that aspect there.
+I like it I like it. So are you saying you would?
+I mean, if we wanted to actually I don’t know all over if you’re actually looking for a job, but I assumed you were partnering to build this. But yeah, if you’re actually looking for a job, it’s just for a client.
+You would delete and just like, “Okay, let’s raise the threshold,” or, “I added some negative keywords.” Usually, part of you don’t need to delete. But if you want to get rid of something, like if you’re seeing job matches that are not relevant, add a negative keyword, delete the matches, click find more jobs again, and it’ll bring back some more jobs.
+Yeah. I think using myself as a user or use case is kind of the best way for me to see if it’s a functional system. Because otherwise, it’s just too easy to assume it’s working. I know that if it finds me a job, I would want, then I’m not looking for a job because I like my mentor then if we lose you to a job, but yeah.
+I already have a great job, actually. I’m not looking for a job only for that reason. But I know that if I would take a job, I’d be like, “Okay, this is a great this is working great,” because I would take one of the.
+Of course, no. I encourage people to test it as well. Usually, just with clients, you’ll get plenty of jobs as an engineer. I tested myself all the time. Gotten 12, I think 13 interviews as of this morning.
+Oh, yeah.
+Here’s another one through the platform So yeah, not looking for a job, but I’d like to make sure that it works. So yeah, you have the login information to go in and take a peek here. You can poke around. So yeah, I guess I’m just understood, David. I thought you wanted to try out some clients in here, but I guess you also want to see how it works for potential integration as well.
+Yeah. Yeah. So the idea is let’s say we get the recently applied list, essentially, right? So
+we send out applications out, and then there’s a couple that we really wanted. It’s like five priority for us, but we didn’t get any response back. Then we would go and say, “Okay, we want to send an email to these people.” And then who’s the hiring manager and all that kind of stuff. We send an email, a LinkedIn message. To that particular hiring manager, so that we can really kind of put our name on top of the bucket and really get the awareness as high as possible on the person, on the client’s candidacy. That is kind of where our app would come.
+Yep And you can do that if you go up just a little bit. You can export the CSV. It’s a little bit about the keywords. You could export the CSV of all the jobs there. So click that button. It’ll download all the jobs, tell you the status that they have, and all that fun stuff there.
+That’s exciting. Hold on. That’s actually really cool.
+Yeah. Click the button, try it out, and see it’ll tell you we applied to this, we failed. And even taking a step further, right? If you fail to apply and you recently failed,
+I’m going to share I’m going to share the I’m going to share the CSV file, but that’s going to be gold for us.
+Yeah. So the idea is if you’re going to test this out yourself, Oliver, I would just strongly recommend completing the profile. Adding you can put in a fake address. It doesn’t matter. But our platform does not make up any information.
+It will quit the application. So if it asks for a zip code or a street address, you don’t have an input. We’ll just quit and we’ll fail to apply it.
+So just complete it LinkedIn. You won’t be able to turn on auto-apply without LinkedIn. Add it there.
+So just complete the profile, and then you can turn on auto-apply and let it go crazy.
+Great.
+And that’s so cool.
+David do you want to add did you want to add some clients in and use this for your current system, or do you just want to try it out this way for now?
+I mean, I want to try it out for this way for now.
+And then I have a couple of people that I want to talk to this about and then see like, “Hey,
+yeah, I want to talk about it before that because essentially,
+if I could do it I’d probably be like, ‘Hey, this is an add-on service that I’m going to be offering you.’” And then these are the things that you can do. And then I could then pay you through the add-ons. That was kind of my vision. Does that make sense?
+Yeah. I mean, so that’s not how we do our pricing. We charge by seat. So we do it more that way. But you guys can feel free to take a peek, poke around through this for like a week or so. And we can figure out how we would do that there. But we don’t do per-client pricing. We only do per-seat pricing.
+Yeah. Per seat. Yeah. And you have three seats for the 175.
+For the trial period, yes.
+So the idea is it gives you a month or however long to figure it out. So we’re charging you for one seat. We’ll give you access to three. And it gives you time to figure out how you want to market it. How you want to include it. And get you set up that way. So you can yeah. And then there’s no time block on the trial. It’s basically you add those three clients. We charge you for the one. And once you start getting interviews for your clients, usually it’s about two to three weeks.
+So okay, how many seats do you want to add there?
+Okay.
+Was there some bad this is probably so not greeting the text properly.
+I think it’s reading the text properly
+There’s some Unicode issues, but it’s an Excel thing, not from us. You have to change the Unicode type in your Excel. It’s okay.
+Oh, yeah.
+Yeah.
+You mean that
+Yeah. It’s a Unicode issue.
+All right Unicode type. I don’t know what it is.
+It doesn’t matter.
+If you open it in Google Sheets, it’ll correctly interpret Unicode.
+Okay. I can open Google Sheets.
+But yeah, this is great, man.
+Yeah. What’s the best way to stay in touch with you guys? Are you guys on Slack? Are you on WhatsApp?
+I’m on LinkedIn all day, every day
+Okay. The problem with LinkedIn is that I probably get a hundred messages a day.
+Okay. Yeah.
+Or obviously, so. Yeah. I can I don’t know if WhatsApp works better.
+Yeah. I mean, I got WhatsApp. I got
+do you like I have Slack too. Slack is preferred.
+Yeah. We’re usually on Slack for the most part So either works for me.
+I can get on Slack Let me send you an email on Slack.
+Let’s see. Okay. Workspace.
+Message. What’s your name on Slack?
+I’ll email him It’s jcrawlc@gmail.
+Okay.
+Got some external authentication.
+All right. I sent you a new one. What’s that? Could be an email.
+Yep Just saw.
+I’ll keep in touch that way. Keeps it a little bit easier.
+Yeah. Slack’s cool.
+Yeah. We got I do the same thing on LinkedIn with tons of emails.
+Yeah. I mean, it’s the best way to get people and do all that fun stuff, so.
+Yeah. I have the automation.
+This year.
+It looks like we accept it. Yeah. Okay.
+Yeah.
+Cool. Server chat with my co-founder.
+And we’ll do it that way.
+Yeah. I think there’s a lot of synchronicities here with this. We’re still pretty glad that Daoud set us up.
+I’ve been in the coaching industry for a long time, especially career coaching. So a lot of people know me. In that. And.
+Yeah. For sure.
+Daoud’s been great.
+Yeah. What’s so what sort of your guys’ game plan for the tool that you’re building? Are you going to use it just for your clients, or are you going to market it more broadly to coaches? Because the tech these days is like.
+It’s for clients. It’s for job seekers, individual job seekers right now.
+Individual job seekers
+Yeah.
+How are you planning on marketing and people who sign up? Because there’s a couple networking tools like this that I found or pricing as well, like HeyJunior is one that does something like this that you guys are proposing. Strokes and Foundry works pretty well.
+But yeah, curious on your plan or tech marketing-wise. Because I found marketing to be the most difficult thing by far.
+Yeah.
+We haven’t really, crystallized our marketing plan. We’re going to have a beta phase where we have people try out the app. For free and just to get some people to make sure it all works and get some feedback from the people that are somewhat techy, but also looking for jobs maybe on LinkedIn and stuff. And then we’ll kind of see how good the feedback is and how helpful it is. And then maybe turn it into a more usable system. And then hopefully, relatively quickly, we can get it to a place where we want to actually sell it actively and get a few dozen users. I guess that’s kind of our only plan of attack. We don’t have anything in terms of marketing. We’re not super we haven’t really started thinking too much about the details of how that’s going to work. Yeah. My idea is to do it all on.
+Oh, sorry Is it all on the server, or is it all going to be on-device?
+It’s all on the server Yeah. We’re going to be mostly on desktop right now. We have an idea to do it on mobile too.
+But we haven’t set up So that’s the original setup.
+The other idea is thinking about creating a community like a school community kind of thing as well.
+School would be smart. Yeah. I think that would be a good idea. But yeah, marketing’s always at least for me, marketing’s always been a pain in the butt. Do you know you want to charge for pricing yet for that?
+Well, we don’t have I mean, we’ve thrown a few numbers around. It seems to me that my only thought on that is that the demand’s increasing. As there’s more layoffs.
+And if we can create a tool that is truly effective, then we should be able to charge something to make it worth our time. Don’t have any solid numbers yet.
+Well, I’ve actually tossed a pretty low, right? So.
+Relatively, yeah. The AI is pretty cheap. The token-wise, so.
+Okay. Cool. Yeah. No, let’s we’ll be in touch on Slack. David or Oliver, I don’t know if you guys are in Slack as well. David, I started a group chat. Do you want to add Oliver in there as well? On Slack. Any questions you have? But yeah, before we give it a full go with the testing, I’m just asking you to complete the profile, give the AI the best chance at being able to answer those questions, and apply to those jobs.
+Successfully And yeah, we’ll check in, I don’t know, in a week or so, whatever works best, or figure it out on Slack.
+Sure. It was nice to meet you, Joseph. Thanks for showing us that. And yeah, happy to walk you through it. We’re trying to build here, so. If you want to see that sometime.
+Yeah. Once you guys David gave me a brief walkthrough the other day. But yeah, as you guys are making some more progress, happy to jump on and see.
+Yeah. Yeah. I saw something about what we’re doing.
+It’s quite comprehensive. We have a personality section too that we’re trying to build in because that’s been my background for career coaching. I’ve used a lot of personality kind of assessments and stuff. So we’re looking into integrating that. And we’re also it’s also like I said before, it’s very much like an outreach platform. So the hardest thing right now is really getting all the right people in there because we’re trying to get the right decision-maker that we can send an email to once they let’s say they go through your process, right? They apply for the job, but it’s a job that they really, really like. And because it happened to me a lot, it’s a career coach working with clients. It was like, “Well, I really want this job, and I hired you so I can get this one job.” And it’s like, “Well.”
+And there’s a little expectation set in there as well, right?
+Yeah, exactly
+Not everybody gets their dream job, so.
+Exactly 100% right.
+So your dream salary, though if you cast a wide enough net. So that’s the idea.
+You can.
+Yeah. I mean, yeah, wide net. And you’ve got to have the skills too, right? People came unrealistically expect to make 200 or 300,000 if they don’t have whatever skills are in demand.
+Or experience.
+Experience and yeah. So. But cool. All right. Yeah. We’ll be in touch. And yeah, I’ll see you guys.
+Yeah. I’m going to set up a I’m going to schedule a call with you gentlemen. We can do it next week. I’ll send you an invite.
+Perfect. I’ll see you there.
+Weekends are good too. All right Bye.
+We see you guys.
+Hey. The quick follow-up call So whoops. What happened?
+That was right. Hello? Hello?
+Yeah. I’m sorry that I call you twice. Sorry about that.
+Yeah. No problem. That won’t happen there.
+Yeah. I think I’m pushing too many buttons here. So yeah. I think we can probably just incorporate some of those tools into our thing.
+I already started to If you want to refresh,
+when you have a minute Actually, it takes two more minutes.
+Yeah. I can tell. I think he’s got some great ideas. I mean,
+what is your initial thoughts That’s what I wanted to ask you.
+Well, my initial thoughts is we should do more of these meetings. With people that have similar ideas and incorporate all their stuff into ours until we run into something that we need them to actually be providing. If we reach a place where we just can’t incorporate, but we should definitely try to build it ourselves.
+Whatever we like, we can borrow.
+Whatever we like, we should try to implement. At least give AI the tools a shot at implementing it.
+And then whatever we can’t get the AI to build for us, for whatever reason, their API is stronger or they if they truly have some implementation that we just can’t achieve, then we can consider just not building ourselves. But yeah, we should definitely start there. Right now,
+I’m looking at I just made a couple of changes if you have a minute. We can look at it. If you want to go on the role fairy page, and kind of walk through so.
+I’m just going outside right now.
+You’re cool.
+I’m taking a bit of a walk real quick But I mean, I’m going to come back right back in a second.
+So I added positive keywords and negative keywords to the auto-discovered section.
+Okay.
+For the roles. So I think that might be a good way to.
+I think he’s got look at all the roles he’s got. He did the different companies. He had good keyword section I liked. He had different companies.
+He had a lot of them. I was there was a lot of them. And then the description or the descriptions come out good on ours as well.
+Wasn’t going to say I mean, was there anything that you were particularly impressed about what you saw there?
+Yeah. I think I want to lean on you a little bit for your opinion about the appearance and workflow. And then whatever you like, that he’s doing, we can incorporate into ours. So my opinion is a bit too biased.
+I’ve gotten too close to this one. It’s hard for me to say. I just want to I want to lean heavily on your opinion. So whatever you want to incorporate, we can just incorporate. But I already I know the positive and negative keyword thing was a good one. So I already put that on our app. It’s already there if you go to role fairy right now.
+So yeah. So good. It populated. So it’s showing me when I go to the auto-discovered, it shows me software engineer, machine learning infrastructure from Stripe and have a Figma. One, which is director of software engineering product platform. And then another one from Figma, director of software engineering growth. So it’s working now. It’s not giving me 30. It’s giving me 4. But it’s progress for sure. And there’s a place to type in positive and negative keywords that you can add. Add those.
+So that’s good. For some reason, it’s not auto-populating a lot of positive keywords right now. It’s just giving me a lot of negative ones. But it’s still working. So let me see. I wonder why.
+Yeah.
+Okay. I’m back on the computer now.
+Eligible only is interesting.
+Well, 155 job matches.
+I don’t know 155 job applications.
+It’s giving me a lot of it’s giving me a oh,
+Alchemy never knew too.
+Confluent.
+It’s actually following the remote location pieces, which is nice.
+I’m on their app right now, just playing around a little more. Jobs is nice. I like the export.
+Okay. Take notes of all the stuff you like. And then I’ll investigate all these screenshots and whatever or send me screenshots, whatever. But yeah, we’ll whatever features that we want to borrow that we should just borrow them. I don’t think anything is unique enough that we’re going to get in trouble. Because a lot of 100 other websites use them. I’m pretty sure they don’t own any copyright on any of these tools. So yeah, we just borrow whatever we like. And then whatever we can incorporate because they did it so much better, we can talk about partnering. But I feel relatively confident we can just kind of duplicate everything.
+And it’ll help us think about our own workflow. We already have a pretty interesting workflow. There’s a lot of stuff that we’re doing. There’s just a few things we want to refine and we should not just look at their site, but borrow everything we like and then just continue to refine ours as probably indefinitely want to continue to refine ours. Five years from now, we might be adding screens, taking away screens.
+Refining that in tools. We just want to make it the best tool on the market. I think in order to and other people are going to do that to us too. They’re going to be borrowing our tools because nothing that we have is unique enough to copyright.
+So people are going to be borrowing our stuff. So we want to make sure that the only way we’re going to stay on top is to continue to research and to borrow the best tools and to have the best overall combination of tools to make the job search smartest. Smartest on the market. And that’s just how the game we’re going to have to play is just to doing what we did today, I think, was great. So thank you for setting that up. Just continue to meet with people to understand their tools. And then to make sure that our tools we don’t need to disclose. That’s our goal, obviously. It should always be like he’s framed it in a partnership opportunity or whatever. You need to get into the door. But and we don’t even necessarily need to meet with them all the time. We can just look at other tools in the market. But we should definitely stay abreast of every potential tool that we could be competing with in the future. And then even after we launch, we want to make sure it stays that way. So but I want you to look at role fairy what I’ve got going on already because it’s already like.
+All right So I’m on role fairy right now.
+Oh, cool.
+What are we looking at?
+Well, we’ll start from the preferences. So it populates everything properly. So you can go save continue, save continue, save continue until you get to roles. And then when you get to roles,
+and then hopefully it should show.
+Promote. I’ll start location.
+I mean,
+just a side note there, what he’s doing is applying to roles.
+And he’s an auto-applying to roles.
+But auto-applying to roles has been around for a while.
+It’s not necessarily new. What he’s doing, that’s a little bit new, is the match percentage, which is nice.
+But what we’re doing is actually revolutionary, new, very new. Nobody’s really doing what we’re doing in that sense. But borrowing the idea of getting more jobs in there to fill the top of the funnel to send messages, that’s definitely a key piece.
+Yeah. I mean, I feel like looking at ours,
+I feel like having to I feel like it’s better to use the person’s resume to pull the skills and then add them instead of trying to add it before.
+You know what I mean?
+Mm-hmm.
+When you’re trying to preload keywords, I think it’s better to allow the person upload their resume, put in there, and then you pull the keywords from the resume. And then you can add keywords afterwards.
+Instead of doing it before. That might be better.
+So I’m looking at the jobs that populated here. And I’m noticing some of these things are overlapping buttons. So I need to I’m telling it to move them.
+Okay. You have the auto-discovered. I’ll pause the keywords now. Okay. I see it.
+Oh, I do see it overlapping. Yeah. I see the overlap.
+I’m fixing that right now.
+And it’s like a flashing apply button.
+I don’t know why we couldn’t have an auto-apply tool built in. It doesn’t have to be part of our main flow, but it could be something.
+Our main flow could still be reaching out. We could still launch a campaign. Kind of like how we have a screen that’s like a little detour. It’s like, “Oh, by the way, send them all a LinkedIn message.” And then we go ahead and apply for the role. That’s not the main way they’re going to get the job, right? Because as we know, you can apply for 100 roles and get squat.
+So I’ve literally done that. I’ve applied for 100 roles and got almost no responses. And I was definitely a qualified applicant for those roles. I was like, very qualified. So somewhat overqualified for some. So there was definitely a disconnect between applications and responses. So I think.
+Yeah. That is true.
+I think that it’s fine to offer that, though, because some people still think in terms of, “Well, I didn’t apply for any jobs today, so I’m not going to get one.” So go ahead and go ahead and apply for them. Do the auto-apply. Then they’ve applied.
+And just add that as one of the things that we offer. Just so that they can feel like they’ve crossed that they’ve because I felt a little weird not applying for jobs, even though I had already done it and I realized that it didn’t work. I was like, “Wow, I haven’t applied for any jobs this month. I sure hope this other thing works where I’m just reaching out to people because it’s weird not applying for any jobs, right?” Turns out it was fine. But if I were new to that, when you’re new to that and you’re just like, and your wife is asking you, “How many jobs did you apply for today?” And I have to answer,
+“Well, technically, zero.” And it’s like, you asshole, get to work. So.
+Yeah. Your wife’s going to be upset.
+Your wife’s going to be upset.
+So now you can at least say “Well, actually, I auto-applied to 200 roles today and reached out to these other people.” And then everybody’s happy, so. I mean, it doesn’t hurt to apply. It’s just a waste of time. If you just do that. It doesn’t hurt.
+Yeah. My sense is and always has been, that you can’t build a relationship with the applicant tracking system. As many applications as you send, it’s still not building a relationship with the actual individual. And you don’t know if anyone’s actually looking at your application. Well, we know that we know we have read receipts from emails. We have link clicks on emails. We have replies on emails. And we have a lot more trackable metrics on LinkedIn messages and emails than we do on an applicant tracking system.
+Yeah.
+All righty. Well, I have to get ready for a jobby job meeting.
+So I’m going to focus on my job that we worked so hard to get me. And.
+Yeah. Sounds good
+We have to be believers in jobs if we sell them for a living, right?
+Yeah. Absolutely. Yeah.
+So yeah, I’m going to be doing that for the next eight hours. And but yeah, if you want to go do another walkthrough of RoleFree, we didn’t really get through. We got about halfway, so. And there’s a bunch of changes, by the way, since our meeting. So if you want to pop through all the screens again, you’ll definitely notice some differences.
+One thing you’ll notice is this screen. I don’t know if you’re on the role screen, but there’s a few other changes too, s
+o.
+If you’ll notice it it’s collapsible like you asked. Do you see that?
+I like that. Don’t you think it’s good?
+Yeah. No, that was a smart that was a smart critique. So that was good. And yeah, it could be a little more collapsed. It’s still kind of chunky, right? But.
+Yeah. No, it’s great. I think it was great.
+No, I know. But it’s chunky. It could be it would be nice to see more than three roles on the screen, for it would be nice if the so I’m just going to condense it a little bit more so that show details is higher up. And the parsed is it can all be on one line. What does view original anyways?
+Oh, that takes you to the site. Okay.
+Yeah.
+So it’s fine. I’ll just say I don’t think view original is the right wording, though. I’m going to fix that.
+I like view original Yeah.
+So instead of the words view original, make it a button that says yeah, I have till 11:30, but I’m going to get ready. All right, Dave. All right. Well, it was good. And I appreciate it. And we should do more of those. And I think we can do the auto-apply thing ourselves. And if we’re not able to, then we’ll talk to him about that. But I think we could probably we have AI to help us figure out how to do that.
+All right man. Sounds good Let’s talk about it more. I got to get going here too.
+All right Take it easy.
+All right man. Talk to you later.
+All right Bye.
+So we want another screen.
+Apply for roles.
+And I think that screen makes sense.
+To be probably after the match. So then you have your preferences, your resume, your personality, your roles, your gaps, your match. Then apply. Then offer. Then research. Then contact. Then bio.
+Then campaign. And then launch doesn’t have to be one of the 12 steps. It can just be the button after all 12 steps are complete. So on the dashboard screen, you can show preferences, resume, personality, roles, gaps, match, offer, research. Sorry. Starting over. Dashboard screen has preferences, resume, personality, roles, gaps,
+match, apply. Then offer. Research. Contact. Bio. And campaign.
+So those 12 steps. And then for that, apply page,
+it should have a way to auto-apply for roles.
+Similar to the simply apply app. Another apps where you can auto-apply to jobs. So yeah, that makes sense after the match because after the match screen, they’ve already looked at the gaps. And the pain point matches. Then they can pick which ones they want to apply to. And then they can do their outreach. And even by that apply step, they will have already applied. And a lot of people are conditioned to thinking that applying for jobs is how you get them. So it makes sense to have that there.

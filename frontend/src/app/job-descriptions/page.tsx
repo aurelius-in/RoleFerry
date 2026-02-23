@@ -318,23 +318,44 @@ export default function JobDescriptionsPage() {
       const pos = Array.isArray(posSaved) ? posSaved.map(normalizeKeyword).filter(Boolean) : [];
       const neg = Array.isArray(negSaved) ? negSaved.map(normalizeKeyword).filter(Boolean) : [];
 
+      const resumeRaw = localStorage.getItem("resume_extract");
+      const selectedRaw = localStorage.getItem("selected_job_description");
+      const prefsRaw = localStorage.getItem("job_preferences");
+      const resume = resumeRaw ? JSON.parse(resumeRaw) : null;
+      const selected = selectedRaw ? JSON.parse(selectedRaw) : null;
+      const prefs = prefsRaw ? JSON.parse(prefsRaw) : null;
+
+      const resumeSkills = Array.isArray(resume?.skills) ? resume.skills : [];
+      const roleSkills = Array.isArray(selected?.required_skills)
+        ? selected.required_skills
+        : Array.isArray(selected?.requiredSkills)
+        ? selected.requiredSkills
+        : [];
+      const prefSkills = Array.isArray(prefs?.skills)
+        ? prefs.skills
+        : Array.isArray(prefs?.Skills)
+        ? prefs.Skills
+        : [];
+      const prefRoleCats = Array.isArray(prefs?.role_categories)
+        ? prefs.role_categories
+        : Array.isArray(prefs?.roleCategories)
+        ? prefs.roleCategories
+        : [];
+      const seedPool = [...resumeSkills, ...prefSkills, ...roleSkills, ...prefRoleCats]
+        .map((x) => normalizeKeyword(x))
+        .filter(Boolean);
+
       let posInit = pos.slice(0, 20);
       if (!posInit.length) {
-        const resumeRaw = localStorage.getItem("resume_extract");
-        const selectedRaw = localStorage.getItem("selected_job_description");
-        const resume = resumeRaw ? JSON.parse(resumeRaw) : null;
-        const selected = selectedRaw ? JSON.parse(selectedRaw) : null;
-        const resumeSkills = Array.isArray(resume?.skills) ? resume.skills : [];
-        const roleSkills = Array.isArray(selected?.required_skills) ? selected.required_skills : [];
-        posInit = Array.from(new Set([...resumeSkills, ...roleSkills].map((x) => normalizeKeyword(x)))).filter(Boolean).slice(0, 8);
+        posInit = Array.from(new Set(seedPool)).slice(0, 8);
       }
 
       const sugg = Array.from(
         new Set(
           [
             ...posInit,
-            ...(Array.isArray(resume?.skills) ? resume.skills : []),
-          ].map((x) => normalizeKeyword(x))
+            ...seedPool,
+          ]
         )
       )
         .filter(Boolean)
@@ -922,28 +943,18 @@ export default function JobDescriptionsPage() {
                 </div>
               ) : (
                 sortedJobDescriptions.map((jd) => (
-                  <div key={jd.id} className="rounded-lg border border-white/10 bg-black/20 p-5">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div key={jd.id} className="rounded-lg border border-white/10 bg-black/20 p-3">
+                    <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
                       <div className="min-w-0">
-                        <h3 className="text-xl font-semibold text-white break-words">{jd.title}</h3>
-                        <p className="mt-1 text-white/70 break-words">{formatCompanyName(jd.company)}</p>
-                        <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+                        <h3 className="text-lg font-semibold text-white break-words">{jd.title}</h3>
+                        <p className="mt-0.5 text-white/70 break-words text-sm">{formatCompanyName(jd.company)}</p>
+                        <div className="mt-1.5 flex flex-wrap gap-2 text-[11px]">
                           <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
                             {jd.salaryRange ? jd.salaryRange : "Salary not provided"}
                           </span>
                         </div>
-                        {jd.url && (
-                          <a
-                            href={jd.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-2 inline-block text-blue-300 hover:text-blue-200 text-sm underline"
-                          >
-                            View Original
-                          </a>
-                        )}
                       </div>
-                      <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
                         {renderPreferencePicker(jd)}
                         {(() => {
                           const maxRank = jobDescriptions.length;
@@ -968,9 +979,9 @@ export default function JobDescriptionsPage() {
                             <div className="flex flex-col items-end gap-1">
                               <div className="text-[10px] font-semibold text-white/60">Favorite Rank</div>
                               <div className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/20 px-1 py-1">
-                                <button type="button" onClick={() => cycle(-1)} className="rounded-md px-2 py-0.5 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white">◀</button>
-                                <button type="button" onClick={() => cycle(1)} className="min-w-[2.25rem] rounded-md px-2 py-0.5 text-sm font-semibold tabular-nums text-white/80 hover:bg-white/10 hover:text-white">{display}</button>
-                                <button type="button" onClick={() => cycle(1)} className="rounded-md px-2 py-0.5 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white">▶</button>
+                                <button type="button" onClick={() => cycle(-1)} className="rounded-md px-1.5 py-0.5 text-xs font-semibold text-white/70 hover:bg-white/10 hover:text-white">◀</button>
+                                <button type="button" onClick={() => cycle(1)} className="min-w-[2rem] rounded-md px-1.5 py-0.5 text-xs font-semibold tabular-nums text-white/80 hover:bg-white/10 hover:text-white">{display}</button>
+                                <button type="button" onClick={() => cycle(1)} className="rounded-md px-1.5 py-0.5 text-xs font-semibold text-white/70 hover:bg-white/10 hover:text-white">▶</button>
                               </div>
                             </div>
                           );
@@ -978,7 +989,7 @@ export default function JobDescriptionsPage() {
                         <button
                           type="button"
                           onClick={() => addToTracker(jd)}
-                          className="text-white/80 hover:text-white text-sm underline"
+                          className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs font-semibold text-white/80 hover:bg-white/10 hover:text-white"
                         >
                           Add to Role Tracker
                           {trackerPulseId === jd.id ? (
@@ -987,17 +998,32 @@ export default function JobDescriptionsPage() {
                             </span>
                           ) : null}
                         </button>
-                        <button onClick={() => handleDelete(jd.id)} className="text-red-500 hover:text-red-300 text-sm">
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(jd.id)}
+                          className="rounded-md border border-red-500/25 bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-200 hover:bg-red-500/15"
+                        >
                           Delete
                         </button>
                       </div>
                     </div>
 
-                    <div className="mt-3 border-t border-white/10 pt-3">
+                    <div className="mt-2 border-t border-white/10 pt-2 flex items-center gap-2">
+                      {jd.url ? (
+                        <a
+                          href={jd.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs font-semibold text-blue-200 hover:bg-white/10 hover:text-blue-100"
+                        >
+                          View Online
+                          <span aria-hidden="true">↗</span>
+                        </a>
+                      ) : null}
                       <button
                         type="button"
                         onClick={() => toggleRoleDetails(jd.id)}
-                        className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/10"
+                        className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs font-semibold text-white/80 hover:bg-white/10"
                       >
                         <span>{expandedRoleDetails[jd.id] ? "Hide details" : "Show details"}</span>
                         <span>{expandedRoleDetails[jd.id] ? "▲" : "▼"}</span>
@@ -1005,7 +1031,7 @@ export default function JobDescriptionsPage() {
                     </div>
 
                     {expandedRoleDetails[jd.id] ? (
-                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Pain Points */}
                     <div>
                       <h4 className="font-semibold text-white mb-3">Business Challenges</h4>
@@ -1134,13 +1160,12 @@ export default function JobDescriptionsPage() {
 
                     {/* JD Jargon intentionally removed (low-signal for job seekers) */}
                       </div>
+                      <div className="mt-3 pt-3 border-t border-white/10">
+                        <p className="text-xs text-white/60">
+                          Parsed on {new Date(jd.parsedAt).toLocaleDateString()}
+                        </p>
+                      </div>
                     ) : null}
-
-                    <div className="mt-4 pt-4 border-t border-white/10">
-                      <p className="text-xs text-white/60">
-                        Parsed on {new Date(jd.parsedAt).toLocaleDateString()}
-                      </p>
-                    </div>
                   </div>
                 ))
               )}
@@ -1292,8 +1317,8 @@ export default function JobDescriptionsPage() {
                     <div className="space-y-2">
                       {visibleScrapedRoles.map((r) => (
                         <div key={r.id} className="rounded-md border border-white/10 bg-white/5 px-3 py-2">
-                          <div className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-3 items-center">
-                            <div className="md:col-span-6 min-w-0">
+                          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                            <div className="min-w-0 md:pr-3">
                               <div className="text-sm font-semibold text-white break-words">{r.title}</div>
                               <div className="mt-0.5 text-[11px] text-white/70 truncate">
                                 {formatCompanyName(String(r.company || "Unknown"))}
@@ -1301,54 +1326,50 @@ export default function JobDescriptionsPage() {
                               </div>
                             </div>
 
-                            <div className="md:col-span-3 text-[11px] text-white/75 break-words">
-                              {r.location || "Location not listed"}
-                            </div>
-
-                            <div className="md:col-span-1">
-                              {typeof r.match_score === "number" ? (
-                                <span className="inline-flex items-center rounded-full bg-amber-500/85 px-2 py-0.5 text-[10px] font-bold text-black">
-                                  {Math.max(0, Math.min(100, Number(r.match_score || 0)))}%
-                                </span>
-                              ) : (
-                                <span className="text-[10px] text-white/50">—</span>
-                              )}
-                            </div>
-
-                            <div className="md:col-span-2 flex items-center justify-start md:justify-end gap-1.5">
-                              <button
-                                type="button"
-                                className="animate-pulse rounded-md border border-emerald-400/40 bg-emerald-500/20 px-2 py-1 text-[10px] font-semibold text-emerald-100 hover:bg-emerald-500/30"
-                                onClick={() => {
-                                  setImportType("url");
-                                  setImportUrl(String(r.url || ""));
-                                }}
-                                title="Use URL Importer"
-                              >
-                                Apply
-                              </button>
-                              <button
-                                type="button"
-                                className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] font-semibold text-white/80 hover:bg-white/10"
-                                onClick={() => {
-                                  const id = String(r.id || "");
-                                  if (!id) return;
-                                  setIgnoredScrapedRoleIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
-                                }}
-                                title="Hide this suggestion"
-                              >
-                                Ignore
-                              </button>
-                              <a
-                                href={r.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
-                                title="Open role link"
-                                aria-label="Open role link"
-                              >
-                                ↗
-                              </a>
+                            <div className="w-full md:w-[210px] shrink-0">
+                              <div className="text-[11px] text-white/75 md:text-right break-words">
+                                {r.location || "Location not listed"}
+                              </div>
+                              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 md:justify-end">
+                                {typeof r.match_score === "number" ? (
+                                  <span className="inline-flex items-center rounded-full bg-amber-500/85 px-2 py-0.5 text-[10px] font-bold text-black">
+                                    {Math.max(0, Math.min(100, Number(r.match_score || 0)))}%
+                                  </span>
+                                ) : null}
+                                <button
+                                  type="button"
+                                  className="animate-pulse rounded-md border border-emerald-400/40 bg-emerald-500/20 px-2 py-1 text-[10px] font-semibold text-emerald-100 hover:bg-emerald-500/30"
+                                  onClick={() => {
+                                    setImportType("url");
+                                    setImportUrl(String(r.url || ""));
+                                  }}
+                                  title="Use URL Importer"
+                                >
+                                  Apply
+                                </button>
+                                <button
+                                  type="button"
+                                  className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] font-semibold text-white/80 hover:bg-white/10"
+                                  onClick={() => {
+                                    const id = String(r.id || "");
+                                    if (!id) return;
+                                    setIgnoredScrapedRoleIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+                                  }}
+                                  title="Hide this suggestion"
+                                >
+                                  Ignore
+                                </button>
+                                <a
+                                  href={r.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
+                                  title="Open role link"
+                                  aria-label="Open role link"
+                                >
+                                  ↗
+                                </a>
+                              </div>
                             </div>
                           </div>
                         </div>
