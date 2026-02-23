@@ -854,6 +854,24 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
         special = str(payload.special_instructions or "").strip()
         ctx = payload.context or {}
 
+        # Sequence-aware CTA strategy from Offer context.
+        offer_ctx = ctx.get("offer") if isinstance(ctx, dict) and isinstance(ctx.get("offer"), dict) else {}
+        soft_cta = str((offer_ctx or {}).get("soft_cta") or "").strip()
+        hard_cta = str((offer_ctx or {}).get("hard_cta") or (offer_ctx or {}).get("default_cta") or "").strip()
+
+        prefer_soft = step in (1, 2)
+        preferred_cta = soft_cta if prefer_soft else hard_cta
+        fallback_cta = hard_cta if prefer_soft else soft_cta
+        chosen_cta = str(preferred_cta or fallback_cta or "").strip()
+
+        cta_strategy = {
+            "step_number": step,
+            "preferred_type": "soft" if prefer_soft else "hard",
+            "preferred_cta": preferred_cta,
+            "secondary_cta": fallback_cta,
+            "chosen_cta": chosen_cta,
+        }
+
         client = get_openai_client()
 
         def _compact_context(obj: Any, *, max_depth: int = 4, max_list: int = 10, max_str: int = 1800) -> Any:
@@ -894,8 +912,140 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             # fallback for other types
             return str(obj)
 
+        def _as_list(v: Any) -> List[Any]:
+            if isinstance(v, list):
+                return v
+            if v is None:
+                return []
+            return [v]
+
+        def _short_text(v: Any, max_len: int = 220) -> str:
+            s = " ".join(str(v or "").split()).strip()
+            if not s:
+                return ""
+            if len(s) <= max_len:
+                return s
+            cut = s.rfind(" ", 0, max_len)
+            if cut < 40:
+                cut = max_len
+            return s[:cut].rstrip() + "..."
+
+        def _push_unique(bucket: List[str], value: str, limit: int) -> None:
+            s = _short_text(value)
+            if not s:
+                return
+            seen = {x.lower() for x in bucket}
+            if s.lower() in seen:
+                return
+            if len(bucket) < limit:
+                bucket.append(s)
+
+        def _build_research_brief(context_obj: Any) -> Dict[str, Any]:
+            """
+            Build a compact, source-forward brief so email generation can reliably
+            use concrete company/contact details without overstuffing.
+            """
+            if not isinstance(context_obj, dict):
+                return {}
+
+            job = context_obj.get("selected_job_description") if isinstance(context_obj.get("selected_job_description"), dict) else {}
+            comp = context_obj.get("company_research") if isinstance(context_obj.get("company_research"), dict) else {}
+            ctc = context_obj.get("contact_research") if isinstance(context_obj.get("contact_research"), dict) else {}
+
+            role_scope_signals: List[str] = []
+            company_signals: List[str] = []
+            contact_signals: List[str] = []
+            source_urls: List[str] = []
+
+            # Role scope from selected JD.
+            role_title = str(job.get("title") or "").strip()
+            role_company = str(job.get("company") or context_obj.get("company_name") or "").strip()
+            if role_title:
+                _push_unique(
+                    role_scope_signals,
+                    f"Target role: {role_title}" + (f" at {role_company}" if role_company else ""),
+                    6,
+                )
+            for p in _as_list(job.get("pain_points"))[:3]:
+                _push_unique(role_scope_signals, f"Role pain point: {p}", 6)
+            for s in _as_list(job.get("success_metrics"))[:2]:
+                _push_unique(role_scope_signals, f"Role success metric: {s}", 6)
+            for s in _as_list(job.get("required_skills"))[:3]:
+                _push_unique(role_scope_signals, f"Role required skill: {s}", 6)
+
+            # Company signals from research output.
+            theme = str(comp.get("theme") or "").strip()
+            if theme and theme.lower() != "no data found":
+                first_theme_line = theme.split("\n")[0].strip()
+                _push_unique(company_signals, f"Company theme signal: {first_theme_line}", 7)
+
+            for k, label in [
+                ("company_market_position", "Market position"),
+                ("company_product_launches", "Products/launches"),
+                ("company_other_hiring_signals", "Hiring signal"),
+                ("company_recent_posts", "Recent post"),
+                ("company_publications", "Publication"),
+            ]:
+                v = str(comp.get(k) or "").strip()
+                if v and v.lower() != "no data found":
+                    first = v.split("\n")[0].strip()
+                    _push_unique(company_signals, f"{label}: {first}", 7)
+
+            for n in _as_list(comp.get("recent_news"))[:4]:
+                if not isinstance(n, dict):
+                    continue
+                title = str(n.get("title") or "").strip()
+                summary = _short_text(n.get("summary"), 160)
+                source = str(n.get("source") or "").strip()
+                url = str(n.get("url") or "").strip()
+                line = title
+                if source:
+                    line = f"{line} ({source})"
+                if summary:
+                    line = f"{line}: {summary}"
+                _push_unique(company_signals, line, 7)
+                if url and len(source_urls) < 6 and url not in source_urls:
+                    source_urls.append(url)
+
+            # Contact signals from contact research + sourced facts.
+            contact_bios = _as_list(ctc.get("contact_bios"))
+            b0 = contact_bios[0] if contact_bios and isinstance(contact_bios[0], dict) else {}
+            if isinstance(b0, dict):
+                for v in _as_list(b0.get("public_profile_highlights"))[:3]:
+                    _push_unique(contact_signals, f"Public profile highlight: {v}", 5)
+                for v in _as_list(b0.get("post_topics"))[:2]:
+                    _push_unique(contact_signals, f"Post topic: {v}", 5)
+                for f in _as_list(b0.get("interesting_facts"))[:3]:
+                    if not isinstance(f, dict):
+                        continue
+                    fact = str(f.get("fact") or "").strip()
+                    src_title = str(f.get("source_title") or "").strip()
+                    src_url = str(f.get("source_url") or "").strip()
+                    if fact:
+                        combined = fact if not src_title else f"{fact} ({src_title})"
+                        _push_unique(contact_signals, combined, 5)
+                    if src_url and len(source_urls) < 6 and src_url not in source_urls:
+                        source_urls.append(src_url)
+
+            out = {
+                "role_scope_signals": role_scope_signals,
+                "company_signals": company_signals,
+                "contact_signals": contact_signals,
+                "source_urls": source_urls,
+            }
+            has_any = any(bool(out.get(k)) for k in ("role_scope_signals", "company_signals", "contact_signals"))
+            return out if has_any else {}
+
+        # Build a compact research brief and include it in LLM context.
+        llm_context_obj = dict(ctx) if isinstance(ctx, dict) else {}
+        research_brief = _build_research_brief(llm_context_obj)
+        if research_brief:
+            llm_context_obj["research_brief"] = research_brief
+        if chosen_cta:
+            llm_context_obj["cta_strategy"] = cta_strategy
+
         # For the LLM path, compact the context to avoid huge payloads.
-        llm_ctx = _compact_context(ctx)
+        llm_ctx = _compact_context(llm_context_obj)
 
         # Deterministic fallback: decent but basic.
         def _fallback() -> tuple[str, str]:
@@ -930,21 +1080,31 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             elif step == 4:
                 subj = "Closing the loop?"
 
+            rb = _build_research_brief(ctx)
+            company_sig = ((rb.get("company_signals") or [None])[0] if isinstance(rb, dict) else None) or None
+            role_sig = ((rb.get("role_scope_signals") or [None])[0] if isinstance(rb, dict) else None) or None
+            cta_line = chosen_cta or "Open to a quick 10-15 minute chat?"
+
             body_bits: List[str] = [f"Hi {greet_name},\n\n"]
             if step == 1:
                 body_bits.append(f"Saw the {job_title or 'role'} at {company_name or 'your team'} and wanted to share one quick idea.\n\n")
+                if company_sig:
+                    body_bits.append(f"One thing that stood out: {company_sig}\n\n")
+                elif role_sig:
+                    body_bits.append(f"What stood out in the role scope: {role_sig}\n\n")
                 body_bits.append("- One idea I’d bring: (add your offer snippet)\n")
                 body_bits.append("- Relevant proof: (add one proof point)\n\n")
-                body_bits.append("Open to a quick 10-15 minute chat?\n\n")
+                body_bits.append(f"{cta_line}\n\n")
             elif step == 2:
                 body_bits.append(f"Quick follow-up - is there a better person to route this to for the {job_title or 'role'}?\n\n")
-                body_bits.append("If helpful, I can share a short 2-3 bullet plan.\n\n")
+                body_bits.append("If helpful, I can share a short 2-3 bullet plan.\n")
+                body_bits.append(f"{cta_line}\n\n")
             elif step == 3:
                 body_bits.append("Following up once more - I can tailor a quick plan to your top priority.\n\n")
-                body_bits.append("Want me to send a short 3-bullet plan?\n\n")
+                body_bits.append(f"{cta_line}\n\n")
             else:
                 body_bits.append("Last note from me. If this isn’t a fit, no worries - just reply “no” and I’ll close the loop.\n\n")
-                body_bits.append("If you are the right person, is it worth a quick chat?\n\n")
+                body_bits.append(f"{cta_line}\n\n")
 
             # Optional: include bio/work links if provided in context
             bio = str(((links or {}).get("bio_page_url")) or "").strip()
@@ -986,6 +1146,22 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
                 "Important: Do not mention drugs/alcohol/explicit content. Keep it professional and kind."
             )
 
+        cta_guidance = (
+            f"CTA sequence policy: This is email step {step}. "
+            + (
+                "Prefer a soft CTA (small, easy reply) for steps 1-2."
+                if prefer_soft
+                else "Prefer a hard CTA (clear commitment/time ask) for steps 3-4."
+            )
+            + "\n"
+            + (f"Preferred CTA from context: {preferred_cta}\n" if preferred_cta else "")
+            + (f"Secondary CTA from context: {fallback_cta}\n" if fallback_cta else "")
+            + (
+                "If one CTA is available, use it once near the end. "
+                "Do not include both CTA types in the same email."
+            )
+        )
+
         system = (
             "You are RoleFerry's outreach copilot. Draft ONE email step in a 4-email sequence.\n\n"
             "Hard style constraints:\n"
@@ -1001,12 +1177,20 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             f"Step intent: {step_intent}\n\n"
             f"{tone_line}\n"
             f"Tone guardrails: {_tone_guardrails(tone)}\n\n"
+            f"{cta_guidance}\n\n"
             "Personalization rules:\n"
             "- If context contains offer (value prop), use its one-liner and 1 proof point to avoid generic claims.\n"
-            "- If context contains company_research or contact_research, reference at least ONE concrete, non-creepy detail from it.\n"
+            "- If context contains research_brief/company_research/contact_research, reference 1-2 concrete details from it.\n"
+            "- Prefer details tied to the role scope and public company signals (product areas, public initiatives, role priorities).\n"
+            "- Keep contact references light-touch and publicly sourced only; avoid over-leaning on personal history.\n"
+            "- Do not claim private knowledge, and do not invent facts, titles, dates, products, or initiatives.\n"
             "- If no research is present, reference the role and one pain point (from painpoint_matches or gap_analysis or job text).\n"
             "- Use at most 1-2 research details total (avoid overstuffing).\n"
             "- Do not mention that you used AI or 'research'.\n\n"
+            "CTA output rules:\n"
+            "- Include exactly ONE CTA sentence/question near the end.\n"
+            "- For steps 1-2, keep CTA low-friction when possible.\n"
+            "- For steps 3-4, move to a clearer commitment ask when possible.\n\n"
             "Special instructions (must follow):\n"
             + (special if special else "(none)") +
             "\n\n"

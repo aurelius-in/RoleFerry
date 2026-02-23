@@ -47,6 +47,139 @@ class OffersListResponse(BaseModel):
     message: str
     offers: List[Offer]
 
+
+class ComposeOfferSnippetRequest(BaseModel):
+    one_liner: str = ""
+    proof_points: List[str] = []
+    case_studies: List[Dict[str, Any]] = []
+    default_cta: str = ""
+    soft_cta: str = ""
+    hard_cta: str = ""
+    role_title: Optional[str] = None
+    role_company: Optional[str] = None
+    required_skills: List[str] = []
+    pain_points: List[str] = []
+    success_metrics: List[str] = []
+
+
+class ComposeOfferSnippetResponse(BaseModel):
+    success: bool
+    message: str
+    snippet: str
+    used_llm: bool = False
+
+
+def _build_rule_based_snippet(payload: ComposeOfferSnippetRequest) -> str:
+    one = re.sub(r"\s+", " ", str(payload.one_liner or "")).strip()[:220]
+    proofs = [re.sub(r"\s+", " ", str(x or "")).strip()[:160] for x in (payload.proof_points or []) if str(x or "").strip()]
+    proofs = proofs[:3]
+    hard_cta = re.sub(r"\s+", " ", str(payload.hard_cta or payload.default_cta or "")).strip()[:140]
+    soft_cta = re.sub(r"\s+", " ", str(payload.soft_cta or "")).strip()[:140]
+    case_bits: List[str] = []
+    for c in (payload.case_studies or [])[:2]:
+        if not isinstance(c, dict):
+            continue
+        p = re.sub(r"\s+", " ", str(c.get("problem") or "")).strip()
+        a = re.sub(r"\s+", " ", str(c.get("actions") or "")).strip()
+        i = re.sub(r"\s+", " ", str(c.get("impact") or "")).strip()
+        bit = " -> ".join([x for x in [p[:100], a[:100], i[:80]] if x])
+        if bit:
+            case_bits.append(bit)
+
+    lines: List[str] = []
+    if one:
+        lines.append(one)
+    if proofs:
+        lines.append(f"Proof: {' | '.join(proofs)}")
+    if case_bits:
+        lines.append(f"Example: {case_bits[0]}")
+    if soft_cta:
+        lines.append(f"Soft CTA: {soft_cta}")
+    if hard_cta:
+        lines.append(f"Hard CTA: {hard_cta}")
+    s = "\n".join(lines).strip()
+    return s[:900]
+
+
+@router.post("/compose-snippet", response_model=ComposeOfferSnippetResponse)
+async def compose_offer_snippet(payload: ComposeOfferSnippetRequest):
+    """
+    Compose a concise, human-sounding offer snippet from Offer page inputs.
+    Uses LLM when configured; deterministic fallback otherwise.
+    """
+    try:
+        fallback = _build_rule_based_snippet(payload)
+        client = get_openai_client()
+        if client.should_use_real_llm:
+            try:
+                ctx = {
+                    "role": {"title": payload.role_title, "company": payload.role_company},
+                    "one_liner": payload.one_liner,
+                    "proof_points": (payload.proof_points or [])[:6],
+                    "case_studies": (payload.case_studies or [])[:2],
+                    "default_cta": payload.default_cta,
+                    "soft_cta": payload.soft_cta,
+                    "hard_cta": payload.hard_cta,
+                    "required_skills": (payload.required_skills or [])[:8],
+                    "pain_points": (payload.pain_points or [])[:6],
+                    "success_metrics": (payload.success_metrics or [])[:6],
+                }
+                messages = [
+                    {
+                        "role": "system",
+                        "content": (
+                            "You write an offer snippet for a job seeker.\n"
+                            "Return ONLY JSON: {\"snippet\": string}\n\n"
+                            "Rules:\n"
+                            "- First-person singular only (I/me/my), never we/us/our.\n"
+                            "- Keep it concise: 3-6 short lines total.\n"
+                            "- Human tone; avoid corporate filler and awkward templates.\n"
+                            "- Do NOT start with 'For <role> at <company>:'\n"
+                            "- Avoid these exact phrases: 'I help teams ship outcomes', 'Need for', 'Context:'.\n"
+                            "- Include one low-friction soft CTA line if provided.\n"
+                            "- Include one stronger hard CTA line if provided.\n"
+                            "- Use only provided inputs; do not invent facts or numbers.\n"
+                            "- If proof points are weak, still produce clean copy without hallucinations.\n"
+                        ),
+                    },
+                    {"role": "user", "content": json.dumps(ctx, ensure_ascii=False)},
+                ]
+                raw = client.run_chat_completion(
+                    messages,
+                    temperature=0.25,
+                    max_tokens=380,
+                    stub_json={"snippet": fallback},
+                )
+                choices = raw.get("choices") or []
+                msg = (choices[0].get("message") if choices else {}) or {}
+                content_str = str(msg.get("content") or "")
+                parsed = extract_json_from_text(content_str) or {}
+                snippet = str(parsed.get("snippet") or "").strip()
+                snippet = _strip_fluff_openers(snippet)
+                snippet = re.sub(r"\bFor\s+[^:\n]{1,120}:\s*", "", snippet, flags=re.I)
+                snippet = re.sub(r"\bI help teams ship outcomes\b", "I help teams get results", snippet, flags=re.I)
+                snippet = re.sub(r"\bNeed for\b", "Need to", snippet, flags=re.I)
+                snippet = re.sub(r"\n{3,}", "\n\n", snippet).strip()
+                if len(snippet.split()) < 18:
+                    snippet = fallback
+                return ComposeOfferSnippetResponse(
+                    success=True,
+                    message="Offer snippet composed",
+                    snippet=snippet[:900],
+                    used_llm=True,
+                )
+            except Exception:
+                pass
+
+        return ComposeOfferSnippetResponse(
+            success=True,
+            message="Offer snippet composed (fallback)",
+            snippet=fallback,
+            used_llm=False,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to compose offer snippet: {str(e)}")
+
 @router.post("/create", response_model=OfferCreationResponse)
 async def create_offer(request: OfferCreationRequest):
     """

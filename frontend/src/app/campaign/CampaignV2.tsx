@@ -249,6 +249,10 @@ function emailLabelForNumber(n: number) {
   return "Follow-up";
 }
 
+function recommendedCtaType(stepNumber: number): "Soft CTA" | "Hard CTA" {
+  return stepNumber <= 2 ? "Soft CTA" : "Hard CTA";
+}
+
 function filterContextByLayers(ctx: any, layers: ContextLayers) {
   const out: any = {
     sender_profile: ctx?.sender_profile,
@@ -865,6 +869,22 @@ export default function CampaignV2() {
                             <div>
                               <div className="text-sm font-bold text-white">
                                 Email {step.step_number} ({emailLabel})
+                              </div>
+                              <div className="mt-1">
+                                <span
+                                  className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                                    recommendedCtaType(Number(step.step_number || 0)) === "Soft CTA"
+                                      ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-200"
+                                      : "border-amber-400/40 bg-amber-500/15 text-amber-200"
+                                  }`}
+                                  title={
+                                    recommendedCtaType(Number(step.step_number || 0)) === "Soft CTA"
+                                      ? "Early sequence: use a low-friction ask."
+                                      : "Later sequence: use a clear commitment ask."
+                                  }
+                                >
+                                  Recommended: {recommendedCtaType(Number(step.step_number || 0))}
+                                </span>
                               </div>
                               <div className="mt-1 text-xs text-white/60">
                                 {step.last_generated_at ? `Updated ${new Date(step.last_generated_at).toLocaleString()}` : "Not generated yet"}

@@ -68,6 +68,9 @@ class ScrapedRole(BaseModel):
     salary_range: Optional[str] = None
     snippet: str = ""
     match_score: int = 0
+    role_family: Optional[str] = None
+    work_mode: Optional[str] = None
+    match_reasons: Optional[List[str]] = None
 
 
 class ScrapedRolesResponse(BaseModel):
@@ -2502,6 +2505,160 @@ def _role_query_from_preferences(pref: Dict[str, Any]) -> str:
     return " ".join(q.split())[:120]
 
 
+def _resume_skill_hints() -> List[str]:
+    rx = store.demo_latest_resume or {}
+    raw = rx.get("skills") or rx.get("Skills") or []
+    out: List[str] = []
+    if isinstance(raw, list):
+        for s in raw:
+            t = str(s or "").strip()
+            if t:
+                out.append(t)
+    return out[:20]
+
+
+def _preferences_require_us(pref: Dict[str, Any]) -> bool:
+    state = str(pref.get("state") or "").strip()
+    if state:
+        return True
+    values: List[str] = []
+    for k in ["location_preferences", "work_type", "location_text"]:
+        v = pref.get(k)
+        if isinstance(v, list):
+            values.extend([str(x).strip().lower() for x in v if str(x).strip()])
+        elif isinstance(v, str) and v.strip():
+            values.append(v.strip().lower())
+    return any(x in " ".join(values) for x in ["united states", "us only", "u.s.", "usa", "within us", "within the us"])
+
+
+def _is_explicit_non_us(text: str) -> bool:
+    low = str(text or "").lower()
+    markers = [
+        "canada", "toronto", "vancouver", "montreal",
+        "united kingdom", " uk ", "london", "emea", "europe",
+        "india", "singapore", "australia", "new zealand",
+        "germany", "france", "spain", "ireland", "netherlands",
+        "brazil", "mexico", "argentina", "philippines", "poland",
+    ]
+    return any(m in low for m in markers)
+
+
+def _is_us_like_location(text: str) -> bool:
+    low = f" {str(text or '').lower()} "
+    if any(x in low for x in [" united states ", " usa ", " u.s. ", " us-only ", " us only "]):
+        return True
+    if "remote" in low and any(x in low for x in ["united states", "usa", "u.s.", "us"]):
+        return True
+    # "City, ST" heuristic
+    if re.search(r"\b[a-z][a-z\s]+,\s*[a-z]{2}\b", low):
+        return True
+    return False
+
+
+def _blocked_title_for_tech_seekers(title: str) -> bool:
+    low = str(title or "").lower()
+    blocked = [
+        "account executive",
+        "sales representative",
+        "brand marketing",
+        "marketing lead",
+        "social media",
+        "customer success manager",
+        "business development representative",
+        "field marketer",
+    ]
+    return any(x in low for x in blocked)
+
+
+def _role_family_from_title(title: str) -> str:
+    t = str(title or "").lower()
+    if any(x in t for x in ["architect", "principal engineer", "staff engineer"]):
+        return "Architecture"
+    if any(x in t for x in ["machine learning", "ml ", "ai ", "artificial intelligence", "llm"]):
+        return "AI/ML"
+    if any(x in t for x in ["software engineer", "developer", "backend", "frontend", "full stack", "platform engineer"]):
+        return "Software Engineering"
+    if any(x in t for x in ["data engineer", "data scientist", "analytics engineer"]):
+        return "Data"
+    return "Technology"
+
+
+def _preference_terms(pref: Dict[str, Any], role_query: str) -> List[str]:
+    terms: List[str] = []
+    skills = [str(x).strip().lower() for x in (pref.get("skills") or []) if str(x).strip()]
+    terms.extend(skills[:12])
+    terms.extend([x.lower() for x in _resume_skill_hints()[:10]])
+    terms.extend([x.lower() for x in re.findall(r"[A-Za-z]{3,}", role_query)])
+    role_cats = " ".join([str(x).lower() for x in (pref.get("role_categories") or []) if str(x).strip()])
+    if any(x in role_cats for x in ["technical", "engineering", "software", "architect"]):
+        terms.extend(["software", "engineer", "developer", "architect", "platform", "backend", "frontend", "python", "ai", "ml"])
+    # Stable order + dedupe
+    out: List[str] = []
+    seen: set[str] = set()
+    for t in terms:
+        tok = str(t or "").strip().lower()
+        if len(tok) < 3:
+            continue
+        if tok in seen:
+            continue
+        seen.add(tok)
+        out.append(tok)
+    return out[:30]
+
+
+def _score_scraped_role(
+    *,
+    title: str,
+    snippet: str,
+    salary_range: Optional[str],
+    location: Optional[str],
+    pref_terms: List[str],
+    require_us: bool,
+) -> tuple[int, List[str], str, str]:
+    blob = f"{title} {snippet}".lower()
+    title_low = str(title or "").lower()
+    reasons: List[str] = []
+    score = 28
+
+    tech_title_terms = [
+        "architect", "engineer", "developer", "software", "platform",
+        "machine learning", "ai ", "artificial intelligence", "backend", "frontend",
+        "full stack", "site reliability", "sre", "data engineer", "solutions architect",
+    ]
+    if any(t in title_low for t in tech_title_terms):
+        score += 20
+        reasons.append("Tech role title")
+
+    term_hits = [t for t in pref_terms if t in blob]
+    unique_hits = sorted(set(term_hits))
+    if unique_hits:
+        score += min(40, len(unique_hits) * 8)
+        reasons.append(f"Preference skills match: {', '.join(unique_hits[:4])}")
+
+    if salary_range:
+        score += 8
+        reasons.append("Salary listed")
+
+    loc_text = str(location or "").strip()
+    loc_blob = f"{title} {snippet} {loc_text}"
+    if require_us:
+        if _is_us_like_location(loc_blob):
+            score += 6
+            reasons.append("US location alignment")
+        elif _is_explicit_non_us(loc_blob):
+            score -= 35
+    elif _is_us_like_location(loc_blob):
+        score += 2
+
+    if _blocked_title_for_tech_seekers(title):
+        score -= 45
+
+    score = max(0, min(100, score))
+    work_mode = "Remote" if "remote" in loc_blob.lower() else ("Hybrid" if "hybrid" in loc_blob.lower() else "On-site/Unspecified")
+    role_family = _role_family_from_title(title)
+    return score, reasons[:4], role_family, work_mode
+
+
 def _source_from_url(url: str) -> str:
     u = str(url or "").lower()
     if "boards.greenhouse.io" in u:
@@ -2630,6 +2787,7 @@ async def _discover_roles_without_serper(
     role_query: str,
     requested: int,
     minimum_salary: Optional[int],
+    require_us: bool = False,
 ) -> List[Dict[str, Any]]:
     """
     Keyless fallback: fetch real job links from public ATS APIs (Greenhouse + Lever).
@@ -2682,6 +2840,8 @@ async def _discover_roles_without_serper(
                     salary = _salary_from_greenhouse_metadata((j or {}).get("metadata"))
                     if not _salary_meets_floor(salary, minimum_salary):
                         continue
+                    if require_us and loc and (not _is_us_like_location(loc) or _is_explicit_non_us(loc)):
+                        continue
                     snippet = str((j or {}).get("updated_at") or "").strip()
                     out.append(
                         {
@@ -2726,6 +2886,8 @@ async def _discover_roles_without_serper(
                         salary = str((j or {}).get("salaryRange") or "").strip() or None
                     if not _salary_meets_floor(salary, minimum_salary):
                         continue
+                    if require_us and loc and (not _is_us_like_location(loc) or _is_explicit_non_us(loc)):
+                        continue
                     snippet = str((j or {}).get("descriptionPlain") or "").strip()[:260]
                     out.append(
                         {
@@ -2747,7 +2909,7 @@ async def _discover_roles_without_serper(
 
 
 @router.get("/scraped-roles", response_model=ScrapedRolesResponse)
-async def get_scraped_roles(limit: int = 25):
+async def get_scraped_roles(limit: int = 30):
     """
     Auto-discover role links from common career page ecosystems using user preferences.
     This is additive to the existing manual URL import flow.
@@ -2756,8 +2918,11 @@ async def get_scraped_roles(limit: int = 25):
     role_query = _role_query_from_preferences(prefs)
     minimum_salary = _parse_min_salary_to_int(str(prefs.get("minimum_salary") or ""))
 
-    requested = max(1, min(int(limit or 25), 40))
-    target_companies = min(25, requested)
+    requested = max(1, min(int(limit or 30), 40))
+    target_companies = min(30, requested)
+    require_us = _preferences_require_us(prefs)
+    pref_terms = _preference_terms(prefs, role_query)
+    min_match_score = 75
 
     # Keep query set focused on real career ecosystems while broadening enough to get
     # role diversity (ideally >=25 companies when possible).
@@ -2791,12 +2956,12 @@ async def get_scraped_roles(limit: int = 25):
             role_query=role_query,
             requested=requested,
             minimum_salary=minimum_salary,
+            require_us=require_us,
         )
 
     # De-dupe + score + salary filter.
     seen_urls: set[str] = set()
     roles: List[ScrapedRole] = []
-    q_tokens = [x.lower() for x in re.findall(r"[A-Za-z]{3,}", role_query)][:8]
     for i, item in enumerate(found):
         url = str(item.get("url") or "").strip()
         if not url or url in seen_urls:
@@ -2804,19 +2969,32 @@ async def get_scraped_roles(limit: int = 25):
         seen_urls.add(url)
 
         title = str(item.get("title") or "").strip()[:180] or "Role listing"
+        if _blocked_title_for_tech_seekers(title):
+            continue
+        if not _looks_like_relevant_title(title, _role_tokens(role_query)):
+            continue
         snippet = str(item.get("snippet") or "").strip()[:420]
         salary_range = str(item.get("salary_range") or "").strip() or _extract_salary_range_from_text(f"{title} {snippet}")
         if not _salary_meets_floor(salary_range, minimum_salary):
             continue
 
-        blob = f"{title} {snippet}".lower()
-        token_hits = sum(1 for t in q_tokens if t in blob)
-        score = 45 + min(35, token_hits * 6)
-        if salary_range:
-            score += 10
-        if "remote" in blob:
-            score += 3
-        score = max(0, min(100, score))
+        raw_loc = str(item.get("location") or "").strip()
+        loc_blob = f"{title} {snippet} {raw_loc}"
+        if require_us and _is_explicit_non_us(loc_blob):
+            continue
+        if require_us and raw_loc and not _is_us_like_location(raw_loc):
+            continue
+
+        score, reasons, role_family, work_mode = _score_scraped_role(
+            title=title,
+            snippet=snippet,
+            salary_range=salary_range,
+            location=raw_loc,
+            pref_terms=pref_terms,
+            require_us=require_us,
+        )
+        if score < min_match_score:
+            continue
 
         company = str(item.get("company") or "").strip() or _company_from_result(url, title)
         role_id = hashlib.sha1(f"{url}|{title}".encode("utf-8", errors="ignore")).hexdigest()[:16]
@@ -2827,10 +3005,13 @@ async def get_scraped_roles(limit: int = 25):
                 company=company,
                 url=url,
                 source=str(item.get("source") or _source_from_url(url)),
-                location=str(item.get("location") or "").strip() or ("Remote" if "remote" in blob else None),
+                location=raw_loc or ("Remote" if "remote" in loc_blob.lower() else None),
                 salary_range=salary_range,
                 snippet=snippet,
                 match_score=score,
+                role_family=role_family,
+                work_mode=work_mode,
+                match_reasons=reasons,
             )
         )
 
@@ -2884,6 +3065,8 @@ async def get_scraped_roles(limit: int = 25):
             "target_companies": target_companies,
             "unique_companies": unique_companies,
             "raw_results": len(found),
+            "min_match_score": min_match_score,
+            "require_us": require_us,
         },
     )
 

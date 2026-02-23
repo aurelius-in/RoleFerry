@@ -114,6 +114,9 @@ type ScrapedRole = {
   salary_range?: string | null;
   snippet?: string;
   match_score?: number;
+   role_family?: string | null;
+   work_mode?: string | null;
+   match_reasons?: string[] | null;
 };
 
 type ScrapedRolesResponse = {
@@ -124,6 +127,8 @@ type ScrapedRolesResponse = {
     requested_roles?: number;
     target_companies?: number;
     unique_companies?: number;
+    min_match_score?: number;
+    require_us?: boolean;
     [k: string]: any;
   };
 };
@@ -208,6 +213,7 @@ export default function JobDescriptionsPage() {
   const [scrapedRolesError, setScrapedRolesError] = useState<string | null>(null);
   const [scrapedRolesMessage, setScrapedRolesMessage] = useState<string>("");
   const [scrapedRolesMeta, setScrapedRolesMeta] = useState<{ requested_roles?: number; target_companies?: number; unique_companies?: number } | null>(null);
+  const [expandedRoleDetails, setExpandedRoleDetails] = useState<Record<string, boolean>>({});
   const trackerPulseTimer = useRef<number | null>(null);
   const suggestedUrl =
     "https://www.google.com/about/careers/applications/jobs/results/?employment_type=FULL_TIME&degree=MASTERS&skills=software%2C%20architecture%2C%20ai";
@@ -247,8 +253,8 @@ export default function JobDescriptionsPage() {
     setScrapedRolesError(null);
     setIsLoadingScrapedRoles(true);
     try {
-      const res = await api<ScrapedRolesResponse>("/job-descriptions/scraped-roles?limit=25", "GET");
-      const roles = Array.isArray(res?.roles) ? res.roles : [];
+      const res = await api<ScrapedRolesResponse>("/job-descriptions/scraped-roles?limit=30", "GET");
+      const roles = (Array.isArray(res?.roles) ? res.roles : []).filter((r) => Number(r?.match_score || 0) >= 75);
       setScrapedRoles(roles);
       setScrapedRolesMessage(String(res?.message || ""));
       setScrapedRolesMeta((res?.helper || null) as any);
@@ -539,6 +545,10 @@ export default function JobDescriptionsPage() {
     }
   };
 
+  const toggleRoleDetails = (id: string) => {
+    setExpandedRoleDetails((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
   return (
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4 mb-4">
@@ -791,224 +801,106 @@ export default function JobDescriptionsPage() {
             )}
           </div>
 
-          {!hasMounted || jobDescriptions.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="mb-6">
-                <svg className="mx-auto h-12 w-12 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-white mb-2">No Roles Yet</h3>
-              <p className="text-white/70 mb-6">
-                Import role descriptions from URLs or paste text to get started.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {sortedJobDescriptions.map((jd) => (
-                <div key={jd.id} className="rounded-lg border border-white/10 bg-black/20 p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <div className="flex items-start gap-3">
-                        <div className="min-w-0">
-                          {editMeta?.id === jd.id && editMeta.field === "title" ? (
-                            <div className="flex items-center gap-2">
-                              <input
-                                value={editMeta.value}
-                                onChange={(e) => setEditMeta({ ...editMeta, value: e.target.value })}
-                                className="w-full max-w-xl rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
-                                aria-label="Edit title"
-                              />
-                              <button
-                                type="button"
-                                onClick={saveEdit}
-                                className="shrink-0 rounded-md bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
-                              >
-                                Save
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setEditMeta(null)}
-                                className="shrink-0 rounded-md bg-white/10 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/15"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <h3 className="text-xl font-semibold text-white break-words">{jd.title}</h3>
-                              <button
-                                type="button"
-                                onClick={() => startEdit(jd, "title")}
-                                className="shrink-0 inline-flex items-center rounded-full border border-orange-400/30 bg-orange-500/15 px-2 py-0.5 text-[11px] font-semibold text-orange-200 hover:bg-orange-500/20 hover:text-orange-100"
-                              >
-                                Edit title
-                              </button>
-                            </div>
-                          )}
-
-                          {editMeta?.id === jd.id && editMeta.field === "company" ? (
-                            <div className="mt-1 flex items-center gap-2">
-                              <input
-                                value={editMeta.value}
-                                onChange={(e) => setEditMeta({ ...editMeta, value: e.target.value })}
-                                className="w-full max-w-md rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
-                                aria-label="Edit company"
-                              />
-                              <button
-                                type="button"
-                                onClick={saveEdit}
-                                className="shrink-0 rounded-md bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
-                              >
-                                Save
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setEditMeta(null)}
-                                className="shrink-0 rounded-md bg-white/10 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/15"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="mt-1 flex items-center gap-2">
-                              <p className="text-white/70 break-words">{formatCompanyName(jd.company)}</p>
-                              <button
-                                type="button"
-                                onClick={() => startEdit(jd, "company")}
-                                className="inline-flex items-center rounded-full border border-orange-400/30 bg-orange-500/15 px-2 py-0.5 text-[11px] font-semibold text-orange-200 hover:bg-orange-500/20 hover:text-orange-100"
-                              >
-                                Edit company
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {(jd.salaryRange || jd.location || jd.workMode || jd.employmentType) && (
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-8 space-y-6">
+              {!hasMounted || jobDescriptions.length === 0 ? (
+                <div className="text-center py-12 rounded-lg border border-white/10 bg-black/20">
+                  <div className="mb-6">
+                    <svg className="mx-auto h-12 w-12 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-white mb-2">No Roles Yet</h3>
+                  <p className="text-white/70 mb-6">
+                    Import role descriptions from URLs or paste text to get started.
+                  </p>
+                </div>
+              ) : (
+                sortedJobDescriptions.map((jd) => (
+                  <div key={jd.id} className="rounded-lg border border-white/10 bg-black/20 p-5">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0">
+                        <h3 className="text-xl font-semibold text-white break-words">{jd.title}</h3>
+                        <p className="mt-1 text-white/70 break-words">{formatCompanyName(jd.company)}</p>
                         <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
-                          {jd.salaryRange ? (
-                            <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
-                              {jd.salaryRange}
-                            </span>
-                          ) : null}
-                          {jd.location ? (
-                            <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
-                              Location: {jd.location}
-                            </span>
-                          ) : null}
-                          {jd.workMode ? (
-                            <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
-                              {jd.workMode}
-                            </span>
-                          ) : null}
-                          {jd.employmentType ? (
-                            <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
-                              {jd.employmentType}
-                            </span>
-                          ) : null}
+                          <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
+                            {jd.salaryRange ? jd.salaryRange : "Salary not provided"}
+                          </span>
                         </div>
-                      )}
-                      {jd.url && (
-                        <a 
-                          href={jd.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        {jd.url && (
+                          <a
+                            href={jd.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 inline-block text-blue-300 hover:text-blue-200 text-sm underline"
+                          >
+                            View Original
+                          </a>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        {renderPreferencePicker(jd)}
+                        {(() => {
+                          const maxRank = jobDescriptions.length;
+                          const current = Number((jd as any).favoriteRank);
+                          const currentOk = Number.isFinite(current) && current >= 1 && current <= maxRank;
+                          const used = new Set<number>();
+                          for (const other of jobDescriptions) {
+                            if (other.id === jd.id) continue;
+                            const r = Number((other as any).favoriteRank);
+                            if (Number.isFinite(r) && r >= 1 && r <= maxRank) used.add(r);
+                          }
+                          const available: Array<number | null> = [null, ...Array.from({ length: maxRank }, (_, i) => i + 1).filter((n) => !used.has(n))];
+                          const cur: number | null = currentOk ? current : null;
+                          const curIdx = Math.max(0, available.indexOf(cur));
+                          const display = cur === null ? "—" : String(cur);
+                          const cycle = (dir: -1 | 1) => {
+                            if (!available.length) return handleFavoriteRankChange(jd.id, null);
+                            const nextIdx = (curIdx + dir + available.length) % available.length;
+                            handleFavoriteRankChange(jd.id, available[nextIdx]);
+                          };
+                          return (
+                            <div className="flex flex-col items-end gap-1">
+                              <div className="text-[10px] font-semibold text-white/60">Favorite Rank</div>
+                              <div className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/20 px-1 py-1">
+                                <button type="button" onClick={() => cycle(-1)} className="rounded-md px-2 py-0.5 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white">◀</button>
+                                <button type="button" onClick={() => cycle(1)} className="min-w-[2.25rem] rounded-md px-2 py-0.5 text-sm font-semibold tabular-nums text-white/80 hover:bg-white/10 hover:text-white">{display}</button>
+                                <button type="button" onClick={() => cycle(1)} className="rounded-md px-2 py-0.5 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white">▶</button>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                        <button
+                          type="button"
+                          onClick={() => addToTracker(jd)}
+                          className="text-white/80 hover:text-white text-sm underline"
                         >
-                          View Original
-                        </a>
-                      )}
+                          Add to Role Tracker
+                          {trackerPulseId === jd.id ? (
+                            <span className="ml-1 inline-flex items-center text-green-300" aria-label="Added">
+                              ✅
+                            </span>
+                          ) : null}
+                        </button>
+                        <button onClick={() => handleDelete(jd.id)} className="text-red-500 hover:text-red-300 text-sm">
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-4">
-                      {renderPreferencePicker(jd)}
-                      {(() => {
-                        const maxRank = jobDescriptions.length;
-                        const current = Number((jd as any).favoriteRank);
-                        const currentOk = Number.isFinite(current) && current >= 1 && current <= maxRank;
-                        const used = new Set<number>();
-                        for (const other of jobDescriptions) {
-                          if (other.id === jd.id) continue;
-                          const r = Number((other as any).favoriteRank);
-                          if (Number.isFinite(r) && r >= 1 && r <= maxRank) used.add(r);
-                        }
-                        return (
-                          <div className="flex flex-col items-end gap-1">
-                            <div className="text-[10px] font-semibold text-white/60">Favorite Rank</div>
-                            {(() => {
-                              const available: Array<number | null> = [
-                                null,
-                                ...Array.from({ length: maxRank }, (_, i) => i + 1).filter((n) => !used.has(n)),
-                              ];
-                              const cur: number | null = currentOk ? current : null;
-                              const curIdx = Math.max(0, available.indexOf(cur));
-                              const display = cur === null ? "—" : String(cur);
 
-                              const cycle = (dir: -1 | 1) => {
-                                if (!available.length) {
-                                  handleFavoriteRankChange(jd.id, null);
-                                  return;
-                                }
-                                const nextIdx = (curIdx + dir + available.length) % available.length;
-                                handleFavoriteRankChange(jd.id, available[nextIdx]);
-                              };
-
-                              return (
-                                <div
-                                  className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/20 px-1 py-1"
-                                  title="Favorite Rank: unique per job (1..N). Use ◀/▶ or click the rank to cycle unused values."
-                                >
-                                  <button
-                                    type="button"
-                                    onClick={() => cycle(-1)}
-                                    className="rounded-md px-2 py-0.5 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white outline-none focus:ring-2 focus:ring-blue-500"
-                                    aria-label="Previous favorite rank"
-                                  >
-                                    ◀
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => cycle(1)}
-                                    className="min-w-[2.25rem] rounded-md px-2 py-0.5 text-sm font-semibold tabular-nums text-white/80 hover:bg-white/10 hover:text-white outline-none focus:ring-2 focus:ring-blue-500"
-                                    aria-label={`Favorite rank: ${display}. Click to cycle.`}
-                                  >
-                                    {display}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => cycle(1)}
-                                    className="rounded-md px-2 py-0.5 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white outline-none focus:ring-2 focus:ring-blue-500"
-                                    aria-label="Next favorite rank"
-                                  >
-                                    ▶
-                                  </button>
-                                </div>
-                              );
-                            })()}
-                          </div>
-                        );
-                      })()}
+                    <div className="mt-3 border-t border-white/10 pt-3">
                       <button
                         type="button"
-                        onClick={() => addToTracker(jd)}
-                        className="text-white/80 hover:text-white text-sm underline"
+                        onClick={() => toggleRoleDetails(jd.id)}
+                        className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/10"
                       >
-                        Add to Role Tracker
-                        {trackerPulseId === jd.id ? (
-                          <span className="ml-1 inline-flex items-center text-green-300" aria-label="Added">
-                            ✅
-                          </span>
-                        ) : null}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(jd.id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Delete
+                        <span>{expandedRoleDetails[jd.id] ? "Hide details" : "Show details"}</span>
+                        <span>{expandedRoleDetails[jd.id] ? "▲" : "▼"}</span>
                       </button>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {expandedRoleDetails[jd.id] ? (
+                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {/* Pain Points */}
                     <div>
                       <h4 className="font-semibold text-white mb-3">Business Challenges</h4>
@@ -1136,132 +1028,132 @@ export default function JobDescriptionsPage() {
                     </div>
 
                     {/* JD Jargon intentionally removed (low-signal for job seekers) */}
-                  </div>
+                      </div>
+                    ) : null}
 
-                  <div className="mt-4 pt-4 border-t border-white/10">
-                    <p className="text-xs text-white/60">
-                      Parsed on {new Date(jd.parsedAt).toLocaleDateString()}
-                    </p>
+                    <div className="mt-4 pt-4 border-t border-white/10">
+                      <p className="text-xs text-white/60">
+                        Parsed on {new Date(jd.parsedAt).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
-          )}
+            <div className="lg:col-span-4">
+              <div className="rounded-lg border border-white/10 bg-black/20 p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">Auto-discovered roles from career pages</h3>
+                    <p className="mt-1 text-sm text-white/70">
+                      We collect up to 30 roles at a time, prioritize roles aligned to your preferences/skills, enforce a 75%+ match threshold, and favor US roles when your preferences indicate US.
+                    </p>
+                    {scrapedRolesMessage ? (
+                      <p className="mt-1 text-xs text-white/50">{scrapedRolesMessage}</p>
+                    ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={loadScrapedRoles}
+                    disabled={isLoadingScrapedRoles}
+                    className="shrink-0 rounded-md border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/15 disabled:opacity-50 inline-flex items-center gap-2"
+                    title="Refresh auto-discovered role links"
+                  >
+                    {isLoadingScrapedRoles ? (
+                      <>
+                        <InlineSpinner className="h-3.5 w-3.5" />
+                        <span>Refreshing</span>
+                      </>
+                    ) : (
+                      "Refresh"
+                    )}
+                  </button>
+                </div>
 
-          <div className="mt-8 rounded-lg border border-white/10 bg-black/20 p-5">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-semibold text-white">Auto-discovered roles from career pages</h3>
-                <p className="mt-1 text-sm text-white/70">
-                  We try to collect up to 25 roles at a time, aiming for one role from each company (25 companies when possible), using your role preferences and salary target.
-                </p>
-                {scrapedRolesMessage ? (
-                  <p className="mt-1 text-xs text-white/50">{scrapedRolesMessage}</p>
+                {scrapedRolesError ? (
+                  <div className="mt-3 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200">
+                    {scrapedRolesError}
+                  </div>
+                ) : null}
+
+                {!isLoadingScrapedRoles && scrapedRoles.length === 0 && !scrapedRolesError ? (
+                  <div className="mt-4 text-sm text-white/60">
+                    No auto-discovered roles yet. Save your Job Preferences (including salary) and refresh.
+                  </div>
+                ) : null}
+
+                {scrapedRoles.length > 0 ? (
+                  <div className="mt-4">
+                    <div className="mb-3 flex flex-wrap gap-2 text-[11px]">
+                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
+                        Roles shown: {scrapedRoles.length}
+                      </span>
+                      {typeof scrapedRolesMeta?.requested_roles === "number" ? (
+                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
+                          Target roles: {scrapedRolesMeta.requested_roles}
+                        </span>
+                      ) : null}
+                      {typeof scrapedRolesMeta?.unique_companies === "number" ? (
+                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
+                          Companies: {scrapedRolesMeta.unique_companies}
+                          {typeof scrapedRolesMeta?.target_companies === "number" ? ` / ${scrapedRolesMeta.target_companies}` : ""}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="space-y-3">
+                      {scrapedRoles.map((r) => (
+                        <div key={r.id} className="rounded-md border border-white/10 bg-white/5 p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="text-sm font-semibold text-white break-words">{r.title}</div>
+                              <div className="text-xs text-white/70">{formatCompanyName(String(r.company || "Unknown"))}</div>
+                            </div>
+                            <div className="text-xs text-white/60 shrink-0">{String(r.source || "Career pages")}</div>
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+                            {r.salary_range ? (
+                              <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
+                                {r.salary_range}
+                              </span>
+                            ) : null}
+                            {r.location ? (
+                              <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
+                                {r.location}
+                              </span>
+                            ) : null}
+                            {typeof r.match_score === "number" ? (
+                              <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
+                                Match {Math.max(0, Math.min(100, Number(r.match_score || 0)))}%
+                              </span>
+                            ) : null}
+                          </div>
+                          <div className="mt-3 flex items-center gap-3">
+                            <a
+                              href={r.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-300 underline hover:text-blue-200"
+                            >
+                              Open role link
+                            </a>
+                            <button
+                              type="button"
+                              className="animate-pulse rounded-md border border-blue-400/40 bg-blue-500/20 px-2.5 py-1 text-xs font-semibold text-blue-100 hover:bg-blue-500/30"
+                              onClick={() => {
+                                setImportType("url");
+                                setImportUrl(String(r.url || ""));
+                              }}
+                            >
+                              Use URL Importer
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 ) : null}
               </div>
-              <button
-                type="button"
-                onClick={loadScrapedRoles}
-                disabled={isLoadingScrapedRoles}
-                className="shrink-0 rounded-md border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/15 disabled:opacity-50 inline-flex items-center gap-2"
-                title="Refresh auto-discovered role links"
-              >
-                {isLoadingScrapedRoles ? (
-                  <>
-                    <InlineSpinner className="h-3.5 w-3.5" />
-                    <span>Refreshing</span>
-                  </>
-                ) : (
-                  "Refresh"
-                )}
-              </button>
             </div>
-
-            {scrapedRolesError ? (
-              <div className="mt-3 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200">
-                {scrapedRolesError}
-              </div>
-            ) : null}
-
-            {!isLoadingScrapedRoles && scrapedRoles.length === 0 && !scrapedRolesError ? (
-              <div className="mt-4 text-sm text-white/60">
-                No auto-discovered roles yet. Save your Job Preferences (including salary) and refresh.
-              </div>
-            ) : null}
-
-            {scrapedRoles.length > 0 ? (
-              <div className="mt-4">
-                <div className="mb-3 flex flex-wrap gap-2 text-[11px]">
-                  <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
-                    Roles shown: {scrapedRoles.length}
-                  </span>
-                  {typeof scrapedRolesMeta?.requested_roles === "number" ? (
-                    <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
-                      Target roles: {scrapedRolesMeta.requested_roles}
-                    </span>
-                  ) : null}
-                  {typeof scrapedRolesMeta?.unique_companies === "number" ? (
-                    <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
-                      Companies: {scrapedRolesMeta.unique_companies}
-                      {typeof scrapedRolesMeta?.target_companies === "number" ? ` / ${scrapedRolesMeta.target_companies}` : ""}
-                    </span>
-                  ) : null}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {scrapedRoles.map((r) => (
-                  <div key={r.id} className="rounded-md border border-white/10 bg-white/5 p-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="text-sm font-semibold text-white break-words">{r.title}</div>
-                        <div className="text-xs text-white/70">{formatCompanyName(String(r.company || "Unknown"))}</div>
-                      </div>
-                      <div className="text-xs text-white/60 shrink-0">{String(r.source || "Career pages")}</div>
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
-                      {r.salary_range ? (
-                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
-                          {r.salary_range}
-                        </span>
-                      ) : null}
-                      {r.location ? (
-                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
-                          {r.location}
-                        </span>
-                      ) : null}
-                      {typeof r.match_score === "number" ? (
-                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
-                          Match {Math.max(0, Math.min(100, Number(r.match_score || 0)))}%
-                        </span>
-                      ) : null}
-                    </div>
-                    {r.snippet ? (
-                      <p className="mt-2 text-xs text-white/60 line-clamp-3">{r.snippet}</p>
-                    ) : null}
-                    <div className="mt-3 flex items-center gap-3">
-                      <a
-                        href={r.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-blue-300 underline hover:text-blue-200"
-                      >
-                        Open role link
-                      </a>
-                      <button
-                        type="button"
-                        className="text-xs text-white/80 underline hover:text-white"
-                        onClick={() => {
-                          setImportType("url");
-                          setImportUrl(String(r.url || ""));
-                        }}
-                      >
-                        Use URL in importer
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                </div>
-              </div>
-            ) : null}
           </div>
 
           {jobDescriptions.length > 0 && (

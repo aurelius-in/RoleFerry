@@ -52,7 +52,7 @@ type GapAnalysisItem = {
   company: string;
   score: number;
   // UI-only: star rating assigned on first analysis run (should not re-scale when roles are dropped)
-  ui_stars?: 2 | 3 | 4 | 5;
+  ui_stars?: 1 | 2 | 3 | 4 | 5;
   recommendation: "pursue" | "maybe" | "skip";
   matched_skills: string[];
   missing_skills: string[];
@@ -151,10 +151,13 @@ function buildMinimalTemperamentProfileFromAnswers(rawAnswers: any): Temperament
   return { version: "answers-v1", completed_at: new Date().toISOString(), scores };
 }
 
-function pillColor(rec: GapAnalysisItem["recommendation"]) {
-  if (rec === "pursue") return "bg-emerald-500/15 border-emerald-500/30 text-emerald-200";
-  if (rec === "maybe") return "bg-yellow-500/15 border-yellow-500/30 text-yellow-200";
-  return "bg-red-500/15 border-red-500/30 text-red-200";
+function badgeByStars(stars: number | undefined) {
+  const s = Number(stars || 0);
+  if (s >= 5) return { label: "Excellent", cls: "bg-emerald-500/15 border-emerald-500/30 text-emerald-200" };
+  if (s >= 4) return { label: "Great", cls: "bg-lime-500/15 border-lime-500/30 text-lime-200" };
+  if (s >= 3) return { label: "Good", cls: "bg-yellow-500/15 border-yellow-500/30 text-yellow-200" };
+  if (s >= 2) return { label: "Fair", cls: "bg-orange-500/15 border-orange-500/30 text-orange-200" };
+  return { label: "Poor", cls: "bg-red-500/15 border-red-500/30 text-red-200" };
 }
 
 export default function GapAnalysisPage() {
@@ -220,12 +223,19 @@ export default function GapAnalysisPage() {
     return 2;
   }
 
+  function applyResumeGapPenalty(baseStars: 2 | 3 | 4 | 5, resumeGaps: any): 1 | 2 | 3 | 4 | 5 {
+    const count = Array.isArray(resumeGaps) ? resumeGaps.length : 0;
+    const penalty = Math.floor(count / 4); // subtract 1 star per 4 resume gaps
+    const adjusted = Math.max(1, Number(baseStars) - penalty);
+    return adjusted as 1 | 2 | 3 | 4 | 5;
+  }
+
   const rankedUi = useMemo(() => {
     const list = Array.isArray(ranked) ? ranked : [];
     return list.map((r, idx) => ({
       ...r,
       // IMPORTANT: once assigned, keep static (dropping roles shouldn't re-scale stars)
-      ui_stars: (r as any)?.ui_stars ?? starsForRank(idx, list.length),
+      ui_stars: (r as any)?.ui_stars ?? applyResumeGapPenalty(starsForRank(idx, list.length), (r as any)?.resume_gaps),
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ranked]);
@@ -268,7 +278,7 @@ export default function GapAnalysisPage() {
       // Assign stars ONCE based on initial rank order.
       const initial = (Array.isArray(rawRanked) ? rawRanked : []).map((r, idx, arr) => ({
         ...r,
-        ui_stars: (r as any)?.ui_stars ?? starsForRank(idx, arr.length),
+        ui_stars: (r as any)?.ui_stars ?? applyResumeGapPenalty(starsForRank(idx, arr.length), (r as any)?.resume_gaps),
       }));
       setRanked(initial as any);
       setHelper(resp.helper || null);
@@ -468,8 +478,8 @@ export default function GapAnalysisPage() {
                           </div>
                           <div className="text-right shrink-0">
                             <StarRating value={r.ui_stars / 5} scale="fraction" showNumeric={false} className="text-[10px]" />
-                            <div className={`mt-1 inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] ${pillColor(r.recommendation)}`}>
-                              {r.recommendation}
+                            <div className={`mt-1 inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] ${badgeByStars(r.ui_stars).cls}`}>
+                              {badgeByStars(r.ui_stars).label}
                             </div>
                           </div>
                         </div>
@@ -515,8 +525,8 @@ export default function GapAnalysisPage() {
                         <div className="text-xs text-white/70">{formatCompanyName(selected.company)}</div>
                         <div className="mt-2 flex items-center gap-3">
                           <StarRating value={(selected as any).ui_stars / 5} scale="fraction" showNumeric={false} className="text-[10px]" />
-                          <div className={`inline-flex items-center px-2 py-1 rounded-full border text-xs ${pillColor(selected.recommendation)}`}>
-                            {selected.recommendation}
+                          <div className={`inline-flex items-center px-2 py-1 rounded-full border text-xs ${badgeByStars((selected as any).ui_stars).cls}`}>
+                            {badgeByStars((selected as any).ui_stars).label}
                           </div>
                         </div>
                       </div>
