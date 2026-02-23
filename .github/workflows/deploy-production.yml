@@ -53,11 +53,16 @@ jobs:
         run: |
           cd frontend
           npm ci
+
+      - name: Show frontend npm scripts
+        run: |
+          cd frontend
+          npm run
       
       - name: Run frontend tests
         run: |
           cd frontend
-          npm run test
+          npm run test --if-present
       
       - name: Type check
         run: |

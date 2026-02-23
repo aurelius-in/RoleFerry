@@ -160,25 +160,6 @@ export default function BioPageStep() {
     return first || "you";
   }, [uiDisplayName]);
 
-  const publishedFingerprint = useMemo(() => {
-    const workPts =
-      (Array.isArray((draft as any)?.work_style_points) && (draft as any).work_style_points.length > 0)
-        ? (draft as any).work_style_points
-        : workStylePoints;
-    const payloadForPublish = {
-      ...(draft || {}),
-      display_name: safeStr(userDisplayName) || safeStr(draft?.display_name),
-      profile_image_url: profileImageUrl || draft?.profile_image_url || "",
-      work_style_points: workPts,
-      resume_extract: (draft as any)?.resume_extract ?? resumeExtract ?? null,
-    };
-    try {
-      return JSON.stringify(payloadForPublish);
-    } catch {
-      return "";
-    }
-  }, [draft, userDisplayName, profileImageUrl, workStylePoints, resumeExtract]);
-
   const updateTheme = (patch: Partial<BioPageTheme>) => {
     const cur = draft || ({} as any);
     const base = { ...(cur.theme || {}) };
@@ -277,6 +258,25 @@ export default function BioPageStep() {
     if (values.length) out.push(`Values: ${values.slice(0, 3).join(", ")}`);
     return out.slice(0, 5);
   }, [jobPrefs]);
+
+  const publishedFingerprint = useMemo(() => {
+    const workPts =
+      (Array.isArray((draft as any)?.work_style_points) && (draft as any).work_style_points.length > 0)
+        ? (draft as any).work_style_points
+        : workStylePoints;
+    const payloadForPublish = {
+      ...(draft || {}),
+      display_name: safeStr(userDisplayName) || safeStr(draft?.display_name),
+      profile_image_url: profileImageUrl || draft?.profile_image_url || "",
+      work_style_points: workPts,
+      resume_extract: (draft as any)?.resume_extract ?? resumeExtract ?? null,
+    };
+    try {
+      return JSON.stringify(payloadForPublish);
+    } catch {
+      return "";
+    }
+  }, [draft, userDisplayName, profileImageUrl, workStylePoints, resumeExtract]);
 
   const onPickProfilePhoto = () => {
     profileInputRef.current?.click();
