@@ -110,7 +110,16 @@ function cleanMessageText(v: any): string {
     .replace(/&#160;?/gi, " ")
     .replace(/\u00a0/g, " ")
     .replace(/\r\n/g, "\n")
+    .replace(/^\s{0,3}#{1,6}\s*/gm, "")
+    .replace(/\*\*(.*?)\*\*/gs, "$1")
+    .replace(/__(.*?)__/gs, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^\s*[*+-]\s+/gm, "")
+    .replace(/(?<!\*)\*(?!\*)([^*\n]+?)(?<!\*)\*(?!\*)/gs, "$1")
+    .replace(/(?<!_)_(?!_)([^_\n]+?)(?<!_)_(?!_)/gs, "$1")
+    .replace(/\*/g, "")
     .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
@@ -890,50 +899,53 @@ export default function CampaignV2() {
                                 {step.last_generated_at ? `Updated ${new Date(step.last_generated_at).toLocaleString()}` : "Not generated yet"}
                               </div>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => generateStep(String(activeContactId || ""), step)}
-                              disabled={isBusy}
-                              className="px-3 py-2 rounded-md bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center gap-2"
-                            >
-                              {isBusy ? (
-                                <>
-                                  <InlineSpinner className="h-3.5 w-3.5" />
-                                  <span>Generating</span>
-                                </>
-                              ) : (
-                                "Generate"
-                              )}
-                            </button>
                           </div>
 
                           {/* Tone selector */}
                           <div className="mt-3">
                             <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Tone</div>
-                            <div className="inline-flex items-center gap-1 rounded-md border border-white/15 bg-black/30 px-1 py-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <div className="inline-flex items-center gap-1 rounded-md border border-white/15 bg-black/30 px-1 py-1">
+                                <button
+                                  type="button"
+                                  onClick={() => cycleTone(String(activeContactId || ""), step, -1)}
+                                  className="h-8 w-9 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                                  aria-label="Previous tone"
+                                >
+                                  ◀
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => cycleTone(String(activeContactId || ""), step, 1)}
+                                  className="h-8 min-w-[220px] px-3 rounded-md border border-white/10 bg-white/5 text-white/85 hover:bg-white/10 text-sm font-semibold text-left"
+                                  title="Click to cycle tones"
+                                >
+                                  {toneLabel(toneDisplay)}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => cycleTone(String(activeContactId || ""), step, 1)}
+                                  className="h-8 w-9 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                                  aria-label="Next tone"
+                                >
+                                  ▶
+                                </button>
+                              </div>
                               <button
                                 type="button"
-                                onClick={() => cycleTone(String(activeContactId || ""), step, -1)}
-                                className="h-8 w-9 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
-                                aria-label="Previous tone"
+                                onClick={() => generateStep(String(activeContactId || ""), step)}
+                                disabled={isBusy}
+                                className="h-10 px-3 rounded-md bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center gap-2"
+                                title="Generate this email using the selected tone"
                               >
-                                ◀
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => cycleTone(String(activeContactId || ""), step, 1)}
-                                className="h-8 min-w-[220px] px-3 rounded-md border border-white/10 bg-white/5 text-white/85 hover:bg-white/10 text-sm font-semibold text-left"
-                                title="Click to cycle tones"
-                              >
-                                {toneLabel(toneDisplay)}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => cycleTone(String(activeContactId || ""), step, 1)}
-                                className="h-8 w-9 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
-                                aria-label="Next tone"
-                              >
-                                ▶
+                                {isBusy ? (
+                                  <>
+                                    <InlineSpinner className="h-3.5 w-3.5" />
+                                    <span>Generating</span>
+                                  </>
+                                ) : (
+                                  "Generate This Tone"
+                                )}
                               </button>
                             </div>
                             {step.tone === "custom" ? (

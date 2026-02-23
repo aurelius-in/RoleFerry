@@ -801,6 +801,15 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             t = t.replace("\r\n", "\n").replace("\r", "\n")
             t = re.sub(r"[ \t]+\n", "\n", t)
             t = re.sub(r"\n{3,}", "\n\n", t)
+            # Strip markdown formatting so final messages are plain text.
+            t = re.sub(r"^\s{0,3}#{1,6}\s*", "", t, flags=re.M)  # headings
+            t = re.sub(r"\*\*(.*?)\*\*", r"\1", t, flags=re.S)   # bold **
+            t = re.sub(r"__(.*?)__", r"\1", t, flags=re.S)       # bold __
+            t = re.sub(r"`([^`]+)`", r"\1", t)                   # inline code
+            t = re.sub(r"^\s*[*+-]\s+", "", t, flags=re.M)       # list markers
+            t = re.sub(r"(?<!\*)\*(?!\*)([^*\n]+?)(?<!\*)\*(?!\*)", r"\1", t, flags=re.S)  # italic *
+            t = re.sub(r"(?<!_)_(?!_)([^_\n]+?)(?<!_)_(?!_)", r"\1", t, flags=re.S)         # italic _
+            t = t.replace("*", "")                               # stray stars
             # Job-seeker voice normalization: first-person singular only.
             swaps = [
                 (r"\bwe can\b", "I can"),
