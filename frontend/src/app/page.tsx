@@ -20,14 +20,14 @@ const STONES: StoneConfig[] = [
   { step: 4, tab: "job-descriptions", label: "Role Search", icon: "🔎", href: "/job-descriptions" },
   { step: 5, tab: "gap-analysis", label: "Gap Analysis", icon: "🧩", href: "/gap-analysis" },
   { step: 6, tab: "pain-point-match", label: "Pain Point Match", icon: "🔗", href: "/painpoint-match" },
-  { step: 7, tab: "offer", label: "Offer (Value Prop)", icon: "✨", href: "/offer" },
+  { step: 7, tab: "apply", label: "Apply", icon: "✅", href: "/apply" },
+  { step: 8, tab: "offer", label: "Offer", icon: "✨", href: "/offer" },
   // Flow order: company research first, then decision makers.
-  { step: 8, tab: "company-research", label: "Company Research", icon: "🏢", href: "/company-research" },
-  { step: 9, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
-  // Bio → Campaign → Launch.
-  { step: 10, tab: "bio-page", label: "Bio Page", icon: "🌐", href: "/bio-page" },
-  { step: 11, tab: "campaign", label: "Campaign", icon: "📧", href: "/campaign" },
-  { step: 12, tab: "launch", label: "Launch", icon: "🚀", href: "/deliverability-launch" },
+  { step: 9, tab: "company-research", label: "Company Research", icon: "🏢", href: "/company-research" },
+  { step: 10, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
+  // Bio → Campaign.
+  { step: 11, tab: "bio-page", label: "Bio Page", icon: "🌐", href: "/bio-page" },
+  { step: 12, tab: "campaign", label: "Campaign", icon: "📧", href: "/campaign" },
 ];
 
 const LEFT_FOOT_SRC = "/wireframes/assets/left-foot.gif";
@@ -69,11 +69,28 @@ export default function Home() {
             ? (parsed as any).steps
             : [];
 
-        // New format (v4): Offer moved to step 7 (between Match and Research).
+        // New format (v5): Apply inserted at step 7, launch removed from steps.
         // IMPORTANT: do not run legacy remaps or we can accidentally drop step 12 and never unlock Launch.
-        if (version >= 4) {
+        if (version >= 5) {
           const final = Array.from(new Set((steps || []).filter((n) => Number.isFinite(n) && n >= 1 && n <= 12)));
           setCompleted(new Set(final));
+          return;
+        }
+
+        // v4 -> v5 remap:
+        // v4: 1 prefs, 2 resume, 3 personality, 4 roles, 5 gaps, 6 match, 7 offer, 8 research, 9 contact, 10 bio, 11 campaign, 12 launch
+        // v5: 1 prefs, 2 resume, 3 personality, 4 roles, 5 gaps, 6 match, 7 apply, 8 offer, 9 research, 10 contact, 11 bio, 12 campaign
+        if (version === 4) {
+          const remapped = (steps || []).map((n) => {
+            if (n >= 7 && n <= 11) return n + 1;
+            if (n === 12) return 12; // old Launch treated as end-of-flow complete; keep campaign unlocked
+            return n;
+          });
+          const final = Array.from(new Set(remapped.filter((n) => Number.isFinite(n) && n >= 1 && n <= 12)));
+          setCompleted(new Set(final));
+          try {
+            window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 5, steps: final }));
+          } catch {}
           return;
         }
 
@@ -92,7 +109,7 @@ export default function Home() {
           setCompleted(new Set(final));
           // Persist upgraded version so we don't re-map repeatedly.
           try {
-            window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 4, steps: final }));
+            window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 5, steps: final }));
           } catch {}
           return;
         }
@@ -173,7 +190,7 @@ export default function Home() {
   }, []);
 
   function saveProgress(next: Set<number>) {
-    window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 4, steps: Array.from(next) }));
+    window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 5, steps: Array.from(next) }));
   }
 
   function playFootstepSequence(targetStep: number, onComplete: () => void) {
@@ -241,6 +258,17 @@ export default function Home() {
           <div>
             Steps completed: <span id="progressText">{progressCount}</span>
           </div>
+          <Link
+            href="/deliverability-launch"
+            className={`ml-4 inline-flex items-center rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
+              progressCount >= 12
+                ? "bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 hover:bg-emerald-500/30"
+                : "bg-white/5 border border-white/10 text-white/50 pointer-events-none"
+            }`}
+            title={progressCount >= 12 ? "Launch workflow" : "Complete all 12 steps to unlock"}
+          >
+            Launch
+          </Link>
         </div>
 
         <div className="keypad-header">
