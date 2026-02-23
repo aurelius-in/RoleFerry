@@ -191,6 +191,8 @@ function analyzeIndeedUrl(raw: string): {
 
 export default function JobDescriptionsPage() {
   const router = useRouter();
+  const AUTO_POS_KW_KEY = "rf_auto_roles_positive_keywords_v1";
+  const AUTO_NEG_KW_KEY = "rf_auto_roles_negative_keywords_v1";
   // Important: avoid reading localStorage during the initial render to prevent
   // React hydration mismatches (which can break click interactions).
   const [hasMounted, setHasMounted] = useState(false);
@@ -213,10 +215,68 @@ export default function JobDescriptionsPage() {
   const [scrapedRolesError, setScrapedRolesError] = useState<string | null>(null);
   const [scrapedRolesMessage, setScrapedRolesMessage] = useState<string>("");
   const [scrapedRolesMeta, setScrapedRolesMeta] = useState<{ requested_roles?: number; target_companies?: number; unique_companies?: number } | null>(null);
+  const [ignoredScrapedRoleIds, setIgnoredScrapedRoleIds] = useState<string[]>([]);
   const [expandedRoleDetails, setExpandedRoleDetails] = useState<Record<string, boolean>>({});
+  const [positiveKeywords, setPositiveKeywords] = useState<string[]>([]);
+  const [negativeKeywords, setNegativeKeywords] = useState<string[]>([]);
+  const [positiveSuggestions, setPositiveSuggestions] = useState<string[]>([]);
+  const [negativeSuggestions, setNegativeSuggestions] = useState<string[]>([
+    "account executive",
+    "brand marketing",
+    "sales representative",
+    "customer success",
+    "field marketing",
+  ]);
+  const [positiveInput, setPositiveInput] = useState("");
+  const [negativeInput, setNegativeInput] = useState("");
   const trackerPulseTimer = useRef<number | null>(null);
   const suggestedUrl =
     "https://www.google.com/about/careers/applications/jobs/results/?employment_type=FULL_TIME&degree=MASTERS&skills=software%2C%20architecture%2C%20ai";
+
+  const normalizeKeyword = (v: any) => " ".join(String(v || "").split()).trim();
+
+  const persistKeywordPrefs = (pos: string[], neg: string[]) => {
+    try {
+      localStorage.setItem(AUTO_POS_KW_KEY, JSON.stringify(pos));
+      localStorage.setItem(AUTO_NEG_KW_KEY, JSON.stringify(neg));
+    } catch {}
+  };
+
+  const addKeyword = (kind: "positive" | "negative", raw: string) => {
+    const kw = normalizeKeyword(raw);
+    if (!kw) return;
+    if (kind === "positive") {
+      const next = Array.from(new Set([...positiveKeywords, kw].map((x) => normalizeKeyword(x)))).filter(Boolean).slice(0, 20);
+      setPositiveKeywords(next);
+      persistKeywordPrefs(next, negativeKeywords);
+      return;
+    }
+    const next = Array.from(new Set([...negativeKeywords, kw].map((x) => normalizeKeyword(x)))).filter(Boolean).slice(0, 20);
+    setNegativeKeywords(next);
+    persistKeywordPrefs(positiveKeywords, next);
+  };
+
+  const removeKeyword = (kind: "positive" | "negative", kw: string) => {
+    const target = normalizeKeyword(kw).toLowerCase();
+    if (kind === "positive") {
+      const next = positiveKeywords.filter((x) => normalizeKeyword(x).toLowerCase() !== target);
+      setPositiveKeywords(next);
+      persistKeywordPrefs(next, negativeKeywords);
+      return;
+    }
+    const next = negativeKeywords.filter((x) => normalizeKeyword(x).toLowerCase() !== target);
+    setNegativeKeywords(next);
+    persistKeywordPrefs(positiveKeywords, next);
+  };
+
+  const toggleKeyword = (kind: "positive" | "negative", kw: string) => {
+    const target = normalizeKeyword(kw).toLowerCase();
+    if (!target) return;
+    const cur = kind === "positive" ? positiveKeywords : negativeKeywords;
+    const exists = cur.some((x) => normalizeKeyword(x).toLowerCase() === target);
+    if (exists) removeKeyword(kind, kw);
+    else addKeyword(kind, kw);
+  };
 
   useEffect(() => {
     setHasMounted(true);
@@ -249,13 +309,58 @@ export default function JobDescriptionsPage() {
     }
   }, []);
 
+  useEffect(() => {
+    try {
+      const posRaw = localStorage.getItem(AUTO_POS_KW_KEY);
+      const negRaw = localStorage.getItem(AUTO_NEG_KW_KEY);
+      const posSaved = posRaw ? JSON.parse(posRaw) : [];
+      const negSaved = negRaw ? JSON.parse(negRaw) : [];
+      const pos = Array.isArray(posSaved) ? posSaved.map(normalizeKeyword).filter(Boolean) : [];
+      const neg = Array.isArray(negSaved) ? negSaved.map(normalizeKeyword).filter(Boolean) : [];
+
+      let posInit = pos.slice(0, 20);
+      if (!posInit.length) {
+        const resumeRaw = localStorage.getItem("resume_extract");
+        const selectedRaw = localStorage.getItem("selected_job_description");
+        const resume = resumeRaw ? JSON.parse(resumeRaw) : null;
+        const selected = selectedRaw ? JSON.parse(selectedRaw) : null;
+        const resumeSkills = Array.isArray(resume?.skills) ? resume.skills : [];
+        const roleSkills = Array.isArray(selected?.required_skills) ? selected.required_skills : [];
+        posInit = Array.from(new Set([...resumeSkills, ...roleSkills].map((x) => normalizeKeyword(x)))).filter(Boolean).slice(0, 8);
+      }
+
+      const sugg = Array.from(
+        new Set(
+          [
+            ...posInit,
+            ...(Array.isArray(resume?.skills) ? resume.skills : []),
+          ].map((x) => normalizeKeyword(x))
+        )
+      )
+        .filter(Boolean)
+        .slice(0, 14);
+
+      setPositiveKeywords(posInit);
+      setNegativeKeywords(neg.slice(0, 20));
+      setPositiveSuggestions(sugg);
+      if (!pos.length || !neg.length) persistKeywordPrefs(posInit, neg.slice(0, 20));
+    } catch {
+      // keep defaults
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const loadScrapedRoles = async () => {
     setScrapedRolesError(null);
     setIsLoadingScrapedRoles(true);
     try {
-      const res = await api<ScrapedRolesResponse>("/job-descriptions/scraped-roles?limit=30", "GET");
+      const params = new URLSearchParams({ limit: "30" });
+      if (positiveKeywords.length) params.set("positive_keywords", positiveKeywords.join(", "));
+      if (negativeKeywords.length) params.set("negative_keywords", negativeKeywords.join(", "));
+      const res = await api<ScrapedRolesResponse>(`/job-descriptions/scraped-roles?${params.toString()}`, "GET");
       const roles = (Array.isArray(res?.roles) ? res.roles : []).filter((r) => Number(r?.match_score || 0) >= 75);
       setScrapedRoles(roles);
+      setIgnoredScrapedRoleIds([]);
       setScrapedRolesMessage(String(res?.message || ""));
       setScrapedRolesMeta((res?.helper || null) as any);
     } catch (e: any) {
@@ -1064,6 +1169,100 @@ export default function JobDescriptionsPage() {
                   </button>
                 </div>
 
+                <div className="mt-3 space-y-3 rounded-md border border-white/10 bg-black/20 p-3">
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-wider text-white/70">Positive keywords</div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {positiveSuggestions.slice(0, 14).map((kw) => {
+                        const on = positiveKeywords.some((x) => normalizeKeyword(x).toLowerCase() === normalizeKeyword(kw).toLowerCase());
+                        return (
+                          <button
+                            key={`pos_s_${kw}`}
+                            type="button"
+                            onClick={() => toggleKeyword("positive", kw)}
+                            className={`rounded-full border px-2 py-0.5 text-[11px] ${
+                              on ? "border-emerald-400/50 bg-emerald-500/20 text-emerald-100" : "border-white/15 bg-white/5 text-white/70 hover:bg-white/10"
+                            }`}
+                          >
+                            {kw}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-2 flex gap-2">
+                      <input
+                        value={positiveInput}
+                        onChange={(e) => setPositiveInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addKeyword("positive", positiveInput);
+                            setPositiveInput("");
+                          }
+                        }}
+                        placeholder="Add positive keyword"
+                        className="flex-1 rounded-md border border-white/15 bg-black/30 px-2.5 py-1.5 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          addKeyword("positive", positiveInput);
+                          setPositiveInput("");
+                        }}
+                        className="rounded-md border border-white/15 bg-white/10 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-white/15"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-wider text-white/70">Negative keywords</div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {negativeSuggestions.slice(0, 14).map((kw) => {
+                        const on = negativeKeywords.some((x) => normalizeKeyword(x).toLowerCase() === normalizeKeyword(kw).toLowerCase());
+                        return (
+                          <button
+                            key={`neg_s_${kw}`}
+                            type="button"
+                            onClick={() => toggleKeyword("negative", kw)}
+                            className={`rounded-full border px-2 py-0.5 text-[11px] ${
+                              on ? "border-rose-400/50 bg-rose-500/20 text-rose-100" : "border-white/15 bg-white/5 text-white/70 hover:bg-white/10"
+                            }`}
+                          >
+                            {kw}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-2 flex gap-2">
+                      <input
+                        value={negativeInput}
+                        onChange={(e) => setNegativeInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addKeyword("negative", negativeInput);
+                            setNegativeInput("");
+                          }
+                        }}
+                        placeholder="Add negative keyword"
+                        className="flex-1 rounded-md border border-white/15 bg-black/30 px-2.5 py-1.5 text-xs text-white outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          addKeyword("negative", negativeInput);
+                          setNegativeInput("");
+                        }}
+                        className="rounded-md border border-white/15 bg-white/10 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-white/15"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {scrapedRolesError ? (
                   <div className="mt-3 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200">
                     {scrapedRolesError}
@@ -1076,11 +1275,13 @@ export default function JobDescriptionsPage() {
                   </div>
                 ) : null}
 
-                {scrapedRoles.length > 0 ? (
+                {(() => {
+                  const visibleScrapedRoles = scrapedRoles.filter((r) => !ignoredScrapedRoleIds.includes(String(r.id || "")));
+                  return visibleScrapedRoles.length > 0 ? (
                   <div className="mt-4">
                     <div className="mb-3 flex flex-wrap gap-2 text-[11px]">
                       <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
-                        Roles shown: {scrapedRoles.length}
+                        Roles shown: {visibleScrapedRoles.length}
                       </span>
                       {typeof scrapedRolesMeta?.unique_companies === "number" ? (
                         <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
@@ -1088,58 +1289,74 @@ export default function JobDescriptionsPage() {
                         </span>
                       ) : null}
                     </div>
-                    <div className="space-y-3">
-                      {scrapedRoles.map((r) => (
-                        <div key={r.id} className="rounded-md border border-white/10 bg-white/5 p-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
+                    <div className="space-y-2">
+                      {visibleScrapedRoles.map((r) => (
+                        <div key={r.id} className="rounded-md border border-white/10 bg-white/5 px-3 py-2">
+                          <div className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-3 items-center">
+                            <div className="md:col-span-6 min-w-0">
                               <div className="text-sm font-semibold text-white break-words">{r.title}</div>
-                              <div className="text-xs text-white/70">{formatCompanyName(String(r.company || "Unknown"))}</div>
+                              <div className="mt-0.5 text-[11px] text-white/70 truncate">
+                                {formatCompanyName(String(r.company || "Unknown"))}
+                                {r.work_mode ? ` • ${r.work_mode}` : ""}
+                              </div>
                             </div>
-                            <div className="text-xs text-white/60 shrink-0">{String(r.source || "Career pages")}</div>
-                          </div>
-                          <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
-                            {r.salary_range ? (
-                              <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
-                                {r.salary_range}
-                              </span>
-                            ) : null}
-                            {r.location ? (
-                              <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
-                                {r.location}
-                              </span>
-                            ) : null}
-                            {typeof r.match_score === "number" ? (
-                              <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
-                                Match {Math.max(0, Math.min(100, Number(r.match_score || 0)))}%
-                              </span>
-                            ) : null}
-                          </div>
-                          <div className="mt-3 flex items-center gap-3">
-                            <a
-                              href={r.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-300 underline hover:text-blue-200"
-                            >
-                              Open role link
-                            </a>
-                            <button
-                              type="button"
-                              className="animate-pulse rounded-md border border-blue-400/40 bg-blue-500/20 px-2.5 py-1 text-xs font-semibold text-blue-100 hover:bg-blue-500/30"
-                              onClick={() => {
-                                setImportType("url");
-                                setImportUrl(String(r.url || ""));
-                              }}
-                            >
-                              Use URL Importer
-                            </button>
+
+                            <div className="md:col-span-3 text-[11px] text-white/75 break-words">
+                              {r.location || "Location not listed"}
+                            </div>
+
+                            <div className="md:col-span-1">
+                              {typeof r.match_score === "number" ? (
+                                <span className="inline-flex items-center rounded-full bg-amber-500/85 px-2 py-0.5 text-[10px] font-bold text-black">
+                                  {Math.max(0, Math.min(100, Number(r.match_score || 0)))}%
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-white/50">—</span>
+                              )}
+                            </div>
+
+                            <div className="md:col-span-2 flex items-center justify-start md:justify-end gap-1.5">
+                              <button
+                                type="button"
+                                className="animate-pulse rounded-md border border-emerald-400/40 bg-emerald-500/20 px-2 py-1 text-[10px] font-semibold text-emerald-100 hover:bg-emerald-500/30"
+                                onClick={() => {
+                                  setImportType("url");
+                                  setImportUrl(String(r.url || ""));
+                                }}
+                                title="Use URL Importer"
+                              >
+                                Apply
+                              </button>
+                              <button
+                                type="button"
+                                className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] font-semibold text-white/80 hover:bg-white/10"
+                                onClick={() => {
+                                  const id = String(r.id || "");
+                                  if (!id) return;
+                                  setIgnoredScrapedRoleIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+                                }}
+                                title="Hide this suggestion"
+                              >
+                                Ignore
+                              </button>
+                              <a
+                                href={r.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
+                                title="Open role link"
+                                aria-label="Open role link"
+                              >
+                                ↗
+                              </a>
+                            </div>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
-                ) : null}
+                ) : null;
+                })()}
               </div>
             </div>
           </div>

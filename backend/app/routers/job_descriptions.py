@@ -2509,12 +2509,59 @@ def _resume_skill_hints() -> List[str]:
     rx = store.demo_latest_resume or {}
     raw = rx.get("skills") or rx.get("Skills") or []
     out: List[str] = []
+    seen: set[str] = set()
+    blocked = {
+        "communication",
+        "leadership",
+        "teamwork",
+        "problem solving",
+        "critical thinking",
+        "time management",
+        "collaboration",
+    }
     if isinstance(raw, list):
         for s in raw:
             t = str(s or "").strip()
-            if t:
-                out.append(t)
+            if not t:
+                continue
+            k = t.lower()
+            if k in blocked:
+                continue
+            if len(t) < 2:
+                continue
+            if k in seen:
+                continue
+            seen.add(k)
+            out.append(t)
     return out[:20]
+
+
+def _parse_keyword_list(raw: Optional[str]) -> List[str]:
+    if not raw:
+        return []
+    out: List[str] = []
+    seen: set[str] = set()
+    for part in re.split(r"[,\n;]+", str(raw or "")):
+        t = " ".join(str(part or "").split()).strip().strip('"').strip("'")
+        if not t:
+            continue
+        k = t.lower()
+        if k in seen:
+            continue
+        seen.add(k)
+        out.append(t)
+    return out[:20]
+
+
+def _contains_any_keyword(text: str, keywords: List[str]) -> bool:
+    hay = str(text or "").lower()
+    for kw in (keywords or []):
+        k = str(kw or "").strip().lower()
+        if not k:
+            continue
+        if k in hay:
+            return True
+    return False
 
 
 def _preferences_require_us(pref: Dict[str, Any]) -> bool:
@@ -2909,7 +2956,11 @@ async def _discover_roles_without_serper(
 
 
 @router.get("/scraped-roles", response_model=ScrapedRolesResponse)
-async def get_scraped_roles(limit: int = 30):
+async def get_scraped_roles(
+    limit: int = 30,
+    positive_keywords: Optional[str] = None,
+    negative_keywords: Optional[str] = None,
+):
     """
     Auto-discover role links from common career page ecosystems using user preferences.
     This is additive to the existing manual URL import flow.
@@ -2923,6 +2974,8 @@ async def get_scraped_roles(limit: int = 30):
     require_us = _preferences_require_us(prefs)
     pref_terms = _preference_terms(prefs, role_query)
     min_match_score = 75
+    positive_kw = _parse_keyword_list(positive_keywords)
+    negative_kw = _parse_keyword_list(negative_keywords)
 
     # Build multiple role terms so discovery does not collapse to one employer/source.
     role_terms: List[str] = []
@@ -2949,6 +3002,18 @@ async def get_scraped_roles(limit: int = 30):
         seen_terms.add(k)
         dedup_terms.append(t)
     role_terms = dedup_terms[:6]
+    resume_positive = [s for s in _resume_skill_hints() if str(s or "").strip()][:6]
+    if positive_kw:
+        seen_pos = {str(x).strip().lower() for x in resume_positive}
+        for kw in positive_kw:
+            k = str(kw or "").strip().lower()
+            if not k or k in seen_pos:
+                continue
+            resume_positive.append(kw)
+            seen_pos.add(k)
+    skill_focus = resume_positive[:4]
+    skill_clause = " OR ".join([f'"{s}"' for s in skill_focus]) if skill_focus else ""
+    negative_clause = " ".join([f'-"{kw}"' for kw in negative_kw[:6]]) if negative_kw else ""
 
     # Broaden to multiple ATS ecosystems + public careers surfaces.
     domains = [
@@ -2966,13 +3031,18 @@ async def get_scraped_roles(limit: int = 30):
     queries: List[str] = []
     for term in role_terms:
         for d in domains:
-            queries.append(f'site:{d} "{term}" "remote"')
-            queries.append(f'site:{d} "{term}" "united states"')
+            queries.append(f'site:{d} "{term}" "remote" {negative_clause}'.strip())
+            queries.append(f'site:{d} "{term}" "united states" {negative_clause}'.strip())
+            if skill_clause:
+                queries.append(f'site:{d} "{term}" ({skill_clause}) "remote" {negative_clause}'.strip())
+                queries.append(f'site:{d} "{term}" ({skill_clause}) "united states" {negative_clause}'.strip())
         # Non site-locked queries to catch direct career pages outside ATS providers.
-        queries.append(f'"{term}" "careers" "remote" "united states"')
-        queries.append(f'"{term}" "job opening" "apply now"')
+        queries.append(f'"{term}" "careers" "remote" "united states" {negative_clause}'.strip())
+        queries.append(f'"{term}" "job opening" "apply now" {negative_clause}'.strip())
+        if skill_clause:
+            queries.append(f'"{term}" ({skill_clause}) "careers" "remote" {negative_clause}'.strip())
     # Keep to a reasonable cap to avoid runaway API usage.
-    queries = queries[:72]
+    queries = queries[:96]
 
     found: List[Dict[str, Any]] = []
     for q in queries:
@@ -3045,6 +3115,18 @@ async def get_scraped_roles(limit: int = 30):
         seen_urls.add(url)
 
         title = str(item.get("title") or "").strip()[:180] or "Role listing"
+        text_blob = " ".join(
+            [
+                title,
+                str(item.get("snippet") or "").strip(),
+                str(item.get("company") or "").strip(),
+                str(item.get("url") or "").strip(),
+            ]
+        )
+        if negative_kw and _contains_any_keyword(text_blob, negative_kw):
+            continue
+        if positive_kw and not _contains_any_keyword(text_blob, positive_kw):
+            continue
         if _blocked_title_for_tech_seekers(title):
             continue
         if not _looks_like_relevant_title(title, _role_tokens(role_query)):
@@ -3134,6 +3216,8 @@ async def get_scraped_roles(limit: int = 30):
             "raw_results": len(found),
             "min_match_score": min_match_score,
             "require_us": require_us,
+            "positive_keywords": positive_kw,
+            "negative_keywords": negative_kw,
         },
     )
 
