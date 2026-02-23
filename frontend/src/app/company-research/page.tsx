@@ -320,7 +320,6 @@ function toCsvRow(cols: string[]): string {
 
 export default function CompanyResearchPage() {
   const router = useRouter();
-  const [companyQuery, setCompanyQuery] = useState("");
   const [activeCompany, setActiveCompany] = useState<string>("");
   const [isRunning, setIsRunning] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -357,11 +356,19 @@ export default function CompanyResearchPage() {
     const pick = savedActive && by?.[savedActive] ? savedActive : "";
     if (pick) {
       setActiveCompany(pick);
-      setCompanyQuery(pick);
       setDraft(sanitizeDraft(by[pick]));
       localStorage.setItem("selected_company_name", pick);
     }
   }, []);
+
+  useEffect(() => {
+    // If no active company yet, pick the first available from prior role selections.
+    if (activeCompany) return;
+    if (!companyOptions.length) return;
+    const first = String(companyOptions[0] || "").trim();
+    if (!first) return;
+    setActiveCompany(first);
+  }, [activeCompany, companyOptions]);
 
   async function runResearch(companyName: string) {
     const company = String(companyName || "").trim();
@@ -465,7 +472,6 @@ export default function CompanyResearchPage() {
 
       setDraft(sanitizeDraft(next));
       setActiveCompany(company);
-      setCompanyQuery(company);
       localStorage.setItem(STORAGE_ACTIVE_COMPANY, company);
       localStorage.setItem("selected_company_name", company);
       if (hasWebSources) setNotice("Company research generated. Review/edit, then Save.");
@@ -622,13 +628,13 @@ export default function CompanyResearchPage() {
             <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
               <div>
                 <div className="text-sm font-bold text-white">Company</div>
-                <div className="text-xs text-white/60">Pick a company from your imported roles (or type one).</div>
+                <div className="text-xs text-white/60">Pick a company from roles you selected in earlier steps.</div>
               </div>
               <div className="flex gap-2">
                 <button
                   type="button"
-                  disabled={isRunning || !companyQuery.trim()}
-                  onClick={() => runResearch(companyQuery)}
+                  disabled={isRunning || !activeCompany.trim()}
+                  onClick={() => runResearch(activeCompany)}
                   className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 inline-flex items-center gap-2"
                 >
                   {isRunning ? (
@@ -643,36 +649,38 @@ export default function CompanyResearchPage() {
               </div>
             </div>
 
-            <div className="mt-3 grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
-              <div className="md:col-span-8">
-                <input
-                  value={companyQuery}
-                  onChange={(e) => setCompanyQuery(e.target.value)}
-                  placeholder="Type a company name (e.g., Zapier)…"
-                  className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="md:col-span-4">
-                <select
-                  value={activeCompany}
-                  onChange={(e) => {
-                    const v = String(e.target.value || "").trim();
-                    if (!v) return;
-                    setActiveCompany(v);
-                    setCompanyQuery(v);
-                    const by = safeJson<Record<string, CompanyResearch>>(localStorage.getItem(STORAGE_BY_COMPANY), {});
-                    if (by?.[v]) setDraft(sanitizeDraft(by[v]));
-                  }}
-                  className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select from imported…</option>
-                  {companyOptions.slice(0, 80).map((c) => (
-                    <option key={`co_${c}`} value={c}>
-                      {formatCompanyName(c)}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="mt-3">
+              {companyOptions.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {companyOptions.slice(0, 100).map((c) => {
+                    const isActive = String(activeCompany || "").trim() === String(c || "").trim();
+                    return (
+                      <button
+                        key={`co_chip_${c}`}
+                        type="button"
+                        onClick={() => {
+                          const v = String(c || "").trim();
+                          if (!v) return;
+                          setActiveCompany(v);
+                          const by = safeJson<Record<string, CompanyResearch>>(localStorage.getItem(STORAGE_BY_COMPANY), {});
+                          if (by?.[v]) setDraft(sanitizeDraft(by[v]));
+                        }}
+                        className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                          isActive
+                            ? "border-blue-400/60 bg-blue-500/15 text-blue-100"
+                            : "border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
+                        }`}
+                      >
+                        {formatCompanyName(c)}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-sm text-white/60">
+                  No companies found from previous role selections yet. Add/select roles first.
+                </div>
+              )}
             </div>
           </div>
 
@@ -723,7 +731,6 @@ export default function CompanyResearchPage() {
                           onClick={() => {
                             if (!name) return;
                             setActiveCompany(name);
-                            setCompanyQuery(name);
                             setDraft(sanitizeDraft(c));
                             localStorage.setItem(STORAGE_ACTIVE_COMPANY, name);
                             localStorage.setItem("selected_company_name", name);

@@ -24,6 +24,7 @@ class JobPreferences(BaseModel):
     values: List[str]
     role_categories: List[str]
     location_preferences: List[str]
+    location_text: Optional[str] = None
     work_type: List[str]
     role_type: List[str]
     company_size: List[str]

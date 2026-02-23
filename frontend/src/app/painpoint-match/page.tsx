@@ -27,6 +27,14 @@ interface PainPointMatch {
   metric_3: string;
   overlap_3?: string;
   alignment_score: number;
+  alignments?: Array<{
+    painpoint: string;
+    jd_evidence?: string;
+    solution: string;
+    resume_evidence?: string;
+    overlap?: string;
+    metric?: string;
+  }>;
 }
 
 interface JobDescription {
@@ -78,6 +86,14 @@ interface BackendPainPointMatch {
   metric_3: string;
   overlap_3?: string | null;
   alignment_score: number;
+  alignments?: Array<{
+    painpoint: string;
+    jd_evidence?: string | null;
+    solution: string;
+    resume_evidence?: string | null;
+    overlap?: string | null;
+    metric?: string | null;
+  }> | null;
 }
 
 interface PainPointMatchResponse {
@@ -192,6 +208,16 @@ export default function PainPointMatchPage() {
       metric_3: m.metric_3,
       overlap_3: m.overlap_3 || "",
       alignment_score: m.alignment_score,
+      alignments: Array.isArray(m.alignments)
+        ? m.alignments.map((a) => ({
+            painpoint: String(a?.painpoint || ""),
+            jd_evidence: String(a?.jd_evidence || ""),
+            solution: String(a?.solution || ""),
+            resume_evidence: String(a?.resume_evidence || ""),
+            overlap: String(a?.overlap || ""),
+            metric: String(a?.metric || ""),
+          }))
+        : undefined,
     };
   };
 
@@ -314,6 +340,22 @@ export default function PainPointMatchPage() {
   };
 
   const renderableAlignments = (match: PainPointMatch) => {
+    const dynamic = Array.isArray(match.alignments) ? match.alignments : [];
+    if (dynamic.length > 0) {
+      return dynamic
+        .slice(0, 6)
+        .map((a, idx) => ({
+          n: idx + 1,
+          painpoint: String(a?.painpoint || ""),
+          jdEvidence: String(a?.jd_evidence || ""),
+          solution: String(a?.solution || ""),
+          resumeEvidence: String(a?.resume_evidence || ""),
+          overlap: String(a?.overlap || ""),
+          metric: String(a?.metric || ""),
+        }))
+        .filter((it) => String(it.painpoint || "").trim().length > 0);
+    }
+
     const items = [
       {
         n: 1,
@@ -526,7 +568,7 @@ export default function PainPointMatchPage() {
                             <div className="mt-5 space-y-6">
                               {jobMatches.map((match, index) => (
                                 <div key={`match_${jd.id}_${index}`} className="rounded-lg border border-white/10 bg-white/5 p-4">
-                                  <div className="text-xs text-white/60 mb-3">Showing up to 3 best matches for this role.</div>
+                                  <div className="text-xs text-white/60 mb-3">Showing 2-6 best matches for this role.</div>
                                   <div className="space-y-6">
                                     {renderableAlignments(match).length === 0 ? (
                                       <div className="text-sm text-white/60 italic">No alignments were found for this role.</div>

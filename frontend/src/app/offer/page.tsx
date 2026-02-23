@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import InlineSpinner from "@/components/InlineSpinner";
+import { api } from "@/lib/api";
 
 type OfferCaseStudy = {
   title: string;
@@ -19,6 +20,8 @@ type OfferV1 = {
   case_studies: OfferCaseStudy[]; // 0-2
   credibility: string[]; // short tags
   default_cta: string;
+  soft_cta?: string;
+  hard_cta?: string;
   snippet: string; // compiled preview
 };
 
@@ -49,6 +52,13 @@ type PainPointMatchLite = {
   solution_3?: string;
   metric_3?: string;
   alignment_score?: number;
+};
+
+type ComposeOfferSnippetResponse = {
+  success: boolean;
+  message: string;
+  snippet: string;
+  used_llm?: boolean;
 };
 
 function nowIso() {
@@ -103,12 +113,14 @@ function buildSnippet(d: {
   one_liner: string;
   proof_points: string[];
   case_studies: OfferCaseStudy[];
-  default_cta: string;
+  soft_cta: string;
+  hard_cta: string;
 }) {
   const one = clampLines(d.one_liner, 220);
   const proofs = (d.proof_points || []).map((x) => clampLines(x, 140)).filter(Boolean).slice(0, 3);
   const cs = (d.case_studies || []).filter((c) => c && (c.problem || c.actions || c.impact));
-  const cta = clampLines(d.default_cta, 140);
+  const softCta = clampLines(d.soft_cta, 140);
+  const hardCta = clampLines(d.hard_cta, 140);
 
   const parts: string[] = [];
   if (one) parts.push(one);
@@ -118,8 +130,45 @@ function buildSnippet(d: {
     const bit = [c0.problem, c0.actions, c0.impact].map((x) => clampLines(x, 110)).filter(Boolean).join(" → ");
     if (bit) parts.push(`Example: ${bit}`);
   }
-  if (cta) parts.push(`CTA: ${cta}`);
+  if (softCta) parts.push(`Soft CTA: ${softCta}`);
+  if (hardCta) parts.push(`Hard CTA: ${hardCta}`);
   return parts.join("\n");
+}
+
+function deriveCredibilitySignals(resume: any, roleSkills: string[]): string[] {
+  const out: string[] = [];
+  const push = (s: string) => {
+    const t = String(s || "").trim();
+    if (!t) return;
+    if (!out.includes(t)) out.push(t);
+  };
+
+  const skills = Array.isArray(resume?.skills)
+    ? resume.skills.map((x: any) => String(x || "").trim()).filter(Boolean)
+    : [];
+  const skillsLow = skills.map((s: string) => s.toLowerCase());
+  const overlap = (roleSkills || []).filter((s) => skillsLow.includes(String(s || "").toLowerCase())).slice(0, 2);
+  if (overlap.length) push(`Role-skill overlap: ${overlap.join(" + ")}`);
+
+  const positions = Array.isArray(resume?.positions) ? resume.positions : [];
+  const titles = positions.map((p: any) => String(p?.title || "").trim()).filter(Boolean);
+  const titlesLow = titles.map((t: string) => t.toLowerCase()).join(" | ");
+  if (/\b(architect|principal|staff)\b/.test(titlesLow)) push("Architecture-level ownership");
+  if (/\b(manager|lead|director|head)\b/.test(titlesLow)) push("Cross-functional leadership");
+
+  if (skillsLow.some((s: string) => ["aws", "azure", "gcp", "kubernetes", "docker", "terraform"].some((k) => s.includes(k)))) {
+    push("Cloud/platform delivery");
+  }
+  if (skillsLow.some((s: string) => ["python", "react", "fastapi", "sql", "typescript", "node"].some((k) => s.includes(k)))) {
+    push("Hands-on software engineering");
+  }
+
+  const metrics = Array.isArray(resume?.keyMetrics) ? resume.keyMetrics : [];
+  if (metrics.length) push("Measurable outcomes delivered");
+  const accomplishments = Array.isArray(resume?.accomplishments) ? resume.accomplishments : [];
+  if (accomplishments.length && !out.includes("Measurable outcomes delivered")) push("Track record of shipped results");
+
+  return out.slice(0, 3);
 }
 
 export default function OfferPage() {
@@ -138,7 +187,11 @@ export default function OfferPage() {
   ]);
   const [credibility, setCredibility] = useState<string[]>([]);
   const [credInput, setCredInput] = useState("");
+  const [softCta, setSoftCta] = useState("Worth exploring, or totally not a priority right now?");
   const [defaultCta, setDefaultCta] = useState("Open to a 10-minute chat this week?");
+  const [aiSnippet, setAiSnippet] = useState("");
+  const [isGeneratingSnippet, setIsGeneratingSnippet] = useState(false);
+  const [showStepHelp, setShowStepHelp] = useState(false);
 
   // Pull best-effort context for suggestions (no extra API calls).
   const resume = useMemo(() => safeJson<any>(typeof window !== "undefined" ? localStorage.getItem("resume_extract") : null, null), []);
@@ -156,6 +209,12 @@ export default function OfferPage() {
   }, [roles, activeRoleId]);
 
   function loadOfferToState(saved: OfferV1 | null) {
+    const roleSkills = (Array.isArray(activeRole?.requiredSkills) ? activeRole.requiredSkills : [])
+      .map((x) => String(x || "").trim())
+      .filter(Boolean)
+      .slice(0, 4);
+    const autoCredibility = deriveCredibilitySignals(resume, roleSkills);
+
     if (saved?.version === 1) {
       setOneLiner(normalizeNoEmDash(String(saved.one_liner || "")));
       setProofPoints(
@@ -176,8 +235,10 @@ export default function OfferPage() {
               { title: "Case study 2", problem: "", actions: "", impact: "" },
             ]
       );
-      setCredibility(Array.isArray(saved.credibility) ? saved.credibility : []);
-      setDefaultCta(String(saved.default_cta || "Open to a 10-minute chat this week?"));
+      const savedCred = Array.isArray(saved.credibility) ? saved.credibility.map((x) => String(x || "").trim()).filter(Boolean) : [];
+      setCredibility(savedCred.length ? savedCred : autoCredibility);
+      setSoftCta(String(saved.soft_cta || "Worth exploring, or totally not a priority right now?"));
+      setDefaultCta(String(saved.hard_cta || saved.default_cta || "Open to a 10-minute chat this week?"));
       return;
     }
 
@@ -229,7 +290,8 @@ export default function OfferPage() {
       },
       { title: "Case study 2", problem: "", actions: "", impact: "" },
     ]);
-    setCredibility([]);
+    setCredibility(autoCredibility);
+    setSoftCta("Worth exploring, or totally not a priority right now?");
     setDefaultCta("Open to a 10-minute chat this week?");
   }
 
@@ -272,6 +334,8 @@ export default function OfferPage() {
           .slice(0, 2),
         credibility: (credibility || []).map((x) => String(x || "").trim()).filter(Boolean).slice(0, 10),
         default_cta: String(defaultCta || "").trim(),
+        soft_cta: String(softCta || "").trim(),
+        hard_cta: String(defaultCta || "").trim(),
         snippet,
       };
       persistOfferForRole(rid, payload, { updateLegacy: Boolean(opts?.updateLegacy) });
@@ -321,10 +385,11 @@ export default function OfferPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeRoleId]);
 
-  const snippet = useMemo(
-    () => buildSnippet({ one_liner: oneLiner, proof_points: proofPoints, case_studies: caseStudies, default_cta: defaultCta }),
-    [oneLiner, proofPoints, caseStudies, defaultCta]
+  const deterministicSnippet = useMemo(
+    () => buildSnippet({ one_liner: oneLiner, proof_points: proofPoints, case_studies: caseStudies, soft_cta: softCta, hard_cta: defaultCta }),
+    [oneLiner, proofPoints, caseStudies, softCta, defaultCta]
   );
+  const snippet = (aiSnippet || deterministicSnippet || "").trim();
 
   const suggestedMetrics = useMemo(() => {
     const km = Array.isArray(resume?.keyMetrics) ? resume.keyMetrics : [];
@@ -367,6 +432,8 @@ export default function OfferPage() {
           .slice(0, 2),
         credibility: (credibility || []).map((x) => String(x || "").trim()).filter(Boolean).slice(0, 10),
         default_cta: String(defaultCta || "").trim(),
+        soft_cta: String(softCta || "").trim(),
+        hard_cta: String(defaultCta || "").trim(),
         snippet,
       };
       const key = String(activeRoleId || "").trim() || String(activeRole?.id || "").trim() || "default";
@@ -382,6 +449,49 @@ export default function OfferPage() {
     }
   };
 
+  const composeSnippetWithAI = async () => {
+    setIsGeneratingSnippet(true);
+    try {
+      const res = await api<ComposeOfferSnippetResponse>("/offer-creation/compose-snippet", "POST", {
+        one_liner: oneLiner,
+        proof_points: proofPoints,
+        case_studies: caseStudies,
+        default_cta: defaultCta,
+        soft_cta: softCta,
+        hard_cta: defaultCta,
+        role_title: String(activeRole?.title || "").trim(),
+        role_company: String(activeRole?.company || "").trim(),
+        required_skills: Array.isArray(activeRole?.requiredSkills) ? activeRole.requiredSkills : [],
+        pain_points: Array.isArray(activeRole?.painPoints) ? activeRole.painPoints : [],
+        success_metrics: Array.isArray(activeRole?.successMetrics) ? activeRole.successMetrics : [],
+      });
+      const s = String(res?.snippet || "").trim();
+      if (s) {
+        setAiSnippet(s);
+        setNotice("AI snippet updated.");
+        window.setTimeout(() => setNotice(null), 1200);
+      }
+    } catch {
+      // Keep deterministic fallback visible.
+      setNotice("Couldn’t generate AI snippet right now. Using fallback.");
+      window.setTimeout(() => setNotice(null), 1500);
+    } finally {
+      setIsGeneratingSnippet(false);
+    }
+  };
+
+  useEffect(() => {
+    // Role-specific snippets should refresh when switching roles.
+    setAiSnippet("");
+    if (!activeRole) return;
+    if (!String(oneLiner || "").trim() && !(proofPoints || []).some((p) => String(p || "").trim())) return;
+    const t = window.setTimeout(() => {
+      composeSnippetWithAI();
+    }, 200);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeRoleId]);
+
   return (
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
@@ -393,11 +503,34 @@ export default function OfferPage() {
 
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Offer (Value Prop)</h1>
-            <p className="text-white/70">
-              This is the core story RoleFerry uses in your emails. It’s not your resume. It’s the{" "}
-              <span className="font-semibold text-white/80">why you</span>, in plain language.
-            </p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2">Offer - Value Proposition</h1>
+                <p className="text-white/70">
+                  This is the core story RoleFerry uses in your emails. It’s not your resume. It’s the{" "}
+                  <span className="font-semibold text-white/80">why you</span>, in plain language.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowStepHelp((v) => !v)}
+                className="shrink-0 inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/20 bg-white/10 text-xs font-bold text-white/85 hover:bg-white/15"
+                title="What this step fixes"
+                aria-label="What this step fixes"
+              >
+                ?
+              </button>
+            </div>
+            {showStepHelp ? (
+              <div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-4">
+                <div className="text-sm font-bold text-white">What this step fixes</div>
+                <ul className="mt-2 space-y-1 text-sm text-white/70">
+                  <li>- Prevents polite but generic emails by giving the AI a real spine.</li>
+                  <li>- Keeps your story consistent across contacts, roles, and follow-ups.</li>
+                  <li>- Makes personalization credible: you reference proof, not just research.</li>
+                </ul>
+              </div>
+            ) : null}
             <div className="mt-3 text-sm text-white/70">
               {activeRole ? (
                 <>
@@ -464,20 +597,32 @@ export default function OfferPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-sm font-bold text-white">Offer snippet (auto)</div>
-                    <div className="mt-1 text-[11px] text-white/60">This is what the Campaign step will reuse across emails.</div>
+                    <div className="mt-1 text-[11px] text-white/60">AI-composed from your role signals + proof points. Campaign reuses this across emails.</div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      try {
-                        navigator.clipboard.writeText(snippet || "");
-                      } catch {}
-                    }}
-                    className="text-[11px] font-semibold rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-white/80 hover:bg-white/10"
-                    title="Copy snippet"
-                  >
-                    Copy
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={composeSnippetWithAI}
+                      disabled={isGeneratingSnippet}
+                      className="text-[11px] font-semibold rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-white/80 hover:bg-white/10 disabled:opacity-50 inline-flex items-center gap-1.5"
+                      title="Regenerate snippet with AI"
+                    >
+                      {isGeneratingSnippet ? <InlineSpinner className="h-3 w-3" /> : null}
+                      <span>{isGeneratingSnippet ? "Generating" : "Regenerate (AI)"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        try {
+                          navigator.clipboard.writeText(snippet || "");
+                        } catch {}
+                      }}
+                      className="text-[11px] font-semibold rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-white/80 hover:bg-white/10"
+                      title="Copy snippet"
+                    >
+                      Copy
+                    </button>
+                  </div>
                 </div>
                 <pre className="mt-3 whitespace-pre-wrap rounded-md border border-white/10 bg-black/30 p-3 text-[12px] text-white/85 min-h-[140px]">
                   {snippet || "Start with a one-liner + 3 proof points to generate your snippet."}
@@ -491,22 +636,58 @@ export default function OfferPage() {
               </div>
 
               <div className="rounded-lg border border-white/10 bg-black/20 p-5">
-                <div className="text-sm font-bold text-white">What this step fixes</div>
-                <ul className="mt-2 space-y-1 text-sm text-white/70">
-                  <li>- Prevents “polite but generic” emails by giving the AI a real spine.</li>
-                  <li>- Keeps your story consistent across contacts, roles, and follow-ups.</li>
-                  <li>- Makes personalization credible: you reference proof, not just research.</li>
-                </ul>
+                <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Call-to-Action Strategy</div>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="rounded-md border border-white/10 bg-white/5 p-3">
+                    <div className="text-sm font-bold text-amber-200">Strong / Hard CTA</div>
+                    <div className="mt-1 text-[11px] text-white/60">Ask for clear commitment (time, scheduling, or decision).</div>
+                    <input
+                      value={defaultCta}
+                      onChange={(e) => setDefaultCta(e.target.value)}
+                      className="mt-2 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Can we do 15 minutes next week — Tue 11am or Thu 2pm?"
+                    />
+                    <div className="mt-2 text-[11px] text-white/55">
+                      Variable:{" "}
+                      <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
+                        {"{{offer.hard_cta}}"}
+                      </code>
+                    </div>
+                  </div>
+                  <div className="rounded-md border border-white/10 bg-white/5 p-3">
+                    <div className="text-sm font-bold text-sky-200">Soft CTA</div>
+                    <div className="mt-1 text-[11px] text-white/60">Ask for a low-friction response (easy yes/no or routing).</div>
+                    <input
+                      value={softCta}
+                      onChange={(e) => setSoftCta(e.target.value)}
+                      className="mt-2 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Worth exploring, or totally not a priority right now?"
+                    />
+                    <div className="mt-2 text-[11px] text-white/55">
+                      Variable:{" "}
+                      <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
+                        {"{{offer.soft_cta}}"}
+                      </code>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 text-[11px] text-white/55">
+                  Legacy variable (maps to hard CTA):{" "}
+                  <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
+                    {"{{offer.default_cta}}"}
+                  </code>
+                </div>
               </div>
+
             </div>
 
             <div className="lg:col-span-7 space-y-6">
               {(roleSignals.skills.length || roleSignals.pains.length || roleSignals.metrics.length) ? (
                 <div className="rounded-lg border border-white/10 bg-black/20 p-4">
                   <div className="text-[11px] font-semibold text-white/70 uppercase tracking-wider">Role signals (from this posting)</div>
-                  <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                      <div className="text-[10px] text-white/60 font-semibold mb-1">Pain points</div>
+                  <div className="mt-2 grid grid-cols-1 md:grid-cols-12 gap-3">
+                    <div className="md:col-span-5">
+                      <div className="text-xs font-bold text-sky-200 mb-1.5">Pain Points</div>
                       <div className="flex flex-wrap gap-1.5">
                         {roleSignals.pains.slice(0, 4).map((p) => (
                           <button
@@ -538,8 +719,8 @@ export default function OfferPage() {
                         ))}
                       </div>
                     </div>
-                    <div>
-                      <div className="text-[10px] text-white/60 font-semibold mb-1">Required skills</div>
+                    <div className="md:col-span-3">
+                      <div className="text-xs font-bold text-violet-200 mb-1.5">Required Skills</div>
                       <div className="flex flex-wrap gap-1.5">
                         {roleSignals.skills.slice(0, 6).map((s) => (
                           <button
@@ -562,8 +743,8 @@ export default function OfferPage() {
                         ))}
                       </div>
                     </div>
-                    <div>
-                      <div className="text-[10px] text-white/60 font-semibold mb-1">Success metrics</div>
+                    <div className="md:col-span-4">
+                      <div className="text-xs font-bold text-emerald-200 mb-1.5">Success Metrics</div>
                       <div className="flex flex-wrap gap-1.5">
                         {roleSignals.metrics.slice(0, 4).map((m) => (
                           <button
@@ -588,32 +769,6 @@ export default function OfferPage() {
                     </div>
                   </div>
 
-                  {roleSignals.match0 ? (
-                    <div className="mt-3 text-[11px] text-white/60">
-                      Tip: we found a Pain Point Match for this role.{" "}
-                      <button
-                        type="button"
-                        className="underline font-semibold text-white/80 hover:text-white"
-                        onClick={() =>
-                          setCaseStudies((prev) => {
-                            const next = [...(prev || [])];
-                            const m0 = roleSignals.match0!;
-                            const c0 = next[0] || { title: "Case study 1", problem: "", actions: "", impact: "" };
-                            next[0] = {
-                              ...c0,
-                              problem: String(c0.problem || "").trim() || clampLines(String(m0.painpoint_1 || ""), 180),
-                              actions: String(c0.actions || "").trim() || clampLines(String(m0.solution_1 || ""), 180),
-                              impact: String(c0.impact || "").trim() || clampLines(String(m0.metric_1 || ""), 140),
-                            };
-                            return next;
-                          })
-                        }
-                      >
-                        Use it to prefill Case study 1
-                      </button>
-                      .
-                    </div>
-                  ) : null}
                 </div>
               ) : null}
 
@@ -716,7 +871,7 @@ export default function OfferPage() {
 
               <div className="rounded-lg border border-white/10 bg-black/20 p-5">
                 <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Micro case studies (optional)</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className={`grid grid-cols-1 ${caseStudies.length > 1 ? "md:grid-cols-2" : "md:grid-cols-1"} gap-4`}>
                   {caseStudies.map((c, idx) => (
                     <div key={`cs_${idx}`} className="rounded-md border border-white/10 bg-white/5 p-3">
                       <div className="text-[11px] font-bold text-white/80">{c.title || `Case study ${idx + 1}`}</div>
@@ -795,22 +950,6 @@ export default function OfferPage() {
                   Variable:{" "}
                   <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
                     {"{{offer.credibility[]}}"}
-                  </code>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-white/10 bg-black/20 p-5">
-                <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">Default Call-to-Action (CTA)</div>
-                <input
-                  value={defaultCta}
-                  onChange={(e) => setDefaultCta(e.target.value)}
-                  className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Example: Open to a quick 10-minute chat this week?"
-                />
-                <div className="mt-2 text-[11px] text-white/55">
-                  Variable:{" "}
-                  <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
-                    {"{{offer.default_cta}}"}
                   </code>
                 </div>
               </div>

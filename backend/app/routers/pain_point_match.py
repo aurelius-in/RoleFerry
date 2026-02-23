@@ -36,6 +36,8 @@ class PainPointMatch(BaseModel):
     metric_3: str
     overlap_3: Optional[str] = ""
     alignment_score: float
+    # New dynamic structure: 2-6 alignments per role (kept optional for back-compat).
+    alignments: Optional[List[Dict[str, str]]] = None
 
 
 class PainPointMatchResponse(BaseModel):
@@ -305,8 +307,8 @@ async def generate_painpoint_matches(request: MatchRequest):
                     metric_candidates.append(f"Qualitative: {metric}"[:240])
         metric_candidates = [x for x in metric_candidates if x and not _is_fluff_line(x)]
 
-        # Helper: rule-based pairing (avoid demo defaults; allow 0–3 alignments)
-        def build_rule_based_match() -> PainPointMatch:
+        # Helper: rule-based pairing with variable count (target 2-6 alignments per role).
+        def build_rule_based_alignment_rows() -> List[Dict[str, str]]:
             # Prefer concrete items; responsibilities/requirements tend to be most concrete.
             resp = _clean_candidates(jd_responsibilities)
             reqs = _clean_candidates(jd_requirements)
@@ -324,7 +326,7 @@ async def generate_painpoint_matches(request: MatchRequest):
                 sc -= 8 if low.startswith(("developer ", "engineer ", "software engineer", "software developer")) else 0
                 sc -= max(0, len(line) - 140) // 20
                 return sc
-            pp = sorted(jd_candidates, key=_pp_score, reverse=True)[:10]
+            pp = sorted(jd_candidates, key=_pp_score, reverse=True)[:14]
 
             acc = [str(x).strip() for x in (resume_accomplishments or []) if str(x).strip()]
             # Resume evidence pool: accomplishments + role descriptions + key metric contexts
@@ -353,40 +355,60 @@ async def generate_painpoint_matches(request: MatchRequest):
             if not solution_pool:
                 solution_pool = resume_candidates[:10]
 
-            def _safe_get(items, idx) -> str:
-                return items[idx] if idx < len(items) else ""
-
-            # Best-effort score: more real inputs -> higher confidence
-            score = 0.55
-            score += 0.1 if len(pp) >= 1 else 0.0
-            score += 0.1 if len(solution_pool) >= 1 else 0.0
-            score += 0.05 if len(pp) >= 2 else 0.0
-            score += 0.05 if len(solution_pool) >= 2 else 0.0
-            score = min(score, 0.9)
-
-            # Metric: never leave empty; prefer numeric, else qualitative.
+            # Dynamic count based on available signal; clamp to 2..6.
+            usable = min(len(pp), len(solution_pool))
+            desired = max(2, min(6, usable if usable > 0 else 2))
             metric_default = metric_candidates[0] if metric_candidates else "Qualitative: improved outcomes (confirm metric in resume bullets)."
+            rows: List[Dict[str, str]] = []
+            for i in range(desired):
+                ptxt = pp[i % len(pp)] if pp else ""
+                stxt = solution_pool[i % len(solution_pool)] if solution_pool else ""
+                if not ptxt and not stxt:
+                    continue
+                rows.append(
+                    {
+                        "painpoint": str(ptxt or "").strip(),
+                        "jd_evidence": _best_evidence(str(ptxt or ""), jd_candidates),
+                        "solution": str(stxt or "").strip(),
+                        "resume_evidence": _best_evidence(str(stxt or ""), resume_candidates),
+                        "overlap": "",
+                        "metric": metric_default,
+                    }
+                )
+            return rows[:6]
+
+        def _match_from_alignment_rows(rows: List[Dict[str, str]], alignment_score: float) -> PainPointMatch:
+            cleaned = [r for r in (rows or []) if str((r or {}).get("painpoint") or "").strip() and str((r or {}).get("solution") or "").strip()]
+            if len(cleaned) < 2:
+                cleaned = (cleaned + build_rule_based_alignment_rows())[:6]
+            cleaned = cleaned[:6]
+
+            def _get(i: int, k: str) -> str:
+                if i < len(cleaned):
+                    return str((cleaned[i] or {}).get(k) or "").strip()
+                return ""
 
             return PainPointMatch(
-                painpoint_1=_safe_get(pp, 0),
-                jd_evidence_1=_best_evidence(_safe_get(pp, 0), jd_candidates),
-                solution_1=_safe_get(solution_pool, 0),
-                resume_evidence_1=_best_evidence(_safe_get(solution_pool, 0), resume_candidates),
-                metric_1=metric_default,
-                overlap_1="",
-                painpoint_2=_safe_get(pp, 1),
-                jd_evidence_2=_best_evidence(_safe_get(pp, 1), jd_candidates),
-                solution_2=_safe_get(solution_pool, 1),
-                resume_evidence_2=_best_evidence(_safe_get(solution_pool, 1), resume_candidates),
-                metric_2=metric_default,
-                overlap_2="",
-                painpoint_3=_safe_get(pp, 2),
-                jd_evidence_3=_best_evidence(_safe_get(pp, 2), jd_candidates),
-                solution_3=_safe_get(solution_pool, 2),
-                resume_evidence_3=_best_evidence(_safe_get(solution_pool, 2), resume_candidates),
-                metric_3=metric_default,
-                overlap_3="",
-                alignment_score=score,
+                painpoint_1=_get(0, "painpoint"),
+                jd_evidence_1=_get(0, "jd_evidence"),
+                solution_1=_get(0, "solution"),
+                resume_evidence_1=_get(0, "resume_evidence"),
+                metric_1=_get(0, "metric"),
+                overlap_1=_get(0, "overlap"),
+                painpoint_2=_get(1, "painpoint"),
+                jd_evidence_2=_get(1, "jd_evidence"),
+                solution_2=_get(1, "solution"),
+                resume_evidence_2=_get(1, "resume_evidence"),
+                metric_2=_get(1, "metric"),
+                overlap_2=_get(1, "overlap"),
+                painpoint_3=_get(2, "painpoint"),
+                jd_evidence_3=_get(2, "jd_evidence"),
+                solution_3=_get(2, "solution"),
+                resume_evidence_3=_get(2, "resume_evidence"),
+                metric_3=_get(2, "metric"),
+                overlap_3=_get(2, "overlap"),
+                alignment_score=float(alignment_score),
+                alignments=cleaned,
             )
 
         # Try GPT-backed matching first when configured
@@ -434,46 +456,28 @@ async def generate_painpoint_matches(request: MatchRequest):
 
                 pairs = data.get("pairs") or []
                 alignment_score = float(data.get("alignment_score") or 0.8)
-
-                def _pair(idx: int) -> Dict[str, Any]:
-                    return pairs[idx] if idx < len(pairs) else {}
-
-                p1 = _pair(0)
-                p2 = _pair(1)
-                p3 = _pair(2)
-
-                def _safe_list_get(items: list, idx: int) -> str:
-                    try:
-                        v = items[idx]
-                        return str(v).strip()
-                    except Exception:
-                        return ""
-
-                match = PainPointMatch(
-                    painpoint_1=str(p1.get("jd_snippet") or _safe_list_get(jd_pain_points, 0)).strip(),
-                    jd_evidence_1=str(p1.get("jd_evidence") or "").strip(),
-                    solution_1=str(p1.get("resume_snippet") or _safe_list_get(resume_accomplishments, 0)).strip(),
-                    resume_evidence_1=str(p1.get("resume_evidence") or "").strip(),
-                    metric_1=str(p1.get("metric") or "").strip(),
-                    overlap_1=str(p1.get("overlap") or "").strip(),
-                    painpoint_2=str(p2.get("jd_snippet") or _safe_list_get(jd_pain_points, 1)).strip(),
-                    jd_evidence_2=str(p2.get("jd_evidence") or "").strip(),
-                    solution_2=str(p2.get("resume_snippet") or _safe_list_get(resume_accomplishments, 1)).strip(),
-                    resume_evidence_2=str(p2.get("resume_evidence") or "").strip(),
-                    metric_2=str(p2.get("metric") or "").strip(),
-                    overlap_2=str(p2.get("overlap") or "").strip(),
-                    painpoint_3=str(p3.get("jd_snippet") or _safe_list_get(jd_pain_points, 2)).strip(),
-                    jd_evidence_3=str(p3.get("jd_evidence") or "").strip(),
-                    solution_3=str(p3.get("resume_snippet") or _safe_list_get(resume_accomplishments, 2)).strip(),
-                    resume_evidence_3=str(p3.get("resume_evidence") or "").strip(),
-                    metric_3=str(p3.get("metric") or "").strip(),
-                    overlap_3=str(p3.get("overlap") or "").strip(),
-                    alignment_score=alignment_score,
-                )
+                rows: List[Dict[str, str]] = []
+                if isinstance(pairs, list):
+                    for p in pairs[:6]:
+                        if not isinstance(p, dict):
+                            continue
+                        rows.append(
+                            {
+                                "painpoint": str(p.get("jd_snippet") or "").strip(),
+                                "jd_evidence": str(p.get("jd_evidence") or "").strip(),
+                                "solution": str(p.get("resume_snippet") or "").strip(),
+                                "resume_evidence": str(p.get("resume_evidence") or "").strip(),
+                                "metric": str(p.get("metric") or "").strip(),
+                                "overlap": str(p.get("overlap") or "").strip(),
+                            }
+                        )
+                if len(rows) < 2:
+                    rows = (rows + build_rule_based_alignment_rows())[:6]
+                match = _match_from_alignment_rows(rows, alignment_score)
             except Exception:
-                match = build_rule_based_match()
+                match = _match_from_alignment_rows(build_rule_based_alignment_rows(), 0.75)
         else:
-            match = build_rule_based_match()
+            match = _match_from_alignment_rows(build_rule_based_alignment_rows(), 0.75)
 
         # Post-process: ensure evidence is never blank, and avoid fluff pain points.
         jd_candidates = _clean_candidates(jd_responsibilities) + _clean_candidates(jd_requirements) + _clean_candidates(jd_pain_points) + _clean_candidates(jd_success_metrics)
@@ -515,14 +519,51 @@ async def generate_painpoint_matches(request: MatchRequest):
                     (metric_candidates[n - 1] if len(metric_candidates) >= n else (metric_candidates[0] if metric_candidates else "Qualitative: positive impact (confirm metric from resume).")),
                 )
 
+        # Ensure dynamic alignments are present and synced with the canonical first 3 fields.
+        if not isinstance(match.alignments, list):
+            match.alignments = []
+        base_rows: List[Dict[str, str]] = []
+        for n in (1, 2, 3):
+            pp = str(getattr(match, f"painpoint_{n}", "") or "").strip()
+            sol = str(getattr(match, f"solution_{n}", "") or "").strip()
+            if not pp or not sol:
+                continue
+            base_rows.append(
+                {
+                    "painpoint": pp,
+                    "jd_evidence": str(getattr(match, f"jd_evidence_{n}", "") or "").strip(),
+                    "solution": sol,
+                    "resume_evidence": str(getattr(match, f"resume_evidence_{n}", "") or "").strip(),
+                    "metric": str(getattr(match, f"metric_{n}", "") or "").strip(),
+                    "overlap": str(getattr(match, f"overlap_{n}", "") or "").strip(),
+                }
+            )
+        merged_rows = (match.alignments or []) + base_rows
+        deduped: List[Dict[str, str]] = []
+        seen_keys: set[str] = set()
+        for row in merged_rows:
+            key = f"{str((row or {}).get('painpoint') or '').strip().lower()}|{str((row or {}).get('solution') or '').strip().lower()}"
+            if not key or key in seen_keys:
+                continue
+            seen_keys.add(key)
+            deduped.append(
+                {
+                    "painpoint": str((row or {}).get("painpoint") or "").strip(),
+                    "jd_evidence": str((row or {}).get("jd_evidence") or "").strip(),
+                    "solution": str((row or {}).get("solution") or "").strip(),
+                    "resume_evidence": str((row or {}).get("resume_evidence") or "").strip(),
+                    "metric": str((row or {}).get("metric") or "").strip(),
+                    "overlap": str((row or {}).get("overlap") or "").strip(),
+                }
+            )
+        if len(deduped) < 2:
+            deduped = (deduped + build_rule_based_alignment_rows())[:6]
+        match.alignments = deduped[:6]
+
         # Persist each (challenge, solution) pair into pain_point_match table (best-effort).
         try:
             async with engine.begin() as conn:
-                challenge_solution_pairs = [
-                    (match.painpoint_1, match.solution_1),
-                    (match.painpoint_2, match.solution_2),
-                    (match.painpoint_3, match.solution_3),
-                ]
+                challenge_solution_pairs = [(str((r or {}).get("painpoint") or "").strip(), str((r or {}).get("solution") or "").strip()) for r in (match.alignments or [])]
                 for ch, sol in challenge_solution_pairs:
                     if not ch or not sol:
                         continue

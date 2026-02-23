@@ -1,0 +1,376 @@
+How are we doing
+Good good good So they got the transcription going.
+I know you said you don’t have a lot of time, so.
+Yeah, I don’t have too much time. I just got to my parents are still here. And yeah,
+it’s just going quick.
+Let’s see.
+But yeah, what do you think about that guy
+Yeah, that sounds good. Let’s check it out. Let’s do it. I’m always open to new ideas here. Okay.
+Yeah, I think the one piece that we’re missing, you know what I mean?
+Yeah. I mean, there’s definitely room to improve our concept here.
+But it’s also pretty cool. I think that, yeah, we should definitely be open. It’s kind of a new thing, and if someone else is doing it better, we don’t want to leave that on the table, s
+o.
+All right Yeah, I agree.
+Yeah. So auto-discovered roles from the career pages.
+So this is the time and date it was put on there. So that was the 17th. And then we can refresh this. And so you can open the role link, check it out.
+Right So this was found on you can check these out. So they can actually go and apply for these jobs. Some of them are not in the US, like this one’s in Sydney, but you can still open the role link. And if they want to go to Sydney, I guess there’s some people who might want to do that.
+So yeah, these are all from Stripe, though. So I’m not really sure what that’s about. It’s not a terrible.
+No, I know what I’m talking about. Yeah.
+I don’t know But it’s a lot of roles. So it did a good job of scraping from Skype, I noticed. Now, it doesn’t have a lot of information from these roles, but it does have links to all of them. So that’s kind of fun.
+Yeah.
+It’s kind of neat that we have the I told it to do 25, and it says found 25 role links from career pages. But it should say from career page. Because it literally just went to Stripe.
+Yeah.
+So yeah, maybe what would be a way to make this better? So if it doesn’t need more than one to give us 25 roles,
+I mean, I’m by the way, these roles are these roles aren’t super appropriate for my resume.
+Yeah. A lot of them aren’t appropriate for the resume. You’re not going to you put in your preferences too, and they’re not going to move to another country.
+Exactly But I’m happy that it pulled real roles. And it put it down on the bottom. So that’s I’m going to call that progress. It just needs to be refined a bit. So I’m going to say right now, I’m going to have it work on this. I’m going to say on the roles screen,
+I’m happy.
+To see the 25 roles are populating.
+But they are not specific to my job preference or resume skills or anything it lists.
+I’m a AI architect, software developer, but it lists a lot of unrelated roles like account executive. And the roles listed all right, executive and brand marketing lead. Some of these might be more appropriate for you. And let’s see what else. It’s like it just went alphabetical order and just grabbed 25 roles from the top. Oh, greenhouse. It did do more than one website. So oh, no, it did Stripe. Stripe the company? I’m confused.
+Yeah, it’s not the company. Yeah.
+Oh, okay. So Stripe is a company. Greenhouse is the app.
+Greenhouse is the app contract system that Stripe uses.
+Okay.
+Okay.
+Looks like it all knows.
+No, what I saw from this guy, simple hire, I mean, simple apply to AI. He had a sliding bar where you can put how much relevance you want.
+He said do 65% relevance or higher. It’s good. But you can put in from 0 to 100 in terms of the relevance.
+Okay.
+But it’s funny because it looks exactly like our company inside. And even this website, it uses vertical columns.
+Large vertical columns.
+I think he’s using the same shit we’re using.
+I want him to think we’re copying him Maybe go ahead and show him what we got so he doesn’t think we’re copying him later. It’s like after they met with me, I looked at their site and it was the same as mine. It’s like, actually, I was already like that.
+So oh, yeah.
+And on each role,
+card, there should be more info right now. It just lists the match percent.
+Which is not I mean, if it already knows it’s only 45% match, why is it?
+Yeah, but did we put some kind of parameters on only providing matches that are above 75% or something like that?
+Yeah, not even 50% It’s like nothing to match.
+Shouldn’t be.
+And also, I mean, there’s also hiring.
+Yeah, I know.
+You’re not going to go to hiring.
+Make sure it’s in the US.
+Okay. Sorry I wanted to make sure. But that’s I’m going to call that progress. At least we know that it can pull jobs. It just needs to do it needs to put more filters in there. So that’s good. So we know that it’s going to be able to populate some jobs at the bottom there. And once it refines it, there’ll be more apt jobs and that’s great. That’s good. So we’re going to have our little job scrape where they don’t have to pop in one at a time and go through that tedious process. They still have that option to add some more, but it’ll initially be populated with 25 jobs that are well, I changed it to 30 right now. I told it to do 30. I didn’t like the uneven columns. Anyways, so because I know 30 was a number you mentioned last time anyways. So right now, we have run gap analysis. It’s only showing two ranked jobs. It’s got a five-star and a three-star let’s go back to the roles. So I see.
+So here we have roles.
+Shouldn’t one of them be on the no, because you’re putting so the main thing is here with roles is the ranked and relevant score. Because the individual is choosing a role and therefore the relevance is inherent in the person that’s choosing a role.
+Yeah, yeah.
+So there is no relevance score because it’s all manually input.
+Inputted.
+Oh, look. So when I click use URL and import, let’s pretend this is a job I would want, right?
+I mean, I’ll take any of these jobs if they pay me enough, but I’m not qualified for them. So I’ll click I clicked it says URL importer.
+I feel like that’s not terrible, but it needs to be a better flow. So look, it did a great job scraping, it looks like, except some of this stuff is weird. Let’s see. Increase user acquisition through platforms by X percent.
+Well, I don’t know why it says that but it’s interesting. What? I’m in a meeting. Hello.
+Come here, little cute baby. Come here. Come here.
+What’s your name Tell me.
+It’s too this is too hard to function.
+You want me to fix your toy right now Okay, you’re going to have to wait for that.
+No.
+No, Tamagotchi. It’s too tiny.
+You want to sell your Tamagotchi to your sister? Go ahead. I don’t care.
+They sell her Tamagotchi.
+No, they like money because they like to go to the dollar store and buy cheap stuff.
+So they get little coins and their little dollars together and they go on a little shopping spree. They have fun with money.
+So they have a conception of money already.
+Oh, for sure, man. Well, they’re not that young. I got an eight-year-old, an 11-year-old, and a 12-year-old. So they already do.
+They’re grown-ups and they’re own minds.
+Yeah.
+Let me tell the younger, yeah.
+Okay, so let me just add another one of these irrelevant jobs just so that I can play with the feature. So I like that it’s doing that. So it says URL and importer.
+So I can open them up if I wanted to scrape it. Or this makes sense. In fact, if we ignore the fact that these jobs are I’m not qualified. This one maybe, the AIML engineering manager. I might be applying for a job like this in a couple of years after I get a little more experience as a solutions architect. Because I think I’m going to get a good reference from this job, man. Oh, man. It’s really cool. They laid off 20 people. I’m kind of I got so much work done using AI. And everybody’s super cool about AI use. So it’s not like a secret that I’m using AI, but I’m blowing past deadlines. And it’s just super positive, so. So I use wait, did I do it?
+Oh, I need to click import. I mean, it’s a what could we do to rearrange the page to make the workflow better? Because assuming it fixes the whole relevance thing and it does me better next time.
+And I get like 30 good links I feel like scrolling down, clicking use URL and importer and having to scroll back up doesn’t feel like a good flow.
+Multiple columns, maybe.
+So instead of having these down here, have them on the right.
+Did you have space on the right and left?
+What’s that?
+I said we do have space on the right and left.
+Well, currently, yeah. I mean,
+because yeah, I feel like scrolling is not great. And you forget where things are. And I mean, we built this thing and I’m already forgetting. So
+when I first saw use URL and importer, it didn’t immediately occur to me that that’s the flow and that I could use this to pull this information up here.
+Even though that was the obvious thing I told it to do, like a week ago.
+So sure, a lot of account executives must be enough pedicore.
+Isn’t it Makes sense.
+It just scraped the first 25 from their dog page for all jobs. But anyways, it imported it. It looks like it did a reasonable job. At first glance.
+I’ll take that money, please.
+That’s nice. That’s a solid salary right there, man. I’ll be an AI engineering manager. Maybe I should apply right now.
+I’m just kidding.
+That’s legit. That’ll pay some bills.
+Yeah, I mean, it should be paying big bucks.
+Yeah.
+They’re a good company too, though the multi-billion dollar company.
+Yeah.
+But again, it’s like one of those things, right? It’s like, yeah, it’s going to be good pay, but what’s the?
+Culture
+Is it going to be enjoyable? Right now, you’re enjoying it.
+I am. I like my people. And they like me. It’s great.
+It’s a smile because it’s a smaller company. That’s how stripe is what is a multi-billion dollar company with 200,000 employees.
+They don’t pay their marketing manager half of what they pay the other guy.
+So they value their engineering manager. That’s a job I’d be qualified for soon. Like another year or two because right now, I’m basically like the architect for all the AI stuff. So yeah, this is a job I could apply for. That’d be nice money.
+Anyways, yeah, so we want to have good feelings when we look at it. If we were the ones applying, right? That means something’s working.
+Okay. So the flow. So I want to fix the flow here. So instead of having to scroll down to all these jobs on the bottom, I think we’re going to need a column on the right.
+I think that’s the best thing to do would be collapsing the jobs.
+Collapsing them?
+Yeah, collapsing them. Like if there’s a way.
+Like scroll you mean
+No, like if you go up You can scroll up.
+You see how each job is like that? Maybe we collapse it so you just see.
+A title.
+The AI engineering manager. And the salary there, the location.
+Full-time. And then this bottom part can be minimized and maximized. So you can collapse it.
+Okay.
+That way,
+it’s easier to see this.
+Okay.
+All right So you know what I mean?
+Yeah, yeah, yeah.
+So on the roles page.
+What else are you going to do I don’t know of any other things you could do.
+No, I actually really like that. So over here, so I still think we should move this to the right. So you can look at them at the same time. And it will be more evident, I think, when you see the use URL importer.
+Maybe it can even be blinking.
+Oh, highlighting. Yeah, I kind of see what you’re saying. It’s not really evident that you need to press that button.
+Make the use URL importer button a button that links so they know they need to.
+It’s highlighted.
+Do that And put the auto discovered roles in the right column. And make the I like your collapsing idea. That’s smart. So what is it the make the roles that were scraped or imported collapsible so you only see the what do you want to see? You want to see them top or?
+I would say with the company, the salary, the preference stars, the favorite, rank,
+and the add to role tracker button and delete button.
+And make everything below the view original text hideable via an accordion col
+Okay. So all the roles previously scraped or imported will be collapsible with just that top info showing.
+Okay. Done. Moving on. So I got some good roles in here now. Now I want to apply for this shit. I wonder if that’s going to happen during this whole process I’m going to find myself another job.
+All right So run.
+That means it’s working.
+130 to 200 to 330 to 500.
+I mean, if the apps working right, you know what I mean? And then I’ll quit all the jobs because, I mean, ultimately, if the app works well, if I find another job, that works great. If I don’t need a job,
+right Because the app’s making its own money.
+Yeah.
+That’s the measurement of success here is if it helps me double my income with a job, good. If it helps me triple my income, because it makes its own money, that’s great. Okay. So we have ranked jobs.
+All right So this is why does it say maybe here?
+I don’t know
+Because it seems in conflict, right? They seem like contradictory.
+The maybe.
+Yeah, if it’s five stars, why is it maybe? Yeah, makes sense.
+Badge.
+Next to the ranked jobs. And the gap. Analysis page.
+Makes no sense. Oh, because it’s the gap analysis.
+That’s why.
+Analysis.
+Yeah. So the maybe relates to the gaps. That’s why.
+Or is the stars what we gave it? Let me go back here.
+Yeah, I don’t know.
+Well, I think it doesn’t make sense then.
+Why would you give it a five-star name? Because a five-star, it’s a good. If it’s a three or four, it’s a maybe. If it’s a one or two, it’s a bad.
+Okay. So five-star is excellent.
+Four-star. Is good. Three-star well, I guess four-star is great. Four-star is great. Three-star is good.
+Two stars is poor or fair?
+I’d say fair.
+And one star is terrible.
+Star is poor.
+Yeah. It’s poor.
+Okay.
+All righty. Yeah, I don’t know what maybe means. Maybe it doesn’t seem right. But anyways, let’s take a look at this. So
+see, this is five-star, but it’s like I’m not qualified for this at all.
+Personality gaps, preference gaps. Where are the resume gaps? That’s probably the most relevant. Oh, it’s on the top.
+That’s the first one. Yeah.
+All right So missing required skill. Yeah, I would say if there’s this many resume gaps,
+yeah, I think the resume gaps should be the most heavily weighted.
+Gaps.
+Yeah. Yeah, definitely.
+Lots of those.
+Then it shouldn’t. Be five stars.
+I would say subtract a star for every three gaps.
+Yeah. The weighting.
+Three resume. Resume.
+All right We’ll see how that comes out.
+Well, I’m going to delete this one because it’s not relevant to my skill set. So I’ve still got that really good AIML thing from Stripe that pays like 400K.
+So moving on to saving continue. I’ll do a pain point match analysis.
+Remember this being faster before. Maybe we complicated it. So it’s doing more stuff now.
+It was faster.
+It is like doing a better job. It usually, right? So I think that’s part of it. Okay. So IT security program manager. So the pain points, it finds three.
+I’m going to ask it real quick Is the three points for the pain point match analysis consistent across all roles by design, or is it just a coincidence that they are all three points? If it’s by design, that’s bad.
+We want between two and six pain points matched.
+Per role.
+Two and six.
+And.
+Not
+Not only to have three. You don’t need all. You don’t need to have three.
+Same. Number of pain points.
+Maybe six would be the max?
+Yeah. And doesn’t need to be all six. You know what I mean?
+Okay. So do we like these pain points? Lead and execute efforts to achieve and maintain compliance. Oh, here we go with that fucking NIST thing again.
+Where’s that even coming from? I want to remove that.
+Anyways.
+Where’s he coming from, the job description?
+Yeah. Oh, well The next pain point is conduct IT control assessment and ensure audit readiness. And the third one is which role? Does it even tell us what role?
+I’m thinking top and left.
+Oh, this is the same company. Gotcha. I thought we were looking at three different roles. Makes sense. Okay.
+So these are the three pain points Define and implement a scalable secure and reliable data architecture on Microsoft Azure.
+Yeah, I’m looking forward to that roles population to be better where it actually gives me relevant list. Because that was almost cool. I was excited for a second there, but then I realized it was a bunch of relevant job titles. But it actually was giving us real jobs, at least. So that means it can do that.
+So once you fill this in.
+That guy’s whole app is just that one thing.
+Yeah. So that would be pretty cool if it does it right next time.
+If it understands my instructions. Okay. So here we are on the offer value prop. Why it wants to abbreviate prop, I don’t know.
+It’s not. There’s no point to abbreviate that. So on the offer screen,
+instead of the heading being offer value prop, make it
+offer do we want slash hyphen or and? So maybe offer maybe just dash.
+I’m not going to dash or slash.
+Yeah. The whole word value proposition.
+Because why prop I mean, you want to just confuse people that might not know what proposition. Anyways.
+Okay. This is the core story role fairy uses in your emails. It’s not your resume. It’s the why you in plain language.
+I like that it’s trying to explain it to people that don’t get it. Even if we want to refine that explanation, I like the concept of giving it a some clarity. Editing offer four. And then it tells us who the company is for. This is progress.
+Right
+Yeah.
+The question is can we change it But yeah, it’s right here. Cool.
+Yeah.
+Good This is positive. This is progress. Good, good, good. Okay. So save from gaps.
+Cool.
+All right Good. So let’s take a look at these I’m annoyed with Castro Company because of that whole NIST thing. Let’s go look at a different one.
+For senior data architect at Wiser. I help why is it have this?
+I don’t know We’re not coming from.
+What’s that I help teams need wait, need for a scalable okay, this is obviously bad.
+It’s better than the strange way of introducing it.
+Yeah, that’s just not good. So we need well, no, but we need AI involved in that. We need AI involved in the com position of the offer snippet auto that is displayed on the offer page.
+Because right now, I’m seeing this very bad example.
+Okay.
+Unless we got here. What this step fixes. Prevents polite but generic emails I don’t know. Do we need this? They don’t need to understand all the reasons why we have features in our app.
+And if anything, it would be at the top.
+Yeah. Yeah.
+Or maybe even in an about pop-up. You could have a question mark. Yeah, it should be hidden behind a question mark. If they really want to know, what’s this for?
+So hide this okay. On the about page,
+hide this text behind a question mark. At the top of the screen.
+Question mark icon.
+Right It’s not bad. It’s just too much TMI for this whole screen they need to be focused on what they’re trying to accomplish here and not read about our website. Okay.
+Role signals from this posting. Now, I don’t really like this display here.
+So pain points. It’s listing some pain points. It’s listing required skills. I feel like maybe these headings are not clearly headings because they’re too much the same size.
+Yeah. It’s hard to see.
+Yeah. So on the role signals from this posting,
+boulder in different color. Yeah. The headings. Pain points.
+Required skills.
+And success metrics.
+Should be our currently the same text size. Or too close to the same size and color as the other text. And the card. So it’s our two if they are headings. So make them a different color consistent with the app color scheme. And make the text a lot bigger.
+Boulder. Than the other text. Also, the other text should be a little no, maybe not smaller, but it shouldn’t be bold. I don’t know what you think.
+The column for the pain points should be a bit wider. And the column for required skills can be a bit narrower.
+What else I’m just going to leave it like that. Tip. We found a pain point match for this role. Use it to prefill case study one. What does that mean?
+Yeah. What’s case study one?
+I think we’ll just have it I think that’s just stupid and remove it.
+Remove the text.
+Yeah.
+Yeah. I don’t even know what case study is.
+Okay.
+Oh, it was down because it was scrolled down on the case study. Micro case studies.
+Do you have that on your page?
+Micro case studies? I’m looking at do you see my screen?
+Oh, yeah.
+Yeah. Mine’s a little bit different from yours.
+It’s weird that it doesn’t fill the whole thing.
+All right. So I’m going to tell it to fix that.
+That’s why I’m saying it though
+The micro case studies.
+Optional.
+Has a card that does not fill its parent card. I’m going to screenshot that. So it doesn’t get confused.
+It was okay. Maybe I removed something else that was stupid here and then it just didn’t expand it. That happens. And then credibility, trust signal optional.
+It should auto-populate something.
+They’re not going to follow the credibility is one of the it should say something there, but the call to actions should be there should be soft call to actions.
+This is a pretty hard call to action.
+Okay.
+Like what I mean by that is a soft call to action is like something that’s a simple yes and no. That’s not requiring to get on a call right away. Something like you’re the right person to speak to about this. Or things like that.
+Call to actions.
+At the bottom.
+Oh, default call to action. Open to a 10-minute chat this week.
+Yeah. There should be soft call to actions, not hard ones.
+Okay.
+The call to should we include both call to actions and soft call to actions?
+Yeah. I mean, I can give you some examples of what it looks like. It’d be easier for you.
+Well, the robot’s going to have to figure it out unless we can’t get it to and then we can provide examples. But yeah, go ahead and give me some examples if you want. And it says, “The current default call to action card has a hard call to action which is “ yeah, go ahead and give me some examples if you have them on the top of mind.
+Yeah. I’m not going to have pages here.
+So instead of a default call to action, have a hard call to action and a soft call to action screen. The soft call to action option might be and then give me those.
+Let me know when you paste those.
+Paste it.
+Cool.
+How do I get there
+Go to Google. It’s in the Google Meet. It’s a little like a chat. In the Google Meet. It’s a little chat there.
+Yeah.
+Does it interest you if I just send you an email?
+I don’t know why, but I’m having a I’ll get there. Oh, there it is.
+Too many windows open. All right. So cool. Thank you.
+Perfect. Thank you. That’s very helpful Okay.
+Okay. Sorry about that. Moving on.
+I think they should be moved over here, right, to the left because we’ve got this extra room.
+Share your screen. Can you stop sharing?
+Oh, I did stop sharing, didn’t I?
+Okay. Can you see me now
+Yeah. I can see you now
+Cool. All right. So we want to put it over here on the left. Because we’re getting rid of this. And then there’ll be room down here.
+And we already have these two things. So here we’ll have our soft call to action and our hard call to action right here.
+Yeah.
+Yeah. I mean, chances are and then the soft call to action is the ones that are more value-oriented.
+So in the first and second email, you want to do more soft call to action. Something that’s like,
+“Is this worth exploring? Is the right person to speak to? Can I send you a something I did?” Something I created for you.
+Yeah. It’s going to bring
+Makes sense. All right. So do we want to mess with this? I already complained about this. To the manager. And then so proof points. We can add them. Oh, we can add more proof points. That’s kind of good.
+People might have things they want to talk about. They might not.
+You can just click and click them, right? You can put them on, take them off.
+Yeah. You can delete it. And then you can.
+Oh, you can add. You can add or you can delete it.
+Okay.
+If they don’t like any of those, they can just get rid of them all and have nothing.
+Yeah.
+Which made their little message a lot simpler.
+A strong man. So that’s my proof.
+Okay.
+I hate my spinach.
+There it is.
+All right. So moving on. Save and continue.
+All right So that page will be a little different next time we look at it. We’ve still got Dirk up here.
+Dirk
+I’m going to run company search.
+Dirk.
+Dirk All right. Run a company search here and see.
+It’s not Dirk
+Dirk
+You probably get something like that.
+You think so I think they probably get over it, but maybe.
+Dirk.
+Dirk I work for Dirk.
+Dirk has a work. Has a work.
+Dirk All right. So we’re oh, select.
+I see.
+So we can that’s not the prettiest UI design, but it’s probably don’t need a drop-down and a thing. You probably just need to toggle this company. Yeah. I’m going to go ahead and tell it because it’s stupid to have a drop-down right there. So I’m going to say on the company drop-down. What’s that? What’s that?
+You don’t like drop-downs at all
+Well, they’re problematic for a couple of reasons, but on the company page, we have the company on the company research screen. We have the company name which should be toggleable. From the names of companies, we previously selected as roles. We are interested in from previous.
+Screens.
+So we don’t need a drop-down to the right. And we don’t need a manual entry on the left. Under the company header.
+The company research page. Okay. Moving on. So is there any hope for this to ever give us anything? Recent posts. Nothing. I was doing better with just GPT, man.
+Yeah.
+It was giving me stuff. Let’s try it right now.
+I want to write an email to John from Wiser.
+I want to personalize it. So recent posts.
+And other hiring. Signals. Are considered. Please find recent posts and other hiring signals. That can be considered. As context. For my email. And write me an email.
+To John. From Wiser.
+He’s a decision maker. What other things are there on here that we’re? Okay.
+All right You said 30 minutes. We’ve gone to 45. Are you wanting to wrap it up?
+Yeah. I’m going to.
+Recent news.
+Hold on Let me just try this real quick just to see if I’m wrong. If I have recent posts. And recent news. Okay. Let’s just see what it gives me.
+If this doesn’t give me anything, then I’ll leave it alone. But if I know GPT can give me this in one quick pass, then I know it can too. I just have to figure out how to prompt it anything.
+I think it’s going to it’s going to require you to copy and paste the information. We’ll see.
+It’s not
+Scroll the website. Just looking at the look. It’s looking at all these sites.
+Multiple Wiser entities. Oh, that’s not good.
+Looking for a John.
+John Yeah. All these sites are not relevant though. I mean, I looked for the sites.
+Try to find John’s recent public posts, but I could not reliably locate a specific John at Wiser.
+Okay. So hope you are doing well I have been following Wiser’s recent growth and visibility and executive search, including the moderate expansion, the broader GI group holding network behind Wiser. See, these are job signals.
+Okay. So I’m going to work with GPT to figure out what I need to tell it so it does the same search and gives me something similar. And of course, I’ll do that. But I’ll let you go. And my wife wants to feed me food now. So I’m going to talk about myself go. So yeah.
+I have a mission plan here. I’m going to get this screen to actually give us some stuff.
+All right You want to come join my talk tomorrow?
+Yeah. Yeah.
+Well, what time is it your time It’s like 9:00 your time.
+Oh, it’s later there. So it’s like 1100 your time? 11:30?
+It’s 1100 my time. Yeah.
+Yeah. So yeah. It’s like I got it on my calendar.
+Yeah. I sent you an invite. You didn’t click it though.
+Oh, didn’t I Hold on.
+All right I’ll do that Don’t worry I’ll be there.
+Okay.
+All right Thanks, David All right. Thanks. Bye.
