@@ -801,8 +801,8 @@ export default function JobDescriptionsPage() {
             )}
           </div>
 
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-8 space-y-6">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-12 gap-6">
+            <div className="md:col-span-8 md:order-1 space-y-6">
               {!hasMounted || jobDescriptions.length === 0 ? (
                 <div className="text-center py-12 rounded-lg border border-white/10 bg-black/20">
                   <div className="mb-6">
@@ -1040,17 +1040,11 @@ export default function JobDescriptionsPage() {
                 ))
               )}
             </div>
-            <div className="lg:col-span-4">
+            <div className="md:col-span-4 md:order-2">
               <div className="rounded-lg border border-white/10 bg-black/20 p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-semibold text-white">Auto-discovered roles from career pages</h3>
-                    <p className="mt-1 text-sm text-white/70">
-                      We collect up to 30 roles at a time, prioritize roles aligned to your preferences/skills, enforce a 75%+ match threshold, and favor US roles when your preferences indicate US.
-                    </p>
-                    {scrapedRolesMessage ? (
-                      <p className="mt-1 text-xs text-white/50">{scrapedRolesMessage}</p>
-                    ) : null}
+                    <h3 className="text-lg font-semibold text-white">Auto-discovered</h3>
                   </div>
                   <button
                     type="button"
@@ -1088,15 +1082,9 @@ export default function JobDescriptionsPage() {
                       <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
                         Roles shown: {scrapedRoles.length}
                       </span>
-                      {typeof scrapedRolesMeta?.requested_roles === "number" ? (
-                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
-                          Target roles: {scrapedRolesMeta.requested_roles}
-                        </span>
-                      ) : null}
                       {typeof scrapedRolesMeta?.unique_companies === "number" ? (
                         <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
                           Companies: {scrapedRolesMeta.unique_companies}
-                          {typeof scrapedRolesMeta?.target_companies === "number" ? ` / ${scrapedRolesMeta.target_companies}` : ""}
                         </span>
                       ) : null}
                     </div>

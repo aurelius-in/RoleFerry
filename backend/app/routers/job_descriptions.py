@@ -2924,22 +2924,55 @@ async def get_scraped_roles(limit: int = 30):
     pref_terms = _preference_terms(prefs, role_query)
     min_match_score = 75
 
-    # Keep query set focused on real career ecosystems while broadening enough to get
-    # role diversity (ideally >=25 companies when possible).
-    queries = [
-        f'site:boards.greenhouse.io/jobs "{role_query}"',
-        f'site:boards.greenhouse.io "{role_query}" remote',
-        f'site:boards.greenhouse.io "{role_query}" "united states"',
-        f'site:jobs.lever.co "{role_query}"',
-        f'site:jobs.lever.co "{role_query}" remote',
-        f'site:myworkdayjobs.com "{role_query}"',
-        f'site:myworkdayjobs.com "{role_query}" remote',
-        f'site:jobs.ashbyhq.com "{role_query}"',
-        f'site:jobs.ashbyhq.com "{role_query}" remote',
-        f'"{role_query}" "careers" "salary"',
-        f'"{role_query}" "careers" "job opening"',
-        f'"{role_query}" "apply now" "careers"',
+    # Build multiple role terms so discovery does not collapse to one employer/source.
+    role_terms: List[str] = []
+    for x in (prefs.get("role_categories") or [])[:3]:
+        t = str(x or "").strip()
+        if t:
+            role_terms.append(t)
+    for x in (prefs.get("skills") or [])[:3]:
+        t = str(x or "").strip()
+        if t:
+            role_terms.append(t)
+    for x in _resume_skill_hints()[:2]:
+        t = str(x or "").strip()
+        if t:
+            role_terms.append(t)
+    role_terms.append(role_query)
+    # Preserve order while de-duping.
+    dedup_terms: List[str] = []
+    seen_terms: set[str] = set()
+    for t in role_terms:
+        k = t.lower()
+        if k in seen_terms:
+            continue
+        seen_terms.add(k)
+        dedup_terms.append(t)
+    role_terms = dedup_terms[:6]
+
+    # Broaden to multiple ATS ecosystems + public careers surfaces.
+    domains = [
+        "boards.greenhouse.io",
+        "jobs.lever.co",
+        "myworkdayjobs.com",
+        "jobs.ashbyhq.com",
+        "careers.smartrecruiters.com",
+        "jobs.jobvite.com",
+        "icims.com",
+        "jobs.workable.com",
+        "jobs.bamboohr.com",
     ]
+
+    queries: List[str] = []
+    for term in role_terms:
+        for d in domains:
+            queries.append(f'site:{d} "{term}" "remote"')
+            queries.append(f'site:{d} "{term}" "united states"')
+        # Non site-locked queries to catch direct career pages outside ATS providers.
+        queries.append(f'"{term}" "careers" "remote" "united states"')
+        queries.append(f'"{term}" "job opening" "apply now"')
+    # Keep to a reasonable cap to avoid runaway API usage.
+    queries = queries[:72]
 
     found: List[Dict[str, Any]] = []
     for q in queries:
@@ -2958,6 +2991,49 @@ async def get_scraped_roles(limit: int = 30):
             minimum_salary=minimum_salary,
             require_us=require_us,
         )
+    else:
+        # If live search is too small or too concentrated (for example, mostly one employer),
+        # augment with ATS API discovery to improve employer diversity and role volume.
+        diversity_threshold = max(4, min(10, requested // 3))
+        size_threshold = max(requested * 3, 60)
+        try:
+            live_companies = {
+                (
+                    str(item.get("company") or "").strip().lower()
+                    or _company_from_result(
+                        str(item.get("url") or "").strip(),
+                        str(item.get("title") or "").strip(),
+                    ).strip().lower()
+                )
+                for item in found
+                if isinstance(item, dict)
+                and str(item.get("url") or "").strip()
+            }
+            live_companies.discard("")
+        except Exception:
+            live_companies = set()
+
+        if len(live_companies) < diversity_threshold or len(found) < size_threshold:
+            extra = await _discover_roles_without_serper(
+                role_query=role_query,
+                requested=max(requested * 2, 50),
+                minimum_salary=minimum_salary,
+                require_us=require_us,
+            )
+            if extra:
+                seen_live_urls = {
+                    str(item.get("url") or "").strip()
+                    for item in found
+                    if isinstance(item, dict) and str(item.get("url") or "").strip()
+                }
+                for item in extra:
+                    u = str((item or {}).get("url") or "").strip()
+                    if not u or u in seen_live_urls:
+                        continue
+                    found.append(item)
+                    seen_live_urls.add(u)
+                    if len(found) >= max(requested * 5, 120):
+                        break
 
     # De-dupe + score + salary filter.
     seen_urls: set[str] = set()
@@ -3043,16 +3119,7 @@ async def get_scraped_roles(limit: int = 30):
 
     roles_out = selected[:requested]
     unique_companies = len({(r.company or "").strip().lower() for r in roles_out if (r.company or "").strip() and (r.company or "").strip().lower() != "unknown"})
-    diversity_note = (
-        "company diversity target met"
-        if unique_companies >= target_companies
-        else f"company diversity {unique_companies}/{target_companies}"
-    )
-    msg = (
-        f"Found {len(roles_out)} role links from career pages ({diversity_note})"
-        if roles_out
-        else "No role links found yet"
-    )
+    msg = f"Found {len(roles_out)} auto-discovered roles" if roles_out else "No roles found yet"
     return ScrapedRolesResponse(
         success=True,
         message=msg,

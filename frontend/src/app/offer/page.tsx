@@ -246,10 +246,6 @@ export default function OfferPage() {
     const title = String(activeRole?.title || selectedRole?.title || "").trim();
     const company = String(activeRole?.company || selectedRole?.company || "").trim();
     const industry = Array.isArray(prefs?.industries) ? String(prefs.industries[0] || "").trim() : "";
-    const roleSkills = (Array.isArray(activeRole?.requiredSkills) ? activeRole?.requiredSkills : [])
-      .map((x) => String(x || "").trim())
-      .filter(Boolean)
-      .slice(0, 4);
     const resumeSkills = Array.isArray(resume?.skills) ? resume.skills.map((x: any) => String(x || "").trim()).filter(Boolean) : [];
     const overlap = roleSkills.filter((s) => resumeSkills.some((r: string) => r.toLowerCase() === s.toLowerCase())).slice(0, 2);
     const painpoints = (Array.isArray(activeRole?.painPoints) ? activeRole?.painPoints : [])
