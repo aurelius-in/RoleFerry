@@ -665,7 +665,7 @@ export default function BioPageStep() {
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-start justify-between gap-3 mb-6">
           <div>
-            <div className="text-xs text-white/60">Step 10 of 12</div>
+            <div className="text-xs text-white/60">Step 11 of 12</div>
             <h1 className="text-3xl font-bold">Bio Page</h1>
             <p className="text-white/70 mt-1">
               Generate a public bio page link you can paste into email or a LinkedIn note.

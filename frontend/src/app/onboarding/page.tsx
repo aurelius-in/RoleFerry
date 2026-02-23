@@ -4,6 +4,7 @@ export default function Onboarding() {
     { label: "Import role descriptions", href: "/job-descriptions" },
     { label: "Upload resume / candidate profile", href: "/resume" },
     { label: "Match pain points", href: "/painpoint-match" },
+    { label: "Apply to selected roles", href: "/apply" },
     { label: "Company research", href: "/company-research" },
     { label: "Find contacts (Email or LinkedIn)", href: "/find-contact" },
     { label: "Bio page (shareable link)", href: "/bio-page" },

@@ -324,7 +324,7 @@ export default function PainPointMatchPage() {
       // Ignore storage failures (private mode/quota); navigation still works.
     }
 
-    router.push("/offer");
+    router.push("/apply");
   };
 
   const getScoreColor = (score: number) => {

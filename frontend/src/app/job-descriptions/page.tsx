@@ -1031,6 +1031,7 @@ export default function JobDescriptionsPage() {
                     </div>
 
                     {expandedRoleDetails[jd.id] ? (
+                      <>
                       <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Pain Points */}
                     <div>
@@ -1158,13 +1159,14 @@ export default function JobDescriptionsPage() {
                       ) : null}
                     </div>
 
+                    </div>
                     {/* JD Jargon intentionally removed (low-signal for job seekers) */}
-                      </div>
-                      <div className="mt-3 pt-3 border-t border-white/10">
-                        <p className="text-xs text-white/60">
-                          Parsed on {new Date(jd.parsedAt).toLocaleDateString()}
-                        </p>
-                      </div>
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                      <p className="text-xs text-white/60">
+                        Parsed on {new Date(jd.parsedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    </>
                     ) : null}
                   </div>
                 ))
@@ -1385,7 +1387,7 @@ export default function JobDescriptionsPage() {
           {jobDescriptions.length > 0 && (
             <div className="mt-8 flex justify-end space-x-4">
               <button
-                onClick={() => router.push('/offer')}
+                onClick={() => router.push('/personality')}
                 className="bg-white/10 text-white px-6 py-3 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
               >
                 Back
