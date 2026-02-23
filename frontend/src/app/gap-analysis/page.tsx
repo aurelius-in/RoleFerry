@@ -46,6 +46,8 @@ type JobDescription = {
   parsedAt?: string;
 };
 
+type GapSeverity = "small" | "medium" | "large" | "low" | "high";
+
 type GapAnalysisItem = {
   job_id: string;
   title: string;
@@ -56,9 +58,9 @@ type GapAnalysisItem = {
   recommendation: "pursue" | "maybe" | "skip";
   matched_skills: string[];
   missing_skills: string[];
-  resume_gaps: Array<{ gap: string; severity: "low" | "medium" | "high"; evidence: string[]; how_to_close: string }>;
-  personality_gaps: Array<{ gap: string; severity: "low" | "medium" | "high"; evidence: string[]; how_to_close: string }>;
-  preference_gaps: Array<{ gap: string; severity: "low" | "medium" | "high"; evidence: string[]; how_to_close: string }>;
+  resume_gaps: Array<{ gap: string; severity: GapSeverity; evidence: string[]; how_to_close: string }>;
+  personality_gaps: Array<{ gap: string; severity: GapSeverity; evidence: string[]; how_to_close: string }>;
+  preference_gaps: Array<{ gap: string; severity: GapSeverity; evidence: string[]; how_to_close: string }>;
   notes: string[];
 };
 
@@ -340,10 +342,22 @@ export default function GapAnalysisPage() {
     } catch {}
   };
 
-  function severityPill(sev: "low" | "medium" | "high") {
-    if (sev === "high") return "bg-red-500/15 border-red-500/30 text-red-200";
-    if (sev === "medium") return "bg-yellow-500/15 border-yellow-500/30 text-yellow-200";
+  function normalizeSeverity(sev: GapSeverity): "small" | "medium" | "large" {
+    if (sev === "low") return "small";
+    if (sev === "high") return "large";
+    if (sev === "small" || sev === "medium" || sev === "large") return sev;
+    return "medium";
+  }
+
+  function severityPill(sev: GapSeverity) {
+    const s = normalizeSeverity(sev);
+    if (s === "large") return "bg-red-500/15 border-red-500/30 text-red-200";
+    if (s === "medium") return "bg-yellow-500/15 border-yellow-500/30 text-yellow-200";
     return "bg-emerald-500/15 border-emerald-500/30 text-emerald-200";
+  }
+
+  function severityLabel(sev: GapSeverity): "small" | "medium" | "large" {
+    return normalizeSeverity(sev);
   }
 
   function Icon({ kind }: { kind: "resume" | "personality" | "prefs" }) {
@@ -549,7 +563,7 @@ export default function GapAnalysisPage() {
                                 <div key={`${col.title}_${idx}`} className="rounded-md border border-white/10 bg-black/20 p-3">
                                   <div className="flex items-start gap-3">
                                     <div className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] ${severityPill(g.severity)}`}>
-                                      {g.severity}
+                                      {severityLabel(g.severity)}
                                     </div>
                                     <div className="min-w-0">
                                       <div className="text-xs text-white/90">{g.gap}</div>
