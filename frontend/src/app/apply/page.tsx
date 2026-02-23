@@ -36,6 +36,7 @@ type BulkApplyResponse = {
   applications: ApplicationRecord[];
   summary: { applied: number; failed: number; skipped: number; queued: number };
 };
+type SingleApplyResponse = { application: ApplicationRecord; status?: string };
 
 type RequiredProfileKey =
   | "first_name"
@@ -56,13 +57,26 @@ function safeJson<T>(raw: string | null, fallback: T): T {
   }
 }
 
-function normalizeRoles(raw: any[]): RoleItem[] {
+function normalizeRoles(raw: any[], painpointByJob: Record<string, any[]> = {}): RoleItem[] {
   const seen = new Set<string>();
   const out: RoleItem[] = [];
   for (const r of Array.isArray(raw) ? raw : []) {
     const id = String(r?.id || `${r?.company || ""}:${r?.title || ""}:${r?.url || ""}`).trim();
     if (!id || seen.has(id)) continue;
     seen.add(id);
+    const directScore = Number.isFinite(Number(r?.matchScore))
+      ? Number(r?.matchScore)
+      : Number.isFinite(Number(r?.match_score))
+      ? Number(r?.match_score)
+      : undefined;
+    const painpointScore = (() => {
+      const arr = Array.isArray(painpointByJob?.[id]) ? painpointByJob[id] : [];
+      const first = arr[0] || null;
+      const s = Number(first?.alignment_score);
+      if (!Number.isFinite(s)) return undefined;
+      // pain point alignment_score is 0..1; convert to percent.
+      return Math.max(0, Math.min(100, Math.round(s * 100)));
+    })();
     out.push({
       id,
       title: String(r?.title || "").trim(),
@@ -71,11 +85,7 @@ function normalizeRoles(raw: any[]): RoleItem[] {
       location: String(r?.location || "").trim(),
       city: String(r?.city || "").trim(),
       state: String(r?.state || "").trim(),
-      matchScore: Number.isFinite(Number(r?.matchScore))
-        ? Number(r?.matchScore)
-        : Number.isFinite(Number(r?.match_score))
-        ? Number(r?.match_score)
-        : undefined,
+      matchScore: directScore ?? painpointScore,
     });
   }
   return out;
@@ -127,7 +137,8 @@ export default function ApplyPage() {
 
   useEffect(() => {
     const storedRoles = safeJson<any[]>(localStorage.getItem("job_descriptions"), []);
-    const normalized = normalizeRoles(storedRoles);
+    const painpointByJob = safeJson<Record<string, any[]>>(localStorage.getItem("painpoint_matches_by_job"), {});
+    const normalized = normalizeRoles(storedRoles, painpointByJob);
     setRoles(normalized);
     setSelectedIds(new Set(normalized.map((r) => r.id)));
 
@@ -270,12 +281,37 @@ export default function ApplyPage() {
           source: "apply-step",
         })),
       };
-      const resp = await api<BulkApplyResponse>("/applications/bulk", "POST", payload);
-      await loadApplications();
-      syncTrackerFromApplications(resp.applications || []);
-      setMsg(
-        `Applied: ${resp.summary.applied}, Failed: ${resp.summary.failed}, Skipped: ${resp.summary.skipped}.`
-      );
+      try {
+        const resp = await api<BulkApplyResponse>("/applications/bulk", "POST", payload);
+        await loadApplications();
+        syncTrackerFromApplications(resp.applications || []);
+        setMsg(
+          `Applied: ${resp.summary.applied}, Failed: ${resp.summary.failed}, Skipped: ${resp.summary.skipped}.`
+        );
+      } catch (bulkErr: any) {
+        // Compatibility fallback for environments that don't have /applications/bulk yet.
+        const detail = String(bulkErr?.message || "");
+        if (!/404/.test(detail)) throw bulkErr;
+
+        const created: ApplicationRecord[] = [];
+        for (const role of payload.roles) {
+          const single = await api<SingleApplyResponse>("/applications", "POST", {
+            ...role,
+            auto_apply: payload.auto_apply,
+          });
+          if (single?.application) created.push(single.application);
+        }
+        await loadApplications();
+        syncTrackerFromApplications(created);
+        const summary = {
+          applied: created.filter((a) => a?.status === "applied").length,
+          failed: created.filter((a) => a?.status === "failed").length,
+          skipped: created.filter((a) => a?.status === "skipped").length,
+        };
+        setMsg(
+          `Applied: ${summary.applied}, Failed: ${summary.failed}, Skipped: ${summary.skipped}.`
+        );
+      }
     } catch (e: any) {
       setErr(String(e?.message || "Failed to run apply flow."));
     } finally {
@@ -384,55 +420,43 @@ export default function ApplyPage() {
                 <div className="space-y-2 rounded-md border border-yellow-400/30 bg-yellow-500/10 p-3">
                   <div className="text-xs font-semibold text-yellow-100">Complete required fields</div>
                   <div className="grid grid-cols-2 gap-2">
-                    {missingRequiredKeys.has("first_name") ? (
-                      <input
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        placeholder="First name"
-                        className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-                      />
-                    ) : null}
-                    {missingRequiredKeys.has("last_name") ? (
-                      <input
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        placeholder="Last name"
-                        className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-                      />
-                    ) : null}
+                    <input
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="First name"
+                      className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
+                    />
+                    <input
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Last name"
+                      className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
+                    />
                   </div>
-                  {missingRequiredKeys.has("email") ? (
-                    <input
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Email"
-                      className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-                    />
-                  ) : null}
-                  {missingRequiredKeys.has("phone") ? (
-                    <input
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="Phone"
-                      className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-                    />
-                  ) : null}
-                  {missingRequiredKeys.has("city") ? (
-                    <input
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      placeholder="City"
-                      className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-                    />
-                  ) : null}
-                  {missingRequiredKeys.has("postal_code") ? (
-                    <input
-                      value={postalCode}
-                      onChange={(e) => setPostalCode(e.target.value)}
-                      placeholder="Postal code"
-                      className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-                    />
-                  ) : null}
+                  <input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Email"
+                    className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
+                  />
+                  <input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Phone"
+                    className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
+                  />
+                  <input
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="City"
+                    className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
+                  />
+                  <input
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                    placeholder="Postal code"
+                    className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
+                  />
                   {missingRequiredKeys.has("resume") ? (
                     <div className="flex items-center justify-between gap-2">
                       <label className="inline-flex items-center gap-2 text-xs text-white/80">
@@ -480,23 +504,6 @@ export default function ApplyPage() {
                   Save &amp; Continue
                 </button>
               </div>
-              <div className="pt-2 border-t border-white/10">
-                <div className="text-xs text-white/60 mb-2">Next workflow shortcuts</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => router.push("/offer")} className="px-2 py-1 rounded border border-white/10 bg-white/10 text-xs">
-                    Offer
-                  </button>
-                  <button type="button" onClick={() => router.push("/company-research")} className="px-2 py-1 rounded border border-white/10 bg-white/10 text-xs">
-                    Research
-                  </button>
-                  <button type="button" onClick={() => router.push("/find-contact")} className="px-2 py-1 rounded border border-white/10 bg-white/10 text-xs">
-                    Contact
-                  </button>
-                  <button type="button" onClick={() => router.push("/campaign")} className="px-2 py-1 rounded border border-white/10 bg-white/10 text-xs">
-                    Campaign
-                  </button>
-                </div>
-              </div>
             </div>
 
             <div className="lg:col-span-8 rounded-lg border border-white/10 bg-black/20 overflow-hidden">
@@ -534,10 +541,10 @@ export default function ApplyPage() {
               </div>
               <div className="px-4 py-2 border-b border-white/10 bg-black/30">
                 <div className="grid grid-cols-12 gap-3 text-[11px] font-semibold uppercase tracking-wide text-white/50">
-                  <div className="col-span-6">Role</div>
-                  <div className="col-span-2">Match</div>
+                  <div className="col-span-5">Role</div>
+                  <div className="col-span-2 pl-2">Match</div>
                   <div className="col-span-2">Eligibility</div>
-                  <div className="col-span-1">Status</div>
+                  <div className="col-span-2">Status</div>
                   <div className="col-span-1 text-right">Action</div>
                 </div>
               </div>
@@ -553,7 +560,7 @@ export default function ApplyPage() {
                     return (
                       <div key={r.id} className="px-4 py-2.5 border-b border-white/10">
                         <div className="grid grid-cols-12 gap-3 items-center">
-                          <div className="col-span-6 min-w-0">
+                          <div className="col-span-5 min-w-0">
                             <label className="inline-flex items-start gap-2 cursor-pointer min-w-0">
                               <input
                                 type="checkbox"
@@ -562,7 +569,7 @@ export default function ApplyPage() {
                                 disabled={!eligible}
                               />
                               <div className="min-w-0">
-                                <div className="text-sm font-semibold text-white truncate leading-tight">{r.title || "Untitled role"}</div>
+                                <div className="text-xs font-semibold text-white truncate leading-tight">{r.title || "Untitled role"}</div>
                                 <div className="text-xs text-white/70 truncate leading-tight">{formatCompanyName(r.company || "Unknown company")}</div>
                                 <div className="text-[11px] text-white/55 truncate mt-0.5 leading-tight">
                                   {r.location || [r.city, r.state].filter(Boolean).join(", ") || "Location unavailable"}
@@ -570,7 +577,7 @@ export default function ApplyPage() {
                               </div>
                             </label>
                           </div>
-                          <div className="col-span-2 text-xs text-white/80">
+                          <div className="col-span-2 pl-2 text-xs text-white/80">
                             {typeof r.matchScore === "number" ? (
                               <span className="inline-flex items-center rounded-md border border-white/15 bg-white/5 px-2 py-1">
                                 {Math.round(r.matchScore)}%
@@ -595,7 +602,7 @@ export default function ApplyPage() {
                               </div>
                             ) : null}
                           </div>
-                          <div className="col-span-1">
+                          <div className="col-span-2">
                             <span className={`inline-flex items-center rounded-md border px-2 py-1 text-[11px] font-semibold ${statusUi.className}`}>
                               {statusUi.label}
                             </span>
@@ -609,7 +616,7 @@ export default function ApplyPage() {
                                 className="inline-flex items-center px-2 py-1 rounded border border-white/15 bg-white/10 hover:bg-white/15 text-[11px] font-semibold"
                                 title="Open job link"
                               >
-                                Open
+                                Website
                               </a>
                             ) : (
                               <span className="text-[11px] text-white/40">No link</span>

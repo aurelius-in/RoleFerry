@@ -825,7 +825,11 @@ async def conduct_research(request: ResearchRequest):
         ck = _cache_key(cache_payload)
         cached = _cache_get(ck)
         if cached:
-            return ResearchResponse(**cached)
+            try:
+                return ResearchResponse(**cached)
+            except Exception:
+                # Cache shape can drift after schema/prompt updates; ignore stale entries.
+                _CTX_CACHE.pop(ck, None)
 
         def _dept_bucket(c: SelectedContact) -> str:
             t = f"{c.title or ''} {c.department or ''}".lower()

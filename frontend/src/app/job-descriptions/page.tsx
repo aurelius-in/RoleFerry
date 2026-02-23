@@ -248,11 +248,17 @@ export default function JobDescriptionsPage() {
     if (kind === "positive") {
       const next = Array.from(new Set([...positiveKeywords, kw].map((x) => normalizeKeyword(x)))).filter(Boolean).slice(0, 20);
       setPositiveKeywords(next);
+      setPositiveSuggestions((prev) =>
+        Array.from(new Set([...(Array.isArray(prev) ? prev : []), kw].map((x) => normalizeKeyword(x)))).filter(Boolean).slice(0, 20)
+      );
       persistKeywordPrefs(next, negativeKeywords);
       return;
     }
     const next = Array.from(new Set([...negativeKeywords, kw].map((x) => normalizeKeyword(x)))).filter(Boolean).slice(0, 20);
     setNegativeKeywords(next);
+    setNegativeSuggestions((prev) =>
+      Array.from(new Set([...(Array.isArray(prev) ? prev : []), kw].map((x) => normalizeKeyword(x)))).filter(Boolean).slice(0, 20)
+    );
     persistKeywordPrefs(positiveKeywords, next);
   };
 
@@ -413,6 +419,72 @@ export default function JobDescriptionsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const importFromUrl = async (raw: string, opts?: { clearImporterInput?: boolean; seedImporterInput?: boolean }) => {
+    const rawUrl = String(raw || "").trim();
+    if (!rawUrl) return;
+
+    // Guard: Indeed "share/search" URLs are often not the actual application page.
+    // If we can, normalize them to a direct viewjob link; otherwise instruct the user.
+    let finalUrl = rawUrl;
+    const indeed = analyzeIndeedUrl(rawUrl);
+    if (indeed.isIndeed && indeed.isSearchShare) {
+      if (indeed.normalizedViewJobUrl) {
+        finalUrl = indeed.normalizedViewJobUrl;
+      } else {
+        throw new Error(
+          "That looks like an Indeed search/share URL. Please open the job, click “Apply” / “Apply on company site”, then copy the URL from the application page (or paste the role text instead)."
+        );
+      }
+    }
+
+    if (opts?.seedImporterInput) setImportUrl(finalUrl);
+
+    const resp = await api<JobDescriptionResponse>("/job-descriptions/import", "POST", {
+      url: finalUrl,
+      text: null,
+    });
+    const jds = (resp.job_descriptions && resp.job_descriptions.length)
+      ? resp.job_descriptions
+      : (resp.job_description ? [resp.job_description] : []);
+
+    if (jds.length) {
+      const mappedAll: JobDescription[] = jds.map((jd) => ({
+        id: jd.id,
+        title: jd.title,
+        company: jd.company,
+        url: jd.url || undefined,
+        content: jd.content || "",
+        painPoints: jd.pain_points || [],
+        requiredSkills: jd.required_skills || [],
+        successMetrics: jd.success_metrics || [],
+        location: jd.location || undefined,
+        workMode: jd.work_mode || undefined,
+        employmentType: jd.employment_type || undefined,
+        salaryRange: jd.salary_range || undefined,
+        responsibilities: (jd.responsibilities || undefined) as any,
+        requirements: (jd.requirements || undefined) as any,
+        benefits: (jd.benefits || undefined) as any,
+        jdJargon: extractJargon(jd.content || ""),
+        preferenceStars: undefined,
+        parsedAt: jd.parsed_at || new Date().toISOString(),
+      }));
+
+      setJobDescriptions((prev) => {
+        const next = [...prev];
+        for (const m of mappedAll) {
+          const idx = next.findIndex((p) => p.id === m.id);
+          if (idx >= 0) next[idx] = { ...next[idx], ...m };
+          else next.push(m);
+        }
+        const normalized = normalizeFavoriteRanks(next);
+        if (typeof window !== "undefined") localStorage.setItem("job_descriptions", JSON.stringify(normalized));
+        return normalized;
+      });
+    }
+
+    if (opts?.clearImporterInput) setImportUrl("");
+  };
+
   const handleImport = async () => {
     const hasUrl = importType === "url" && Boolean(importUrl.trim());
     const hasText = importType === "text" && Boolean(importText.trim());
@@ -422,70 +494,56 @@ export default function JobDescriptionsPage() {
     setIsImporting(true);
 
     try {
-      // Guard: Indeed "share/search" URLs are often not the actual application page.
-      // If we can, normalize them to a direct viewjob link; otherwise instruct the user to copy the apply URL.
       if (importType === "url") {
-        const rawUrl = importUrl.trim();
-        const indeed = analyzeIndeedUrl(rawUrl);
-        if (indeed.isIndeed && indeed.isSearchShare) {
-          if (indeed.normalizedViewJobUrl) {
-            setImportUrl(indeed.normalizedViewJobUrl);
-          } else {
-            setImportError(
-              "That looks like an Indeed search/share URL. Please open the job, click “Apply” / “Apply on company site”, then copy the URL from the application page (or paste the role text instead)."
-            );
-            return;
-          }
+        await importFromUrl(importUrl.trim(), { clearImporterInput: true, seedImporterInput: true });
+      } else {
+        const payload = {
+          url: null,
+          text: hasText ? importText.trim() : null,
+        };
+        const resp = await api<JobDescriptionResponse>("/job-descriptions/import", "POST", payload);
+        const jds = (resp.job_descriptions && resp.job_descriptions.length)
+          ? resp.job_descriptions
+          : (resp.job_description ? [resp.job_description] : []);
+
+        if (jds.length) {
+          const mappedAll: JobDescription[] = jds.map((jd) => ({
+            id: jd.id,
+            title: jd.title,
+            company: jd.company,
+            url: jd.url || undefined,
+            content: jd.content || "",
+            painPoints: jd.pain_points || [],
+            requiredSkills: jd.required_skills || [],
+            successMetrics: jd.success_metrics || [],
+            location: jd.location || undefined,
+            workMode: jd.work_mode || undefined,
+            employmentType: jd.employment_type || undefined,
+            salaryRange: jd.salary_range || undefined,
+            responsibilities: (jd.responsibilities || undefined) as any,
+            requirements: (jd.requirements || undefined) as any,
+            benefits: (jd.benefits || undefined) as any,
+            jdJargon: extractJargon(jd.content || ""),
+            preferenceStars: undefined,
+            parsedAt: jd.parsed_at || new Date().toISOString(),
+          }));
+
+          setJobDescriptions((prev) => {
+            // Merge by id: replace existing items (so re-importing the same URL updates the card),
+            // and append truly new ones.
+            const next = [...prev];
+            for (const m of mappedAll) {
+              const idx = next.findIndex((p) => p.id === m.id);
+              if (idx >= 0) next[idx] = { ...next[idx], ...m };
+              else next.push(m);
+            }
+            const normalized = normalizeFavoriteRanks(next);
+            if (typeof window !== "undefined") localStorage.setItem("job_descriptions", JSON.stringify(normalized));
+            return normalized;
+          });
         }
       }
-
-      const payload = {
-        url: hasUrl ? importUrl.trim() : null,
-        text: hasText ? importText.trim() : null,
-      };
-      const resp = await api<JobDescriptionResponse>("/job-descriptions/import", "POST", payload);
-      const jds = (resp.job_descriptions && resp.job_descriptions.length)
-        ? resp.job_descriptions
-        : (resp.job_description ? [resp.job_description] : []);
-
-      if (jds.length) {
-        const mappedAll: JobDescription[] = jds.map((jd) => ({
-          id: jd.id,
-          title: jd.title,
-          company: jd.company,
-          url: jd.url || undefined,
-          content: jd.content || "",
-          painPoints: jd.pain_points || [],
-          requiredSkills: jd.required_skills || [],
-          successMetrics: jd.success_metrics || [],
-          location: jd.location || undefined,
-          workMode: jd.work_mode || undefined,
-          employmentType: jd.employment_type || undefined,
-          salaryRange: jd.salary_range || undefined,
-          responsibilities: (jd.responsibilities || undefined) as any,
-          requirements: (jd.requirements || undefined) as any,
-          benefits: (jd.benefits || undefined) as any,
-          jdJargon: extractJargon(jd.content || ""),
-          preferenceStars: undefined,
-          parsedAt: jd.parsed_at || new Date().toISOString(),
-        }));
-
-        setJobDescriptions((prev) => {
-          // Merge by id: replace existing items (so re-importing the same URL updates the card),
-          // and append truly new ones.
-          const next = [...prev];
-          for (const m of mappedAll) {
-            const idx = next.findIndex((p) => p.id === m.id);
-            if (idx >= 0) next[idx] = { ...next[idx], ...m };
-            else next.push(m);
-          }
-          const normalized = normalizeFavoriteRanks(next);
-          if (typeof window !== "undefined") localStorage.setItem("job_descriptions", JSON.stringify(normalized));
-          return normalized;
-        });
-      }
       // Only clear inputs on success
-      setImportUrl("");
       setImportText("");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -1199,6 +1257,22 @@ export default function JobDescriptionsPage() {
                 <div className="mt-3 space-y-3 rounded-md border border-white/10 bg-black/20 p-3">
                   <div>
                     <div className="text-[11px] font-semibold uppercase tracking-wider text-white/70">Positive keywords</div>
+                    {positiveKeywords.length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {positiveKeywords.map((kw) => (
+                          <button
+                            key={`pos_kw_${kw}`}
+                            type="button"
+                            onClick={() => removeKeyword("positive", kw)}
+                            className="rounded-full border border-emerald-400/50 bg-emerald-500/20 px-2 py-0.5 text-[11px] text-emerald-100"
+                            title="Remove keyword"
+                          >
+                            <span>{kw}</span>
+                            <span className="ml-1 font-extrabold text-red-300">-</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
                     <div className="mt-2 flex flex-wrap gap-2">
                       {positiveSuggestions.slice(0, 14).map((kw) => {
                         const on = positiveKeywords.some((x) => normalizeKeyword(x).toLowerCase() === normalizeKeyword(kw).toLowerCase());
@@ -1245,6 +1319,22 @@ export default function JobDescriptionsPage() {
 
                   <div>
                     <div className="text-[11px] font-semibold uppercase tracking-wider text-white/70">Negative keywords</div>
+                    {negativeKeywords.length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {negativeKeywords.map((kw) => (
+                          <button
+                            key={`neg_kw_${kw}`}
+                            type="button"
+                            onClick={() => removeKeyword("negative", kw)}
+                            className="rounded-full border border-rose-400/50 bg-rose-500/20 px-2 py-0.5 text-[11px] text-rose-100"
+                            title="Remove keyword"
+                          >
+                            <span>{kw}</span>
+                            <span className="ml-1 font-extrabold text-red-300">-</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
                     <div className="mt-2 flex flex-wrap gap-2">
                       {negativeSuggestions.slice(0, 14).map((kw) => {
                         const on = negativeKeywords.some((x) => normalizeKeyword(x).toLowerCase() === normalizeKeyword(kw).toLowerCase());
@@ -1319,20 +1409,23 @@ export default function JobDescriptionsPage() {
                     <div className="space-y-2">
                       {visibleScrapedRoles.map((r) => (
                         <div key={r.id} className="rounded-md border border-white/10 bg-white/5 px-3 py-2">
-                          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                            <div className="min-w-0 md:pr-3">
-                              <div className="text-sm font-semibold text-white break-words">{r.title}</div>
-                              <div className="mt-0.5 text-[11px] text-white/70 truncate">
-                                {formatCompanyName(String(r.company || "Unknown"))}
-                                {r.work_mode ? ` • ${r.work_mode}` : ""}
+                          {/* Keep title full-width on its own row for readability. */}
+                          <div>
+                            <div className="min-w-0">
+                              <div className="text-sm font-semibold leading-snug text-white break-normal whitespace-normal">
+                                {r.title}
+                              </div>
+                              <div className="mt-0.5 text-[11px] text-white/70">
+                                <span className="inline">{formatCompanyName(String(r.company || "Unknown"))}</span>
+                                {r.work_mode ? <span className="inline"> • {r.work_mode}</span> : null}
                               </div>
                             </div>
 
-                            <div className="w-full md:w-[210px] shrink-0">
-                              <div className="text-[11px] text-white/75 md:text-right break-words">
+                            <div className="mt-2 flex items-start justify-between gap-2">
+                              <div className="min-w-0 pr-2 text-[11px] text-white/75 whitespace-normal break-words">
                                 {r.location || "Location not listed"}
                               </div>
-                              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 md:justify-end">
+                              <div className="shrink-0 flex flex-wrap items-center justify-end gap-1.5">
                                 {typeof r.match_score === "number" ? (
                                   <span className="inline-flex items-center rounded-full bg-amber-500/85 px-2 py-0.5 text-[10px] font-bold text-black">
                                     {Math.max(0, Math.min(100, Number(r.match_score || 0)))}%
@@ -1341,13 +1434,25 @@ export default function JobDescriptionsPage() {
                                 <button
                                   type="button"
                                   className="animate-pulse rounded-md border border-emerald-400/40 bg-emerald-500/20 px-2 py-1 text-[10px] font-semibold text-emerald-100 hover:bg-emerald-500/30"
-                                  onClick={() => {
-                                    setImportType("url");
-                                    setImportUrl(String(r.url || ""));
+                                  disabled={isImporting}
+                                  onClick={async () => {
+                                    const roleUrl = String(r.url || "").trim();
+                                    if (!roleUrl) return;
+                                    setImportError(null);
+                                    setIsImporting(true);
+                                    try {
+                                      await importFromUrl(roleUrl, { seedImporterInput: true });
+                                      setImportType("url");
+                                    } catch (err) {
+                                      const msg = err instanceof Error ? err.message : String(err);
+                                      setImportError(msg);
+                                    } finally {
+                                      setIsImporting(false);
+                                    }
                                   }}
-                                  title="Use URL Importer"
+                                  title="Import this role now"
                                 >
-                                  Apply
+                                  Import
                                 </button>
                                 <button
                                   type="button"

@@ -131,6 +131,17 @@ export default function BioPageStep() {
   }, []);
 
   useEffect(() => {
+    // Keep draft in sync with persisted video URL across refreshes/sessions.
+    if (!videoUrl) return;
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const cur = safeStr((prev as any)?.video_url);
+      if (cur === videoUrl) return prev;
+      return { ...(prev as any), video_url: videoUrl } as any;
+    });
+  }, [videoUrl]);
+
+  useEffect(() => {
     // Prefer the logged-in user's profile name for display + publish.
     try {
       const raw = localStorage.getItem("rf_user");
@@ -491,7 +502,7 @@ export default function BioPageStep() {
           display_name: safeStr(userDisplayName) || safeStr(res.draft.display_name),
           linkedin_url: safeStr(draft?.linkedin_url) || safeStr(res.draft.linkedin_url),
           calendly_url: safeStr(draft?.calendly_url) || safeStr(res.draft.calendly_url),
-          video_url: safeStr(draft?.video_url) || safeStr(res.draft.video_url),
+          video_url: safeStr(draft?.video_url) || safeStr(videoUrl) || safeStr(res.draft.video_url),
           profile_image_url: profileImageUrl || res.draft.profile_image_url || "",
           work_style_points:
             (Array.isArray((draft as any)?.work_style_points) && (draft as any).work_style_points.length > 0)
@@ -523,6 +534,7 @@ export default function BioPageStep() {
           ...draft,
           display_name: safeStr(userDisplayName) || safeStr(draft.display_name),
           profile_image_url: profileImageUrl || draft.profile_image_url || "",
+          video_url: safeStr(videoUrl) || safeStr(draft.video_url) || "",
           work_style_points:
             (Array.isArray((draft as any)?.work_style_points) && (draft as any).work_style_points.length > 0)
               ? (draft as any).work_style_points
@@ -1260,7 +1272,7 @@ export default function BioPageStep() {
                   </div>
 
                   <div className="mt-6">
-                    <div className="text-2xl font-extrabold">{draft.headline || "Your headline"}</div>
+                    <div className="text-lg md:text-xl leading-snug font-extrabold">{draft.headline || "Your headline"}</div>
                     {safeStr((draft.theme as any)?.slogan_line) ? (
                       <div className="mt-3 inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold"
                         style={{ borderColor: colors.border, background: colors.cardStrong }}
