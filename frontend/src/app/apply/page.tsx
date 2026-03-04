@@ -14,6 +14,7 @@ type RoleItem = {
   city?: string;
   state?: string;
   matchScore?: number;
+  isFavorite?: boolean;
 };
 
 type ApplicationRecord = {
@@ -87,6 +88,11 @@ function normalizeRoles(raw: any[], painpointByJob: Record<string, any[]> = {}):
       city: String(r?.city || "").trim(),
       state: String(r?.state || "").trim(),
       matchScore: directScore ?? painpointScore,
+      isFavorite: Boolean(
+        (Number.isFinite(Number(r?.preferenceStars)) && Number(r?.preferenceStars) >= 1) ||
+          (Number.isFinite(Number(r?.favoriteRank)) && Number(r?.favoriteRank) >= 1) ||
+          r?.isFavorite
+      ),
     });
   }
   return out;
@@ -107,8 +113,10 @@ function statusPill(status: string): { label: string; className: string } {
 export default function ApplyPage() {
   const router = useRouter();
   const [roles, setRoles] = useState<RoleItem[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [eligibleOnly, setEligibleOnly] = useState(true);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [autoApply, setAutoApply] = useState(true);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -141,6 +149,7 @@ export default function ApplyPage() {
     const painpointByJob = safeJson<Record<string, any[]>>(localStorage.getItem("painpoint_matches_by_job"), {});
     const normalized = normalizeRoles(storedRoles, painpointByJob);
     setRoles(normalized);
+    setFavoriteIds(new Set(normalized.filter((r) => r.isFavorite).map((r) => r.id)));
     setSelectedIds(new Set(normalized.map((r) => r.id)));
 
     const user = safeJson<any>(localStorage.getItem("rf_user"), {});
@@ -170,9 +179,10 @@ export default function ApplyPage() {
   };
 
   const filteredRoles = useMemo(() => {
-    if (!eligibleOnly) return roles;
-    return roles.filter((r) => isRoleEligible(r));
-  }, [roles, eligibleOnly, appsByJobId]);
+    const base = favoritesOnly ? roles.filter((r) => favoriteIds.has(r.id)) : roles;
+    if (!eligibleOnly) return base;
+    return base.filter((r) => isRoleEligible(r));
+  }, [roles, eligibleOnly, favoritesOnly, favoriteIds, appsByJobId]);
 
   const selectedRoles = useMemo(() => filteredRoles.filter((r) => selectedIds.has(r.id)), [filteredRoles, selectedIds]);
   const roleStateSummary = useMemo(() => {
@@ -211,6 +221,34 @@ export default function ApplyPage() {
 
   const selectAllShown = () => setSelectedIds(new Set(filteredRoles.map((r) => r.id)));
   const clearSelection = () => setSelectedIds(new Set());
+
+  const toggleFavorite = (id: string) => {
+    setFavoriteIds((prev) => {
+      const next = new Set(prev);
+      const willFavorite = !next.has(id);
+      if (willFavorite) next.add(id);
+      else next.delete(id);
+
+      setRoles((curr) => curr.map((r) => (r.id === id ? { ...r, isFavorite: willFavorite } : r)));
+      try {
+        const stored = safeJson<any[]>(localStorage.getItem("job_descriptions"), []);
+        const mapped = (Array.isArray(stored) ? stored : []).map((r) => {
+          const rid = String(r?.id || `${r?.company || ""}:${r?.title || ""}:${r?.url || ""}`).trim();
+          if (rid !== id) return r;
+          const nextRow: any = { ...r, isFavorite: willFavorite };
+          if (willFavorite) {
+            if (!Number.isFinite(Number(nextRow.preferenceStars))) nextRow.preferenceStars = 5;
+            if (!Number.isFinite(Number(nextRow.favoriteRank))) nextRow.favoriteRank = 1;
+          } else {
+            delete nextRow.favoriteRank;
+          }
+          return nextRow;
+        });
+        localStorage.setItem("job_descriptions", JSON.stringify(mapped));
+      } catch {}
+      return next;
+    });
+  };
 
   const syncTrackerFromApplications = (applications: ApplicationRecord[]) => {
     const existing = safeJson<any[]>(localStorage.getItem(TRACKER_KEY), []);
@@ -581,6 +619,10 @@ export default function ApplyPage() {
                     <input type="checkbox" checked={eligibleOnly} onChange={(e) => setEligibleOnly(e.target.checked)} />
                     Eligible only
                   </label>
+                  <label className="text-xs text-white/75 inline-flex items-center gap-1">
+                    <input type="checkbox" checked={favoritesOnly} onChange={(e) => setFavoritesOnly(e.target.checked)} />
+                    Favorites only
+                  </label>
                   <button type="button" onClick={selectAllShown} className="text-xs px-2 py-1 rounded border border-white/15 bg-white/10">
                     Select all shown
                   </button>
@@ -658,19 +700,33 @@ export default function ApplyPage() {
                             </span>
                           </div>
                           <div className="col-span-1 flex justify-end">
-                            {r.url ? (
-                              <a
-                                href={r.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center px-2 py-1 rounded border border-white/15 bg-white/10 hover:bg-white/15 text-[11px] font-semibold"
-                                title="Open job link"
+                            <div className="inline-flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => toggleFavorite(r.id)}
+                                className={`inline-flex items-center px-2 py-1 rounded border text-[11px] font-semibold ${
+                                  favoriteIds.has(r.id)
+                                    ? "border-amber-400/40 bg-amber-500/20 text-amber-100"
+                                    : "border-white/15 bg-white/10 hover:bg-white/15"
+                                }`}
+                                title={favoriteIds.has(r.id) ? "Remove from favorites" : "Add to favorites"}
                               >
-                                Website
-                              </a>
-                            ) : (
-                              <span className="text-[11px] text-white/40">No link</span>
-                            )}
+                                {favoriteIds.has(r.id) ? "★" : "☆"}
+                              </button>
+                              {r.url ? (
+                                <a
+                                  href={r.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center px-2 py-1 rounded border border-white/15 bg-white/10 hover:bg-white/15 text-[11px] font-semibold"
+                                  title="Open job link"
+                                >
+                                  Website
+                                </a>
+                              ) : (
+                                <span className="text-[11px] text-white/40">No link</span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>

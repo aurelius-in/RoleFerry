@@ -240,7 +240,7 @@ export default function JobDescriptionsPage() {
   const [scrapedRolesMessage, setScrapedRolesMessage] = useState<string>("");
   const [scrapedRolesMeta, setScrapedRolesMeta] = useState<{ requested_roles?: number; target_companies?: number; unique_companies?: number } | null>(null);
   const [funnelMode, setFunnelMode] = useState<"strict" | "broad">("broad");
-  const [discoveryLimit, setDiscoveryLimit] = useState<120 | 220 | 300>(220);
+  const [discoveryLimit, setDiscoveryLimit] = useState<120 | 220 | 300>(120);
   const [highFitOnly, setHighFitOnly] = useState(false);
   const [ignoredScrapedRoleIds, setIgnoredScrapedRoleIds] = useState<string[]>([]);
   const [expandedRoleDetails, setExpandedRoleDetails] = useState<Record<string, boolean>>({});
@@ -263,7 +263,7 @@ export default function JobDescriptionsPage() {
     "https://www.indeed.com/jobs?q=jobs&l=United+States"
   );
 
-  const normalizeKeyword = (v: any) => " ".join(String(v || "").split()).trim();
+  const normalizeKeyword = (v: any) => String(v || "").split(/\s+/).join(" ").trim();
 
   const persistKeywordPrefs = (pos: string[], neg: string[]) => {
     try {
@@ -290,6 +290,26 @@ export default function JobDescriptionsPage() {
       Array.from(new Set([...(Array.isArray(prev) ? prev : []), kw].map((x) => normalizeKeyword(x)))).filter(Boolean).slice(0, 20)
     );
     persistKeywordPrefs(positiveKeywords, next);
+  };
+
+  const addKeywordsFromInput = (kind: "positive" | "negative", rawInput: string): number => {
+    const parts = String(rawInput || "")
+      .split(/[,\n;]+/)
+      .map((x) => normalizeKeyword(x))
+      .filter(Boolean)
+      .slice(0, 20);
+    if (!parts.length) return 0;
+    const cur = kind === "positive" ? positiveKeywords : negativeKeywords;
+    const curNorm = new Set(cur.map((x) => normalizeKeyword(x).toLowerCase()));
+    let added = 0;
+    for (const kw of parts) {
+      const k = normalizeKeyword(kw).toLowerCase();
+      if (!k || curNorm.has(k)) continue;
+      addKeyword(kind, kw);
+      curNorm.add(k);
+      added += 1;
+    }
+    return added;
   };
 
   const removeKeyword = (kind: "positive" | "negative", kw: string) => {
@@ -357,9 +377,11 @@ export default function JobDescriptionsPage() {
       const resumeRaw = localStorage.getItem("resume_extract");
       const selectedRaw = localStorage.getItem("selected_job_description");
       const prefsRaw = localStorage.getItem("job_preferences");
+      const personalityRaw = localStorage.getItem("personality_profile") || localStorage.getItem("personality_assessment");
       const resume = resumeRaw ? JSON.parse(resumeRaw) : null;
       const selected = selectedRaw ? JSON.parse(selectedRaw) : null;
       const prefs = prefsRaw ? JSON.parse(prefsRaw) : null;
+      const personality = personalityRaw ? JSON.parse(personalityRaw) : null;
 
       const resumeSkills = Array.isArray(resume?.skills) ? resume.skills : [];
       const roleSkills = Array.isArray(selected?.required_skills)
@@ -377,7 +399,19 @@ export default function JobDescriptionsPage() {
         : Array.isArray(prefs?.roleCategories)
         ? prefs.roleCategories
         : [];
+      const personalityPositive = [
+        ...(Array.isArray(personality?.strengths) ? personality.strengths : []),
+        ...(Array.isArray(personality?.traits) ? personality.traits : []),
+        ...(Array.isArray(personality?.preferred_roles) ? personality.preferred_roles : []),
+        ...(Array.isArray(personality?.preferredRoles) ? personality.preferredRoles : []),
+      ];
+      const personalityNegative = [
+        ...(Array.isArray(personality?.avoid_roles) ? personality.avoid_roles : []),
+        ...(Array.isArray(personality?.avoidRoles) ? personality.avoidRoles : []),
+        ...(Array.isArray(personality?.dislikes) ? personality.dislikes : []),
+      ];
       const seedPool = [...resumeSkills, ...prefSkills, ...roleSkills, ...prefRoleCats]
+        .concat(Array.isArray(personalityPositive) ? personalityPositive : [])
         .map((x) => normalizeKeyword(x))
         .filter(Boolean);
       const locationSeed = Array.isArray(prefs?.location_preferences)
@@ -425,6 +459,7 @@ export default function JobDescriptionsPage() {
             new Set(
               [
                 ...(Array.isArray(prev) ? prev : []),
+                ...(Array.isArray(personalityNegative) ? personalityNegative : []),
                 "intern",
                 "entry level",
                 "seasonal",
@@ -449,44 +484,67 @@ export default function JobDescriptionsPage() {
     setScrapedRolesError(null);
     setIsLoadingScrapedRoles(true);
     try {
-      const params = new URLSearchParams({ limit: String(discoveryLimit), funnel_mode: funnelMode });
+      const buildParams = (opts?: { simple?: boolean }) => {
+        const params = new URLSearchParams({
+          limit: String(opts?.simple ? Math.min(discoveryLimit, 180) : discoveryLimit),
+          funnel_mode: funnelMode,
+        });
+        if (!opts?.simple) {
+          try {
+            const prefsRaw = localStorage.getItem("job_preferences");
+            const resumeRaw = localStorage.getItem("resume_extract");
+            const prefs = prefsRaw ? JSON.parse(prefsRaw) : null;
+            const resume = resumeRaw ? JSON.parse(resumeRaw) : null;
+            const listToCsv = (arr: unknown) =>
+              Array.isArray(arr)
+                ? arr
+                    .map((x) => normalizeKeyword(x))
+                    .filter(Boolean)
+                    .slice(0, 20)
+                    .join(", ")
+                : "";
+            const roleCategories = listToCsv(prefs?.role_categories || prefs?.roleCategories);
+            const prefSkills = listToCsv(prefs?.skills || prefs?.Skills);
+            const industries = listToCsv(prefs?.industries || prefs?.Industries);
+            const resumeSkills = listToCsv(resume?.skills || resume?.Skills);
+            const locations = listToCsv(prefs?.location_preferences || prefs?.locationPreferences);
+            const minimumSalary = normalizeKeyword(prefs?.minimum_salary || prefs?.minimumSalary);
+            const state = normalizeKeyword(prefs?.state);
+            if (roleCategories) params.set("role_categories", roleCategories);
+            if (prefSkills) params.set("skills", prefSkills);
+            if (industries) params.set("industries", industries);
+            if (resumeSkills) params.set("resume_skills", resumeSkills);
+            if (locations) params.set("location_preferences", locations);
+            if (minimumSalary) params.set("minimum_salary_pref", minimumSalary);
+            if (state) params.set("state", state);
+          } catch {
+            // best-effort context
+          }
+          if (positiveKeywords.length) params.set("positive_keywords", positiveKeywords.join(", "));
+          if (negativeKeywords.length) params.set("negative_keywords", negativeKeywords.join(", "));
+        }
+        return params;
+      };
+
+      let res: ScrapedRolesResponse;
+      let recovered = false;
       try {
-        const prefsRaw = localStorage.getItem("job_preferences");
-        const resumeRaw = localStorage.getItem("resume_extract");
-        const prefs = prefsRaw ? JSON.parse(prefsRaw) : null;
-        const resume = resumeRaw ? JSON.parse(resumeRaw) : null;
-        const listToCsv = (arr: unknown) =>
-          Array.isArray(arr)
-            ? arr
-                .map((x) => normalizeKeyword(x))
-                .filter(Boolean)
-                .slice(0, 20)
-                .join(", ")
-            : "";
-        const roleCategories = listToCsv(prefs?.role_categories || prefs?.roleCategories);
-        const prefSkills = listToCsv(prefs?.skills || prefs?.Skills);
-        const industries = listToCsv(prefs?.industries || prefs?.Industries);
-        const resumeSkills = listToCsv(resume?.skills || resume?.Skills);
-        const locations = listToCsv(prefs?.location_preferences || prefs?.locationPreferences);
-        const minimumSalary = normalizeKeyword(prefs?.minimum_salary || prefs?.minimumSalary);
-        const state = normalizeKeyword(prefs?.state);
-        if (roleCategories) params.set("role_categories", roleCategories);
-        if (prefSkills) params.set("skills", prefSkills);
-        if (industries) params.set("industries", industries);
-        if (resumeSkills) params.set("resume_skills", resumeSkills);
-        if (locations) params.set("location_preferences", locations);
-        if (minimumSalary) params.set("minimum_salary_pref", minimumSalary);
-        if (state) params.set("state", state);
+        const params = buildParams();
+        res = await api<ScrapedRolesResponse>(`/job-descriptions/scraped-roles?${params.toString()}`, "GET");
       } catch {
-        // best-effort context
+        // Degraded retry mode: simpler query profile to avoid hard failures.
+        const params = buildParams({ simple: true });
+        res = await api<ScrapedRolesResponse>(`/job-descriptions/scraped-roles?${params.toString()}`, "GET");
+        recovered = true;
       }
-      if (positiveKeywords.length) params.set("positive_keywords", positiveKeywords.join(", "));
-      if (negativeKeywords.length) params.set("negative_keywords", negativeKeywords.join(", "));
-      const res = await api<ScrapedRolesResponse>(`/job-descriptions/scraped-roles?${params.toString()}`, "GET");
       const roles = Array.isArray(res?.roles) ? res.roles : [];
       setScrapedRoles(roles);
       setIgnoredScrapedRoleIds([]);
-      setScrapedRolesMessage(String(res?.message || ""));
+      setScrapedRolesMessage(
+        recovered
+          ? `Recovered using compatibility mode (reduced filters). ${String(res?.message || "")}`.trim()
+          : String(res?.message || "")
+      );
       setScrapedRolesMeta((res?.helper || null) as any);
     } catch (e: any) {
       setScrapedRoles([]);
@@ -1471,8 +1529,13 @@ export default function JobDescriptionsPage() {
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
-                            addKeyword("positive", positiveInput);
+                            const added = addKeywordsFromInput("positive", positiveInput);
                             setPositiveInput("");
+                            setScrapedRolesMessage(
+                              added > 0
+                                ? `Added ${added} positive keyword${added === 1 ? "" : "s"}.`
+                                : "No new positive keywords were added."
+                            );
                           }
                         }}
                         placeholder="Add positive keyword"
@@ -1481,8 +1544,13 @@ export default function JobDescriptionsPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          addKeyword("positive", positiveInput);
+                          const added = addKeywordsFromInput("positive", positiveInput);
                           setPositiveInput("");
+                          setScrapedRolesMessage(
+                            added > 0
+                              ? `Added ${added} positive keyword${added === 1 ? "" : "s"}.`
+                              : "No new positive keywords were added."
+                          );
                         }}
                         className="rounded-md border border-white/15 bg-white/10 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-white/15"
                       >
@@ -1533,8 +1601,13 @@ export default function JobDescriptionsPage() {
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
-                            addKeyword("negative", negativeInput);
+                            const added = addKeywordsFromInput("negative", negativeInput);
                             setNegativeInput("");
+                            setScrapedRolesMessage(
+                              added > 0
+                                ? `Added ${added} negative keyword${added === 1 ? "" : "s"}.`
+                                : "No new negative keywords were added."
+                            );
                           }
                         }}
                         placeholder="Add negative keyword"
@@ -1543,8 +1616,13 @@ export default function JobDescriptionsPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          addKeyword("negative", negativeInput);
+                          const added = addKeywordsFromInput("negative", negativeInput);
                           setNegativeInput("");
+                          setScrapedRolesMessage(
+                            added > 0
+                              ? `Added ${added} negative keyword${added === 1 ? "" : "s"}.`
+                              : "No new negative keywords were added."
+                          );
                         }}
                         className="rounded-md border border-white/15 bg-white/10 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-white/15"
                       >

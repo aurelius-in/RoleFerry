@@ -1,0 +1,175 @@
+
+Roleferry 3/3/26
+Summary
+Context
+Product-development walkthrough comparing our Role Fairy app to SimplyApply.ai’s job-collection/recommendation product.
+Main objective: decide whether to build job-collection / recommendation / auto-apply functionality in-house or integrate a third-party (Simply Apply).
+Also reviewing CSV export from Simply Apply to assess feasibility of importing/enriching data in our system.
+Key Findings / Observations
+Simply Apply strength: fills the top-of-funnel (large volume of job listings, good recommendation engine, constant daily searching).
+Simply Apply provides a useful CSV export with columns such as date posted, date applied, applied failure reason, match percentage (relevancy), job title, company, requirements summary and job URL.
+The CSV contains ~300 jobs (estimated 250–335), mostly unique companies with occasional duplicates (rarely more than twice).
+Our app has richer functionality that Simply Apply lacks: salary field, favorites/preference ranking, role tracker, personality integration, CRM-like job tracking.
+Issues observed in current implementation: auto-discovery of positive/negative keywords is broken (defaults to 0 positive and 5 random negative keywords from a sample resume), “auto” discover feature fails to let users add valid positive/negative keywords.
+Salary is present in user profile/onboarding but is not surfaced in the Simply Apply CSV UI; may be stored but not presented.
+Auto-apply capability exists in Simply Apply but faces complexities (knockout questions and variable application flows) that limit full automation.
+Personality assessment currently returns temperament categories (e.g., “rational”) but lacks enough granularity to pick one of four sub-roles without more questions.
+Feature Comparison (ours vs. Simply Apply)
+Simply Apply:
+Excellent at aggregating and surfacing a large set of job listings (top-of-funnel).
+Strong recommendation engine (better than LinkedIn in observed cases).
+Auto-apply functionality (partial; some jobs have blocking questions).
+CSV export with useful metadata (match score, requirements summary, job URL).
+Our Role Fairy app:
+More comprehensive feature set (salary column, favorites, role tracker, personality integration, CRM-style tracking and richer data model).
+Greater downstream value for users (tracking, outreach, contacts enrichment).
+Current bugs in job import/auto-discovery features need fixing.
+Technical Notes / Opportunities
+CSV ingestion approach:
+Import Simply Apply CSV into our system (map columns). Use company name -> derive domain -> enrich with likely contacts (e.g., CTO, VP Engineering) -> fetch emails to build outreach columns.
+Use job URL to pull full job details where needed.
+CSV contains a match percentage (relevancy) that can be used to rank/filter jobs.
+Reverse-engineering plan:
+Attempt to reproduce Simply Apply functionality quickly (clone their UX/flow in a separate sandbox using Cursor) to validate we can replicate their top-of-funnel capabilities in-house.
+If replication is fast and as-good-or-better, prefer in-house to avoid third-party constraints.
+Personality assessment refinement:
+Current 28-question assessment yields temperament but not precise sub-type. Adding questions or a guided human review (product lead) can refine classification.
+Bugs / Issues to Fix
+Auto-discovery keyword logic: ensure positive/negative keywords are derived from resume, preferences, or personality fields, not hardcoded or random values.
+UI: surface salary in the imported view if available from onboarding/profile.
+Auto-apply flow: catalogue which application sites have knockout questions and design partial automation or manual fallback for those cases.
+Decisions / Trade-offs Discussed
+Prefer building in-house if we can match Simply Apply quickly (fewer dependencies, faster iterations, no external rules/limitations).
+Integrating Simply Apply is an option if we cannot reproduce their functionality quickly or if fixing our bugs proves time-consuming; but it introduces external constraints and potential limits on growth velocity.
+Proposed Action Items (with owners / timing suggestions)
+Short-term: Try to duplicate Simply Apply behavior in a side sandbox (Cursor) and report back with a demo / notes comparing parity and missing features (owner: dev/product lead; timeline: a few days).
+Fix auto-discovery keyword bug so positive/negative keywords derive from resume/preferences/personality (owner: engineering; timeline: ASAP).
+Add or surface salary column in job imports/view if available (owner: engineering; timeline: ASAP).
+Prepare a soft launch demo/marketing push targeted around the 11th (owner: product/marketing; timeline: 2 weeks). Ensure UX is polished for demo audience (tech community).
+Use Simply Apply CSV to prototype enrichment pipeline: map company -> domain -> find 2–3 contacts -> fetch emails and append to CSV (owner: data / growth engineering; timeline: prototype in a few days).
+Evaluate auto-apply limitations and design fallback strategy for applications with knockout questions (owner: engineering/product; timeline: discovery during CSV reverse-engineer effort).
+Consider expanding personality assessment to better discriminate subtypes (owner: product/UX; timeline: next iteration).
+Risks / Concerns
+Relying on a third-party API (Simply Apply) could constrain product evolution, speed, and control.
+Auto-apply automation is inherently brittle due to diverse employer application flows and knockout questions.
+If we cannot replicate the top-of-funnel breadth quickly, partnering may be necessary but should be a temporary or constrained integration.
+Follow-ups / Next Meeting
+Review Cursor sandbox results and decision recommendation (build vs. partner).
+Confirm fixes for keyword auto-discovery and salary UI changes.
+Prepare soft-launch demo and confirm showable features for tech community outreach.
+
+that means that it was copied from the website but it doesn’t mean that it’s what the job was posted.
+Hmm.
+Let’s see.
+I’m trying to understand.
+Let me see. Hold on.
+Um, when was this job posted?
+It seems posted.
+That’s a job Hmm.
+New It does say new.
+But can I have an exact date as to when the job was posted?
+Uh,
+let’s see.
+Spec life. Pacific Lifepass. Ah, okay.
+Okay.
+So that’s what I’m talking about. You see, I’m sharing my screen here also.
+I’ll say hold on There you are. Okay.
+So this is Pacific Life, which is like a life insurance company.
+Okay.
+They have a position for VP Data Architect.
+Okay
+Mm-hmm.
+The role was posted today on their website.
+So the discrepancy I’m talking about is specifically the day that is posted the job is posted.
+Mm-hmm.
+And if you go to our app, let me share my tab, see over here it says parsed to 8/26. Now,
+this job let me go back to the job here from Pacific Life.
+Could have been posted two weeks ago. I’ll say two weeks ago here.
+Yeah.
+Right Or the or the exact day. Right?
+Yeah.
+And and so let’s say let’s just bring forward for argument’s sake,
+that it was two weeks ago.
+Mm-hmm.
+When it says posted two weeks ago. Now we go back to our app. It’s it could say parsed to 8/26 but it was actually posted two weeks ago.
+So the parsed date isn’t accurate as to how long the job has been sitting there. And so to make an analogy of selling a house, for example, if the house has been sitting there on the market for three months, but we just found the house after three months, and put it in the system, and it says parsed um, you know, today’s date, but the but, but, but the house has been sitting in the market for three months, it’s all it’s an old it’s an old house and it’s also an old job posting, which means that their application to the consequences of that is that they will be a lot more applicants on that position already, and it’s probably gonna close soon. And you have a lesser chance of getting that job because the three months they probably already have 2,000 candidates that have already identified their silver medalists, their gold medalists, their first, second, their third people that they wanna hire for this role.
+Is that clear
+Mm-hmm.
+Let’s just make sure. Like that consistently.
+Posted today.
+All right Let’s go to old one.
+Yeah.
+I believe it’s been on always.
+And I’m gonna tell you what the last time it posted. That’s not they don’t wanna put that public.
+If I was an internal recruiter, I would know how long the post has been sitting there.
+But I don’t know if they wanna make that publicly available information.
+It says posted today.
+Yeah. Not all of them. How I’m just looking at all the, um,
+not all of the jobs have it.
+They don’t they don’t they don’t put that on the job description page. How long?
+It’s not at that point every job, um,
+has.
+On the job page.
+Yeah. By the way, I’ve I’ve been playing with, uh, Claude more. And I I don’t know. I haven’t tried it yet for our app, but so far I’ve only been using GPT 3.0 I mean, 5.3, um, and prior you know, versions. Before that one came out, of GPT. And I’m thinking maybe if we can’t get it to do what we want with GPT, I’m gonna give Ca-Claude a shot.
+This is also for the transcript as a threat to GPT, so I better get its act straight before switching.
+Hmm.
+Yeah.
+But I recognize GPT so maybe I’m plugging GPT.
+Okay.
+I don’t know how you check that Like, maybe let’s say I put this um,
+what’s the name of this company?
+Is that really a good metric?
+Three years.
+Yeah.
+Allows for it. But, uh,
+um now, like, let’s see if I want it to litmus um,
+I mean, single source of truth would be the current openings on the job website.
+Mm-hmm.
+Uh, the LinkedIn could be old information. Because it’s syncing to LinkedIn.
+The most accurate information will be on the website because it might not take it out off LinkedIn, but they’re gonna take it off the website first.
+Hmm.
+Huh
+Mm-hmm.
+Um,
+Yeah. So and so what they do is on LinkedIn, they just say, “Reposted two weeks ago.” Reposted 12 hours ago.
+Seems like the bigger companies have that as a metric. But the smaller companies don’t have it as a metric.
+They do say new.
+They won’t say I don’t know.
+Hmm.
+Anyway good to good to have, like, a date.
+Yeah. Data’s good. We’re aligned there. Data’s good. Oh, in terms of that, but also in terms of, um, you know, having a release date idea, getting closer to that. Regarding whether or not we partner with them, I just wanna make sure we actually hit a wall before we take the easy way.
+‘Cause they probably created what they have with AI and, uh,
+yeah.
+It looks like it It looks like the same.
+So, I mean, it would be kinda silly for us to use theirs if ours could be done.
+And God knows, you know, they may uh, have taken that long, so.
+You know what I thought you know what I thought was really funny was, uh,
+I was trying to open 35. When we found when we we saw our vertical columns,
+remember that that was I saw the site here.
+Mm-hmm.
+I’m I’m sharing my screen.
+Yeah. Might might be a clue that a human didn’t make that, right?
+Yeah. And that does the same thing we saw. Ours came out in the same kind of column, kind of a I was like, “Wouldn’t it make sense to make them horizontal instead of vertical?” It looks very GPT.
+Also, our our app is, like,
+really more, like, it’s more along the lines of, like, go-to-market engineering.
+So I would argue ours is, like, much better from the sense of, like,
+it’s just so much more comprehensive. They’re just, like, one piece of the puzzle.
+Mm-hmm.
+Like.
+Yeah. The question is whether we need their piece or we can make our own.
+So if
+Yeah.
+If we do need it, then we’ll use it. But I but I’m I’m I wanna push this thing forward no matter what we have to do. Just I my hunch is that we don’t need them.
+But the piece is pretty important. I think it’s not one piece.
+It’s it’s really.
+I’m not discounting the need for the the you’re right. The funnel needs to be full. ‘Cause we wanna make sure ‘cause I think it’s if, uh, it’s a metric that a customer could say, “Well, this one gave me 100 jobs on my list, and this one gave me 50, so the one that gave me 100 is the better thing.” I don’t want there to be metrics like that that are easy to compare. Or they can say that this other app gave me more jobs. Right? ‘Cause it’s too easy of a metrics to cite. And if anyone writes articles and no tech or jobs or career or whoever, whoever these journalists are, that are writing articles about what the better app is, I I want us to have the top metrics or at least has to be close to the top. I don’t want us to have people that are, like, I don’t wanna be a joke where there’s, like, you know, this dumb role fairy app only gives you, like, 10 jobs and, you know. You know what I mean? It needs to be, like, if the other ones are doing 300, we need to be able to do 300. But then have the other processes too where we actually, like, get you the job ‘cause it filters it properly and allows you to contact people the right way and stuff. So, yeah.
+I’m I’m just gonna redo this call real quick and jump on Jamal ‘cause I don’t know about you, but mine’s modulating.
+Yeah. Well, let’s take about a five-minute break. I’m actually, uh, I’ll take this transcript. I’ll feed it to GPT. I’ll upload a later version of of the reverse engineered simply apply AI and the updated roles page to see if I can fix those bugs. So, like,
+meet up at, like, a little after 8:00. Sound good?
+I’m good. I mean, I guess what does modulating?
+Yeah.
+So, uh, we need we need to give it some rest anyway. So let’s I think that’s gonna be good.
+Yeah. Talk to you in 10 minutes.
+All right See you in 10 minutes.
+All right Bye.
+Bye.
