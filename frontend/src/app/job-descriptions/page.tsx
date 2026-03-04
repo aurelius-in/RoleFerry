@@ -258,6 +258,11 @@ export default function JobDescriptionsPage() {
   ]);
   const [positiveInput, setPositiveInput] = useState("");
   const [negativeInput, setNegativeInput] = useState("");
+  const [csvFile, setCsvFile] = useState<string | null>(null);
+  const [csvContent, setCsvContent] = useState("");
+  const [csvBusy, setCsvBusy] = useState(false);
+  const [csvMsg, setCsvMsg] = useState<string | null>(null);
+  const [csvErr, setCsvErr] = useState<string | null>(null);
   const trackerPulseTimer = useRef<number | null>(null);
   const [suggestedUrl, setSuggestedUrl] = useState(
     "https://www.indeed.com/jobs?q=jobs&l=United+States"
@@ -902,6 +907,214 @@ export default function JobDescriptionsPage() {
     setExpandedRoleDetails((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
+  type ImportedRole = {
+    id: string;
+    title: string;
+    company: string;
+    url: string;
+    location?: string | null;
+    match_score?: number | null;
+    salary_range?: string | null;
+    posted_date?: string | null;
+    posted_text?: string | null;
+    requirements_summary?: string | null;
+  };
+  type CsvImportResponse = {
+    success: boolean;
+    message: string;
+    imported_roles: ImportedRole[];
+    helper?: { input_rows?: number; imported?: number; dropped?: number };
+  };
+
+  const onPickCsv = (f: File | null) => {
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCsvContent(String(reader.result || ""));
+      setCsvFile(f.name);
+    };
+    reader.readAsText(f);
+  };
+
+  const importCsv = async () => {
+    setCsvErr(null);
+    setCsvMsg(null);
+    if (!csvContent.trim()) {
+      setCsvErr("Choose a CSV file first.");
+      return;
+    }
+    setCsvBusy(true);
+    try {
+      const resp = await api<CsvImportResponse>("/applications/import/matches-csv", "POST", {
+        csv_content: csvContent,
+      });
+      const rows = Array.isArray(resp?.imported_roles) ? resp.imported_roles : [];
+      if (!rows.length) {
+        setCsvMsg("No importable rows found in the CSV.");
+        return;
+      }
+      const merged = [...jobDescriptions];
+      const byId = new Map(merged.map((jd) => [jd.id, jd]));
+      for (const r of rows) {
+        const jd: JobDescription = {
+          id: r.id,
+          title: String(r.title || "").trim(),
+          company: String(r.company || "").trim(),
+          url: String(r.url || "").trim() || undefined,
+          content: String(r.requirements_summary || "").trim(),
+          painPoints: byId.get(r.id)?.painPoints || [],
+          requiredSkills: String(r.requirements_summary || "")
+            .split(/[;,]/)
+            .map((x) => x.trim())
+            .filter(Boolean)
+            .slice(0, 12),
+          successMetrics: byId.get(r.id)?.successMetrics || [],
+          location: String(r.location || "").trim() || undefined,
+          salaryRange: String(r.salary_range || "").trim() || undefined,
+          postedDate: String(r.posted_date || "").trim() || undefined,
+          postedText: String(r.posted_text || "").trim() || undefined,
+          jdJargon: [],
+          parsedAt: new Date().toISOString(),
+        };
+        if (byId.has(r.id)) {
+          const idx = merged.findIndex((x) => x.id === r.id);
+          if (idx >= 0) merged[idx] = { ...merged[idx], ...jd };
+        } else {
+          merged.push(jd);
+        }
+      }
+      const normalized = normalizeFavoriteRanks(merged);
+      persistJobDescriptions(normalized);
+      setCsvMsg(`Imported ${rows.length} roles from CSV.`);
+    } catch (e: any) {
+      setCsvErr(String(e?.message || "CSV import failed."));
+    } finally {
+      setCsvBusy(false);
+    }
+  };
+
+  const exportRolesCsv = () => {
+    if (!jobDescriptions.length) return;
+    const headers = [
+      "Job Title",
+      "Company",
+      "Location",
+      "Salary Range",
+      "Posted Date",
+      "Job URL",
+      "Preference Stars",
+      "Favorite Rank",
+      "Work Mode",
+      "Employment Type",
+      "Required Skills",
+      "Pain Points",
+      "Success Metrics",
+      "Imported On",
+    ];
+    const esc = (v: string) => {
+      const s = String(v || "").replace(/"/g, '""');
+      return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s}"` : s;
+    };
+    const rows = jobDescriptions.map((jd) => [
+      esc(jd.title),
+      esc(jd.company),
+      esc(jd.location || ""),
+      esc(jd.salaryRange || ""),
+      esc(jd.postedText || jd.postedDate || ""),
+      esc(jd.url || ""),
+      jd.preferenceStars != null ? String(jd.preferenceStars) : "",
+      jd.favoriteRank != null ? String(jd.favoriteRank) : "",
+      esc(jd.workMode || ""),
+      esc(jd.employmentType || ""),
+      esc((jd.requiredSkills || []).join("; ")),
+      esc((jd.painPoints || []).join("; ")),
+      esc((jd.successMetrics || []).join("; ")),
+      esc(jd.parsedAt ? new Date(jd.parsedAt).toLocaleDateString() : ""),
+    ]);
+    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const name = (() => {
+      try {
+        const raw = localStorage.getItem("resume_extract");
+        const resume = raw ? JSON.parse(raw) : null;
+        const n = String(resume?.name || "").trim().replace(/\s+/g, "_");
+        if (n) return `${n}_roles_${new Date().toISOString().slice(0, 10)}.csv`;
+      } catch {}
+      return `roleferry_roles_${new Date().toISOString().slice(0, 10)}.csv`;
+    })();
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const [enrichedBusy, setEnrichedBusy] = useState(false);
+  const [enrichedMsg, setEnrichedMsg] = useState<string | null>(null);
+
+  const exportEnrichedCsv = async () => {
+    if (!jobDescriptions.length) return;
+    setEnrichedBusy(true);
+    setEnrichedMsg(null);
+    try {
+      const contacts: any[] = (() => {
+        try {
+          const raw = localStorage.getItem("selected_contacts");
+          const arr = raw ? JSON.parse(raw) : [];
+          return Array.isArray(arr) ? arr : [];
+        } catch { return []; }
+      })();
+      const customerName = (() => {
+        try {
+          const raw = localStorage.getItem("resume_extract");
+          const resume = raw ? JSON.parse(raw) : null;
+          return String(resume?.name || "").trim() || "customer";
+        } catch { return "customer"; }
+      })();
+      const roles = jobDescriptions.map((jd) => ({
+        job_id: jd.id,
+        title: jd.title,
+        company: jd.company,
+        location: jd.location || null,
+        job_url: jd.url || null,
+        match_score: (jd as any).matchScore ?? null,
+        eligible: true,
+        requirements_summary: (jd.requiredSkills || []).join("; ") || null,
+        date_posted: jd.postedText || jd.postedDate || null,
+      }));
+      const resp = await api<{ filename: string; content: string }>("/applications/export/enriched", "POST", {
+        customer_name: customerName,
+        roles,
+        contacts: contacts.map((c: any) => ({
+          id: c.id || null,
+          name: c.name || null,
+          title: c.title || null,
+          email: c.email || null,
+          linkedin_url: c.linkedin_url || c.linkedinUrl || null,
+          company: c.company || null,
+        })),
+      });
+      const blob = new Blob([resp.content], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = resp.filename || `enriched_roles_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      const contactCount = contacts.length;
+      setEnrichedMsg(`Downloaded enriched CSV with ${roles.length} roles and ${contactCount} contacts.`);
+    } catch (e: any) {
+      setEnrichedMsg(`Export failed: ${e?.message || "Unknown error"}`);
+    } finally {
+      setEnrichedBusy(false);
+    }
+  };
+
   return (
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4 mb-4">
@@ -1152,6 +1365,35 @@ export default function JobDescriptionsPage() {
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="mb-6 rounded-lg border border-white/10 bg-black/20 p-4">
+            <div className="text-sm font-semibold text-white">Import from CSV</div>
+            <p className="mt-1 text-xs text-white/60">
+              Upload a CSV of job matches (e.g. from SimplyApply, another tracker, or a previous RoleFerry export) to import roles in bulk.
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <label className="inline-flex cursor-pointer items-center rounded-md border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold hover:bg-white/15">
+                Choose CSV
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={(e) => onPickCsv((e.target.files && e.target.files[0]) || null)}
+                />
+              </label>
+              <button
+                type="button"
+                onClick={importCsv}
+                disabled={csvBusy || !csvContent.trim()}
+                className="rounded-md border border-emerald-400/35 bg-emerald-500/20 px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/30 disabled:opacity-50"
+              >
+                {csvBusy ? "Importing..." : "Import Into Roles"}
+              </button>
+              {csvFile ? <span className="text-xs text-white/70">File: {csvFile}</span> : null}
+            </div>
+            {csvMsg ? <div className="mt-2 text-xs text-emerald-200">{csvMsg}</div> : null}
+            {csvErr ? <div className="mt-2 text-xs text-red-300">{csvErr}</div> : null}
           </div>
 
           <div className="mt-8 grid grid-cols-1 md:grid-cols-12 gap-6">
@@ -1778,20 +2020,51 @@ export default function JobDescriptionsPage() {
           </div>
 
           {jobDescriptions.length > 0 && (
-            <div className="mt-8 flex justify-end space-x-4">
-              <button
-                onClick={() => router.push('/personality')}
-                className="bg-white/10 text-white px-6 py-3 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
-              >
-                Back
-              </button>
-              <button
-                onClick={handleContinue}
-                className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
-              >
-                Save &amp; Continue
-              </button>
-            </div>
+            <>
+              <div className="mt-8 rounded-lg border border-white/10 bg-black/20 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <div className="text-sm font-semibold text-white">Export Roles to CSV</div>
+                    <p className="mt-1 text-xs text-white/60">
+                      Download all {jobDescriptions.length} imported role{jobDescriptions.length === 1 ? "" : "s"} as a CSV file.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={exportRolesCsv}
+                      className="rounded-md border border-blue-400/35 bg-blue-500/20 px-4 py-2 text-xs font-semibold text-blue-100 hover:bg-blue-500/30 inline-flex items-center gap-2"
+                    >
+                      <span>⬇</span> Basic CSV
+                    </button>
+                    <button
+                      type="button"
+                      onClick={exportEnrichedCsv}
+                      disabled={enrichedBusy}
+                      className="rounded-md border border-emerald-400/35 bg-emerald-500/20 px-4 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/30 disabled:opacity-50 inline-flex items-center gap-2"
+                      title="Includes contact columns (name, title, email, LinkedIn) from your Find Contact results"
+                    >
+                      <span>⬇</span> {enrichedBusy ? "Exporting..." : "Enriched CSV (with Contacts)"}
+                    </button>
+                  </div>
+                </div>
+                {enrichedMsg ? <div className="mt-2 text-xs text-emerald-200">{enrichedMsg}</div> : null}
+              </div>
+              <div className="mt-4 flex justify-end space-x-4">
+                <button
+                  onClick={() => router.push('/personality')}
+                  className="bg-white/10 text-white px-6 py-3 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleContinue}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Save &amp; Continue
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>

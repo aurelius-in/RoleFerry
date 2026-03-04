@@ -52,6 +52,7 @@ type ScrapedRolesResponse = {
 const STUDIO_NOTES_KEY = "rf_apply_studio_notes_v1";
 const STUDIO_RANKS_KEY = "rf_apply_studio_ranks_v1";
 const STUDIO_FILTERS_KEY = "rf_apply_studio_filters_v1";
+const STUDIO_FAVORITES_KEY = "rf_apply_studio_favorites_v1";
 
 function safeJson<T>(raw: string | null, fallback: T): T {
   try {
@@ -87,6 +88,8 @@ export default function ApplyStudioPage() {
   const [negativeKeywords, setNegativeKeywords] = useState<string[]>([]);
   const [positiveInput, setPositiveInput] = useState("");
   const [negativeInput, setNegativeInput] = useState("");
+  const [favoriteIds, setFavoriteIds] = useState<Record<string, boolean>>({});
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
 
   const shareUrl = useMemo(() => {
     if (typeof window === "undefined") return "/tools/apply-studio";
@@ -106,12 +109,14 @@ export default function ApplyStudioPage() {
   useEffect(() => {
     const notes = safeJson<Record<string, string>>(localStorage.getItem(STUDIO_NOTES_KEY), {});
     const ranks = safeJson<Record<string, number>>(localStorage.getItem(STUDIO_RANKS_KEY), {});
+    const favs = safeJson<Record<string, boolean>>(localStorage.getItem(STUDIO_FAVORITES_KEY), {});
     const filters = safeJson<{ positive: string[]; negative: string[] }>(
       localStorage.getItem(STUDIO_FILTERS_KEY),
       { positive: [], negative: [] }
     );
     setNotesById(notes);
     setRankById(ranks);
+    setFavoriteIds(favs);
     setPositiveKeywords(Array.isArray(filters.positive) ? filters.positive.map(normalizeKeyword).filter(Boolean).slice(0, 20) : []);
     setNegativeKeywords(Array.isArray(filters.negative) ? filters.negative.map(normalizeKeyword).filter(Boolean).slice(0, 20) : []);
   }, []);
@@ -127,6 +132,76 @@ export default function ApplyStudioPage() {
   useEffect(() => {
     localStorage.setItem(STUDIO_FILTERS_KEY, JSON.stringify({ positive: positiveKeywords, negative: negativeKeywords }));
   }, [positiveKeywords, negativeKeywords]);
+
+  useEffect(() => {
+    localStorage.setItem(STUDIO_FAVORITES_KEY, JSON.stringify(favoriteIds));
+  }, [favoriteIds]);
+
+  const toggleFavorite = (id: string) => {
+    setFavoriteIds((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      if (!next[id]) delete next[id];
+      return next;
+    });
+  };
+
+  const visibleRoles = useMemo(() => {
+    if (!favoritesOnly) return roles;
+    return roles.filter((r) => favoriteIds[r.id]);
+  }, [roles, favoritesOnly, favoriteIds]);
+
+  const exportStudioCsv = () => {
+    if (!roles.length) return;
+    const headers = [
+      "Job Title",
+      "Company",
+      "Location",
+      "Match %",
+      "Posted",
+      "Job URL",
+      "Source",
+      "Rank",
+      "Favorite",
+      "Notes",
+      "Snippet",
+    ];
+    const esc = (v: string) => {
+      const s = String(v || "").replace(/"/g, '""');
+      return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s}"` : s;
+    };
+    const rows = roles.map((r) => [
+      esc(r.title),
+      esc(r.company),
+      esc(r.location || ""),
+      Number.isFinite(Number(r.match_score)) ? String(Math.round(Number(r.match_score))) : "",
+      esc(r.posted_text || ""),
+      esc(r.url),
+      esc(r.source || ""),
+      rankById[r.id] ? String(rankById[r.id]) : "",
+      favoriteIds[r.id] ? "Yes" : "",
+      esc(notesById[r.id] || ""),
+      esc(r.snippet || ""),
+    ]);
+    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const name = (() => {
+      try {
+        const raw = localStorage.getItem("resume_extract");
+        const resume = raw ? JSON.parse(raw) : null;
+        const n = String(resume?.name || "").trim().replace(/\s+/g, "_");
+        if (n) return `${n}_apply_studio_${new Date().toISOString().slice(0, 10)}.csv`;
+      } catch {}
+      return `roleferry_apply_studio_${new Date().toISOString().slice(0, 10)}.csv`;
+    })();
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const addFromInput = (kind: "positive" | "negative", rawInput: string): number => {
     const parts = String(rawInput || "")
@@ -283,6 +358,7 @@ export default function ApplyStudioPage() {
     for (const r of picked) {
       const note = String(notesById[r.id] || "").trim();
       const rank = Number(rankById[r.id] || 0);
+      const isFav = !!favoriteIds[r.id];
       byId[r.id] = {
         ...(byId[r.id] || {}),
         id: r.id,
@@ -299,6 +375,8 @@ export default function ApplyStudioPage() {
         postedText: r.posted_text || undefined,
         parsedAt: new Date().toISOString(),
         preferenceStars: rank >= 1 && rank <= 5 ? rank : undefined,
+        isFavorite: isFav || undefined,
+        favoriteRank: isFav ? 1 : undefined,
       };
     }
     localStorage.setItem("job_descriptions", JSON.stringify(Object.values(byId)));
@@ -316,16 +394,7 @@ export default function ApplyStudioPage() {
               A standalone, linkable workflow for job import, fit validation, and one-click apply execution.
             </p>
           </div>
-          <div className="inline-flex items-center rounded-full border border-white/15 bg-black/30 px-3 py-1 text-xs text-white/75">
-            Branded for RoleFerry
-          </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-4">
-          <StepCard number="1" title="Import Roles" href="/job-descriptions" />
-          <StepCard number="2" title="Run Gap Analysis" href="/gap-analysis" />
-          <StepCard number="3" title="Pain Point Match" href="/painpoint-match" />
-          <StepCard number="4" title="Apply Workflow" href="/apply" />
+          <div />
         </div>
 
         <div className="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
@@ -361,17 +430,49 @@ export default function ApplyStudioPage() {
           </div>
           {roleErr ? <div className="mt-2 text-xs text-red-200">{roleErr}</div> : null}
           {msg ? <div className="mt-2 text-xs text-emerald-200">{msg}</div> : null}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setFavoritesOnly((v) => !v)}
+              className={`rounded border px-2 py-1 text-xs font-semibold ${
+                favoritesOnly ? "border-yellow-400/40 bg-yellow-500/20 text-yellow-100" : "border-white/10 bg-black/20 text-white/70 hover:bg-white/10"
+              }`}
+            >
+              {favoritesOnly ? "★ Favorites only" : "☆ Favorites only"}
+            </button>
+            {roles.length > 0 ? (
+              <button
+                type="button"
+                onClick={exportStudioCsv}
+                className="rounded border border-blue-400/35 bg-blue-500/20 px-2 py-1 text-xs font-semibold text-blue-100 hover:bg-blue-500/30 inline-flex items-center gap-1"
+              >
+                <span>⬇</span> Download CSV
+              </button>
+            ) : null}
+            {roles.length > 0 ? (
+              <span className="text-[11px] text-white/60">{visibleRoles.length} of {roles.length} shown</span>
+            ) : null}
+          </div>
           <div className="mt-3 max-h-[520px] overflow-auto rounded border border-white/10">
-            {roles.length === 0 ? (
-              <div className="p-3 text-xs text-white/70">No roles loaded yet. Click Regenerate.</div>
+            {visibleRoles.length === 0 ? (
+              <div className="p-3 text-xs text-white/70">{roles.length === 0 ? "No roles loaded yet. Click Regenerate." : "No favorites yet. Star some roles first."}</div>
             ) : (
               <div className="space-y-2 p-2">
-                {roles.map((r) => {
+                {visibleRoles.map((r) => {
                   const expanded = !!expandedById[r.id];
+                  const isFav = !!favoriteIds[r.id];
                   return (
-                    <div key={r.id} className="rounded border border-white/10 bg-black/20 p-2">
+                    <div key={r.id} className={`rounded border p-2 ${isFav ? "border-yellow-400/30 bg-yellow-900/10" : "border-white/10 bg-black/20"}`}>
                       <div className="flex items-start gap-2">
                         <input type="checkbox" checked={!!selectedIds[r.id]} onChange={(e) => setSelectedIds((p) => ({ ...p, [r.id]: e.target.checked }))} />
+                        <button
+                          type="button"
+                          onClick={() => toggleFavorite(r.id)}
+                          className={`text-lg leading-none ${isFav ? "text-yellow-300" : "text-white/25 hover:text-yellow-200"}`}
+                          title={isFav ? "Remove from favorites" : "Add to favorites"}
+                        >
+                          {isFav ? "★" : "☆"}
+                        </button>
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-semibold leading-tight">{r.title}</div>
                           <div className="text-xs text-white/70">{r.company} {r.location ? `• ${r.location}` : ""} {r.posted_text ? `• Posted ${r.posted_text}` : ""}</div>
@@ -483,13 +584,4 @@ export default function ApplyStudioPage() {
   );
 }
 
-function StepCard({ number, title, href }: { number: string; title: string; href: string }) {
-  return (
-    <Link href={href} className="rounded-lg border border-white/10 bg-black/20 p-4 hover:bg-black/30 transition-colors">
-      <div className="text-[11px] uppercase tracking-wider text-white/50">Step {number}</div>
-      <div className="mt-1 text-sm font-semibold text-white">{title}</div>
-      <div className="mt-2 text-xs text-emerald-200">Open</div>
-    </Link>
-  );
-}
 
