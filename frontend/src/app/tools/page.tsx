@@ -6,6 +6,7 @@ export default function Tools() {
     <main className="max-w-4xl mx-auto p-6 space-y-5">
       <h1 className="text-2xl md:text-3xl font-semibold">Tools</h1>
       <ul className="list-disc list-inside space-y-2 text-base">
+        <li><Link className="underline" href="/tools/apply-studio">Apply Studio (RoleFerry-branded)</Link></li>
         <li><Link className="underline" href="/replies">Reply Classifier</Link></li>
         <li><Link className="underline" href="/warm-angles">Warm Angles</Link></li>
         <li><Link className="underline" href="/onepager">One-pager Generator</Link></li>

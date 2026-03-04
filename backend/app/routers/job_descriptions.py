@@ -7,7 +7,7 @@ import re
 import html as html_lib
 import hashlib
 import httpx
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse
 
 from sqlalchemy import text as sql_text, bindparam
@@ -40,6 +40,8 @@ class JobDescription(BaseModel):
     responsibilities: Optional[List[str]] = None
     requirements: Optional[List[str]] = None
     benefits: Optional[List[str]] = None
+    posted_date: Optional[str] = None
+    posted_text: Optional[str] = None
     parsed_at: str
 
 class JobDescriptionResponse(BaseModel):
@@ -71,6 +73,7 @@ class ScrapedRole(BaseModel):
     role_family: Optional[str] = None
     work_mode: Optional[str] = None
     match_reasons: Optional[List[str]] = None
+    posted_text: Optional[str] = None
 
 
 class ScrapedRolesResponse(BaseModel):
@@ -859,6 +862,91 @@ def _extract_expectations_as_benefits(content: str, max_lines: int = 10) -> List
         "posted",
     ]
     return _extract_section_lines(content, header_patterns, max_lines=max_lines, stop_patterns=stop_patterns)
+
+
+def _extract_posted_signal(content: str, html: Optional[str] = None) -> tuple[Optional[str], Optional[str]]:
+    """
+    Best-effort extraction of job posting recency.
+    Returns:
+      - posted_date: normalized YYYY-MM-DD when derivable
+      - posted_text: human-readable source text (e.g., "2 weeks ago", "New")
+    """
+    now = datetime.now(timezone.utc)
+    raw = str(content or "")
+    low = raw.lower()
+
+    def _fmt(dt: datetime) -> str:
+        return dt.date().isoformat()
+
+    # 1) Prefer machine-readable schema dates in page HTML if present.
+    if html:
+        h = str(html)
+        for pat in [
+            r'"datePosted"\s*:\s*"(\d{4}-\d{2}-\d{2})',
+            r'"datePublished"\s*:\s*"(\d{4}-\d{2}-\d{2})',
+            r'datetime=["\'](\d{4}-\d{2}-\d{2})(?:[T ][^"\']*)?["\']',
+        ]:
+            m = re.search(pat, h, flags=re.I)
+            if m:
+                iso = str(m.group(1) or "").strip()
+                if iso:
+                    return iso, f"Posted {iso}"
+
+    # 2) Relative terms.
+    if re.search(r"\b(reposted|posted)\s+(today)\b", low):
+        return _fmt(now), "Today"
+    if re.search(r"\b(reposted|posted)\s+(yesterday)\b", low):
+        return _fmt(now - timedelta(days=1)), "Yesterday"
+    m_days = re.search(r"\b(reposted|posted)\s+(\d{1,3})\s+day[s]?\s+ago\b", low)
+    if m_days:
+        n = max(0, int(m_days.group(2)))
+        return _fmt(now - timedelta(days=n)), f"{n} days ago"
+    m_weeks = re.search(r"\b(reposted|posted)\s+(\d{1,3})\s+week[s]?\s+ago\b", low)
+    if m_weeks:
+        n = max(0, int(m_weeks.group(2)))
+        return _fmt(now - timedelta(days=n * 7)), f"{n} weeks ago"
+    m_months = re.search(r"\b(reposted|posted)\s+(\d{1,3})\s+month[s]?\s+ago\b", low)
+    if m_months:
+        n = max(0, int(m_months.group(2)))
+        return _fmt(now - timedelta(days=n * 30)), f"{n} months ago"
+
+    # 3) Explicit date strings near "posted/reposted".
+    m_named = re.search(
+        r"\b(reposted|posted)(?:\s+on)?\s+([A-Za-z]{3,9}\s+\d{1,2},\s+\d{4})\b",
+        raw,
+        flags=re.I,
+    )
+    if m_named:
+        text = " ".join(str(m_named.group(2) or "").split()).strip()
+        for fmt in ["%B %d, %Y", "%b %d, %Y"]:
+            try:
+                dt = datetime.strptime(text, fmt).replace(tzinfo=timezone.utc)
+                return _fmt(dt), text
+            except Exception:
+                continue
+        if text:
+            return None, text
+
+    m_numeric = re.search(
+        r"\b(reposted|posted)(?:\s+on)?\s+(\d{1,2}/\d{1,2}/\d{2,4}|\d{4}-\d{2}-\d{2})\b",
+        raw,
+        flags=re.I,
+    )
+    if m_numeric:
+        text = str(m_numeric.group(2) or "").strip()
+        for fmt in ["%m/%d/%Y", "%m/%d/%y", "%Y-%m-%d"]:
+            try:
+                dt = datetime.strptime(text, fmt).replace(tzinfo=timezone.utc)
+                return _fmt(dt), text
+            except Exception:
+                continue
+        return None, text
+
+    # 4) Board "new" labels when no date is shown.
+    if re.search(r"\bnew\b", low):
+        return None, "New"
+
+    return None, None
 
 
 def _extract_who_is_for_as_requirements(content: str, max_lines: int = 12) -> List[str]:
@@ -1954,6 +2042,7 @@ async def import_job_description(payload: JobImportRequest):
             raise HTTPException(status_code=400, detail="Job description content is empty after extraction")
 
         parsed_at = _now_iso_z()
+        posted_date, posted_text = _extract_posted_signal(content, page_html)
 
         # --- Heuristic parsing (non-LLM fallback) ----------------------
         title, company = _best_effort_title_company(content, url)
@@ -2159,6 +2248,8 @@ async def import_job_description(payload: JobImportRequest):
             "responsibilities": responsibilities,
             "requirements": requirements,
             "benefits": benefits,
+            "posted_date": posted_date,
+            "posted_text": posted_text,
         }
 
         # --- Optional GPT-backed parsing via OpenAIClient ---------------
@@ -2264,6 +2355,8 @@ async def import_job_description(payload: JobImportRequest):
                         "responsibilities": responsibilities,
                         "requirements": requirements,
                         "benefits": benefits,
+                        "posted_date": posted_date,
+                        "posted_text": posted_text,
                     }
             except Exception:
                 # On any GPT failure, keep heuristic extraction.
@@ -2304,6 +2397,8 @@ async def import_job_description(payload: JobImportRequest):
             "responsibilities": responsibilities,
             "requirements": requirements,
             "benefits": benefits,
+            "posted_date": posted_date,
+            "posted_text": posted_text,
         }
 
         # Validate: do not create incomplete JDs (common when scraping a job board/search page).
@@ -2394,6 +2489,8 @@ async def import_job_description(payload: JobImportRequest):
             responsibilities=responsibilities or None,
             requirements=requirements or None,
             benefits=benefits or None,
+            posted_date=posted_date,
+            posted_text=posted_text,
             parsed_at=parsed_at,
         )
 
@@ -2501,7 +2598,7 @@ def _role_query_from_preferences(pref: Dict[str, Any]) -> str:
         parts.append(industries[0])
     q = " ".join(parts).strip()
     if not q:
-        q = "software engineer data analytics product manager"
+        q = "professional specialist manager analyst coordinator"
     return " ".join(q.split())[:120]
 
 
@@ -2617,6 +2714,22 @@ def _blocked_title_for_tech_seekers(title: str) -> bool:
     return any(x in low for x in blocked)
 
 
+def _is_tech_intent(pref: Dict[str, Any]) -> bool:
+    blob_parts: List[str] = []
+    for k in ["role_categories", "skills", "industries", "resume_skills"]:
+        v = pref.get(k)
+        if isinstance(v, list):
+            blob_parts.extend([str(x or "") for x in v])
+        elif isinstance(v, str):
+            blob_parts.append(v)
+    blob = " ".join(blob_parts).lower()
+    markers = [
+        "software", "engineering", "engineer", "developer", "architect",
+        "data", "machine learning", "artificial intelligence", "ml", "ai", "devops", "cloud",
+    ]
+    return any(m in blob for m in markers)
+
+
 def _role_family_from_title(title: str) -> str:
     t = str(title or "").lower()
     if any(x in t for x in ["architect", "principal engineer", "staff engineer"]):
@@ -2634,7 +2747,11 @@ def _preference_terms(pref: Dict[str, Any], role_query: str) -> List[str]:
     terms: List[str] = []
     skills = [str(x).strip().lower() for x in (pref.get("skills") or []) if str(x).strip()]
     terms.extend(skills[:12])
-    terms.extend([x.lower() for x in _resume_skill_hints()[:10]])
+    resume_skills = [str(x).strip().lower() for x in (pref.get("resume_skills") or []) if str(x).strip()]
+    if resume_skills:
+        terms.extend(resume_skills[:10])
+    else:
+        terms.extend([x.lower() for x in _resume_skill_hints()[:10]])
     terms.extend([x.lower() for x in re.findall(r"[A-Za-z]{3,}", role_query)])
     role_cats = " ".join([str(x).lower() for x in (pref.get("role_categories") or []) if str(x).strip()])
     if any(x in role_cats for x in ["technical", "engineering", "software", "architect"]):
@@ -2661,20 +2778,22 @@ def _score_scraped_role(
     location: Optional[str],
     pref_terms: List[str],
     require_us: bool,
+    funnel_mode: str = "strict",
+    role_tokens: Optional[List[str]] = None,
+    apply_tech_blockers: bool = False,
 ) -> tuple[int, List[str], str, str]:
     blob = f"{title} {snippet}".lower()
     title_low = str(title or "").lower()
     reasons: List[str] = []
     score = 28
 
-    tech_title_terms = [
-        "architect", "engineer", "developer", "software", "platform",
-        "machine learning", "ai ", "artificial intelligence", "backend", "frontend",
-        "full stack", "site reliability", "sre", "data engineer", "solutions architect",
-    ]
-    if any(t in title_low for t in tech_title_terms):
-        score += 20
-        reasons.append("Tech role title")
+    title_focus_tokens = [str(t or "").strip().lower() for t in (role_tokens or []) if str(t or "").strip()]
+    if not title_focus_tokens:
+        title_focus_tokens = [str(t or "").strip().lower() for t in pref_terms[:6] if str(t or "").strip()]
+    title_hits = [t for t in title_focus_tokens if t in title_low]
+    if title_hits:
+        score += min(20, len(set(title_hits)) * 5)
+        reasons.append(f"Title alignment: {', '.join(sorted(set(title_hits))[:3])}")
 
     term_hits = [t for t in pref_terms if t in blob]
     unique_hits = sorted(set(term_hits))
@@ -2697,8 +2816,9 @@ def _score_scraped_role(
     elif _is_us_like_location(loc_blob):
         score += 2
 
-    if _blocked_title_for_tech_seekers(title):
-        score -= 45
+    if apply_tech_blockers and _blocked_title_for_tech_seekers(title):
+        # In broad mode, down-rank strongly but don't auto-kill top-funnel discovery.
+        score -= 45 if str(funnel_mode or "strict").lower() == "strict" else 18
 
     score = max(0, min(100, score))
     work_mode = "Remote" if "remote" in loc_blob.lower() else ("Hybrid" if "hybrid" in loc_blob.lower() else "On-site/Unspecified")
@@ -2768,10 +2888,10 @@ def _load_job_preferences_best_effort() -> Dict[str, Any]:
 
 def _role_tokens(role_query: str) -> List[str]:
     raw = [x.lower() for x in re.findall(r"[A-Za-z]{3,}", str(role_query or ""))]
-    stop = {"and", "the", "with", "for", "role", "roles", "technical", "engineering", "machine", "learning"}
+    stop = {"and", "the", "with", "for", "role", "roles", "openings", "jobs", "career", "careers"}
     out = [x for x in raw if x not in stop]
     if not out:
-        return ["engineer", "developer", "software", "data", "product", "analyst"]
+        return ["manager", "specialist", "analyst", "coordinator", "consultant", "representative"]
     return out[:10]
 
 
@@ -2782,21 +2902,23 @@ def _looks_like_relevant_title(title: str, tokens: List[str]) -> bool:
     generic_bad = ["intern", "campus", "student", "volunteer", "contractor pool"]
     if any(b in t for b in generic_bad):
         return False
+    # Generic professional-title anchors across industries.
     role_words = [
-        "engineer",
-        "developer",
-        "architect",
         "manager",
-        "director",
-        "analyst",
-        "scientist",
         "specialist",
-        "administrator",
+        "analyst",
+        "coordinator",
         "consultant",
-        "product",
-        "security",
-        "platform",
-        "infrastructure",
+        "representative",
+        "technician",
+        "administrator",
+        "designer",
+        "director",
+        "associate",
+        "officer",
+        "planner",
+        "operator",
+        "supervisor",
     ]
     if not tokens:
         return any(w in t for w in role_words)
@@ -2957,23 +3079,53 @@ async def _discover_roles_without_serper(
 
 @router.get("/scraped-roles", response_model=ScrapedRolesResponse)
 async def get_scraped_roles(
-    limit: int = 30,
+    limit: int = 120,
     positive_keywords: Optional[str] = None,
     negative_keywords: Optional[str] = None,
+    funnel_mode: str = "broad",
+    role_categories: Optional[str] = None,
+    skills: Optional[str] = None,
+    industries: Optional[str] = None,
+    resume_skills: Optional[str] = None,
+    minimum_salary_pref: Optional[str] = None,
+    location_preferences: Optional[str] = None,
+    state: Optional[str] = None,
 ):
     """
     Auto-discover role links from common career page ecosystems using user preferences.
     This is additive to the existing manual URL import flow.
     """
     prefs = _load_job_preferences_best_effort()
+    # Allow caller-provided context to avoid cross-user demo cache bleed.
+    role_cats_in = _parse_keyword_list(role_categories)
+    skills_in = _parse_keyword_list(skills)
+    industries_in = _parse_keyword_list(industries)
+    resume_skills_in = _parse_keyword_list(resume_skills)
+    locations_in = _parse_keyword_list(location_preferences)
+    if any([role_cats_in, skills_in, industries_in, resume_skills_in, locations_in, str(state or "").strip(), str(minimum_salary_pref or "").strip()]):
+        prefs = {
+            "role_categories": role_cats_in,
+            "skills": skills_in,
+            "industries": industries_in,
+            "resume_skills": resume_skills_in,
+            "location_preferences": locations_in,
+            "state": str(state or "").strip(),
+            "minimum_salary": str(minimum_salary_pref or "").strip(),
+        }
     role_query = _role_query_from_preferences(prefs)
+    role_tokens = _role_tokens(role_query)
     minimum_salary = _parse_min_salary_to_int(str(prefs.get("minimum_salary") or ""))
 
-    requested = max(1, min(int(limit or 30), 40))
+    requested = max(1, min(int(limit or 120), 300))
+    mode = str(funnel_mode or "broad").strip().lower()
+    if mode not in {"strict", "broad"}:
+        mode = "broad"
     target_companies = min(30, requested)
     require_us = _preferences_require_us(prefs)
     pref_terms = _preference_terms(prefs, role_query)
-    min_match_score = 75
+    tech_intent = _is_tech_intent(prefs)
+    # Keep strict quality for explicit strict mode; broaden when building top-of-funnel.
+    min_match_score = 75 if mode == "strict" else (50 if requested <= 180 else 45)
     positive_kw = _parse_keyword_list(positive_keywords)
     negative_kw = _parse_keyword_list(negative_keywords)
 
@@ -3002,7 +3154,8 @@ async def get_scraped_roles(
         seen_terms.add(k)
         dedup_terms.append(t)
     role_terms = dedup_terms[:6]
-    resume_positive = [s for s in _resume_skill_hints() if str(s or "").strip()][:6]
+    resume_hints_source = (prefs.get("resume_skills") or _resume_skill_hints() or [])
+    resume_positive = [s for s in resume_hints_source if str(s or "").strip()][:6]
     if positive_kw:
         seen_pos = {str(x).strip().lower() for x in resume_positive}
         for kw in positive_kw:
@@ -3026,6 +3179,12 @@ async def get_scraped_roles(
         "icims.com",
         "jobs.workable.com",
         "jobs.bamboohr.com",
+        "boards.eu.greenhouse.io",
+        "jobs.smartrecruiters.com",
+        "boards.jobvite.com",
+        "jobs.indeed.com",
+        "builtin.com/jobs",
+        "wellfound.com/jobs",
     ]
 
     queries: List[str] = []
@@ -3042,12 +3201,15 @@ async def get_scraped_roles(
         if skill_clause:
             queries.append(f'"{term}" ({skill_clause}) "careers" "remote" {negative_clause}'.strip())
     # Keep to a reasonable cap to avoid runaway API usage.
-    queries = queries[:96]
+    queries = queries[:220]
 
     found: List[Dict[str, Any]] = []
+    max_found_pool = max(requested * 12, 600)
     for q in queries:
         try:
             found.extend(serper_web_search(q, num=10, gl="us", hl="en"))
+            if len(found) >= max_found_pool:
+                break
         except Exception:
             continue
 
@@ -3086,7 +3248,7 @@ async def get_scraped_roles(
         if len(live_companies) < diversity_threshold or len(found) < size_threshold:
             extra = await _discover_roles_without_serper(
                 role_query=role_query,
-                requested=max(requested * 2, 50),
+                requested=max(requested * 3, 90),
                 minimum_salary=minimum_salary,
                 require_us=require_us,
             )
@@ -3102,7 +3264,7 @@ async def get_scraped_roles(
                         continue
                     found.append(item)
                     seen_live_urls.add(u)
-                    if len(found) >= max(requested * 5, 120):
+                    if len(found) >= max(requested * 8, 300):
                         break
 
     # De-dupe + score + salary filter.
@@ -3126,10 +3288,13 @@ async def get_scraped_roles(
         if negative_kw and _contains_any_keyword(text_blob, negative_kw):
             continue
         if positive_kw and not _contains_any_keyword(text_blob, positive_kw):
+            # In broad mode, treat positive keywords as preference signal rather
+            # than a hard exclusion so discovery doesn't collapse to zero.
+            if mode == "strict":
+                continue
+        if tech_intent and mode == "strict" and _blocked_title_for_tech_seekers(title):
             continue
-        if _blocked_title_for_tech_seekers(title):
-            continue
-        if not _looks_like_relevant_title(title, _role_tokens(role_query)):
+        if not _looks_like_relevant_title(title, role_tokens):
             continue
         snippet = str(item.get("snippet") or "").strip()[:420]
         salary_range = str(item.get("salary_range") or "").strip() or _extract_salary_range_from_text(f"{title} {snippet}")
@@ -3150,6 +3315,9 @@ async def get_scraped_roles(
             location=raw_loc,
             pref_terms=pref_terms,
             require_us=require_us,
+            funnel_mode=mode,
+            role_tokens=role_tokens,
+            apply_tech_blockers=tech_intent,
         )
         if score < min_match_score:
             continue
@@ -3170,6 +3338,7 @@ async def get_scraped_roles(
                 role_family=role_family,
                 work_mode=work_mode,
                 match_reasons=reasons,
+                posted_text=str(item.get("date") or "").strip() or None,
             )
         )
 
@@ -3201,6 +3370,16 @@ async def get_scraped_roles(
 
     roles_out = selected[:requested]
     unique_companies = len({(r.company or "").strip().lower() for r in roles_out if (r.company or "").strip() and (r.company or "").strip().lower() != "unknown"})
+    discovered_urls = len({str((item or {}).get("url") or "").strip() for item in found if isinstance(item, dict) and str((item or {}).get("url") or "").strip()})
+    source_breakdown: Dict[str, int] = {}
+    for r in roles_out:
+        src = str(r.source or "Other").strip() or "Other"
+        source_breakdown[src] = source_breakdown.get(src, 0) + 1
+    fit_breakdown = {
+        "high": len([r for r in roles_out if int(r.match_score or 0) >= 85]),
+        "medium": len([r for r in roles_out if 70 <= int(r.match_score or 0) < 85]),
+        "exploratory": len([r for r in roles_out if int(r.match_score or 0) < 70]),
+    }
     msg = f"Found {len(roles_out)} auto-discovered roles" if roles_out else "No roles found yet"
     return ScrapedRolesResponse(
         success=True,
@@ -3214,7 +3393,14 @@ async def get_scraped_roles(
             "target_companies": target_companies,
             "unique_companies": unique_companies,
             "raw_results": len(found),
+            "discovered_urls": discovered_urls,
+            "scored_candidates": len(ranked),
+            "returned_roles": len(roles_out),
+            "source_breakdown": source_breakdown,
+            "fit_breakdown": fit_breakdown,
             "min_match_score": min_match_score,
+            "funnel_mode": mode,
+            "tech_intent": tech_intent,
             "require_us": require_us,
             "positive_keywords": positive_kw,
             "negative_keywords": negative_kw,
@@ -3232,6 +3418,8 @@ async def save_job_description(job_description: JobDescription):
             "pain_points": job_description.pain_points,
             "required_skills": job_description.required_skills,
             "success_metrics": job_description.success_metrics,
+            "posted_date": job_description.posted_date,
+            "posted_text": job_description.posted_text,
         }
         stmt = (
             sql_text(
@@ -3298,6 +3486,8 @@ async def get_job_descriptions(user_id: str):
                     pain_points=parsed.get("pain_points", []),
                     required_skills=parsed.get("required_skills", []),
                     success_metrics=parsed.get("success_metrics", []),
+                    posted_date=parsed.get("posted_date"),
+                    posted_text=parsed.get("posted_text"),
                     parsed_at=row.created_at.isoformat() if getattr(row, "created_at", None) else "",
                 )
             )
@@ -3320,6 +3510,8 @@ async def get_job_descriptions(user_id: str):
                         "Reduce time-to-hire by 30%",
                         "Improve candidate quality scores",
                     ],
+                    posted_date=None,
+                    posted_text=None,
                     parsed_at="2024-01-15T10:30:00Z",
                 )
             ]
@@ -3363,6 +3555,8 @@ async def get_job_description(user_id: str, jd_id: str):
                 pain_points=parsed.get("pain_points", []),
                 required_skills=parsed.get("required_skills", []),
                 success_metrics=parsed.get("success_metrics", []),
+                posted_date=parsed.get("posted_date"),
+                posted_text=parsed.get("posted_text"),
                 parsed_at=row.created_at.isoformat() if getattr(row, "created_at", None) else "",
             )
         else:
@@ -3382,6 +3576,8 @@ async def get_job_description(user_id: str, jd_id: str):
                     "Reduce time-to-hire by 30%",
                     "Improve candidate quality scores",
                 ],
+                posted_date=None,
+                posted_text=None,
                 parsed_at="2024-01-15T10:30:00Z",
             )
 
@@ -3404,6 +3600,8 @@ async def update_job_description(user_id: str, jd_id: str, job_description: JobD
             "pain_points": job_description.pain_points,
             "required_skills": job_description.required_skills,
             "success_metrics": job_description.success_metrics,
+            "posted_date": job_description.posted_date,
+            "posted_text": job_description.posted_text,
         }
         stmt = (
             sql_text(

@@ -3,6 +3,7 @@ export default function sitemap() {
     { url: "https://example.com/" },
     { url: "https://example.com/analytics" },
     { url: "https://example.com/tools" },
+    { url: "https://example.com/tools/apply-studio" },
   ];
 }
 
