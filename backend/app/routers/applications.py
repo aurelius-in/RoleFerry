@@ -8,6 +8,7 @@ from datetime import datetime
 import csv
 import io
 import re
+import hashlib
 
 router = APIRouter()
 
@@ -96,6 +97,32 @@ class EnrichedExportRequest(BaseModel):
     contacts: List[ExportContact] = Field(default_factory=list)
 
 
+class MatchesCsvImportRequest(BaseModel):
+    csv_content: str
+
+
+class ImportedRoleRow(BaseModel):
+    id: str
+    title: str
+    company: str
+    url: str
+    location: Optional[str] = None
+    match_score: Optional[int] = None
+    salary_range: Optional[str] = None
+    posted_date: Optional[str] = None
+    posted_text: Optional[str] = None
+    requirements_summary: Optional[str] = None
+    eligible: Optional[bool] = None
+    source: Optional[str] = None
+
+
+class MatchesCsvImportResponse(BaseModel):
+    success: bool
+    message: str
+    imported_roles: List[ImportedRoleRow] = Field(default_factory=list)
+    helper: Dict[str, Any] = Field(default_factory=dict)
+
+
 def _now_iso() -> str:
     return datetime.utcnow().isoformat()
 
@@ -124,6 +151,38 @@ def _pick_contacts_for_company(contacts: List[ExportContact], company: str) -> L
 
 def _today_stamp() -> str:
     return datetime.utcnow().strftime("%Y-%m-%d")
+
+
+def _slug_id(parts: List[str]) -> str:
+    src = "|".join([_clean_cell(x) for x in parts if _clean_cell(x)])
+    if not src:
+        src = _now_iso()
+    return "imp_" + hashlib.sha1(src.encode("utf-8", errors="ignore")).hexdigest()[:16]
+
+
+def _parse_bool_maybe(v: Any) -> Optional[bool]:
+    s = _clean_cell(v).lower()
+    if not s:
+        return None
+    if s in {"yes", "true", "1", "y"}:
+        return True
+    if s in {"no", "false", "0", "n"}:
+        return False
+    return None
+
+
+def _parse_int_maybe(v: Any) -> Optional[int]:
+    s = _clean_cell(v)
+    if not s:
+        return None
+    m = re.search(r"(\d{1,3})", s)
+    if not m:
+        return None
+    try:
+        n = int(m.group(1))
+    except Exception:
+        return None
+    return max(0, min(100, n))
 
 
 def _validate_auto_apply_profile(profile: Optional[CandidateProfile]) -> List[str]:
@@ -365,6 +424,83 @@ async def export_enriched_matches_csv(payload: EnrichedExportRequest):
         "content": buff.getvalue(),
         "columns": fieldnames,
     }
+
+
+@router.post("/api/applications/import/matches-csv", response_model=MatchesCsvImportResponse)
+async def import_matches_csv(payload: MatchesCsvImportRequest):
+    raw = str(payload.csv_content or "")
+    if not raw.strip():
+        raise HTTPException(status_code=400, detail="csv_content is required")
+
+    try:
+        reader = csv.DictReader(io.StringIO(raw))
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid CSV content: {exc}")
+
+    rows = list(reader or [])
+    if not rows:
+        return MatchesCsvImportResponse(
+            success=True,
+            message="No rows found in CSV.",
+            imported_roles=[],
+            helper={"input_rows": 0, "imported": 0},
+        )
+
+    def pick(d: Dict[str, Any], names: List[str]) -> str:
+        lower_map = {str(k).strip().lower(): v for k, v in (d or {}).items()}
+        for n in names:
+            v = lower_map.get(str(n).strip().lower())
+            if v is not None and _clean_cell(v):
+                return _clean_cell(v)
+        return ""
+
+    out: List[ImportedRoleRow] = []
+    seen_ids: set[str] = set()
+    for r in rows:
+        title = pick(r, ["Job Title", "title", "role", "position"])
+        company = pick(r, ["Company", "company", "employer"])
+        url = pick(r, ["Job URL", "url", "link"])
+        location = pick(r, ["Location", "location", "city"])
+        posted = pick(r, ["Date Posted", "date_posted", "posted", "posted_date"])
+        posted_text = pick(r, ["Posted Text", "posted_text", "reposted", "posted"])
+        req_summary = pick(r, ["Requirements Summary", "requirements_summary", "requirements", "summary"])
+        salary = pick(r, ["Salary", "salary", "salary_range", "salary range"])
+        score = _parse_int_maybe(pick(r, ["Match Percentage", "match_percentage", "match", "relevancy"]))
+        eligible = _parse_bool_maybe(pick(r, ["Eligible", "eligible"]))
+        source = pick(r, ["Source", "source"])
+        if not (title or company or url):
+            continue
+        rid = _slug_id([company, title, url, location])
+        if rid in seen_ids:
+            continue
+        seen_ids.add(rid)
+        out.append(
+            ImportedRoleRow(
+                id=rid,
+                title=title or "Role",
+                company=company or "Unknown",
+                url=url,
+                location=location or None,
+                match_score=score,
+                salary_range=salary or None,
+                posted_date=posted or None,
+                posted_text=posted_text or None,
+                requirements_summary=req_summary or None,
+                eligible=eligible,
+                source=source or "Imported CSV",
+            )
+        )
+
+    return MatchesCsvImportResponse(
+        success=True,
+        message=f"Imported {len(out)} role rows from CSV.",
+        imported_roles=out,
+        helper={
+            "input_rows": len(rows),
+            "imported": len(out),
+            "dropped": max(0, len(rows) - len(out)),
+        },
+    )
 
 
 @router.get("/api/applications/{application_id}")

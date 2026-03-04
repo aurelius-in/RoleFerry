@@ -7,6 +7,7 @@ import re
 import html as html_lib
 import hashlib
 import httpx
+import time
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse
 
@@ -2503,7 +2504,77 @@ async def import_job_description(payload: JobImportRequest):
         raise
     except Exception as e:
         logger.exception("Error importing job description")
-        raise HTTPException(status_code=500, detail="Failed to parse job description")
+        # Last-resort fallback: never hard-fail import due to parser edge-cases.
+        # Keep the role in the workflow with minimal extracted fields.
+        try:
+            fallback_url = (locals().get("url") or payload.url or "").strip() if payload else ""
+            fallback_text = (locals().get("content") or payload.text or "").strip() if payload else ""
+            if not fallback_text:
+                raise RuntimeError("No fallback content available")
+
+            title, company = _best_effort_title_company(fallback_text, fallback_url)
+            if not title:
+                title = "Imported role"
+            if not company:
+                company = _company_from_result(fallback_url, title) if fallback_url else "Unknown"
+
+            if fallback_url:
+                job_id = "jd_" + hashlib.md5(fallback_url.encode("utf-8")).hexdigest()[:10]
+            else:
+                job_id = "jd_" + hashlib.md5((fallback_text[:500]).encode("utf-8")).hexdigest()[:10]
+
+            parsed_at = _now_iso_z()
+            parsed_json = {
+                "pain_points": [],
+                "required_skills": [],
+                "success_metrics": [],
+                "salary_range": _extract_salary_range(fallback_text) or "Salary not provided",
+                "location": _extract_location_hint(fallback_text),
+                "work_mode": _infer_work_mode_from_text(fallback_text),
+                "employment_type": _infer_employment_type_from_text(fallback_text),
+                "responsibilities": [],
+                "requirements": [],
+                "benefits": [],
+                "posted_date": None,
+                "posted_text": None,
+            }
+
+            store.demo_job_descriptions[job_id] = {
+                "id": job_id,
+                "title": title,
+                "company": company,
+                "url": fallback_url or None,
+                "content": fallback_text,
+                "parsed_json": parsed_json,
+            }
+
+            jd = JobDescription(
+                id=job_id,
+                title=title,
+                company=company,
+                url=fallback_url or None,
+                content=fallback_text,
+                pain_points=[],
+                required_skills=[],
+                success_metrics=[],
+                location=parsed_json.get("location"),
+                work_mode=parsed_json.get("work_mode"),
+                employment_type=parsed_json.get("employment_type"),
+                salary_range=parsed_json.get("salary_range"),
+                responsibilities=None,
+                requirements=None,
+                benefits=None,
+                posted_date=None,
+                posted_text=None,
+                parsed_at=parsed_at,
+            )
+            return JobDescriptionResponse(
+                success=True,
+                message="Job imported with fallback parsing",
+                job_description=jd,
+            )
+        except Exception:
+            raise HTTPException(status_code=500, detail="Failed to parse job description")
 
 def _parse_min_salary_to_int(raw: str | None) -> Optional[int]:
     """
@@ -3200,12 +3271,19 @@ async def get_scraped_roles(
         queries.append(f'"{term}" "job opening" "apply now" {negative_clause}'.strip())
         if skill_clause:
             queries.append(f'"{term}" ({skill_clause}) "careers" "remote" {negative_clause}'.strip())
-    # Keep to a reasonable cap to avoid runaway API usage.
-    queries = queries[:220]
+    # Keep to a reasonable cap to avoid runaway API usage / timeouts.
+    query_cap = 120 if requested >= 220 else 90
+    if positive_kw or negative_kw:
+        query_cap = min(query_cap, 80)
+    queries = queries[:query_cap]
 
     found: List[Dict[str, Any]] = []
-    max_found_pool = max(requested * 12, 600)
+    max_found_pool = max(requested * 8, 400)
+    start_ts = time.monotonic()
+    budget_seconds = 18 if requested >= 220 else 14
     for q in queries:
+        if (time.monotonic() - start_ts) > budget_seconds:
+            break
         try:
             found.extend(serper_web_search(q, num=10, gl="us", hl="en"))
             if len(found) >= max_found_pool:
@@ -3219,7 +3297,7 @@ async def get_scraped_roles(
     if not found:
         found = await _discover_roles_without_serper(
             role_query=role_query,
-            requested=requested,
+            requested=min(max(requested, 90), 160),
             minimum_salary=minimum_salary,
             require_us=require_us,
         )
@@ -3245,10 +3323,10 @@ async def get_scraped_roles(
         except Exception:
             live_companies = set()
 
-        if len(live_companies) < diversity_threshold or len(found) < size_threshold:
+        if (time.monotonic() - start_ts) <= (budget_seconds + 6) and (len(live_companies) < diversity_threshold or len(found) < size_threshold):
             extra = await _discover_roles_without_serper(
                 role_query=role_query,
-                requested=max(requested * 3, 90),
+                requested=min(max(requested * 2, 90), 220),
                 minimum_salary=minimum_salary,
                 require_us=require_us,
             )
