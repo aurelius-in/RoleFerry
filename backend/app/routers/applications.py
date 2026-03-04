@@ -7,6 +7,7 @@ from typing import List, Optional, Literal, Dict, Any
 from datetime import datetime
 import csv
 import io
+import re
 
 router = APIRouter()
 
@@ -64,8 +65,65 @@ class InterviewCreate(BaseModel):
     interviewer: str
 
 
+class ExportContact(BaseModel):
+    id: Optional[str] = None
+    name: Optional[str] = None
+    title: Optional[str] = None
+    email: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    company: Optional[str] = None
+    department: Optional[str] = None
+    level: Optional[str] = None
+    verification_status: Optional[str] = None
+    verification_score: Optional[float] = None
+
+
+class ExportRoleRow(BaseModel):
+    job_id: str
+    title: Optional[str] = None
+    company: Optional[str] = None
+    location: Optional[str] = None
+    job_url: Optional[str] = None
+    match_score: Optional[int] = None
+    eligible: Optional[bool] = None
+    requirements_summary: Optional[str] = None
+    date_posted: Optional[str] = None
+
+
+class EnrichedExportRequest(BaseModel):
+    customer_name: Optional[str] = None
+    roles: List[ExportRoleRow] = Field(default_factory=list)
+    contacts: List[ExportContact] = Field(default_factory=list)
+
+
 def _now_iso() -> str:
     return datetime.utcnow().isoformat()
+
+
+def _clean_cell(v: Any) -> str:
+    return re.sub(r"\s+", " ", str(v or "")).strip()
+
+
+def _company_key(v: Any) -> str:
+    s = _clean_cell(v).lower()
+    s = re.sub(r"[^a-z0-9]+", "", s)
+    return s
+
+
+def _pick_contacts_for_company(contacts: List[ExportContact], company: str) -> List[ExportContact]:
+    key = _company_key(company)
+    if not contacts:
+        return []
+    if not key:
+        return contacts[:3]
+    same = [c for c in contacts if _company_key(c.company) == key]
+    if len(same) >= 1:
+        return same[:3]
+    return contacts[:3]
+
+
+def _today_stamp() -> str:
+    return datetime.utcnow().strftime("%Y-%m-%d")
 
 
 def _validate_auto_apply_profile(profile: Optional[CandidateProfile]) -> List[str]:
@@ -220,6 +278,93 @@ async def export_applications_csv():
             }
         )
     return {"filename": "applications_export.csv", "content": buff.getvalue()}
+
+
+@router.post("/api/applications/export/enriched")
+async def export_enriched_matches_csv(payload: EnrichedExportRequest):
+    fieldnames = [
+        "Date Posted",
+        "Date Applied",
+        "Apply Failure Reason",
+        "Match Percentage",
+        "Location",
+        "Job Title",
+        "Company",
+        "Requirements Summary",
+        "Job URL",
+        "Eligible",
+        "Application Status",
+        "Source",
+        "Contact 1 Name",
+        "Contact 1 Title",
+        "Contact 1 Email",
+        "Contact 1 LinkedIn",
+        "Contact 2 Name",
+        "Contact 2 Title",
+        "Contact 2 Email",
+        "Contact 2 LinkedIn",
+        "Contact 3 Name",
+        "Contact 3 Title",
+        "Contact 3 Email",
+        "Contact 3 LinkedIn",
+        "Contacts Count (Company)",
+    ]
+
+    apps_by_job: Dict[str, Dict[str, Any]] = {}
+    for app in applications_db:
+        jid = str(app.get("jobId") or "").strip()
+        if not jid:
+            continue
+        apps_by_job[jid] = app
+
+    buff = io.StringIO()
+    writer = csv.DictWriter(buff, fieldnames=fieldnames)
+    writer.writeheader()
+
+    for role in payload.roles:
+        app = apps_by_job.get(str(role.job_id or "").strip()) or {}
+        job = app.get("job") if isinstance(app.get("job"), dict) else {}
+        company = _clean_cell(role.company or job.get("company") or "")
+        contacts = _pick_contacts_for_company(payload.contacts, company)
+        c1 = contacts[0] if len(contacts) > 0 else None
+        c2 = contacts[1] if len(contacts) > 1 else None
+        c3 = contacts[2] if len(contacts) > 2 else None
+        writer.writerow(
+            {
+                "Date Posted": _clean_cell(role.date_posted),
+                "Date Applied": _clean_cell(app.get("appliedAt")),
+                "Apply Failure Reason": _clean_cell(app.get("failureReason")),
+                "Match Percentage": str(int(role.match_score or job.get("match_score") or 0)),
+                "Location": _clean_cell(role.location or job.get("location")),
+                "Job Title": _clean_cell(role.title or job.get("title")),
+                "Company": company,
+                "Requirements Summary": _clean_cell(role.requirements_summary),
+                "Job URL": _clean_cell(role.job_url or job.get("url")),
+                "Eligible": "Yes" if bool(role.eligible if role.eligible is not None else app.get("eligible", True)) else "No",
+                "Application Status": _clean_cell(app.get("status") or "pending"),
+                "Source": _clean_cell(app.get("source") or "manual"),
+                "Contact 1 Name": _clean_cell(c1.name if c1 else ""),
+                "Contact 1 Title": _clean_cell(c1.title if c1 else ""),
+                "Contact 1 Email": _clean_cell(c1.email if c1 else ""),
+                "Contact 1 LinkedIn": _clean_cell(c1.linkedin_url if c1 else ""),
+                "Contact 2 Name": _clean_cell(c2.name if c2 else ""),
+                "Contact 2 Title": _clean_cell(c2.title if c2 else ""),
+                "Contact 2 Email": _clean_cell(c2.email if c2 else ""),
+                "Contact 2 LinkedIn": _clean_cell(c2.linkedin_url if c2 else ""),
+                "Contact 3 Name": _clean_cell(c3.name if c3 else ""),
+                "Contact 3 Title": _clean_cell(c3.title if c3 else ""),
+                "Contact 3 Email": _clean_cell(c3.email if c3 else ""),
+                "Contact 3 LinkedIn": _clean_cell(c3.linkedin_url if c3 else ""),
+                "Contacts Count (Company)": str(len(contacts)),
+            }
+        )
+
+    safe_customer = re.sub(r"[^A-Za-z0-9_-]+", "_", _clean_cell(payload.customer_name or "customer")).strip("_") or "customer"
+    return {
+        "filename": f"{safe_customer}_job_matches_enriched_{_today_stamp()}.csv",
+        "content": buff.getvalue(),
+        "columns": fieldnames,
+    }
 
 
 @router.get("/api/applications/{application_id}")

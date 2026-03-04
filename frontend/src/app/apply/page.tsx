@@ -37,6 +37,7 @@ type BulkApplyResponse = {
   summary: { applied: number; failed: number; skipped: number; queued: number };
 };
 type SingleApplyResponse = { application: ApplicationRecord; status?: string };
+type EnrichedExportResponse = { filename: string; content: string; columns?: string[] };
 
 type RequiredProfileKey =
   | "first_name"
@@ -322,12 +323,61 @@ export default function ApplyPage() {
   const exportCsv = async () => {
     setErr(null);
     try {
-      const resp = await api<{ filename: string; content: string }>("/applications/export", "GET");
+      const rawJobs = safeJson<any[]>(localStorage.getItem("job_descriptions"), []);
+      const selectedContacts = safeJson<any[]>(localStorage.getItem("selected_contacts"), []);
+      const rfUser = safeJson<any>(localStorage.getItem("rf_user"), {});
+      const byId: Record<string, any> = {};
+      for (const jd of rawJobs) {
+        const id = String(jd?.id || `${jd?.company || ""}:${jd?.title || ""}:${jd?.url || ""}`).trim();
+        if (id) byId[id] = jd;
+      }
+      const rolesPayload = roles.map((r) => {
+        const jd = byId[r.id] || {};
+        const req = Array.isArray(jd?.requiredSkills) ? jd.requiredSkills : Array.isArray(jd?.required_skills) ? jd.required_skills : [];
+        const reqSummary = req.length
+          ? req.slice(0, 12).join("; ")
+          : String(jd?.content || "").replace(/\s+/g, " ").trim().slice(0, 500);
+        const app = appsByJobId[r.id];
+        return {
+          job_id: r.id,
+          title: r.title,
+          company: r.company,
+          location: r.location || `${r.city || ""}${r.city && r.state ? ", " : ""}${r.state || ""}`,
+          job_url: r.url || "",
+          match_score: Number(r.matchScore || 0),
+          eligible: isRoleEligible(r),
+          requirements_summary: reqSummary,
+          date_posted: "",
+          application_status: app?.status || "pending",
+        };
+      });
+      const contactsPayload = (Array.isArray(selectedContacts) ? selectedContacts : []).map((c) => ({
+        id: String(c?.id || ""),
+        name: String(c?.name || ""),
+        title: String(c?.title || ""),
+        email: String(c?.email || ""),
+        linkedin_url: String(c?.linkedin_url || c?.linkedinUrl || ""),
+        company: String(c?.company || ""),
+        department: String(c?.department || ""),
+        level: String(c?.level || ""),
+        verification_status: String(c?.verification_status || c?.verificationStatus || ""),
+        verification_score: Number(c?.verification_score || c?.verificationScore || 0) || null,
+      }));
+      const customerName =
+        String(
+          rfUser?.name ||
+            [rfUser?.first_name || rfUser?.firstName, rfUser?.last_name || rfUser?.lastName].filter(Boolean).join(" ")
+        ).trim() || "customer";
+      const resp = await api<EnrichedExportResponse>("/applications/export/enriched", "POST", {
+        customer_name: customerName,
+        roles: rolesPayload,
+        contacts: contactsPayload,
+      });
       const blob = new Blob([resp.content || ""], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = resp.filename || "applications_export.csv";
+      a.download = resp.filename || "job_matches_enriched.csv";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

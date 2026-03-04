@@ -127,6 +127,15 @@ type ScrapedRolesResponse = {
     requested_roles?: number;
     target_companies?: number;
     unique_companies?: number;
+    discovered_urls?: number;
+    scored_candidates?: number;
+    returned_roles?: number;
+    source_breakdown?: Record<string, number>;
+    fit_breakdown?: {
+      high?: number;
+      medium?: number;
+      exploratory?: number;
+    };
     min_match_score?: number;
     require_us?: boolean;
     [k: string]: any;
@@ -215,23 +224,29 @@ export default function JobDescriptionsPage() {
   const [scrapedRolesError, setScrapedRolesError] = useState<string | null>(null);
   const [scrapedRolesMessage, setScrapedRolesMessage] = useState<string>("");
   const [scrapedRolesMeta, setScrapedRolesMeta] = useState<{ requested_roles?: number; target_companies?: number; unique_companies?: number } | null>(null);
+  const [funnelMode, setFunnelMode] = useState<"strict" | "broad">("broad");
+  const [discoveryLimit, setDiscoveryLimit] = useState<120 | 220 | 300>(220);
+  const [highFitOnly, setHighFitOnly] = useState(false);
   const [ignoredScrapedRoleIds, setIgnoredScrapedRoleIds] = useState<string[]>([]);
   const [expandedRoleDetails, setExpandedRoleDetails] = useState<Record<string, boolean>>({});
   const [positiveKeywords, setPositiveKeywords] = useState<string[]>([]);
   const [negativeKeywords, setNegativeKeywords] = useState<string[]>([]);
   const [positiveSuggestions, setPositiveSuggestions] = useState<string[]>([]);
   const [negativeSuggestions, setNegativeSuggestions] = useState<string[]>([
-    "account executive",
-    "brand marketing",
-    "sales representative",
-    "customer success",
-    "field marketing",
+    "intern",
+    "entry level",
+    "seasonal",
+    "part-time",
+    "contract",
+    "commission",
+    "volunteer",
   ]);
   const [positiveInput, setPositiveInput] = useState("");
   const [negativeInput, setNegativeInput] = useState("");
   const trackerPulseTimer = useRef<number | null>(null);
-  const suggestedUrl =
-    "https://www.google.com/about/careers/applications/jobs/results/?employment_type=FULL_TIME&degree=MASTERS&skills=software%2C%20architecture%2C%20ai";
+  const [suggestedUrl, setSuggestedUrl] = useState(
+    "https://www.indeed.com/jobs?q=jobs&l=United+States"
+  );
 
   const normalizeKeyword = (v: any) => " ".join(String(v || "").split()).trim();
 
@@ -350,6 +365,24 @@ export default function JobDescriptionsPage() {
       const seedPool = [...resumeSkills, ...prefSkills, ...roleSkills, ...prefRoleCats]
         .map((x) => normalizeKeyword(x))
         .filter(Boolean);
+      const locationSeed = Array.isArray(prefs?.location_preferences)
+        ? prefs.location_preferences
+        : Array.isArray(prefs?.locationPreferences)
+        ? prefs.locationPreferences
+        : [];
+      const firstQueryBits = [...prefRoleCats, ...prefSkills, ...resumeSkills].map((x) => normalizeKeyword(x)).filter(Boolean).slice(0, 4);
+      const query = encodeURIComponent(firstQueryBits.join(" "));
+      const where = encodeURIComponent(
+        normalizeKeyword(
+          (Array.isArray(locationSeed) && locationSeed[0]) ||
+            prefs?.state ||
+            prefs?.location_text ||
+            "United States"
+        )
+      );
+      if (query) {
+        setSuggestedUrl(`https://www.indeed.com/jobs?q=${query}&l=${where || "United+States"}`);
+      }
 
       let posInit = pos.slice(0, 20);
       if (!posInit.length) {
@@ -370,6 +403,26 @@ export default function JobDescriptionsPage() {
       setPositiveKeywords(posInit);
       setNegativeKeywords(neg.slice(0, 20));
       setPositiveSuggestions(sugg);
+      if (neg.length === 0) {
+        // Generic exclusions that apply across industries.
+        setNegativeSuggestions((prev) =>
+          Array.from(
+            new Set(
+              [
+                ...(Array.isArray(prev) ? prev : []),
+                "intern",
+                "entry level",
+                "seasonal",
+                "part-time",
+                "commission",
+                "volunteer",
+              ].map((x) => normalizeKeyword(x))
+            )
+          )
+            .filter(Boolean)
+            .slice(0, 20)
+        );
+      }
       if (!pos.length || !neg.length) persistKeywordPrefs(posInit, neg.slice(0, 20));
     } catch {
       // keep defaults
@@ -381,11 +434,41 @@ export default function JobDescriptionsPage() {
     setScrapedRolesError(null);
     setIsLoadingScrapedRoles(true);
     try {
-      const params = new URLSearchParams({ limit: "30" });
+      const params = new URLSearchParams({ limit: String(discoveryLimit), funnel_mode: funnelMode });
+      try {
+        const prefsRaw = localStorage.getItem("job_preferences");
+        const resumeRaw = localStorage.getItem("resume_extract");
+        const prefs = prefsRaw ? JSON.parse(prefsRaw) : null;
+        const resume = resumeRaw ? JSON.parse(resumeRaw) : null;
+        const listToCsv = (arr: unknown) =>
+          Array.isArray(arr)
+            ? arr
+                .map((x) => normalizeKeyword(x))
+                .filter(Boolean)
+                .slice(0, 20)
+                .join(", ")
+            : "";
+        const roleCategories = listToCsv(prefs?.role_categories || prefs?.roleCategories);
+        const prefSkills = listToCsv(prefs?.skills || prefs?.Skills);
+        const industries = listToCsv(prefs?.industries || prefs?.Industries);
+        const resumeSkills = listToCsv(resume?.skills || resume?.Skills);
+        const locations = listToCsv(prefs?.location_preferences || prefs?.locationPreferences);
+        const minimumSalary = normalizeKeyword(prefs?.minimum_salary || prefs?.minimumSalary);
+        const state = normalizeKeyword(prefs?.state);
+        if (roleCategories) params.set("role_categories", roleCategories);
+        if (prefSkills) params.set("skills", prefSkills);
+        if (industries) params.set("industries", industries);
+        if (resumeSkills) params.set("resume_skills", resumeSkills);
+        if (locations) params.set("location_preferences", locations);
+        if (minimumSalary) params.set("minimum_salary_pref", minimumSalary);
+        if (state) params.set("state", state);
+      } catch {
+        // best-effort context
+      }
       if (positiveKeywords.length) params.set("positive_keywords", positiveKeywords.join(", "));
       if (negativeKeywords.length) params.set("negative_keywords", negativeKeywords.join(", "));
       const res = await api<ScrapedRolesResponse>(`/job-descriptions/scraped-roles?${params.toString()}`, "GET");
-      const roles = (Array.isArray(res?.roles) ? res.roles : []).filter((r) => Number(r?.match_score || 0) >= 75);
+      const roles = Array.isArray(res?.roles) ? res.roles : [];
       setScrapedRoles(roles);
       setIgnoredScrapedRoleIds([]);
       setScrapedRolesMessage(String(res?.message || ""));
@@ -417,7 +500,16 @@ export default function JobDescriptionsPage() {
     // Additive feed at the bottom of the screen; does not alter existing import flow.
     loadScrapedRoles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [funnelMode, discoveryLimit]);
+
+  useEffect(() => {
+    if (!hasMounted) return;
+    const t = window.setTimeout(() => {
+      loadScrapedRoles();
+    }, 250);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMounted, positiveKeywords, negativeKeywords]);
 
   const importFromUrl = async (raw: string, opts?: { clearImporterInput?: boolean; seedImporterInput?: boolean }) => {
     const rawUrl = String(raw || "").trim();
@@ -1235,6 +1327,67 @@ export default function JobDescriptionsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="text-lg font-semibold text-white">Auto-discovered</h3>
+                    <div className="mt-1">
+                      <button
+                        type="button"
+                        onClick={() => router.push("/tools/apply-studio")}
+                        className="rounded-md border border-emerald-400/35 bg-emerald-500/15 px-2 py-1 text-[11px] font-semibold text-emerald-100 hover:bg-emerald-500/25"
+                        title="Open RoleFerry Apply Studio"
+                      >
+                        Open Apply Studio
+                      </button>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
+                      <div className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/20 p-1">
+                        <button
+                          type="button"
+                          onClick={() => setFunnelMode("strict")}
+                          className={`rounded px-2 py-1 font-semibold ${
+                            funnelMode === "strict" ? "bg-white/20 text-white" : "text-white/65 hover:bg-white/10"
+                          }`}
+                          title="Higher precision, fewer jobs"
+                        >
+                          Strict
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFunnelMode("broad")}
+                          className={`rounded px-2 py-1 font-semibold ${
+                            funnelMode === "broad" ? "bg-emerald-500/25 text-emerald-100" : "text-white/65 hover:bg-white/10"
+                          }`}
+                          title="Top-of-funnel volume"
+                        >
+                          Broad
+                        </button>
+                      </div>
+                      <div className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/20 p-1">
+                        {[120, 220, 300].map((n) => (
+                          <button
+                            key={`lim_${n}`}
+                            type="button"
+                            onClick={() => setDiscoveryLimit(n as 120 | 220 | 300)}
+                            className={`rounded px-2 py-1 font-semibold ${
+                              discoveryLimit === n ? "bg-white/20 text-white" : "text-white/65 hover:bg-white/10"
+                            }`}
+                            title={`Target ${n} roles`}
+                          >
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setHighFitOnly((v) => !v)}
+                        className={`rounded-md border px-2 py-1 font-semibold ${
+                          highFitOnly
+                            ? "border-emerald-400/40 bg-emerald-500/20 text-emerald-100"
+                            : "border-white/10 bg-black/20 text-white/70 hover:bg-white/10"
+                        }`}
+                        title="Show only 75%+ fit roles"
+                      >
+                        High fit only
+                      </button>
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -1393,19 +1546,54 @@ export default function JobDescriptionsPage() {
                 ) : null}
 
                 {(() => {
-                  const visibleScrapedRoles = scrapedRoles.filter((r) => !ignoredScrapedRoleIds.includes(String(r.id || "")));
+                  const visibleScrapedRoles = scrapedRoles
+                    .filter((r) => !ignoredScrapedRoleIds.includes(String(r.id || "")))
+                    .filter((r) => (highFitOnly ? Number(r.match_score || 0) >= 75 : true));
                   return visibleScrapedRoles.length > 0 ? (
                   <div className="mt-4">
                     <div className="mb-3 flex flex-wrap gap-2 text-[11px]">
                       <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
                         Roles shown: {visibleScrapedRoles.length}
                       </span>
+                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
+                        Mode: {funnelMode}
+                      </span>
+                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
+                        Target: {discoveryLimit}
+                      </span>
+                      {typeof scrapedRolesMeta?.scored_candidates === "number" ? (
+                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
+                          Scored: {scrapedRolesMeta.scored_candidates}
+                        </span>
+                      ) : null}
+                      {typeof scrapedRolesMeta?.discovered_urls === "number" ? (
+                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
+                          URLs found: {scrapedRolesMeta.discovered_urls}
+                        </span>
+                      ) : null}
                       {typeof scrapedRolesMeta?.unique_companies === "number" ? (
                         <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
                           Companies: {scrapedRolesMeta.unique_companies}
                         </span>
                       ) : null}
+                      {typeof scrapedRolesMeta?.fit_breakdown?.high === "number" ? (
+                        <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-emerald-100">
+                          High fit: {scrapedRolesMeta.fit_breakdown.high}
+                        </span>
+                      ) : null}
                     </div>
+                    {scrapedRolesMeta?.source_breakdown && Object.keys(scrapedRolesMeta.source_breakdown).length > 0 ? (
+                      <div className="mb-3 flex flex-wrap gap-2 text-[10px] text-white/70">
+                        {Object.entries(scrapedRolesMeta.source_breakdown)
+                          .sort((a, b) => Number(b[1] || 0) - Number(a[1] || 0))
+                          .slice(0, 8)
+                          .map(([src, count]) => (
+                            <span key={`src_${src}`} className="rounded-full border border-white/10 bg-black/20 px-2 py-1">
+                              {src}: {count}
+                            </span>
+                          ))}
+                      </div>
+                    ) : null}
                     <div className="space-y-2">
                       {visibleScrapedRoles.map((r) => (
                         <div key={r.id} className="rounded-md border border-white/10 bg-white/5 px-3 py-2">
