@@ -7,7 +7,7 @@ import re
 import html as html_lib
 import hashlib
 import httpx
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse
 
 from sqlalchemy import text as sql_text, bindparam
@@ -40,6 +40,8 @@ class JobDescription(BaseModel):
     responsibilities: Optional[List[str]] = None
     requirements: Optional[List[str]] = None
     benefits: Optional[List[str]] = None
+    posted_date: Optional[str] = None
+    posted_text: Optional[str] = None
     parsed_at: str
 
 class JobDescriptionResponse(BaseModel):
@@ -71,6 +73,7 @@ class ScrapedRole(BaseModel):
     role_family: Optional[str] = None
     work_mode: Optional[str] = None
     match_reasons: Optional[List[str]] = None
+    posted_text: Optional[str] = None
 
 
 class ScrapedRolesResponse(BaseModel):
@@ -859,6 +862,91 @@ def _extract_expectations_as_benefits(content: str, max_lines: int = 10) -> List
         "posted",
     ]
     return _extract_section_lines(content, header_patterns, max_lines=max_lines, stop_patterns=stop_patterns)
+
+
+def _extract_posted_signal(content: str, html: Optional[str] = None) -> tuple[Optional[str], Optional[str]]:
+    """
+    Best-effort extraction of job posting recency.
+    Returns:
+      - posted_date: normalized YYYY-MM-DD when derivable
+      - posted_text: human-readable source text (e.g., "2 weeks ago", "New")
+    """
+    now = datetime.now(timezone.utc)
+    raw = str(content or "")
+    low = raw.lower()
+
+    def _fmt(dt: datetime) -> str:
+        return dt.date().isoformat()
+
+    # 1) Prefer machine-readable schema dates in page HTML if present.
+    if html:
+        h = str(html)
+        for pat in [
+            r'"datePosted"\s*:\s*"(\d{4}-\d{2}-\d{2})',
+            r'"datePublished"\s*:\s*"(\d{4}-\d{2}-\d{2})',
+            r'datetime=["\'](\d{4}-\d{2}-\d{2})(?:[T ][^"\']*)?["\']',
+        ]:
+            m = re.search(pat, h, flags=re.I)
+            if m:
+                iso = str(m.group(1) or "").strip()
+                if iso:
+                    return iso, f"Posted {iso}"
+
+    # 2) Relative terms.
+    if re.search(r"\b(reposted|posted)\s+(today)\b", low):
+        return _fmt(now), "Today"
+    if re.search(r"\b(reposted|posted)\s+(yesterday)\b", low):
+        return _fmt(now - timedelta(days=1)), "Yesterday"
+    m_days = re.search(r"\b(reposted|posted)\s+(\d{1,3})\s+day[s]?\s+ago\b", low)
+    if m_days:
+        n = max(0, int(m_days.group(2)))
+        return _fmt(now - timedelta(days=n)), f"{n} days ago"
+    m_weeks = re.search(r"\b(reposted|posted)\s+(\d{1,3})\s+week[s]?\s+ago\b", low)
+    if m_weeks:
+        n = max(0, int(m_weeks.group(2)))
+        return _fmt(now - timedelta(days=n * 7)), f"{n} weeks ago"
+    m_months = re.search(r"\b(reposted|posted)\s+(\d{1,3})\s+month[s]?\s+ago\b", low)
+    if m_months:
+        n = max(0, int(m_months.group(2)))
+        return _fmt(now - timedelta(days=n * 30)), f"{n} months ago"
+
+    # 3) Explicit date strings near "posted/reposted".
+    m_named = re.search(
+        r"\b(reposted|posted)(?:\s+on)?\s+([A-Za-z]{3,9}\s+\d{1,2},\s+\d{4})\b",
+        raw,
+        flags=re.I,
+    )
+    if m_named:
+        text = " ".join(str(m_named.group(2) or "").split()).strip()
+        for fmt in ["%B %d, %Y", "%b %d, %Y"]:
+            try:
+                dt = datetime.strptime(text, fmt).replace(tzinfo=timezone.utc)
+                return _fmt(dt), text
+            except Exception:
+                continue
+        if text:
+            return None, text
+
+    m_numeric = re.search(
+        r"\b(reposted|posted)(?:\s+on)?\s+(\d{1,2}/\d{1,2}/\d{2,4}|\d{4}-\d{2}-\d{2})\b",
+        raw,
+        flags=re.I,
+    )
+    if m_numeric:
+        text = str(m_numeric.group(2) or "").strip()
+        for fmt in ["%m/%d/%Y", "%m/%d/%y", "%Y-%m-%d"]:
+            try:
+                dt = datetime.strptime(text, fmt).replace(tzinfo=timezone.utc)
+                return _fmt(dt), text
+            except Exception:
+                continue
+        return None, text
+
+    # 4) Board "new" labels when no date is shown.
+    if re.search(r"\bnew\b", low):
+        return None, "New"
+
+    return None, None
 
 
 def _extract_who_is_for_as_requirements(content: str, max_lines: int = 12) -> List[str]:
@@ -1954,6 +2042,7 @@ async def import_job_description(payload: JobImportRequest):
             raise HTTPException(status_code=400, detail="Job description content is empty after extraction")
 
         parsed_at = _now_iso_z()
+        posted_date, posted_text = _extract_posted_signal(content, page_html)
 
         # --- Heuristic parsing (non-LLM fallback) ----------------------
         title, company = _best_effort_title_company(content, url)
@@ -2159,6 +2248,8 @@ async def import_job_description(payload: JobImportRequest):
             "responsibilities": responsibilities,
             "requirements": requirements,
             "benefits": benefits,
+            "posted_date": posted_date,
+            "posted_text": posted_text,
         }
 
         # --- Optional GPT-backed parsing via OpenAIClient ---------------
@@ -2264,6 +2355,8 @@ async def import_job_description(payload: JobImportRequest):
                         "responsibilities": responsibilities,
                         "requirements": requirements,
                         "benefits": benefits,
+                        "posted_date": posted_date,
+                        "posted_text": posted_text,
                     }
             except Exception:
                 # On any GPT failure, keep heuristic extraction.
@@ -2304,6 +2397,8 @@ async def import_job_description(payload: JobImportRequest):
             "responsibilities": responsibilities,
             "requirements": requirements,
             "benefits": benefits,
+            "posted_date": posted_date,
+            "posted_text": posted_text,
         }
 
         # Validate: do not create incomplete JDs (common when scraping a job board/search page).
@@ -2394,6 +2489,8 @@ async def import_job_description(payload: JobImportRequest):
             responsibilities=responsibilities or None,
             requirements=requirements or None,
             benefits=benefits or None,
+            posted_date=posted_date,
+            posted_text=posted_text,
             parsed_at=parsed_at,
         )
 
@@ -3241,6 +3338,7 @@ async def get_scraped_roles(
                 role_family=role_family,
                 work_mode=work_mode,
                 match_reasons=reasons,
+                posted_text=str(item.get("date") or "").strip() or None,
             )
         )
 
@@ -3320,6 +3418,8 @@ async def save_job_description(job_description: JobDescription):
             "pain_points": job_description.pain_points,
             "required_skills": job_description.required_skills,
             "success_metrics": job_description.success_metrics,
+            "posted_date": job_description.posted_date,
+            "posted_text": job_description.posted_text,
         }
         stmt = (
             sql_text(
@@ -3386,6 +3486,8 @@ async def get_job_descriptions(user_id: str):
                     pain_points=parsed.get("pain_points", []),
                     required_skills=parsed.get("required_skills", []),
                     success_metrics=parsed.get("success_metrics", []),
+                    posted_date=parsed.get("posted_date"),
+                    posted_text=parsed.get("posted_text"),
                     parsed_at=row.created_at.isoformat() if getattr(row, "created_at", None) else "",
                 )
             )
@@ -3408,6 +3510,8 @@ async def get_job_descriptions(user_id: str):
                         "Reduce time-to-hire by 30%",
                         "Improve candidate quality scores",
                     ],
+                    posted_date=None,
+                    posted_text=None,
                     parsed_at="2024-01-15T10:30:00Z",
                 )
             ]
@@ -3451,6 +3555,8 @@ async def get_job_description(user_id: str, jd_id: str):
                 pain_points=parsed.get("pain_points", []),
                 required_skills=parsed.get("required_skills", []),
                 success_metrics=parsed.get("success_metrics", []),
+                posted_date=parsed.get("posted_date"),
+                posted_text=parsed.get("posted_text"),
                 parsed_at=row.created_at.isoformat() if getattr(row, "created_at", None) else "",
             )
         else:
@@ -3470,6 +3576,8 @@ async def get_job_description(user_id: str, jd_id: str):
                     "Reduce time-to-hire by 30%",
                     "Improve candidate quality scores",
                 ],
+                posted_date=None,
+                posted_text=None,
                 parsed_at="2024-01-15T10:30:00Z",
             )
 
@@ -3492,6 +3600,8 @@ async def update_job_description(user_id: str, jd_id: str, job_description: JobD
             "pain_points": job_description.pain_points,
             "required_skills": job_description.required_skills,
             "success_metrics": job_description.success_metrics,
+            "posted_date": job_description.posted_date,
+            "posted_text": job_description.posted_text,
         }
         stmt = (
             sql_text(

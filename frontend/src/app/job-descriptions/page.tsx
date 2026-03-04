@@ -49,6 +49,8 @@ interface JobDescription {
   responsibilities?: string[];
   requirements?: string[];
   benefits?: string[];
+  postedDate?: string;
+  postedText?: string;
   jdJargon: string[];
   // New: user-selected preference rank (unique across the visible jobs).
   favoriteRank?: FavoriteRank;
@@ -76,6 +78,8 @@ interface BackendJobDescription {
   responsibilities?: string[] | null;
   requirements?: string[] | null;
   benefits?: string[] | null;
+  posted_date?: string | null;
+  posted_text?: string | null;
   parsed_at: string;
 }
 
@@ -117,6 +121,7 @@ type ScrapedRole = {
    role_family?: string | null;
    work_mode?: string | null;
    match_reasons?: string[] | null;
+  posted_text?: string | null;
 };
 
 type ScrapedRolesResponse = {
@@ -169,6 +174,16 @@ function normalizeFavoriteRanks(list: JobDescription[]): JobDescription[] {
     used.add(r);
   }
   return out;
+}
+
+function postedLabel(jd: JobDescription): string {
+  const text = String(jd?.postedText || "").trim();
+  if (text) return text;
+  const d = String(jd?.postedDate || "").trim();
+  if (!d) return "Unknown";
+  const parsed = new Date(d);
+  if (Number.isNaN(parsed.getTime())) return d;
+  return parsed.toLocaleDateString();
 }
 
 function analyzeIndeedUrl(raw: string): {
@@ -556,6 +571,8 @@ export default function JobDescriptionsPage() {
         responsibilities: (jd.responsibilities || undefined) as any,
         requirements: (jd.requirements || undefined) as any,
         benefits: (jd.benefits || undefined) as any,
+        postedDate: jd.posted_date || undefined,
+        postedText: jd.posted_text || undefined,
         jdJargon: extractJargon(jd.content || ""),
         preferenceStars: undefined,
         parsedAt: jd.parsed_at || new Date().toISOString(),
@@ -615,6 +632,8 @@ export default function JobDescriptionsPage() {
             responsibilities: (jd.responsibilities || undefined) as any,
             requirements: (jd.requirements || undefined) as any,
             benefits: (jd.benefits || undefined) as any,
+            postedDate: jd.posted_date || undefined,
+            postedText: jd.posted_text || undefined,
             jdJargon: extractJargon(jd.content || ""),
             preferenceStars: undefined,
             parsedAt: jd.parsed_at || new Date().toISOString(),
@@ -1102,6 +1121,9 @@ export default function JobDescriptionsPage() {
                           <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
                             {jd.salaryRange ? jd.salaryRange : "Salary not provided"}
                           </span>
+                          <span className="px-2 py-1 rounded-full border border-blue-400/25 bg-blue-500/10 text-blue-100">
+                            Posted: {postedLabel(jd)}
+                          </span>
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
@@ -1312,9 +1334,8 @@ export default function JobDescriptionsPage() {
                     </div>
                     {/* JD Jargon intentionally removed (low-signal for job seekers) */}
                     <div className="mt-3 pt-3 border-t border-white/10">
-                      <p className="text-xs text-white/60">
-                        Parsed on {new Date(jd.parsedAt).toLocaleDateString()}
-                      </p>
+                      <div className="text-xs text-white/60">Posted: {postedLabel(jd)}</div>
+                      <div className="text-xs text-white/50">Imported on {new Date(jd.parsedAt).toLocaleDateString()}</div>
                     </div>
                     </>
                     ) : null}
@@ -1606,6 +1627,7 @@ export default function JobDescriptionsPage() {
                               <div className="mt-0.5 text-[11px] text-white/70">
                                 <span className="inline">{formatCompanyName(String(r.company || "Unknown"))}</span>
                                 {r.work_mode ? <span className="inline"> • {r.work_mode}</span> : null}
+                                {r.posted_text ? <span className="inline"> • Posted {String(r.posted_text)}</span> : null}
                               </div>
                             </div>
 

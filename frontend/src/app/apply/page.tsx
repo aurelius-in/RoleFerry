@@ -347,7 +347,7 @@ export default function ApplyPage() {
           match_score: Number(r.matchScore || 0),
           eligible: isRoleEligible(r),
           requirements_summary: reqSummary,
-          date_posted: "",
+          date_posted: String(jd?.postedDate || jd?.posted_date || jd?.postedText || jd?.posted_text || "").trim(),
           application_status: app?.status || "pending",
         };
       });
