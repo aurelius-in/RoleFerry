@@ -257,13 +257,13 @@ def _create_application_from_payload(payload: ApplicationCreate, *, auto_apply: 
     return app
 
 
-@router.post("/api/applications")
+@router.post("/applications")
 async def create_application(payload: ApplicationCreate):
     app = _create_application_from_payload(payload, auto_apply=bool(payload.auto_apply), profile=None)
     return {"application": app, "status": "created"}
 
 
-@router.post("/api/applications/bulk")
+@router.post("/applications/bulk")
 async def bulk_apply(payload: BulkApplyRequest):
     if not isinstance(payload.roles, list) or not payload.roles:
         raise HTTPException(status_code=400, detail="roles is required")
@@ -287,7 +287,7 @@ async def bulk_apply(payload: BulkApplyRequest):
     return {"applications": created, "summary": summary}
 
 
-@router.get("/api/applications")
+@router.get("/applications")
 async def list_applications(mode: Optional[str] = "jobseeker"):
     return {
         "applications": applications_db,
@@ -295,7 +295,7 @@ async def list_applications(mode: Optional[str] = "jobseeker"):
     }
 
 
-@router.get("/api/applications/export")
+@router.get("/applications/export")
 async def export_applications_csv():
     fieldnames = [
         "application_id",
@@ -339,7 +339,7 @@ async def export_applications_csv():
     return {"filename": "applications_export.csv", "content": buff.getvalue()}
 
 
-@router.post("/api/applications/export/enriched")
+@router.post("/applications/export/enriched")
 async def export_enriched_matches_csv(payload: EnrichedExportRequest):
     fieldnames = [
         "Date Posted",
@@ -426,7 +426,7 @@ async def export_enriched_matches_csv(payload: EnrichedExportRequest):
     }
 
 
-@router.post("/api/applications/import/matches-csv", response_model=MatchesCsvImportResponse)
+@router.post("/applications/import/matches-csv", response_model=MatchesCsvImportResponse)
 async def import_matches_csv(payload: MatchesCsvImportRequest):
     raw = str(payload.csv_content or "")
     if not raw.strip():
@@ -503,7 +503,7 @@ async def import_matches_csv(payload: MatchesCsvImportRequest):
     )
 
 
-@router.get("/api/applications/{application_id}")
+@router.get("/applications/{application_id}")
 async def get_application(application_id: int):
     app = next((a for a in applications_db if a['id'] == application_id), None)
     if not app:
@@ -511,7 +511,7 @@ async def get_application(application_id: int):
     return {"application": app}
 
 
-@router.patch("/api/applications/{application_id}")
+@router.patch("/applications/{application_id}")
 async def update_application(application_id: int, payload: ApplicationUpdate):
     app = next((a for a in applications_db if a['id'] == application_id), None)
     if not app:
@@ -537,7 +537,7 @@ async def update_application(application_id: int, payload: ApplicationUpdate):
     return {"application": app}
 
 
-@router.post("/api/applications/{application_id}/interviews")
+@router.post("/applications/{application_id}/interviews")
 async def add_interview(application_id: int, payload: InterviewCreate):
     app = next((a for a in applications_db if a['id'] == application_id), None)
     if not app:
@@ -557,7 +557,7 @@ async def add_interview(application_id: int, payload: InterviewCreate):
     return {"interview": interview}
 
 
-@router.post("/api/applications/{application_id}/offer")
+@router.post("/applications/{application_id}/offer")
 async def add_offer(application_id: int, amount: int, equity: Optional[str] = None):
     app = next((a for a in applications_db if a['id'] == application_id), None)
     if not app:
