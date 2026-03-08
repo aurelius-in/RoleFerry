@@ -21,6 +21,8 @@ export type RFCampaignContextV1 = {
   painpoint_matches?: any;
   company_research?: any;
   contact_research?: any;
+  selected_contact_signals?: any[];
+  selected_company_signals?: any[];
   links?: {
     bio_page_url?: string;
     work_link?: string;
@@ -169,6 +171,8 @@ export function buildCampaignContextV1(contactId: string): RFCampaignContextV1 {
     painpoint_matches: painpointMatches,
     company_research: companyResearch,
     contact_research: contactResearch,
+    selected_contact_signals: safeJson<any[]>(lsGet("rf_selected_contact_signals"), []),
+    selected_company_signals: safeJson<any[]>(lsGet("rf_selected_company_signals"), []),
     links,
   };
 }

@@ -20,12 +20,10 @@ const STONES: StoneConfig[] = [
   { step: 4, tab: "job-descriptions", label: "Role Search", icon: "🔎", href: "/job-descriptions" },
   { step: 5, tab: "gap-analysis", label: "Gap Analysis", icon: "🧩", href: "/gap-analysis" },
   { step: 6, tab: "pain-point-match", label: "Pain Point Match", icon: "🔗", href: "/painpoint-match" },
-  { step: 7, tab: "apply", label: "Apply", icon: "✅", href: "/apply" },
-  { step: 8, tab: "offer", label: "Offer", icon: "✨", href: "/offer" },
-  // Flow order: company research first, then decision makers.
-  { step: 9, tab: "company-research", label: "Company Research", icon: "🏢", href: "/company-research" },
-  { step: 10, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
-  // Bio → Campaign.
+  { step: 7, tab: "company-research", label: "Company Research", icon: "🏢", href: "/company-research" },
+  { step: 8, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
+  { step: 9, tab: "offer", label: "Offer", icon: "✨", href: "/offer" },
+  { step: 10, tab: "apply", label: "Apply", icon: "✅", href: "/apply" },
   { step: 11, tab: "bio-page", label: "Bio Page", icon: "🌐", href: "/bio-page" },
   { step: 12, tab: "campaign", label: "Campaign", icon: "📧", href: "/campaign" },
 ];

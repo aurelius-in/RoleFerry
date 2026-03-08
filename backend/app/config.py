@@ -72,6 +72,9 @@ class Settings(BaseModel):
     auth_cookie_secure: bool = Field(default=os.getenv("ROLEFERRY_AUTH_COOKIE_SECURE", "false").lower() == "true")
     auth_cookie_samesite: str = Field(default=os.getenv("ROLEFERRY_AUTH_COOKIE_SAMESITE", "lax"))
 
+    # Signaliz (AI-powered company signal enrichment)
+    signaliz_api_key: str | None = Field(default=os.getenv("SIGNALIZ_API_KEY"))
+
     # Offer Decks / Clay-Clone
     gamma_api_key: str | None = Field(default=os.getenv("GAMMA_API_KEY"))
     gamma_webhook_url: str | None = Field(default=os.getenv("GAMMA_WEBHOOK_URL"))

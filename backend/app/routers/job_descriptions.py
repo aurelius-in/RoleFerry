@@ -2764,17 +2764,30 @@ def _blocked_title_for_non_tech_seekers(title: str) -> bool:
     """Block software/engineering roles for users whose resume has no tech intent."""
     low = str(title or "").lower()
     blocked = [
-        "software engineer", "software developer", "backend engineer",
-        "frontend engineer", "full stack engineer", "full-stack engineer",
-        "fullstack engineer", "platform engineer", "site reliability",
-        "sre ", "devops engineer", "cloud engineer", "data engineer",
-        "machine learning", "ml engineer", "ai engineer", "ai research",
+        "software engineer", "software developer", "software architect",
+        "backend engineer", "backend developer",
+        "frontend engineer", "frontend developer",
+        "full stack engineer", "full-stack engineer", "full stack developer",
+        "fullstack engineer", "fullstack developer",
+        "platform engineer", "site reliability", "sre ",
+        "devops engineer", "devops ", "cloud engineer",
+        "data engineer", "data engineering",
+        "machine learning", "ml engineer", "ml ops", "mlops",
+        "ai engineer", "ai research", "ai developer",
         "deep learning", "nlp engineer", "computer vision",
         "systems engineer", "infrastructure engineer", "security engineer",
-        "firmware engineer", "embedded engineer", "ios developer",
-        "android developer", "mobile developer", "web developer",
-        "qa engineer", "test engineer", "sdet",
-        "data scientist", "applied scientist",
+        "cybersecurity engineer", "network engineer",
+        "firmware engineer", "embedded engineer", "embedded software",
+        "ios developer", "ios engineer",
+        "android developer", "android engineer",
+        "mobile developer", "mobile engineer",
+        "web developer", "react developer", "angular developer", "vue developer",
+        "python developer", "java developer", "golang developer", "rust developer",
+        "node.js developer", "typescript developer",
+        "qa engineer", "test engineer", "sdet", "automation engineer",
+        "data scientist", "applied scientist", "research scientist",
+        "solutions architect", "cloud architect",
+        "blockchain", "smart contract", "solidity",
     ]
     return any(x in low for x in blocked)
 
@@ -3285,7 +3298,16 @@ async def get_scraped_roles(
             seen_pos.add(k)
     skill_focus = resume_positive[:4]
     skill_clause = " OR ".join([f'"{s}"' for s in skill_focus]) if skill_focus else ""
-    negative_clause = " ".join([f'-"{kw}"' for kw in negative_kw[:6]]) if negative_kw else ""
+
+    # Auto-inject negative keywords to prevent tech role pollution for non-tech seekers.
+    effective_neg = list(negative_kw)
+    if not tech_intent:
+        auto_neg = ["software engineer", "machine learning", "data scientist", "backend engineer", "frontend engineer"]
+        existing_neg_lower = {str(k).lower() for k in effective_neg}
+        for an in auto_neg:
+            if an not in existing_neg_lower:
+                effective_neg.append(an)
+    negative_clause = " ".join([f'-"{kw}"' for kw in effective_neg[:10]]) if effective_neg else ""
 
     # Broaden to multiple ATS ecosystems + public careers surfaces.
     domains = [
@@ -3421,6 +3443,8 @@ async def get_scraped_roles(
             if mode == "strict":
                 continue
         if tech_intent and mode == "strict" and _blocked_title_for_tech_seekers(title):
+            continue
+        if not tech_intent and _blocked_title_for_non_tech_seekers(title):
             continue
         if not _looks_like_relevant_title(title, role_tokens):
             continue

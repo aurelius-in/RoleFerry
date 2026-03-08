@@ -281,7 +281,8 @@ function filterContextByLayers(ctx: any, layers: ContextLayers) {
   if (layers.painpoint_match) out.painpoint_matches = ctx.painpoint_matches;
   if (layers.company_research) out.company_research = ctx.company_research;
   if (layers.contact_research) out.contact_research = ctx.contact_research;
-  // Keep links in context by default; signature lines are controlled separately by signature_prefs.
+  if (ctx.selected_contact_signals?.length) out.selected_contact_signals = ctx.selected_contact_signals;
+  if (ctx.selected_company_signals?.length) out.selected_company_signals = ctx.selected_company_signals;
   return out;
 }
 
