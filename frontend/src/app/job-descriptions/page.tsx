@@ -240,9 +240,10 @@ export default function JobDescriptionsPage() {
   const [scrapedRolesError, setScrapedRolesError] = useState<string | null>(null);
   const [scrapedRolesMessage, setScrapedRolesMessage] = useState<string>("");
   const [scrapedRolesMeta, setScrapedRolesMeta] = useState<{ requested_roles?: number; target_companies?: number; unique_companies?: number; discovered_urls?: number; scored_candidates?: number; source_breakdown?: Record<string, number>; fit_breakdown?: { high?: number; medium?: number; exploratory?: number } } | null>(null);
-  const [funnelMode, setFunnelMode] = useState<"strict" | "broad">("broad");
-  const [discoveryLimit, setDiscoveryLimit] = useState<120 | 220 | 300>(120);
-  const [highFitOnly, setHighFitOnly] = useState(false);
+  const [strictness, setStrictness] = useState(25);
+  const funnelMode = strictness > 50 ? "strict" : "broad";
+  const discoveryLimit: 120 | 220 | 300 = strictness > 70 ? 120 : strictness > 40 ? 220 : 300;
+  const highFitOnly = false;
   const [ignoredScrapedRoleIds, setIgnoredScrapedRoleIds] = useState<string[]>([]);
   const [expandedRoleDetails, setExpandedRoleDetails] = useState<Record<string, boolean>>({});
   const [positiveKeywords, setPositiveKeywords] = useState<string[]>([]);
@@ -510,14 +511,12 @@ export default function JobDescriptionsPage() {
                     .join(", ")
                 : "";
             const roleCategories = listToCsv(prefs?.role_categories || prefs?.roleCategories);
-            const prefSkills = listToCsv(prefs?.skills || prefs?.Skills);
             const industries = listToCsv(prefs?.industries || prefs?.Industries);
             const resumeSkills = listToCsv(resume?.skills || resume?.Skills);
             const locations = listToCsv(prefs?.location_preferences || prefs?.locationPreferences);
             const minimumSalary = normalizeKeyword(prefs?.minimum_salary || prefs?.minimumSalary);
             const state = normalizeKeyword(prefs?.state);
             if (roleCategories) params.set("role_categories", roleCategories);
-            if (prefSkills) params.set("skills", prefSkills);
             if (industries) params.set("industries", industries);
             if (resumeSkills) params.set("resume_skills", resumeSkills);
             if (locations) params.set("location_preferences", locations);
@@ -576,10 +575,9 @@ export default function JobDescriptionsPage() {
   }, []);
 
   useEffect(() => {
-    // Additive feed at the bottom of the screen; does not alter existing import flow.
     loadScrapedRoles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [funnelMode, discoveryLimit]);
+  }, []);
 
   useEffect(() => {
     if (!hasMounted) return;
@@ -1675,56 +1673,30 @@ export default function JobDescriptionsPage() {
                         See Matched Roles
                       </button>
                     </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
-                      <div className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/20 p-1">
-                        <button
-                          type="button"
-                          onClick={() => setFunnelMode("strict")}
-                          className={`rounded px-2 py-1 font-semibold ${
-                            funnelMode === "strict" ? "bg-white/20 text-white" : "text-white/65 hover:bg-white/10"
-                          }`}
-                          title="Higher precision, fewer jobs"
-                        >
-                          Strict
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setFunnelMode("broad")}
-                          className={`rounded px-2 py-1 font-semibold ${
-                            funnelMode === "broad" ? "bg-emerald-500/25 text-emerald-100" : "text-white/65 hover:bg-white/10"
-                          }`}
-                          title="Top-of-funnel volume"
-                        >
-                          Broad
-                        </button>
+                    <div className="mt-2 text-[11px]">
+                      <div className="flex items-center gap-3">
+                        <span className="text-white/50 font-semibold shrink-0">Broad</span>
+                        <input
+                          type="range"
+                          min={0}
+                          max={100}
+                          step={5}
+                          value={strictness}
+                          onChange={(e) => setStrictness(Number(e.target.value))}
+                          className="flex-1 h-1.5 accent-emerald-400 cursor-pointer"
+                          title={`Strictness: ${strictness}%`}
+                        />
+                        <span className="text-white/50 font-semibold shrink-0">Strict</span>
                       </div>
-                      <div className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-black/20 p-1">
-                        {[120, 220, 300].map((n) => (
-                          <button
-                            key={`lim_${n}`}
-                            type="button"
-                            onClick={() => setDiscoveryLimit(n as 120 | 220 | 300)}
-                            className={`rounded px-2 py-1 font-semibold ${
-                              discoveryLimit === n ? "bg-white/20 text-white" : "text-white/65 hover:bg-white/10"
-                            }`}
-                            title={`Target ${n} roles`}
-                          >
-                            {n}
-                          </button>
-                        ))}
+                      <div className="mt-1 text-[10px] text-white/40 text-center">
+                        {strictness <= 20
+                          ? "Very broad — needs only 1 keyword match"
+                          : strictness <= 50
+                          ? "Moderate — needs a few keyword matches"
+                          : strictness <= 80
+                          ? "Strict — needs several keyword matches"
+                          : "Very strict — needs 5+ keyword matches"}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setHighFitOnly((v) => !v)}
-                        className={`rounded-md border px-2 py-1 font-semibold ${
-                          highFitOnly
-                            ? "border-emerald-400/40 bg-emerald-500/20 text-emerald-100"
-                            : "border-white/10 bg-black/20 text-white/70 hover:bg-white/10"
-                        }`}
-                        title="Show only 75%+ fit roles"
-                      >
-                        High fit only
-                      </button>
                     </div>
                   </div>
                   <button
@@ -1916,9 +1888,22 @@ export default function JobDescriptionsPage() {
             ) : null}
 
             {(() => {
+              const minScore = strictness <= 20 ? 0 : strictness <= 50 ? 35 : strictness <= 80 ? 55 : 75;
+              const minPosHits = strictness <= 20 ? 1 : strictness <= 50 ? 2 : strictness <= 80 ? 3 : 5;
               const visibleScrapedRoles = scrapedRoles
                 .filter((r) => !ignoredScrapedRoleIds.includes(String(r.id || "")))
-                .filter((r) => (highFitOnly ? Number(r.match_score || 0) >= 75 : true));
+                .filter((r) => Number(r.match_score || 0) >= minScore)
+                .filter((r) => {
+                  if (!negativeKeywords.length) return true;
+                  const blob = `${r.title} ${r.snippet || ""}`.toLowerCase();
+                  return !negativeKeywords.some((kw) => blob.includes(kw.toLowerCase()));
+                })
+                .filter((r) => {
+                  if (!positiveKeywords.length || minPosHits <= 1) return true;
+                  const blob = `${r.title} ${r.snippet || ""}`.toLowerCase();
+                  const hits = positiveKeywords.filter((kw) => blob.includes(kw.toLowerCase())).length;
+                  return hits >= Math.min(minPosHits, positiveKeywords.length);
+                });
               return visibleScrapedRoles.length > 0 ? (
               <div>
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -1928,7 +1913,7 @@ export default function JobDescriptionsPage() {
                       {visibleScrapedRoles.length} roles
                     </span>
                     <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
-                      {funnelMode}
+                      {strictness <= 20 ? "very broad" : strictness <= 50 ? "broad" : strictness <= 80 ? "strict" : "very strict"}
                     </span>
                     {typeof scrapedRolesMeta?.unique_companies === "number" ? (
                       <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
