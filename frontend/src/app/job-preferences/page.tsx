@@ -480,7 +480,11 @@ export default function JobPreferencesPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-medium mb-3">Preferred location (optional)</h3>
+                  <h3 className="text-lg font-medium mb-3">
+                    Preferred location
+                    {(preferences.locationPreferences.includes("In-Person") || preferences.locationPreferences.includes("Hybrid"))
+                      ? "" : " (optional)"}
+                  </h3>
                   <input
                     value={preferences.locationText || ""}
                     onChange={(e) => handleSingleSelect("locationText", e.target.value)}
@@ -488,7 +492,9 @@ export default function JobPreferencesPage() {
                     className="w-full max-w-xl border border-gray-300 rounded-md px-3 py-2"
                   />
                   <div className="mt-1 text-xs text-white/70">
-                    Used for gap analysis + personalization. Leave blank if you’re fully flexible.
+                    {(preferences.locationPreferences.includes("In-Person") || preferences.locationPreferences.includes("Hybrid"))
+                      ? "Required for in-person or hybrid roles."
+                      : "Used for gap analysis + personalization. Leave blank if you're fully flexible."}
                   </div>
                 </div>
 
@@ -583,47 +589,6 @@ export default function JobPreferencesPage() {
                   </label>
                 ))}
               </div>
-            </div>
-
-            {/* Skills */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4">
-                What skills do you have or enjoy working with? (Optional)
-              </h2>
-              <p className="text-gray-600 mb-4">
-                Heart a skill to indicate that you'd prefer roles that utilize that
-                skill!
-              </p>
-              <div className="mb-4">
-                <input
-                  type="text"
-                  placeholder="Search all skills..."
-                  value={skillSearch}
-                  onChange={(e) => setSkillSearch(e.target.value)}
-                  className="w-full max-w-md border border-gray-300 rounded-md px-3 py-2"
-                />
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {visibleSkills.map((skill) => (
-                  <label
-                    key={skill}
-                    className="flex items-center space-x-2 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={preferences.skills.includes(skill)}
-                      onChange={() => handleMultiSelect("skills", skill)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="text-sm">{skill}</span>
-                  </label>
-                ))}
-              </div>
-              {filteredSkills.length > visibleSkills.length && (
-                <div className="mt-3 text-xs text-white/60">
-                  Showing {visibleSkills.length} of {filteredSkills.length} matching skills. Narrow the search to see others.
-                </div>
-              )}
             </div>
 
             {/* Minimum Salary */}

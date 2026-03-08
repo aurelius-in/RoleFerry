@@ -2674,34 +2674,9 @@ def _role_query_from_preferences(pref: Dict[str, Any]) -> str:
 
 
 def _resume_skill_hints() -> List[str]:
-    rx = store.demo_latest_resume or {}
-    raw = rx.get("skills") or rx.get("Skills") or []
-    out: List[str] = []
-    seen: set[str] = set()
-    blocked = {
-        "communication",
-        "leadership",
-        "teamwork",
-        "problem solving",
-        "critical thinking",
-        "time management",
-        "collaboration",
-    }
-    if isinstance(raw, list):
-        for s in raw:
-            t = str(s or "").strip()
-            if not t:
-                continue
-            k = t.lower()
-            if k in blocked:
-                continue
-            if len(t) < 2:
-                continue
-            if k in seen:
-                continue
-            seen.add(k)
-            out.append(t)
-    return out[:20]
+    """Return an empty list. Resume skills must come from the caller (frontend).
+    We never read from the global demo store to avoid cross-user contamination."""
+    return []
 
 
 def _parse_keyword_list(raw: Optional[str]) -> List[str]:
@@ -2793,11 +2768,13 @@ def _blocked_title_for_non_tech_seekers(title: str) -> bool:
         "frontend engineer", "full stack engineer", "full-stack engineer",
         "fullstack engineer", "platform engineer", "site reliability",
         "sre ", "devops engineer", "cloud engineer", "data engineer",
-        "machine learning engineer", "ml engineer", "ai engineer",
+        "machine learning", "ml engineer", "ai engineer", "ai research",
+        "deep learning", "nlp engineer", "computer vision",
         "systems engineer", "infrastructure engineer", "security engineer",
         "firmware engineer", "embedded engineer", "ios developer",
         "android developer", "mobile developer", "web developer",
         "qa engineer", "test engineer", "sdet",
+        "data scientist", "applied scientist",
     ]
     return any(x in low for x in blocked)
 
@@ -2994,8 +2971,8 @@ def _company_from_result(url: str, title: str) -> str:
 
 
 def _load_job_preferences_best_effort() -> Dict[str, Any]:
-    if isinstance(store.demo_job_preferences, dict) and store.demo_job_preferences:
-        return dict(store.demo_job_preferences)
+    """Return neutral defaults. User preferences must come from the caller (frontend).
+    We never read from the global demo store to avoid cross-user contamination."""
     return {
         "role_categories": ["Professional & Specialist"],
         "skills": [],
@@ -3238,23 +3215,21 @@ async def get_scraped_roles(
     Auto-discover role links from common career page ecosystems using user preferences.
     This is additive to the existing manual URL import flow.
     """
-    prefs = _load_job_preferences_best_effort()
-    # Allow caller-provided context to avoid cross-user demo cache bleed.
+    # Always build prefs from caller-supplied params. Never use the global demo store.
     role_cats_in = _parse_keyword_list(role_categories)
     skills_in = _parse_keyword_list(skills)
     industries_in = _parse_keyword_list(industries)
     resume_skills_in = _parse_keyword_list(resume_skills)
     locations_in = _parse_keyword_list(location_preferences)
-    if any([role_cats_in, skills_in, industries_in, resume_skills_in, locations_in, str(state or "").strip(), str(minimum_salary_pref or "").strip()]):
-        prefs = {
-            "role_categories": role_cats_in,
-            "skills": skills_in,
-            "industries": industries_in,
-            "resume_skills": resume_skills_in,
-            "location_preferences": locations_in,
-            "state": str(state or "").strip(),
-            "minimum_salary": str(minimum_salary_pref or "").strip(),
-        }
+    prefs: Dict[str, Any] = {
+        "role_categories": role_cats_in or ["Professional & Specialist"],
+        "skills": skills_in,
+        "industries": industries_in,
+        "resume_skills": resume_skills_in,
+        "location_preferences": locations_in,
+        "state": str(state or "").strip(),
+        "minimum_salary": str(minimum_salary_pref or "").strip() or "$50,000",
+    }
     role_query = _role_query_from_preferences(prefs)
     role_tokens = _role_tokens(role_query)
     minimum_salary = _parse_min_salary_to_int(str(prefs.get("minimum_salary") or ""))
