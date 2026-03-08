@@ -84,6 +84,7 @@ export default function FindContactPage() {
   const [isResearching, setIsResearching] = useState(false);
   const [researchNotice, setResearchNotice] = useState<string | null>(null);
   const [researchByContact, setResearchByContact] = useState<Record<string, any>>({});
+  const [selectedContactSignalIds, setSelectedContactSignalIds] = useState<Set<string>>(new Set());
 
   type RoleDomain =
     | "engineering"
@@ -1245,16 +1246,20 @@ export default function FindContactPage() {
 
                       {activeDraftContactId ? (
                         <div className="mt-3 rounded-md border border-white/10 bg-black/20 p-2.5">
-                          <div className="text-[11px] font-semibold text-white/80">Insights preview</div>
+                          <div className="text-[11px] font-semibold text-white/80">Top signals</div>
                           <div className="mt-1 text-[11px] text-white/60">
                             {(() => {
                               const facts = getInterestingFactsForContact(activeDraftContactId);
                               if (!facts.length) return "No online highlights found yet. Run research to populate.";
-                              return facts.map((f, idx) => (
-                                <div key={`f_${idx}`} className="mt-1 truncate">
-                                  • {trimToChars(f.text, 96)}
-                                </div>
-                              ));
+                              return facts.slice(0, 3).map((f, idx) => {
+                                const sigId = `${activeDraftContactId}_fact_${idx}`;
+                                const on = selectedContactSignalIds.has(sigId);
+                                return (
+                                  <div key={`f_${idx}`} className={`mt-1 truncate ${on ? "text-emerald-200" : ""}`}>
+                                    {on ? "✓ " : "• "}{trimToChars(f.text, 96)}
+                                  </div>
+                                );
+                              });
                             })()}
                           </div>
                         </div>
@@ -1493,31 +1498,70 @@ export default function FindContactPage() {
 
                         {(() => {
                           const facts = getInterestingFactsForContact(active.id);
+                          const topFacts = facts.slice(0, 3);
                           return (
                             <div className="mt-3 rounded-md border border-amber-400/25 bg-amber-500/10 p-3">
                               <div className="text-xs font-semibold text-amber-200 uppercase tracking-wider">
-                                Interesting facts found (for email hooks)
+                                Signals to include in outreach
                               </div>
-                              {facts.length ? (
-                                <div className="mt-2 space-y-1.5 text-sm text-white/80">
-                                  {facts.slice(0, 6).map((f, idx) => (
-                                    <div key={`fact_${active.id}_${idx}`} className="flex items-start justify-between gap-2">
-                                      <div className="min-w-0">
-                                        <span aria-hidden="true">• </span>
-                                        <span>{f.text}</span>
-                                      </div>
-                                      {f.url ? (
-                                        <a
-                                          href={f.url}
-                                          target="_blank"
-                                          className="shrink-0 text-[11px] underline text-white/60 hover:text-white"
-                                          title={f.source_title ? f.source_title : f.url}
-                                        >
-                                          source
-                                        </a>
-                                      ) : null}
-                                    </div>
-                                  ))}
+                              <div className="text-[11px] text-white/55 mt-0.5 mb-2">
+                                Select which facts about {safeFirstName(active.name)} to include in your message.
+                              </div>
+                              {topFacts.length ? (
+                                <div className="space-y-2">
+                                  {topFacts.map((f, idx) => {
+                                    const sigId = `${active.id}_fact_${idx}`;
+                                    const on = selectedContactSignalIds.has(sigId);
+                                    return (
+                                      <button
+                                        key={sigId}
+                                        type="button"
+                                        onClick={() => {
+                                          setSelectedContactSignalIds((prev) => {
+                                            const next = new Set(prev);
+                                            if (next.has(sigId)) next.delete(sigId); else next.add(sigId);
+                                            try {
+                                              const selected = topFacts.filter((_, fi) => next.has(`${active.id}_fact_${fi}`));
+                                              localStorage.setItem(
+                                                "rf_selected_contact_signals",
+                                                JSON.stringify(selected.map((s) => ({ text: s.text, url: s.url }))),
+                                              );
+                                            } catch {}
+                                            return next;
+                                          });
+                                        }}
+                                        className={`w-full text-left rounded-md border p-2.5 transition-colors ${
+                                          on
+                                            ? "border-emerald-400/50 bg-emerald-500/15"
+                                            : "border-white/10 bg-white/5 hover:bg-white/10"
+                                        }`}
+                                      >
+                                        <div className="flex items-start gap-2">
+                                          <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] font-bold ${
+                                            on ? "border-emerald-400 bg-emerald-500 text-black" : "border-white/30 text-white/40"
+                                          }`}>
+                                            {on ? "✓" : ""}
+                                          </span>
+                                          <div className="min-w-0 flex-1">
+                                            <span className="text-sm text-white/80">{f.text}</span>
+                                            {f.source_title ? (
+                                              <span className="ml-2 text-[10px] text-white/45">({f.source_title})</span>
+                                            ) : null}
+                                          </div>
+                                          {f.url ? (
+                                            <a
+                                              href={f.url}
+                                              target="_blank"
+                                              className="shrink-0 text-[10px] underline text-white/50 hover:text-white"
+                                              onClick={(e) => e.stopPropagation()}
+                                            >
+                                              source
+                                            </a>
+                                          ) : null}
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
                                 </div>
                               ) : (
                                 <div className="mt-2 text-xs text-white/65">
@@ -1526,6 +1570,11 @@ export default function FindContactPage() {
                                   on the left to populate this.
                                 </div>
                               )}
+                              {facts.length > 3 ? (
+                                <div className="mt-2 text-[10px] text-white/45">
+                                  {facts.length - 3} more fact{facts.length - 3 === 1 ? "" : "s"} available in research data.
+                                </div>
+                              ) : null}
                             </div>
                           );
                         })()}

@@ -220,6 +220,7 @@ export default function JobDescriptionsPage() {
   // Important: avoid reading localStorage during the initial render to prevent
   // React hydration mismatches (which can break click interactions).
   const [hasMounted, setHasMounted] = useState(false);
+  const [jobSitesOpen, setJobSitesOpen] = useState(false);
   const [jobDescriptions, setJobDescriptions] = useState<JobDescription[]>([]);
   const [editMeta, setEditMeta] = useState<{
     id: string;
@@ -238,7 +239,7 @@ export default function JobDescriptionsPage() {
   const [isLoadingScrapedRoles, setIsLoadingScrapedRoles] = useState(false);
   const [scrapedRolesError, setScrapedRolesError] = useState<string | null>(null);
   const [scrapedRolesMessage, setScrapedRolesMessage] = useState<string>("");
-  const [scrapedRolesMeta, setScrapedRolesMeta] = useState<{ requested_roles?: number; target_companies?: number; unique_companies?: number } | null>(null);
+  const [scrapedRolesMeta, setScrapedRolesMeta] = useState<{ requested_roles?: number; target_companies?: number; unique_companies?: number; discovered_urls?: number; scored_candidates?: number; source_breakdown?: Record<string, number>; fit_breakdown?: { high?: number; medium?: number; exploratory?: number } } | null>(null);
   const [funnelMode, setFunnelMode] = useState<"strict" | "broad">("broad");
   const [discoveryLimit, setDiscoveryLimit] = useState<120 | 220 | 300>(120);
   const [highFitOnly, setHighFitOnly] = useState(false);
@@ -553,7 +554,7 @@ export default function JobDescriptionsPage() {
       setScrapedRolesMeta((res?.helper || null) as any);
     } catch (e: any) {
       setScrapedRoles([]);
-      setScrapedRolesError(String(e?.message || "Failed to load auto-discovered roles."));
+      setScrapedRolesError(String(e?.message || "Failed to load matched roles."));
       setScrapedRolesMessage("");
       setScrapedRolesMeta(null);
     } finally {
@@ -1143,15 +1144,25 @@ export default function JobDescriptionsPage() {
           )}
 
           <div className="mb-6 rounded-lg border border-white/10 bg-black/20 p-4">
-            <div className="text-sm font-bold text-white">Websites to find role descriptions</div>
-            <div className="mt-1 text-xs text-white/60">
+            <button
+              type="button"
+              onClick={() => setJobSitesOpen((v) => !v)}
+              className="flex w-full items-center justify-between text-sm font-bold text-white hover:text-white/90"
+            >
+              <span>Job Sites</span>
+              <span className="text-white/50 text-xs">{jobSitesOpen ? "▲" : "▼"}</span>
+            </button>
+
+            {jobSitesOpen ? (
+            <>
+            <div className="mt-2 text-xs text-white/60">
               Open a site, find a posting, then paste the URL or posting text below.
             </div>
 
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="rounded-md border border-white/10 bg-white/5 p-4">
                 <div className="text-xs font-semibold text-white/70 mb-2">General boards</div>
-                <ul className="space-y-1 text-sm">
+                <ul className="space-y-0.5 text-xs">
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.linkedin.com/jobs/" target="_blank" rel="noopener noreferrer">LinkedIn Jobs</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.indeed.com/" target="_blank" rel="noopener noreferrer">Indeed</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.google.com/search?q=jobs" target="_blank" rel="noopener noreferrer">Google Jobs</a></li>
@@ -1168,7 +1179,7 @@ export default function JobDescriptionsPage() {
 
               <div className="rounded-md border border-white/10 bg-white/5 p-4">
                 <div className="text-xs font-semibold text-white/70 mb-2">Startups & remote</div>
-                <ul className="space-y-1 text-sm">
+                <ul className="space-y-0.5 text-xs">
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://wellfound.com/jobs" target="_blank" rel="noopener noreferrer">Wellfound (AngelList Talent)</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.ycombinator.com/jobs" target="_blank" rel="noopener noreferrer">Work at a Startup (YC)</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://remoteok.com/" target="_blank" rel="noopener noreferrer">Remote OK</a></li>
@@ -1184,7 +1195,7 @@ export default function JobDescriptionsPage() {
 
               <div className="rounded-md border border-white/10 bg-white/5 p-4">
                 <div className="text-xs font-semibold text-white/70 mb-2">Tech boards</div>
-                <ul className="space-y-1 text-sm">
+                <ul className="space-y-0.5 text-xs">
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.builtin.com/jobs" target="_blank" rel="noopener noreferrer">Built In (Tech)</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.dice.com/" target="_blank" rel="noopener noreferrer">Dice</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.techcareers.com/" target="_blank" rel="noopener noreferrer">TechCareers</a></li>
@@ -1196,7 +1207,7 @@ export default function JobDescriptionsPage() {
 
               <div className="rounded-md border border-white/10 bg-white/5 p-4">
                 <div className="text-xs font-semibold text-white/70 mb-2">Top Company Boards</div>
-                <ul className="space-y-1 text-sm">
+                <ul className="space-y-0.5 text-xs">
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://careers.google.com/" target="_blank" rel="noopener noreferrer">Google Careers</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://jobs.careers.microsoft.com/" target="_blank" rel="noopener noreferrer">Microsoft Careers</a></li>
                   <li><a className="text-blue-300 underline hover:text-blue-200" href="https://www.amazon.jobs/" target="_blank" rel="noopener noreferrer">Amazon Jobs</a></li>
@@ -1210,6 +1221,8 @@ export default function JobDescriptionsPage() {
                 </ul>
               </div>
             </div>
+            </>
+            ) : null}
           </div>
 
           <div className="mb-6 flex justify-between items-center">
@@ -1647,23 +1660,19 @@ export default function JobDescriptionsPage() {
               <div className="rounded-lg border border-white/10 bg-black/20 p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-semibold text-white">Auto-discovered</h3>
+                    <h3 className="text-lg font-semibold text-white">Keywords</h3>
                     <div className="mt-1">
                       <button
                         type="button"
                         onClick={() => {
-                          try {
-                            localStorage.setItem(
-                              "rf_apply_studio_filters_v1",
-                              JSON.stringify({ positive: positiveKeywords, negative: negativeKeywords }),
-                            );
-                          } catch {}
-                          router.push("/tools/apply-studio");
+                          loadScrapedRoles();
+                          const el = document.getElementById("matched-roles-section");
+                          if (el) setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 300);
                         }}
                         className="rounded-md border border-emerald-400/35 bg-emerald-500/15 px-2 py-1 text-[11px] font-semibold text-emerald-100 hover:bg-emerald-500/25"
-                        title="Open RoleFerry Apply Studio"
+                        title="Generate and view matched roles"
                       >
-                        Open Apply Studio
+                        See Matched Roles
                       </button>
                     </div>
                     <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
@@ -1723,7 +1732,7 @@ export default function JobDescriptionsPage() {
                     onClick={loadScrapedRoles}
                     disabled={isLoadingScrapedRoles}
                     className="shrink-0 rounded-md border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/15 disabled:opacity-50 inline-flex items-center gap-2"
-                    title="Refresh auto-discovered role links"
+                    title="Refresh matched roles"
                   >
                     {isLoadingScrapedRoles ? (
                       <>
@@ -1882,149 +1891,159 @@ export default function JobDescriptionsPage() {
                   </div>
                 </div>
 
-                {scrapedRolesError ? (
-                  <div className="mt-3 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200">
-                    {scrapedRolesError}
-                  </div>
-                ) : null}
-
-                {!isLoadingScrapedRoles && scrapedRoles.length === 0 && !scrapedRolesError ? (
-                  <div className="mt-4 text-sm text-white/60">
-                    No auto-discovered roles yet. Save your Job Preferences (including salary) and refresh.
-                  </div>
-                ) : null}
-
-                {(() => {
-                  const visibleScrapedRoles = scrapedRoles
-                    .filter((r) => !ignoredScrapedRoleIds.includes(String(r.id || "")))
-                    .filter((r) => (highFitOnly ? Number(r.match_score || 0) >= 75 : true));
-                  return visibleScrapedRoles.length > 0 ? (
-                  <div className="mt-4">
-                    <div className="mb-3 flex flex-wrap gap-2 text-[11px]">
-                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
-                        Roles shown: {visibleScrapedRoles.length}
-                      </span>
-                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
-                        Mode: {funnelMode}
-                      </span>
-                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
-                        Target: {discoveryLimit}
-                      </span>
-                      {typeof scrapedRolesMeta?.scored_candidates === "number" ? (
-                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
-                          Scored: {scrapedRolesMeta.scored_candidates}
-                        </span>
-                      ) : null}
-                      {typeof scrapedRolesMeta?.discovered_urls === "number" ? (
-                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
-                          URLs found: {scrapedRolesMeta.discovered_urls}
-                        </span>
-                      ) : null}
-                      {typeof scrapedRolesMeta?.unique_companies === "number" ? (
-                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
-                          Companies: {scrapedRolesMeta.unique_companies}
-                        </span>
-                      ) : null}
-                      {typeof scrapedRolesMeta?.fit_breakdown?.high === "number" ? (
-                        <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-emerald-100">
-                          High fit: {scrapedRolesMeta.fit_breakdown.high}
-                        </span>
-                      ) : null}
-                    </div>
-                    {scrapedRolesMeta?.source_breakdown && Object.keys(scrapedRolesMeta.source_breakdown).length > 0 ? (
-                      <div className="mb-3 flex flex-wrap gap-2 text-[10px] text-white/70">
-                        {Object.entries(scrapedRolesMeta.source_breakdown)
-                          .sort((a, b) => Number(b[1] || 0) - Number(a[1] || 0))
-                          .slice(0, 8)
-                          .map(([src, count]) => (
-                            <span key={`src_${src}`} className="rounded-full border border-white/10 bg-black/20 px-2 py-1">
-                              {src}: {count}
-                            </span>
-                          ))}
-                      </div>
-                    ) : null}
-                    <div className="space-y-2">
-                      {visibleScrapedRoles.map((r) => (
-                        <div key={r.id} className="rounded-md border border-white/10 bg-white/5 px-3 py-2">
-                          {/* Keep title full-width on its own row for readability. */}
-                          <div>
-                            <div className="min-w-0">
-                              <div className="text-sm font-semibold leading-snug text-white break-normal whitespace-normal">
-                                {r.title}
-                              </div>
-                              <div className="mt-0.5 text-[11px] text-white/70">
-                                <span className="inline">{formatCompanyName(String(r.company || "Unknown"))}</span>
-                                {r.work_mode ? <span className="inline"> • {r.work_mode}</span> : null}
-                                {r.posted_text ? <span className="inline"> • Posted {String(r.posted_text)}</span> : null}
-                              </div>
-                            </div>
-
-                            <div className="mt-2 flex items-start justify-between gap-2">
-                              <div className="min-w-0 pr-2 text-[11px] text-white/75 whitespace-normal break-words">
-                                {r.location || "Location not listed"}
-                              </div>
-                              <div className="shrink-0 flex flex-wrap items-center justify-end gap-1.5">
-                                {typeof r.match_score === "number" ? (
-                                  <span className="inline-flex items-center rounded-full bg-amber-500/85 px-2 py-0.5 text-[10px] font-bold text-black">
-                                    {Math.max(0, Math.min(100, Number(r.match_score || 0)))}%
-                                  </span>
-                                ) : null}
-                                <button
-                                  type="button"
-                                  className="animate-pulse rounded-md border border-emerald-400/40 bg-emerald-500/20 px-2 py-1 text-[10px] font-semibold text-emerald-100 hover:bg-emerald-500/30"
-                                  disabled={isImporting}
-                                  onClick={async () => {
-                                    const roleUrl = String(r.url || "").trim();
-                                    if (!roleUrl) return;
-                                    setImportError(null);
-                                    setIsImporting(true);
-                                    try {
-                                      await importFromUrl(roleUrl, { seedImporterInput: true });
-                                      setImportType("url");
-                                    } catch (err) {
-                                      const msg = err instanceof Error ? err.message : String(err);
-                                      setImportError(msg);
-                                    } finally {
-                                      setIsImporting(false);
-                                    }
-                                  }}
-                                  title="Import this role now"
-                                >
-                                  Import
-                                </button>
-                                <button
-                                  type="button"
-                                  className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] font-semibold text-white/80 hover:bg-white/10"
-                                  onClick={() => {
-                                    const id = String(r.id || "");
-                                    if (!id) return;
-                                    setIgnoredScrapedRoleIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
-                                  }}
-                                  title="Hide this suggestion"
-                                >
-                                  Ignore
-                                </button>
-                                <a
-                                  href={r.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
-                                  title="Open role link"
-                                  aria-label="Open role link"
-                                >
-                                  ↗
-                                </a>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : null;
-                })()}
               </div>
             </div>
+          </div>
+
+          <div id="matched-roles-section" className="mt-8">
+            {isLoadingScrapedRoles ? (
+              <div className="rounded-lg border border-white/10 bg-black/20 p-6 text-center">
+                <InlineSpinner className="mx-auto h-5 w-5" />
+                <div className="mt-2 text-sm text-white/70">Finding matched roles...</div>
+              </div>
+            ) : null}
+
+            {scrapedRolesError ? (
+              <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+                {scrapedRolesError}
+              </div>
+            ) : null}
+
+            {!isLoadingScrapedRoles && scrapedRoles.length === 0 && !scrapedRolesError ? (
+              <div className="rounded-lg border border-white/10 bg-black/20 p-6 text-center text-sm text-white/60">
+                No matched roles yet. Set your keywords above and click <span className="font-semibold text-emerald-200">See Matched Roles</span>.
+              </div>
+            ) : null}
+
+            {(() => {
+              const visibleScrapedRoles = scrapedRoles
+                .filter((r) => !ignoredScrapedRoleIds.includes(String(r.id || "")))
+                .filter((r) => (highFitOnly ? Number(r.match_score || 0) >= 75 : true));
+              return visibleScrapedRoles.length > 0 ? (
+              <div>
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="text-lg font-semibold text-white">Matched Roles</h3>
+                  <div className="flex flex-wrap gap-2 text-[11px]">
+                    <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
+                      {visibleScrapedRoles.length} roles
+                    </span>
+                    <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
+                      {funnelMode}
+                    </span>
+                    {typeof scrapedRolesMeta?.unique_companies === "number" ? (
+                      <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
+                        {scrapedRolesMeta.unique_companies} companies
+                      </span>
+                    ) : null}
+                    {typeof scrapedRolesMeta?.fit_breakdown?.high === "number" ? (
+                      <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-emerald-100">
+                        {scrapedRolesMeta.fit_breakdown.high} high fit
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {visibleScrapedRoles.map((r) => (
+                    <div key={r.id} className="rounded-lg border border-white/10 bg-black/20 p-3">
+                      <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0">
+                          <h3 className="text-lg font-semibold text-white break-words">{r.title}</h3>
+                          <p className="mt-0.5 text-white/70 break-words text-sm">{formatCompanyName(String(r.company || "Unknown"))}</p>
+                          <div className="mt-1.5 flex flex-wrap gap-2 text-[11px]">
+                            {r.salary_range ? (
+                              <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
+                                {r.salary_range}
+                              </span>
+                            ) : (
+                              <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/50">
+                                Salary not listed
+                              </span>
+                            )}
+                            <span className="px-2 py-1 rounded-full border border-blue-400/25 bg-blue-500/10 text-blue-100">
+                              Posted: {r.posted_text || "Unknown"}
+                            </span>
+                            {r.location ? (
+                              <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/70">
+                                {r.location}
+                              </span>
+                            ) : null}
+                            {r.work_mode ? (
+                              <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/70">
+                                {r.work_mode}
+                              </span>
+                            ) : null}
+                            {typeof r.match_score === "number" ? (
+                              <span className="px-2 py-1 rounded-full bg-amber-500/85 text-[10px] font-bold text-black">
+                                {Math.max(0, Math.min(100, Number(r.match_score || 0)))}% match
+                              </span>
+                            ) : null}
+                          </div>
+                          {r.role_family ? (
+                            <div className="mt-1 text-[10px] text-white/50">{r.role_family}</div>
+                          ) : null}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            className="rounded-md border border-emerald-400/40 bg-emerald-500/20 px-3 py-1.5 text-[11px] font-semibold text-emerald-100 hover:bg-emerald-500/30"
+                            disabled={isImporting}
+                            onClick={async () => {
+                              const roleUrl = String(r.url || "").trim();
+                              if (!roleUrl) return;
+                              setImportError(null);
+                              setIsImporting(true);
+                              try {
+                                await importFromUrl(roleUrl, { seedImporterInput: true });
+                                setImportType("url");
+                              } catch (err) {
+                                const msg = err instanceof Error ? err.message : String(err);
+                                setImportError(msg);
+                              } finally {
+                                setIsImporting(false);
+                              }
+                            }}
+                            title="Import this role into your workflow"
+                          >
+                            Import
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded-md border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/80 hover:bg-white/10"
+                            onClick={() => {
+                              const id = String(r.id || "");
+                              if (!id) return;
+                              setIgnoredScrapedRoleIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+                            }}
+                            title="Hide this suggestion"
+                          >
+                            Ignore
+                          </button>
+                          <a
+                            href={r.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-md border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/80 hover:bg-white/10"
+                            title="View original posting"
+                          >
+                            View ↗
+                          </a>
+                        </div>
+                      </div>
+                      {(r.match_reasons || []).length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {(r.match_reasons || []).map((reason, ri) => (
+                            <span key={`mr_${r.id}_${ri}`} className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-white/60">
+                              {reason}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              ) : null;
+            })()}
           </div>
 
           {jobDescriptions.length > 0 && (

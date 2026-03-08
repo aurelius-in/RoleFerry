@@ -24,6 +24,39 @@ type CompanyResearch = {
   updated_at: string;
 };
 
+type CompanySignal = {
+  id: string;
+  category: string;
+  text: string;
+  priority: number;
+};
+
+function extractTopSignals(d: CompanyResearch | null, max = 3): CompanySignal[] {
+  if (!d) return [];
+  const candidates: CompanySignal[] = [];
+  const add = (id: string, cat: string, raw: string, priority: number) => {
+    const t = String(raw || "").replace(/no\s+(data|info|information)\s+found/gi, "").trim();
+    if (!t || t.length < 10) return;
+    const firstLine = t.split(/\n/).map(l => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean)[0] || t;
+    candidates.push({ id, category: cat, text: firstLine.slice(0, 280), priority });
+  };
+  add("product_launches", "Product Launch", d.product_launches, 100);
+  add("leadership_changes", "Leadership Change", d.leadership_changes, 95);
+  add("recent_news", "Recent News", d.recent_news, 90);
+  add("recent_posts", "Recent Post", d.recent_posts, 85);
+  add("culture", "Culture & Values", d.culture, 60);
+  add("market_position", "Market Position", d.market_position, 55);
+  add("other_hiring_signals", "Hiring Signal", d.other_hiring_signals, 50);
+  add("publications", "Publication", d.publications, 45);
+  for (const sig of (d.hiring_signals || []).slice(0, 3)) {
+    if (sig.detail && sig.detail.length > 15) {
+      candidates.push({ id: `hs_${sig.label}`, category: sig.label, text: sig.detail.slice(0, 280), priority: 75 });
+    }
+  }
+  candidates.sort((a, b) => b.priority - a.priority);
+  return candidates.slice(0, max);
+}
+
 type ResearchResponse = {
   success: boolean;
   message: string;
@@ -335,6 +368,25 @@ export default function CompanyResearchPage() {
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<CompanyResearch | null>(null);
   const [savedByCompany, setSavedByCompany] = useState<Record<string, CompanyResearch>>({});
+  const [selectedSignalIds, setSelectedSignalIds] = useState<Set<string>>(new Set());
+  const [briefingOpen, setBriefingOpen] = useState(false);
+
+  const topSignals = useMemo(() => extractTopSignals(draft), [draft]);
+
+  const toggleSignal = (id: string) => {
+    setSelectedSignalIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      try {
+        const selected = topSignals.filter((s) => next.has(s.id));
+        localStorage.setItem(
+          "rf_selected_company_signals",
+          JSON.stringify(selected.map((s) => ({ category: s.category, text: s.text }))),
+        );
+      } catch {}
+      return next;
+    });
+  };
 
   const companyOptions = useMemo(() => {
     const companies = new Set<string>();
@@ -822,13 +874,56 @@ export default function CompanyResearchPage() {
                   ) : null}
                   </div>
 
+                  {/* Top Signals for outreach */}
+                  {topSignals.length > 0 ? (
+                  <div className="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
+                    <div className="text-sm font-bold text-white mb-1">Signals to Include in Outreach</div>
+                    <div className="text-xs text-white/60 mb-3">
+                      The best facts we found about <span className="font-semibold text-white/80">{activeCompanyDisplay}</span>. Select which to include in your messages.
+                    </div>
+                    <div className="space-y-2">
+                      {topSignals.map((sig) => {
+                        const on = selectedSignalIds.has(sig.id);
+                        return (
+                          <button
+                            key={sig.id}
+                            type="button"
+                            onClick={() => toggleSignal(sig.id)}
+                            className={`w-full text-left rounded-md border p-3 transition-colors ${
+                              on
+                                ? "border-emerald-400/50 bg-emerald-500/15"
+                                : "border-white/10 bg-white/5 hover:bg-white/10"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs font-bold ${
+                                on ? "border-emerald-400 bg-emerald-500 text-black" : "border-white/30 text-white/40"
+                              }`}>
+                                {on ? "✓" : ""}
+                              </span>
+                              <span className="rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/70">
+                                {sig.category}
+                              </span>
+                            </div>
+                            <div className="mt-1.5 pl-7 text-sm text-white/80">{sig.text}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  ) : null}
+
                   {/* Company Briefing */}
                   <div className="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
               <div className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-sm font-bold text-white">Company Briefing</div>
-                  <div className="text-xs text-white/60">Edit these to refine your knowledge base (used downstream).</div>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setBriefingOpen((v) => !v)}
+                  className="flex items-center gap-2 text-sm font-bold text-white hover:text-white/90"
+                >
+                  <span>Company Briefing</span>
+                  <span className="text-white/50 text-xs">{briefingOpen ? "▲" : "▼"}</span>
+                </button>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -848,6 +943,8 @@ export default function CompanyResearchPage() {
                 </div>
               </div>
 
+              {briefingOpen ? (
+              <>
               {(() => {
                 const emptySections: string[] = [];
                 const cn = activeCompanyDisplay;
@@ -995,6 +1092,10 @@ export default function CompanyResearchPage() {
                   </ul>
                 </div>
               ) : null}
+              </>
+              ) : (
+                <div className="mt-2 text-xs text-white/50">Click to expand and edit full briefing details.</div>
+              )}
             </div>
                 </>
               ) : (
