@@ -504,9 +504,11 @@ export default function ApplyPage() {
                 </div>
               )}
 
-              {autoApply && missingRequiredFields.length > 0 ? (
-                <div className="space-y-2 rounded-md border border-yellow-400/30 bg-yellow-500/10 p-3">
-                  <div className="text-xs font-semibold text-yellow-100">Complete required fields</div>
+              {autoApply ? (
+                <div className={`space-y-2 rounded-md border p-3 ${missingRequiredFields.length > 0 ? "border-yellow-400/30 bg-yellow-500/10" : "border-emerald-400/30 bg-emerald-500/10"}`}>
+                  <div className={`text-xs font-semibold ${missingRequiredFields.length > 0 ? "text-yellow-100" : "text-emerald-100"}`}>
+                    {missingRequiredFields.length > 0 ? "Complete required fields" : "All fields complete"}
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
                     <input
                       value={firstName}
@@ -533,19 +535,21 @@ export default function ApplyPage() {
                     placeholder="Phone"
                     className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
                   />
-                  <input
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="City"
-                    className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-                  />
-                  <input
-                    value={postalCode}
-                    onChange={(e) => setPostalCode(e.target.value)}
-                    placeholder="Postal code"
-                    className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-                  />
-                  {missingRequiredKeys.has("resume") ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="City"
+                      className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
+                    />
+                    <input
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                      placeholder="Postal code"
+                      className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
+                    />
+                  </div>
+                  {!resumePresent ? (
                     <div className="flex items-center justify-between gap-2">
                       <label className="inline-flex items-center gap-2 text-xs text-white/80">
                         <input type="checkbox" checked={resumePresent} onChange={(e) => setResumePresent(e.target.checked)} />

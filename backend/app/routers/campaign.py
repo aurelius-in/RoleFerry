@@ -1019,29 +1019,57 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             # Contact signals from contact research + sourced facts.
             contact_bios = _as_list(ctc.get("contact_bios"))
             b0 = contact_bios[0] if contact_bios and isinstance(contact_bios[0], dict) else {}
+            outreach_angles: List[str] = []
+            urgency_info = ""
             if isinstance(b0, dict):
                 for v in _as_list(b0.get("public_profile_highlights"))[:3]:
-                    _push_unique(contact_signals, f"Public profile highlight: {v}", 5)
+                    _push_unique(contact_signals, f"Profile highlight: {v}", 8)
                 for v in _as_list(b0.get("post_topics"))[:2]:
-                    _push_unique(contact_signals, f"Post topic: {v}", 5)
-                for f in _as_list(b0.get("interesting_facts"))[:3]:
+                    _push_unique(contact_signals, f"Posts about: {v}", 8)
+                for f in _as_list(b0.get("interesting_facts"))[:5]:
                     if not isinstance(f, dict):
                         continue
                     fact = str(f.get("fact") or "").strip()
                     src_title = str(f.get("source_title") or "").strip()
                     src_url = str(f.get("source_url") or "").strip()
+                    signal_type = str(f.get("signal_type") or "").strip()
                     if fact:
-                        combined = fact if not src_title else f"{fact} ({src_title})"
-                        _push_unique(contact_signals, combined, 5)
-                    if src_url and len(source_urls) < 6 and src_url not in source_urls:
+                        prefix = {
+                            "web_activity": "Activity",
+                            "career_move": "Career move",
+                            "company_news": "Company news",
+                            "hiring_signal": "Hiring",
+                        }.get(signal_type, "Signal")
+                        combined = f"{prefix}: {fact}" if not src_title else f"{prefix}: {fact} ({src_title})"
+                        _push_unique(contact_signals, combined, 8)
+                    if src_url and len(source_urls) < 8 and src_url not in source_urls:
                         source_urls.append(src_url)
+                outreach_angles = _as_list(b0.get("outreach_angles"))[:4]
+                u_score = int(b0.get("urgency_score") or 0)
+                u_reason = str(b0.get("urgency_reason") or "").strip()
+                if u_score > 0 and u_reason:
+                    urgency_info = f"Urgency: {u_score}/100 - {u_reason}"
 
-            out = {
+            # Also pull from user-selected signals stored in context.
+            selected_signals = _as_list(context_obj.get("selected_contact_signals"))
+            for sel in selected_signals[:3]:
+                if isinstance(sel, dict):
+                    t = str(sel.get("text") or "").strip()
+                    if t:
+                        _push_unique(contact_signals, f"[SELECTED] {t}", 8)
+                elif isinstance(sel, str) and sel.strip():
+                    _push_unique(contact_signals, f"[SELECTED] {sel.strip()}", 8)
+
+            out: Dict[str, Any] = {
                 "role_scope_signals": role_scope_signals,
                 "company_signals": company_signals,
                 "contact_signals": contact_signals,
                 "source_urls": source_urls,
             }
+            if outreach_angles:
+                out["outreach_angles"] = outreach_angles
+            if urgency_info:
+                out["urgency_info"] = urgency_info
             has_any = any(bool(out.get(k)) for k in ("role_scope_signals", "company_signals", "contact_signals"))
             return out if has_any else {}
 
@@ -1139,12 +1167,26 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
                 helper={"used_llm": False},
             )
 
-        # Step-specific intent to reduce generic output.
+        # Step-specific intent -- each email must take a DIFFERENT angle.
         step_intent = {
-            1: "Primary cold email. Strong opener + one clear idea + one proof + simple CTA.",
-            2: "Short follow-up. Add one new helpful detail, do not repeat the whole pitch.",
-            3: "Different angle. Offer a tiny 2-3 bullet plan or alternate proof. Keep it warm and specific.",
-            4: "Breakup / last follow-up. Respectful, easy out, easy yes. Can be playful but workplace-safe.",
+            1: (
+                "Primary cold email. Lead with ONE specific signal about the contact or company "
+                "(recent post, career move, company news, hiring signal). Bridge to ONE proof point from "
+                "your resume. Simple soft CTA. 4-6 sentences max."
+            ),
+            2: (
+                "Follow-up with a NEW angle. Do NOT repeat step 1. Pick a DIFFERENT signal or pain point. "
+                "Share one additional proof point or mini-insight. Keep it under 4 sentences."
+            ),
+            3: (
+                "Value-add email. Offer something useful: a 2-3 bullet mini-plan, a relevant framework, "
+                "or a quick-win suggestion tied to a SPECIFIC role challenge. Show you understand their world. "
+                "Harder CTA (specific time ask)."
+            ),
+            4: (
+                "Breakup / final message. Gracious, brief, easy out. Acknowledge they're busy. "
+                "If there's a referral ask, include it. Can be slightly warmer in tone. 2-3 sentences."
+            ),
         }.get(step, "Email step")
 
         # Expand "custom" tone into concrete instructions for the model.
@@ -1176,28 +1218,30 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
 
         system = (
             "You are RoleFerry's outreach copilot. Draft ONE email step in a 4-email sequence.\n\n"
-            "IDEAL MESSAGE STRUCTURE (follow this flow):\n"
-            "Line 1: Research hook about the company (shows you did homework on them).\n"
-            "Line 2: Bridge connecting that research to your relevant expertise.\n"
-            "Line 3: A concrete proof point or result you achieved.\n"
-            "Line 4: CTA about applying your expertise at their company.\n\n"
-            "EXAMPLE of a good Step 1 email body:\n"
+            "IDEAL MESSAGE STRUCTURE (follow this flow exactly):\n"
+            "1. Signal hook: Open with a SPECIFIC signal about the person or their company. This proves you did research.\n"
+            "   Good signals: their recent LinkedIn post, a company product launch, a hiring push, a conference talk they gave.\n"
+            "   BAD: 'I noticed your company is doing great things' (vague). GOOD: 'I saw your post about scaling the data pipeline team from 3 to 12' (specific).\n"
+            "2. Bridge: Connect that signal to YOUR relevant expertise in one sentence.\n"
+            "3. Proof: One concrete result (metric, shipped project, measurable outcome).\n"
+            "4. CTA: One clear, low-friction ask.\n\n"
+            "EXAMPLE of a good Step 1:\n"
             "\"Hi Sarah,\n\n"
-            "I'm reaching out after learning about Acme's advanced threat detection platform "
-            "and your team's challenge to validate alerts and reduce false positives. "
-            "That aligns with how I've approached similar problems: in my current role, "
-            "I built a framework that reduced false-positive rates by 40% while scaling "
-            "to handle 3x the alert volume.\n\n"
-            "I'd love to explore how I could bring this to the Security Engineering Lead role.\n\n"
+            "I saw your recent post about scaling Acme's threat detection team and the challenge "
+            "of validating alerts at 3x volume. That's exactly the problem I solved at my current company, "
+            "where I built a triage framework that cut false-positive rates by 40%.\n\n"
+            "Would you be open to a quick 10-minute chat about how I could help with the Security Engineering Lead role?\n\n"
             "Best,\nJohn\"\n\n"
-            "EXAMPLE of a good Step 4 (final) email body:\n"
+            "EXAMPLE of a good Step 2 (different angle):\n"
             "\"Hi Sarah,\n\n"
-            "I realize your time is limited, so this will be my last note. If the role has "
-            "been filled or I'm not the right fit, no worries at all. If there is someone else "
-            "I should speak with, I would be grateful for an introduction.\n\n"
-            "If you are still exploring options, I would welcome the chance to talk briefly about "
-            "how I can contribute.\n\n"
-            "Thanks again,\nJohn\"\n\n"
+            "Quick follow-up. I noticed Acme just announced the SOC automation roadmap. In my current role, "
+            "I led a similar initiative that reduced mean-time-to-respond from 45min to under 8.\n\n"
+            "Happy to share specifics if helpful.\n\nJohn\"\n\n"
+            "EXAMPLE of a good Step 4 (breakup):\n"
+            "\"Hi Sarah,\n\n"
+            "This will be my last note. If the timing isn't right or the role's been filled, completely understand. "
+            "If there's someone else on your team I should connect with, I'd appreciate an intro.\n\n"
+            "Thanks for your time,\nJohn\"\n\n"
             "Hard style constraints:\n"
             "- Do NOT use em dashes or en dashes. Use commas, parentheses, or simple hyphens.\n"
             "- Hard ban: no canned openers like 'I hope you're doing well'.\n"
@@ -1212,15 +1256,21 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             f"{tone_line}\n"
             f"Tone guardrails: {_tone_guardrails(tone)}\n\n"
             f"{cta_guidance}\n\n"
-            "Personalization rules:\n"
-            "- If context contains offer (value prop), use its one-liner and 1 proof point to avoid generic claims.\n"
-            "- If context contains research_brief/company_research/contact_research, reference 1-2 concrete details from it.\n"
-            "- Prefer details tied to the role scope and public company signals (product areas, public initiatives, role priorities).\n"
-            "- Keep contact references light-touch and publicly sourced only; avoid over-leaning on personal history.\n"
-            "- Do not claim private knowledge, and do not invent facts, titles, dates, products, or initiatives.\n"
-            "- If no research is present, reference the role and one pain point (from painpoint_matches or gap_analysis or job text).\n"
-            "- Use at most 1-2 research details total (avoid overstuffing).\n"
-            "- Do not mention that you used AI or 'research'.\n\n"
+            "Personalization rules (CRITICAL for quality):\n"
+            "- The research_brief in context contains categorized signals. USE THEM.\n"
+            "- contact_signals marked [SELECTED] are the ones the user specifically chose. Prioritize these.\n"
+            "- For step 1: Use 1 contact signal (activity, career move, or post) as your opener hook.\n"
+            "- For step 2: Use a DIFFERENT signal than step 1 (company news, product launch, or hiring signal).\n"
+            "- For step 3: Connect a role pain point to a specific proof point from the offer/resume.\n"
+            "- If research_brief.outreach_angles is provided, use one of them as your approach angle.\n"
+            "- If context contains offer (value prop), use its one-liner and 1 proof point.\n"
+            "- Prefer details tied to the role scope and public company signals.\n"
+            "- Keep contact references light-touch and publicly sourced only.\n"
+            "- Do not claim private knowledge, and do not invent facts.\n"
+            "- If no research signals exist, reference the role and one pain point from the job posting.\n"
+            "- Use at most 2 research details per email (avoid overstuffing).\n"
+            "- Do not mention that you used AI or 'research'.\n"
+            "- NEVER be generic. Every sentence must contain a specific detail.\n\n"
             "CTA output rules:\n"
             "- Include exactly ONE CTA sentence/question near the end.\n"
             "- For steps 1-2, keep CTA low-friction when possible.\n"
@@ -1240,7 +1290,7 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
         raw = client.run_chat_completion(
             messages,
             temperature=0.35 if step in (1, 2) else (0.45 if step == 3 else 0.55),
-            max_tokens=700,
+            max_tokens=900,
             stub_json={"subject": _fallback()[0], "body": _fallback()[1], "rationale": "fallback"},
         )
 

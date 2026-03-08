@@ -7,6 +7,40 @@ import { getCurrentDataMode } from "@/lib/dataMode";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
 
+type StructuredSignal = {
+  signal_type: string;
+  source_type: string;
+  signal_title: string;
+  signal_source: string;
+  signal_content: string;
+  signal_date: string;
+  confidence_score: number;
+  metadata?: Record<string, any>;
+};
+
+type SequenceStep = {
+  email_number: number;
+  angle: string;
+  subject_line: string;
+  key_point: string;
+};
+
+type OutreachSummaryType = {
+  one_liner_hook: string;
+  strongest_signal: string;
+  recommended_angle: string;
+  conversation_starters: string[];
+  signal_relevance: string[];
+  sequence_strategy?: SequenceStep[];
+};
+
+type CompanyIntelligence = {
+  signals: StructuredSignal[];
+  outreach_summary?: OutreachSummaryType;
+  executive_summary: string;
+  overall_relevance_score: number;
+};
+
 type CompanyResearch = {
   company_name: string;
   overview: string;
@@ -21,6 +55,7 @@ type CompanyResearch = {
   publications: string;
   hiring_signals: Array<{ label: string; status: "good" | "unknown"; detail: string }>;
   hooks?: string[];
+  intelligence?: CompanyIntelligence;
   updated_at: string;
 };
 
@@ -31,7 +66,7 @@ type CompanySignal = {
   priority: number;
 };
 
-function extractTopSignals(d: CompanyResearch | null, max = 3): CompanySignal[] {
+function extractTopSignals(d: CompanyResearch | null, max = 5): CompanySignal[] {
   if (!d) return [];
   const candidates: CompanySignal[] = [];
   const add = (id: string, cat: string, raw: string, priority: number) => {
@@ -524,6 +559,7 @@ export default function CompanyResearchPage() {
         publications: publicationsFromModel || "",
         hiring_signals: signals,
         hooks: Array.isArray(resp?.helper?.hooks) ? resp.helper!.hooks : undefined,
+        intelligence: entry?.intelligence || undefined,
         updated_at: new Date().toISOString(),
       };
 
@@ -881,36 +917,201 @@ export default function CompanyResearchPage() {
                     <div className="text-xs text-white/60 mb-3">
                       The best facts we found about <span className="font-semibold text-white/80">{activeCompanyDisplay}</span>. Select which to include in your messages.
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {topSignals.map((sig) => {
                         const on = selectedSignalIds.has(sig.id);
+                        const catColors: Record<string, string> = {
+                          "Product Launch": "bg-blue-500/20 text-blue-300 border-blue-500/30",
+                          "Leadership Change": "bg-purple-500/20 text-purple-300 border-purple-500/30",
+                          "Recent News": "bg-amber-500/20 text-amber-300 border-amber-500/30",
+                          "Recent Post": "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
+                          "Culture & Values": "bg-pink-500/20 text-pink-300 border-pink-500/30",
+                          "Market Position": "bg-white/10 text-white/70 border-white/20",
+                          "Hiring Signal": "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+                          "Publication": "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
+                        };
+                        const badgeClass = catColors[sig.category] || "bg-white/10 text-white/70 border-white/20";
                         return (
                           <button
                             key={sig.id}
                             type="button"
                             onClick={() => toggleSignal(sig.id)}
-                            className={`w-full text-left rounded-md border p-3 transition-colors ${
+                            className={`w-full text-left rounded-md border p-2.5 transition-colors ${
                               on
                                 ? "border-emerald-400/50 bg-emerald-500/15"
                                 : "border-white/10 bg-white/5 hover:bg-white/10"
                             }`}
                           >
-                            <div className="flex items-center gap-2">
-                              <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs font-bold ${
+                            <div className="flex items-start gap-2">
+                              <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] font-bold ${
                                 on ? "border-emerald-400 bg-emerald-500 text-black" : "border-white/30 text-white/40"
                               }`}>
                                 {on ? "✓" : ""}
                               </span>
-                              <span className="rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/70">
-                                {sig.category}
-                              </span>
+                              <div className="min-w-0 flex-1">
+                                <span className={`inline-block rounded-full border px-1.5 py-0.5 text-[9px] font-semibold mb-1 ${badgeClass}`}>
+                                  {sig.category}
+                                </span>
+                                <div className="text-[13px] text-white/80 leading-tight">{sig.text}</div>
+                              </div>
                             </div>
-                            <div className="mt-1.5 pl-7 text-sm text-white/80">{sig.text}</div>
                           </button>
                         );
                       })}
                     </div>
                   </div>
+                  ) : null}
+
+                  {/* Structured Intelligence */}
+                  {draft?.intelligence?.signals?.length ? (
+                    <div className="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-sm font-bold text-white">Company Intelligence</div>
+                        {draft.intelligence.overall_relevance_score > 0 && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-white/50">Relevance</span>
+                            <span className={`text-xs font-bold ${draft.intelligence.overall_relevance_score >= 0.7 ? "text-emerald-300" : draft.intelligence.overall_relevance_score >= 0.4 ? "text-amber-300" : "text-white/50"}`}>
+                              {(draft.intelligence.overall_relevance_score * 100).toFixed(0)}%
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {draft.intelligence.outreach_summary?.one_liner_hook ? (
+                        <div className="mb-4 rounded-md border border-blue-500/20 bg-blue-500/10 p-3">
+                          <div className="text-[10px] font-semibold text-blue-300 uppercase tracking-wider mb-1">Outreach Summary</div>
+                          <div className="text-sm text-white/90 font-medium mb-2">{draft.intelligence.outreach_summary.one_liner_hook}</div>
+                          {draft.intelligence.outreach_summary.strongest_signal && (
+                            <div className="text-xs text-white/60 mb-1.5">
+                              <span className="text-amber-300 font-semibold">Strongest signal:</span> {draft.intelligence.outreach_summary.strongest_signal}
+                            </div>
+                          )}
+                          {draft.intelligence.outreach_summary.recommended_angle && (
+                            <div className="text-xs text-white/60 mb-2">
+                              <span className="text-emerald-300 font-semibold">Recommended angle:</span> {draft.intelligence.outreach_summary.recommended_angle}
+                            </div>
+                          )}
+                          {draft.intelligence.outreach_summary.conversation_starters?.length ? (
+                            <div className="mt-2 pt-2 border-t border-blue-500/15">
+                              <div className="text-[10px] font-semibold text-blue-200/70 mb-1">Conversation starters</div>
+                              {draft.intelligence.outreach_summary.conversation_starters.map((s, i) => (
+                                <div key={`cs_${i}`} className="text-xs text-white/60 mt-0.5 flex items-start gap-1.5">
+                                  <span className="shrink-0 text-blue-300/50 mt-0.5">→</span>
+                                  <span>{s}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : null}
+                          {draft.intelligence.outreach_summary.sequence_strategy?.length ? (
+                            <div className="mt-2 pt-2 border-t border-blue-500/15">
+                              <div className="text-[10px] font-semibold text-blue-200/70 mb-1.5">Email Sequence Strategy</div>
+                              <div className="space-y-2">
+                                {draft.intelligence.outreach_summary.sequence_strategy.map((step) => (
+                                  <div key={`seq_${step.email_number}`} className="rounded border border-white/10 bg-white/[0.02] p-2">
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                      <span className="inline-block rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 text-[9px] font-bold">
+                                        Email {step.email_number}
+                                      </span>
+                                      <span className="text-[10px] text-white/70 font-medium">{step.angle}</span>
+                                    </div>
+                                    {step.subject_line && (
+                                      <div className="text-[10px] text-white/50 mt-0.5">
+                                        <span className="text-white/30">Subject:</span> {step.subject_line}
+                                      </div>
+                                    )}
+                                    {step.key_point && (
+                                      <div className="text-[10px] text-white/45 mt-0.5">{step.key_point}</div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
+
+                      {draft.intelligence.executive_summary && (
+                        <div className="mb-4 text-xs text-white/60 leading-relaxed">
+                          {draft.intelligence.executive_summary}
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        {draft.intelligence.signals.map((sig, idx) => {
+                          const typeLabels: Record<string, string> = {
+                            leadership_change: "Leadership",
+                            product_launch: "Product",
+                            hiring_signal: "Hiring",
+                            funding_event: "Funding",
+                            partnership: "Partnership",
+                            market_expansion: "Market",
+                            regulatory: "Regulatory",
+                            technology_adoption: "Technology",
+                            technology: "Technology",
+                            earnings: "Earnings",
+                            restructuring: "Restructuring",
+                            expansion: "Expansion",
+                            news: "News",
+                            workforce: "Workforce",
+                            intent: "Intent",
+                            firmographics: "Firmographics",
+                            funding: "Funding",
+                          };
+                          const typeColors: Record<string, string> = {
+                            leadership_change: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+                            product_launch: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+                            hiring_signal: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+                            funding_event: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+                            partnership: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
+                            market_expansion: "bg-pink-500/20 text-pink-300 border-pink-500/30",
+                            regulatory: "bg-red-500/20 text-red-300 border-red-500/30",
+                            technology_adoption: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
+                            technology: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
+                            earnings: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
+                            restructuring: "bg-orange-500/20 text-orange-300 border-orange-500/30",
+                            expansion: "bg-pink-500/20 text-pink-300 border-pink-500/30",
+                            news: "bg-sky-500/20 text-sky-300 border-sky-500/30",
+                            workforce: "bg-teal-500/20 text-teal-300 border-teal-500/30",
+                            intent: "bg-violet-500/20 text-violet-300 border-violet-500/30",
+                            firmographics: "bg-slate-500/20 text-slate-300 border-slate-500/30",
+                            funding: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+                          };
+                          const badge = typeColors[sig.signal_type] || "bg-white/10 text-white/60 border-white/20";
+                          const confColor = sig.confidence_score >= 0.8 ? "text-emerald-300" : sig.confidence_score >= 0.5 ? "text-amber-300" : "text-white/40";
+                          return (
+                            <div key={`intel_${idx}`} className="rounded-md border border-white/10 bg-white/[0.03] p-3">
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <span className={`inline-block rounded-full border px-1.5 py-0.5 text-[9px] font-semibold ${badge}`}>
+                                  {typeLabels[sig.signal_type] || sig.signal_type}
+                                </span>
+                                {sig.signal_source?.startsWith("signaliz::") ? (
+                                  <span className="text-[9px] text-violet-400/80 font-medium border border-violet-500/30 rounded-full px-1.5">Signaliz</span>
+                                ) : sig.source_type === "web_source" ? (
+                                  <span className="text-[9px] text-emerald-400/60 font-medium">Sourced</span>
+                                ) : null}
+                                <span className={`text-[9px] font-bold ml-auto ${confColor}`}>
+                                  {(sig.confidence_score * 100).toFixed(0)}%
+                                </span>
+                              </div>
+                              <div className="text-sm font-medium text-white/90 mb-1">{sig.signal_title}</div>
+                              {sig.signal_content && (
+                                <div className="text-xs text-white/55 leading-relaxed">{sig.signal_content}</div>
+                              )}
+                              <div className="flex items-center gap-3 mt-1.5">
+                                {sig.signal_date && (
+                                  <span className="text-[10px] text-white/35">{sig.signal_date.split("T")[0]}</span>
+                                )}
+                                {sig.signal_source && !sig.signal_source.startsWith("signaliz::") && (
+                                  <a href={sig.signal_source} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-300/60 hover:text-blue-300 underline truncate max-w-[200px]">
+                                    {(() => { try { return new URL(sig.signal_source).hostname.replace("www.", ""); } catch { return "source"; } })()}
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   ) : null}
 
                   {/* Company Briefing */}

@@ -12,6 +12,7 @@ import xml.etree.ElementTree as ET
 
 router = APIRouter()
 from ..clients.openai_client import get_openai_client, extract_json_from_text
+from ..clients.signaliz import signaliz_enabled, enrich_company_signals
 from ..config import settings
 from ..services.serper_client import serper_web_search
 from ..services.pdl_client import PDLClient
@@ -21,6 +22,19 @@ logger = logging.getLogger(__name__)
 
 # Bump this when changing prompting/logic so cached results don't mask improvements.
 _PROMPT_VERSION = "2026-02-16-research-provider-normalization-v6"
+
+
+def _safe_str_list(val: Any) -> List[str]:
+    """Safely coerce a value to a list of strings. If the LLM returns a bare
+    string instead of a list, wrap it rather than iterating per-character."""
+    if val is None:
+        return []
+    if isinstance(val, str):
+        v = val.strip()
+        return [v] if v and v.lower() != "unknown" else []
+    if isinstance(val, list):
+        return [str(x) for x in val if x is not None and str(x).strip()]
+    return []
 
 
 def _strip_likely_language(s: str) -> str:
@@ -76,8 +90,10 @@ class ContactBio(BaseModel):
     post_topics: List[str] = []
     opinions: List[str] = []
     other_interesting_facts: List[str] = []
-    # Preferred: structured "hooks" with sources (only include urls that exist in corpus).
     interesting_facts: List[Dict[str, str]] = []
+    outreach_angles: List[str] = []
+    urgency_score: int = 0
+    urgency_reason: str = ""
 
 class RecentNews(BaseModel):
     title: str
@@ -86,15 +102,46 @@ class RecentNews(BaseModel):
     source: str
     url: str
 
+
+class StructuredSignal(BaseModel):
+    signal_type: str = ""
+    source_type: str = "ai_enrichment"
+    signal_title: str = ""
+    signal_source: str = ""
+    signal_content: str = ""
+    signal_date: str = ""
+    confidence_score: float = 0.0
+    metadata: Dict[str, Any] = {}
+
+
+class SequenceStep(BaseModel):
+    email_number: int = 1
+    angle: str = ""
+    subject_line: str = ""
+    key_point: str = ""
+
+class OutreachSummary(BaseModel):
+    one_liner_hook: str = ""
+    strongest_signal: str = ""
+    recommended_angle: str = ""
+    conversation_starters: List[str] = []
+    signal_relevance: List[str] = []
+    sequence_strategy: List[SequenceStep] = []
+
+
+class CompanyIntelligence(BaseModel):
+    signals: List[StructuredSignal] = []
+    outreach_summary: Optional[OutreachSummary] = None
+    executive_summary: str = ""
+    overall_relevance_score: float = 0.0
+
+
 class ResearchData(BaseModel):
     company_summary: CompanySummary
     contact_bios: List[ContactBio]
-    # Outreach "theme" guidance (not news): plausible priority + mini-plan
     theme: str = ""
-    # Explicit company fields (LLM-filled). The UI uses these directly instead of scraping headings.
     company_culture_values: str = ""
     company_market_position: str = ""
-    # More company fields useful for job-seekers/outreach (LLM-filled, sourced when possible).
     company_product_launches: str = ""
     company_leadership_changes: str = ""
     company_other_hiring_signals: str = ""
@@ -102,9 +149,9 @@ class ResearchData(BaseModel):
     company_publications: str = ""
     recent_news: List[RecentNews]
     shared_connections: List[str]
-    # Report-style view (dynamic sections; omit low-signal headings)
     background_report_title: Optional[str] = None
     background_report_sections: Optional[List[Dict[str, Any]]] = None
+    intelligence: Optional[CompanyIntelligence] = None
 
 class ResearchRequest(BaseModel):
     contact_ids: List[str]
@@ -134,7 +181,9 @@ _CTX_CACHE_TTL_SECONDS = 60 * 30  # 30 minutes
 
 def _strip_html(s: str) -> str:
     try:
+        import html as _html_mod
         t = re.sub(r"<[^>]+>", " ", str(s or ""))
+        t = _html_mod.unescape(t)
         t = re.sub(r"\s+", " ", t).strip()
         return t
     except Exception:
@@ -187,15 +236,173 @@ def _google_news_rss_hits(query: str, *, num: int = 6) -> List[Dict[str, Any]]:
     return hits
 
 
-def _contact_facts_from_hits(hits: Any, *, max_items: int = 4) -> List[Dict[str, str]]:
+def _extract_ddg_url(raw_href: str) -> str:
+    """Extract the real destination URL from a DuckDuckGo redirect link."""
+    from urllib.parse import unquote, urlparse, parse_qs
+    raw = str(raw_href or "").strip()
+    if "uddg=" in raw:
+        try:
+            parsed = urlparse(raw if raw.startswith("http") else ("https:" + raw))
+            qs = parse_qs(parsed.query)
+            uddg = qs.get("uddg", [""])[0]
+            if uddg:
+                return unquote(uddg)
+        except Exception:
+            pass
+    if raw.startswith("//"):
+        return "https:" + raw
+    return raw
+
+
+def _duckduckgo_search(query: str, *, num: int = 8) -> List[Dict[str, Any]]:
+    """Free keyless web search via DuckDuckGo HTML. Returns Serper-like hit dicts."""
+    q = str(query or "").strip()
+    if not q:
+        return []
+    try:
+        url = f"https://html.duckduckgo.com/html/?q={_urlquote(q)}"
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        with httpx.Client(timeout=10.0, follow_redirects=True, headers=headers) as client:
+            r = client.get(url)
+            if r.status_code != 200:
+                return []
+            html = r.text or ""
+    except Exception:
+        return []
+
+    hits: List[Dict[str, Any]] = []
+    try:
+        for m in re.finditer(
+            r'<a[^>]+class="result__a"[^>]+href="([^"]+)"[^>]*>(.*?)</a>.*?'
+            r'<a[^>]+class="result__snippet"[^>]*>(.*?)</a>',
+            html, re.DOTALL,
+        ):
+            raw_href = str(m.group(1) or "").strip()
+            link = _extract_ddg_url(raw_href)
+            title = _strip_html(m.group(2) or "")
+            snippet = _strip_html(m.group(3) or "")
+            if not link or "duckduckgo.com" in link:
+                continue
+            hits.append({"title": title[:200], "link": link, "url": link, "snippet": snippet[:400]})
+            if len(hits) >= num:
+                break
+    except Exception:
+        pass
+    return hits
+
+
+def _free_web_search(query: str, *, num: int = 6) -> List[Dict[str, Any]]:
+    """Best-effort free web search: tries DuckDuckGo first, then Google News RSS."""
+    hits = _duckduckgo_search(query, num=num)
+    if hits:
+        return hits
+    return _google_news_rss_hits(query, num=num)
+
+
+def _scrape_newsroom(domain: str, *, max_items: int = 6) -> List[Dict[str, Any]]:
     """
-    Deterministically derive outreach-safe 'interesting_facts' from Serper hits.
-    Only uses title/snippet/url (no invention).
+    Try common newsroom/press paths on a company domain and extract press release links.
+    Returns Serper-like hit dicts with title, link, snippet.
+    """
+    if not domain:
+        return []
+    domain = domain.strip().lower().replace("www.", "")
+
+    paths = [
+        f"https://newsroom.{domain}/",
+        f"https://newsroom.{domain}/press-releases",
+        f"https://news.{domain}/",
+        f"https://{domain}/newsroom",
+        f"https://{domain}/press",
+        f"https://{domain}/press-releases",
+        f"https://{domain}/news",
+        f"https://{domain}/blog/press",
+    ]
+
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    hits: List[Dict[str, Any]] = []
+
+    for base_url in paths[:5]:
+        try:
+            with httpx.Client(timeout=8.0, follow_redirects=True, headers=headers) as client:
+                r = client.get(base_url)
+                if r.status_code != 200:
+                    continue
+                html = r.text or ""
+                if len(html) < 500:
+                    continue
+                seen_urls: set[str] = set()
+                for m in re.finditer(
+                    r'<a[^>]+href="([^"]+)"[^>]*>(.*?)</a>',
+                    html, re.DOTALL | re.IGNORECASE,
+                ):
+                    href = str(m.group(1) or "").strip()
+                    title = _strip_html(m.group(2) or "").strip()
+                    if not title or len(title) < 15 or len(title) > 250:
+                        continue
+                    href_lower = href.lower()
+                    if any(skip in href_lower for skip in ["#", "javascript:", "mailto:", "tel:", ".pdf", ".jpg", ".png"]):
+                        continue
+                    if not any(kw in href_lower for kw in [
+                        "press", "release", "announcement", "news", "blog", "article", "update", "launch",
+                    ]):
+                        continue
+                    if href.startswith("/"):
+                        parsed = urlparse(base_url)
+                        href = f"{parsed.scheme}://{parsed.netloc}{href}"
+                    elif not href.startswith("http"):
+                        continue
+                    if href.lower() in seen_urls:
+                        continue
+                    seen_urls.add(href.lower())
+                    hits.append({
+                        "title": title[:200],
+                        "link": href,
+                        "url": href,
+                        "snippet": f"From {domain} newsroom",
+                        "source": "newsroom",
+                    })
+                    if len(hits) >= max_items:
+                        return hits
+                if hits:
+                    return hits
+        except Exception:
+            continue
+    return hits
+
+
+def _classify_signal_type(url: str, title: str, snippet: str) -> str:
+    """Classify a search hit into a signal type for structured display."""
+    text = (url + " " + title + " " + snippet).lower()
+    if any(w in text for w in ["linkedin.com/in", "linkedin.com/posts", "linkedin post"]):
+        return "web_activity"
+    if any(w in text for w in ["podcast", "interview", "conference", "talk", "speaker", "keynote", "webinar"]):
+        return "web_activity"
+    if any(w in text for w in ["hired", "promoted", "appointed", "joins", "joined", "new role", "named as"]):
+        return "career_move"
+    if any(w in text for w in ["funding", "raised", "acquisition", "acquired", "ipo", "series "]):
+        return "company_news"
+    if any(w in text for w in ["hiring", "job", "open role", "we're hiring", "careers"]):
+        return "hiring_signal"
+    if any(w in text for w in ["article", "blog", "post", "wrote", "published", "whitepaper", "report"]):
+        return "web_activity"
+    return "web_activity"
+
+
+def _contact_facts_from_hits(hits: Any, *, max_items: int = 6) -> List[Dict[str, str]]:
+    """
+    Deterministically derive outreach-safe 'interesting_facts' from search hits.
+    Prioritizes high-signal hits (posts, career moves, talks) over generic pages.
     """
     out: List[Dict[str, str]] = []
-    seen: set[str] = set()
+    seen_urls: set[str] = set()
+    seen_facts: set[str] = set()
+
+    priority_buckets: Dict[str, List[Dict[str, Any]]] = {
+        "high": [], "medium": [], "low": [],
+    }
     try:
-        for h in (hits or [])[: 30]:
+        for h in (hits or [])[:40]:
             if not isinstance(h, dict):
                 continue
             title = str(h.get("title") or "").strip()
@@ -203,25 +410,44 @@ def _contact_facts_from_hits(hits: Any, *, max_items: int = 4) -> List[Dict[str,
             snippet = str(h.get("snippet") or "").strip()
             if not url:
                 continue
-            fact = ""
-            if snippet:
-                fact = snippet
-            elif title:
-                fact = title
-            fact = " ".join(str(fact).split()).strip()
-            if not fact:
-                continue
-            # Keep it short + outreach-safe.
-            fact = fact[:140].rstrip()
-            k = (fact.lower() + "|" + url.lower()).strip()
-            if k in seen:
-                continue
-            seen.add(k)
-            out.append({"fact": fact, "source_title": title[:140], "source_url": url})
-            if len(out) >= max(1, int(max_items)):
-                break
+            text_lower = (url + " " + title + " " + snippet).lower()
+            is_high = any(w in text_lower for w in [
+                "linkedin.com/posts", "podcast", "interview", "conference", "speaker",
+                "hired", "promoted", "appointed", "joins", "joined", "article", "blog",
+                "published", "whitepaper", "wrote", "keynote", "talk",
+            ])
+            is_medium = any(w in text_lower for w in [
+                "linkedin.com/in", "funding", "raised", "hiring", "announcement",
+            ])
+            bucket = "high" if is_high else ("medium" if is_medium else "low")
+            priority_buckets[bucket].append(h)
     except Exception:
         return []
+
+    for bucket_name in ["high", "medium", "low"]:
+        for h in priority_buckets[bucket_name]:
+            title = str(h.get("title") or "").strip()
+            url = str(h.get("link") or h.get("url") or "").strip()
+            snippet = str(h.get("snippet") or "").strip()
+            fact = " ".join((snippet or title).split()).strip()
+            if not fact:
+                continue
+            fact = fact[:160].rstrip()
+            url_key = url.lower().rstrip("/")
+            fact_key = fact.lower()[:80]
+            if url_key in seen_urls or fact_key in seen_facts:
+                continue
+            seen_urls.add(url_key)
+            seen_facts.add(fact_key)
+            signal_type = _classify_signal_type(url, title, snippet)
+            out.append({
+                "fact": fact,
+                "source_title": title[:160],
+                "source_url": url,
+                "signal_type": signal_type,
+            })
+            if len(out) >= max(1, int(max_items)):
+                return out
     return out
 
 
@@ -349,6 +575,169 @@ def _bullets_from_serper_hits(hits: Any, *, max_items: int = 6, label: str | Non
     if label:
         return f"{label}:\n" + "\n".join(out)
     return "\n".join(out)
+
+_VALID_SIGNAL_TYPES = {
+    "leadership_change", "product_launch", "hiring_signal", "funding_event",
+    "partnership", "market_expansion", "regulatory", "technology_adoption",
+    "earnings", "restructuring",
+    "technology", "expansion", "news", "workforce", "intent", "firmographics", "funding",
+}
+
+
+def _build_stub_intelligence(corpus: Dict, scope_target: str, company_serper_by_topic: Dict) -> Dict[str, Any]:
+    """Build a basic intelligence block from web search hits (no LLM needed)."""
+    signals: List[Dict[str, Any]] = []
+    try:
+        type_map = {
+            "product_launches": "product_launch",
+            "leadership": "leadership_change",
+            "signals": "hiring_signal",
+            "news": "hiring_signal",
+            "publications": "product_launch",
+            "market": "market_expansion",
+            "culture": "hiring_signal",
+            "overview": "market_expansion",
+            "posts": "technology_adoption",
+        }
+        for topic_key, hits in (company_serper_by_topic.items() if isinstance(company_serper_by_topic, dict) else []):
+            sig_type = type_map.get(str(topic_key), "hiring_signal")
+            for h in (hits or [])[:3]:
+                if not isinstance(h, dict):
+                    continue
+                title = _strip_html(str(h.get("title") or ""))
+                snippet = _strip_html(str(h.get("snippet") or ""))
+                url = str(h.get("link") or h.get("url") or "").strip()
+                if not title and not snippet:
+                    continue
+                signals.append({
+                    "signal_type": sig_type,
+                    "source_type": "web_source" if url else "ai_enrichment",
+                    "signal_title": title[:200],
+                    "signal_source": url,
+                    "signal_content": snippet[:500],
+                    "signal_date": "",
+                    "confidence_score": 0.6 if url else 0.3,
+                    "metadata": {},
+                })
+                if len(signals) >= 8:
+                    break
+            if len(signals) >= 8:
+                break
+    except Exception:
+        pass
+    return {
+        "signals": signals[:8],
+        "outreach_summary": {
+            "one_liner_hook": f"{scope_target} is showing activity worth monitoring for outreach timing.",
+            "strongest_signal": signals[0]["signal_title"] if signals else "",
+            "recommended_angle": f"Reference a recent development at {scope_target} and connect it to your expertise.",
+            "conversation_starters": [],
+            "signal_relevance": [],
+        } if signals else None,
+        "executive_summary": "",
+        "overall_relevance_score": min(1.0, len(signals) * 0.15) if signals else 0.0,
+    }
+
+
+def _parse_intelligence(raw: Any) -> Optional[CompanyIntelligence]:
+    """Parse the intelligence block from LLM output into a CompanyIntelligence model."""
+    if not raw or not isinstance(raw, dict):
+        return None
+    try:
+        signals_raw = raw.get("signals") or []
+        if not isinstance(signals_raw, list):
+            signals_raw = []
+        signals = []
+        for s in signals_raw[:12]:
+            if not isinstance(s, dict):
+                continue
+            st = str(s.get("signal_type") or "").strip().lower()
+            if st not in _VALID_SIGNAL_TYPES:
+                st = "hiring_signal"
+            sig = StructuredSignal(
+                signal_type=st,
+                source_type=str(s.get("source_type") or "ai_enrichment").strip(),
+                signal_title=str(s.get("signal_title") or "").strip()[:200],
+                signal_source=str(s.get("signal_source") or "").strip(),
+                signal_content=str(s.get("signal_content") or "").strip()[:800],
+                signal_date=str(s.get("signal_date") or "").strip(),
+                confidence_score=min(1.0, max(0.0, float(s.get("confidence_score") or 0.0))),
+                metadata=s.get("metadata") if isinstance(s.get("metadata"), dict) else {},
+            )
+            if sig.signal_title or sig.signal_content:
+                signals.append(sig)
+
+        os_raw = raw.get("outreach_summary") or {}
+        if not isinstance(os_raw, dict):
+            os_raw = {}
+        seq_raw = os_raw.get("sequence_strategy") or []
+        seq_steps: List[SequenceStep] = []
+        if isinstance(seq_raw, list):
+            for step in seq_raw[:4]:
+                if isinstance(step, dict):
+                    seq_steps.append(SequenceStep(
+                        email_number=int(step.get("email_number") or len(seq_steps) + 1),
+                        angle=str(step.get("angle") or "").strip()[:120],
+                        subject_line=str(step.get("subject_line") or "").strip()[:200],
+                        key_point=str(step.get("key_point") or "").strip()[:300],
+                    ))
+        outreach_summary = OutreachSummary(
+            one_liner_hook=str(os_raw.get("one_liner_hook") or "").strip()[:300],
+            strongest_signal=str(os_raw.get("strongest_signal") or "").strip()[:500],
+            recommended_angle=str(os_raw.get("recommended_angle") or "").strip()[:500],
+            conversation_starters=_safe_str_list(os_raw.get("conversation_starters"))[:5],
+            signal_relevance=_safe_str_list(os_raw.get("signal_relevance"))[:3],
+            sequence_strategy=seq_steps,
+        ) if (os_raw.get("one_liner_hook") or os_raw.get("strongest_signal")) else None
+
+        return CompanyIntelligence(
+            signals=signals,
+            outreach_summary=outreach_summary,
+            executive_summary=str(raw.get("executive_summary") or "").strip()[:1500],
+            overall_relevance_score=min(1.0, max(0.0, float(raw.get("overall_relevance_score") or 0.0))),
+        )
+    except Exception:
+        return None
+
+
+def _merge_intelligence(
+    llm_intel: Optional[CompanyIntelligence],
+    signaliz_data: Dict[str, Any],
+) -> Optional[CompanyIntelligence]:
+    """Merge Signaliz API signals with LLM-generated intelligence. Signaliz takes priority."""
+    signaliz_signals = signaliz_data.get("signals") if isinstance(signaliz_data, dict) else None
+    if not signaliz_signals and llm_intel:
+        return llm_intel
+    if not signaliz_signals and not llm_intel:
+        return None
+
+    parsed_signaliz = _parse_intelligence(signaliz_data) if signaliz_data else None
+
+    if parsed_signaliz and not llm_intel:
+        return parsed_signaliz
+    if not parsed_signaliz and llm_intel:
+        return llm_intel
+
+    if parsed_signaliz and llm_intel:
+        seen_titles = {s.signal_title.lower()[:60] for s in parsed_signaliz.signals}
+        for s in llm_intel.signals:
+            if s.signal_title.lower()[:60] not in seen_titles:
+                parsed_signaliz.signals.append(s)
+                seen_titles.add(s.signal_title.lower()[:60])
+        parsed_signaliz.signals = parsed_signaliz.signals[:12]
+        if not parsed_signaliz.outreach_summary and llm_intel.outreach_summary:
+            parsed_signaliz.outreach_summary = llm_intel.outreach_summary
+        if not parsed_signaliz.executive_summary and llm_intel.executive_summary:
+            parsed_signaliz.executive_summary = llm_intel.executive_summary
+        if parsed_signaliz.overall_relevance_score < llm_intel.overall_relevance_score:
+            parsed_signaliz.overall_relevance_score = max(
+                parsed_signaliz.overall_relevance_score,
+                llm_intel.overall_relevance_score,
+            )
+        return parsed_signaliz
+
+    return llm_intel
+
 
 @router.post("/research", response_model=ResearchResponse)
 async def conduct_research(request: ResearchRequest):
@@ -653,16 +1042,15 @@ async def conduct_research(request: ResearchRequest):
                     "linkedin": hits_li,
                 }
         elif want_live and not settings.serper_api_key:
-            # Keyless fallback: use Google News RSS so we still populate "recent news",
-            # and can often extract leadership changes / launches / publications / market-position signals.
-            def _gather_rss(queries: List[str], *, per_query: int = 6, cap: int = 12) -> List[Dict[str, Any]]:
+            # Keyless fallback: DuckDuckGo + Google News RSS for both company and contact research.
+            def _gather_free(queries: List[str], *, per_query: int = 6, cap: int = 12) -> List[Dict[str, Any]]:
                 seen: set[str] = set()
                 out: List[Dict[str, Any]] = []
                 for q in queries or []:
                     q = str(q or "").strip()
                     if not q:
                         continue
-                    for h in (_google_news_rss_hits(q, num=per_query) or []):
+                    for h in (_free_web_search(q, num=per_query) or []):
                         if not isinstance(h, dict):
                             continue
                         url = str(h.get("link") or h.get("url") or "").strip()
@@ -676,46 +1064,51 @@ async def conduct_research(request: ResearchRequest):
                 return out
 
             company_queries: Dict[str, List[str]] = {
-                "overview": [f"{scope_target} company overview", f"{scope_target} what is {scope_target}"],
-                "news": [f"{scope_target} recent news", f"{scope_target} announcement"],
-                "product_launches": [f"{scope_target} product launch", f"{scope_target} launched new"],
-                "leadership": [f"{scope_target} leadership changes", f"{scope_target} appointed CEO CTO CPO CFO VP"],
-                "publications": [f"{scope_target} report whitepaper case study", f"{scope_target} publication"],
-                "market": [f"{scope_target} competitors market position", f"{scope_target} competitor"],
-                "culture": [f"{scope_target} culture values", f"{scope_target} careers values"],
-                "signals": [f"{scope_target} acquisition reorg restructuring outage breach lawsuit"],
+                "overview": [f"{scope_target} company overview", f"{scope_target} what does {scope_target} do"],
+                "news": [
+                    f'"{scope_target}" recent news 2025 2026',
+                    f'"{scope_target}" announcement press release',
+                    f'"{scope_target}" newsroom press releases',
+                    f'site:prnewswire.com "{scope_target}"',
+                ],
+                "product_launches": [f'"{scope_target}" product launch new feature 2025 2026'],
+                "leadership": [f'"{scope_target}" leadership team CEO CTO VP', f'"{scope_target}" appointed new hire executive'],
+                "publications": [f'"{scope_target}" report whitepaper case study'],
+                "market": [f'"{scope_target}" competitors market', f'"{scope_target}" industry analysis'],
+                "culture": [f'"{scope_target}" company culture values careers'],
+                "signals": [f'"{scope_target}" acquisition restructuring funding'],
             }
 
-            serper_hits = _gather_rss(company_queries["overview"], per_query=6, cap=10)
+            serper_hits = _gather_free(company_queries["overview"], per_query=6, cap=10)
             for k, qs in company_queries.items():
                 if k == "overview":
                     company_serper_by_topic[k] = serper_hits
                 else:
-                    hits_k = _gather_rss(qs, per_query=6, cap=12)
+                    hits_k = _gather_free(qs, per_query=6, cap=12)
                     if k == "news":
                         hits_k = [h for h in hits_k if _is_company_relevant_hit(scope_target, h, company_domain=company_domain_guess)]
                     company_serper_by_topic[k] = hits_k
 
-            # Best-effort per-contact public snippets from RSS so we can still derive interesting facts.
             max_contacts = 8
             for c in contacts[:max_contacts]:
                 nm = str(c.name or "").strip()
                 co = str(c.company or company).strip()
                 if not nm:
                     continue
-                q_general = f"\"{nm}\" {co}"
-                q_posts = f"\"{nm}\" {co} interview article post"
-                q_pubs = f"\"{nm}\" {co} publication report whitepaper"
-                hits_general = _gather_rss([q_general], per_query=5, cap=6)
-                hits_posts = _gather_rss([q_posts], per_query=5, cap=6)
-                hits_pubs = _gather_rss([q_pubs], per_query=5, cap=6)
+                title_str = str(c.title or "").strip()
+                hits_general = _free_web_search(f'"{nm}" "{co}" {title_str}', num=6)
+                hits_posts = _free_web_search(f'"{nm}" {co} LinkedIn post article blog', num=6)
+                hits_talks = _free_web_search(f'"{nm}" {co} podcast interview conference speaker', num=6)
+                hits_pubs = _free_web_search(f'"{nm}" {co} publication whitepaper report', num=4)
+                li = str(getattr(c, "linkedin_url", "") or "").strip()
+                hits_li = _free_web_search(f'{li} {nm} {co}' if li else f'site:linkedin.com/in "{nm}" {co}', num=4)
                 contact_serper_hits[c.id] = hits_general
                 contact_serper_by_topic[c.id] = {
                     "general": hits_general,
                     "posts": hits_posts,
-                    "talks": [],
+                    "talks": hits_talks,
                     "publications": hits_pubs,
-                    "linkedin": [],
+                    "linkedin": hits_li,
                 }
 
             # Keep compatibility: feed RSS hits into the same corpus keys the model expects.
@@ -732,6 +1125,32 @@ async def conduct_research(request: ResearchRequest):
                 pdl_company = pdl.company_enrich(contact_company_websites[0]) or {}
             except Exception:
                 pdl_company = {}
+
+        # PDL person enrichment: get bio, skills, experience for each contact
+        pdl_person_by_contact: Dict[str, Dict[str, Any]] = {}
+        if want_live and settings.pdl_api_key:
+            try:
+                pdl = PDLClient(settings.pdl_api_key, timeout_seconds=12.0)
+                for c in contacts[:6]:
+                    nm = str(c.name or "").strip()
+                    co = str(c.company or company).strip()
+                    li = str(getattr(c, "linkedin_url", "") or "").strip()
+                    if not nm and not li:
+                        continue
+                    try:
+                        person_data = pdl.person_enrich(
+                            name=nm,
+                            company=co,
+                            linkedin_url=li,
+                            title=str(c.title or "").strip(),
+                        )
+                        if person_data and isinstance(person_data, dict):
+                            pdl_person_by_contact[c.id] = person_data
+                            logger.info("PDL person enrich found data for %s at %s", nm, co)
+                    except Exception as pe:
+                        logger.debug("PDL person enrich failed for %s: %s", nm, pe)
+            except Exception:
+                pass
 
         corpus = {
             "company_name": company,
@@ -754,6 +1173,7 @@ async def conduct_research(request: ResearchRequest):
                 "company_sizes": contact_company_sizes,
             },
             "pdl_company_enrich": pdl_company,
+            "pdl_person_by_contact": pdl_person_by_contact,
             "serper_hits": serper_hits,
             "contact_serper_hits": contact_serper_hits,
             "company_serper_by_topic": company_serper_by_topic,
@@ -764,6 +1184,44 @@ async def conduct_research(request: ResearchRequest):
             "requested_contact_ids": request.contact_ids,
             "data_mode": data_mode,
         }
+
+        # Signaliz enrichment: if API key is configured, get structured signals.
+        signaliz_data: Dict[str, Any] = {}
+        if want_live and signaliz_enabled():
+            try:
+                job_context = f" for someone pursuing a {jd_title} role" if jd_title else ""
+                prompt = (
+                    f"Find recent signals about {scope_target} including product launches, "
+                    f"leadership changes, hiring activity, funding events, and partnerships"
+                    f"{job_context}. Focus on newsroom announcements, press releases, and public filings."
+                )
+                signaliz_data = enrich_company_signals(
+                    scope_target,
+                    research_prompt=prompt,
+                    domain=company_domain_guess,
+                    target_signal_count=6,
+                    lookback_days=180,
+                    timeout=45.0,
+                )
+                if signaliz_data:
+                    corpus["signaliz_enrichment"] = signaliz_data
+                    logger.info("Signaliz returned %d signals for %s", len(signaliz_data.get("signals") or []), scope_target)
+            except Exception as e:
+                logger.warning("Signaliz enrichment failed for %s: %s", scope_target, e)
+
+        # Newsroom scraping: try to find the company's press/newsroom page for recent announcements.
+        if want_live and company_domain_guess:
+            try:
+                newsroom_hits = _scrape_newsroom(company_domain_guess, max_items=4)
+                if newsroom_hits:
+                    corpus.setdefault("newsroom_hits", []).extend(newsroom_hits)
+                    if "news" not in company_serper_by_topic:
+                        company_serper_by_topic["news"] = []
+                    company_serper_by_topic["news"].extend(newsroom_hits)
+                    serper_hits.extend(newsroom_hits)
+                    logger.info("Newsroom scrape found %d items for %s", len(newsroom_hits), company_domain_guess)
+            except Exception as e:
+                logger.debug("Newsroom scrape failed for %s: %s", company_domain_guess, e)
 
         # Convert Serper hits (when present) into a simple recent_news_raw list.
         # If Serper is not enabled/available, keep this empty (no fabricated URLs).
@@ -886,6 +1344,155 @@ async def conduct_research(request: ResearchRequest):
             )
 
         client = get_openai_client()
+
+        def _pdl_bio(c: SelectedContact, pdl: Dict[str, Any], fallback_company: str) -> str:
+            summary = str(pdl.get("summary") or "").strip() if pdl else ""
+            if summary and len(summary) > 20:
+                return summary[:500]
+            return (
+                f"{c.name} is a {c.title} at {c.company or fallback_company}. "
+                f"Likely cares about outcomes, execution risk, and pragmatic improvements aligned to their team."
+            )
+
+        def _pdl_experience(pdl: Dict[str, Any]) -> str:
+            if not pdl:
+                return "Unknown"
+            exp = pdl.get("experience") or []
+            if not isinstance(exp, list) or not exp:
+                yrs = pdl.get("inferred_years_experience")
+                if yrs:
+                    return f"~{yrs} years of experience"
+                return "Unknown"
+            parts = []
+            for e in exp[:4]:
+                if not isinstance(e, dict):
+                    continue
+                t = str(e.get("title", {}).get("name") or e.get("title") or "").strip() if isinstance(e.get("title"), (dict, str)) else ""
+                co = str(e.get("company", {}).get("name") or e.get("company") or "").strip() if isinstance(e.get("company"), (dict, str)) else ""
+                if t and co:
+                    parts.append(f"{t} at {co}")
+                elif t:
+                    parts.append(t)
+            return "; ".join(parts) if parts else "Unknown"
+
+        def _pdl_education(pdl: Dict[str, Any]) -> str:
+            if not pdl:
+                return "Unknown"
+            edu = pdl.get("education") or []
+            if not isinstance(edu, list) or not edu:
+                return "Unknown"
+            parts = []
+            for e in edu[:3]:
+                if not isinstance(e, dict):
+                    continue
+                school = str(e.get("school", {}).get("name") or e.get("school") or "").strip() if isinstance(e.get("school"), (dict, str)) else ""
+                degree = str(e.get("degrees") or e.get("degree") or "").strip()
+                if isinstance(e.get("degrees"), list):
+                    degree = ", ".join(str(d) for d in e["degrees"][:2])
+                if school:
+                    parts.append(f"{degree} - {school}" if degree else school)
+            return "; ".join(parts) if parts else "Unknown"
+
+        def _pdl_skills(pdl: Dict[str, Any]) -> List[str]:
+            if not pdl:
+                return []
+            skills_raw = pdl.get("skills") or []
+            if not isinstance(skills_raw, list):
+                return []
+            return [str(s).strip() for s in skills_raw[:8] if str(s).strip()]
+
+        def _build_contact_facts(
+            c: SelectedContact,
+            serper_topics: Dict[str, List[Dict[str, Any]]],
+            pdl: Dict[str, Any],
+        ) -> List[Dict[str, str]]:
+            facts: List[Dict[str, str]] = []
+            seen: set[str] = set()
+
+            if pdl:
+                summary = str(pdl.get("summary") or "").strip()
+                if summary and len(summary) > 20:
+                    key = summary[:60].lower()
+                    if key not in seen:
+                        seen.add(key)
+                        facts.append({
+                            "fact": summary[:160],
+                            "source_title": "Professional profile",
+                            "source_url": str(pdl.get("linkedin_url") or ""),
+                            "signal_type": "career_move",
+                        })
+
+                exp = pdl.get("experience") or []
+                if isinstance(exp, list):
+                    for e in exp[:2]:
+                        if not isinstance(e, dict):
+                            continue
+                        t = str(e.get("title", {}).get("name") or e.get("title") or "").strip() if isinstance(e.get("title"), (dict, str)) else ""
+                        co_name = str(e.get("company", {}).get("name") or e.get("company") or "").strip() if isinstance(e.get("company"), (dict, str)) else ""
+                        start = str(e.get("start_date") or "").strip()
+                        if t and co_name:
+                            fact_text = f"{'Currently ' if not e.get('end_date') else 'Previously '}{t} at {co_name}"
+                            if start:
+                                fact_text += f" (since {start[:7]})"
+                            key = fact_text[:60].lower()
+                            if key not in seen:
+                                seen.add(key)
+                                facts.append({
+                                    "fact": fact_text[:160],
+                                    "source_title": "Career history",
+                                    "source_url": str(pdl.get("linkedin_url") or ""),
+                                    "signal_type": "career_move",
+                                })
+
+                pdl_skills = pdl.get("skills") or []
+                if isinstance(pdl_skills, list) and len(pdl_skills) >= 3:
+                    top = ", ".join(str(s) for s in pdl_skills[:5])
+                    facts.append({
+                        "fact": f"Key skills: {top}"[:160],
+                        "source_title": "Professional profile",
+                        "source_url": str(pdl.get("linkedin_url") or ""),
+                        "signal_type": "role_insight",
+                    })
+
+                interests = pdl.get("interests") or []
+                if isinstance(interests, list) and interests:
+                    top = ", ".join(str(i) for i in interests[:4])
+                    facts.append({
+                        "fact": f"Interests: {top}"[:160],
+                        "source_title": "Professional profile",
+                        "source_url": "",
+                        "signal_type": "role_insight",
+                    })
+
+            web_facts = _contact_facts_from_hits(
+                sum((list(serper_topics.values())), []) if serper_topics else [],
+                max_items=6,
+            )
+            for wf in web_facts:
+                key = str(wf.get("fact", ""))[:60].lower()
+                if key and key not in seen:
+                    seen.add(key)
+                    facts.append(wf)
+
+            if len(facts) < 3:
+                title = str(c.title or "").strip()
+                co_fallback = str(c.company or "").strip()
+                inferred = [
+                    f"As {title} at {co_fallback}, likely owns key operational and strategic decisions for their team",
+                    f"Responsible for team performance metrics, hiring, and cross-functional coordination",
+                    f"Decision-maker who values concrete, outcome-oriented proposals over generic pitches",
+                ]
+                for inf in inferred:
+                    if len(facts) >= 3:
+                        break
+                    facts.append({
+                        "fact": inf[:160],
+                        "source_title": "Role analysis",
+                        "source_url": "",
+                        "signal_type": "role_insight",
+                    })
+
+            return facts[:8]
 
         def _build_stub_for_contact(c: SelectedContact) -> Dict[str, Any]:
             bucket = _dept_bucket(c)
@@ -1018,15 +1625,19 @@ async def conduct_research(request: ResearchRequest):
                         "name": c.name,
                         "title": c.title,
                         "company": c.company or company,
-                        "bio": (
-                            f"{c.name} is a {c.title} at {c.company or company}. "
-                            f"Likely cares about outcomes, execution risk, and pragmatic improvements aligned to their team."
+                        "bio": _pdl_bio(c, pdl_person_by_contact.get(c.id, {}), company),
+                        "experience": _pdl_experience(pdl_person_by_contact.get(c.id, {})),
+                        "education": _pdl_education(pdl_person_by_contact.get(c.id, {})),
+                        "skills": _pdl_skills(pdl_person_by_contact.get(c.id, {})) or skills,
+                        "linkedin_url": c.linkedin_url or str((pdl_person_by_contact.get(c.id) or {}).get("linkedin_url") or ""),
+                        "interesting_facts": _build_contact_facts(
+                            c,
+                            contact_serper_by_topic.get(c.id, {}),
+                            pdl_person_by_contact.get(c.id, {}),
                         ),
-                        "experience": "Unknown",
-                        "education": "Unknown",
-                        "skills": skills,
-                        "linkedin_url": c.linkedin_url,
-                        "interesting_facts": [],
+                        "outreach_angles": [],
+                        "urgency_score": 0,
+                        "urgency_reason": "",
                     }
                 ],
                 "recent_news": contact_news,
@@ -1044,6 +1655,7 @@ async def conduct_research(request: ResearchRequest):
                         "sources": [],
                     }
                 ],
+                "intelligence": _build_stub_intelligence(corpus, scope_target, company_serper_by_topic),
                 "hooks": [
                     "Connect the job’s top pain point to a specific outcome you’ve delivered before",
                     "Reference their org’s likely constraints (speed vs reliability vs cost) and offer a low-risk first step",
@@ -1114,12 +1726,20 @@ async def conduct_research(request: ResearchRequest):
                     "- company_recent_posts should be 3–8 bullets summarizing recent company posts (blog/press/LinkedIn topics) with URLs when available.\n"
                     "- company_publications should be 1–6 bullets summarizing notable publications (case studies, whitepapers, reports) with URLs when available.\n"
                     "- contact_bios.bio should be 1–2 sentences tailored to the contact's title/department.\n"
-                    "- contact_bios[].interesting_facts MUST have at least 3 items. If the corpus includes contact_serper_by_topic for a contact with real URLs, populate 3–6 items.\n"
-                    "  - Each interesting_facts item must be { fact, source_title, source_url }.\n"
-                    "  - fact should be a punchy outreach hook (<= 140 chars), grounded in the snippet and safe to reference.\n"
-                    "  - source_url must be a real URL from the corpus for that contact. Do NOT fabricate.\n"
-                    "  - If no web sources exist for a contact, create 3 inferred facts based on their title/role/company (e.g. 'As VP Engineering at Acme, likely oversees the platform reliability roadmap').\n"
-                    "    Use source_title: 'Inferred from role context' and source_url: '' for these.\n"
+                    "- contact_bios[].interesting_facts MUST have at least 3 items (aim for 5–6). Populate from these sources IN ORDER:\n"
+                    "  0) PDL person enrichment data (pdl_person_by_contact): skills, experience, education, summary, interests. These are HIGHLY reliable.\n"
+                    "  1) REAL signals from contact_serper_by_topic: recent posts, talks, articles, LinkedIn activity (use actual URLs).\n"
+                    "  2) Career signals: promotions, role changes, new company joins visible in snippets.\n"
+                    "  3) Company-context signals: if the company recently raised funding, launched a product, or made news, tie it to this person's role.\n"
+                    "  4) Role-specific intelligence: based on their title, what are they MEASURABLY accountable for? What KPIs keep them up at night?\n"
+                    "  Each item: { fact, source_title, source_url, signal_type }.\n"
+                    "  signal_type must be one of: 'web_activity', 'career_move', 'company_news', 'role_insight', 'hiring_signal'.\n"
+                    "  fact must be specific and outreach-ready (<=160 chars). BAD: 'Likely oversees reliability'. GOOD: 'Recently posted about scaling observability from 10 to 50 microservices'.\n"
+                    "  source_url must be a real URL from the corpus. For role_insight signals, use source_url: '' and source_title: 'Role analysis'.\n"
+                    "  NEVER produce vague facts like 'Likely cares about X'. Every fact must be specific enough to open a cold email with.\n"
+                    "- contact_bios[].outreach_angles: array of 2–4 short outreach angle strings, each <100 chars, connecting the contact's signals to the job seeker's value.\n"
+                    "- contact_bios[].urgency_score: integer 0–100 estimating how likely this contact is to respond NOW based on signals (hiring activity=high, recent posts=medium, no activity=low).\n"
+                    "- contact_bios[].urgency_reason: 1 sentence explaining the urgency score.\n"
                     "- hooks should be 4–8 punchy, concrete outreach angles (no fluff), grounded in the job pain_points / success_metrics if present.\n\n"
                     "Grounding rules for the Contact Background Report:\n"
                     "- If resume_extract or painpoint_matches are provided, use them to make the report SPECIFIC.\n"
@@ -1157,7 +1777,8 @@ async def conduct_research(request: ResearchRequest):
                     "  Each value must be an object with keys:\n"
                     "  - company_summary: { name, description, industry, size, founded, headquarters, website, linkedin_url }\n"
                     "  - contact_bios: array of { name, title, company, bio, experience, education, skills, linkedin_url,\n"
-                    "      public_profile_highlights, publications, post_topics, opinions, other_interesting_facts, interesting_facts }\n"
+                    "      public_profile_highlights, publications, post_topics, opinions, other_interesting_facts, interesting_facts,\n"
+                    "      outreach_angles, urgency_score, urgency_reason }\n"
                     "  - theme: string\n"
                     "  - company_culture_values: string\n"
                     "  - company_market_position: string\n"
@@ -1170,13 +1791,38 @@ async def conduct_research(request: ResearchRequest):
                     "  - shared_connections: array of strings\n"
                     "  - background_report_title: string\n"
                     "  - background_report_sections: array of { heading: string, body: string, sources: array of { title, url } }\n"
+                    "  - intelligence: object with keys:\n"
+                    "    - signals: array of structured signal objects, each with:\n"
+                    "      { signal_type, source_type, signal_title, signal_source, signal_content, signal_date, confidence_score, metadata }\n"
+                    "      signal_type MUST be one of: leadership_change, product_launch, hiring_signal, funding_event, partnership, market_expansion, regulatory, technology_adoption, earnings, restructuring\n"
+                    "      source_type: 'web_source' if from a real URL in corpus, 'ai_enrichment' if synthesized from multiple sources\n"
+                    "      signal_title: Short headline (<120 chars)\n"
+                    "      signal_source: The actual URL where this was found (from corpus). Empty string if ai_enrichment.\n"
+                    "      signal_content: 2-4 sentence detailed description of the signal and its business implications\n"
+                    "      signal_date: ISO date string if known, empty otherwise\n"
+                    "      confidence_score: float 0.0-1.0 (1.0 = directly sourced, 0.7+ = strong inference, <0.5 = speculative)\n"
+                    "      Produce 3-8 signals per company. Prioritize: leadership changes, product launches, hiring signals, funding events.\n"
+                    "      IMPORTANT: If the corpus contains a 'signaliz_enrichment' key, it has pre-enriched signals from Signaliz AI.\n"
+                    "      Use its executive_summary, key_themes, and outreach_summary to enhance your output.\n"
+                    "      Reference its signal relevance reasons as signal_content when appropriate.\n"
+                    "    - outreach_summary: object with:\n"
+                    "      one_liner_hook: A single compelling sentence that could open a cold email about this company (<160 chars)\n"
+                    "      strongest_signal: The most actionable signal for outreach, explained in 1-2 sentences\n"
+                    "      recommended_angle: 2-3 sentences on the best approach angle for outreach given the signals\n"
+                    "      conversation_starters: array of 3 specific opening lines a job seeker could use in outreach\n"
+                    "      signal_relevance: array of 2 sentences explaining why these signals matter for the job seeker\n"
+                    "      sequence_strategy: array of 3 objects, one per email in a 3-email campaign sequence:\n"
+                    "        { email_number: 1|2|3, angle: string (the approach angle for this email, ~40 chars), subject_line: string, key_point: string (~100 chars describing what to emphasize) }\n"
+                    "        Email 1: lead with the strongest signal/hook. Email 2: follow up with a different angle (company news, mutual interest). Email 3: breakup email with a soft CTA.\n"
+                    "    - executive_summary: 3-5 sentence executive briefing on the company's current trajectory and what it means for outreach\n"
+                    "    - overall_relevance_score: float 0.0-1.0 (how relevant is this company to the job seeker based on signals)\n"
                     "- hooks: array of short talking points for outreach\n"
                 ),
             },
             {"role": "user", "content": json.dumps({**corpus, "selected_contacts": contacts_dump})},
         ]
 
-        raw = client.run_chat_completion(messages, temperature=0.2, max_tokens=1400, stub_json=stub_json)
+        raw = client.run_chat_completion(messages, temperature=0.2, max_tokens=6144, stub_json=stub_json, timeout_seconds=120)
         choices = raw.get("choices") or []
         msg = (choices[0].get("message") if choices else {}) or {}
         content_str = str(msg.get("content") or "")
@@ -1190,8 +1836,14 @@ async def conduct_research(request: ResearchRequest):
             if not isinstance(entry, dict):
                 continue
             cs = entry.get("company_summary") or {}
+            if not isinstance(cs, dict):
+                cs = {}
             bios = entry.get("contact_bios") or []
+            if not isinstance(bios, list):
+                bios = []
             news = entry.get("recent_news") or []
+            if not isinstance(news, list):
+                news = []
             theme = str(entry.get("theme") or "").strip()
             culture_values = str(entry.get("company_culture_values") or "").strip()
             market_position = str(entry.get("company_market_position") or "").strip()
@@ -1205,8 +1857,9 @@ async def conduct_research(request: ResearchRequest):
             report_sections = entry.get("background_report_sections") or []
             if not isinstance(report_sections, list):
                 report_sections = []
+            report_sections = [s for s in report_sections if isinstance(s, dict)]
 
-            # If the model didn't populate interesting_facts, fill a few from serper hits (source-backed).
+            # If the model didn't populate interesting_facts well, fill from serper hits (source-backed).
             try:
                 topics_for_contact = {}
                 try:
@@ -1218,14 +1871,19 @@ async def conduct_research(request: ResearchRequest):
                     for k in ["posts", "talks", "publications", "linkedin", "general"]:
                         all_hits.extend(topics_for_contact.get(k) or [])
                 li_best = _best_linkedin_from_hits(all_hits)
-                facts_fallback = _contact_facts_from_hits(all_hits, max_items=4)
+                facts_fallback = _contact_facts_from_hits(all_hits, max_items=6)
                 if bios and isinstance(bios, list) and isinstance(bios[0], dict):
                     b0 = bios[0]
                     cur_facts = b0.get("interesting_facts") or []
-                    if (not isinstance(cur_facts, list)) or (len(cur_facts) == 0):
-                        if facts_fallback:
-                            b0["interesting_facts"] = facts_fallback
-                    # Fill linkedin_url if missing and we found one.
+                    if not isinstance(cur_facts, list):
+                        cur_facts = []
+                    if len(cur_facts) < 3 and facts_fallback:
+                        existing_urls = {str(f.get("source_url") or "").lower() for f in cur_facts if isinstance(f, dict)}
+                        for fb in facts_fallback:
+                            if str(fb.get("source_url") or "").lower() not in existing_urls:
+                                cur_facts.append(fb)
+                                existing_urls.add(str(fb.get("source_url") or "").lower())
+                        b0["interesting_facts"] = cur_facts[:8]
                     if li_best and not str(b0.get("linkedin_url") or "").strip():
                         b0["linkedin_url"] = li_best
             except Exception:
@@ -1361,22 +2019,26 @@ async def conduct_research(request: ResearchRequest):
                         bio=str(b.get("bio") or ""),
                         experience=str(b.get("experience") or ""),
                         education=str(b.get("education") or ""),
-                        skills=[str(s) for s in (b.get("skills") or [])],
+                        skills=_safe_str_list(b.get("skills")),
                         linkedin_url=b.get("linkedin_url"),
-                        public_profile_highlights=[str(x) for x in (b.get("public_profile_highlights") or [])][:8],
-                        publications=[str(x) for x in (b.get("publications") or [])][:6],
-                        post_topics=[str(x) for x in (b.get("post_topics") or [])][:10],
-                        opinions=[str(x) for x in (b.get("opinions") or [])][:8],
-                        other_interesting_facts=[str(x) for x in (b.get("other_interesting_facts") or [])][:8],
+                        public_profile_highlights=_safe_str_list(b.get("public_profile_highlights"))[:8],
+                        publications=_safe_str_list(b.get("publications"))[:6],
+                        post_topics=_safe_str_list(b.get("post_topics"))[:10],
+                        opinions=_safe_str_list(b.get("opinions"))[:8],
+                        other_interesting_facts=_safe_str_list(b.get("other_interesting_facts"))[:8],
                         interesting_facts=[
                             {
                                 "fact": str((x or {}).get("fact") or "").strip(),
                                 "source_title": str((x or {}).get("source_title") or "").strip(),
                                 "source_url": str((x or {}).get("source_url") or "").strip(),
+                                "signal_type": str((x or {}).get("signal_type") or "").strip(),
                             }
                             for x in (b.get("interesting_facts") or [])
                             if isinstance(x, dict) and str((x or {}).get("fact") or "").strip()
                         ][:8],
+                        outreach_angles=_safe_str_list(b.get("outreach_angles"))[:4],
+                        urgency_score=min(100, max(0, int(b.get("urgency_score") or 0))),
+                        urgency_reason=str(b.get("urgency_reason") or "").strip(),
                     )
                     for b in bios
                     if isinstance(b, dict)
@@ -1400,10 +2062,13 @@ async def conduct_research(request: ResearchRequest):
                     for n in news
                     if isinstance(n, dict)
                 ],
-                # Never surface fake shared connections.
                 shared_connections=[],
                 background_report_title=report_title,
                 background_report_sections=report_sections[:24],
+                intelligence=_merge_intelligence(
+                    _parse_intelligence(entry.get("intelligence")),
+                    signaliz_data,
+                ),
             )
 
         # Back-compat: also return a single research_data (first contact).
@@ -1428,6 +2093,8 @@ async def conduct_research(request: ResearchRequest):
         _cache_set(ck, resp_obj.model_dump() if hasattr(resp_obj, "model_dump") else resp_obj.dict())
         return resp_obj
     except Exception as e:
+        import traceback
+        logger.error("conduct_research failed: %s\n%s", e, traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Failed to conduct research: {str(e)}")
 
 @router.post("/save", response_model=ResearchResponse)

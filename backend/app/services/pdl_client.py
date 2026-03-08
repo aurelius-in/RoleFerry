@@ -45,6 +45,47 @@ DEFAULT_PERSON_FIELDS: List[str] = [
     "job_company_size",
 ]
 
+PERSON_ENRICH_FIELDS: List[str] = [
+    "id",
+    "full_name",
+    "first_name",
+    "last_name",
+    "gender",
+    "job_title",
+    "job_title_role",
+    "job_title_sub_role",
+    "job_company_name",
+    "job_company_website",
+    "job_company_industry",
+    "job_company_size",
+    "job_start_date",
+    "linkedin_url",
+    "linkedin_username",
+    "linkedin_id",
+    "twitter_url",
+    "github_url",
+    "facebook_url",
+    "work_email",
+    "recommended_personal_email",
+    "emails",
+    "phone_numbers",
+    "location_name",
+    "location_country",
+    "location_metro",
+    "location_region",
+    "skills",
+    "interests",
+    "experience",
+    "education",
+    "certifications",
+    "languages",
+    "summary",
+    "industry",
+    "job_company_linkedin_url",
+    "inferred_salary",
+    "inferred_years_experience",
+]
+
 
 class PDLClient:
     def __init__(self, api_key: str, timeout_seconds: float = 15.0) -> None:
@@ -62,6 +103,39 @@ class PDLClient:
         url = f"{PDL_BASE_URL}/company/enrich"
         with httpx.Client(timeout=self.timeout_seconds, follow_redirects=True) as client:
             resp = client.get(url, params={"website": website}, headers=self._headers())
+            resp.raise_for_status()
+            return resp.json()
+
+    def person_enrich(
+        self,
+        *,
+        name: str = "",
+        company: str = "",
+        linkedin_url: str = "",
+        title: str = "",
+    ) -> Dict[str, Any]:
+        """
+        Person Enrichment API -- look up a person by name+company or LinkedIn URL.
+        Returns bio, skills, experience, education, etc.
+        """
+        url = f"{PDL_BASE_URL}/person/enrich"
+        params: Dict[str, Any] = {}
+        if linkedin_url:
+            params["profile"] = linkedin_url
+        if name:
+            params["name"] = name
+        if company:
+            params["company"] = company
+        if title:
+            params["title"] = title
+        if not params:
+            return {}
+        with httpx.Client(timeout=self.timeout_seconds, follow_redirects=True) as client:
+            resp = client.get(url, params=params, headers=self._headers())
+            if resp.status_code == 404:
+                return {}
+            if resp.status_code == 402:
+                return {}
             resp.raise_for_status()
             return resp.json()
 

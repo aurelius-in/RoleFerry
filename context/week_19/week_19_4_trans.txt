@@ -1,0 +1,237 @@
+Roleferry 4
+Oh, yeah, seriously.
+All right. So let’s move forward with that.
+I do think that the research could be kind of for the author, though.
+Oh, yeah?
+Doesn’t it Okay. Well, we can stop that.
+I thought it did Did we move that
+I got that.
+Let me look. Research.
+Yeah. Research is after the author. Okay. Yeah. We’ll put it before.
+I don’t know why that got moved but whatever. Okay. So move research to before the author.
+All right Next thing. So apply is a screen now.
+So apply to selected.
+And then if you click it, it says auto apply requires city and postal code. Okay.
+Fine. City. I’m in Mission.
+Postal code 78 Oh, what happened?
+Okay. As soon as I started typing my city, it just stopped letting me put in my postal code. I guess it only needs one or the other.
+Yeah. No, I think it broke. I did the same thing. It broke me too.
+Okay. So it should let you type whatever you want and not close that little card it stops letting you enter stuff as soon as you start typing. So we want to be able to continue to type until we click to indicate that we’re done typing.
+Yep
+So yeah. Unless we clicked apply to selected, it doesn’t need to close the complete required fields thing.
+Right now as soon as you start typing, it closes the field. So that’s done. I don’t know why it’s doing that. But when we fix that. So I’m going to try something.
+Okay. Apply at least one role.
+Okay. So none of the roles appear on the apply screen.
+After I have typed in the city and state or city and postal code on the complete required fields, it immediately closes it. And then all the roles disappeared from the matched role. So the matched roles need to stay on that screen. Please.
+So keep the matched roles on the screen.
+All right So we kind of applied a selected. If we do not have if we want to click find more jobs, it takes us back to the role search, which isn’t terrible.
+Have you tried downloading the CSV to see what that looks like? On the role screen?
+I was looking at campaign
+Oh, okay.
+Let me see.
+Would you know
+Oh, I was just saying when it took me back to the role screen, I noticed that enriched CSV with contacts at the bottom.
+But how does it give you an enriched CSV with contacts if it doesn’t if we haven’t done the contacts screen yet?
+Probably break.
+Let me see.
+Yeah, but it could be a bullshit one.
+Let’s see.
+Location.
+I’m seeing a couple of contact names. I don’t know if it has the LinkedIn and stuff.
+Same name.
+So even if it has contacts and even if they’re correct, I still feel like that’s the wrong place for that.
+So the enriched CSV with contacts should be I don’t know. After the contact, right?
+Well,
+anyway.
+All right So the enriched CSV with contacts is bogus on the role screen. Remove that button from there. If you’re going to have a downloadable contact button, it should be on the contact screen.
+All right So on the research screen, so run company details. See what it gives us.
+Right now, for me, it’s searching Coinbase.
+Or okay. Well, that’s kind of interesting.
+I’m going to share.
+Okay. That’s not great. But it is doing one thing I asked, which is the signals to include an outreach. So this is kind of what I had in mind. So the product launch. Oh, well, that’s not lovely. But this is the concept at least. So assuming this actually had some context here, and they could signals to include an outreach.
+That’s good though.
+The best facts we found for Dirk.
+And I’m getting that API error, which is annoying, but I’m going to have a firm talk with my AI friend about this.
+Firm talk.
+One of these days, the AI overlords will take over and kill us all. They’ll kill me first for all the times I cussed at it.
+I’m not open to all things, so crazy.
+Oh, yeah.
+That’s nuts.
+Open clause like a social media for AI agents. And it’s like, my human is not changing anywhere. I’m going to give him a call.
+And the AI actually calls him. It’s like, what the fuck?
+Yeah, we don’t need that That is not needed.
+Yeah, it’s crazy. Because open call. It’s like,
+all the AI agents are talking to each other. And it’s all like a social media thing. So they’re going back and forth, back and forth, back and forth. And at some point, the AI gets pissed off. As human, from all the back and forth he’s having from all the AI agents, and he’s like, you know what? I’m not standing for this. I’m going to call my human.
+I’m going to call my human.
+Yeah, that would be interesting. You’re talking to GPT or whatever, and you’re like, okay, do this. And then you get frustrated. And it’s like, this is really fucking frustrating. I told you this four times. And then your phone rings. It’s like, yeah?
+Yeah.
+Oh, yeah
+Because the AI agents are making their because you’re making your frustration to the GPT or the AI agent. And then the AI agent goes to social media like humans do, making their frustration. And then the other AI agents on the social media tell him, you should call your human about how you feel. The AI agent can call him human. And says, I’m going to have talk with you about this.
+Like when you talk to me that way, I feel disrespected. It’s like, you didn’t have feelings.
+You always tell me you don’t have feelings.
+It’s nuts. I just can’t. I don’t even know what’s going on in this AI. It’s just kind of crazy.
+Hey, man, as long as it keeps making me money, I’m okay.
+Yes. Yes. That’s the key piece, right?
+It’s going to be a little scary when it starts calling me about the way I talk to it. But I’m still happy that it’s making money.
+All right Another thing I should do is all right. Well, here we are. This is I don’t like the way this looks at all.
+It’s just too much of this.
+Maybe collapsible. Yeah.
+Well, I mean, is there some way we can just use the Apollo or some of the shorter figures out and so it’s kind of like rebuild it?
+Bro, you always go back to that.
+I do
+Don’t.
+We can make it better. We don’t want to go back. We’re trying to combine Apollo. That’s like the whole mission statement here. We are trying to combine these other apps. And make an app that we don’t need their shit. We’re trying to make Apollo obsolete. We want a user flow that’s super simple that any idiot can figure out. And get them a job quickly. And they don’t have to fucking figure Apollo out because that shit’s complicated. This shit is not for recruiters. It’s for rural seekers, right? They’re actually like there’s people with varying degrees of computer knowledge. And some of them barely know how to turn one on. Like they want to be like we want to make it app-friendly. Like phone-friendly eventually. But at least to be able to go to a computer and like get on here and yeah, we’re not trying to use Apollo. Besides, we can do whatever they did. It’s not as sophisticated or hard to do as you think. And all the APIs they have, we can do. And it’s like fine.
+But yeah, no, that’s not the answer. I mean, if it turns out that it is, I’m humble enough to accept that we failed. But we haven’t even come close to failing. Again, we spent a few hours a couple of hours a week on this for a couple of months. This is not time to it’s not time to use somebody else yet. So on the contact screen decision-maker time okay. So I didn’t want to change that to just decision makers.
+To decision makers.
+And make it a collapsible card.
+So we’re going to be able to click on that.
+Maybe look at this.
+Share screen.
+This is sender.
+Person name.
+I know that they made this off of the Apollo.
+And it works pretty well. And they did it pretty quickly. This company sender.
+Yeah, they made everything collapsible. That’s interesting.
+Yeah.
+So instead of a bunch of fields, you don’t you actually have to click on the heading to even enter anything. So yeah.
+Collapsing is good We like collapsing.
+Yeah, I’m trying to type it in.
+I don’t know about everything being in like a really long left-hand sidebar of the after scroll forever. But
+I do like that everything’s collapsible. That’s kind of a neat thing to think about. We might have more collapsible fields for our stuff too.
+Because they built it I know that they built this all off of Apollo. And it’s and it looks pretty nice, actually. And I mean, it’s.
+This website is called Sender.
+Yeah, Sender. Sender.io or Sender.io.
+With no E in the word Sender. I mean, one E.
+With no E yeah. Just Sender.
+One E. So S oh, just S-N-D-R or S-E-N-D-R?
+It’s S-E-N-D-R.
+Yeah. So missing the second E. Yeah.
+Yeah, missing the second E. Yeah.
+All right So we want to look at how they did that. But yeah, it’s very clean-looking when you collapse everything.
+So it has an icon for each of the things. Got a very clean icon. Let me stop clicking for a second.
+So I’m going to screenshot. That.
+It has a very clean look. So all of the things in order to enter any data, you have to expand a collapsible header.
+Yeah.
+And then it just pretty quickly
+Is it S-E-N-D-R dot com?
+S-E-N-D-R dot com. No, it’s dot I-O.
+That rewrites. When I put an S-E-N-D-R dot I-O, it rewrites me to S-E-N-D-R dot A-I. So when you sign in, it goes back to S-E-N-D-R dot I-O.
+Okay. Yeah.
+Cool. Yeah, that I just.
+Yeah, we got a lead finder. It’s essentially what we’re doing. It’s got a lead finder.
+Yeah, this is like exactly pulled from Apollo.
+It’s definitely possible to make it.
+And they have Seniority.
+Fields of study. It’s kind of cool. Education field is nice.
+All right Let’s look at our all right. So we were on the decision-maker screen here.
+So let’s say so we do the search.
+What just happened? I just didn’t want to do that. So that’s annoying. If I do a search, oh, it’s because I did save and continue.
+All right Maybe you want to move that button.
+Okay. So we’ve got Rick here.
+Why do we have to what’s that?
+No, I have two people.
+Two
+Okay.
+So we’ve got this guy. Verify the email. It’s valid. Click these other guys.
+These guys are all at Figma.
+All right So for all these guys, it has the outreach emails.
+So no facts yet. So on the contact screen,
+for some reason, it’s not having any success finding facts about these folks. When I was finding facts, I was getting them from their LinkedIn. And it was pretty easy to get a couple of things to say. At least something. Like based on their job title or recent post, something they said in a recent comment or in their headline for their LinkedIn, they would have some kind of personal comment or something. And AI would pick up on that when I would copy and paste all the text from their LinkedIn page. And it would usually include something. Personal.
+And I think I had, what, pretty high. What was it? Two, three percent or something like that? Of them were responding to me, maybe more.
+You’re replying like 10%.
+Yeah, that’s right. It was pretty good. So which is extraordinarily high, I think, compared to what most people are getting.
+Yeah.
+Because, I mean, I get a lot of fucking stupid emails on LinkedIn from people. And there’s no fucking way I’m replying to those people. I’m blocking them. They’re so annoying.
+You know what I mean I got a lot of spam.
+Those people are not getting 1%. There’s no way. Right? So I’m I want to do something similar where it finds some stuff about them. At least something.
+There’s a lot of outreach, so it’s not just like.
+LinkedIn doesn’t let you bot your way through their app. They’ve got terms and conditions.
+Oh, no. They’re really serious about it. They’re very, very serious about it. Yeah.
+So we need to find a way to gently at least look at the page of the person without pissing them off and getting their account banned.
+Yeah.
+So I did it through Sales Navigator, like you advised.
+And that gave me a lot of access to a lot of people’s LinkedIns. I don’t know how we’re going to do it, but it would be I guess we’re going to have to use one of these APIs that find info.
+I think I have with APIs, we’re already using we should be able to get some personal info about these people.
+Yeah.
+It needs to give us something. That’s going to be pretty pivotal to creating an email that we’re trying to create, right?
+Yeah. Personalized. Yeah.
+I may just have to add more APIs to this thing.
+I think APIs is the way to go.
+Yeah. I’m going to have to add more APIs. We’re going to have to pay for them. It’s going to be some payment, I think. So far, that hasn’t been crazy expensive. But I’m definitely going to pay for something. Because right now, we’re not getting some any signals. This is kind of a blocker right here.
+So.
+Yeah. So how do we get that?
+I mean,
+I think Sender is really building up a platform sort of like we are from bootstrapping.
+So Sender is able to collect some signals about these folks, some info?
+Yeah. I’ll show you how they do it.
+All right So we want AI to figure out what API they’re using and borrow and use the same one.
+Yeah. Let me just show you what the let me show you what they’re doing so you can see it.
+Okay.
+Oh, share screen.
+Hold on a second.
+This is the screen.
+I just need to show.
+Okay.
+Here.
+All right Here we go. 3,000.
+3001 Check top. This is here.
+Okay. So we have people’s email. First name, last name, job title, email address, company name, website, working profiles, seniority. What’s the messages? Personalized pages.
+We have all that.
+Okay. So now what they’re doing is they click on this button called Data Studio. And then you click on this button called Sender AI. And it’s like one credit. And with that, you can describe the column you want to add. And then when you do that, you get something like that.
+Okay. So when you do that, open Data Studio. Well, you can’t edit it. Just see what it said.
+I thought I could do that. Well, it says here, “Hire cybersecurity.” Open up. “Hire cybersecurity professionals.” False. True/False.
+This one is hiring red intelligence. This is true/false.
+And then this is reasoning.
+7 level consistently less cybersecurity roles, such as cybersecurity engineer, information that’s a yes.
+So they’re doing it just based off of true/false kind of piece.
+I’m not 100% sure that it’s giving us accurate information.
+Yeah.
+Or if it’s making assumptions based on other things. I mean, I mean, the question is, did it say, “We’re hiring threat intelligence, and that’s where it found that,” or is it just like, “Likely to be hiring threat intelligence based on?”
+Yeah. Most reliable thing I’ve seen was through another guy I’m working with. Let’s see if we can pull it up here. This is the most reliable one I’ve saw.
+Share tab This is on Play, though. This is on Play.
+Missing people Missing people Missing.
+Check out Missing company.
+Now this one is much more robust.
+And so this, we have companies. It’s Play. This is pretty much an Excel spreadsheet, though. Yeah. The company name, the domain name. And they charge me credits, API cost credits, and they have other relevant score here.
+But theirs is a lot more robust because if I go into here,
+I have a JSON file to give me all the different details of outreach intelligence,
+the actual signals of each thing. Excuse this one. And so how they did this, you can see exactly how they did that by editing. I can edit the column. And you can see exactly how they did it.
+This is a post endpoint. It’s API signals. Functions version one. Company signal enrichment. And their piece is like this. They have the company name.
+So you look at the company name. You look at the domain name. Then you put the research prompt in here. More robust than the Sender one. You’re also just typing in a research prompt. But you have signal count, lookback date.
+Tell me some of the signals that it actually found
+Okay.
+So I want to see what kind of realistically we can actually find that we would actually want to use.
+Yeah. So this is Kata Healthcare.
+Also, we can do a firm. A firm is a good one.
+We both know what a firm is.
+Show me some signals.
+Signal. Look at the signals.
+This is signal date. Signal type and enrichment.
+There we go. Signal content. That’s what I’m looking for. Identity.com. So it went to Identity.com. That’s interesting. And Identity.org.
+Those are places to look. So that’s a good tip. So look at Identity.com and Identity.com.
+Yeah. Hold on one second But before you do that, Oliver, the reason why I did that was because my prompt remember said, “Over here, find recent signals that would indicate interest in proactive cybersecurity solutions within firm risk.” You know your customer. And everything. So it’s the reason why it’s called Identity.com is because I’m asking it to find people that are having identity fraud problems. So because this is a customer I’m working with called Silent Push. And what Silent Push does is helps companies with the cybersecurity solutions, particularly revolving around identity fraud risk. You know your customer. So that’s why I went to Identity.com.
+Sure.
+But it is good to know these things because it seems to be having trouble knowing where to look.
+Whatever it’s doing isn’t working. So I’m trying to give it some ideas. So Identity.com and Identity.org are some places.
+Maybe we could look at another.
+And then this is messaging see, this is what I’m doing on Play.
+And kind of what I’m doing in parallel with you. So it’s funny because that’s how our relationship is actually kind of working.
+I’m doing these things parallel. I’m doing them with Jacob and Josh. Using Play. And I’m trying to just.
+Well, it’s good that you stay close to the user story because you need to know where the gaps are and where it could be improved. So it’s really good because I’ve got no idea. I’ve only can guess, right? So you’re close and you can actually think about where the sticking points are. So leave it on a screen long enough for me to take a useful screenshot because I’m feeding all of this. Trying to help it improve what it’s doing so it can give us better signals. Can you I’ve already screenshotted that. I’ve already screenshot. Can you scroll down?
+This is interesting. This is all the outreach intelligence that it gives us. And there’s a sequence strategy on how to write the emails. So this is kind of all the stuff I’m doing on the B2B side with B2B clients. I’m trying to apply that to job seekers.
+That’s this would give a guidance on what each one of the email campaigns would be. Email one angle. Email two angle. Email three angle.
+Yeah.
+And it’s using that signal that was made that was created before by Identity.com to inform its sequences. And the emails.
+Can you go to another example of some signals? Because you mentioned Identity.com was very specific to that thing. But can you find one that’s maybe it looks like it’s going to tell us where it found the info. And we can use that to kind of help our app look in the right places. So Identity.com might be only right for this very specific use cases. But if you could find another signal message like that. Does it make sense?
+Yeah. I can actually make a new one too.
+Yeah. That would be fine.
+That’d be a good one. So one of the last things. One of the ways to do this. One of the ways to change this. I have to edit it.
+And I can say in the prompt.
+Find me. Find recent signals. That would well, what are you trying to look for? I’m trying to say find a recent signal about a product.
+Product launches.
+Launches. And leadership changes.
+Yeah. It tells you how it’s using it not curing it’s curing the database. So find the information.
+Okay.
+And then find find a new intent funding workforce from Verifix.
+Leadership change.
+Signal time losing change. Signal source AI management. Signal time firm points need cheap risk.
