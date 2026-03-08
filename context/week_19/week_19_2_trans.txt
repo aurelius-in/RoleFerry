@@ -1,0 +1,178 @@
+Transcript
+Hey there.
+Are you there
+Mm-hmm.
+Hello sir. Yeah, I had an idea.
+Mm-hmm.
+Regarding one of the things that you were talking about. So, um,
+uh, we have so to make the flow good, right, so you have, um, the Clex company research. You talked about this in your video, right? And then you did point out that when I was creating mine, it was more about the person.
+Mm-hmm.
+Right?
+Yeah.
+But a little about the company too. It was kind of either/or. And what made me think was, well, how about we get it to do its best, you know, collecting info about the company, and about the person, and then the person in a very user-friendly, easy-flow way. You kind of have three options, right? So there’s, like, three different company facts that they can select, you know, one of those facts or more for their email inclusion. And then same when you get to the contact screen, we could have three facts about the person, assuming you can find that, that they can it might not find that many. But whatever it finds, it or, or it just gives it three different things and it can include, like, personal comments. It was like a company-company-whatever we call it. I don’t know what it’d be called, but it’d be, like, facts to include facts to include it wouldn’t be called that. It’d be called something else, but you get the idea, right? So.
+Yeah.
+We want, like, something personal about the company. Something personal about the, the person. You want the company just to kind of anchor them, like, “Yeah, this isn’t a random thing I’m sending to everybody. I’m actually interested in working for your company.” And I’m also talking to a person, and I’m not just sending random spam to everybody at the company. So it seems to kind of anchor in both, like, I know what company I’m reaching out to, and I know who I’m reaching out to, you know, just so that it’s not as spammy. You know, they know that you don’t.
+Yeah.
+You don’t wanna get to know them that well, but, you know, it still needs to be some kind of a personalization. So anyways, that’s my thought, is, like, you kind of give them three things they can choose what to include, since the AI is not perfect. It may not always, like, include the best thing, right? But then there’s a human kind of human in the loop, they call it, where I work, right? The human in the loop is someone to kind of, like, add some sanity checking to what’s being produced. And the and it also.
+Yeah.
+Person helps them. They, you know, the user being like, “Yeah, I like I want that in my email,” you know, kind of personalize it a little bit. So.
+Yeah, that makes sense. Yeah, I like that. I mean, and the, the.
+So, uh, instead of all those
+Yeah, I mean, the, the personal stuff can be, like, more, like, uh, like, posts that they made currently.
+Currently Yeah, ‘cause I don’t like all those empty fields. Like, if it doesn’t find, you know, um, those specific signal things for specific things, it just has, like, all these empty fields. It makes it feel like it’s not working, right? It gives the app kind of.
+Mm-hmm.
+Just that broken feeling. So instead of having all those empty fields, it should just pop up whatever it does find and items that can be selected. And they can choose whether or not they wanna include it. However many it is. Right?
+Yeah, I mean, that sounds good.
+So it gives it a few things that it, it considers including, like, signals or whatever. And then yeah.
+Yeah, company and company overview to they choose it. They can choose, you know, 100 signal, a company debriefing, product launch, leadership changes, those are your main things. I mean, uh, I mean, as we go through this, we, we man, that’s the best thing to do, I think. You, you, you wanna cast a wide net and then as you go through it, we actually slim it down.
+Yeah.
+That’s what we’re doing.
+So let AI do its best at getting interesting things, and then it kind of figures out the three best things that we would be likely to include, and then puts it in front of the user. It says, “Hey, which of these things do you wanna include? These are the three best things I found, you know, would be most, most appropriate for, um, you know, for, for an email of this kind. Which do you wanna include?” And then you let the user pick whatever they wanna include. It could be all three. It could be one. Those things. But the emails are too.
+Yeah.
+Are too short to include like 10 things. So it’s gonna be one.
+Yeah.
+Maybe two, in rare cases, three of those things. And then for especially if there’s if it’s real light on, like, personal details about the person, right, you might have more information about the company. Right? And that’s how my that’s how GPT was doing my emails.
+Mm-hmm.
+They’re calling it GPT now.
+Yeah.
+GPT.
+Yeah, it was.
+But yeah.
+GPT what?
+They’re calling it they’re calling it GPT now.
+GPT why are we calling it GPT?
+I don’t know It’s I think ‘cause it sounds like Skippity. I don’t know. The, the kids these days, all the of the videos, I’m watching anytime I, I kind of stay up on the latest AI stuff and everybody’s calling it GPT. It’s like a new thing.
+Mm-hmm. The kids, man. All those kids.
+So now that’s just what it’s called. It’s like the universal term for ChatGPT is just GPT. So there’s GPT. There’s Claude. Everybody’s saying GPT.
+Anyways.
+Anyways.
+And it’s stuck, like.
+Yeah, they say that.
+Yeah.
+They say that as they type shit. Type shit, type shit. Yeah, type shit.
+Type shit.
+I hear them say that all the time.
+What the hell is type shit?
+Type shit. Type shit.
+I don’t know what you’re talking about
+Um, that’s just it has nothing to do with GPT specifically, but, like,
+if I speak to, like, 18-year-olds.
+Mm-hmm.
+Or younger, the the they’ll just be like, “Yeah.” And you should do you should go here. You should go there. And type shit, you know, type shit.
+Hmm.
+It’s like it’s in this general thing people say, that incorporates everything. It’s like, you know, type shit. You know, type shit.
+It’s another filler word.
+It’s another filler word.
+Around here, they like to say we. ‘Cause it’s like Latinos.
+So they’re like.
+What is it?
+Tacos caseríos, we.
+We.
+Yeah.
+It’s kind of similar. My, my Spanish is no good, but I keep hearing we, we. I think it means, like, dude or something like that.
+Yeah.
+Yeah.
+Yeah, when I was in Guatemala, I would hear people say bye. Bye. All the time.
+Bye.
+And I was like, that was like a, a yes,
+good sure,
+like, I always thought that you say like, see. Like, see. Like, yes.
+Yeah.
+But they, they would just say like, bye.
+Yeah, there’s regional stuff too. So, um,
+let’s talk a little bit more about how we want this ‘cause I’m transcribing so we can, like, get it how we want.
+They gotta get all this shit out of this transcript.
+No, it it knows the personal stuff from the work stuff. So but let’s, let’s try to figure this out. So okay, just try to visualize. So we have, um, well, I guess we can look at the actual app, I mean.
+Yeah, I’m looking at the app yeah. And I just noticed that as I’m looking at the app, we actually already have, um, a section that says posts. I didn’t realize that.
+Yeah, so I think what I wanna get away from is having a field so it’s for I think for some companies, it’s gonna find, like, a lot of, um, stuff and more of those fields will be filled. Right? But for it’s just not finding a lot of stuff. So on all the companies and all the people. So I just don’t want a bunch of empty fields. I just think, like, let it find the best stuff it can find, the, the, the, the filters, um, not the filters, but the signals, right?
+The signals.
+And and and then let, let it like, let it go through those signals and then make some decisions about the best three signals to let the user consider as things to include in their message. And then show those three signals on the screen. And then some of them might be, like, obviously inappropriate, but at least the, the user will have a the role seeker will have, like, a, an opportunity to, like, just pick the one that makes the most sense or none of them. Right?
+Yeah, I think I think that I think that we should also do is have a scoring system a priority scoring, scoring system.
+For what
+So like, the priority scoring system would be like, um, you know,
+you’re okay. So you’re supposed to have only three, but the, the priority one would be like product launches, leadership changes, and, um, you know, any, any like recent posts.
+I don’t know if it needs to be a system, but we can just tell the AI, like, when, um, when you’re considering signals, the ones we want most are the, um, leadership changes.
+Yeah, leadership changes or product launches because when you’re when you’re personalizing a message, it sounds best when there’s a leadership change.
+Mm-hmm.
+Or a product launch.
+Okay.
+Or some recent news or recent post.
+Okay.
+Um, that that sounds the best.
+Yeah. Yeah, we don’t need we don’t need to, like, detail what a scoring system would look like, but it’ll create one for us internally to kind of, like, do that. So it’s it needs to prioritize product launches, and, um, what was the other one?
+Product launches and um.
+Leadership changes.
+Leadership changes. Leadership changes and product launches. That would be like the best things for it to find about all the companies. What would be the best things for it to find about each person on the, uh, contact screen?
+On the contact, um,
+it would be like, um, a post because they’re likely going to be posting jobs on their posting section or they’re, they’re likely writing something that is relevant to what’s going on in their life. And that’s gonna be personalized because it’s for their personal what’s going on in their life. Um, I mean, if you think about what you did, you pretty much just went to the LinkedIn profile and copied everything and then you put that in with the message template. And so when you did that, you likely copied the most recent posts.
+Yeah.
+Um, on there.
+Yeah, I did I did do that. Yeah. I don’t think it has access to scraping LinkedIn, unfortunately. Um.
+Yeah.
+Yeah.
+Yeah.
+Are you looking at my screen yet
+I’m looking at my screen. I have it opened up, but now you’ll be able to.
+Go ahead and look at mine ‘cause I’m gonna talk about specific stuff we’re gonna remove from certain pages and replace it with that thing we’re talking about.
+Um, I’m looking at yours.
+So all right. So let’s see. It starts this is where we’re so the roles here, um, auto discovered. We probably wanna change the heading of auto discovered. Because we don’t really wanna show a million roles on a right-hand column that goes on forever. You have to endlessly scroll.
+Yeah.
+So we don’t wanna call the auto discovered card auto discovered anymore. We’re gonna call it, um, keywords.
+Keywords, yeah.
+‘Cause that’s all it’s gonna have in it. And then um, maybe instead of open apply studio, we can give them something more like obvious what they’re gonna see there. They’re gonna say see auto discovered roles or something. Or just see roles.
+Yeah, maybe the naming convention can change to see masked roles. See keyword masked roles.
+Okay. So there you go. So for the auto discovered, we’re gonna rename it. It’s not gonna be auto discovered anymore. It’s just gonna be keywords. And then instead of open apply studio,
+um it’s still gonna take us to the apply studio screen, but the button’s gonna say see matched roles. And, um, and then when you click it, it should show the roles. They can the, the, the fil the, the keyword filters that they already selected from the page should move over to here.
+Um, and they can edit them some more if they want. But here, but when they come to this screen, it should have already generated the roles. ‘Cause otherwise they accomplish nothing on that other screen. They just like selected a bunch of keywords, and then it generated a bunch of roles that stayed on that screen. So we don’t want any roles on that screen except the ones that they like filter manually. And it also anything that they fil they filtered by, by either entering the link on the role screen or entering, you know, scraping the, the job description and pasting it in the text field on the role screen. Whatever they already have on that should move over to the apply studio too. So the apply studio is mostly a list of roles they’ve already collected either manually or through the auto process. And then it should be all listed here. And it should be easy to click each one of those roles and apply. They shouldn’t have to go back and forth between the role screen and the apply studio. But anyways, once they’re at the apply studio, um, that’s where all these roles that from the previous screen should have already been um, you know, created using those those uh keywords, positive and negative, and filtered and then put onto this screen. Um, in fact, a more natural flow might be um,
+so they select their keywords,
+and then they click generate, and then it just take them to that screen. Right?
+Mm-hmm.
+But I mean, we did so much work on this page why wouldn’t we use this page? I think that you should go back to I think that you go to the apply studio to go back to this screen because we did so much work on this screen.
+Yeah. That’s fine. So tell me is the flow just needs to make sense. Like, I, I don’t have a preference for either, and I’m not worried about, like, invested time in certain screen. I just want it to be a good app. So like, what is it about this screen that we like that we wanna like, okay, so they, they use the keywords they open apply studio. Now they’re here.
+It should show the roles.
+It should show all the keywords they previously selected.
+Right And then um,
+I just want the flow to make sense. I mean, it doesn’t have to be a separate page for the apply studio. I just wanna I mean, I guess scrolling is kind of not, not great. I guess that’s one reason. But so I was jumping around between pages as well.
+But this, but this page you put so much time into. Why would we this has a salary. This has a show details. This has the preferences. I mean, all this stuff. I mean.
+Okay. So.
+I think that the idea would be to upload everything onto the apply studio so that you can go back to this page.
+Okay.
+Okay. So we wanna borrow so anything generated on the apply studio, we move back to the role screen, and it should have it.
+Yeah. I mean, that’s just what you want.
+Do we like the apply studio screen, or do we wanna just move everything over to the role screen?
+Maybe this can.
+Um.
+So I okay. One thing I definitely wanna do is I wanna make this smaller. So um.
+And I like what we did on this role search. I don’t wanna lose the work that we did on that because it’s gonna trying to go to uh, the apply studio.
+Okay. So the website’s to find role descriptions. I want all of those links to have a, a smaller text. So they, they don’t it doesn’t take up so much room on the screen. Um.
+Why don’t you just do the same thing we did over here Uh, with the uh, show details section.
+Okay. So it should be collapsible. So.
+Collapsible, yeah.
+Websites, to find roles, role descriptions is also a really long heading. So let’s take that down to um, job sites. So instead of websites to find role descriptions, click jobs have job sites be the heading, and that should be a collapsible thing and they should only be able to see job sites and then it should be like a, you know, a cascading um, you know, accordion type thing.
+Well, I mean, I think the core categories are good. Just maybe the headings general I mean, we spent so much time on this. I don’t know why you wanna.
+I’m not I just wanna collapse it. So instead of websites to find role descriptions, we’re gonna change that to job sites. That, that’s the name of the, the heading. And then when you click on that heading, it collapses it so that we have more room on the screen for this other stuff that we care about. Since we’re doing the auto search, the auto discovered stuff, they may never use the job sites.
+Yeah. They may not They may not Okay. I see what you’re saying.
+So it’s kind of less important now ‘cause it’s, it’s more important that we can collect a few hundred roles for them. So they have like a robust starting point, like you said, the top of the funnel. So yeah. So same thing. So they can also import this. This can this can be moved up. Right? But yeah.
+Yeah.
+So the whole thing could just move up. We’re not trying to remove it. We just wanna less obvious. So now that we have auto discovered, we kind of don’t need it. So instead of auto discover, we’re gonna put keywords as the heading for auto discovered. And instead of collecting and displaying these roles down here,
+we have to decide if we wanna put them on the apply studio screen or maybe the apply studio screen isn’t needed and we can keep everything here. And put it underneath these roles and have all these roles down here in the same format that we already have roles. So with the preferences stars and the favorite rank and all of that.
+Yeah. I mean, I feel like we should we have salary. You have perfect we have perfectly done here.
+Okay. So.
+Um, I think we need to change it.
+So we don’t want the apply studio screen. We just want everything on the apply studio. To be moved over to the role screen.
+Yeah. Yeah. Yeah. Yeah.
+So the apply studio was it was an experiment.
+It was an experiment trying to trying to get some of that stuff from simply apply, and I thought maybe we need another screen, but I think you’re right. So on the on the open apply studio screen, there are some features. We want all of those features. But we don’t want to separate screen for them. We want all of those features on the role screen. And when they click um, you know, generate, all of the roles should populate under the existing place for roles that has all of those nice things, like the like the um, the preferences and the favorite rank and the add role track add role tracker and the delete button and the, the salary and posted unknown. I’m not sure what that is. What is posted unknown?
+When, when was when was the role posted? I like that. I like that piece. That’s something I liked in simply apply did.
+All right
+We yeah. ‘Cause, ‘cause it’s a remember the analogy of like buying a house. When was a house for a market?
+Well, right now it’s not finding the date. So I don’t know if it’s gonna be able to find these dates.
+All right All right
+Um, I don’t know. Tell I’ll tell the AI to look a little harder for the date of when it was posted so that hopefully we can get some dates in there at least for some of these roles. If that’s something you care about. So all right.
+I think people people are gonna care about that too. Like when was the ‘cause it’s like it’s, it’s, it’s a it’s a really it’s an important metric in the sense of like you know, if the role was closer to a year ago, you know, why am I gonna, you know, apply to it? And so they got 10,000 people applying to it. You know what I mean?
+Okay.
+So it’s a good thing.
+Agreed. All right. So we’ve talked about this. We’ve talked about um, moving porting they call it porting everything from the uh, open apply studio screen onto the role screen. And the places we described. So the roles go under roles. And the tools go in a place that doesn’t clutter up the screen. We want the websites to find role descriptions heading to be changed to job sites. And we want that to be a button you can click or a collapsible. You know, accordion thing. So it can not take up so much of the screen and all you should be able to see is the heading uh, job sites.
+Um, and then all these roles are gonna populate under here. They need to be specific, of course, to the job applier, like you are not a software developer. So you shouldn’t be seeing any uh, software jobs on your on your jobs. You should have stuff that relates to your resume and your preferences and your uh, even, you know, mostly those resume, mostly. Um, and preferences, those both have a job specific types of uh, preferences. So okay. So let’s take this I’m gonna stop the transcript.
+And what I’d like to do is um,
+do an update here and get some stuff.

@@ -2785,6 +2785,23 @@ def _blocked_title_for_tech_seekers(title: str) -> bool:
     return any(x in low for x in blocked)
 
 
+def _blocked_title_for_non_tech_seekers(title: str) -> bool:
+    """Block software/engineering roles for users whose resume has no tech intent."""
+    low = str(title or "").lower()
+    blocked = [
+        "software engineer", "software developer", "backend engineer",
+        "frontend engineer", "full stack engineer", "full-stack engineer",
+        "fullstack engineer", "platform engineer", "site reliability",
+        "sre ", "devops engineer", "cloud engineer", "data engineer",
+        "machine learning engineer", "ml engineer", "ai engineer",
+        "systems engineer", "infrastructure engineer", "security engineer",
+        "firmware engineer", "embedded engineer", "ios developer",
+        "android developer", "mobile developer", "web developer",
+        "qa engineer", "test engineer", "sdet",
+    ]
+    return any(x in low for x in blocked)
+
+
 def _is_tech_intent(pref: Dict[str, Any]) -> bool:
     blob_parts: List[str] = []
     for k in ["role_categories", "skills", "industries", "resume_skills"]:
@@ -2793,12 +2810,21 @@ def _is_tech_intent(pref: Dict[str, Any]) -> bool:
             blob_parts.extend([str(x or "") for x in v])
         elif isinstance(v, str):
             blob_parts.append(v)
-    blob = " ".join(blob_parts).lower()
-    markers = [
-        "software", "engineering", "engineer", "developer", "architect",
-        "data", "machine learning", "artificial intelligence", "ml", "ai", "devops", "cloud",
+    blob = f" {' '.join(blob_parts).lower()} "
+    exact_phrases = [
+        "software", "software engineer", "developer", "full stack",
+        "backend", "frontend", "devops", "cloud engineer", "cloud computing",
+        "machine learning", "artificial intelligence", "deep learning",
+        "data engineer", "data scientist", "data science",
+        "python", "javascript", "typescript", "java ", "golang", "rust ",
+        "kubernetes", "docker", "aws ", "azure", "terraform",
+        "platform engineer", "site reliability", "sre ",
     ]
-    return any(m in blob for m in markers)
+    if any(p in blob for p in exact_phrases):
+        return True
+    word_markers = {"ml", "ai", "swe", "cs"}
+    words = set(re.findall(r"\b[a-z]+\b", blob))
+    return bool(words & word_markers)
 
 
 def _role_family_from_title(title: str) -> str:
@@ -2811,7 +2837,19 @@ def _role_family_from_title(title: str) -> str:
         return "Software Engineering"
     if any(x in t for x in ["data engineer", "data scientist", "analytics engineer"]):
         return "Data"
-    return "Technology"
+    if any(x in t for x in ["recruiter", "talent", "sourcing", "hiring", "staffing", "hr ", "people operations"]):
+        return "Recruiting & HR"
+    if any(x in t for x in ["marketing", "brand", "social media", "content", "growth", "seo", "sem"]):
+        return "Marketing"
+    if any(x in t for x in ["sales", "account executive", "business development", "revenue", "partnerships"]):
+        return "Sales & BD"
+    if any(x in t for x in ["operations", "coordinator", "analyst", "specialist", "administrator"]):
+        return "Operations"
+    if any(x in t for x in ["product manager", "program manager", "project manager"]):
+        return "Product & Program"
+    if any(x in t for x in ["design", "ux ", "ui ", "creative"]):
+        return "Design"
+    return "General"
 
 
 def _preference_terms(pref: Dict[str, Any], role_query: str) -> List[str]:
@@ -2825,9 +2863,14 @@ def _preference_terms(pref: Dict[str, Any], role_query: str) -> List[str]:
         terms.extend([x.lower() for x in _resume_skill_hints()[:10]])
     terms.extend([x.lower() for x in re.findall(r"[A-Za-z]{3,}", role_query)])
     role_cats = " ".join([str(x).lower() for x in (pref.get("role_categories") or []) if str(x).strip()])
-    if any(x in role_cats for x in ["technical", "engineering", "software", "architect"]):
+    if _is_tech_intent(pref):
         terms.extend(["software", "engineer", "developer", "architect", "platform", "backend", "frontend", "python", "ai", "ml"])
-    # Stable order + dedupe
+    elif any(x in role_cats for x in ["recruiting", "talent", "hr", "human resources"]):
+        terms.extend(["recruiter", "talent", "sourcing", "hiring", "staffing", "hr", "people operations"])
+    elif any(x in role_cats for x in ["marketing", "social media", "content", "brand"]):
+        terms.extend(["marketing", "brand", "social media", "content", "digital marketing", "campaigns", "growth"])
+    elif any(x in role_cats for x in ["sales", "business development", "account"]):
+        terms.extend(["sales", "account executive", "business development", "revenue", "partnerships"])
     out: List[str] = []
     seen: set[str] = set()
     for t in terms:
@@ -2852,35 +2895,39 @@ def _score_scraped_role(
     funnel_mode: str = "strict",
     role_tokens: Optional[List[str]] = None,
     apply_tech_blockers: bool = False,
+    apply_non_tech_blockers: bool = False,
 ) -> tuple[int, List[str], str, str]:
     blob = f"{title} {snippet}".lower()
     title_low = str(title or "").lower()
     reasons: List[str] = []
-    score = 28
+    score = 20
 
     title_focus_tokens = [str(t or "").strip().lower() for t in (role_tokens or []) if str(t or "").strip()]
     if not title_focus_tokens:
         title_focus_tokens = [str(t or "").strip().lower() for t in pref_terms[:6] if str(t or "").strip()]
     title_hits = [t for t in title_focus_tokens if t in title_low]
     if title_hits:
-        score += min(20, len(set(title_hits)) * 5)
+        score += min(25, len(set(title_hits)) * 7)
         reasons.append(f"Title alignment: {', '.join(sorted(set(title_hits))[:3])}")
 
     term_hits = [t for t in pref_terms if t in blob]
     unique_hits = sorted(set(term_hits))
     if unique_hits:
-        score += min(40, len(unique_hits) * 8)
+        score += min(45, len(unique_hits) * 9)
         reasons.append(f"Preference skills match: {', '.join(unique_hits[:4])}")
+    elif pref_terms:
+        score -= 20
+        reasons.append("No skill/preference overlap")
 
     if salary_range:
-        score += 8
+        score += 5
         reasons.append("Salary listed")
 
     loc_text = str(location or "").strip()
     loc_blob = f"{title} {snippet} {loc_text}"
     if require_us:
         if _is_us_like_location(loc_blob):
-            score += 6
+            score += 5
             reasons.append("US location alignment")
         elif _is_explicit_non_us(loc_blob):
             score -= 35
@@ -2888,8 +2935,10 @@ def _score_scraped_role(
         score += 2
 
     if apply_tech_blockers and _blocked_title_for_tech_seekers(title):
-        # In broad mode, down-rank strongly but don't auto-kill top-funnel discovery.
         score -= 45 if str(funnel_mode or "strict").lower() == "strict" else 18
+
+    if apply_non_tech_blockers and _blocked_title_for_non_tech_seekers(title):
+        score -= 50 if str(funnel_mode or "strict").lower() == "strict" else 25
 
     score = max(0, min(100, score))
     work_mode = "Remote" if "remote" in loc_blob.lower() else ("Hybrid" if "hybrid" in loc_blob.lower() else "On-site/Unspecified")
@@ -2945,15 +2994,13 @@ def _company_from_result(url: str, title: str) -> str:
 
 
 def _load_job_preferences_best_effort() -> Dict[str, Any]:
-    # Prefer demo store cache
     if isinstance(store.demo_job_preferences, dict) and store.demo_job_preferences:
         return dict(store.demo_job_preferences)
-    # fallback defaults aligned to existing options
     return {
-        "role_categories": ["Technical & Engineering"],
-        "skills": ["Python", "SQL"],
-        "industries": ["AI & Machine Learning"],
-        "minimum_salary": "$80,000",
+        "role_categories": ["Professional & Specialist"],
+        "skills": [],
+        "industries": [],
+        "minimum_salary": "$50,000",
     }
 
 
@@ -2973,7 +3020,6 @@ def _looks_like_relevant_title(title: str, tokens: List[str]) -> bool:
     generic_bad = ["intern", "campus", "student", "volunteer", "contractor pool"]
     if any(b in t for b in generic_bad):
         return False
-    # Generic professional-title anchors across industries.
     role_words = [
         "manager",
         "specialist",
@@ -2993,7 +3039,9 @@ def _looks_like_relevant_title(title: str, tokens: List[str]) -> bool:
     ]
     if not tokens:
         return any(w in t for w in role_words)
-    return any(tok in t for tok in tokens) or any(w in t for w in role_words)
+    if any(tok in t for tok in tokens):
+        return True
+    return False
 
 
 def _salary_from_greenhouse_metadata(meta: Any) -> Optional[str]:
@@ -3028,17 +3076,19 @@ async def _discover_roles_without_serper(
     requested: int,
     minimum_salary: Optional[int],
     require_us: bool = False,
+    pref: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Keyless fallback: fetch real job links from public ATS APIs (Greenhouse + Lever).
-    This avoids returning only generic board links when Serper is unavailable.
+    Board lists are selected based on user industry/intent so non-tech seekers
+    see relevant companies instead of only SaaS/tech firms.
     """
     tokens = _role_tokens(role_query)
     cap = max(requested * 3, 60)
     out: List[Dict[str, Any]] = []
     seen_urls: set[str] = set()
 
-    greenhouse_boards = [
+    tech_gh = [
         "stripe", "figma", "notion", "airtable", "plaid", "coinbase", "discord", "doordash", "datadog",
         "openai", "anthropic", "perplexityai", "vanta", "ramp", "brex", "asana", "zapier", "gusto",
         "canva", "mural", "intercom", "hubspot", "mongodb", "snowflake", "cloudflare", "palantir",
@@ -3047,13 +3097,35 @@ async def _discover_roles_without_serper(
         "dataiku", "toast", "newrelic", "fivetran", "dbtlabs", "grafana", "sumologic", "tripactions",
         "cruise", "affirm", "nuro", "udacity", "postman", "monday", "carta", "apolloio", "xai",
     ]
-    lever_companies = [
+    tech_lever = [
         "netlify", "sourcegraph", "improbable", "udemy", "eventbrite", "coursera", "gitlab", "robinhood",
         "benchling", "sentry", "postman", "flexport", "segment", "calendly", "clearbit", "pilot", "n8n",
         "render", "vercel", "mixpanel", "heap", "newrelic", "fivetran", "airbyte", "dbt-labs",
         "supabase", "sonarqube", "clerk", "retool", "crunchbase", "planet", "duckduckgo", "codecov",
         "launchdarkly", "algolia", "motive", "rippling", "webflow", "zapier", "hashicorp", "apollo",
     ]
+    general_gh = [
+        "hubspot", "toast", "gusto", "monday", "carta", "asana", "zapier", "canva",
+        "mural", "intercom", "checkr", "loom", "optimizely", "tripactions",
+        "salesforce", "adobe", "servicenow", "docusign", "zendesk", "twilio",
+        "okta", "pagerduty", "elastic", "atlassian", "dropbox",
+        "roberthalf", "kforce", "insightsoftware", "hireright",
+        "paychex", "paylocity", "bamboohr", "lattice", "cultureamp",
+        "deel", "remote", "oysterhr", "justworks",
+    ]
+    general_lever = [
+        "eventbrite", "coursera", "udemy", "flexport", "calendly", "clearbit",
+        "mixpanel", "heap", "crunchbase", "webflow", "rippling", "motive",
+        "lever", "greenhouse", "beamery", "phenom", "eightfold",
+    ]
+
+    is_tech = _is_tech_intent(pref or {}) if pref else False
+    if is_tech:
+        greenhouse_boards = tech_gh
+        lever_companies = tech_lever
+    else:
+        greenhouse_boards = general_gh
+        lever_companies = general_lever
 
     timeout = httpx.Timeout(6.0, connect=4.0)
     headers = {"User-Agent": "RoleFerry/1.0 (+https://roleferry.app)"}
@@ -3210,7 +3282,8 @@ async def get_scraped_roles(
         t = str(x or "").strip()
         if t:
             role_terms.append(t)
-    for x in _resume_skill_hints()[:2]:
+    caller_resume_skills = [str(x).strip() for x in (prefs.get("resume_skills") or []) if str(x).strip()]
+    for x in (caller_resume_skills or _resume_skill_hints())[:2]:
         t = str(x or "").strip()
         if t:
             role_terms.append(t)
@@ -3300,6 +3373,7 @@ async def get_scraped_roles(
             requested=min(max(requested, 90), 160),
             minimum_salary=minimum_salary,
             require_us=require_us,
+            pref=prefs,
         )
     else:
         # If live search is too small or too concentrated (for example, mostly one employer),
@@ -3329,6 +3403,7 @@ async def get_scraped_roles(
                 requested=min(max(requested * 2, 90), 220),
                 minimum_salary=minimum_salary,
                 require_us=require_us,
+                pref=prefs,
             )
             if extra:
                 seen_live_urls = {
@@ -3396,6 +3471,7 @@ async def get_scraped_roles(
             funnel_mode=mode,
             role_tokens=role_tokens,
             apply_tech_blockers=tech_intent,
+            apply_non_tech_blockers=not tech_intent,
         )
         if score < min_match_score:
             continue

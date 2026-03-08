@@ -1249,7 +1249,7 @@ export default function FindContactPage() {
                           <div className="mt-1 text-[11px] text-white/60">
                             {(() => {
                               const facts = getInterestingFactsForContact(activeDraftContactId);
-                              if (!facts.length) return "No highlights yet (run research, or switch contacts).";
+                              if (!facts.length) return "No online highlights found yet. Run research to populate.";
                               return facts.map((f, idx) => (
                                 <div key={`f_${idx}`} className="mt-1 truncate">
                                   • {trimToChars(f.text, 96)}
@@ -1602,7 +1602,7 @@ export default function FindContactPage() {
                             </div>
                           ) : (
                             <div className="mt-2 text-[11px] text-white/50">
-                              No personalization facts yet. Run research for saved contacts to populate these.
+                              No online info found for {contact.name?.split(" ")[0] || "this contact"}. Run research to discover more.
                             </div>
                           )}
                         </div>

@@ -737,6 +737,61 @@ class OpenAIClient:
         }
         return self.run_chat_completion(messages, temperature=0.35, max_tokens=700, stub_json=stub)
 
+    def quality_filter_message(self, subject: str, body: str, *, cta_text: str = "", step: int = 1) -> Dict[str, str]:
+        """
+        Post-generation quality filter. Takes a draft email, polishes awkward
+        phrasing, ensures natural flow, and verifies the CTA is present.
+        Returns {"subject": str, "body": str}.
+        """
+        if not self.should_use_real_llm:
+            return {"subject": subject, "body": body}
+
+        cta_instruction = ""
+        if cta_text:
+            cta_instruction = (
+                f"\n- The email MUST contain a CTA near the end. The intended CTA is: \"{cta_text}\"\n"
+                "  If it is missing or awkwardly placed, weave it in naturally as the closing ask.\n"
+            )
+
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a professional email editor for job-seeker outreach.\n"
+                    "Your ONLY job is to polish the draft below so it reads naturally and confidently.\n\n"
+                    "Rules:\n"
+                    "- Fix awkward phrasing, run-on sentences, and stiff/robotic language.\n"
+                    "- Ensure smooth paragraph transitions.\n"
+                    "- Remove duplicate ideas and filler.\n"
+                    "- Keep the meaning, facts, names, and specifics identical; do NOT invent new information.\n"
+                    "- Do NOT add greetings or sign-offs that are already present.\n"
+                    "- Do NOT use em dashes or en dashes.\n"
+                    "- Do NOT use cliche openers ('I hope you are well', etc.).\n"
+                    "- Voice: first-person singular (I/me/my).\n"
+                    "- Keep the length roughly the same (within 15%).\n"
+                    f"{cta_instruction}"
+                    "\nReturn ONLY valid JSON: {\"subject\": \"...\", \"body\": \"...\"}\n"
+                ),
+            },
+            {
+                "role": "user",
+                "content": json.dumps({"subject": subject, "body": body}, ensure_ascii=False),
+            },
+        ]
+        try:
+            raw = self.run_chat_completion(messages, temperature=0.2, max_tokens=700, stub_json={"subject": subject, "body": body})
+            choices = raw.get("choices") or []
+            msg = (choices[0].get("message") if choices else {}) or {}
+            content_str = str(msg.get("content") or "")
+            parsed = extract_json_from_text(content_str) or {}
+            out_subj = str(parsed.get("subject") or "").strip() or subject
+            out_body = str(parsed.get("body") or "").strip() or body
+            if len(out_body.split()) < 10:
+                return {"subject": subject, "body": body}
+            return {"subject": out_subj, "body": out_body}
+        except Exception:
+            return {"subject": subject, "body": body}
+
 
 # Singleton-style accessor used across the backend
 _default_client: Optional[OpenAIClient] = None

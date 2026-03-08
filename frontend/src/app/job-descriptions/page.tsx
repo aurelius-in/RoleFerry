@@ -1651,7 +1651,15 @@ export default function JobDescriptionsPage() {
                     <div className="mt-1">
                       <button
                         type="button"
-                        onClick={() => router.push("/tools/apply-studio")}
+                        onClick={() => {
+                          try {
+                            localStorage.setItem(
+                              "rf_apply_studio_filters_v1",
+                              JSON.stringify({ positive: positiveKeywords, negative: negativeKeywords }),
+                            );
+                          } catch {}
+                          router.push("/tools/apply-studio");
+                        }}
                         className="rounded-md border border-emerald-400/35 bg-emerald-500/15 px-2 py-1 text-[11px] font-semibold text-emerald-100 hover:bg-emerald-500/25"
                         title="Open RoleFerry Apply Studio"
                       >
