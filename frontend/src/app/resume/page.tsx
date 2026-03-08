@@ -746,7 +746,7 @@ export default function ResumePage() {
               </div>
 
               <div className="rounded-lg border border-white/10 bg-black/20 p-4">
-                <div className="text-sm font-bold text-white mb-2">Available Variables from this Step</div>
+                <div className="text-sm font-bold text-white mb-2">Available Variables</div>
                 <div className="text-xs text-white/60 mb-3">
                   These variables are now available for downstream steps (Bio/Campaign):
                 </div>
@@ -754,7 +754,7 @@ export default function ResumePage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-white/60">Scalar:</span>
                     <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                      {"{{resume.total_years_experience}}"}
+                      {"Total years experience"}
                       {totalYearsExperience !== null ? ` = ${totalYearsExperience}` : " = (unavailable)"}
                     </code>
                   </div>
@@ -768,19 +768,19 @@ export default function ResumePage() {
                           #
                         </th>
                         <th className="border border-white/10 bg-black/30 px-1.5 py-1.5 align-top whitespace-normal w-[16%]">
-                          <span className="font-semibold">{""}{"{{resume.key_metrics[]}}"}</span>
+                          <span className="font-semibold">Key metrics</span>
                         </th>
                         <th className="border border-white/10 bg-black/30 px-1.5 py-1.5 align-top whitespace-normal w-[18%]">
-                          <span className="font-semibold">{""}{"{{resume.business_challenges[]}}"}</span>
+                          <span className="font-semibold">Business challenges</span>
                         </th>
                         <th className="border border-white/10 bg-black/30 px-1.5 py-1.5 align-top whitespace-normal w-[18%]">
-                          <span className="font-semibold">{""}{"{{resume.accomplishments[]}}"}</span>
+                          <span className="font-semibold">Accomplishments</span>
                         </th>
                         <th className="border border-white/10 bg-black/30 px-1.5 py-1.5 align-top whitespace-normal w-[16%]">
-                          <span className="font-semibold">{""}{"{{resume.positions[]}}"}</span>
+                          <span className="font-semibold">Positions</span>
                         </th>
                         <th className="border border-white/10 bg-black/30 px-1.5 py-1.5 align-top whitespace-normal w-[18%]">
-                          <span className="font-semibold">{""}{"{{resume.education[]}}"}</span>
+                          <span className="font-semibold">Education</span>
                         </th>
                       </tr>
                     </thead>

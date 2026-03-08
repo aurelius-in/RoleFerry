@@ -169,7 +169,672 @@ meet up at, like, a little after 8:00. Sound good?
 I’m good. I mean, I guess what does modulating?
 Yeah.
 So, uh, we need we need to give it some rest anyway. So let’s I think that’s gonna be good.
-Yeah. Talk to you in 10 minutes.
-All right See you in 10 minutes.
-All right Bye.
-Bye.
+
+
+Transcript
+Nie, czy do pretty good on I don’t have a job.
+So just for the transcript, you’re looking at the simply apply AI page, and you were thinking about partnering with these guys because you like their job matches product, so instead of incorporating it into our website or instead of us kind of reinventing that process of finding those jobs, we were going to consider not doing that ourselves and letting them do it. So I’m looking at it. Let me put on some there.
+I think we got enough from just trying to finish it in our own fucking day.
+That might be the case. I’m not no. Not completely resistant to getting there, to getting there, involvement. I just I don’t think it makes sense if we can get it working. So if it’s simple and we can get it working, there’s just no point in not.
+If it’s simple.
+Just doing it ourselves. Yeah, I guess it’s just a degree of how much work it’s going to be. Generally, I think, yeah, we don’t want to do a bunch of extra work, but maybe relatively straightforward. Let’s jump on our app and take a look and see this. I think they probably have a good product and they’ve spent some time on it and I understand.
+Yeah, I like the CSV file. We could just upload that to our product.
+Under the jobs role section, right here.
+Can you go ahead and click through to the process so that it collects the information?
+What I do like to what I do like about ours, that they don’t have, is we have a lot more functionality that they didn’t think about. Putting the salary in there, putting a favorite or preference rank, adding it to a role tracker. I think those things are really cool that they don’t have. But anyway, let’s talk about it again.
+Yeah, let’s go through it and just kind of see. I think you might have to actually go through the steps properly to get all the other pages to work because I’ve tried to jump in through and it doesn’t work right.
+So yeah.
+All right. So now we’re on the role fairy app and we’re going to go through and see how well we’re doing at developing the same kind of job collection process. And we have to make a decision either today or sometime in the near future whether or not we want to get another API involved with our process or if we just want to do it ourselves.
+But I also want to
+Ideally, we do ourselves.
+I want to a soft launch, at least, start getting the word out.
+On the 11th like I was saying, I think that’s about time. So if he knows about what we’re building, we’ll build something here.
+Yeah. And I think you’re right. I think it’s time to start thinking about that for sure.
+I don’t know exactly how that will take shape, but I think it should begin in the next couple of weeks for sure.
+Let’s just make sure that our stuff is polished enough to show it so it our immediate first impression is not like, “Oh, look at this broken thing.” So let’s get something to show him. I think we’re getting there.
+I think there’s something we can see. Let’s get what I’ll do.
+The skills I have are not the funny thing is I’m showcasing it to a tech community.
+So they’re probably going to like all these skills and stuff here.
+Yeah.
+But then again, it should work for more than just tech folks. There’s a million different types of jobs out in the world.
+And a lot of them are getting replaced by AI. And it’s going to make the job market harder for everybody. Which means our app will have more value. So it’s a good thing for us.
+But
+I think a lot of them I think a lot of people that are in this field are going to do well.
+Which I’m not expecting to say I think 100 I think 150. I don’t know if people.
+Okay.
+Okay.
+How’s it changed
+I think it’s good. Pretty good. Okay.
+All those columns.
+And your personality assessment, you already got you might need to do that real quick. 28 questions. So it doesn’t take too long.
+You want me to do it I’ll do the 8 questions.
+Yeah.
+All right When you explain the idea, you really start with first of all,
+grounded. I feel grounded.
+What’s that You can watch interdisciplinary responsibilities. You prefer in groups.
+That works great. Let’s say neutral.
+That affects you default to relationships.
+Results.
+In the work style you prefer autonomous coordination.
+Flexibility.
+Rational Same system. Same journey. Yeah.
+Is that what you used to do
+Yeah. Rational is definitely I agree.
+Okay.
+There you go.
+Okay.
+Okay. Okay. This is giving me specific one. This is giving me specific type. It just gives me a mix of results.
+Yeah. Doesn’t give me the specific type. It just gives me one. It gives me the category. The rational, which is good.
+So we want to refine it a little bit more. It might need more questions, but your four role patterns within this temperament. I see. So there’s four kinds of things within this temperament.
+Correct. Yeah. I’ll probably need more questions to get even further. Into which one of the four in the category.
+The category is right I would say that inventor. Would be mine because I’m an extroverted intuitive. Extroverted intuitive is my dominant now. I can also be an ENFP.
+But to dominant is EN.
+And the P stays the same. So pretty much empty. Or ENF. Or ENFP. I also can get INFP. And IT. INTP.
+That was Tier in all of this. So it was N. There’s no what is it?
+It’s the most consistent letters in my playbook.
+There’s no SF in there. What’s that?
+Yeah. No SF in there. Exactly. Which is the whole thing in my book and everything. It’s the diametrically opposed.
+Idea, right Because there’s no SF.
+Each type is like kind of like that. It’s all about dichotomies. And opposites. And yin and yangs. And all this kind of shit.
+But what I was going to say was my most consistent letters are N and P.
+Okay.
+The E and I changed.
+And the T and the F can change. But I’m definitely an NP of all things.
+Okay.
+I definitely lean more on the ENTP side. I mean, definitely more on innovator. And inventor. And that kind of person. So
+I definitely resonate more like that. I’d like to go out. So E is pretty strong. But I can also be a pretty pretty much I can also be an introvert. I can also be pretty to myself and stuff.
+So I understand both sides.
+Yeah.
+Well, I guess we can add more questions and try to narrow it down a little bit more.
+Yeah. I mean,
+I like it. If someone like me can walk them through that personality piece, after they get it, I can probably figure it out from the temperament, which one they are out of the four.
+But anyway let’s try to add a job here. Maybe a new one.
+Oh, yeah. Wait. Before you do that, can you scroll down for a second, please? I want to try the auto thing first. So remember that because that’s what we’re really talking about today is whether we want to use these other guys. And if we need to or not. So can you scroll down, maybe put yeah, I guess we talked about last time. So these are not.
+There’s some jobs that are focused on your background.
+Yeah. So what’s that about? Put another positive keyword that’s got nothing to do with my background.
+All right Let’s see.
+I was an ad
+So it’s broken.
+It’s broken.
+Okay.
+Well, I would say if we can’t get it unbroken, I mean, we’ll be able to fix that bug, but if we can’t get it yeah, if we can’t get it pointing at resumes that aren’t like mine, then that’s not good.
+Also, we need to add positive keywords that feature doesn’t seem to work.
+Yeah. It seems like it’s only added a negative keyword to that positive one.
+What a negative ad. See if you can even add a negative one that’s legit.
+Yeah. Negative one either.
+You can have shit. Okay. So the auto discovered isn’t letting us add positive or negative keywords. It’s defaulting with zero positive keywords. And five negative ones.
+Which are random because these aren’t necessarily negative for me.
+Okay. And the five negative keywords that are auto discovered there, for the resume that Dave uploaded,
+from his computer, they wouldn’t be negative keywords. So they wouldn’t be appropriate. So the negative and the positive keywords should be drawing from the resume. Or from the preferences. The earlier screens. And maybe from the personality. It wouldn’t be coming from just they can’t be hardcoded.
+Yeah.
+The positive thing, I think, build marketing would be positive. Account executive would be positive.
+Okay.
+Okay. Well, I mean, if we can’t fix it,
+then that’s where we bring on these simply what do they call it again?
+Simply apply.
+Simply apply
+I also really like their CSV file. Do you want to look at that again?
+Yeah. Let’s look at it.
+Yeah. I think we should have the near-term goal of trying to duplicate what they’re doing.
+Because I really feel like if we can, do it in a few days and get it better than what they’ve got or at least as good. It’s going to be
+much easier to not have other people involved.
+Because they get to make the rules. Of how we use their stuff and all that. And it’s going to put limitations on us. And we want to be able to move at light speed and not at whatever speed they’re at. It’s not a criticism to them. It’s just the nature of working with more people. It’s going to be a potential boundary to our growth.
+I mean,
+the reason why I like the success spreadsheet so much is because, yeah, Dave
+posted you have a math percentage and also I can sort this just so you understand things about that. And I know it says what it says, but.
+So what is this Can you explain what I’m looking at?
+Yeah. I’m like.
+For the transcript too, and how we would integrate this and this is something that you would download from the app, assuming we had this feature. They would download this SCV CSV.
+Yeah. Yeah. I’ll explain. All right. So this is the file. That we would get from Simply Apply.
+And it would have all these different columns that have a column date posted. Date applied. Applied failure reason and math percentage, which is the relevancy score, essentially.
+The location of the position The job title. The company. The requirements summary, which is pretty much a breakdown of what the job description would have, which is really nice. There’s a lot of good details there. And then the job URL, which they could we can just pretty much put the job URL into our system and then import all of the details that way too.
+But one thing would be interesting too is once we have this CSV file, what we could do is we can use the company name to create a column that says domain. And then from the domain name, the job and the company name,
+we could find people at the company that would be a good match for people to reach out to.
+Using kind of the job title too, why not, that you can find the CTO or whoever’s higher than VP, maybe managing director of software engineering. So you can use the job title of the company and then create another column with domain. And then through those three columns, you can
+enrich this with three people that would be a good people to reach out to. And then you can also get their email addresses after you get their names and the three people. And now you have your CSV with the proper columns.
+And then that also makes the finding of the email addresses and people easier as well.
+And then the bigger piece than that is the amount of jobs it’s pulling.
+Right now it’s pulling about 335. And we’re just going to sort right now by company, name, so that we’re seeing how many company, how many of the same company we have.
+Okay. Most of these are firms twice.
+Firm has two jobs.
+This is bad.
+Economy. Hey, economy has two jobs.
+Most of the time, it is most of the time, it is showing different companies. Which is a good thing.
+So there might be like 250 to 300 jobs that are unique for unique companies here.
+Well, so far, it looks like some of these are doubles from the same company, but most of them aren’t doubles, to be honest with you.
+So you say there’s 300 jobs here?
+Yeah.
+310
+They all have a salary column?
+It doesn’t have a salary column. Yeah.
+There isn’t. Do they all land above 200K?
+They do not all land I think they can be 150, 175, 200, and beyond.
+Okay.
+See, sometimes you get two of the same, but it doesn’t seem like it ever goes more than two times more.
+Okay. Is it blur?
+Oh, explore. I got it
+Yeah. Explore. Explore.
+Zillow. Zillow.
+Yeah. But it’s unique enough, so 250 to 300 or whatever. Are there unique companies? So this looks good. Do I have this file?
+I sent it
+Yeah. Because I’m going to want to feed it to our app, see if we can reverse engineer their stuff. So let me go to Simply Apply here, speaking of reverse engineering.
+Is it Simply Applyai
+Yeah. Simply Apply.ai.
+CSV file from Simply Apply.
+300 jobs.
+Simply Apply CSV file.
+Did you email me that spreadsheet?
+Listed in.
+Cool.
+Got it Wait.
+No, that’s not it That is our meeting. There it is.
+I mean, it’s strange because I mean, we’re just in honestly, strange. I mean, it’s just there is no column for salary. But I know that we put it in when we did the initial onboarding. For you. So I know it’s got to be looking at it at some point. It’s just not presenting it in the UI, probably.
+Edit profile.
+When I go to edit profile.
+Oh, I see it All right It says 153.
+Maybe 150 is a sweet spot for it. I’m not really sure.
+If you in like three or four words, how would you describe what their site offers that you would like to incorporate into ours?
+Do you understand what I’m asking
+In three words
+Well, just however, just like in a very succinct description.
+I think I can give you a very, very succinct description. What they’re at does, which ours is not, is fills the top of the funnel.
+That’s the shortest description I could possibly tell you.
+All right
+It fills the top of the funnel. Meaning if you had a big giant funnel, and it went small it went slowly, smaller, it’s a more qualified list. It’s putting a whole lot of stuff in the top of the funnel. Which is all these jobs.
+From different companies. And then
+once the third jobs go from the top of the funnel and they swing all the way down to the loops and different things, to catch it, different screens.
+There’s things on the bottom that are left over.
+So you want to have a large amount of people on top of the funnel. And
+Does it talk about contacts at all or just the jobs?
+Say that again?
+Does it use contacts like ours at all or is it just like the jobs themselves?
+No, it doesn’t use contacts at all It just gets the jobs. And a more precise way. I mean, the recommendation engine is really good. Whatever recommendation engine is like much better than LinkedIn is. Much better than the other recommendation engines out there that are there.
+And then of course,
+it could apply that. It could auto-apply to those positions.
+Which it is a useful function. And there are difficulty in filling out applications because sometimes they have knockout questions. And different things on there. To prevent you from just mass applying. So there is some complicated nature of auto-applying.
+But I just think it’s good because a lot of people aren’t going to have the time to actually do the searching for all the different positions. We got to get we got to get these jobs in there. First of all, and also what’s cool about it, what I’ve noticed, is that it’s constantly searching.
+This is March 3rd. We talked to them way back. And it’s been working on it every day. Finding new positions.
+Okay.
+All right So what I’m doing right now is I’m trying to see if I can impress you with how well we can do what they’re doing.
+And if I’m not successful, then we’ll just partner with them. But I think that will have downstream consequences. So I’m going to try to convince you that we can do it. And hopefully, I’m able to do that.
+It might take me a few minutes, but I want to what I asked Cursor to do was clone their site.
+So what’s going in there and it’s reverse engineering what they’re doing. With our branding, it’s creating a whole other site. Not to interfere with what we’re building already, but just as like a side thing. I’d like to. And
+see if we can reproduce their effect there then. With some notes on what you like about it. So you can make some arguments why we shouldn’t or why they can probably do it better than us or what they’re doing that we can’t do. And that might help feed the AI as a context so feel free to keep thinking about it and talking about it. While the machine works.
+Well,
+let’s see.
+I mean, I think that we have done is much more comprehensive.
+Which is really the selling factor of our app. Much more data. Much better for job tracking. We’ve essentially created a CRM.
+For role fair.
+Where theirs is kind of a singular function. Ours is definitely multifaceted. With
+personality to
+Ako import URL 300, done. You got your own there, your golden. You can still work.
+Tell me the workflow again. What’s the first step?
+Okay, so I just entered the import file.
+Yeah, my pull that in there right now
+But the okay, the first step would be well, you can have websites find road descriptions. I think that’s the good thing if you want to do something manually. But then you could say, like,
+manual find road descriptions, manually find your roles.
+Automated search of your roles.
+And then just take some to simply apply. Then you get whatever roles they want to get. And then they go to simply apply. I’m going to share the screen just so you can see it step by step here.
+You go to the name.
+They click on this export all jobs CSV.
+Right here.
+All right Now,
+they got this file. Now, it says import URL paste text upload CSV. It’s a button.
+Click on upload CSV button.
+Internally, tell the computer to look at column job URL and one by one import all the URLs.
+It does that You see 300 jobs here now.
+Under each one of these dropdowns.
+300 Jobs.
+Now we’re holding. Now we have everything we need.
+Okay.
+So collects the roles, you download the roles, and then you upload the roles?
+Yeah. Yeah. You download them from simply apply.ai.
+You press this button, export all jobs CSV. You know you have 335 matches here. So you’re good.
+You can always find more jobs. And then you go back to Rolf Harry. There’s a button that says upload CSV. Click on upload CSV. And
+it just takes that CSV file and uploads one by one all of the URLs.
+And now we have 300 roles in Rolf Harry.
+Okay.
+So I don’t think that new link is very useful to open apply studio.
+Right As it is now. But I think one thing we could do with it so what if instead of open apply studio, you could say rank matches? Right?
+And then it goes through and it lists the 300 roles it found for you. Right? Assuming we can get it working.
+So let’s say it does this just as good as they do, which I suspect we can actually achieve. Even though I haven’t gotten it to work yet. So it loads them up. It puts them in a table. Instead of a CSV where you can look at them, then you can go through and you can rank them all. It kind of helps sort them. Right? You can delete them if they’re way off. You can give them a four or five or three or two or one-star rating. Right? And yeah, somehow rank them all and put notes next to them or whatever. Right? So it’s like a it’s still an apply studio.
+Now their website lets you apply for the job as well.
+Yeah.
+Through their system.
+Yep
+So that’s another thing. We could still call it an apply studio.
+By the way, do they have apply studio as part of their verbiage?
+No.
+Okay. Good So we don’t worry about copying it.
+But we don’t have to call it that either. But I’m just saying so all right. So the hundreds of jobs found can be listed.
+There. And they can accordion expand each. And rank each and make notes about each on that screen.
+Then move to the next step. That would be useful.
+They could also use that screen.
+To edit the filter settings. And regenerate the list and scroll through the list. Etc.
+All right So I was thinking I gave it some instructions. So I think we use the open let’s say we get it to work. And we use the open click open apply studio. Then we have the apply studio. Let’s say it lists a few hundred jobs or however many it finds for them.
+They can go through They can make notes about each job. They can put rankings next to each job, whatever they want to do. Right? With that screen. They can delete any jobs and filter out any jobs they don’t like. They can add a job. Let me add that.
+They can add a job to favorites list.
+Yeah. I think that functionality of what we’re doing is so much better.
+I like the fact that we have framework. We have preference. We have a salary. We have add to role tracker. We have that sort of thing.
+And we already have the requirements that they’re doing the same.
+We have business challenges where we’re more granular on the business challenges. Which is nice. So there’s a lot of things that we’re doing right. But it’s like there’s one critical piece that they’re doing right. That we’re not doing right.
+Many of those jobs because it’s Rolf Harry. Many of those roles yeah. You’re right. If we can’t get the app generating more jobs or at least as many jobs as the competitor, then we’re not the superior app. And our app doesn’t have a lot of value. But if we can and we have these other features, I think we have something great. Which the thing is, I’m not just kind of sure we can do it.
+It’s just I guess right now my question is, are the APIs we’re currently using sufficient to do it? And if not, what other API do I have to subscribe to to get it working?
+That’s really the only question to be honest.
+So I don’t think partnering with them makes any sense. At least based on my current perspective of the situation. Now, I’ll have a different perspective if I try what I think makes kind of clear sense and then it doesn’t work. And then I’d be like, “Fine. I guess they have some magic that we couldn’t figure out.” But based on the little bit that I know and the understanding that I have of over narrow it might be, I think we’ll be fine. We don’t need them.
+I think we’re hours away of work from figuring it out versus days, weeks, or months. You know what I mean?
+Maybe it’s long. Maybe we need to tell Claude. Maybe they’re using Claude and Claude’s smarter.
+I mean, right now I’m giving it another shot. So before the end of the call, we can try to see if it works. I had it generating some jobs there the other day. So I’m not sure where it’s stuck. But I’m going to give it another shot.
+And we will see.
+It’s like we have it’s like we have all the ornaments. It’s just like a Christmas tree. They got a better tree. But we have all the ornaments on the tree that are better than them.
+I don’t know I don’t think they got a better tree.
+We got a.
+I think they have we have a tree. They have a branch. All we need is their little branch. Add to our tree. And we’ll be good.
+Well, their branch is pretty big. Their branch is the roles.
+One of the stronger branches of the lower part of the tree.
+It’s a big branch.
+And we might be missing that branch right now. But it’s growing. And we’re going to get there. But no, we got a lot of branches. That’s the thing. It’s not a tree. They have a branch.
+We got a ton of branches.
+We’re growing a tree. They’re growing a branch. Our tree will make their branch obsolete.
+Yeah. If we can replicate their branch.
+Not just their branch. But you know the bottom line isn’t how many jobs you can generate on a screen and say, “Hey, look at all these jobs I generated.” No. The bottom line is if they have jobs. So what we need is happy people that have jobs now.
+Yeah. We just need the data. We really just need the data. If we have the data in this format.
+Yeah. We need happy people that found a job because of our app. They understand why our process works.
+And it’s like happy relationships too. I don’t know why I always come back to the dating apps. But it’s about happy relationships, not just relationships. You can swipe left on Tinder or whatever. I don’t even know which way you swipe. I’ve never used Tinder. But swipe right, I guess, is good. Right? So you can swipe right all day. But I mean, are these happy relationships? But then there’s e-harmony where they advertise that they find 27 levels of compatibility or whatever their number is. Right? And that’s a more meaningful relationship than just hooking up. Right?
+True. True. True. True. True.
+Honestly, hooking up is overrated. You ever go on a bad day with a stupid person? You can’t even stand to be around them. And they have to get in bed with them. And then wake up with them the next day. Hooking up is super overrated. When you’re young and you’re doing that shit, you’re just like, “Fuck, man. Fucking stupid people.” You know what I’m saying?
+If you don’t have anything in common with someone, sex isn’t very good. And neither is waking up next to them the next day. It’s just kind of a bummer.
+So yeah.
+Yeah. I mean,
+yeah.
+Relationships count. All relationships.
+Relationships. Definitely got to have some relationships.
+At the end of the day, some relationships do go a long way.
+All right So let’s see.
+Still with the whole idea about sales and everything too,
+AR SDRs, I mean, AI and AI salespeople, it’s like it’s not going to work.
+You still want to speak to somebody about this thing that you bought. They don’t want to be on a call and saying, “Representative,
+I don’t want this shit.” Where’s the real person? Sick and tired of fucking calls on it.
+All right Let me try to push this one more change. And hopefully, it’s cool and stuff. We’ll see. I don’t know what’s going to happen. But basically, I’m rolling the dice here. So
+Let’s see what happens.
+Let’s get commit.
+And what do we call that little screen?
+It’s the
+This apply studio.
+Apply studio. There you go.
+Yeah. Maybe a landing page dude. We got so much shit going for us.
+One little thing is like.
+I mean, we’re building an app. It’s going to have certain features.
+If so many cool features.
+They just got one thing that’s better than us. But that one thing is everything for a lot of people.
+So I mean, yeah. So it’s just a thing.
+Hey, look. Here’s the evidence. Right? Last week or whenever, whenever that last meeting was, we had the auto thing work. Right? You clicked it. It generated some jobs. Right?
+I think so.
+So if you like one or two.
+Okay. If we can generate two, it can generate a thousand. And I mean,
+the process for bringing up a job and finding a job online is the same when it comes to computers that repeat those things like if you can do one, it can do a billion. You know what I’m saying? There isn’t it’s just a matter of repeating the same process.
+So yeah.
+I have every reason to believe that it’s going to work.
+After a few pokes at it, we’re going to get it working. So but I won’t make you stay here while I figure it out. I am going to show you one more time right now.
+What it’s doing,
+I’ll be watching it with you for the first time too. But it should be interesting. Hopefully, it’s progress. But we have made progress today no matter what because we recognized a distinct problem and I have a very specific goal. Very clear direction over the course of the week or whenever we however long. And then I solve this problem of not needing them. And I haven’t really spent any time researching them or what they do or websites like them. So I’ll spend some time actually looking at what the problem is so that I can solve the problem. And incorporate those things. And I’ll work with AI to get ideas on how to solve the problem. I’ll do my research on what APIs we might need to add to get it working right. But this is a thing we should be doing, I think. I just don’t know why we would. It almost seems like it’s going to make us silly if we don’t if we say we can’t do this one feature. It just doesn’t make sense to me. We have AI to help us. And it’s like things are solvable. Think of what we’ve achieved so far. All the tools we’ve been able to create and everything. I mean, it pulls up all these contacts. And even their LinkedIn addresses and everything. For each company, the capability is there. We just have to be a little bit patient. And it’s just a different creative process than if you are coding it yourself.
+It’s just kind of working with the AI to get it to understand what you want and to get it to work.
+Anyways, that’s my perspective. In a second here, we’ll test it and see how it’s working. That’s the litmus test or whatever. Okay. So we’ve got it. It’s building. Am I sharing?
+No, no. But you’re not sharing. But you know what? I also want to create some kind of post. If you want to support the effort of making a social media post, I’m going to write some kind of post saying I’m going to be out to Charleston Hacks show and tell. On March 11th, and.
+That’s actually the perfect amount of time because that gives me one full week to figure out this problem. So you can start telling people that this app does the full workflow of looking for jobs. Including this important branch that we’re trying to solve.
+Yeah.
+There it is. Finished So we should be able to view it now. So let’s refresh our role fairies.
+Okay.
+Maybe I should start from the beginning just to go to proper okay. Here we go. Role fairy.
+So it takes oh, it didn’t take as long that time. That’s good.
+Mm-hmm.
+All right I guess I’m an idealist and irrational, huh?
+That is not very nice. Now I feel like it’s insulting me.
+I’m all right with being an idealist, but are you more rational than me? I don’t know.
+No, I think that. Like I said, it could be a INFP INTP kind of thing.
+Look what it’s doing here.
+And a lot of these are coming from Stripe. Which is a good thing. It’s a good thing not that Stripe not because we love Stripe.
+Yeah.
+Because if it can do that for one.
+When I was in Singapore, you can’t put Singapore, man.
+Yeah, yeah. Well, that’s a refining thing. So here, we’ve made our apply studio a little bit more interesting. We need a stricter broad. We can select the number. We can add some positive keywords. So let’s say what’s a positive keyword?
+Software. We’ll make it easy for them. And we’re going to add it. And did it add it? Added one positive keyword. Although I don’t see it anywhere. Do you?
+I’m going to give you the ones that we put in for this.
+We can, but let me do you even see them showing up here? Where’s my positive keyword?
+I’m just going to copy and paste this so you have it.
+Okay.
+All right I just copy and pasted it. Going to check so you can see it. All right. Oh, wow. You have this new option here. Build your existing job phone.
+I like that
+Yeah.
+Well, it read your transcript. And it took some ideas from your verbiage there. So it says added one positive keyword, but I don’t see it displayed anywhere here.
+I think it’s saving it. It’s just not showing it. So let’s assume that it’s saving it. So it’s added one positive keyword. What’s another positive keyword? We’ll say.
+Can I give it to you to check? Google check. Google Me check.
+Chat, chat, chat.
+On the right side.
+Oh, it’s right here.
+Yeah, there it is. Yeah.
+Cool.
+Can you add the mini chat? Can you add that menu?
+Probably not all at once, but it’s all right I’ll put it down here in my little text box. And I’ll just paste it.
+So we’ve got engineering.
+I’ll say slave. I want to be a slave.
+All right Added one negative keyword.
+Artificial intelligence Add.
+All right Don’t want to wash dishes.
+Add. All right.
+Machine learning.
+All right I don’t do dog grooming.
+All right This is productive. And then generative AI.
+All right But I’m not an assassin.
+All right So we can.
+Could you add generative AI?
+Oh, there it is. Look, it’s right here. Positive. Software engineering. Artificial intelligence. Machine learning. Negative. Slave. Wash dishes. Dog grooming. Assassin.
+Yeah. Because I don’t want to do any of those things.
+It’s not my style I’m sure there’s someone out there that does all those things. Or maybe he has slaves. Anyway, so he calls them dogs. And he cuts their hair. All right. So then I want to import into workflow. It says no roles loaded yet. Click regenerate. Okay. Going up.
+Let’s start with 300 and see what happens. Regenerate. Loading.
+So signs are pointing to this is possible. They’re not pointing towards this is not possible. They’re pointing towards I think we can do this. We don’t need them. And this is after about an hour of me poking around and getting the AI to do all the work for me. So just imagine after a week of me poking around some more and testing what APIs might be better and so they’re not all showing Stripe. They’re now got Coinbase and Anthropic and Figma.
+Anthropic is the one who does Claude. So we like that. That’d be a pretty cool company because they’re like the sexiest day right now. Everybody’s saying nice things about them. But my job, everybody’s like, “Oh, forget GPT. You need to do Claude.” They got a text from you about that.
+I don’t know what kind of marketing campaign they fucking did.
+No, I think they made their shit good. And people wanted it. Yeah.
+It’s everywhere.
+So I see a lot of the same companies. But I do see a lot of roles here. I don’t know how many this is. Oh, it’s 169 roles. Okay. I mean, again, this is like it’s not limited to this. This is our first pass at getting it. You know what I mean? There’s no way that we can’t get this to be whatever we want it to be. If it took me less than an hour of poking around to getting it a lot closer, wouldn’t you say? By the way, it has a details. Right? I can rank it. Right? The source is greenhouse. It tells me where I found the role. So if I want to go there and apply for it. And then I’m going to say, “I like this one.” Because I don’t know. Coins are shiny.
+Right So then oh, you’re a Moana fan.
+Yeah, I got a bunch of kids. Anyways,
+open link. We can also open the link of these. And there’s the role. That’s actually pretty cool because then you can go apply for the role. Bam.
+Exactly what you want to do. Yeah.
+Nice. I mean, dude, I don’t think we need those guys.
+Are you convinced That we can build? I’m not saying that we have the solution yet. I’m saying, are you convinced that after poking around at this for a few minutes, I was able to get it working?
+I think we’re definitely progressing. I mean, I’m not saying that this tool I’m not arguing at all that our tool is suddenly better than theirs. In terms of this aspect, I’m saying that in a few minutes, I got it doing the core of what we want theirs to do or we want to use from theirs. So arguably, if I spent 10 times this amount of time refining it, we could have a tool that’s as useful and incorporated into our workflow without having to get away from our workflow, go to their app, compensate them or whatever it is they’re going to want from us, even the 170 dollars. We have zero customers. Let’s start with just being self-reliant. That’s my thing. Honestly, I’m fine with paying whatever we have to. There’s going to be AI APIs we have to pay for. I just don’t know if that’s one. And it’s not because I don’t expect your opinion. I think it’s a fight thing for me. I just want to build it myself.
+Yeah. I mean,
+you’re definitely making progress This is good. This is really good.
+So this is good direction for me. See, this is right now, you’re playing the role of business. And I’m playing the role of developer. And so that’s helpful because you’re the client in essence and even though we’re partners in this, as far as the meeting is concerned, usually, it’s the client that has these high-level points of view and the direction of the app and then the developer develops them. So that is a very effective development process. And we’re doing that. And that’s the model that we’re following regardless of the reality of our roles in the company. You’re playing the role of client and playing the role of developer. And it’s working really well. Because you are the subject matter expert on this stuff. So now that you have this, this is online. You can poke around at it.
+I think before the 11th, that’s when your thing is. We’re going to present stuff.
+Yeah. 100% Yeah.
+These meetings are pretty effective at keeping me focused on the task because I do have other stuff. My job is pretty much it. My family. So to make sure that I put the hours in, I can do a little homework. But pretty much when I show up to school with Dave is when I actually do the majority of this stuff. So if you want to try to schedule maybe two more meetings with me before the 11th so we can make sure that.
+Schedule school with Dave.
+Right
+Yeah.
+I think before you show it off, we could probably get it to a place that we’re excited to show everybody. It’s not going to be perfect. But it’s going to be demoable.
+Yeah. I mean, the whole thing is to show what we’re building. It doesn’t have to be perfect.
+Yeah. But it can’t be embarrassingly distracting because there’s certain things that will pop out and people will be staring at the ugly thing in the corner even though there’s all this cool stuff going on because people are like that, so.
+Yeah. I mean, that’s good One of the things I want to do is I can create a social media post. And if your GPT can give me an idea of a post, my GPT has another idea of it. So pretty much
+our two GPTs.
+How many words
+Understand it differently. Yeah.
+How many words are in the post?
+Let’s go with 200 words.
+That’s not a lot of words. But let’s do it.
+I mean, we can make an article.
+No, no. 200 words is good. So I was thinking characters.
+So write a post with 200 words that.
+Yeah. Characters. Yeah. Characters is different.
+So yeah. Characters is very different. That’s only, what, five characters a word? Anyways,
+write a post with 200 words that sells the app to job seekers. Effective.
+And make sure the call to action is to join the meeting on March 11th.
+Who’s the guy
+On the Jonathan Hax meeting.
+The guy. Let’s see.
+I don’t think it matters the guy. I think it matters the meeting.
+I’m glad it got working before yeah.
+I can send you the post.
+I hope it’s fine. I’m just going to do a quick one right now. And then I can get some feedback and then work on it a little bit. Spend a little more time. But just as a first draft because.
+Yeah. First draft. I’m sending you a message. On Google Meet. With the link. I’m going to send you an email.
+Okay.
+Google Meet probably works fine.
+Stop applying blind Start landing interviews. Most job seekers spray resumes into a void and hope for the best. Roll fairy flips the script with a 12-step system that actually gets you hired. Here’s what makes it different. Roll fairy connects the dots that other tools leave disconnected. It starts by analyzing your resume and personality. Then auto-discovers hundreds of roles matched to your exact skills. Non-generic keyword spam. From there, it identifies the gaps between you and each role, matches your experience to the company’s real pain points, and builds a personalized value proposition that makes hiring managers pay attention. But it doesn’t stop at apply and pray. Roll fairy finds the decision makers at each company verifies their contact information, writes personalized outreach sequences, and tracks everything in one place. Resume to interview pipeline fully connected. The result? Fewer applications, higher response rates, and a process that treats job searching like the strategic campaign it should be. Want to see it live? Join Dave March and Charleston Hax on March 11th. For an exclusive walkthrough of the platform, seats are limited. RSVP now and take control of your job search. Want me to adjust the tone? More casual, more corporate, shorter, or tailored to a specific platform like LinkedIn?
+There is this.
+I like that
+There is this hilarious and I was watching this thing where it was clearly written with ChatGPT. And they kept reading, “Would you like another version of this?” And they were like, “Anyways, it’s fine.” It was on he was trying to say, “We never use GPT to generate our scripts.” And then they have all this stuff at the end. It’s like,
+“What would you like to do next Would you like this as a PDF?” Anyway.
+Anyways, so yeah. So RSVP and take control of your job search. Do you want to there’s a start. So yeah. And that was pretty quick. So yeah. Don’t underestimate the iMan. I actually can make some money. Need to capitalize on this opportunity. There’s no doubt.
+So this is a very first draft. I’m happy that it’s actually generating 169 roles, right? Is that what it is? 100 and whatever. So I like that it did what I asked it to do. Doesn’t always. But it did this time. Gave me the I like whether it’s a rank of strong best, low, fair, right? And I can go through each one of these. And let’s say I’m tired. I’m a job seeker. And I just don’t want to look at 169 roles right now. I can at least today, if one thing I want to do today is just I don’t know if I want to look at that one today. I guess we can prioritize looking at some of these. And I can find some of these roles that yeah, actually, this is a pretty good one. And then I can go through each one of these, rank them. And then when I have some energy, be like, “Okay. Cool. Well, I’ll look at all these that I thought looked like good fits.” And then another time, and it also has this little percent here. Right? So the fitness percent, I’m assuming that is.
+Yeah. 169 roles isn’t bad. Think of this is our first shot at it. I’m absolutely sure that if we wanted 1,000 roles, it could give us that. I actually think that our shit is better already. And this is why. It’s not perfect because there’s shit we got to straighten out and do stuff. But think about when the guy came to us and he’s like, “Well, I got you a few roles here. And after a few minutes, I used the same resume. I haven’t seen any roles that are a total bad fit for me.” Right? What came up with? See what I mean? I mean, I know there’s this more sophisticated system because they spent more time conceiving of how to make it good. But we get to re-engineer everything they did. That we like. And make it there. Oh, by the way, it has a CSV. So let’s see how that works. So choose CSV. Oh, it wants us to choose it. I don’t want to. I want to save it.
+I’ll get one. Never mind Share this tool.
+I’ll get a copy of the URL and just start sharing. There you go. So yeah. Okay. Well, it doesn’t do what I thought it would do. It doesn’t download a CSV.
+I don’t know what it’s thinking there. I think when it was hearing you talk about your workflow, you talk about getting the oh, you could import it, though. Oh, look. That’s funny. Import simply apply style CSV rows directly to role pair. So this is if we aren’t able to get this working up here. And we’re just like, “Fuck it. Just put that CSV in there. And we’re good.” Right?
+So there.
+It’s not his name.
+There’s your backup plan. Right?
+So I guess we can go ahead and do it. Let’s do it real quick. Let’s see if it actually works.
+We’re literally we’re literally here doing this so quickly. We’re writing so fast. It’s crazy.
+Well, that’s the thing is we can. Right?
+We’re literally doing it so fast
+We’re doing that is not it is kind of the name of the game.
+So if we’re able to move it like light speed here,
+so let’s see. So choose CSV, import into roles. Whoops. Well, that shouldn’t be working. Okay. We’ll fix it, though. These are fixable things. So import into roles button gives me an API error. Anyways, it’s not a perfectly there are bumps in the road. But that’s why they call it work. And that’s why we get money for it. Right?
+Yeah. I’m trying to use this post to see what it can do. Because I have a whole thing.
+I’ll give it all my posts so they can write posts like me.
+Right on Nice. Well, I like that it opens the links, which means these are real, not hallucinated things. Right?
+Just so important.
+Yeah. I know Early AI was all hallucinations. It was like, “Make you believe.” There were so many lawyers getting in trouble. So all these lawyers would submit one of them was Rudy Giuliani.
+Oh, no. It was well, it actually he did actually talk about how he got in trouble for that. But it was who was that Trump lawyer that ultimately testified against him?
+He’s kind of goofy. And he sounds like he’s from a mob movie.
+Anyways. It was around.
+I remember this one thing about Stone. Jack Stone.
+Yeah. He did have one. One attorney back in the day. But there was this guy, more recently,
+it’s a good thing that it’s not in my brain. That means I’m not thinking about Trump very much anymore, which it’s hard to do when he’s trying to talk about.
+Which is a good thing.
+Yeah. He’s trying to start world wars and shit. Just not to talk about what a child must train is. But anyways,
+point is this guy it doesn’t matter who he is. He filed some paperwork using GPT or whatever to generate the paperwork. Right? And it was legal documents. And they cited these references. To past legal you know how everything is precedent when it comes to legal documents. Right? So based on this judgment and this judgment and this judgment, these are my arguments that support why this is a solid argument for my client or whatever. And then they cite all these past hearings. And that’s the precedent. Well, they were all fucking made up.
+Oh, fuck.
+Or several of them were. Maybe not all But enough of them were that the judge fined him for citing false precedents in support of his argument. Because the judge initially ruled in his favor based on this document because he had a well-supported, at least what it looked like, a very well-supported argument that had lots of precedent, supporting his argument. It was all made up fucking links to fake court cases.
+And he admits it. He talks about it on his podcast. What’s this guy Bob Mueller? Mueller? Is that? No. Bob Mueller was the guy who investigated him. What was Trump’s old attorney’s name that went on trial about Stormy Daniels?
+Can’t remember I’m surprised I’m forgetting his name.
+Michael Cohen.
+Yeah. Michael Cohen.
+That was him?
+Yeah. Cohen did it And he openly admits it. He’s like, “Yeah. I was I screwed up because AI had messed me up and got me I got fined because I submitted a document with a bunch of fake precedent.” Anyways, it’s kind of funny.
+So yeah. Lawyers getting in trouble for that shit all the time now. Because it’s just too easy. Any legal document you write is so formulaic. They follow such a consistent format. I know this because we had an attorney representing us. We were suing our landlord because they didn’t even own the property they were renting to us. So anyways, so he was talking to and he was an older guy. And he didn’t use AI at all. And he was trying to rewrite this legal document, rewrite it. Go in there. Microsoft Word and retype stuff. And delete paragraphs and reword them so they would work for our case. And I’m like, “GPT, you could do this in 10 seconds, man.” He’s like, “You can at least take a picture of it or scan it in or whatever.” And I just feel like.
+Even though you could do that.
+I want to reword this in the following ways. And you can describe it in a very vague way. And it will know exactly what you need to do. And it’ll rewrite this document in 10 seconds later. You can print it. And it’s got a full legal document that’s rewritten for your client with a different condition supply. Lawyers are using that stuff like crazy. So the hallucinations cannot happen. So it’s getting better. Because that’s a real deal breaker. If it’s going to hallucinate and mess up your stuff, so that’s why I like seeing these to make long story short or make a short story long.
+That’s why I like seeing these here. Because this tells me it’s actually giving me real stuff. It’s not making anything up. Yeah. Early AI was all about making shit up.
+Oh.
+And it did a great job at convincing you that that’s some real stuff. And my research papers were bogus.
+It’s like, “I need a references page now. Look at my paper and write me a references page.” And I would find out at least a few of my references weren’t good. I was like, “Oh, fuck. You’re going to get me in trouble.”
+True.
+Yeah.
+So this is kind of it’s showing me the post.
+I gave it to your I gave it to your I gave it to your thing.
+Oh, you gave it to copy and paste
+Yeah. I just copied it right now.
+Okay. Oh, there it is. All right.
+Do you want to read it or do you want me to read it
+Yeah. I can read it You have a movie theater voice though. It’s kind of funny.
+You can put that on I was a DJ way back in the day.
+Yeah. There was a point where I was honestly there was a point where I honestly wondered if job searching was just broken.
+You do everything right You tell your resume. You apply to eat. I can see you applied to each position. You wait. And still feels like tossing your resume to a black hole. It’s exactly why we built welfare. Most tools help you do one piece of the process. Welfare connects the whole pipeline end to end with 12-step system designed to land interviews.
+It analyzes your resume plus personality. So you’re not chasing random roles. Auto discovers hundreds of roles matched to your skills, not generic keyword spam. Identifies skill gaps versus I don’t want to say versus, but for each target role.
+Maps your experience to the company’s real pain points, builds a personalized value proposition that makes you stand out.
+Yeah. I think versus is right
+You think versus is right
+Yeah. Think about it for a second. These are gaps. So they’re not gaps for each you’re not want gaps for each target role. You want gaps versus each. I mean, it’s a contradictory thing. These are yeah. Versus works. Versus makes more sense.
+Yeah. Okay. Identifies skill gaps versus each target role.
+Maps your experience to the company’s real pain points, builds a personalized value proposition that makes you stand out.
+Finds a decision maker, verifies contact information, and writes our sequences.
+Then tracks everything in one place. The resume, the outreach, I said outreach messages.
+Replies, and interviews. No more applying and praying. This treats job searching like it is like what it is. A strategic campaign. Want to see it live? Turn day March at Charleston Heights March 11th for exclusive awkward welfare.
+I don’t know enough about social media and human psychology to know which of those messages will be better. They’re very different. I would do both.
+Yeah.
+Yeah. They’re such a different voice.
+Right
+Yeah.
+I don’t mean the speaker. I mean the tone behind them. It’s very I don’t know which is more effective. Honestly. I think both is your answer. Do both.
+I would do both of those messages in different places or maybe do one and maybe in the same place, but space that a little bit.
+Yeah. Well, that’s what I was thinking. Because RGBTs are probably very different because it’s straight in my voice and my personality.
+Well, actually, I used Opus 4.6 for mine.
+Opus.
+Opus. Yeah. It’s clogged.
+See, it’s clogged. Let me see what clogged says.
+This is clogged. That was clogged. Clogged was the first one.
+I’m using GPT.
+Yeah. So GPT is great. And I use it for a million things. So I can’t say anything bad. But this was clogged. And I’ve only just started poking around with clogged. And it’s I’ve only been happy.
+Well, I’ve always found that clogged is a lot better for copy.
+If I’m writing a marketing campaign,
+or yeah.
+Well, why don’t you write these two in clogged or whichever AI and ask it which is better and why?
+Okay.
+And make one that’s better than both. I don’t know, man. You’re going to have to write some you’re going to have to figure out the marketing side of it. But yeah, I think for readability, if it’s being read to you, maybe the first one.
+But maybe the second. Depends on how it’s read.
+See, I could imagine a commercial on the radio saying like, “There was a point where I honestly wondered if job searching was just broken.” You do everything right. You tailor your resume. You apply
+You wait. And it still feels like you’re tossing your resume into a black hole.
+That’s exactly why we built welfare. Most tools help you do one piece of the process. Welfare connects you the whole pipeline end to end with a 12-step system designed to land interviews.
+Analyzes your resume, plus your personality, so you’re not chasing random holes. Auto discovers hundreds of roles matched to your skills, not generic keyword spam.
+Identifies skill gaps versus each target role. And maps your experience to the company’s real pain points. Builds a personalized value proposition. And makes you stand out. And we find a decision maker verify contact info and write outreach sequences.
+Tracks everything in one place: resume, outreach messages, replies, interviews, no more apply and pray. This treats job search like what it is a strategic campaign. Want to see it live? Join Dave March on Charleston Heights on March 11th for an exclusive walkthrough of welfare. Seats are limited. Comment RSVP and I’ll send the details. See, I think they’re both I think you just do both. The tone isn’t the tone’s a little different. Mine’s wordier. I don’t think yours is 200 words. Well, I could be wrong.
+Maybe it’s the way you have it spaced. I’m not really sure.
+Hmm.
+Yeah. But no, I’m glad you’re doing it. Thanks for doing your part. And getting that because that is going to be pretty critical. I’ve created a ton of apps that just sit there on my server. And nobody’s ever seen I guess it’s just me entertaining myself at some point, right? So it’s pretty important to put it in front of other people. It doesn’t really count until then.
+I’m really until you monetize it it isn’t much either.
+All right.
+Let’s see what it says.
+So I’m asking GPT.
+I also have clogged here.
+Which one of these posts is better? What is defined better? Well, which one of these posts will get higher engagement?
+Yes, exactly That is the question. I was going to ask. Yeah.
+Which one of those will get higher engagement?
+Why
+I’m using Sonic.
+Okay.
+Opus is in your upgrade for Opus. Looks like.
+Okay. So it says the second post will almost certainly get higher engagement.
+I was thinking that too.
+And it tells you why
+Yeah. It says what post one does better. It’s more polished and might perform better as a paid ad or email with brand voice matters more than algorithm optimization. But for organic LinkedIn reach, post two wins on almost every dimension: emotion, festival.
+It sounds like we need more with some of that verbiage. We win on every dimension.
+We win on every dimension.
+Find jobs in any dimension.
+I love that
+Who’s going to look for jobs not just on Earth? And not just in this galaxy, but multiple dimensions.
+Okay. So it looks like Sonic agrees with you.
+Did you already put it through Sonic?
+I put Sonic. Yeah. I put Sonic.
+Okay. Then, of course.
+I was going to say, I don’t have access to Opus. It looks like Opus is upgraded. Upgraded to a clogged profile.
+Let me do Opus then.
+For every single dimension. We’re in a third dimension. And we’re in a fourth dimension here. And we believe.
+Yeah.
+And now from the fifth dimension, welfare.
+All right So ChatGPT says post two will get better engagement on LinkedIn. Why? It starts with a human problem, not a pitch. Job searching feels broken. It’s a relatable hook that earns attention. Before you ask for anything, it’s scannable. The short lines, white space, and bullets—yeah, the white space does help, but I would have added that to the other one. The short lines, white space, and bullets match how people actually read LinkedIn on mobile half-distracted.
+It invites interaction. Comment RSVP and I’ll send the details. Is a built-in engagement trigger. Post one asks people to click RSVP off-platform immediately, which usually depresses engagement.
+Yeah, that makes sense. I don’t want to click on them.
+It feels less like an ad. Post one is a wall of copy. Seats are limited, which often reads like a webinar funnel. And makes people scroll past.
+These are good One strategic tweak importantly cut the feature list by 30 to 40 percent and keep only the wow chain.
+Naturals to your resume. Map gaps. Map gaps. There’s another one. It’s like available variables. Map gaps and available variables. Find decision makers and outreach sequences. Track pipeline and that keeps the story clean and matches your own product positioning. Stop applying. Start connecting. That’s actually a good motto right there.
+Two quick edits to post to boost replies. Replace seats are limited with something less sells LinkedIn users are allergic to urgency lines. Yeah, that makes sense.
+Goal fewer applications, more conversations.
+Oh, that’s the goal.
+If you want, I can—yeah, that’s actually a good one for us too because we’re kind of like not into the whole application thing.
+Yeah.
+We’re more about the conversations. Fewer applications, more conversations. These are alliterations, man. They end in this—they have these rhythmic patterns to them. They’re good little slogans. This is gold here. Fewer applications, more conversations. Stop applying. Start connecting.
+That’s the whole point of sending him an email. I’ll have a conversation because when people call, we do offer just so you know.
+Is networking. They call networking.
+Yeah.
+It’s just not going to—it’s the same shit. Call 10 different things. It’s the same exact thing.
+You’re sending an average message to another human being. It’s networking. Okay. Sure. Networking. Whatever you want to call it.
+So this is what Opus 2 says. It says post two will almost certainly outperform post one on LinkedIn. Here’s why. Post two nails the hook. It opens with the vulnerable, relatable feeling. How similar is this to yours?
+To what Sonic said.
+It’s not
+Sonic. Sonic and Opus are both clogged. Opus is for bigger tasks usually, but I’m just trying it out. Anyways, post two nails the hook. It opens with a vulnerable, relatable feeling. I honestly wondered if job searching was just broken.
+It just feels like I’m watching an infomercial. That’s the kind of line that stops the scroll because it sounds like a real person. Does it though? Not a marketing pitch. Debatable. Post one opens with stop applying blind. Start landing interviews, which reads like an ad copy. LinkedIn algorithm. Maybe it’s because I’m old.
+I just have an acclimated to this world of how people relate to ads. Because personally, I want the facts. But anyways, LinkedIn’s algorithm rewards content people actually pause on and people pause on emotion, not commands. Post two uses LinkedIn native formatting. The short lines, white space, single thought paragraphs are designed kind of what GPT said. How people actually read on LinkedIn. Mobile skimming, thumb scrolling. Post one is dense paragraphs. So GPT is pretty consistent, man. I mean, all these AIs are consistent. They’re saying, use post two. It’s got a lot of good things going for it. It has a couple of tweaks, but mostly it just says go with post two.
+Yeah.
+One thing we can do is the post with the best elements.
+Of both Keep it Under 200 words. And add good stuff. If needed. And I’ll say the same thing to this guy. See what we get.
+And if you want to try it and use your can,
+I said rewrite the post. I can post it in the thing, but I probably don’t need you to do it if it’s going to be like the same thing because I’m already doing it, but I posted it in the chat here, I think. Scroll.
+Yeah, it’s there. So what I did is I said rewrite the post. So there was a point where I honestly wondered if job searching was just broken.
+You do everything right. Tailor the resume. Apply. Wait. And it still feels like tossing your resume into a black hole. That’s why we built RoleFairy. Most tools handle one piece of the process. RoleFairy connects the whole resume to interview pipeline with a 12-step system. Built to land interviews. It analyzes your resume and how you show up. So you stop chasing random roles. It finds roles matched to your real skills, not keyword spam. Shows the gaps for each role and turns your experience into clear value proposition tied to the company’s pain points. It finds decision makers, verifies contact info, drafts personalized outreach, and tracks it all in one place. No more apply and pray. Fewer applications. More conversations. Higher response rates. Want to see it live? Join Dave March and Charleston Hacks on March 11th for a walkthrough of RoleFairy. Comment RSVP and I’ll send the details. And this one, let’s see if it’s probably pretty close, right? Here’s the rewrite about 160 words key choices I made. Kept post two, vulnerable hook, short line formatting, first-person voice. All right.
+Where is it
+You want to click on.
+I used to think job searching was just broken. You tailor your resume. You apply. You wait. And it feels like tossing it into a black hole.
+That’s why we built RoleFairy. Most tools, the music changes, right?
+Sad music Scary music.
+Yeah.
+And then music cheers up. That’s why we built RoleFairy. You hear bells.
+Yeah.
+It’s like a blonde woman running down the street.
+She’s all happy.
+And she’s like happy.
+Yeah.
+That’s why we built RoleFairy. She’s got a skip in her step. Most tools help with one piece. RoleFairy connects the entire pipeline. Resume to interview with a 12-step system. Analyzes your resume, post personality to find roles that actually fit. Maps your personality thing, I think, was what reminds me of the dating site. Maps your experience to each company’s real pain points. Builds a value proposition that makes hiring managers pay attention and finds decision makers, verifies contacts, and writes personalized outreach and tracks everything in one place. I like how it turned 12 bullet points into 5 by kind of grouping them together. No more spray and pray. This treats job search like one strategic campaign it should be. Fewer applications. Higher response rates. More interviews. Want to see it live? Join Dave March and Charleston Hacks on March 11th for an exclusive walkthrough of RoleFairy. Seats are limited. Comment RSVP and I’ll send the details.
+So yeah.
+Yeah. I think we should use the more conversations.
+Fewer applications. Higher response rates. I think we should use the line that was before. The more conversations. Fewer applications. More conversations. But that was a lot better.
+So I’ll paste the so that was the Sonnet or whatever.
+What is that? This is it. Yeah. No more supply and pray. Fewer applications. More conversations. I like that. I like that’s a good tagline.
+Okay. I think all those are pretty effective. I think what we’re selling is good.
+What we’re selling is really good. There’s these guys on YouTube that I watch.
+Several different developer marketer guys and they really do sell the app before they even start building it.
+That’s how you’re going to do it, man.
+And so we’re definitely at the point where we should start talking about it.
+Because we pretty much built the whole thing anyways. There’s some security things we need to put in place. There’s some refining. But we’re at the point where we can probably confidently put them if we thought about it and what the other refinements we need, we can probably have a launch date already. When we could probably confidently stand by and I’d probably have to take a few days off work to make sure that it was hit on time, but we could have a launch date and yeah, we could do it. So let’s think about when that is. Maybe let’s see how we do. So on the 11th, do you want to try to do two more meetings before the 11th?
+And then we’ll further refine the app so that you have something nice to show off on your walkthrough.
+I think that’d be good
+Okay.
+I’m just going to change the one thing with fewer. Fewer applications. More conversations.
+All right
+Okay.
+I mean,
+I’ll post it tomorrow.
+I’ll post it tomorrow. What’s the thing One is going to be like crazy.
+There’s the
+I can pretty much commit to this time.
+An hour before now pretty much whenever just I need to plan for it. Oh, well, actually, tomorrow I can’t do it. It’s because they have this Catholic thing I have to do on 7:00 PM, which is 8:00 your time.
+Yeah, I can’t do it. I can’t do Wednesday anyway.
+Okay, cool. Well, it gives me an extra day to work on stuff. So Thursday and Friday?
+Maybe not Thursday and Friday. Thursday or Friday, or we can wait till the weekend. You have the thing on the 11th, right?
+Yeah.
+We could just try to do our normal time. For the 8th.
+Yeah, Thursday trying to do Thursday.
+Yeah, I want to do Thursday or Friday, and then I guess Sunday.
+I don’t have anything Friday. No, I can think of right now. Oh, my first Fridays.
+You can probably do something like 8:00, 9:00.
+Okay.
+Oh, but I also have Friday night. Yeah, definitely Thursday.
+Looks like Saturday. Of course, Sunday would always work too.
+Yeah, well, we’re going to do Sunday. That’s already in the schedule. I guess the question is what.
+So if we’re going to do Sunday, so why don’t you do Thursday and Sunday? We’re going to be doing it.
+I mean, if we don’t do Sunday, we’ll have a makeup day before the 11th, either Monday or whatever. Like today, we’re kind of doing today because this weekend I went to the beach and I was like, so out of it. I didn’t even think about our meeting. But yeah, so.
+Thursday. Let’s do Thursday and Sunday.
+Okay.
+So let’s see. Am I creating this meeting or are you?
+I can create it
+I mean, I’m already creating it, but if.
+Okay, you can just send it over What are you going to put? Like 8:30, 9:00 or something?
+I could I could say 8:00, and then if we’re running late, then actually, you’re saying your time, aren’t you?
+So maybe 8:30 your time. And then what is this Thursday, you say?
+Thursday, yeah, Thursday at 830 my time, right?
+Okay.
+And then Sunday.
+900.
+Are you going to do 800 on Thursday? I mean, on Sunday.
+No, I don’t know why it’s messing with me. Change the day weekly on Thursday, not Sunday.
+Can you do it?
+I think so. There it is. We said Thursday, right?
+Yeah, I’m just going to put it on Thursday.
+Okay, so I have 830 your time on Thursday. And I have 8:00 or 9:00 my time on Sunday.
+That should be enough iterations for us to work it out and when you show it off on, I guess, next Wednesday.
+We’ll have it mostly there. And if there may be some things like after it actually gives me time because if we do it on Sunday,
+and I have to fix a few things, I have a couple of days to do it. Because that’s 8:00, 9:00, 10:00, 11:00, right?
+Yeah.
+So if there’s some stuff, it’s like, “Oh, we need to make sure that’s squared away before I show this thing to anybody.” I can work on it, make sure.
+I think we’re good, bro. I’m really proud of you. You’re doing good.
+I enjoy these meetings. It’s kind of neat. We get to make something. It’s nice to have a partner to work on it with. Kind of get tired of working on stuff by myself.
+Yeah, we got to bring us out there too. We got to bring it out.
+Yeah, we got to bring it out We got to show it to somebody. Get their money. I honestly think we have the tool that can make money, so. We just need to poke at it. And are you at least reasonably convinced that we probably don’t need simply AI at this point?
+We can get there from here.
+I mean, you’re going to give a couple more hours. You’re going to get there.
+Yeah, that’s what I’m saying. I’m not saying it’s there yet. I’m saying that. Then I achieve convincing Dave that we may not need them. And then it would almost be crazy to use them at all. Not because their app isn’t good, but because we can do that.
+Cool.
+Just make sure you listen make sure you tell me all the features that they have that we need. That’s your homework. If there’s features that their app has and you like the way they work, the goal is to convince yourself that we can do it. Right? In other words, if you properly inform me about how their stuff works and why you like it. I know you’ve already talked to me about it, but spend a little more time making it make sense to me and yeah, we can make sure that we have anything that they have and better. Just think, 169 rules. How long did it take that guy to dig up any rules for me the other day when we were on that call with him?
+I mean, it took some time on the call I’m not sure now.
+How many was it? I don’t think it was 169 rules. And that was my first shot. And we haven’t even tapped into all the different job sites we can have it dig from, like refining the filtering process. I mean, there’s a lot more work we can do to make it even better, so.
+All signs point to we don’t need them. That’s all I’m trying to say.
+Okay.
+More on the belief side than it was in the beginning of this call. I definitely give you that. On the beginning of this call, I was like, “Jobs, give up. No hope. Let’s just work on what we can work on.”
+It’s just because I haven’t worked on it all week. I’m sorry.
+Work on other stuff like on my job. They like me at my job. I’m doing good. So, yeah.
+We’re putting a lot of hours at work All right man.
+Good speaking to you, man. It was fun. I’ll talk to you later.
+All right Have a good night
+Have a good night.

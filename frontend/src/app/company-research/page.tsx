@@ -24,6 +24,39 @@ type CompanyResearch = {
   updated_at: string;
 };
 
+type CompanySignal = {
+  id: string;
+  category: string;
+  text: string;
+  priority: number;
+};
+
+function extractTopSignals(d: CompanyResearch | null, max = 3): CompanySignal[] {
+  if (!d) return [];
+  const candidates: CompanySignal[] = [];
+  const add = (id: string, cat: string, raw: string, priority: number) => {
+    const t = String(raw || "").replace(/no\s+(data|info|information)\s+found/gi, "").trim();
+    if (!t || t.length < 10) return;
+    const firstLine = t.split(/\n/).map(l => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean)[0] || t;
+    candidates.push({ id, category: cat, text: firstLine.slice(0, 280), priority });
+  };
+  add("product_launches", "Product Launch", d.product_launches, 100);
+  add("leadership_changes", "Leadership Change", d.leadership_changes, 95);
+  add("recent_news", "Recent News", d.recent_news, 90);
+  add("recent_posts", "Recent Post", d.recent_posts, 85);
+  add("culture", "Culture & Values", d.culture, 60);
+  add("market_position", "Market Position", d.market_position, 55);
+  add("other_hiring_signals", "Hiring Signal", d.other_hiring_signals, 50);
+  add("publications", "Publication", d.publications, 45);
+  for (const sig of (d.hiring_signals || []).slice(0, 3)) {
+    if (sig.detail && sig.detail.length > 15) {
+      candidates.push({ id: `hs_${sig.label}`, category: sig.label, text: sig.detail.slice(0, 280), priority: 75 });
+    }
+  }
+  candidates.sort((a, b) => b.priority - a.priority);
+  return candidates.slice(0, max);
+}
+
 type ResearchResponse = {
   success: boolean;
   message: string;
@@ -85,6 +118,15 @@ function scrubModePlaceholders(raw: string): string {
   if (lower.startsWith("theme: what the company likely cares about")) return "";
   if (lower.includes("what the company likely cares about") && lower.includes("mini-plan")) return "";
   return s;
+}
+
+function hasRealData(raw: string): boolean {
+  const s = scrubModePlaceholders(String(raw || "")).trim().toLowerCase();
+  if (!s) return false;
+  if (s === "no data found") return false;
+  if (s === "unknown") return false;
+  if (s.startsWith("no ") && s.includes("found")) return false;
+  return true;
 }
 
 function scrubRecentNews(raw: string): string {
@@ -326,6 +368,25 @@ export default function CompanyResearchPage() {
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<CompanyResearch | null>(null);
   const [savedByCompany, setSavedByCompany] = useState<Record<string, CompanyResearch>>({});
+  const [selectedSignalIds, setSelectedSignalIds] = useState<Set<string>>(new Set());
+  const [briefingOpen, setBriefingOpen] = useState(false);
+
+  const topSignals = useMemo(() => extractTopSignals(draft), [draft]);
+
+  const toggleSignal = (id: string) => {
+    setSelectedSignalIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      try {
+        const selected = topSignals.filter((s) => next.has(s.id));
+        localStorage.setItem(
+          "rf_selected_company_signals",
+          JSON.stringify(selected.map((s) => ({ category: s.category, text: s.text }))),
+        );
+      } catch {}
+      return next;
+    });
+  };
 
   const companyOptions = useMemo(() => {
     const companies = new Set<string>();
@@ -456,18 +517,18 @@ export default function CompanyResearchPage() {
         recent_news: scrubRecentNews(joinNews(realNews as any[])) || "",
         culture: culture || "",
         market_position: market || "",
-        product_launches: productLaunchesFromModel || "No data found",
-        leadership_changes: leadershipChangesFromModel || "No data found",
-        other_hiring_signals: otherHiringSignalsFromModel || "No data found",
-        recent_posts: recentPostsFromModel || "No data found",
-        publications: publicationsFromModel || "No data found",
+        product_launches: productLaunchesFromModel || "",
+        leadership_changes: leadershipChangesFromModel || "",
+        other_hiring_signals: otherHiringSignalsFromModel || "",
+        recent_posts: recentPostsFromModel || "",
+        publications: publicationsFromModel || "",
         hiring_signals: signals,
         hooks: Array.isArray(resp?.helper?.hooks) ? resp.helper!.hooks : undefined,
         updated_at: new Date().toISOString(),
       };
 
       if (!hasWebSources) {
-        setNotice("Research generated. Some sections may show No data found.");
+        setNotice("Research generated. Some data may not be available for this company.");
       }
 
       setDraft(sanitizeDraft(next));
@@ -779,7 +840,9 @@ export default function CompanyResearchPage() {
                       </div>
                     ) : null}
 
+                  {(hasRealData(draft.recent_posts || "") || hasRealData(draft.publications || "")) ? (
                   <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {hasRealData(draft.recent_posts || "") ? (
                     <div>
                       <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
                         Recent posts (blog/press/LinkedIn topics)
@@ -791,13 +854,9 @@ export default function CompanyResearchPage() {
                         className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="- Post/topic: … (include URL when possible)"
                       />
-                      <div className="mt-2 text-[11px] text-white/60">
-                        Variable:{" "}
-                        <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
-                          {"{{company_recent_posts}}"}
-                        </code>
-                      </div>
                     </div>
+                    ) : null}
+                    {hasRealData(draft.publications || "") ? (
                     <div>
                       <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
                         Publications (case studies / reports)
@@ -809,23 +868,62 @@ export default function CompanyResearchPage() {
                         className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="- Publication: … (include URL when possible)"
                       />
-                      <div className="mt-2 text-[11px] text-white/60">
-                        Variable:{" "}
-                        <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
-                          {"{{company_publications}}"}
-                        </code>
-                      </div>
+                    </div>
+                    ) : null}
+                  </div>
+                  ) : null}
+                  </div>
+
+                  {/* Top Signals for outreach */}
+                  {topSignals.length > 0 ? (
+                  <div className="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
+                    <div className="text-sm font-bold text-white mb-1">Signals to Include in Outreach</div>
+                    <div className="text-xs text-white/60 mb-3">
+                      The best facts we found about <span className="font-semibold text-white/80">{activeCompanyDisplay}</span>. Select which to include in your messages.
+                    </div>
+                    <div className="space-y-2">
+                      {topSignals.map((sig) => {
+                        const on = selectedSignalIds.has(sig.id);
+                        return (
+                          <button
+                            key={sig.id}
+                            type="button"
+                            onClick={() => toggleSignal(sig.id)}
+                            className={`w-full text-left rounded-md border p-3 transition-colors ${
+                              on
+                                ? "border-emerald-400/50 bg-emerald-500/15"
+                                : "border-white/10 bg-white/5 hover:bg-white/10"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs font-bold ${
+                                on ? "border-emerald-400 bg-emerald-500 text-black" : "border-white/30 text-white/40"
+                              }`}>
+                                {on ? "✓" : ""}
+                              </span>
+                              <span className="rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/70">
+                                {sig.category}
+                              </span>
+                            </div>
+                            <div className="mt-1.5 pl-7 text-sm text-white/80">{sig.text}</div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                  </div>
+                  ) : null}
 
                   {/* Company Briefing */}
                   <div className="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
               <div className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-sm font-bold text-white">Company Briefing</div>
-                  <div className="text-xs text-white/60">Edit these to refine your knowledge base (used downstream).</div>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setBriefingOpen((v) => !v)}
+                  className="flex items-center gap-2 text-sm font-bold text-white hover:text-white/90"
+                >
+                  <span>Company Briefing</span>
+                  <span className="text-white/50 text-xs">{briefingOpen ? "▲" : "▼"}</span>
+                </button>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -845,7 +943,22 @@ export default function CompanyResearchPage() {
                 </div>
               </div>
 
+              {briefingOpen ? (
+              <>
+              {(() => {
+                const emptySections: string[] = [];
+                const cn = activeCompanyDisplay;
+                if (!hasRealData(draft.recent_news)) emptySections.push("recent news");
+                if (!hasRealData(draft.culture)) emptySections.push("culture & values");
+                if (!hasRealData(draft.product_launches)) emptySections.push("product launches");
+                if (!hasRealData(draft.leadership_changes)) emptySections.push("leadership changes");
+                if (!hasRealData(draft.other_hiring_signals)) emptySections.push("other hiring signals");
+                if (!hasRealData(draft.publications)) emptySections.push("publications");
+                if (!hasRealData(draft.market_position)) emptySections.push("market position");
+                return (
+                  <>
               <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Overview and Theme are always shown */}
                 <div>
                   <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Company Overview</div>
                   <textarea
@@ -879,8 +992,9 @@ export default function CompanyResearchPage() {
                   </div>
                 </div>
 
+                {hasRealData(draft.recent_news) ? (
                 <div>
-                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Recent News (actual)</div>
+                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Recent News</div>
                   <textarea
                     value={draft.recent_news}
                     onChange={(e) => setDraft({ ...draft, recent_news: e.target.value })}
@@ -888,14 +1002,10 @@ export default function CompanyResearchPage() {
                     className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="- Headline: short summary"
                   />
-                  <div className="mt-2 text-[11px] text-white/60">
-                    Variable:{" "}
-                    <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
-                      {"{{recent_news}}"}
-                    </code>
-                  </div>
                 </div>
+                ) : null}
 
+                {hasRealData(draft.culture) ? (
                 <div>
                   <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Company Culture & Values</div>
                   <textarea
@@ -905,14 +1015,10 @@ export default function CompanyResearchPage() {
                     className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="What do they value? How do they operate?"
                   />
-                  <div className="mt-2 text-[11px] text-white/60">
-                    Variable:{" "}
-                    <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
-                      {"{{company_culture}}"}
-                    </code>
-                  </div>
                 </div>
+                ) : null}
 
+                {hasRealData(draft.product_launches) ? (
                 <div>
                   <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Product launches</div>
                   <textarea
@@ -922,14 +1028,10 @@ export default function CompanyResearchPage() {
                     className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="- Launch: … (include URL when possible)"
                   />
-                  <div className="mt-2 text-[11px] text-white/60">
-                    Variable:{" "}
-                    <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
-                      {"{{company_product_launches}}"}
-                    </code>
-                  </div>
                 </div>
+                ) : null}
 
+                {hasRealData(draft.leadership_changes) ? (
                 <div>
                   <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Leadership changes</div>
                   <textarea
@@ -939,14 +1041,10 @@ export default function CompanyResearchPage() {
                     className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="- Change: … (include URL when possible)"
                   />
-                  <div className="mt-2 text-[11px] text-white/60">
-                    Variable:{" "}
-                    <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
-                      {"{{company_leadership_changes}}"}
-                    </code>
-                  </div>
                 </div>
+                ) : null}
 
+                {hasRealData(draft.other_hiring_signals) ? (
                 <div className="lg:col-span-2">
                   <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Other hiring signals</div>
                   <textarea
@@ -956,14 +1054,10 @@ export default function CompanyResearchPage() {
                     className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="- Signal: … (include URL when possible)"
                   />
-                  <div className="mt-2 text-[11px] text-white/60">
-                    Variable:{" "}
-                    <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
-                      {"{{company_other_hiring_signals}}"}
-                    </code>
-                  </div>
                 </div>
+                ) : null}
 
+                {hasRealData(draft.market_position) ? (
                 <div className="lg:col-span-2">
                   <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Market Position</div>
                   <textarea
@@ -973,14 +1067,18 @@ export default function CompanyResearchPage() {
                     className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Competitors, positioning, and what matters right now."
                   />
-                  <div className="mt-2 text-[11px] text-white/60">
-                    Variable:{" "}
-                    <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
-                      {"{{company_market_position}}"}
-                    </code>
-                  </div>
                 </div>
+                ) : null}
               </div>
+
+              {emptySections.length > 0 ? (
+                <div className="mt-4 rounded-md border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/60">
+                  No {emptySections.join(", ")} information found for {cn}. Try running research in live mode for richer results.
+                </div>
+              ) : null}
+                  </>
+                );
+              })()}
 
               {Array.isArray(draft.hooks) && draft.hooks.length ? (
                 <div className="mt-4">
@@ -994,6 +1092,10 @@ export default function CompanyResearchPage() {
                   </ul>
                 </div>
               ) : null}
+              </>
+              ) : (
+                <div className="mt-2 text-xs text-white/50">Click to expand and edit full briefing details.</div>
+              )}
             </div>
                 </>
               ) : (

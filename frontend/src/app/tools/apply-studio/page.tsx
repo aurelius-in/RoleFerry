@@ -114,11 +114,21 @@ export default function ApplyStudioPage() {
       localStorage.getItem(STUDIO_FILTERS_KEY),
       { positive: [], negative: [] }
     );
+    let pos = Array.isArray(filters.positive) ? filters.positive.map(normalizeKeyword).filter(Boolean).slice(0, 20) : [];
+    let neg = Array.isArray(filters.negative) ? filters.negative.map(normalizeKeyword).filter(Boolean).slice(0, 20) : [];
+
+    if (!pos.length && !neg.length) {
+      const rolesPos = safeJson<string[]>(localStorage.getItem("rf_auto_roles_positive_keywords_v1"), []);
+      const rolesNeg = safeJson<string[]>(localStorage.getItem("rf_auto_roles_negative_keywords_v1"), []);
+      if (rolesPos.length) pos = rolesPos.map(normalizeKeyword).filter(Boolean).slice(0, 20);
+      if (rolesNeg.length) neg = rolesNeg.map(normalizeKeyword).filter(Boolean).slice(0, 20);
+    }
+
     setNotesById(notes);
     setRankById(ranks);
     setFavoriteIds(favs);
-    setPositiveKeywords(Array.isArray(filters.positive) ? filters.positive.map(normalizeKeyword).filter(Boolean).slice(0, 20) : []);
-    setNegativeKeywords(Array.isArray(filters.negative) ? filters.negative.map(normalizeKeyword).filter(Boolean).slice(0, 20) : []);
+    setPositiveKeywords(pos);
+    setNegativeKeywords(neg);
   }, []);
 
   useEffect(() => {
@@ -239,6 +249,20 @@ export default function ApplyStudioPage() {
           if (positiveKeywords.length) params.set("positive_keywords", positiveKeywords.join(", "));
           if (negativeKeywords.length) params.set("negative_keywords", negativeKeywords.join(", "));
         }
+        try {
+          const prefs = JSON.parse(localStorage.getItem("job_preferences") || "{}");
+          if (prefs.role_categories?.length) params.set("role_categories", prefs.role_categories.join(", "));
+          if (prefs.skills?.length) params.set("skills", prefs.skills.join(", "));
+          if (prefs.industries?.length) params.set("industries", prefs.industries.join(", "));
+          if (prefs.location_preferences?.length) params.set("location_preferences", prefs.location_preferences.join(", "));
+          if (prefs.state) params.set("state", prefs.state);
+          if (prefs.minimum_salary) params.set("minimum_salary_pref", String(prefs.minimum_salary));
+        } catch {}
+        try {
+          const resume = JSON.parse(localStorage.getItem("resume_extract") || "{}");
+          const skills = resume?.skills || resume?.Skills || [];
+          if (Array.isArray(skills) && skills.length) params.set("resume_skills", skills.join(", "));
+        } catch {}
         return params;
       };
       let resp: ScrapedRolesResponse;

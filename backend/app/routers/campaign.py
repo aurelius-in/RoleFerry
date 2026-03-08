@@ -1096,23 +1096,26 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
 
             body_bits: List[str] = [f"Hi {greet_name},\n\n"]
             if step == 1:
-                body_bits.append(f"Saw the {job_title or 'role'} at {company_name or 'your team'} and wanted to share one quick idea.\n\n")
                 if company_sig:
-                    body_bits.append(f"One thing that stood out: {company_sig}\n\n")
+                    body_bits.append(f"I'm reaching out after learning about {company_name or 'your team'}'s work. {company_sig}\n\n")
                 elif role_sig:
-                    body_bits.append(f"What stood out in the role scope: {role_sig}\n\n")
-                body_bits.append("- One idea I’d bring: (add your offer snippet)\n")
-                body_bits.append("- Relevant proof: (add one proof point)\n\n")
+                    body_bits.append(f"I noticed {company_name or 'your team'} is looking for a {job_title or 'new team member'}. {role_sig}\n\n")
+                else:
+                    body_bits.append(f"I noticed the {job_title or 'role'} at {company_name or 'your team'} and wanted to introduce myself.\n\n")
+                offer_ctx = ctx.get("offer") if isinstance(ctx, dict) else {}
+                one_liner = str((offer_ctx or {}).get("one_liner") or "").strip()
+                if one_liner:
+                    body_bits.append(f"{one_liner}\n\n")
                 body_bits.append(f"{cta_line}\n\n")
             elif step == 2:
-                body_bits.append(f"Quick follow-up - is there a better person to route this to for the {job_title or 'role'}?\n\n")
-                body_bits.append("If helpful, I can share a short 2-3 bullet plan.\n")
+                body_bits.append(f"Just a quick follow-up on my previous note about the {job_title or 'role'}. I'm still very interested and would be glad to speak briefly if the role is still open.\n\n")
                 body_bits.append(f"{cta_line}\n\n")
             elif step == 3:
-                body_bits.append("Following up once more - I can tailor a quick plan to your top priority.\n\n")
+                body_bits.append(f"I wanted to share a few highlights from my work that align with what teams typically need in a {job_title or 'role like this'}.\n\n")
+                body_bits.append("I'd be glad to explore how my background could support your team's goals.\n\n")
                 body_bits.append(f"{cta_line}\n\n")
             else:
-                body_bits.append("Last note from me. If this isn’t a fit, no worries - just reply “no” and I’ll close the loop.\n\n")
+                body_bits.append("I realize your time is limited, so this will be my final message. If the role has been filled or I'm not the right fit, no worries at all. If there's someone else I should speak with, I'd be grateful for an introduction.\n\n")
                 body_bits.append(f"{cta_line}\n\n")
 
             # Optional: include bio/work links if provided in context
@@ -1173,6 +1176,28 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
 
         system = (
             "You are RoleFerry's outreach copilot. Draft ONE email step in a 4-email sequence.\n\n"
+            "IDEAL MESSAGE STRUCTURE (follow this flow):\n"
+            "Line 1: Research hook about the company (shows you did homework on them).\n"
+            "Line 2: Bridge connecting that research to your relevant expertise.\n"
+            "Line 3: A concrete proof point or result you achieved.\n"
+            "Line 4: CTA about applying your expertise at their company.\n\n"
+            "EXAMPLE of a good Step 1 email body:\n"
+            "\"Hi Sarah,\n\n"
+            "I'm reaching out after learning about Acme's advanced threat detection platform "
+            "and your team's challenge to validate alerts and reduce false positives. "
+            "That aligns with how I've approached similar problems: in my current role, "
+            "I built a framework that reduced false-positive rates by 40% while scaling "
+            "to handle 3x the alert volume.\n\n"
+            "I'd love to explore how I could bring this to the Security Engineering Lead role.\n\n"
+            "Best,\nJohn\"\n\n"
+            "EXAMPLE of a good Step 4 (final) email body:\n"
+            "\"Hi Sarah,\n\n"
+            "I realize your time is limited, so this will be my last note. If the role has "
+            "been filled or I'm not the right fit, no worries at all. If there is someone else "
+            "I should speak with, I would be grateful for an introduction.\n\n"
+            "If you are still exploring options, I would welcome the chance to talk briefly about "
+            "how I can contribute.\n\n"
+            "Thanks again,\nJohn\"\n\n"
             "Hard style constraints:\n"
             "- Do NOT use em dashes or en dashes. Use commas, parentheses, or simple hyphens.\n"
             "- Hard ban: no canned openers like 'I hope you're doing well'.\n"
@@ -1199,7 +1224,8 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             "CTA output rules:\n"
             "- Include exactly ONE CTA sentence/question near the end.\n"
             "- For steps 1-2, keep CTA low-friction when possible.\n"
-            "- For steps 3-4, move to a clearer commitment ask when possible.\n\n"
+            "- For steps 3-4, move to a clearer commitment ask when possible.\n"
+            "- The CTA MUST appear in the email body. Do not omit it.\n\n"
             "Special instructions (must follow):\n"
             + (special if special else "(none)") +
             "\n\n"
@@ -1229,13 +1255,17 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
         # IMPORTANT: Never return an email that is only a signature block.
         body_core = _strip_existing_signature(_strip_fluff_openers(body)).strip()
         if len(body_core) < 40:
-            # Model likely returned only a closing/signature (or we stripped everything).
-            # Fall back to a deterministic, non-empty body so the UI always shows an actual email.
             fb_subj, fb_body = _fallback()
             if not subject:
                 subject = fb_subj
-            # _fallback() already includes signature; strip it back to core then append canonical signature below.
             body_core = _strip_existing_signature(_strip_fluff_openers(fb_body)).strip()
+
+        # Deterministic CTA injection: if the chosen CTA is not present in the body, append it.
+        if chosen_cta and chosen_cta.lower() not in body_core.lower():
+            cta_sentence = chosen_cta.strip()
+            if not cta_sentence[-1:] in ".?!":
+                cta_sentence += "?"
+            body_core = body_core.rstrip() + "\n\n" + cta_sentence
 
         body = _append_signature(body_core)
         body = _no_em_dashes(body)
@@ -1243,7 +1273,14 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
         body = _normalize_message_text(body)
         subject = _normalize_message_text(subject)
 
-        # Basic sanity: avoid accidental over-long subjects.
+        # AI quality filter: polish the final output so nothing awkward reaches the user.
+        try:
+            polished = client.quality_filter_message(subject, body, cta_text=chosen_cta, step=step)
+            subject = polished.get("subject") or subject
+            body = polished.get("body") or body
+        except Exception:
+            pass
+
         subject = re.sub(r"\s+", " ", subject).strip()[:140]
 
         return CampaignGenerateStepResponse(

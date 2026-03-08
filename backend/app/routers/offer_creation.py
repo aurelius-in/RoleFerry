@@ -90,14 +90,14 @@ def _build_rule_based_snippet(payload: ComposeOfferSnippetRequest) -> str:
     if one:
         lines.append(one)
     if proofs:
-        lines.append(f"Proof: {' | '.join(proofs)}")
+        lines.append("I've delivered results including " + ", and ".join(proofs[:2]) + ("." if not proofs[0].endswith(".") else ""))
     if case_bits:
-        lines.append(f"Example: {case_bits[0]}")
+        lines.append(f"For example: {case_bits[0]}.")
     if soft_cta:
-        lines.append(f"Soft CTA: {soft_cta}")
-    if hard_cta:
-        lines.append(f"Hard CTA: {hard_cta}")
-    s = "\n".join(lines).strip()
+        lines.append(soft_cta if soft_cta[0].isupper() else soft_cta.capitalize())
+    elif hard_cta:
+        lines.append(hard_cta if hard_cta[0].isupper() else hard_cta.capitalize())
+    s = "\n\n".join(lines).strip()
     return s[:900]
 
 
@@ -128,18 +128,30 @@ async def compose_offer_snippet(payload: ComposeOfferSnippetRequest):
                     {
                         "role": "system",
                         "content": (
-                            "You write an offer snippet for a job seeker.\n"
+                            "You write an offer snippet for a job seeker to use in outreach emails.\n"
                             "Return ONLY JSON: {\"snippet\": string}\n\n"
+                            "The snippet should follow this proven 4-line structure:\n"
+                            "Line 1: A research-based hook about the company (shows you did homework).\n"
+                            "Line 2: A bridge connecting that research to your relevant expertise.\n"
+                            "Line 3: A concrete proof point or result you have achieved.\n"
+                            "Line 4: A CTA about applying this at their company for the target role.\n\n"
+                            "Example of a GOOD snippet:\n"
+                            "\"I noticed your team is scaling its analytics platform to support enterprise clients. "
+                            "That challenge aligns with my experience building scalable measurement systems "
+                            "that reduced decision-making risk. In my current role, I built an A/B testing "
+                            "framework that contributed to $1M in new revenue through improved measurement. "
+                            "I'd love to explore how I could bring this to the team.\"\n\n"
                             "Rules:\n"
                             "- First-person singular only (I/me/my), never we/us/our.\n"
-                            "- Keep it concise: 3-6 short lines total.\n"
+                            "- Keep it concise: 3-6 flowing sentences.\n"
                             "- Human tone; avoid corporate filler and awkward templates.\n"
                             "- Do NOT start with 'For <role> at <company>:'\n"
-                            "- Avoid these exact phrases: 'I help teams ship outcomes', 'Need for', 'Context:'.\n"
-                            "- Include one low-friction soft CTA line if provided.\n"
-                            "- Include one stronger hard CTA line if provided.\n"
+                            "- Avoid: 'I help teams ship outcomes', 'Need for', 'Context:'.\n"
+                            "- If soft_cta is provided, use it as the closing ask (low-friction).\n"
+                            "- If hard_cta is provided but no soft_cta, use the hard_cta as the closing ask.\n"
+                            "- The CTA must appear naturally as the final sentence, not as a labeled line.\n"
                             "- Use only provided inputs; do not invent facts or numbers.\n"
-                            "- If proof points are weak, still produce clean copy without hallucinations.\n"
+                            "- The output must read as a natural paragraph, not a bulleted list.\n"
                         ),
                     },
                     {"role": "user", "content": json.dumps(ctx, ensure_ascii=False)},
