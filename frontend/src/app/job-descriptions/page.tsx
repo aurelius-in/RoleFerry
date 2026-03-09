@@ -433,7 +433,7 @@ export default function JobDescriptionsPage() {
         }));
 
         setJobDescriptions(cleaned);
-        localStorage.setItem("job_descriptions", JSON.stringify(cleaned));
+        try { localStorage.setItem("job_descriptions", JSON.stringify(cleaned)); } catch {}
       }
     } catch {
       // ignore malformed cache
@@ -630,11 +630,23 @@ export default function JobDescriptionsPage() {
     }
   };
 
+  const safeSetItem = (key: string, value: string) => {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      try {
+        const scraped = localStorage.getItem("scraped_roles_cache");
+        if (scraped && scraped.length > 50_000) localStorage.removeItem("scraped_roles_cache");
+        localStorage.setItem(key, value);
+      } catch {
+        console.warn(`[Storage] Could not save "${key}" (${(value.length / 1024).toFixed(0)} KB). localStorage may be full.`);
+      }
+    }
+  };
+
   const persistJobDescriptions = (next: JobDescription[]) => {
     setJobDescriptions(next);
-    try {
-      localStorage.setItem("job_descriptions", JSON.stringify(next));
-    } catch {}
+    safeSetItem("job_descriptions", JSON.stringify(next));
   };
 
   useEffect(() => {
@@ -717,7 +729,7 @@ export default function JobDescriptionsPage() {
           else next.push(m);
         }
         const normalized = normalizeFavoriteRanks(next);
-        if (typeof window !== "undefined") localStorage.setItem("job_descriptions", JSON.stringify(normalized));
+        try { if (typeof window !== "undefined") localStorage.setItem("job_descriptions", JSON.stringify(normalized)); } catch {}
         return normalized;
       });
     }
@@ -780,7 +792,7 @@ export default function JobDescriptionsPage() {
               else next.push(m);
             }
             const normalized = normalizeFavoriteRanks(next);
-            if (typeof window !== "undefined") localStorage.setItem("job_descriptions", JSON.stringify(normalized));
+            try { if (typeof window !== "undefined") localStorage.setItem("job_descriptions", JSON.stringify(normalized)); } catch {}
             return normalized;
           });
         }
@@ -913,7 +925,7 @@ export default function JobDescriptionsPage() {
 
   const handleContinue = () => {
     if (jobDescriptions.length > 0) {
-      localStorage.setItem('job_descriptions', JSON.stringify(jobDescriptions));
+      try { localStorage.setItem('job_descriptions', JSON.stringify(jobDescriptions)); } catch {}
       router.push('/gap-analysis');
     }
   };
@@ -977,7 +989,7 @@ export default function JobDescriptionsPage() {
         source: jd.url || "job_descriptions",
       };
 
-      localStorage.setItem(key, JSON.stringify([nextItem, ...list]));
+      try { localStorage.setItem(key, JSON.stringify([nextItem, ...list])); } catch {}
       setTrackerNotice(`Added to Role Tracker: ${jd.title} @ ${formatCompanyName(jd.company)}`);
       window.setTimeout(() => setTrackerNotice(null), 2500);
 
@@ -2124,7 +2136,7 @@ export default function JobDescriptionsPage() {
                                       const next = [...prev];
                                       if (!next.find((j) => j.id === fallbackJd.id)) next.push(fallbackJd);
                                       const normalized = normalizeFavoriteRanks(next);
-                                      if (typeof window !== "undefined") localStorage.setItem("job_descriptions", JSON.stringify(normalized));
+                                      try { if (typeof window !== "undefined") localStorage.setItem("job_descriptions", JSON.stringify(normalized)); } catch {}
                                       return normalized;
                                     });
                                   }
@@ -2148,12 +2160,15 @@ export default function JobDescriptionsPage() {
                                     const next = [...prev];
                                     if (!next.find((j) => j.id === fallbackJd.id)) next.push(fallbackJd);
                                     const normalized = normalizeFavoriteRanks(next);
-                                    if (typeof window !== "undefined") localStorage.setItem("job_descriptions", JSON.stringify(normalized));
+                                    try { if (typeof window !== "undefined") localStorage.setItem("job_descriptions", JSON.stringify(normalized)); } catch {}
                                     return normalized;
                                   });
                                 }
                                 setImportedScrapedRoleIds((prev) => prev.includes(String(r.id)) ? prev : [...prev, String(r.id)]);
                                 setTimeout(() => preferredSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
+                                setTimeout(() => {
+                                  setIgnoredScrapedRoleIds((prev) => prev.includes(String(r.id)) ? prev : [...prev, String(r.id)]);
+                                }, 3000);
                               } catch (err) {
                                 const msg = err instanceof Error ? err.message : String(err);
                                 setImportError(msg);
