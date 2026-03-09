@@ -51,14 +51,18 @@ def _strip_likely_language(s: str) -> str:
     t = re.sub(r"\bpresumably\b", "", t, flags=re.I)
     t = re.sub(r"\bsuggest(?:s|ing)?\s+that\b", "", t, flags=re.I)
     _placeholder_patterns = [
-        r"(?i)no\s+\w+\s+(?:details?|data|info(?:rmation)?)\s*(?:captured|found|available|collected).*",
+        r"(?i)no\s+\w+\s+(?:details?|data|info(?:rmation)?)\s*(?:captured|found|available|collected|in this run).*",
         r"(?i)try\s+(?:running\s+in\s+)?live\s+mode.*",
-        r"(?i)serper\s+(?:configured|not\s+configured|required).*",
+        r"(?i)(?:with\s+)?serper\s+(?:configured|not\s+configured|required|api).*",
+        r"(?i)serper",
+        r"(?i)live\s+mode",
         r"(?i)no\s+external\s+web\s+sources.*",
-        r"(?i)no\s+product\s+launch.*(?:captured|found|available).*",
-        r"(?i)no\s+leadership\s+change.*(?:captured|found|available).*",
-        r"(?i)no\s+hiring\s+signal.*(?:captured|found|available).*",
-        r"(?i)no\s+recent\s+post.*(?:captured|found|available).*",
+        r"(?i)no\s+product\s+launch.*(?:captured|found|available|details|in this run).*",
+        r"(?i)no\s+leadership\s+change.*(?:captured|found|available|details|in this run).*",
+        r"(?i)no\s+hiring\s+signal.*(?:captured|found|available|details|in this run).*",
+        r"(?i)no\s+recent\s+post.*(?:captured|found|available|details|in this run).*",
+        r"(?i)no\s+publication.*(?:captured|found|available|details|in this run).*",
+        r"(?i)captured\s+in\s+this\s+run",
     ]
     for pat in _placeholder_patterns:
         t = re.sub(pat, "", t)
@@ -2161,6 +2165,24 @@ async def conduct_research(request: ResearchRequest):
             except Exception:
                 pass
 
+            # Final scrub: remove any remaining placeholder/mode strings from all text fields.
+            for _var_name in ["theme", "culture_values", "market_position", "product_launches",
+                              "leadership_changes", "other_hiring_signals", "recent_posts", "publications"]:
+                _val = locals().get(_var_name, "")
+                if isinstance(_val, str):
+                    _val = _strip_likely_language(_val)
+                    if not _val.strip():
+                        _val = ""
+                    locals()[_var_name] = _val
+            theme = _strip_likely_language(theme)
+            culture_values = _strip_likely_language(culture_values)
+            market_position = _strip_likely_language(market_position)
+            product_launches = _strip_likely_language(product_launches)
+            leadership_changes = _strip_likely_language(leadership_changes)
+            other_hiring_signals = _strip_likely_language(other_hiring_signals)
+            recent_posts = _strip_likely_language(recent_posts)
+            publications = _strip_likely_language(publications)
+
             research_by_contact[str(cid)] = ResearchData(
                 company_summary=CompanySummary(
                     name=str(cs.get("name") or request.company_name),
@@ -2264,10 +2286,13 @@ async def conduct_research(request: ResearchRequest):
         tb = traceback.format_exc()
         logger.error("conduct_research failed: %s\n%s", e, tb)
         short_tb = "\n".join(tb.strip().splitlines()[-5:])
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to conduct research: {str(e)}\n{short_tb}",
-        )
+        from starlette.responses import JSONResponse
+        return JSONResponse({
+            "success": False,
+            "message": f"Research encountered an error: {str(e)[:200]}",
+            "research_by_contact": {},
+            "company_signals": [],
+        })
 
 @router.post("/save", response_model=ResearchResponse)
 async def save_research_data(research_data: ResearchData):
