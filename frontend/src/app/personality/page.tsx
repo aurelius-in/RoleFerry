@@ -841,11 +841,10 @@ export default function PersonalityPage() {
 
           <div className="space-y-1">
             {activeTest === "temperaments" ? (
-              <div className="rounded-lg border border-white/10 bg-black/20 p-5">
+              <CollapsibleSection title="Temperament Identifier">
                 {/* Big icon tiles stay visible and “narrow down” in real-time */}
                 <div className="flex items-start justify-between gap-3 flex-col md:flex-row md:items-center">
                   <div>
-                    <div className="text-sm font-bold text-white">Temperament Identifier</div>
                     <div className="mt-1 text-xs text-white/60">
                       Answer a few questions and watch the likely types narrow down (process of elimination).
                     </div>
@@ -1007,7 +1006,7 @@ export default function PersonalityPage() {
                     </div>
                   </div>
                 )}
-              </div>
+              </CollapsibleSection>
             ) : (
               QUESTIONS.map((q) => {
                 const v = answers[q.id] ?? null;
