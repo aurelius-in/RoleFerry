@@ -177,9 +177,7 @@ class PDLClient:
             return {}
         with httpx.Client(timeout=self.timeout_seconds, follow_redirects=True) as client:
             resp = client.get(url, params=params, headers=self._headers())
-            if resp.status_code == 404:
-                return {}
-            if resp.status_code == 402:
+            if resp.status_code in (401, 402, 403, 404):
                 return {}
             resp.raise_for_status()
             return resp.json()
@@ -199,6 +197,8 @@ class PDLClient:
         Person Search API expects `query` as an Elasticsearch JSON query (string),
         which is easiest to send via POST body.
         """
+        import logging
+        _log = logging.getLogger(__name__)
         url = f"{PDL_BASE_URL}/person/search"
         query = {
             "query": {
@@ -213,10 +213,14 @@ class PDLClient:
         }
         with httpx.Client(timeout=self.timeout_seconds, follow_redirects=True) as client:
             resp = client.post(url, json=query, headers=self._headers())
-            if resp.status_code in (402, 404):
+            _log.info("PDL person_search status=%d for company='%s'", resp.status_code, company)
+            if resp.status_code in (401, 402, 403, 404):
+                _log.warning("PDL person_search returned %d for '%s' (auth/credits issue or no results)", resp.status_code, company)
                 return {"data": []}
             resp.raise_for_status()
-            return resp.json()
+            data = resp.json()
+            _log.info("PDL person_search returned %d records for '%s'", len(data.get("data") or []), company)
+            return data
 
     def extract_people(self, raw: Dict[str, Any]) -> List[PdlPersonResult]:
         data = raw.get("data") or []

@@ -646,6 +646,7 @@ async def search_contacts(request: ContactSearchRequest):
 
                 scored = [(int(_score_person(p.title)), p) for p in people]
                 scored.sort(key=lambda t: t[0], reverse=True)
+                logger.info("PDL scored %d people for '%s' (job_fn=%s)", len(scored), q, job_fn)
 
                 def _is_fn_dm(title: str) -> bool:
                     return _is_relevant_decision_maker_for_job(title, job_fn) and any(
@@ -660,8 +661,6 @@ async def search_contacts(request: ContactSearchRequest):
                 talent_dm = [p for _, p in scored if _is_recruiting(p.title)]
                 others = [p for _, p in scored if p not in fn_dm and p not in talent_dm and _is_relevant_decision_maker_for_job(p.title, job_fn)]
 
-                # When users select many title filters, they expect MANY more hits.
-                # So: widen selection aggressively when filters are provided.
                 desired = 24 if title_filters else 10
 
                 if title_filters:
@@ -673,9 +672,14 @@ async def search_contacts(request: ContactSearchRequest):
                     if filtered_pool:
                         people = filtered_pool[:desired]
                     else:
-                        # Fall back to relevance-only if filters were too specific.
                         rel_pool = [p for _, p in scored if _is_relevant_decision_maker_for_job(p.title, job_fn)]
-                        people = rel_pool[:desired]
+                        if rel_pool:
+                            people = rel_pool[:desired]
+                        else:
+                            senior_pool = [p for _, p in scored if any(
+                                k in (p.title or "").lower() for k in ["manager", "director", "head", "vp", "vice president", "chief", "cto", "ceo", "founder"]
+                            )]
+                            people = (senior_pool or [p for _, p in scored])[:desired]
                 else:
                     picked: List[Any] = []
                     for p in fn_dm[:4]:
@@ -688,6 +692,11 @@ async def search_contacts(request: ContactSearchRequest):
                             picked.append(p)
                         if len(picked) >= 8:
                             break
+                    if not picked:
+                        senior_pool = [p for _, p in scored if any(
+                            k in (p.title or "").lower() for k in ["manager", "director", "head", "vp", "vice president", "chief", "cto", "ceo", "founder"]
+                        )]
+                        picked = (senior_pool or [p for _, p in scored])[:desired]
                     people = picked[:desired]
                 contacts: List[Contact] = []
                 for p in people:
@@ -724,8 +733,8 @@ async def search_contacts(request: ContactSearchRequest):
 
                 pdl_contacts = list(contacts)
                 logger.info("PDL returned %d relevant contacts for '%s'", len(pdl_contacts), q)
-            except Exception:
-                logger.exception("PDL contact search failed for '%s'; will try other sources", q)
+            except Exception as pdl_err:
+                logger.exception("PDL contact search failed for '%s' (%s); will try other sources", q, str(pdl_err)[:120])
 
         # 1) Resolve company -> domain using public Clearbit autocomplete
         resolved = await _clearbit_company_suggest(q)
@@ -871,12 +880,16 @@ async def search_contacts(request: ContactSearchRequest):
                     logger.debug("PDL person_enrich failed for %s; skipping", c.name)
 
         if not contacts:
-            raise HTTPException(
-                status_code=404,
-                detail=(
+            logger.warning("No contacts found for '%s' after all sources (PDL=%d, web=%d, GPT=%d)",
+                           q, len(pdl_contacts), 0, 0)
+            return ContactSearchResponse(
+                success=False,
+                message=(
                     "No decision makers found for that company. "
-                    "Try a more specific company name (e.g., 'Zapier' instead of 'Z')."
+                    "Try a more specific company name, or use the suggested targets below."
                 ),
+                contacts=[],
+                helper=None,
             )
 
         # 4b) AI sanity-check: ensure contacts are truly relevant decision makers for the target job.
@@ -990,12 +1003,16 @@ async def search_contacts(request: ContactSearchRequest):
             contacts=contacts,
             helper=helper,
         )
+    except HTTPException:
+        raise
     except Exception as e:
-        # Preserve HTTPException status codes (404, 400, etc)
-        if isinstance(e, HTTPException):
-            raise
-        logger.exception("Failed to search contacts")
-        raise HTTPException(status_code=500, detail=f"Failed to search contacts: {str(e)}")
+        logger.exception("Failed to search contacts for '%s'", (request.company or request.query or ""))
+        return ContactSearchResponse(
+            success=False,
+            message=f"Contact search encountered an error: {str(e)[:200]}",
+            contacts=[],
+            helper=None,
+        )
 
 @router.post("/verify", response_model=ContactVerificationResponse)
 async def verify_contacts(request: ContactVerificationRequest):
@@ -1071,7 +1088,12 @@ async def verify_contacts(request: ContactVerificationRequest):
             verified_contacts=verified_contacts
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to verify contacts: {str(e)}")
+        logger.exception("Failed to verify contacts")
+        return ContactVerificationResponse(
+            success=False,
+            message=f"Verification encountered an error: {str(e)[:200]}",
+            verified_contacts=[],
+        )
 
 
 @router.post("/improve-linkedin-note", response_model=ImproveLinkedInNoteResponse)
