@@ -3623,27 +3623,35 @@ async def get_scraped_roles(
 
     ranked = sorted(roles, key=lambda r: (r.match_score, bool(r.salary_range)), reverse=True)
 
-    # Prefer company diversity first: one role per company in pass 1.
+    MAX_PER_COMPANY = 10
+
+    # Pass 1: one best role per company for maximum diversity.
     selected: List[ScrapedRole] = []
-    used_companies: set[str] = set()
+    company_counts: Dict[str, int] = {}
     for r in ranked:
         ckey = (r.company or "").strip().lower()
         if not ckey or ckey == "unknown":
             continue
-        if ckey in used_companies:
+        if ckey in company_counts:
             continue
         selected.append(r)
-        used_companies.add(ckey)
+        company_counts[ckey] = 1
         if len(selected) >= requested:
             break
 
-    # If we still don't have enough roles, fill from remaining ranked roles.
+    # Pass 2: fill remaining slots, but cap each company at MAX_PER_COMPANY.
     if len(selected) < requested:
         selected_ids = {x.id for x in selected}
         for r in ranked:
             if r.id in selected_ids:
                 continue
+            ckey = (r.company or "").strip().lower()
+            if ckey and ckey != "unknown" and company_counts.get(ckey, 0) >= MAX_PER_COMPANY:
+                continue
             selected.append(r)
+            selected_ids.add(r.id)
+            if ckey and ckey != "unknown":
+                company_counts[ckey] = company_counts.get(ckey, 0) + 1
             if len(selected) >= requested:
                 break
 
