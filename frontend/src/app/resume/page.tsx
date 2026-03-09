@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
+import CollapsibleSection from "@/components/CollapsibleSection";
 
 
 interface ResumeExtract {
@@ -502,8 +503,7 @@ export default function ResumePage() {
               </div>
 
               {/* Positions */}
-              <div>
-                <h3 className="text-xl font-semibold mb-4">Work Experience</h3>
+              <CollapsibleSection title="Work Experience" count={extract.positions.length} defaultOpen>
                 {extract.positions.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
@@ -575,11 +575,10 @@ export default function ResumePage() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </CollapsibleSection>
 
               {/* Key Metrics */}
-              <div>
-                <h3 className="text-xl font-semibold mb-4">Key Metrics</h3>
+              <CollapsibleSection title="Key Metrics" count={extract.keyMetrics.length} defaultOpen>
                 {extract.keyMetrics.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
@@ -630,11 +629,10 @@ export default function ResumePage() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </CollapsibleSection>
 
               {/* Business Challenges */}
-              <div>
-                <h3 className="text-xl font-semibold mb-4">Business Challenges Solved</h3>
+              <CollapsibleSection title="Business Challenges Solved" count={extract.businessChallenges.length} defaultOpen>
                 {extract.businessChallenges.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
@@ -663,11 +661,10 @@ export default function ResumePage() {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </CollapsibleSection>
 
               {/* Skills */}
-              <div>
-                <h3 className="text-xl font-semibold mb-4">Skills</h3>
+              <CollapsibleSection title="Skills" count={extract.skills.length} defaultOpen>
                 {extract.skills.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
@@ -681,11 +678,10 @@ export default function ResumePage() {
                     </span>
                   ))}
                 </div>
-              </div>
+              </CollapsibleSection>
 
               {/* Accomplishments */}
-              <div>
-                <h3 className="text-xl font-semibold mb-4">Notable Accomplishments</h3>
+              <CollapsibleSection title="Notable Accomplishments" count={extract.accomplishments.length} defaultOpen>
                 {extract.accomplishments.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
@@ -697,11 +693,10 @@ export default function ResumePage() {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </CollapsibleSection>
 
               {/* Tenure */}
-              <div>
-                <h3 className="text-xl font-semibold mb-4">Tenure Summary</h3>
+              <CollapsibleSection title="Tenure Summary" count={extract.tenure.length} defaultOpen>
                 {extract.tenure.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
@@ -716,11 +711,10 @@ export default function ResumePage() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </CollapsibleSection>
 
               {/* Education */}
-              <div>
-                <h3 className="text-xl font-semibold mb-4">Education</h3>
+              <CollapsibleSection title="Education" count={extract.education.length} defaultOpen>
                 {extract.education.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
@@ -743,10 +737,9 @@ export default function ResumePage() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </CollapsibleSection>
 
-              <div className="rounded-lg border border-white/10 bg-black/20 p-4">
-                <div className="text-sm font-bold text-white mb-2">Available Variables</div>
+              <CollapsibleSection title="Available Variables" count={Math.max(extract.keyMetrics.length, extract.businessChallenges.length, extract.accomplishments.length, extract.positions.length, extract.education.length)} defaultOpen={false}>
                 <div className="text-xs text-white/60 mb-3">
                   These variables are now available for downstream steps (Bio/Campaign):
                 </div>
@@ -854,7 +847,7 @@ export default function ResumePage() {
                     Note: total years is best-effort (derived from position dates). If your resume dates are missing/irregular, it may show as unavailable.
                   </div>
                 ) : null}
-              </div>
+              </CollapsibleSection>
 
               <div className="flex justify-end space-x-4">
                 <button

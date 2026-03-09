@@ -91,9 +91,9 @@ export default function ApplyStudioPage() {
   const [favoriteIds, setFavoriteIds] = useState<Record<string, boolean>>({});
   const [favoritesOnly, setFavoritesOnly] = useState(false);
 
-  const shareUrl = useMemo(() => {
-    if (typeof window === "undefined") return "/tools/apply-studio";
-    return `${window.location.origin}/tools/apply-studio`;
+  const [shareUrl, setShareUrl] = useState("/tools/apply-studio");
+  useEffect(() => {
+    setShareUrl(`${window.location.origin}/tools/apply-studio`);
   }, []);
 
   const copyShareUrl = async () => {

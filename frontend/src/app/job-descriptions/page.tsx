@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
+import CollapsibleSection from "@/components/CollapsibleSection";
 
 const JARGON_PHRASES = [
   "fast-paced environment",
@@ -137,6 +138,9 @@ type ScrapedRolesResponse = {
     returned_roles?: number;
     source_breakdown?: Record<string, number>;
     fit_breakdown?: {
+      great?: number;
+      fair?: number;
+      weak?: number;
       high?: number;
       medium?: number;
       exploratory?: number;
@@ -239,12 +243,14 @@ export default function JobDescriptionsPage() {
   const [isLoadingScrapedRoles, setIsLoadingScrapedRoles] = useState(false);
   const [scrapedRolesError, setScrapedRolesError] = useState<string | null>(null);
   const [scrapedRolesMessage, setScrapedRolesMessage] = useState<string>("");
-  const [scrapedRolesMeta, setScrapedRolesMeta] = useState<{ requested_roles?: number; target_companies?: number; unique_companies?: number; discovered_urls?: number; scored_candidates?: number; source_breakdown?: Record<string, number>; fit_breakdown?: { high?: number; medium?: number; exploratory?: number } } | null>(null);
+  const [scrapedRolesMeta, setScrapedRolesMeta] = useState<{ requested_roles?: number; target_companies?: number; unique_companies?: number; discovered_urls?: number; scored_candidates?: number; source_breakdown?: Record<string, number>; fit_breakdown?: { great?: number; fair?: number; weak?: number; high?: number; medium?: number; exploratory?: number } } | null>(null);
+  const [hasEverLoadedRoles, setHasEverLoadedRoles] = useState(false);
   const [strictness, setStrictness] = useState(25);
   const funnelMode = strictness > 50 ? "strict" : "broad";
   const discoveryLimit: 120 | 220 | 300 = strictness > 70 ? 120 : strictness > 40 ? 220 : 300;
   const highFitOnly = false;
   const [ignoredScrapedRoleIds, setIgnoredScrapedRoleIds] = useState<string[]>([]);
+  const [importedScrapedRoleIds, setImportedScrapedRoleIds] = useState<string[]>([]);
   const [expandedRoleDetails, setExpandedRoleDetails] = useState<Record<string, boolean>>({});
   const [positiveKeywords, setPositiveKeywords] = useState<string[]>([]);
   const [negativeKeywords, setNegativeKeywords] = useState<string[]>([]);
@@ -266,6 +272,7 @@ export default function JobDescriptionsPage() {
   const [csvMsg, setCsvMsg] = useState<string | null>(null);
   const [csvErr, setCsvErr] = useState<string | null>(null);
   const trackerPulseTimer = useRef<number | null>(null);
+  const preferredSectionRef = useRef<HTMLDivElement | null>(null);
   const [suggestedUrl, setSuggestedUrl] = useState(
     "https://www.indeed.com/jobs?q=jobs&l=United+States"
   );
@@ -276,7 +283,8 @@ export default function JobDescriptionsPage() {
       .replace(/^[""']+|[""']+$/g, "")
       .split(/\s+/)
       .join(" ")
-      .trim();
+      .trim()
+      .toLowerCase();
 
   const persistKeywordPrefs = (pos: string[], neg: string[]) => {
     try {
@@ -461,7 +469,7 @@ export default function JobDescriptionsPage() {
         setSuggestedUrl(`https://www.indeed.com/jobs?q=${query}&l=${where || "United+States"}`);
       }
 
-      let posInit = pos.slice(0, 20);
+      let posInit = Array.from(new Set(pos)).slice(0, 20);
       if (!posInit.length) {
         posInit = Array.from(new Set(seedPool)).slice(0, 8);
       }
@@ -565,6 +573,7 @@ export default function JobDescriptionsPage() {
       }
       const roles = Array.isArray(res?.roles) ? res.roles : [];
       setScrapedRoles(roles);
+      setHasEverLoadedRoles(true);
       setIgnoredScrapedRoleIds([]);
       setScrapedRolesMessage(
         recovered
@@ -1249,32 +1258,56 @@ export default function JobDescriptionsPage() {
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="inline-flex rounded-full border border-white/10 bg-black/25 p-1">
-                      <button
-                        type="button"
-                        onClick={() => setImportType("url")}
-                        aria-pressed={importType === "url"}
-                        className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                          importType === "url"
-                            ? "brand-gradient text-black"
-                            : "text-white/80 hover:bg-white/10"
-                        }`}
-                      >
-                        Import URL
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setImportType("text")}
-                        aria-pressed={importType === "text"}
-                        className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                          importType === "text"
-                            ? "brand-gradient text-black"
-                            : "text-white/80 hover:bg-white/10"
-                        }`}
-                      >
-                        Paste text
-                      </button>
+                    <div className="inline-flex items-center gap-2">
+                      <div className="inline-flex rounded-full border border-white/10 bg-black/25 p-1">
+                        <button
+                          type="button"
+                          onClick={() => setImportType("url")}
+                          aria-pressed={importType === "url"}
+                          className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                            importType === "url"
+                              ? "brand-gradient text-black"
+                              : "text-white/80 hover:bg-white/10"
+                          }`}
+                        >
+                          Import URL
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setImportType("text")}
+                          aria-pressed={importType === "text"}
+                          className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                            importType === "text"
+                              ? "brand-gradient text-black"
+                              : "text-white/80 hover:bg-white/10"
+                          }`}
+                        >
+                          Paste text
+                        </button>
+                      </div>
+                      {csvContent.trim() ? (
+                        <button
+                          type="button"
+                          onClick={importCsv}
+                          disabled={csvBusy}
+                          className="rounded-full border border-emerald-400/35 bg-emerald-500/15 px-4 py-1.5 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/25 disabled:opacity-50"
+                        >
+                          {csvBusy ? "Importing..." : `Import ${csvFile || "CSV"}`}
+                        </button>
+                      ) : (
+                        <label className="inline-flex cursor-pointer items-center rounded-full border border-white/10 bg-black/25 px-4 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/10">
+                          Choose CSV
+                          <input
+                            type="file"
+                            accept=".csv,text/csv"
+                            className="hidden"
+                            onChange={(e) => onPickCsv((e.target.files && e.target.files[0]) || null)}
+                          />
+                        </label>
+                      )}
                     </div>
+                    {csvMsg ? <div className="text-xs text-emerald-200">{csvMsg}</div> : null}
+                    {csvErr ? <div className="text-xs text-red-300">{csvErr}</div> : null}
                   </div>
 
                   {importType === "url" ? (
@@ -1399,47 +1432,14 @@ export default function JobDescriptionsPage() {
             )}
           </div>
 
-          <div className="mb-6 rounded-lg border border-white/10 bg-black/20 p-4">
-            <div className="text-sm font-semibold text-white">Import from CSV</div>
-            <p className="mt-1 text-xs text-white/60">
-              Upload a CSV of job matches (e.g. from SimplyApply, another tracker, or a previous RoleFerry export) to import roles in bulk.
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <label className="inline-flex cursor-pointer items-center rounded-md border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold hover:bg-white/15">
-                Choose CSV
-                <input
-                  type="file"
-                  accept=".csv,text/csv"
-                  className="hidden"
-                  onChange={(e) => onPickCsv((e.target.files && e.target.files[0]) || null)}
-                />
-              </label>
-              <button
-                type="button"
-                onClick={importCsv}
-                disabled={csvBusy || !csvContent.trim()}
-                className="rounded-md border border-emerald-400/35 bg-emerald-500/20 px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/30 disabled:opacity-50"
-              >
-                {csvBusy ? "Importing..." : "Import Into Roles"}
-              </button>
-              {csvFile ? <span className="text-xs text-white/70">File: {csvFile}</span> : null}
-            </div>
-            {csvMsg ? <div className="mt-2 text-xs text-emerald-200">{csvMsg}</div> : null}
-            {csvErr ? <div className="mt-2 text-xs text-red-300">{csvErr}</div> : null}
-          </div>
-
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-12 gap-6">
+          <div ref={preferredSectionRef} className="mt-8 grid grid-cols-1 md:grid-cols-12 gap-6">
             <div className="md:col-span-8 md:order-1 space-y-6">
+              <CollapsibleSection title="Preferred Roles" count={jobDescriptions.length} defaultOpen>
               {!hasMounted || jobDescriptions.length === 0 ? (
-                <div className="text-center py-12 rounded-lg border border-white/10 bg-black/20">
-                  <div className="mb-6">
-                    <svg className="mx-auto h-12 w-12 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
+                <div className="text-center py-8">
                   <h3 className="text-lg font-medium text-white mb-2">No Roles Yet</h3>
-                  <p className="text-white/70 mb-6">
-                    Import role descriptions from URLs or paste text to get started.
+                  <p className="text-white/70 mb-2 text-sm">
+                    Import role descriptions from URLs or paste text to get started, or click Preferred on a matched role below.
                   </p>
                 </div>
               ) : (
@@ -1450,12 +1450,16 @@ export default function JobDescriptionsPage() {
                         <h3 className="text-lg font-semibold text-white break-words">{jd.title}</h3>
                         <p className="mt-0.5 text-white/70 break-words text-sm">{formatCompanyName(jd.company)}</p>
                         <div className="mt-1.5 flex flex-wrap gap-2 text-[11px]">
-                          <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
-                            {jd.salaryRange ? jd.salaryRange : "Salary not provided"}
-                          </span>
-                          <span className="px-2 py-1 rounded-full border border-blue-400/25 bg-blue-500/10 text-blue-100">
-                            Posted: {postedLabel(jd)}
-                          </span>
+                          {jd.salaryRange && !/^salary/i.test(jd.salaryRange.trim()) && !/not (listed|provided)/i.test(jd.salaryRange) && !/^\{/.test(jd.salaryRange.trim()) && !/^\$0\s*-\s*\$0/.test(jd.salaryRange) ? (
+                            <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
+                              {jd.salaryRange}
+                            </span>
+                          ) : null}
+                          {postedLabel(jd) && postedLabel(jd) !== "Unknown" ? (
+                            <span className="px-2 py-1 rounded-full border border-blue-400/25 bg-blue-500/10 text-blue-100">
+                              Posted: {postedLabel(jd)}
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
@@ -1674,12 +1678,12 @@ export default function JobDescriptionsPage() {
                   </div>
                 ))
               )}
+              </CollapsibleSection>
             </div>
             <div className="md:col-span-4 md:order-2">
-              <div className="rounded-lg border border-white/10 bg-black/20 p-5">
+              <CollapsibleSection title="Keywords" defaultOpen>
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-semibold text-white">Keywords</h3>
                     <div className="mt-1">
                       <button
                         type="button"
@@ -1688,10 +1692,20 @@ export default function JobDescriptionsPage() {
                           const el = document.getElementById("matched-roles-section");
                           if (el) setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 300);
                         }}
-                        className="rounded-md border border-emerald-400/35 bg-emerald-500/15 px-2 py-1 text-[11px] font-semibold text-emerald-100 hover:bg-emerald-500/25"
-                        title="Generate and view matched roles"
+                        disabled={isLoadingScrapedRoles}
+                        className="min-w-[170px] rounded-md border border-emerald-400/35 bg-emerald-500/15 px-4 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/25 disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                        title={hasEverLoadedRoles ? "Refresh matched roles" : "Generate and view matched roles"}
                       >
-                        See Matched Roles
+                        {isLoadingScrapedRoles ? (
+                          <>
+                            <InlineSpinner className="h-3.5 w-3.5" />
+                            <span>Refreshing</span>
+                          </>
+                        ) : hasEverLoadedRoles ? (
+                          "Refresh Roles"
+                        ) : (
+                          "See Matched Roles"
+                        )}
                       </button>
                     </div>
                     <div className="mt-2 text-[11px]">
@@ -1710,32 +1724,14 @@ export default function JobDescriptionsPage() {
                         <span className="text-white/50 font-semibold shrink-0">Strict</span>
                       </div>
                       <div className="mt-1 text-[10px] text-white/40 text-center">
-                        {strictness <= 20
-                          ? "Very broad — needs only 1 keyword match"
-                          : strictness <= 50
-                          ? "Moderate — needs a few keyword matches"
-                          : strictness <= 80
-                          ? "Strict — needs several keyword matches"
-                          : "Very strict — needs 5+ keyword matches"}
+                        {strictness <= 33
+                          ? "At least a few keyword matches"
+                          : strictness <= 66
+                          ? "More keyword matches"
+                          : "Most keyword matches"}
                       </div>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={loadScrapedRoles}
-                    disabled={isLoadingScrapedRoles}
-                    className="shrink-0 rounded-md border border-white/15 bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/15 disabled:opacity-50 inline-flex items-center gap-2"
-                    title="Refresh matched roles"
-                  >
-                    {isLoadingScrapedRoles ? (
-                      <>
-                        <InlineSpinner className="h-3.5 w-3.5" />
-                        <span>Refreshing</span>
-                      </>
-                    ) : (
-                      "Refresh"
-                    )}
-                  </button>
                 </div>
 
                 <div className="mt-3 space-y-3 rounded-md border border-white/10 bg-black/20 p-3">
@@ -1885,11 +1881,12 @@ export default function JobDescriptionsPage() {
                   </div>
                 </div>
 
-              </div>
+              </CollapsibleSection>
             </div>
           </div>
 
           <div id="matched-roles-section" className="mt-8">
+          <CollapsibleSection title="Matched Roles" count={scrapedRoles.length} defaultOpen>
             {isLoadingScrapedRoles ? (
               <div className="rounded-lg border border-white/10 bg-black/20 p-6 text-center">
                 <InlineSpinner className="mx-auto h-5 w-5" />
@@ -1904,14 +1901,13 @@ export default function JobDescriptionsPage() {
             ) : null}
 
             {!isLoadingScrapedRoles && scrapedRoles.length === 0 && !scrapedRolesError ? (
-              <div className="rounded-lg border border-white/10 bg-black/20 p-6 text-center text-sm text-white/60">
+              <div className="text-center py-6 text-sm text-white/60">
                 No matched roles yet. Set your keywords above and click <span className="font-semibold text-emerald-200">See Matched Roles</span>.
               </div>
             ) : null}
 
             {(() => {
-              const minScore = strictness <= 20 ? 0 : strictness <= 50 ? 35 : strictness <= 80 ? 55 : 75;
-              const minPosHits = strictness <= 20 ? 1 : strictness <= 50 ? 2 : strictness <= 80 ? 3 : 5;
+              const minScore = strictness <= 33 ? 0 : strictness <= 66 ? 25 : 50;
               const visibleScrapedRoles = scrapedRoles
                 .filter((r) => !ignoredScrapedRoleIds.includes(String(r.id || "")))
                 .filter((r) => Number(r.match_score || 0) >= minScore)
@@ -1919,56 +1915,70 @@ export default function JobDescriptionsPage() {
                   if (!negativeKeywords.length) return true;
                   const blob = `${r.title} ${r.snippet || ""}`.toLowerCase();
                   return !negativeKeywords.some((kw) => blob.includes(kw.toLowerCase()));
-                })
-                .filter((r) => {
-                  if (!positiveKeywords.length || minPosHits <= 1) return true;
-                  const blob = `${r.title} ${r.snippet || ""}`.toLowerCase();
-                  const hits = positiveKeywords.filter((kw) => blob.includes(kw.toLowerCase())).length;
-                  return hits >= Math.min(minPosHits, positiveKeywords.length);
                 });
-              return visibleScrapedRoles.length > 0 ? (
+              const greatFit = visibleScrapedRoles.filter((r) => Number(r.match_score || 0) >= 55);
+              const fairFit = visibleScrapedRoles.filter((r) => { const s = Number(r.match_score || 0); return s >= 40 && s < 55; });
+              const weakFit = visibleScrapedRoles.filter((r) => Number(r.match_score || 0) < 40).slice(0, 5);
+              const displayRoles = [...greatFit, ...fairFit, ...weakFit];
+
+              const fitLabel = (score: number) => {
+                if (score >= 55) return { text: "great fit", cls: "border-emerald-400/30 bg-emerald-500/10 text-emerald-100" };
+                if (score >= 40) return { text: "fair fit", cls: "border-amber-400/30 bg-amber-500/10 text-amber-100" };
+                return { text: "weak fit", cls: "border-white/15 bg-white/5 text-white/50" };
+              };
+
+              return displayRoles.length > 0 ? (
               <div>
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <h3 className="text-lg font-semibold text-white">Matched Roles</h3>
                   <div className="flex flex-wrap gap-2 text-[11px]">
                     <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
-                      {visibleScrapedRoles.length} roles
-                    </span>
-                    <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
-                      {strictness <= 20 ? "very broad" : strictness <= 50 ? "broad" : strictness <= 80 ? "strict" : "very strict"}
+                      {displayRoles.length} roles
                     </span>
                     {typeof scrapedRolesMeta?.unique_companies === "number" ? (
                       <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/70">
                         {scrapedRolesMeta.unique_companies} companies
                       </span>
                     ) : null}
-                    {typeof scrapedRolesMeta?.fit_breakdown?.high === "number" ? (
+                    {greatFit.length > 0 ? (
                       <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 text-emerald-100">
-                        {scrapedRolesMeta.fit_breakdown.high} high fit
+                        {greatFit.length} great fit
+                      </span>
+                    ) : null}
+                    {fairFit.length > 0 ? (
+                      <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-1 text-amber-100">
+                        {fairFit.length} fair fit
+                      </span>
+                    ) : null}
+                    {weakFit.length > 0 ? (
+                      <span className="rounded-full border border-white/15 bg-white/5 px-2 py-1 text-white/60">
+                        {weakFit.length} weak fit
                       </span>
                     ) : null}
                   </div>
                 </div>
                 <div className="space-y-3">
-                  {visibleScrapedRoles.map((r) => (
+                  {displayRoles.map((r) => {
+                    const score = Number(r.match_score || 0);
+                    const fit = fitLabel(score);
+                    const alreadyImported = importedScrapedRoleIds.includes(String(r.id || ""));
+                    return (
                     <div key={r.id} className="rounded-lg border border-white/10 bg-black/20 p-3">
                       <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
                         <div className="min-w-0">
                           <h3 className="text-lg font-semibold text-white break-words">{r.title}</h3>
                           <p className="mt-0.5 text-white/70 break-words text-sm">{formatCompanyName(String(r.company || "Unknown"))}</p>
                           <div className="mt-1.5 flex flex-wrap gap-2 text-[11px]">
-                            {r.salary_range ? (
+                            {r.salary_range && !/^\$0\s*-\s*\$0/.test(r.salary_range) ? (
                               <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
                                 {r.salary_range}
                               </span>
-                            ) : (
-                              <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/50">
-                                Salary not listed
+                            ) : null}
+                            {r.posted_text ? (
+                              <span className="px-2 py-1 rounded-full border border-blue-400/25 bg-blue-500/10 text-blue-100">
+                                Posted: {r.posted_text}
                               </span>
-                            )}
-                            <span className="px-2 py-1 rounded-full border border-blue-400/25 bg-blue-500/10 text-blue-100">
-                              Posted: {r.posted_text || "Unknown"}
-                            </span>
+                            ) : null}
                             {r.location ? (
                               <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/70">
                                 {r.location}
@@ -1979,29 +1989,85 @@ export default function JobDescriptionsPage() {
                                 {r.work_mode}
                               </span>
                             ) : null}
-                            {typeof r.match_score === "number" ? (
-                              <span className="px-2 py-1 rounded-full bg-amber-500/85 text-[10px] font-bold text-black">
-                                {Math.max(0, Math.min(100, Number(r.match_score || 0)))}% match
-                              </span>
-                            ) : null}
+                            <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${fit.cls}`}>
+                              {Math.max(0, Math.min(100, score))}% &middot; {fit.text}
+                            </span>
                           </div>
                           {r.role_family ? (
                             <div className="mt-1 text-[10px] text-white/50">{r.role_family}</div>
                           ) : null}
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
+                          {alreadyImported ? (
+                            <span className="inline-flex items-center gap-1 rounded-md border border-emerald-400/40 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-semibold text-emerald-200 cursor-default">
+                              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                              Added
+                            </span>
+                          ) : (
                           <button
                             type="button"
                             className="rounded-md border border-emerald-400/40 bg-emerald-500/20 px-3 py-1.5 text-[11px] font-semibold text-emerald-100 hover:bg-emerald-500/30"
                             disabled={isImporting}
                             onClick={async () => {
                               const roleUrl = String(r.url || "").trim();
-                              if (!roleUrl) return;
                               setImportError(null);
                               setIsImporting(true);
                               try {
-                                await importFromUrl(roleUrl, { seedImporterInput: true });
+                                if (roleUrl) {
+                                  try {
+                                    await importFromUrl(roleUrl, { seedImporterInput: true });
+                                  } catch {
+                                    const fallbackJd: JobDescription = {
+                                      id: `scr_import_${r.id}`,
+                                      title: r.title || "Untitled",
+                                      company: r.company || "Unknown",
+                                      url: roleUrl || undefined,
+                                      content: r.snippet || "",
+                                      painPoints: [],
+                                      requiredSkills: [],
+                                      successMetrics: [],
+                                      location: r.location || undefined,
+                                      workMode: r.work_mode || undefined,
+                                      salaryRange: r.salary_range || undefined,
+                                      postedText: r.posted_text || undefined,
+                                      jdJargon: extractJargon(r.snippet || ""),
+                                      parsedAt: new Date().toISOString(),
+                                    };
+                                    setJobDescriptions((prev) => {
+                                      const next = [...prev];
+                                      if (!next.find((j) => j.id === fallbackJd.id)) next.push(fallbackJd);
+                                      const normalized = normalizeFavoriteRanks(next);
+                                      if (typeof window !== "undefined") localStorage.setItem("job_descriptions", JSON.stringify(normalized));
+                                      return normalized;
+                                    });
+                                  }
+                                } else {
+                                  const fallbackJd: JobDescription = {
+                                    id: `scr_import_${r.id}`,
+                                    title: r.title || "Untitled",
+                                    company: r.company || "Unknown",
+                                    content: r.snippet || "",
+                                    painPoints: [],
+                                    requiredSkills: [],
+                                    successMetrics: [],
+                                    location: r.location || undefined,
+                                    workMode: r.work_mode || undefined,
+                                    salaryRange: r.salary_range || undefined,
+                                    postedText: r.posted_text || undefined,
+                                    jdJargon: extractJargon(r.snippet || ""),
+                                    parsedAt: new Date().toISOString(),
+                                  };
+                                  setJobDescriptions((prev) => {
+                                    const next = [...prev];
+                                    if (!next.find((j) => j.id === fallbackJd.id)) next.push(fallbackJd);
+                                    const normalized = normalizeFavoriteRanks(next);
+                                    if (typeof window !== "undefined") localStorage.setItem("job_descriptions", JSON.stringify(normalized));
+                                    return normalized;
+                                  });
+                                }
                                 setImportType("url");
+                                setImportedScrapedRoleIds((prev) => prev.includes(String(r.id)) ? prev : [...prev, String(r.id)]);
+                                setTimeout(() => preferredSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
                               } catch (err) {
                                 const msg = err instanceof Error ? err.message : String(err);
                                 setImportError(msg);
@@ -2009,10 +2075,11 @@ export default function JobDescriptionsPage() {
                                 setIsImporting(false);
                               }
                             }}
-                            title="Import this role into your workflow"
+                            title="Add to your Preferred Roles"
                           >
-                            Import
+                            Preferred
                           </button>
+                          )}
                           <button
                             type="button"
                             className="rounded-md border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/80 hover:bg-white/10"
@@ -2046,11 +2113,13 @@ export default function JobDescriptionsPage() {
                         </div>
                       ) : null}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
               ) : null;
             })()}
+          </CollapsibleSection>
           </div>
 
           {jobDescriptions.length > 0 && (

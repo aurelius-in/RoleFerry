@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import CollapsibleSection from "@/components/CollapsibleSection";
 
 type Choice = -2 | -1 | 0 | 1 | 2;
 
@@ -786,7 +787,8 @@ export default function PersonalityPage() {
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Personality (Role Fit)</h1>
+              <h1 className="text-3xl font-bold text-white">Personality</h1>
+              <div className="text-sm text-white/60 mt-0.5 mb-2">Role Fit</div>
               <p className="text-white/70">
                 Use personality to align your role search, outreach strategy, and confidence—especially helpful if you’re early-career or pivoting.
               </p>
@@ -1083,12 +1085,11 @@ export default function PersonalityPage() {
           </div>
 
           {temperamentResult && (
-            <div className="mt-8 rounded-lg border border-white/10 bg-black/20 p-5">
+            <div className="mt-8">
+            <CollapsibleSection title={temperamentResult.temperament} defaultOpen>
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <div className="text-xs font-semibold text-white/60">The four temperaments</div>
-                  <div className="mt-1 text-2xl font-extrabold text-white">{temperamentResult.temperament}</div>
-                  <div className="mt-1 text-xs text-white/60">{temperamentResult.summary}</div>
+                  <div className="text-xs text-white/60">{temperamentResult.summary}</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-extrabold border ${TEMPERAMENT_COLORS[temperamentResult.temperament].border} ${TEMPERAMENT_COLORS[temperamentResult.temperament].bg} ${TEMPERAMENT_COLORS[temperamentResult.temperament].text}`}>
@@ -1145,7 +1146,7 @@ export default function PersonalityPage() {
                 </div>
 
                 <div className="rounded-lg border border-white/10 bg-black/20 p-4">
-                  <div className="text-xs font-semibold text-white/70 mb-2">Your 4 role patterns (within this temperament)</div>
+                  <div className="text-xs font-semibold text-white/70 mb-2">{temperamentResult.temperament} Role Patterns</div>
                   <div className="text-[11px] text-white/60 mb-3">
                     These labels help you describe strengths in a role-search context. The 4-letter codes are common shorthand people recognize online.
                   </div>
@@ -1189,36 +1190,17 @@ export default function PersonalityPage() {
                 </div>
               </div>
 
-              <div className="mt-5 rounded-lg border border-white/10 bg-black/20 p-4">
-                <div className="text-sm font-bold text-white mb-2">Available Variables from this Step</div>
-                <div className="text-xs text-white/60 mb-3">
-                  These variables are available for downstream steps (Roles/Gaps/Campaign):
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    temperament.type={temperamentResult.temperament}
-                  </code>
-                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    temperament.summary
-                  </code>
-                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    temperament.strengths[]
-                  </code>
-                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    temperament.suggested_roles[]
-                  </code>
-                </div>
-              </div>
+            </CollapsibleSection>
             </div>
           )}
 
           {result && (
-            <div className="mt-8 rounded-lg border border-white/10 bg-black/20 p-5">
+            <div className="mt-8">
+            <CollapsibleSection title="Role Fit Playbook" defaultOpen>
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <div className="text-sm font-bold text-white">Role Fit Playbook</div>
                   <div className="mt-1 text-xs text-white/60">
-                    Role-oriented guidance based on your answers. (The 4-letter code is common shorthand, not an official instrument.)
+                    Role-oriented guidance based on your answers. The 4-letter code is common shorthand, not an official instrument.
                   </div>
                 </div>
                 <div className="text-right">
@@ -1268,12 +1250,30 @@ export default function PersonalityPage() {
                 ))}
               </div>
 
-              <div className="mt-5 rounded-lg border border-white/10 bg-black/20 p-4">
-                <div className="text-sm font-bold text-white mb-2">Available Variables from this Step</div>
+            </CollapsibleSection>
+
+            <div className="mt-4">
+            <CollapsibleSection title="Available Variables" count={(temperamentResult ? 4 : 0) + 5}>
                 <div className="text-xs text-white/60 mb-3">
-                  These variables are available for downstream steps (Gaps/Campaign):
+                  Variables available for downstream steps:
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {temperamentResult ? (
+                    <>
+                      <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
+                        temperament.type={temperamentResult.temperament}
+                      </code>
+                      <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
+                        temperament.summary
+                      </code>
+                      <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
+                        temperament.strengths[]
+                      </code>
+                      <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
+                        temperament.suggested_roles[]
+                      </code>
+                    </>
+                  ) : null}
                   <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
                     personality.type_code={result.profile_code}
                   </code>
@@ -1290,7 +1290,8 @@ export default function PersonalityPage() {
                     personality.suggested_roles[]
                   </code>
                 </div>
-              </div>
+            </CollapsibleSection>
+            </div>
             </div>
           )}
         </div>

@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 
 function safeStr(v: any) {
@@ -14,9 +14,9 @@ export default function LeadsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const sourceUrl = useMemo(() => {
-    if (typeof window === "undefined") return "";
-    return window.location.href;
+  const [sourceUrl, setSourceUrl] = useState("");
+  useEffect(() => {
+    setSourceUrl(window.location.href);
   }, []);
 
   async function submit() {

@@ -1784,7 +1784,7 @@ def _looks_like_job_board_or_listing_url(url: str) -> bool:
             return True
         if "otta.com" in host and "/jobs" in path:
             return True
-        if "greenhouse.io" in host and ("/search" in path or "/jobs" in path) and "gh_jid" not in qs:
+        if "greenhouse.io" in host and ("/search" in path or path.rstrip("/").endswith("/jobs")) and "gh_jid" not in qs:
             return True
         if "lever.co" in host and ("?commit=" in qs or path.rstrip("/").endswith("/jobs")):
             return True
@@ -2067,7 +2067,7 @@ async def import_job_description(payload: JobImportRequest):
                 required_skills = required_skills[:18]
 
         # Additional structured fields (best-effort; UI can display these)
-        salary_range = _extract_salary_range(content) or "Salary not provided"
+        salary_range = _extract_salary_range(content) or None
         location = _extract_location_hint(content)
         work_mode = _infer_work_mode_from_text(content)
         employment_type = _infer_employment_type_from_text(content)
@@ -2337,7 +2337,8 @@ async def import_job_description(payload: JobImportRequest):
                     success_metrics = [str(m) for m in (data.get("success_metrics") or success_metrics)]
 
                     # Optional richer fields (best-effort)
-                    salary_range = str(data.get("salary_range") or salary_range or "") or salary_range
+                    raw_salary = str(data.get("salary_range") or salary_range or "").strip()
+                    salary_range = None if raw_salary.lower() in ("", "salary not provided", "salary", "salary not listed", "n/a", "none") else raw_salary
                     location = str(data.get("location") or location or "") or location
                     work_mode = str(data.get("work_mode") or work_mode or "") or work_mode
                     employment_type = str(data.get("employment_type") or employment_type or "") or employment_type
@@ -2528,7 +2529,7 @@ async def import_job_description(payload: JobImportRequest):
                 "pain_points": [],
                 "required_skills": [],
                 "success_metrics": [],
-                "salary_range": _extract_salary_range(fallback_text) or "Salary not provided",
+                "salary_range": _extract_salary_range(fallback_text) or None,
                 "location": _extract_location_hint(fallback_text),
                 "work_mode": _infer_work_mode_from_text(fallback_text),
                 "employment_type": _infer_employment_type_from_text(fallback_text),
@@ -2598,6 +2599,44 @@ def _parse_min_salary_to_int(raw: str | None) -> Optional[int]:
         except Exception:
             return None
     return None
+
+
+def _format_salary_value(raw: Any) -> Optional[str]:
+    """Convert structured salary dicts to human-readable strings.
+    Returns None if the value is empty, zero, or already a usable string."""
+    if raw is None:
+        return None
+    if isinstance(raw, dict):
+        try:
+            lo = float(raw.get("min_value") or 0)
+            hi = float(raw.get("max_value") or 0)
+        except (ValueError, TypeError):
+            return None
+        if lo <= 0 and hi <= 0:
+            return None
+        unit = str(raw.get("unit") or "USD").upper()
+        prefix = "$" if unit == "USD" else f"{unit} "
+        def _fmt(v: float) -> str:
+            if v >= 1000:
+                k = round(v / 1000)
+                return f"{prefix}{k:,}k"
+            return f"{prefix}{v:,.0f}"
+        if lo > 0 and hi > 0:
+            return f"{_fmt(lo)} - {_fmt(hi)}"
+        return _fmt(hi if hi > 0 else lo)
+    s = str(raw).strip()
+    if not s or s.lower() in ("none", "null", "n/a", "salary not provided", "salary not listed", "salary"):
+        return None
+    if s.startswith("{") and "max_value" in s:
+        try:
+            import ast
+            parsed = ast.literal_eval(s)
+            if isinstance(parsed, dict):
+                return _format_salary_value(parsed)
+        except Exception:
+            pass
+        return None
+    return s
 
 
 def _extract_salary_range_from_text(text: str) -> Optional[str]:
@@ -2820,8 +2859,6 @@ def _is_tech_intent(pref: Dict[str, Any]) -> bool:
         elif isinstance(v, str):
             blob_parts.append(v)
     blob = f" {' '.join(blob_parts).lower()} "
-    # Only match when the user IS a tech professional, not someone who
-    # works WITH tech professionals (e.g., "software recruiting", "tech sales").
     non_tech_contexts = [
         "recruiting", "recruiter", "recruitment", "talent acquisition",
         "sales", "marketing", "account", "business development",
@@ -2829,29 +2866,32 @@ def _is_tech_intent(pref: Dict[str, Any]) -> bool:
     ]
     has_non_tech_context = any(nt in blob for nt in non_tech_contexts)
     exact_phrases = [
-        "software engineer", "software developer", "full stack developer",
+        "software engineer", "software developer", "software architect",
+        "full stack developer", "full stack engineer",
         "backend developer", "frontend developer", "devops engineer",
         "cloud engineer", "platform engineer", "site reliability",
-        "machine learning engineer", "data engineer", "data scientist",
+        "machine learning engineer", "machine learning", "data engineer",
+        "data scientist", "ai engineer", "ai architect", "ai researcher",
+        "ml engineer", "deep learning", "nlp engineer",
+        "computer vision", "artificial intelligence",
     ]
     if any(p in blob for p in exact_phrases):
         return True
-    word_phrases = [
-        "python", "javascript", "typescript", "golang", "rust ",
-        "kubernetes", "docker", "terraform",
+    word_markers = [
+        "python", "javascript", "typescript", "golang", "rust",
+        "kubernetes", "docker", "terraform", "pytorch", "tensorflow",
+        "react", "angular", "vue", "node.js",
     ]
-    if not has_non_tech_context and any(p in blob for p in word_phrases):
+    if not has_non_tech_context and any(p in blob for p in word_markers):
         return True
     role_specific = [
-        "software developer", "full stack", "backend", "frontend",
-        "devops", "cloud computing", "deep learning",
-        "artificial intelligence", "data science",
+        "full stack", "backend", "frontend", "devops",
+        "cloud computing", "data science", "computer science",
     ]
     if not has_non_tech_context and any(p in blob for p in role_specific):
         return True
-    word_markers = {"swe"}
-    words = set(re.findall(r"\b[a-z]+\b", blob))
-    return bool(words & word_markers)
+    short_markers = {" ai ", " ml ", " swe ", " nlp ", " sre "}
+    return any(m in blob for m in short_markers)
 
 
 def _role_family_from_title(title: str) -> str:
@@ -2879,6 +2919,16 @@ def _role_family_from_title(title: str) -> str:
     return "General"
 
 
+_GENERIC_TITLE_WORDS: set[str] = {
+    "specialist", "senior", "junior", "associate", "lead", "principal",
+    "manager", "director", "head", "chief", "officer", "professional",
+    "coordinator", "administrator", "consultant", "advisor", "analyst",
+    "intern", "trainee", "executive", "vice", "president", "staff",
+    "global", "regional", "remote", "hybrid", "level", "tier",
+    "the", "and", "for", "with", "from",
+}
+
+
 def _preference_terms(pref: Dict[str, Any], role_query: str) -> List[str]:
     terms: List[str] = []
     skills = [str(x).strip().lower() for x in (pref.get("skills") or []) if str(x).strip()]
@@ -2888,7 +2938,15 @@ def _preference_terms(pref: Dict[str, Any], role_query: str) -> List[str]:
         terms.extend(resume_skills[:10])
     else:
         terms.extend([x.lower() for x in _resume_skill_hints()[:10]])
-    terms.extend([x.lower() for x in re.findall(r"[A-Za-z]{3,}", role_query)])
+    # Extract meaningful words from the role query, but filter out generic title words
+    # that would match every job (e.g. "specialist", "senior", "manager").
+    for w in re.findall(r"[A-Za-z]{2,}", role_query):
+        wl = w.lower()
+        if wl in _GENERIC_TITLE_WORDS:
+            continue
+        if len(wl) < 3 and wl not in _IMPORTANT_SHORT_TERMS:
+            continue
+        terms.append(wl)
     role_cats = " ".join([str(x).lower() for x in (pref.get("role_categories") or []) if str(x).strip()])
     if _is_tech_intent(pref):
         terms.extend(["software", "engineer", "developer", "architect", "platform", "backend", "frontend", "python", "ai", "ml"])
@@ -2905,6 +2963,8 @@ def _preference_terms(pref: Dict[str, Any], role_query: str) -> List[str]:
         if len(tok) < 3:
             continue
         if tok in seen:
+            continue
+        if tok in _GENERIC_TITLE_WORDS:
             continue
         seen.add(tok)
         out.append(tok)
@@ -2929,15 +2989,15 @@ def _score_scraped_role(
     reasons: List[str] = []
     score = 20
 
-    title_focus_tokens = [str(t or "").strip().lower() for t in (role_tokens or []) if str(t or "").strip()]
+    title_focus_tokens = [str(t or "").strip().lower() for t in (role_tokens or []) if str(t or "").strip() and str(t or "").strip().lower() not in _GENERIC_TITLE_WORDS]
     if not title_focus_tokens:
-        title_focus_tokens = [str(t or "").strip().lower() for t in pref_terms[:6] if str(t or "").strip()]
+        title_focus_tokens = [str(t or "").strip().lower() for t in pref_terms[:6] if str(t or "").strip() and str(t or "").strip().lower() not in _GENERIC_TITLE_WORDS]
     title_hits = [t for t in title_focus_tokens if t in title_low]
     if title_hits:
         score += min(25, len(set(title_hits)) * 7)
         reasons.append(f"Title alignment: {', '.join(sorted(set(title_hits))[:3])}")
 
-    term_hits = [t for t in pref_terms if t in blob]
+    term_hits = [t for t in pref_terms if t in blob and t not in _GENERIC_TITLE_WORDS]
     unique_hits = sorted(set(term_hits))
     if unique_hits:
         score += min(45, len(unique_hits) * 9)
@@ -3031,12 +3091,22 @@ def _load_job_preferences_best_effort() -> Dict[str, Any]:
     }
 
 
+_IMPORTANT_SHORT_TERMS: set[str] = {"ai", "ml", "ui", "ux", "qa", "hr", "it", "bi", "pm", "vp", "sre", "nlp"}
+
+
 def _role_tokens(role_query: str) -> List[str]:
-    raw = [x.lower() for x in re.findall(r"[A-Za-z]{3,}", str(role_query or ""))]
-    stop = {"and", "the", "with", "for", "role", "roles", "openings", "jobs", "career", "careers"}
-    out = [x for x in raw if x not in stop]
+    raw = [x.lower() for x in re.findall(r"[A-Za-z]{2,}", str(role_query or ""))]
+    stop = {"and", "the", "with", "for", "of", "in", "on", "at", "to", "or",
+            "role", "roles", "openings", "jobs", "career", "careers"}
+    out = []
+    for x in raw:
+        if x in stop or x in _GENERIC_TITLE_WORDS:
+            continue
+        if len(x) < 3 and x not in _IMPORTANT_SHORT_TERMS:
+            continue
+        out.append(x)
     if not out:
-        return ["manager", "specialist", "analyst", "coordinator", "consultant", "representative"]
+        return []
     return out[:10]
 
 
@@ -3047,21 +3117,30 @@ def _looks_like_relevant_title(title: str, tokens: List[str], *, broad: bool = F
     generic_bad = ["intern", "campus", "student", "volunteer", "contractor pool"]
     if any(b in t for b in generic_bad):
         return False
+    # Tokens are the domain-specific terms (e.g. "machine learning", "ai", "python").
+    # A title is relevant only if it contains at least one domain token.
+    # Generic role words alone ("specialist", "manager") are NOT enough -- every
+    # company has specialists in every department.
+    meaningful_tokens = [tok for tok in (tokens or []) if tok not in _GENERIC_TITLE_WORDS]
+    if meaningful_tokens:
+        if any(tok in t for tok in meaningful_tokens):
+            return True
+        if broad:
+            for tok in meaningful_tokens:
+                stem = tok.rstrip("seding") if len(tok) >= 5 else tok
+                if len(stem) >= 4 and stem in t:
+                    return True
+        return False
+    # No meaningful tokens provided -- very broad fallback, accept if title has
+    # a recognisable role word (only when we truly have nothing to filter on).
     role_words = [
-        "manager", "specialist", "analyst", "coordinator", "consultant",
-        "representative", "technician", "administrator", "designer",
-        "director", "associate", "officer", "planner", "operator",
+        "manager", "analyst", "coordinator", "consultant",
+        "director", "officer", "planner", "operator",
         "supervisor", "recruiter", "recruiting", "marketer", "marketing",
         "lead", "head", "chief", "president", "executive", "strategist",
-        "advisor", "partner", "producer", "editor", "writer",
+        "advisor", "partner", "producer", "editor", "writer", "designer",
     ]
-    if not tokens:
-        return any(w in t for w in role_words)
-    if any(tok in t for tok in tokens):
-        return True
-    if broad:
-        return any(w in t for w in role_words)
-    return False
+    return any(w in t for w in role_words)
 
 
 def _salary_from_greenhouse_metadata(meta: Any) -> Optional[str]:
@@ -3072,11 +3151,19 @@ def _salary_from_greenhouse_metadata(meta: Any) -> Optional[str]:
             if not isinstance(m, dict):
                 continue
             name = str(m.get("name") or "").lower()
-            value = str(m.get("value") or "").strip()
+            if not any(k in name for k in ["salary", "compensation", "pay", "range"]):
+                continue
+            raw_val = m.get("value")
+            if isinstance(raw_val, dict):
+                formatted = _format_salary_value(raw_val)
+                if formatted:
+                    vals.append(formatted)
+                continue
+            value = str(raw_val or "").strip()
             if not value:
                 continue
-            if any(k in name for k in ["salary", "compensation", "pay", "range"]):
-                vals.append(value)
+            formatted = _format_salary_value(value)
+            vals.append(formatted or value)
         if not vals:
             return None
         joined = " | ".join(vals)
@@ -3214,8 +3301,11 @@ async def _discover_roles_without_serper(
                     cats = (j or {}).get("categories") or {}
                     loc = str((cats or {}).get("location") or "").strip() or None
                     salary = None
-                    if isinstance((j or {}).get("salaryRange"), str):
-                        salary = str((j or {}).get("salaryRange") or "").strip() or None
+                    raw_sr = (j or {}).get("salaryRange")
+                    if isinstance(raw_sr, dict):
+                        salary = _format_salary_value(raw_sr)
+                    elif isinstance(raw_sr, str):
+                        salary = raw_sr.strip() or None
                     if not _salary_meets_floor(salary, minimum_salary):
                         continue
                     if require_us and loc and (not _is_us_like_location(loc) or _is_explicit_non_us(loc)):
@@ -3472,18 +3562,20 @@ async def get_scraped_roles(
                 continue
         if tech_intent and mode == "strict" and _blocked_title_for_tech_seekers(title):
             continue
-        # ALWAYS hard-block clearly-tech titles unless user explicitly searches for tech
-        if _blocked_title_for_non_tech_seekers(title):
-            pos_blob = " ".join(positive_kw).lower()
+        # Block tech titles only for NON-tech seekers.  If the resume/prefs show
+        # tech intent, skip this filter entirely -- the user IS looking for tech roles.
+        if not tech_intent and _blocked_title_for_non_tech_seekers(title):
+            pos_blob = f" {' '.join(positive_kw).lower()} "
             _tech_opt_in = ["software", "engineer", "developer", "machine learning",
                             "data science", "devops", "full stack", "backend", "frontend",
-                            "ml ", " ai ", "sre", "cloud engineer", "ios", "android"]
-            if not any(tm in pos_blob for tm in _tech_opt_in):
+                            "ml", "ai", "sre", "cloud engineer", "ios", "android",
+                            "architect", "python", "data engineer"]
+            if not any(f" {tm} " in pos_blob or pos_blob.strip().startswith(tm) or pos_blob.strip().endswith(tm) for tm in _tech_opt_in):
                 continue
         if not _looks_like_relevant_title(title, role_tokens, broad=(mode == "broad")):
             continue
         snippet = str(item.get("snippet") or "").strip()[:420]
-        salary_range = str(item.get("salary_range") or "").strip() or _extract_salary_range_from_text(f"{title} {snippet}")
+        salary_range = _format_salary_value(item.get("salary_range")) or _extract_salary_range_from_text(f"{title} {snippet}")
         if not _salary_meets_floor(salary_range, minimum_salary):
             continue
 
@@ -3504,7 +3596,7 @@ async def get_scraped_roles(
             funnel_mode=mode,
             role_tokens=role_tokens,
             apply_tech_blockers=tech_intent,
-            apply_non_tech_blockers=True,
+            apply_non_tech_blockers=not tech_intent,
         )
         if score < min_match_score:
             continue
@@ -3563,9 +3655,9 @@ async def get_scraped_roles(
         src = str(r.source or "Other").strip() or "Other"
         source_breakdown[src] = source_breakdown.get(src, 0) + 1
     fit_breakdown = {
-        "high": len([r for r in roles_out if int(r.match_score or 0) >= 85]),
-        "medium": len([r for r in roles_out if 70 <= int(r.match_score or 0) < 85]),
-        "exploratory": len([r for r in roles_out if int(r.match_score or 0) < 70]),
+        "great": len([r for r in roles_out if int(r.match_score or 0) >= 55]),
+        "fair": len([r for r in roles_out if 40 <= int(r.match_score or 0) < 55]),
+        "weak": len([r for r in roles_out if int(r.match_score or 0) < 40]),
     }
     msg = f"Found {len(roles_out)} auto-discovered roles" if roles_out else "No roles found yet"
     return ScrapedRolesResponse(

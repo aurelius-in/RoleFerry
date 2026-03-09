@@ -1,0 +1,167 @@
+Transcript
+Yeah.
+Okay, okay.
+All right so currently,
+on the job description screen, also called roles,
+um we are looking at our mashed roles. We like that they are on the screen now.
+We like that we don’t have to, uh, wait, C-matched roles. Okay, it just scrolls down. That works. So there’s no more apply studio.
+But what we want is for happens when you click view. Oh, it takes you to the actual page. Okay, that’s not.
+That’s good
+That works Um, and you might want to actually apply for a job in this process, right? Um, this is just a, a cached version of that screen. Okay.
+So let’s go ahead and why do I have this? I have multiple pages open. That’s my problem.
+Okay, so yeah, these are all relative to me. Are yours relative to you?
+Um,
+yeah, we already know it can pull up software jobs, so I’m gonna stop presenting. I want you to show me yours. Let’s do it from your screen.
+‘Cause I told it to knock that shit off.
+Yeah, ‘cause I think it’s fine in yours. Previously.
+Mm-hmm.
+So let’s see how it does with your resume. Maybe back up to your resume and repopulate everything so that it, like, has, like, fresh cache or whatever.
+Yeah, start from the beginning, just kind of click through. Make sure it’s getting all your, your preferences there.
+This is not one of the stuff that is not applicable.
+Oh, yeah.
+‘Cause the keyword section, we don’t need here anymore.
+No Okay.
+Because we have.
+Can you, like, un-unselect the stuff that isn’t related to you? ‘Cause I don’t know why it why do you have LLM and all that selected.
+Maybe that’s why you’re gonna maybe, maybe, maybe that’s why you’re getting software jobs.
+But also shouldn’t even be here if you’re gonna do keywords in another section.
+Oh, yeah.
+Well, you might be right. Um,
+or this section, do you wanna remove the whole preferences screen, or do you wanna just take off the section?
+No, no, no, no. It’s just one section. Where it says skills because.
+Can you, can you scroll up
+I’m gonna have this.
+Scroll up so we can consider what should be gone. So we still for the preferences page, we still want the, uh, what we value in a role. We still want
+kinds of roles. Can you remove technical and engineering from there so that we stop we’re trying to test and see if we can remove the, the tech jobs from your thing and it’s not fair if it’s, you know, if it’s still, like, you’re still telling it to. And scroll down. Um, so where you would like to work.
+Okay.
+There’s a preferred re location. You, you wanna USA and remote?
+Um, yeah, remote, hybrid.
+Um, USA, South Carolina.
+Carolina. Hybrid remote.
+And remote Okay.
+Um, USA, South Carolina.
+All right So what.
+Is this this form important here or write the full state or can I put the abbreviation of the state?
+Well, we don’t want um, the format to be important for the preferred location, and it’s an optional field. But right now you have USA, comma, South Carolina. It shouldn’t matter. If there’s commas or other punctuation or no punctuation, it should be it should be not important. I’m saying that for the transcript too.
+For for location can’t be optional. If we put in-person or hybrid.
+Okay. That’s good So that should be a thing that it fixes. So um,
+if they click remote, only, then preferred location is an optional field. And
+but if it needs to be required field, if they clicked in-person or hybrid.
+Yeah.
+Okay.
+Um,
+yeah, make sure there’s no tech stuff in there. Remember, we’re trying to see enterprise software. Get rid of that.
+When enterprise software is tech. Industry. It’s not an issue, right? Because in that industry, you can have recruiters.
+Can we just remove it for now, just so that we can like, robustly test this thing, and then we can put it back in later? And remove robotics and automation. I just don’t want it to have any excuse to give you any software jobs. ‘Cause if it still does after we removed all that, then it’s still broken. You know what I mean?
+Um.
+Yeah.
+You know what I’m saying Obviously, you’re right. But I just wanna make sure that we don’t see any more software jobs right now. ‘Cause then we, we fixed it, you know?
+Yeah. Yeah. And so my point is that this section here is really just putting in keywords. And we’re talking about that in the roles section.
+All right So since we already have the the keywords in the roles section, remove the, the keyword section from the preferences page. What do we call that? Can you scroll up? We call that what skills do you have or enjoy working with optional. So remove that whole section from the preferences page. For now, since it’s still there and we’re trying to populate your resume, just type something that’s related to you.
+There you go.
+Okay, cool.
+So yeah, but we, we are not we are gonna remove that. Um,
+the job skills section from the preferences page.
+And you’re actively looking. I guess you can go ahead and click, uh, what is Marketo? Anyways. Save and continue.
+Marketo. It’s called Marketo, and it’s a, uh, marketing automation software.
+Oh, okay. I was just curious. All right. Moving on.
+Hopefully, it’s saving all that stuff. Um, clear the cached resume. In case the loading of a resume, like, is part of the, you know,
+probably shouldn’t matter. But just in case. Then go ahead and load your resume.
+Yeah. I can’t find it
+Oh, okay.
+It’s kind of like a button to load resumes.
+Um,
+uh,
+it’s not an issue. I’m not trying to find my resume. But, but everybody else’s resume in here.
+Well, I mean, it actually, as long as it’s not a software guy’s resume, it’s fine. I just wanna it’s probably better if you do your resume ‘cause then you’ll know you’ll know for sure. If the app’s working, if it’s giving you jobs you actually want. Right?
+What That’s um, does that look like you? Things are looking good.
+Yeah. I mean, I updated my resume from this, but it doesn’t look bad.
+You did
+Updated it a little bit.
+It’s not reflecting the changes?
+Well, I didn’t put the updated resume in there. I put a one from.
+Oh, okay. Scroll up a little bit. Just, I wanted to see how things I just recently made a change. Can you scroll back down? I’m just trying to look at the table at the bottom.
+There we go. Um, so yeah, see how it doesn’t have the brackets around them? I decided the little brackets around the headings don’t serve any purpose, so. They’re just human-readable things with sentence case in.
+Okay.
+So that’s all.
+Uh, position. Yeah, looks good.
+Okay. All right. Save and continue.
+Personality.
+Um,
+you could just save and continue. So it actually, like,
+hopefully saves.
+Job sites. Okay. So I did job sites there. That’s cool. I kind of like that now, you know?
+Yeah. Now that we’re not necessarily gonna need it, but it’s still there. It’s, it’s useful, but not needed. And then you know,
+they might have a favorite job site, and hopefully their favorite job site’s listed. And even if their favorite job site’s not listed, they can still paste a URL to their job site page or whatever.
+Yeah.
+And then, um they can still import a CSV. So you could actually try it. You can test that feature if you want. See if it’s working.
+Import CSV?
+Mm-hmm. I see technical recruiter there. So that’s good. I don’t know if that’s probably previously added, but do you have the, the, the previous upload that you can put in there from the wherever? Well, it doesn’t matter. So from what is that?
+Okay. So it’s still broken. So on the roles screen under matched roles,
+it’s giving a recruiter, someone with who is not a software developer, a bunch of senior machine learning machine learning roles. They’re basically roles that someone like Oliver would want and what is it saying? 93% match for whose resume is it looking at? ‘Cause it’s not looking at the resume he uploaded.
+I don’t know what it’s looking at. I don’t know what it’s looking at. Where is it getting those match? What is it matching those roles to?
+So whatever you’re doing, AI to create this, uh, matched roles list, it’s very wrong. So we, we don’t want a list of software roles for a guy who’s not a software developer.
+The positive keywords don’t relate to software.
+Mm-hmm.
+Um,
+put put negative keywords and see what happens.
+No, add some. Like, add software, add machine learning.
+Under negative software, it seems like it’s giving you, like, a lot of, um, machine learning jobs.
+And put um software?
+Yeah. It’s definitely wrong. It’s definitely wrong.
+Yeah. I don’t know how it’s generating that matched roles list. It’s so weird. It’s so specific to my resume.
+Okay. So the, the matched roles should not be matching to any, like, cached resumes to Oliver Ellison’s um, uh, you know, uh, software machine learning themed resume. It should be only looking at the resume that the job seeker is, is, is uploading on the resume screen.
+The account holder. Like, it should be the account holder. Like, the person that signs in.
+Yeah. Whoever signs in and whoever puts the resume, it should be looking at that resume right now. It’s creating a list of matched roles that are machine learning roles that are not related to the job seeker that is uploading the resume. And that is a big problem. Because not everybody’s gonna be trying to apply for some machine learning engineer roles. I mean,
+that’s dumb. Okay. Well,
+I guess we’ll move on to another screen and look at that. But please fix that and stop showing matched roles that aren’t for aren’t for software developers.
+Yeah.
+All right So we only want matched roles to relate to the resume of the person who uploaded the resume. In that session,
+for that person, I don’t know where it’s getting that list of matched roles, but it is wrong. Very, very wrong. Very frustrating ‘cause this is not the first time we’ve said fix that list.
+Mm-hmm.
+All right Well, we’ll get there. It’s gonna fix it, but it just hasn’t done it yet.
+I’m gonna try to just the matched roles is showing machine learning roles.
+Even for job seekers that do not upload resumes with software or machine learning skills or experience,
+and who do not indicate.
+Yeah.
+Yeah. It’s pretty strange.
+It’s all right It’s probably looking at my, like, resume that it catched and thinks that it wants me to do that, but I don’t know why. Seems that you cached my old resume.
+Are using that to help all right. Well,
+let’s move forward I suppose.
+I’m, I’m fixing it but I’m just annoyed ‘cause I just told it to fix that already.
+But it’ll fix it this next time around, hopefully.
+And I just typed, um, I’m having it fix it right now. I said the matched roles is showing machine learning roles even for job seekers that do not upload resumes with software machine learning skills or experience and who do not indicate on their preferences that they have this experience. It seems that you catched my old resume and are using that to help populate the matched roles instead of limiting the matched roles to the job seeker uploading the resume. Do not ever show software or machine learning roles in the job seeker’s user’s matched roles unless they have that experience in their resume and preferences.
+So yeah. There’s some hard-coded stuff in there that’s causing it to populate a bunch of software stuff. Probably based on a sloppy prompt I gave it earlier or some assumption it made based on something I wrote, so.
+Whatever. Let’s move forward on that We’ll, we’ll get that fixed in the next few minutes, but see what else we can, we can look at while we get that fixed.
+Yeah. We should probably look at some other stuff. Do you wanna go ahead and look at the, uh, well, I guess we can’t really do gaps until we get the roles thing fixed.
+We can do roles for resumes. We can do roles that are um, based off of.
+Yeah. You got technical recruiter. I guess you can oh, that’s, that’s.
+Yeah. Yeah.
+Are there there’s a couple down there that are, are good or at least not terrible.
+These ones are pretty manual.
+Yeah. Yeah. But are there any that the oh, you’re doing it again.
+Also, I clicked on strict. Instead of broad.
+Oh, okay.
+Um, instead of being strict, broad, high fit, why don’t we have like a scale? Maybe like a, a scale piece that’s like you know, 50 to 100%.
+Maybe a slider. ‘Cause numbers are.
+A slider.
+Yeah. Weirdly arbitrary, but you can like slide you know,
+more um strict, strictness. And then on each side of it.
+You said broad and strict is kind of arbitrary. What does that even mean?
+It’s kind of binary. But like, yeah, like a slider. So you can kind of make it very strict or very broad.
+But on the left should be broad and on the right should be strict. Right? So then you slide it to the right and it gets very strict.
+Yeah. Yeah. Yeah. Yeah. So it should be.
+Yeah. It’s very strict. It, it has to it has to have like multiple positive keywords from the keywords you selected. And multiple negative keywords from the ones you selected. If it’s very broad, it can only have it, it, it can have as few as one positive and one negative. And still populate a list.
+So the broadest requires only one of each positive and negative. To populate the matched roles underneath. Whereas it needs like five or, or all, whichever is greater.
+Whichever is smaller, I mean. So it needs at least five positive and five negative. It’s very strict. Well, I guess negative wouldn’t be a thing it has to have. It’s things it doesn’t have. But yeah, the it needs to not have any of the negative keywords in it. It needs to have at least five of the um, the positive keywords. Or all of them, whichever is less for the strict. So the slider bar. I think that’s clear.
+Yeah.
+Yeah. Yeah. I like how much better than just like five fits only and strict and broad.
+So we’ll remove the high fit only button. And instead of two, two buttons, strict or broad, it’ll be a slider. And the farther they go right, the more strict it becomes. And if it’s all the way to the right, it needs at least five positive keywords.
+Um, and cannot have any negative keywords in the job description. Any of the negative keywords in the job description. If it’s all the way left, it just needs one of the positive keywords.
+And.
+No, none of the negative keywords.
+It should still have none of the negative keywords. We don’t want any negative any of the negative keywords in the job description. Ever.
+Yeah. Yeah.
+So, so the the the strict and broad thing just relates to the positive. ‘Cause the negative is always completely like could exclude them.
+Yeah. Yeah.
+All righty. I’m gonna.

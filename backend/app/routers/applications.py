@@ -1,5 +1,5 @@
 """
-Applications API - core apply/tracker workflow
+Applications API - core apply/tracker workflow + cover letter generation
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -9,6 +9,11 @@ import csv
 import io
 import re
 import hashlib
+import logging
+
+from ..clients.openai_client import get_openai_client, extract_json_from_text
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -572,4 +577,174 @@ async def add_offer(application_id: int, amount: int, equity: Optional[str] = No
     app['lastActionAt'] = _now_iso()
 
     return {"offer": app['offer']}
+
+
+# ---------------------------------------------------------------------------
+# Cover Letter Generation
+# ---------------------------------------------------------------------------
+
+class CoverLetterContext(BaseModel):
+    resume: Optional[Dict[str, Any]] = None
+    preferences: Optional[Dict[str, Any]] = None
+    personality: Optional[Dict[str, Any]] = None
+    temperament: Optional[Dict[str, Any]] = None
+    role: Optional[Dict[str, Any]] = None
+    company_research: Optional[Dict[str, Any]] = None
+    company_signals: Optional[List[Dict[str, Any]]] = None
+    painpoint_match: Optional[Dict[str, Any]] = None
+    contact_signals: Optional[List[Dict[str, Any]]] = None
+    tone: Optional[str] = "professional yet personable"
+    extra_instructions: Optional[str] = None
+
+
+class CoverLetterResponse(BaseModel):
+    success: bool
+    cover_letter: str = ""
+    word_count: int = 0
+    message: str = ""
+
+
+def _summarize_for_prompt(label: str, data: Any, *, max_chars: int = 1200) -> str:
+    """Compact a dict/list into a readable block for the LLM prompt."""
+    if not data:
+        return ""
+    import json
+    try:
+        text = json.dumps(data, indent=None, default=str)
+    except Exception:
+        text = str(data)
+    if len(text) > max_chars:
+        text = text[:max_chars] + "..."
+    return f"\n### {label}\n{text}\n"
+
+
+@router.post("/applications/cover-letter", response_model=CoverLetterResponse)
+async def generate_cover_letter(ctx: CoverLetterContext):
+    client = get_openai_client()
+
+    resume = ctx.resume or {}
+    prefs = ctx.preferences or {}
+    personality = ctx.personality or {}
+    role = ctx.role or {}
+    research = ctx.company_research or {}
+    pain = ctx.painpoint_match or {}
+
+    candidate_name = (
+        str(resume.get("name") or "").strip()
+        or str(resume.get("full_name") or "").strip()
+        or "the candidate"
+    )
+    role_title = str(role.get("title") or "").strip() or "the role"
+    company = str(role.get("company") or research.get("company_name") or "").strip() or "the company"
+
+    values_list = prefs.get("values") or prefs.get("Values") or []
+    values_str = ", ".join(str(v) for v in values_list) if values_list else ""
+
+    skills_list = resume.get("skills") or resume.get("Skills") or prefs.get("skills") or []
+    skills_str = ", ".join(str(s) for s in skills_list[:15]) if skills_list else ""
+
+    strengths = personality.get("strengths") or []
+    strengths_str = ", ".join(str(s) for s in strengths[:6]) if strengths else ""
+
+    context_blocks = ""
+    context_blocks += _summarize_for_prompt("Resume Summary", {
+        k: resume.get(k) for k in [
+            "summary", "positions", "accomplishments", "key_metrics",
+            "total_years_experience", "education",
+        ] if resume.get(k)
+    })
+    context_blocks += _summarize_for_prompt("Role Details", {
+        k: role.get(k) for k in [
+            "title", "company", "location", "content", "requiredSkills",
+            "required_skills", "description", "salaryRange", "salary_range",
+        ] if role.get(k)
+    })
+    context_blocks += _summarize_for_prompt("Company Research", {
+        k: research.get(k) for k in [
+            "company_summary", "culture_values", "market_position",
+            "product_launches", "leadership_changes", "recent_news",
+        ] if research.get(k)
+    })
+    if ctx.company_signals:
+        context_blocks += _summarize_for_prompt(
+            "Company Signals",
+            [{"label": s.get("label"), "value": s.get("value")} for s in ctx.company_signals[:6]],
+        )
+    context_blocks += _summarize_for_prompt("Pain Point Alignment", {
+        k: pain.get(k) for k in [
+            "alignment_score", "pain_points", "alignment_reasons",
+            "relevant_experience", "suggested_talking_points",
+        ] if pain.get(k)
+    })
+    if ctx.contact_signals:
+        context_blocks += _summarize_for_prompt(
+            "Contact / Decision-Maker Signals",
+            [{"label": s.get("label"), "value": s.get("value")} for s in ctx.contact_signals[:6]],
+        )
+
+    system_prompt = (
+        "You are an expert career coach and cover letter writer. "
+        "Write a compelling, honest cover letter for a job application. "
+        "The letter should:\n"
+        "- Open with a genuine hook that shows knowledge of the company (use the research)\n"
+        "- Highlight 2-3 specific accomplishments from the resume that align with the role\n"
+        "- Reference the company's pain points and explain how the candidate can solve them\n"
+        "- Reflect the candidate's personality and communication style\n"
+        "- Mention what the candidate values in a role (aligning with company culture)\n"
+        "- Close with confidence and a clear next step\n"
+        "- Be 250-400 words, professional yet warm, and never generic or formulaic\n"
+        "- NEVER fabricate facts. Only reference information provided in the context.\n"
+        "- Do NOT use placeholder brackets like [Company] or [Name]. Use the actual values.\n"
+        "Return ONLY the cover letter text, no JSON wrapper or markdown formatting."
+    )
+
+    user_prompt = f"Write a cover letter for {candidate_name} applying to {role_title} at {company}.\n"
+    if values_str:
+        user_prompt += f"\nWhat they value in a role: {values_str}"
+    if skills_str:
+        user_prompt += f"\nKey skills: {skills_str}"
+    if strengths_str:
+        user_prompt += f"\nPersonality strengths: {strengths_str}"
+    if personality.get("summary"):
+        user_prompt += f"\nPersonality summary: {personality['summary']}"
+    user_prompt += f"\nDesired tone: {ctx.tone or 'professional yet personable'}"
+    if ctx.extra_instructions:
+        user_prompt += f"\nAdditional instructions: {ctx.extra_instructions}"
+    user_prompt += f"\n\n--- CONTEXT ---\n{context_blocks}"
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+
+    stub_text = (
+        f"Dear Hiring Manager,\n\n"
+        f"I am writing to express my strong interest in the {role_title} position at {company}. "
+        f"With my background in {skills_str or 'relevant skills'}, I am confident I can contribute meaningfully to your team.\n\n"
+        f"Thank you for considering my application. I look forward to discussing how my experience aligns with your needs.\n\n"
+        f"Sincerely,\n{candidate_name}"
+    )
+
+    try:
+        raw = client.run_chat_completion(
+            messages,
+            temperature=0.7,
+            max_tokens=1200,
+            stub_json={"choices": [{"message": {"content": stub_text}}]},
+        )
+        choices = raw.get("choices") or []
+        content = str((choices[0].get("message") if choices else {}).get("content") or "").strip()
+        if not content:
+            content = stub_text
+    except Exception as exc:
+        logger.warning("Cover letter generation failed: %s", exc)
+        content = stub_text
+
+    word_count = len(content.split())
+    return CoverLetterResponse(
+        success=True,
+        cover_letter=content,
+        word_count=word_count,
+        message=f"Generated {word_count}-word cover letter for {role_title} at {company}.",
+    )
 

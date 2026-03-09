@@ -2,6 +2,7 @@
 import { api } from "@/lib/api";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import InlineSpinner from "@/components/InlineSpinner";
 
 interface SubscriptionStatus {
@@ -14,6 +15,7 @@ interface SubscriptionStatus {
 }
 
 export default function Settings() {
+  const router = useRouter();
   const [s, setS] = useState<any | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [sub, setSub] = useState<SubscriptionStatus | null>(null);
@@ -23,11 +25,11 @@ export default function Settings() {
   const [profileMsg, setProfileMsg] = useState<string | null>(null);
   const [profileSaving, setProfileSaving] = useState(false);
   const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
-        // Load local user immediately for snappy UI
         try {
           const saved = localStorage.getItem("rf_user");
           if (saved) {
@@ -44,7 +46,6 @@ export default function Settings() {
         setS(settingsData);
         setSub(subscriptionData);
 
-        // Refresh from backend so it reflects DB truth
         try {
           const me = await api<any>("/auth/me", "GET");
           if (me?.user) {
@@ -52,7 +53,11 @@ export default function Settings() {
             setLinkedinUrl(String(me.user?.linkedin_url || ""));
             localStorage.setItem("rf_user", JSON.stringify(me.user));
           }
-        } catch {}
+        } catch (authErr: any) {
+          if (/401/.test(String(authErr?.message || ""))) {
+            setSessionExpired(true);
+          }
+        }
       } catch (e: any) {
         setErr(String(e?.message || e));
       }
@@ -100,11 +105,18 @@ export default function Settings() {
         localStorage.setItem("rf_user", JSON.stringify(res.user));
       }
       setProfileMsg("Saved.");
+      setTimeout(() => setProfileMsg(null), 2500);
     } catch (e: any) {
-      setProfileMsg(String(e?.message || "Failed to save profile"));
+      const msg = String(e?.message || "");
+      if (/401/.test(msg)) {
+        setSessionExpired(true);
+        setProfileMsg("Session expired. Please log in again to save changes.");
+      } else {
+        setProfileMsg(msg || "Failed to save profile");
+        setTimeout(() => setProfileMsg(null), 4000);
+      }
     } finally {
       setProfileSaving(false);
-      setTimeout(() => setProfileMsg(null), 2500);
     }
   };
 
@@ -119,6 +131,18 @@ export default function Settings() {
           </Link>
         </div>
         {err ? <div className="text-xs opacity-80 break-all">{err}</div> : null}
+        {sessionExpired ? (
+          <div className="rounded-lg p-4 bg-amber-500/10 border border-amber-400/30 space-y-2 text-sm">
+            <div className="font-medium text-amber-100">Session expired</div>
+            <div className="text-xs text-amber-200/80">Your login session has expired. Please log in again to save profile changes.</div>
+            <button
+              onClick={() => router.push("/login")}
+              className="px-3 py-2 rounded bg-amber-500/20 border border-amber-400/40 text-xs font-semibold text-amber-100 hover:bg-amber-500/30"
+            >
+              Log in again
+            </button>
+          </div>
+        ) : null}
         {s ? (
           <>
             <div className="rounded-lg p-4 bg-white/5 border border-white/10 space-y-2 text-sm">

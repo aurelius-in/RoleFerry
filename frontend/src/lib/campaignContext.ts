@@ -137,7 +137,9 @@ export function buildCampaignContextV1(contactId: string): RFCampaignContextV1 {
     String(selectedJob?.company || "").trim() ||
     String(c?.company || "").trim();
 
-  const companyResearchByCompany = safeJson<Record<string, any>>(lsGet("rf_company_research_by_company"), {});
+  const companyResearchByCompany =
+    safeJson<Record<string, any>>(lsGet("company_research_by_company"), {}) ||
+    safeJson<Record<string, any>>(lsGet("rf_company_research_by_company"), {});
   const companyResearch =
     (companyName && companyResearchByCompany && companyResearchByCompany[companyName]) || safeJson<any>(lsGet("company_research"), null);
 

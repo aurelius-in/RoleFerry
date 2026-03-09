@@ -39,12 +39,29 @@ def _safe_str_list(val: Any) -> List[str]:
 
 def _strip_likely_language(s: str) -> str:
     t = str(s or "")
-    t = re.sub(r"\blikely\s+", "", t, flags=re.I)
-    t = re.sub(r"\bprobably\s+", "", t, flags=re.I)
+    t = re.sub(r"\blikely\b", "", t, flags=re.I)
+    t = re.sub(r"\bprobably\b", "", t, flags=re.I)
     t = re.sub(r"\bmight\b", "can", t, flags=re.I)
     t = re.sub(r"\bmay be\b", "is", t, flags=re.I)
     t = re.sub(r"\bappears to\b", "", t, flags=re.I)
     t = re.sub(r"\bseems to\b", "", t, flags=re.I)
+    t = re.sub(r"\bit is believed\b", "", t, flags=re.I)
+    t = re.sub(r"\bpossibly\b", "", t, flags=re.I)
+    t = re.sub(r"\bpotentially\b", "", t, flags=re.I)
+    t = re.sub(r"\bpresumably\b", "", t, flags=re.I)
+    t = re.sub(r"\bsuggest(?:s|ing)?\s+that\b", "", t, flags=re.I)
+    _placeholder_patterns = [
+        r"(?i)no\s+\w+\s+(?:details?|data|info(?:rmation)?)\s*(?:captured|found|available|collected).*",
+        r"(?i)try\s+(?:running\s+in\s+)?live\s+mode.*",
+        r"(?i)serper\s+(?:configured|not\s+configured|required).*",
+        r"(?i)no\s+external\s+web\s+sources.*",
+        r"(?i)no\s+product\s+launch.*(?:captured|found|available).*",
+        r"(?i)no\s+leadership\s+change.*(?:captured|found|available).*",
+        r"(?i)no\s+hiring\s+signal.*(?:captured|found|available).*",
+        r"(?i)no\s+recent\s+post.*(?:captured|found|available).*",
+    ]
+    for pat in _placeholder_patterns:
+        t = re.sub(pat, "", t)
     t = re.sub(r"\s{2,}", " ", t)
     t = re.sub(r":\s*\n", ":\n", t)
     return t.strip()
@@ -860,6 +877,32 @@ def _merge_intelligence(
         return parsed_signaliz
 
     return llm_intel
+
+
+def _safe_company_signals(
+    pdl_company: Dict[str, Any],
+    signaliz_data: Dict[str, Any],
+    entry: Dict[str, Any],
+    cs: Dict[str, Any],
+) -> Optional[List["CompanySignal"]]:
+    """Build company_signals safely; return None on any error so the rest of the
+    research response still succeeds."""
+    try:
+        raw = _build_unified_company_signals(
+            pdl_company=pdl_company,
+            signaliz_data=signaliz_data,
+            intelligence=_merge_intelligence(
+                _parse_intelligence(entry.get("intelligence")),
+                signaliz_data,
+            ),
+            company_summary=cs,
+        )
+        if not raw:
+            return None
+        return [CompanySignal(**s) for s in raw]
+    except Exception as exc:
+        logger.warning("_safe_company_signals failed: %s", exc)
+        return None
 
 
 @router.post("/research", response_model=ResearchResponse)
@@ -1713,9 +1756,9 @@ async def conduct_research(request: ResearchRequest):
                 max_items=7,
             ) if has_sources else ""
             if not culture_values:
-                culture_values = "No data found"
+                culture_values = ""
             if not market_position:
-                market_position = "No data found"
+                market_position = ""
 
             return {
                 "company_summary": {
@@ -1817,22 +1860,22 @@ async def conduct_research(request: ResearchRequest):
                     "Rules:\n"
                     "- Prefer facts from the corpus JSON when available.\n"
                     "- Do NOT include meta/system disclaimers like '(no external lookup used)' in any user-facing text.\n"
-                    "- If the corpus has no web snippets/enrichment (serper_hits empty and pdl_company_enrich empty), you SHOULD still try:\n"
+                    "- If the corpus has limited data, you SHOULD still try:\n"
                     "  - Use general model knowledge to write a useful company description (what they sell, who they sell to, and the buying motion).\n"
                     "  - Populate industry/size/headquarters/website/linkedin_url ONLY if you are confident (well-known company) — otherwise 'Unknown'.\n"
                     "  - Never invent specific numbers (revenue, headcount) or specific dates.\n"
                     "  - Never invent 'recent_news' URLs.\n"
-                    "  - recent_news MUST be actual news items from the corpus serper hits (with real URLs). If you don't have serper sources, return recent_news: [].\n"
-                    "  - IMPORTANT: company_market_position MUST be sourced. If serper_hits is empty, set company_market_position to an empty string.\n"
+                    "  - recent_news MUST be actual news items from the corpus web hits (with real URLs). If you don't have web sources, return recent_news: [].\n"
+                    "  - company_market_position MUST be sourced from real web data. If no web sources, set company_market_position to an empty string ''.\n"
                     "  - theme is NOT news. Always populate theme with safe, non-claiming outreach guidance using this exact sentence, then add a 2–3 bullet mini-plan:\n"
                     "    \"Theme: What the company cares about: Reference a plausible priority (customer experience, reliability, speed, cost) and offer a 2–3 bullet mini-plan—without claiming a specific news event.\"\n"
-                    "- If information is missing or uncertain, set fields to 'Unknown' or empty lists.\n"
+                    "- If information is missing or uncertain, return EMPTY STRINGS (not placeholder text). NEVER write phrases like 'No data found', 'No product launch details captured', 'No leadership changes found', or any similar placeholder. Just return ''.\n"
                     "- shared_connections MUST be an empty array unless provided (it is empty in this corpus).\n\n"
                     "MINIMUM FACTS REQUIREMENT (critical):\n"
                     "- You MUST produce at least 3 substantive facts about the company that a job seeker could reference in an email.\n"
                     "  These can come from: company description, culture, market position, product launches, hiring signals, recent posts, or news.\n"
                     "  If web sources are thin, synthesize from the company name, industry, job description pain points, and general knowledge.\n"
-                    "  Do NOT return 'No data found' for more than 2 company fields. Always try harder.\n"
+                    "  NEVER return placeholder text. Either write real content or return an empty string.\n"
                     "- You MUST produce at least 3 substantive facts per contact that the seeker could mention in outreach.\n"
                     "  These can come from: bio, career highlights, post topics, interesting facts, or inferred from their role/title.\n"
                     "  If web sources are thin, infer from their title, department, and company context.\n"
@@ -1871,8 +1914,8 @@ async def conduct_research(request: ResearchRequest):
                     "Contact Background Report (dynamic sections):\n"
                     "- Build a report titled 'Contact Background Report' for each contact, containing ~20 possible headings.\n"
                     "- Only INCLUDE a heading if you have at least ~2 sentences of useful, outreach-relevant info for it.\n"
-                    "- Use ONLY facts/snippets from the provided corpus when serper is present.\n"
-                    "- If serper is missing, you may write general, clearly non-claiming themes, but do not pretend they are sourced.\n"
+                    "- Use ONLY facts/snippets from the provided corpus when web data is present.\n"
+                    "- If web data is thin, you may write general, clearly non-claiming themes, but do not pretend they are sourced.\n"
                     "- Avoid sensitive personal data; keep it outreach-safe.\n\n"
                     "Candidate headings to consider (omit if empty/low-signal):\n"
                     "1) Role summary (what they own)\n"
@@ -2103,19 +2146,18 @@ async def conduct_research(request: ResearchRequest):
                             label="Other hiring signals to verify (source-backed)",
                         )
                 else:
-                    # No web sources available -> always use explicit "No data found".
-                    product_launches = "No data found"
-                    leadership_changes = "No data found"
-                    publications = "No data found"
-                    other_hiring_signals = "No data found"
-                    market_position = "No data found"
-                    culture_values = "No data found"
-                    recent_posts = "No data found"
+                    product_launches = ""
+                    leadership_changes = ""
+                    publications = ""
+                    other_hiring_signals = ""
+                    market_position = ""
+                    culture_values = ""
+                    recent_posts = ""
 
                 if not market_position:
-                    market_position = "No data found"
+                    market_position = ""
                 if not culture_values:
-                    culture_values = "No data found"
+                    culture_values = ""
             except Exception:
                 pass
 
@@ -2188,18 +2230,12 @@ async def conduct_research(request: ResearchRequest):
                     _parse_intelligence(entry.get("intelligence")),
                     signaliz_data,
                 ),
-                company_signals=[
-                    CompanySignal(**s)
-                    for s in _build_unified_company_signals(
-                        pdl_company=corpus.get("pdl_company_enrich") or {},
-                        signaliz_data=signaliz_data,
-                        intelligence=_merge_intelligence(
-                            _parse_intelligence(entry.get("intelligence")),
-                            signaliz_data,
-                        ),
-                        company_summary=cs,
-                    )
-                ] or None,
+                company_signals=_safe_company_signals(
+                    corpus.get("pdl_company_enrich") or {},
+                    signaliz_data,
+                    entry,
+                    cs,
+                ),
             )
 
         # Back-compat: also return a single research_data (first contact).
@@ -2225,8 +2261,13 @@ async def conduct_research(request: ResearchRequest):
         return resp_obj
     except Exception as e:
         import traceback
-        logger.error("conduct_research failed: %s\n%s", e, traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"Failed to conduct research: {str(e)}")
+        tb = traceback.format_exc()
+        logger.error("conduct_research failed: %s\n%s", e, tb)
+        short_tb = "\n".join(tb.strip().splitlines()[-5:])
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to conduct research: {str(e)}\n{short_tb}",
+        )
 
 @router.post("/save", response_model=ResearchResponse)
 async def save_research_data(research_data: ResearchData):
