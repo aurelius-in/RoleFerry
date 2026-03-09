@@ -2015,7 +2015,7 @@ export default function JobDescriptionsPage() {
                               try {
                                 if (roleUrl) {
                                   try {
-                                    await importFromUrl(roleUrl, { seedImporterInput: true });
+                                    await importFromUrl(roleUrl);
                                   } catch {
                                     const fallbackJd: JobDescription = {
                                       id: `scr_import_${r.id}`,
@@ -2065,7 +2065,6 @@ export default function JobDescriptionsPage() {
                                     return normalized;
                                   });
                                 }
-                                setImportType("url");
                                 setImportedScrapedRoleIds((prev) => prev.includes(String(r.id)) ? prev : [...prev, String(r.id)]);
                                 setTimeout(() => preferredSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
                               } catch (err) {
