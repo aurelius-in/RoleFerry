@@ -34,8 +34,8 @@ export default function RootLayout({
 }>) {
   // Mesh gating handled by pages/components as needed
   return (
-    <html lang="en" className="dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`} suppressHydrationWarning>
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 px-3 py-1 rounded bg-blue-600 text-white">Skip to content</a>
         <LoadingProvider>
           <ToastProvider>

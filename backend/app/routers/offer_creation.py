@@ -60,6 +60,8 @@ class ComposeOfferSnippetRequest(BaseModel):
     required_skills: List[str] = []
     pain_points: List[str] = []
     success_metrics: List[str] = []
+    company_signals: List[Dict[str, Any]] = []
+    contact_signals: List[Dict[str, Any]] = []
 
 
 class ComposeOfferSnippetResponse(BaseModel):
@@ -112,7 +114,7 @@ async def compose_offer_snippet(payload: ComposeOfferSnippetRequest):
         client = get_openai_client()
         if client.should_use_real_llm:
             try:
-                ctx = {
+                ctx: Dict[str, Any] = {
                     "role": {"title": payload.role_title, "company": payload.role_company},
                     "one_liner": payload.one_liner,
                     "proof_points": (payload.proof_points or [])[:6],
@@ -124,6 +126,16 @@ async def compose_offer_snippet(payload: ComposeOfferSnippetRequest):
                     "pain_points": (payload.pain_points or [])[:6],
                     "success_metrics": (payload.success_metrics or [])[:6],
                 }
+                if payload.company_signals:
+                    ctx["company_signals"] = [
+                        {"label": s.get("label", ""), "value": s.get("value", "")}
+                        for s in payload.company_signals[:5]
+                    ]
+                if payload.contact_signals:
+                    ctx["contact_signals"] = [
+                        {"label": s.get("label", ""), "value": s.get("value", "")}
+                        for s in payload.contact_signals[:5]
+                    ]
                 messages = [
                     {
                         "role": "system",

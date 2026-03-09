@@ -193,15 +193,23 @@ export default function OfferPage() {
   const [isGeneratingSnippet, setIsGeneratingSnippet] = useState(false);
   const [showStepHelp, setShowStepHelp] = useState(false);
 
-  // Pull best-effort context for suggestions (no extra API calls).
-  const resume = useMemo(() => safeJson<any>(typeof window !== "undefined" ? localStorage.getItem("resume_extract") : null, null), []);
-  const prefs = useMemo(() => safeJson<any>(typeof window !== "undefined" ? localStorage.getItem("job_preferences") : null, null), []);
-  const selectedRole = useMemo(() => safeJson<any>(typeof window !== "undefined" ? localStorage.getItem("selected_job_description") : null, null), []);
-  const selectedRoleId = useMemo(() => String(typeof window !== "undefined" ? localStorage.getItem("selected_job_description_id") : "" || "").trim(), []);
-  const painpointByJob = useMemo(
-    () => safeJson<Record<string, PainPointMatchLite[]>>(typeof window !== "undefined" ? localStorage.getItem("painpoint_matches_by_job") : null, {}),
-    []
-  );
+  const [resume, setResume] = useState<any>(null);
+  const [prefs, setPrefs] = useState<any>(null);
+  const [selectedRole, setSelectedRole] = useState<any>(null);
+  const [selectedRoleId, setSelectedRoleId] = useState("");
+  const [painpointByJob, setPainpointByJob] = useState<Record<string, PainPointMatchLite[]>>({});
+  const [companySignals, setCompanySignals] = useState<any[]>([]);
+  const [contactSignals, setContactSignals] = useState<any[]>([]);
+
+  useEffect(() => {
+    setResume(safeJson<any>(localStorage.getItem("resume_extract"), null));
+    setPrefs(safeJson<any>(localStorage.getItem("job_preferences"), null));
+    setSelectedRole(safeJson<any>(localStorage.getItem("selected_job_description"), null));
+    setSelectedRoleId(String(localStorage.getItem("selected_job_description_id") || "").trim());
+    setPainpointByJob(safeJson<Record<string, PainPointMatchLite[]>>(localStorage.getItem("painpoint_matches_by_job"), {}));
+    setCompanySignals(safeJson<any[]>(localStorage.getItem("rf_selected_company_signals"), []));
+    setContactSignals(safeJson<any[]>(localStorage.getItem("rf_selected_contact_signals"), []));
+  }, []);
 
   const activeRole = useMemo(() => {
     const id = String(activeRoleId || "").trim();
@@ -460,6 +468,8 @@ export default function OfferPage() {
         required_skills: Array.isArray(activeRole?.requiredSkills) ? activeRole.requiredSkills : [],
         pain_points: Array.isArray(activeRole?.painPoints) ? activeRole.painPoints : [],
         success_metrics: Array.isArray(activeRole?.successMetrics) ? activeRole.successMetrics : [],
+        company_signals: companySignals,
+        contact_signals: contactSignals,
       });
       const s = String(res?.snippet || "").trim();
       if (s) {

@@ -150,8 +150,7 @@ function scrubModePlaceholders(raw: string): string {
   if (lower.includes("not available in stub mode")) return "";
   if (lower.includes("live mode")) return "";
   if (lower.includes("stub mode")) return "";
-  if (lower.includes("serper configured")) return "";
-  if (lower.includes("serper_api_key")) return "";
+  if (lower.includes("serper")) return "";
   if (lower.includes("captured in this run")) return "";
   if (lower.includes("replace with real sources")) return "";
   if (lower.includes("no external web sources")) return "";
@@ -160,12 +159,19 @@ function scrubModePlaceholders(raw: string): string {
   if (lower.includes("derived from the imported")) return "";
   if (lower.startsWith("theme: what the company likely cares about")) return "";
   if (lower.includes("what the company likely cares about") && lower.includes("mini-plan")) return "";
-  // Remove hedging language that makes the output look like guessing
+  if (/no\s+\w+\s+(details?|data|info(rmation)?)\s*(captured|found|available|collected)/i.test(lower)) return "";
+  if (/no\s+(product\s+launch|leadership\s+change|hiring\s+signal|recent\s+post)/i.test(lower)) return "";
+  if (lower === "no data found") return "";
   s = s
-    .replace(/\blikely\s+/gi, "")
-    .replace(/\bprobably\s+/gi, "")
+    .replace(/\blikely\b/gi, "")
+    .replace(/\bprobably\b/gi, "")
     .replace(/\bmay be\b/gi, "is")
     .replace(/\bmight be\b/gi, "is")
+    .replace(/\bappears to\b/gi, "")
+    .replace(/\bseems to\b/gi, "")
+    .replace(/\bpotentially\b/gi, "")
+    .replace(/\bpossibly\b/gi, "")
+    .replace(/\bpresumably\b/gi, "")
     .replace(/\s{2,}/g, " ")
     .trim();
   return s;
@@ -176,8 +182,10 @@ function hasRealData(raw: string): boolean {
   if (!s) return false;
   if (s === "no data found") return false;
   if (s === "unknown") return false;
-  if (s.startsWith("no ") && s.includes("found")) return false;
+  if (s.startsWith("no ") && (s.includes("found") || s.includes("captured") || s.includes("available"))) return false;
   if (s.startsWith("example ") || s.includes("(replace with")) return false;
+  if (/^no\s+\w+\s+(details?|data|signals?)/i.test(s)) return false;
+  if (s.includes("try live mode") || s.includes("serper") || s.includes("live mode")) return false;
   return true;
 }
 
@@ -202,6 +210,10 @@ function cleanThemeText(raw: string): string {
   return s
     .replace(/\blikely\b/gi, "")
     .replace(/\bprobably\b/gi, "")
+    .replace(/\bappears to\b/gi, "")
+    .replace(/\bseems to\b/gi, "")
+    .replace(/\bpotentially\b/gi, "")
+    .replace(/\bpossibly\b/gi, "")
     .replace(/\bmay be\b/gi, "is")
     .replace(/\s{2,}/g, " ")
     .replace(/:\s*\n/g, ":\n")
@@ -425,6 +437,7 @@ export default function CompanyResearchPage() {
   const [selectedSignalIds, setSelectedSignalIds] = useState<Set<string>>(new Set());
   const [briefingOpen, setBriefingOpen] = useState(false);
   const [selectedPdlSignalIds, setSelectedPdlSignalIds] = useState<Set<string>>(new Set());
+  const [companyOptions, setCompanyOptions] = useState<string[]>([]);
 
   const topSignals = useMemo(() => extractTopSignals(draft), [draft]);
   const pdlSignals = useMemo(() => draft?.pdl_company_signals || [], [draft]);
@@ -464,7 +477,7 @@ export default function CompanyResearchPage() {
     } catch {}
   };
 
-  const companyOptions = useMemo(() => {
+  useEffect(() => {
     const companies = new Set<string>();
     try {
       const jds = safeJson<any[]>(localStorage.getItem("job_descriptions"), []);
@@ -480,7 +493,7 @@ export default function CompanyResearchPage() {
         if (c) companies.add(c);
       }
     } catch {}
-    return Array.from(companies).sort((a, b) => a.localeCompare(b));
+    setCompanyOptions(Array.from(companies).sort((a, b) => a.localeCompare(b)));
   }, []);
 
   const activeCompanyDisplay = formatCompanyName(activeCompany);
@@ -539,9 +552,6 @@ export default function CompanyResearchPage() {
       const rawNews = entry?.recent_news || [];
       const themeRaw = String(entry?.theme || "").trim();
       const sections = entry?.background_report_sections || [];
-      const serperHits = (resp as any)?.helper?.corpus_preview?.serper_hits;
-      const hasWebSources = Array.isArray(serperHits) && serperHits.length > 0;
-
       const overview = String(companySummary?.description || "").trim();
       const cultureFromModel = String(entry?.company_culture_values || "").trim();
       const marketFromModel = String(entry?.company_market_position || "").trim();
@@ -551,10 +561,7 @@ export default function CompanyResearchPage() {
       const recentPostsFromModel = scrubModePlaceholders(String(entry?.company_recent_posts || ""));
       const publicationsFromModel = scrubModePlaceholders(String(entry?.company_publications || ""));
       const culture = cultureFromModel || pickSectionText(sections, "culture") || pickSectionText(sections, "values");
-      // Market position should be sourced. If we don't have web sources (SERPER), avoid generic "likely/may" output.
-      const market = hasWebSources
-        ? (marketFromModel || pickSectionText(sections, "market") || pickSectionText(sections, "product") || pickSectionText(sections, "moves"))
-        : "";
+      const market = marketFromModel || pickSectionText(sections, "market") || pickSectionText(sections, "product") || pickSectionText(sections, "moves") || "";
       const realNews = Array.isArray(rawNews)
         ? rawNews.filter((n: any) => {
             const title = String(n?.title || "").trim().toLowerCase();
@@ -605,15 +612,11 @@ export default function CompanyResearchPage() {
         pdl_company_signals: Array.isArray(entry?.company_signals) ? entry.company_signals : undefined,
       };
 
-      if (!hasWebSources) {
-        setNotice("Research generated. Some data may not be available for this company.");
-      }
-
       setDraft(sanitizeDraft(next));
       setActiveCompany(company);
       localStorage.setItem(STORAGE_ACTIVE_COMPANY, company);
       localStorage.setItem("selected_company_name", company);
-      if (hasWebSources) setNotice("Company research generated. Review/edit, then Save.");
+      setNotice("Company research generated. Review/edit, then Save.");
       window.setTimeout(() => setNotice(null), 2500);
     } catch (e: any) {
       setError(String(e?.message || "Failed to run company research."));
@@ -903,20 +906,22 @@ export default function CompanyResearchPage() {
                   ) : null}
 
                   <div className="rounded-lg border border-white/10 bg-black/20 p-4">
-                    <div className="text-sm font-bold text-white mb-1">Hiring Signals</div>
-                    <div className="text-xs text-white/60 mb-3">
-                      Quick, outreach-relevant signals for <span className="font-semibold text-white/80">{activeCompanyDisplay}</span>.
-                    </div>
-                    {(draft.hiring_signals || []).length ? (
-                      <div className="space-y-2">
-                        {(draft.hiring_signals || []).slice(0, 8).map((s, idx) => (
-                          <div key={`sig_${idx}`} className="rounded-md border border-white/10 bg-white/5 p-3">
-                            <div className="text-sm font-semibold text-white/85">{s.label}</div>
-                            <div className="mt-1 text-sm text-white/75 whitespace-pre-wrap">{s.detail}</div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
+                    {(draft.hiring_signals || []).length > 0 && (
+                      <>
+                        <div className="text-sm font-bold text-white mb-1">Hiring Signals</div>
+                        <div className="text-xs text-white/60 mb-3">
+                          Quick, outreach-relevant signals for <span className="font-semibold text-white/80">{activeCompanyDisplay}</span>.
+                        </div>
+                        <div className="space-y-2">
+                          {(draft.hiring_signals || []).slice(0, 8).map((s, idx) => (
+                            <div key={`sig_${idx}`} className="rounded-md border border-white/10 bg-white/5 p-3">
+                              <div className="text-sm font-semibold text-white/85">{s.label}</div>
+                              <div className="mt-1 text-sm text-white/75 whitespace-pre-wrap">{s.detail}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
 
                   {(hasRealData(draft.recent_posts || "") || hasRealData(draft.publications || "")) ? (
                   <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -1138,6 +1143,9 @@ export default function CompanyResearchPage() {
                           if (c.includes("signal detected for")) return false;
                           if (c.includes("live mode")) return false;
                           if (c.includes("stub mode")) return false;
+                          if (c.includes("serper")) return false;
+                          if (c.includes("captured in this run")) return false;
+                          if (/no\s+\w+\s+(details?|data|signals?)\s*(captured|found|available)/i.test(c)) return false;
                           if (t.includes("no data") || t.includes("no information")) return false;
                           if (t.includes("example") && t.includes(":")) return false;
                           const scrubbed = scrubModePlaceholders(sig.signal_content || "");

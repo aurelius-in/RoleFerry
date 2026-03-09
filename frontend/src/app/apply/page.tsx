@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { formatCompanyName } from "@/lib/format";
+import InlineSpinner from "@/components/InlineSpinner";
 
 type RoleItem = {
   id: string;
@@ -134,6 +135,28 @@ export default function ApplyPage() {
   const [err, setErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
+  // Cover letter state
+  const [coverLetter, setCoverLetter] = useState("");
+  const [coverLetterBusy, setCoverLetterBusy] = useState(false);
+  const [coverLetterMsg, setCoverLetterMsg] = useState<string | null>(null);
+  const [coverLetterRoleId, setCoverLetterRoleId] = useState<string | null>(null);
+  const [coverLetterOpen, setCoverLetterOpen] = useState(false);
+  const [coverLetterTone, setCoverLetterTone] = useState("professional yet personable");
+  const [coverLetterExtra, setCoverLetterExtra] = useState("");
+  const coverLetterRef = useRef<HTMLTextAreaElement>(null);
+
+  // Upstream context loaded once from localStorage
+  const [upstreamCtx, setUpstreamCtx] = useState<{
+    resume: any; preferences: any; personality: any; temperament: any;
+    companyResearch: Record<string, any>; companySignals: any[];
+    contactSignals: any[]; painpointByJob: Record<string, any[]>;
+    selectedJobRaw: Record<string, any>;
+  }>({
+    resume: null, preferences: null, personality: null, temperament: null,
+    companyResearch: {}, companySignals: [], contactSignals: [],
+    painpointByJob: {}, selectedJobRaw: {},
+  });
+
   const loadApplications = async () => {
     const resp = await api<{ applications: ApplicationRecord[] }>("/applications", "GET");
     const by: Record<string, ApplicationRecord> = {};
@@ -166,9 +189,25 @@ export default function ApplyPage() {
     setCitizenshipStatus(String(localStorage.getItem("rf_citizenship_status") || ""));
     setResumePresent(Boolean(localStorage.getItem("resume_extract")));
 
-    loadApplications().catch(() => {
-      // If backend is unavailable, page remains usable for manual link opening.
+    // Load all upstream context for cover letter generation
+    const resume = safeJson<any>(localStorage.getItem("resume_extract"), null);
+    const personality = safeJson<any>(localStorage.getItem("personality_profile"), null);
+    const temperament = safeJson<any>(localStorage.getItem("temperament_profile"), null);
+    const companyResearchByCompany = safeJson<Record<string, any>>(localStorage.getItem("company_research_by_company"), {});
+    const companySignals = safeJson<any[]>(localStorage.getItem("rf_selected_company_signals"), []);
+    const contactSignals = safeJson<any[]>(localStorage.getItem("rf_selected_contact_signals"), []);
+    const selectedJobRawMap: Record<string, any> = {};
+    for (const jd of storedRoles) {
+      const id = String(jd?.id || `${jd?.company || ""}:${jd?.title || ""}:${jd?.url || ""}`).trim();
+      if (id) selectedJobRawMap[id] = jd;
+    }
+    setUpstreamCtx({
+      resume, preferences: prefs, personality, temperament,
+      companyResearch: companyResearchByCompany, companySignals,
+      contactSignals, painpointByJob, selectedJobRaw: selectedJobRawMap,
     });
+
+    loadApplications().catch(() => {});
   }, []);
 
   const isRoleEligible = (r: RoleItem): boolean => {
@@ -288,7 +327,7 @@ export default function ApplyPage() {
       return;
     }
     if (autoApply && missingRequiredFields.length) {
-      setErr(`Auto-apply requires: ${missingRequiredFields.map((f) => f.label).join(", ")}.`);
+      setErr(`Please complete these fields first: ${missingRequiredFields.map((f) => f.label).join(", ")}. Or uncheck "Verify profile completeness" to skip.`);
       return;
     }
 
@@ -320,15 +359,22 @@ export default function ApplyPage() {
           source: "apply-step",
         })),
       };
+      const showApplyResult = (summary: { applied: number; failed: number; skipped: number }) => {
+        const parts: string[] = [];
+        if (summary.applied > 0) parts.push(`${summary.applied} role${summary.applied > 1 ? "s" : ""} marked as applied`);
+        if (summary.failed > 0) parts.push(`${summary.failed} failed`);
+        if (summary.skipped > 0) parts.push(`${summary.skipped} skipped`);
+        const detail = parts.join(", ") || "No roles were processed.";
+        setMsg(`${detail}. Applied roles now appear below with an "Applied" badge and have been added to your Tracker.`);
+        if (summary.applied > 0) setEligibleOnly(false);
+      };
+
       try {
         const resp = await api<BulkApplyResponse>("/applications/bulk", "POST", payload);
         await loadApplications();
         syncTrackerFromApplications(resp.applications || []);
-        setMsg(
-          `Applied: ${resp.summary.applied}, Failed: ${resp.summary.failed}, Skipped: ${resp.summary.skipped}.`
-        );
+        showApplyResult(resp.summary);
       } catch (bulkErr: any) {
-        // Compatibility fallback for environments that don't have /applications/bulk yet.
         const detail = String(bulkErr?.message || "");
         if (!/404/.test(detail)) throw bulkErr;
 
@@ -342,14 +388,11 @@ export default function ApplyPage() {
         }
         await loadApplications();
         syncTrackerFromApplications(created);
-        const summary = {
+        showApplyResult({
           applied: created.filter((a) => a?.status === "applied").length,
           failed: created.filter((a) => a?.status === "failed").length,
           skipped: created.filter((a) => a?.status === "skipped").length,
-        };
-        setMsg(
-          `Applied: ${summary.applied}, Failed: ${summary.failed}, Skipped: ${summary.skipped}.`
-        );
+        });
       }
     } catch (e: any) {
       setErr(String(e?.message || "Failed to run apply flow."));
@@ -436,6 +479,67 @@ export default function ApplyPage() {
     setMsg("Cleared current matched roles.");
   };
 
+  const generateCoverLetter = useCallback(async (roleId: string) => {
+    setCoverLetterBusy(true);
+    setCoverLetterMsg(null);
+    setCoverLetterRoleId(roleId);
+    setCoverLetterOpen(true);
+    try {
+      const roleRaw = upstreamCtx.selectedJobRaw[roleId] || {};
+      const company = String(roleRaw?.company || "").trim();
+      const companyResearch = company
+        ? (upstreamCtx.companyResearch[company] || upstreamCtx.companyResearch[company.toLowerCase()] || null)
+        : null;
+      const painMatches = upstreamCtx.painpointByJob[roleId] || [];
+
+      const resp = await api<{ success: boolean; cover_letter: string; word_count: number; message: string }>(
+        "/applications/cover-letter", "POST", {
+          resume: upstreamCtx.resume,
+          preferences: upstreamCtx.preferences,
+          personality: upstreamCtx.personality,
+          temperament: upstreamCtx.temperament,
+          role: roleRaw,
+          company_research: companyResearch,
+          company_signals: upstreamCtx.companySignals,
+          painpoint_match: painMatches[0] || null,
+          contact_signals: upstreamCtx.contactSignals,
+          tone: coverLetterTone,
+          extra_instructions: coverLetterExtra || null,
+        }
+      );
+      setCoverLetter(resp.cover_letter || "");
+      setCoverLetterMsg(resp.message || "Cover letter generated.");
+    } catch (e: any) {
+      setCoverLetterMsg(String(e?.message || "Failed to generate cover letter."));
+    } finally {
+      setCoverLetterBusy(false);
+    }
+  }, [upstreamCtx, coverLetterTone, coverLetterExtra]);
+
+  const downloadCoverLetter = () => {
+    if (!coverLetter) return;
+    const role = roles.find((r) => r.id === coverLetterRoleId);
+    const company = String(role?.company || "company").replace(/[^a-zA-Z0-9]+/g, "_");
+    const blob = new Blob([coverLetter], { type: "text/plain;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `cover_letter_${company}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const copyCoverLetter = async () => {
+    if (!coverLetter) return;
+    try {
+      await navigator.clipboard.writeText(coverLetter);
+      setCoverLetterMsg("Copied to clipboard.");
+      setTimeout(() => setCoverLetterMsg(null), 2000);
+    } catch {}
+  };
+
   return (
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-7xl mx-auto px-4">
@@ -450,7 +554,7 @@ export default function ApplyPage() {
               <div className="text-xs text-white/60">Step 7 of 12</div>
               <h1 className="text-3xl font-bold text-white">Apply</h1>
               <p className="text-white/70 text-sm mt-1">
-                Select matched roles, run apply status updates, and hand off applied roles to Tracker.
+                Select roles to track your applications. Click a job link to apply on the company site, then mark it here to keep your Tracker up to date.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -483,92 +587,61 @@ export default function ApplyPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div className="lg:col-span-4 rounded-lg border border-white/10 bg-black/20 p-4 space-y-3">
-              <div className="text-sm font-semibold text-white">Auto-Apply Readiness</div>
+              <div className="text-sm font-semibold text-white">Application Tracker</div>
+              <div className="rounded-md border border-white/10 bg-white/5 p-2 text-xs text-white/70">
+                Mark selected roles as &quot;Applied&quot; to track your progress. Open each job link to submit your application on the company&apos;s site.
+              </div>
               <label className="flex items-center gap-2 text-sm text-white/85">
                 <input type="checkbox" checked={autoApply} onChange={(e) => setAutoApply(e.target.checked)} />
-                Enable auto-apply mode
+                Verify profile completeness before marking
               </label>
-              {autoApply ? (
-                <div className="rounded-md border border-white/10 bg-white/5 p-2 text-xs">
-                  {missingRequiredFields.length === 0 ? (
-                    <div className="text-emerald-100">Ready for one-click auto-apply.</div>
-                  ) : (
-                    <div className="text-yellow-200">
-                      Missing required fields: {missingRequiredFields.map((f) => f.label).join(", ")}.
-                    </div>
-                  )}
+              {autoApply && missingRequiredFields.length > 0 ? (
+                <div className="rounded-md border border-yellow-400/30 bg-yellow-500/10 p-2 text-xs text-yellow-200">
+                  Complete these fields first: {missingRequiredFields.map((f) => f.label).join(", ")}.
                 </div>
-              ) : (
-                <div className="rounded-md border border-white/10 bg-white/5 p-2 text-xs text-white/70">
-                  Auto-apply is off. You can still open links and apply manually.
-                </div>
-              )}
+              ) : null}
 
-              {autoApply ? (
-                <div className={`space-y-2 rounded-md border p-3 ${missingRequiredFields.length > 0 ? "border-yellow-400/30 bg-yellow-500/10" : "border-emerald-400/30 bg-emerald-500/10"}`}>
-                  <div className={`text-xs font-semibold ${missingRequiredFields.length > 0 ? "text-yellow-100" : "text-emerald-100"}`}>
-                    {missingRequiredFields.length > 0 ? "Complete required fields" : "All fields complete"}
-                  </div>
+              {autoApply && missingRequiredFields.length > 0 ? (
+                <div className="space-y-2 rounded-md border border-yellow-400/30 bg-yellow-500/10 p-3">
+                  <div className="text-xs font-semibold text-yellow-100">Complete required fields</div>
                   <div className="grid grid-cols-2 gap-2">
-                    <input
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      placeholder="First name"
-                      className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-                    />
-                    <input
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      placeholder="Last name"
-                      className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-                    />
+                    {missingRequiredKeys.has("first_name") && (
+                      <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white" />
+                    )}
+                    {missingRequiredKeys.has("last_name") && (
+                      <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white" />
+                    )}
                   </div>
-                  <input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email"
-                    className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-                  />
-                  <input
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Phone"
-                    className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-                  />
+                  {missingRequiredKeys.has("email") && (
+                    <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white" />
+                  )}
+                  {missingRequiredKeys.has("phone") && (
+                    <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white" />
+                  )}
                   <div className="grid grid-cols-2 gap-2">
-                    <input
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      placeholder="City"
-                      className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-                    />
-                    <input
-                      value={postalCode}
-                      onChange={(e) => setPostalCode(e.target.value)}
-                      placeholder="Postal code"
-                      className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white"
-                    />
+                    {missingRequiredKeys.has("city") && (
+                      <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white" />
+                    )}
+                    {missingRequiredKeys.has("postal_code") && (
+                      <input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="Postal code" className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white" />
+                    )}
                   </div>
-                  {!resumePresent ? (
+                  {missingRequiredKeys.has("resume") && (
                     <div className="flex items-center justify-between gap-2">
                       <label className="inline-flex items-center gap-2 text-xs text-white/80">
                         <input type="checkbox" checked={resumePresent} onChange={(e) => setResumePresent(e.target.checked)} />
                         Resume uploaded
                       </label>
-                      <button
-                        type="button"
-                        onClick={() => router.push("/resume")}
-                        className="px-2 py-1 rounded border border-white/10 bg-white/10 hover:bg-white/15 text-xs"
-                      >
+                      <button type="button" onClick={() => router.push("/resume")} className="px-2 py-1 rounded border border-white/10 bg-white/10 hover:bg-white/15 text-xs">
                         Go to Resume
                       </button>
                     </div>
-                  ) : null}
+                  )}
                 </div>
               ) : null}
 
               <div className="text-[11px] text-white/55">
-                Auto-filled from your saved profile, preferences, and resume. Optional fields stay hidden.
+                Profile info auto-filled from your account and resume.
               </div>
               <button
                 type="button"
@@ -584,7 +657,7 @@ export default function ApplyPage() {
                   disabled={busy}
                   className="w-full px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-sm font-semibold"
                 >
-                  {busy ? "Applying..." : `Apply to Selected (${selectedRoles.length})`}
+                  {busy ? "Saving..." : `Mark ${selectedRoles.length} as Applied`}
                 </button>
               </div>
               <div className="pt-2">
@@ -740,6 +813,151 @@ export default function ApplyPage() {
               </div>
             </div>
           </div>
+
+          {/* Cover Letter Generator */}
+          <div className="mt-6 rounded-lg border border-white/10 bg-white/5 p-6">
+            <button
+              type="button"
+              onClick={() => setCoverLetterOpen((v) => !v)}
+              className="flex items-center justify-between w-full text-left"
+            >
+              <div>
+                <h2 className="text-lg font-semibold text-white">Cover Letter Generator</h2>
+                <p className="text-xs text-white/60 mt-0.5">
+                  Create a personalized cover letter using your resume, preferences, personality, company research, and pain point analysis.
+                </p>
+              </div>
+              <span className="text-white/50 text-lg ml-4">{coverLetterOpen ? "▾" : "▸"}</span>
+            </button>
+
+            {coverLetterOpen && (
+              <div className="mt-4 space-y-4">
+                {/* Role selector */}
+                <div>
+                  <label className="block text-xs text-white/70 mb-1">Select a role to tailor the letter for</label>
+                  <select
+                    value={coverLetterRoleId || ""}
+                    onChange={(e) => setCoverLetterRoleId(e.target.value || null)}
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white"
+                  >
+                    <option value="">Choose a role...</option>
+                    {roles.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.title} — {formatCompanyName(r.company)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Tone + instructions */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-white/70 mb-1">Tone</label>
+                    <select
+                      value={coverLetterTone}
+                      onChange={(e) => setCoverLetterTone(e.target.value)}
+                      className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white"
+                    >
+                      <option value="professional yet personable">Professional yet personable</option>
+                      <option value="confident and assertive">Confident and assertive</option>
+                      <option value="warm and conversational">Warm and conversational</option>
+                      <option value="formal and traditional">Formal and traditional</option>
+                      <option value="creative and bold">Creative and bold</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-white/70 mb-1">Extra instructions (optional)</label>
+                    <input
+                      value={coverLetterExtra}
+                      onChange={(e) => setCoverLetterExtra(e.target.value)}
+                      placeholder="e.g., Emphasize leadership experience"
+                      className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Context signals summary */}
+                <div className="flex flex-wrap gap-2 text-[11px]">
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 border ${upstreamCtx.resume ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200" : "border-white/10 bg-white/5 text-white/40"}`}>
+                    Resume {upstreamCtx.resume ? "✓" : "—"}
+                  </span>
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 border ${upstreamCtx.preferences ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200" : "border-white/10 bg-white/5 text-white/40"}`}>
+                    Preferences {upstreamCtx.preferences ? "✓" : "—"}
+                  </span>
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 border ${upstreamCtx.personality ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200" : "border-white/10 bg-white/5 text-white/40"}`}>
+                    Personality {upstreamCtx.personality ? "✓" : "—"}
+                  </span>
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 border ${upstreamCtx.companySignals.length > 0 || Object.keys(upstreamCtx.companyResearch).length > 0 ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200" : "border-white/10 bg-white/5 text-white/40"}`}>
+                    Company Research {upstreamCtx.companySignals.length > 0 || Object.keys(upstreamCtx.companyResearch).length > 0 ? "✓" : "—"}
+                  </span>
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 border ${Object.keys(upstreamCtx.painpointByJob).length > 0 ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200" : "border-white/10 bg-white/5 text-white/40"}`}>
+                    Pain Points {Object.keys(upstreamCtx.painpointByJob).length > 0 ? "✓" : "—"}
+                  </span>
+                </div>
+
+                {/* Generate button */}
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => coverLetterRoleId && generateCoverLetter(coverLetterRoleId)}
+                    disabled={coverLetterBusy || !coverLetterRoleId}
+                    className="px-4 py-2.5 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-sm font-semibold inline-flex items-center gap-2"
+                  >
+                    {coverLetterBusy ? (
+                      <>
+                        <InlineSpinner className="h-4 w-4" />
+                        Generating...
+                      </>
+                    ) : (
+                      "Generate Cover Letter"
+                    )}
+                  </button>
+                  {coverLetterMsg ? <span className="text-xs text-white/70">{coverLetterMsg}</span> : null}
+                </div>
+
+                {/* Cover letter output */}
+                {coverLetter && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-white/60">
+                        {coverLetter.split(/\s+/).length} words
+                        {coverLetterRoleId && roles.find((r) => r.id === coverLetterRoleId)
+                          ? ` — ${roles.find((r) => r.id === coverLetterRoleId)!.title} at ${formatCompanyName(roles.find((r) => r.id === coverLetterRoleId)!.company)}`
+                          : ""}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={copyCoverLetter}
+                          className="px-3 py-1.5 rounded border border-white/15 bg-white/10 hover:bg-white/15 text-xs"
+                        >
+                          Copy
+                        </button>
+                        <button
+                          type="button"
+                          onClick={downloadCoverLetter}
+                          className="px-3 py-1.5 rounded border border-white/15 bg-white/10 hover:bg-white/15 text-xs"
+                        >
+                          Download .txt
+                        </button>
+                      </div>
+                    </div>
+                    <textarea
+                      ref={coverLetterRef}
+                      value={coverLetter}
+                      onChange={(e) => setCoverLetter(e.target.value)}
+                      rows={16}
+                      className="w-full rounded-md border border-white/15 bg-black/30 px-4 py-3 text-sm text-white/90 leading-relaxed resize-y focus:border-blue-500/50 focus:outline-none"
+                    />
+                    <p className="text-[11px] text-white/50">
+                      Edit the letter above to your liking, then copy or download it.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
     </div>

@@ -360,8 +360,10 @@ def extract_person_signals(p: PdlPersonResult) -> List[Dict[str, str]]:
 
     if p.experience and len(p.experience) >= 2:
         prev = p.experience[1] if isinstance(p.experience[1], dict) else {}
-        prev_title = str(prev.get("title") or {}).get("name", "") if isinstance(prev.get("title"), dict) else str(prev.get("title") or "")
-        prev_co = str((prev.get("company") or {}).get("name", "")) if isinstance(prev.get("company"), dict) else str(prev.get("company") or "")
+        raw_title = prev.get("title")
+        prev_title = (raw_title.get("name", "") if isinstance(raw_title, dict) else str(raw_title or "")).strip()
+        raw_co = prev.get("company")
+        prev_co = (raw_co.get("name", "") if isinstance(raw_co, dict) else str(raw_co or "")).strip()
         if prev_title and prev_co:
             signals.append({"label": "Previous Role", "value": f"{prev_title.title()} at {prev_co.title()}", "category": "experience"})
 
