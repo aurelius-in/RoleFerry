@@ -169,9 +169,9 @@ def _looks_irrelevant_for_any_target(title: str, job_fn: str) -> bool:
 
 def _is_relevant_decision_maker_for_job(title: str, job_fn: str) -> bool:
     """
-    Strict gate to prevent irrelevant roles from showing up as "decision makers".
-    Always allow recruiting/TA roles (since they are directly involved in hiring),
-    and require management-level seniority for function leads.
+    Gate to surface useful "decision makers" while filtering obvious noise.
+    Permissive for any senior/management-level person; the scoring layer
+    and LLM audit will rank and trim from there.
     """
     low = (title or "").strip().lower()
     if not low:
@@ -179,31 +179,21 @@ def _is_relevant_decision_maker_for_job(title: str, job_fn: str) -> bool:
     if _looks_irrelevant_for_any_target(title, job_fn):
         return False
 
-    # Always include recruiting/TA people (they are the funnel owners), but avoid unrelated ops like "HRIS analyst"
     is_recruiting = any(k in low for k in _JOB_FN_KEYWORDS["recruiting"])
     if is_recruiting:
         if any(k in low for k in ["analyst", "coordinator", "assistant"]) and not any(k in low for k in ["recruiter", "sourcer"]):
             return False
         return True
 
-    # Exclude IC titles like Principal Engineer etc (user explicitly requested)
     if _is_individual_contributor_title(title):
         return False
 
-    # Function match + seniority gate
-    fn_keys = _JOB_FN_KEYWORDS.get(job_fn, [])
-    fn_match = any(k in low for k in fn_keys) if fn_keys else False
-
-    senior = any(k in low for k in ["manager", "director", "head", "vp", "vice president", "chief", "cxo", "cto", "ceo", "founder", "president"])
-    if fn_match and senior:
-        return True
-
-    # When no specific function is targeted, accept any senior person
-    if job_fn == "general" and senior:
-        return True
-
-    # Execs can be relevant even if function keywords don't match (small companies)
-    if any(k in low for k in ["ceo", "cto", "chief", "founder", "president"]):
+    senior = any(k in low for k in [
+        "manager", "director", "head", "vp", "vice president",
+        "chief", "cxo", "cto", "ceo", "cfo", "coo", "founder",
+        "president", "partner", "owner", "lead", "senior director",
+    ])
+    if senior:
         return True
 
     return False
@@ -551,6 +541,7 @@ async def search_contacts(request: ContactSearchRequest):
         target_job_title = (request.target_job_title or request.role or "").strip()
         job_fn = _infer_job_function(target_job_title)
         title_filters = [str(x).strip() for x in (request.title_filters or []) if str(x).strip()]
+        logger.info("Contact search: company='%s' target_title='%s' job_fn='%s' filters=%s", q, target_job_title, job_fn, title_filters[:5])
 
         def _norm_title(s: str) -> str:
             low = (s or "").strip().lower()
@@ -572,12 +563,18 @@ async def search_contacts(request: ContactSearchRequest):
                     return True
             return False
 
-        # 0) Prefer People Data Labs if configured (real people data)
+        # 0a) Resolve company -> domain early so we can use it for PDL too
+        resolved = await _clearbit_company_suggest(q)
+        company = (resolved or {}).get("name") or q
+        domain = (resolved or {}).get("domain") or ""
+        logger.info("Clearbit resolved '%s' -> company='%s' domain='%s'", q, company, domain)
+
+        # 0b) Prefer People Data Labs if configured (real people data)
         pdl_contacts: List[Contact] = []
         if settings.pdl_api_key:
             try:
                 pdl = PDLClient(settings.pdl_api_key, timeout_seconds=20.0)
-                raw = pdl.person_search(company=q, size=80 if title_filters else 50)
+                raw = pdl.person_search(company=q, size=100, domain=domain)
                 people = pdl.extract_people(raw)
                 logger.info("PDL person_search for '%s' returned %d people", q, len(people))
 
@@ -661,43 +658,45 @@ async def search_contacts(request: ContactSearchRequest):
                 talent_dm = [p for _, p in scored if _is_recruiting(p.title)]
                 others = [p for _, p in scored if p not in fn_dm and p not in talent_dm and _is_relevant_decision_maker_for_job(p.title, job_fn)]
 
-                desired = 24 if title_filters else 10
+                desired = 24
+
+                relevant_pool = [p for _, p in scored if _is_relevant_decision_maker_for_job(p.title, job_fn)]
 
                 if title_filters:
-                    filtered_pool = [
-                        p
-                        for _, p in scored
-                        if _is_relevant_decision_maker_for_job(p.title, job_fn) and _matches_title_filters(p.title)
-                    ]
+                    filtered_pool = [p for p in relevant_pool if _matches_title_filters(p.title)]
                     if filtered_pool:
                         people = filtered_pool[:desired]
+                    elif relevant_pool:
+                        people = relevant_pool[:desired]
                     else:
-                        rel_pool = [p for _, p in scored if _is_relevant_decision_maker_for_job(p.title, job_fn)]
-                        if rel_pool:
-                            people = rel_pool[:desired]
-                        else:
-                            senior_pool = [p for _, p in scored if any(
-                                k in (p.title or "").lower() for k in ["manager", "director", "head", "vp", "vice president", "chief", "cto", "ceo", "founder"]
-                            )]
-                            people = (senior_pool or [p for _, p in scored])[:desired]
-                else:
-                    picked: List[Any] = []
-                    for p in fn_dm[:4]:
-                        picked.append(p)
-                    for p in talent_dm[:3]:
-                        if p not in picked:
-                            picked.append(p)
-                    for p in others:
-                        if p not in picked:
-                            picked.append(p)
-                        if len(picked) >= 8:
-                            break
-                    if not picked:
                         senior_pool = [p for _, p in scored if any(
                             k in (p.title or "").lower() for k in ["manager", "director", "head", "vp", "vice president", "chief", "cto", "ceo", "founder"]
                         )]
-                        picked = (senior_pool or [p for _, p in scored])[:desired]
-                    people = picked[:desired]
+                        people = (senior_pool or [p for _, p in scored])[:desired]
+                else:
+                    if relevant_pool:
+                        picked: List[Any] = []
+                        for p in fn_dm[:6]:
+                            picked.append(p)
+                        for p in talent_dm[:5]:
+                            if p not in picked:
+                                picked.append(p)
+                        for p in others:
+                            if p not in picked:
+                                picked.append(p)
+                            if len(picked) >= desired:
+                                break
+                        for p in relevant_pool:
+                            if p not in picked:
+                                picked.append(p)
+                            if len(picked) >= desired:
+                                break
+                        people = picked[:desired]
+                    else:
+                        senior_pool = [p for _, p in scored if any(
+                            k in (p.title or "").lower() for k in ["manager", "director", "head", "vp", "vice president", "chief", "cto", "ceo", "founder"]
+                        )]
+                        people = (senior_pool or [p for _, p in scored])[:desired]
                 contacts: List[Contact] = []
                 for p in people:
                     # If we don't have a real email, leave it blank and let the UI hide it.
@@ -736,12 +735,7 @@ async def search_contacts(request: ContactSearchRequest):
             except Exception as pdl_err:
                 logger.exception("PDL contact search failed for '%s' (%s); will try other sources", q, str(pdl_err)[:120])
 
-        # 1) Resolve company -> domain using public Clearbit autocomplete
-        resolved = await _clearbit_company_suggest(q)
-        company = (resolved or {}).get("name") or q
-        domain = (resolved or {}).get("domain") or ""
-
-        # 2) Fetch leadership/team page(s) and extract names/titles
+        # 1) Fetch leadership/team page(s) and extract names/titles
         contacts: List[Contact] = []
         if domain:
             # Special-case: Google leadership page is on about.google
@@ -764,11 +758,14 @@ async def search_contacts(request: ContactSearchRequest):
             if fetched:
                 page_text = _html_to_text(fetched["html"])
                 contacts = _extract_contacts_from_text(page_text, company=company, domain=domain, source_url=fetched["url"], job_fn=job_fn)
+                logger.info("Web scrape for '%s' found %d contacts from %s", q, len(contacts), fetched["url"])
                 if title_filters:
                     contacts = [c for c in contacts if _matches_title_filters(c.title)]
+            else:
+                logger.info("Web scrape: no working leadership/team page found for domain='%s'", domain)
 
         # 3) Try OpenAI to identify public personas (supplements PDL + web scraping)
-        if len(contacts) + len(pdl_contacts) < 5 and settings.openai_api_key:
+        if len(contacts) + len(pdl_contacts) < 8 and settings.openai_api_key:
             try:
                 client = get_openai_client()
                 # Ask GPT to identify likely decision makers based on its training data (broad knowledge).
@@ -777,18 +774,21 @@ async def search_contacts(request: ContactSearchRequest):
                 filters = [str(x).strip() for x in (request.title_filters or []) if str(x).strip()]
                 prompt = "".join(
                     [
-                        f"Identify 3-6 REAL hiring decision makers for the role '{target or 'this role'}' at the company '{company}'.\n\n",
-                        "Rules:\n",
-                        "- Only include people who would plausibly be involved in hiring for that role (hiring manager, functional leader, talent acquisition/recruiting).\n",
-                        "- EXCLUDE irrelevant functions (e.g., buyers, e-commerce, marketing leaders for an engineering role, etc.).\n",
-                        "- EXCLUDE individual contributors like 'Principal Engineer' / 'Staff Engineer' unless they are also a Manager/Director/Head/VP.\n",
-                        (f"- Preferred titles (must match at least one): {', '.join(filters[:18])}.\n" if filters else ""),
-                        "- Provide name and exact title.\n\n",
+                        f"Identify 6-12 REAL people who work at '{company}' in leadership, management, recruiting, or executive roles.\n\n",
+                        f"Context: the user is looking for people who might influence hiring for a '{target or 'this role'}' position.\n\n",
+                        "Include:\n",
+                        "- VP/Director/Head/Manager of Engineering, Product, Design, HR, Talent, etc.\n",
+                        "- Recruiters and Talent Acquisition professionals\n",
+                        "- C-suite executives (CEO, CTO, COO, etc.)\n",
+                        "- Founders\n\n",
+                        "Exclude individual contributors (Staff Engineer, Senior Designer, etc.) unless they also have a management title.\n",
+                        (f"- Preferred titles: {', '.join(filters[:18])}.\n" if filters else ""),
+                        "- Provide name and exact current title.\n\n",
                         "Return ONLY a JSON object with key 'people': array of {name, title}.",
                     ]
                 )
                 messages = [{"role": "user", "content": prompt}]
-                raw_gpt = client.run_chat_completion(messages, temperature=0.1, max_tokens=500)
+                raw_gpt = client.run_chat_completion(messages, temperature=0.1, max_tokens=800)
                 choices = raw_gpt.get("choices") or []
                 content_str = str((choices[0].get("message") if choices else {}).get("content") or "")
                 data = extract_json_from_text(content_str)
@@ -798,7 +798,7 @@ async def search_contacts(request: ContactSearchRequest):
                     for p in gpt_people:
                         nm = str(p.get("name") or "").strip()
                         ttl = str(p.get("title") or "").strip()
-                        if nm and ttl and _is_relevant_decision_maker_for_job(ttl, job_fn) and _matches_title_filters(ttl):
+                        if nm and ttl and not _is_individual_contributor_title(ttl):
                             cid = hashlib.sha256(f"gpt_backup:{nm}:{ttl}".encode("utf-8")).hexdigest()[:12]
                             contacts.append(
                                 Contact(
@@ -917,15 +917,18 @@ async def search_contacts(request: ContactSearchRequest):
                     {
                         "role": "system",
                         "content": (
-                            "You are filtering a list of people to ONLY those who are hiring decision makers for the target role.\n"
-                            "Return a strict subset.\n\n"
-                            "Keep ONLY:\n"
-                            "- Recruiting / Talent Acquisition roles (Recruiter, Sourcer, TA Partner, TA Manager/Director/Head)\n"
-                            "- The likely hiring manager / function leader for the target role (Manager/Director/Head/VP in the relevant function)\n"
-                            "- Executives only when plausible (CEO/CTO/Founder) for smaller orgs\n\n"
-                            "Drop:\n"
-                            "- Individual contributors like Principal/Staff/Lead Engineer (unless also a Manager/Director/Head/VP)\n"
-                            "- Unrelated functions (e.g. buyers, e-commerce, marketing leaders for engineering roles)\n\n"
+                            "You are reviewing a list of people at a company for networking and outreach.\n"
+                            "Be PERMISSIVE — keep anyone who could plausibly be involved in or influence hiring.\n\n"
+                            "Keep:\n"
+                            "- Recruiting / Talent Acquisition / People / HR roles at any level\n"
+                            "- Managers, Directors, Heads, VPs, C-suite in the relevant function\n"
+                            "- Managers, Directors, Heads, VPs, C-suite in adjacent functions\n"
+                            "- Executives (CEO, CTO, COO, Founder, President) — always keep\n"
+                            "- Anyone at Manager level or above, even in a different department\n\n"
+                            "Only drop:\n"
+                            "- Individual contributors (Engineer, Developer, Analyst, Specialist) with no management title\n"
+                            "- Clearly irrelevant roles (Buyer, Procurement, Store Manager) unless target role is in that domain\n\n"
+                            "When in doubt, KEEP the person. More contacts is better than fewer.\n"
                             "Return ONLY JSON: { keep_ids: [string], notes: [string] }"
                         ),
                     },

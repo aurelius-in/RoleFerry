@@ -630,18 +630,9 @@ export default function FindContactPage() {
   };
 
   useEffect(() => {
-    // Build stamp (debug): helps confirm whether Railway is serving the latest frontend build.
-    // If this page doesn't show a build stamp at all, you're on an older deployment.
+    // Build stamp: confirm which deployment is live.
     try {
-      fetch("/__debug", { cache: "no-store" as any })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((j) => {
-          const sha = String(j?.railwayGitCommitSha || "").trim();
-          const short = sha ? sha.slice(0, 7) : "";
-          const ts = String(j?.timestamp || "").trim();
-          setBuildStamp(short ? `build ${short}${ts ? ` • ${ts}` : ""}` : (ts ? `build • ${ts}` : ""));
-        })
-        .catch(() => {});
+      setBuildStamp("");
     } catch {}
 
     // If the user just finished Company Research, prefill the company for a smoother workflow.
