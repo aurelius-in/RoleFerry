@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { formatCompanyName } from "@/lib/format";
 import { getCurrentDataMode } from "@/lib/dataMode";
 import InlineSpinner from "@/components/InlineSpinner";
+import CollapsibleSection from "@/components/CollapsibleSection";
 
 
 interface ContactSignal {
@@ -808,15 +809,16 @@ export default function FindContactPage() {
         seniority: seniorityFilter || undefined,
         location: locationFilter.trim() || undefined,
       });
-      if (!res.success) throw new Error(res.message || "Search failed");
+      if (!res.success || !(res.contacts?.length)) {
+        throw new Error(res.message || "No decision makers found");
+      }
       setContacts(res.contacts || []);
       setHelper(res.helper || null);
       localStorage.setItem("found_contacts", JSON.stringify(res.contacts || []));
     } catch (e: any) {
       const msg = String(e?.message || "");
-      // Surface the backend error so users know they need to configure PDL or refine the query.
-      const isNotFound = msg.includes("404") || msg.toLowerCase().includes("no decision makers");
-      setError(isNotFound ? "No decision makers found for that company. Try a more specific company name, or use the suggested targets below." : msg || "Search failed.");
+      const isNotFound = msg.includes("404") || msg.toLowerCase().includes("no decision makers") || msg.toLowerCase().includes("no contacts found");
+      setError(isNotFound ? "No decision makers found for that company. Try a more specific company name, or use the suggested targets below." : (msg || "Search failed. Please try again."));
 
       if (isNotFound) {
         const company = companyQuery.trim();
@@ -1959,60 +1961,57 @@ export default function FindContactPage() {
 
           {/* Suggested targets (fallback when no contacts are found) */}
           {contacts.length === 0 && suggested.length > 0 && !isSearching && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-xl font-semibold text-white">Suggested targets</h2>
+            <CollapsibleSection title="Suggested Targets" count={suggested.length} defaultOpen>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
                   <p className="text-white/70 text-sm">
                     These are role targets with LinkedIn search links. Add a real person manually if you have one.
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => setManualOpen(true)}
+                    className="px-4 py-2 rounded-md font-medium transition-colors bg-white/10 border border-white/20 text-white hover:bg-white/15 shrink-0"
+                  >
+                    Add manually
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setManualOpen(true)}
-                  className="px-4 py-2 rounded-md font-medium transition-colors bg-white/10 border border-white/20 text-white hover:bg-white/15"
-                >
-                  Add manually
-                </button>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-                {suggested.map((contact) => {
-                  const isSelected = selectedContacts.includes(contact.id);
-                  return (
-                    <div
-                      key={contact.id}
-                      className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                        isSelected ? "border-blue-500 bg-blue-50" : "border-white/10 hover:border-white/20 bg-black/20"
-                      }`}
-                      onClick={() => handleContactSelect(contact.id)}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-white">{contact.name}</h3>
-                          <p className="text-gray-600 text-sm">{formatTitleCase(contact.title)}</p>
-                          <p className="text-gray-500 text-xs">{formatCompanyName(contact.company)}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                  {suggested.map((contact) => {
+                    const isSelected = selectedContacts.includes(contact.id);
+                    return (
+                      <div
+                        key={contact.id}
+                        className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                          isSelected ? "border-blue-500 bg-blue-50" : "border-white/10 hover:border-white/20 bg-black/20"
+                        }`}
+                        onClick={() => handleContactSelect(contact.id)}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-white">{contact.name}</h3>
+                            <p className="text-gray-600 text-sm">{formatTitleCase(contact.title)}</p>
+                            <p className="text-gray-500 text-xs">{formatCompanyName(contact.company)}</p>
+                          </div>
+                          {isSelected && <span className="text-blue-600">✓</span>}
                         </div>
-                        {isSelected && <span className="text-blue-600">✓</span>}
+                        {contact.linkedin_url ? (
+                          <a
+                            href={contact.linkedin_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Open profile search
+                          </a>
+                        ) : null}
                       </div>
-                      {contact.linkedin_url ? (
-                        <a
-                          href={contact.linkedin_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 text-sm"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          Open profile search
-                        </a>
-                      ) : null}
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-
-              {/* Action buttons live at the bottom of the right column (single CTA) */}
-            </div>
+            </CollapsibleSection>
           )}
 
           {contacts.length === 0 && !isSearching && (
