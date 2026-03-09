@@ -1433,7 +1433,7 @@ export default function JobDescriptionsPage() {
           </div>
 
           <div ref={preferredSectionRef} className="mt-8 grid grid-cols-1 md:grid-cols-12 gap-6">
-            <div className="md:col-span-8 md:order-1 space-y-6">
+            <div className="md:col-span-8 md:order-1 space-y-1">
               <CollapsibleSection title="Preferred Roles" count={jobDescriptions.length} defaultOpen>
               {!hasMounted || jobDescriptions.length === 0 ? (
                 <div className="text-center py-8">

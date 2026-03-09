@@ -839,7 +839,7 @@ export default function PersonalityPage() {
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-1">
             {activeTest === "temperaments" ? (
               <div className="rounded-lg border border-white/10 bg-black/20 p-5">
                 {/* Big icon tiles stay visible and “narrow down” in real-time */}

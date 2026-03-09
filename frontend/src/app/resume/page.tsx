@@ -482,7 +482,7 @@ export default function ResumePage() {
               </div>
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-1">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-semibold">Resume Extract</h2>
                 <div className="flex items-center gap-2">
