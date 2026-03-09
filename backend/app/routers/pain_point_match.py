@@ -12,8 +12,13 @@ from ..clients.openai_client import get_openai_client, extract_json_from_text
 from ..storage import store
 
 router = APIRouter()
-engine = get_engine()
 logger = logging.getLogger(__name__)
+
+def _get_engine_safe():
+    try:
+        return get_engine()
+    except Exception:
+        return None
 DEMO_USER_ID = "demo-user"
 
 class PainPointMatch(BaseModel):
@@ -186,7 +191,10 @@ async def generate_painpoint_matches(request: MatchRequest):
         resume_row = None
         if not should_skip_db:
             try:
-                async with engine.begin() as conn:
+                _engine = _get_engine_safe()
+                if not _engine:
+                    raise Exception("DB engine unavailable")
+                async with _engine.begin() as conn:
                     if request.job_description_id:
                         result = await conn.execute(
                             sql_text(
@@ -562,7 +570,10 @@ async def generate_painpoint_matches(request: MatchRequest):
 
         # Persist each (challenge, solution) pair into pain_point_match table (best-effort).
         try:
-            async with engine.begin() as conn:
+            _engine = _get_engine_safe()
+            if not _engine:
+                raise Exception("skip")
+            async with _engine.begin() as conn:
                 challenge_solution_pairs = [(str((r or {}).get("painpoint") or "").strip(), str((r or {}).get("solution") or "").strip()) for r in (match.alignments or [])]
                 for ch, sol in challenge_solution_pairs:
                     if not ch or not sol:
@@ -592,15 +603,15 @@ async def generate_painpoint_matches(request: MatchRequest):
             matches=[match],
         )
     except Exception as e:
-        logger.exception("Error generating pain point matches")
-        raise HTTPException(status_code=500, detail="Failed to generate matches")
+        logger.exception("Error generating pain point matches: %s", str(e)[:300])
+        raise HTTPException(status_code=500, detail=f"Failed to generate matches: {str(e)[:200]}")
 
 
-@router.post("/generate-batch", response_model=BatchPainPointMatchResponse)
+@router.post("/generate-batch")
 async def generate_painpoint_matches_batch(request: BatchMatchRequest):
     """
     Generate pain point matches for multiple job descriptions in one call.
-    This avoids the frontend making N separate POST requests (presentation-friendly + lower overhead).
+    Never returns 500 -- always returns a valid JSON response.
     """
     matches_by_job_id: Dict[str, List[PainPointMatch]] = {}
     errors_by_job_id: Dict[str, str] = {}
@@ -608,6 +619,7 @@ async def generate_painpoint_matches_batch(request: BatchMatchRequest):
     try:
         jobs = request.job_descriptions if isinstance(request.job_descriptions, list) else []
         for j in jobs:
+            job_id = ""
             try:
                 job_id = str((j or {}).get("id") or "").strip()
                 if not job_id:
@@ -622,21 +634,29 @@ async def generate_painpoint_matches_batch(request: BatchMatchRequest):
                 )
                 matches_by_job_id[job_id] = resp.matches or []
             except HTTPException as he:
+                logger.warning("Batch painpoint job %s HTTPException: %s", job_id, he.detail)
                 errors_by_job_id[job_id] = str(he.detail or "Failed to generate matches")
                 matches_by_job_id[job_id] = []
-            except Exception:
+            except Exception as exc:
+                logger.warning("Batch painpoint job %s error: %s", job_id, str(exc)[:200])
                 errors_by_job_id[job_id] = "Failed to generate matches"
                 matches_by_job_id[job_id] = []
-
-        return BatchPainPointMatchResponse(
-            success=True,
-            message="Pain point matches generated successfully",
-            matches_by_job_id=matches_by_job_id,
-            errors_by_job_id=errors_by_job_id or None,
-        )
     except Exception:
         logger.exception("Error generating pain point matches (batch)")
-        raise HTTPException(status_code=500, detail="Failed to generate matches")
+
+    try:
+        result = {
+            "success": True,
+            "message": f"Pain point matches generated for {len(matches_by_job_id)} roles",
+            "matches_by_job_id": {k: [m.model_dump() for m in v] for k, v in matches_by_job_id.items()},
+            "errors_by_job_id": errors_by_job_id or None,
+        }
+        from starlette.responses import JSONResponse
+        return JSONResponse(result)
+    except Exception:
+        logger.exception("Error serializing batch painpoint response")
+        from starlette.responses import JSONResponse
+        return JSONResponse({"success": False, "message": "Serialization error", "matches_by_job_id": {}, "errors_by_job_id": None})
 
 @router.post("/save", response_model=PainPointMatchResponse)
 async def save_painpoint_matches(matches: List[PainPointMatch]):
