@@ -232,6 +232,7 @@ export default function JobDescriptionsPage() {
     value: string;
   } | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [parsingRoleId, setParsingRoleId] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importUrl, setImportUrl] = useState("");
   const [importText, setImportText] = useState("");
@@ -2003,6 +2004,11 @@ export default function JobDescriptionsPage() {
                               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
                               Added
                             </span>
+                          ) : parsingRoleId === String(r.id) ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-400/40 bg-amber-500/15 px-3 py-1.5 text-[11px] font-semibold text-amber-200 cursor-default">
+                              <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+                              Parsing…
+                            </span>
                           ) : (
                           <button
                             type="button"
@@ -2012,6 +2018,7 @@ export default function JobDescriptionsPage() {
                               const roleUrl = String(r.url || "").trim();
                               setImportError(null);
                               setIsImporting(true);
+                              setParsingRoleId(String(r.id));
                               try {
                                 if (roleUrl) {
                                   try {
@@ -2072,6 +2079,7 @@ export default function JobDescriptionsPage() {
                                 setImportError(msg);
                               } finally {
                                 setIsImporting(false);
+                                setParsingRoleId(null);
                               }
                             }}
                             title="Add to your Preferred Roles"
