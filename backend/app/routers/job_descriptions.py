@@ -2707,6 +2707,25 @@ def _contains_any_keyword(text: str, keywords: List[str]) -> bool:
     return False
 
 
+def _fuzzy_contains_any_keyword(text: str, keywords: List[str]) -> bool:
+    """Like _contains_any_keyword but also matches individual words (>= 4 chars)
+    and common stems. 'recruiting' matches 'recruitment', etc."""
+    hay = str(text or "").lower()
+    for kw in (keywords or []):
+        k = str(kw or "").strip().lower()
+        if not k:
+            continue
+        if k in hay:
+            return True
+        for word in k.split():
+            if len(word) < 4:
+                continue
+            stem = word.rstrip("seding")
+            if len(stem) >= 4 and stem in hay:
+                return True
+    return False
+
+
 def _preferences_require_us(pref: Dict[str, Any]) -> bool:
     state = str(pref.get("state") or "").strip()
     if state:
@@ -2801,18 +2820,36 @@ def _is_tech_intent(pref: Dict[str, Any]) -> bool:
         elif isinstance(v, str):
             blob_parts.append(v)
     blob = f" {' '.join(blob_parts).lower()} "
+    # Only match when the user IS a tech professional, not someone who
+    # works WITH tech professionals (e.g., "software recruiting", "tech sales").
+    non_tech_contexts = [
+        "recruiting", "recruiter", "recruitment", "talent acquisition",
+        "sales", "marketing", "account", "business development",
+        "training", "enablement", "staffing", "headhunt",
+    ]
+    has_non_tech_context = any(nt in blob for nt in non_tech_contexts)
     exact_phrases = [
-        "software", "software engineer", "developer", "full stack",
-        "backend", "frontend", "devops", "cloud engineer", "cloud computing",
-        "machine learning", "artificial intelligence", "deep learning",
-        "data engineer", "data scientist", "data science",
-        "python", "javascript", "typescript", "java ", "golang", "rust ",
-        "kubernetes", "docker", "aws ", "azure", "terraform",
-        "platform engineer", "site reliability", "sre ",
+        "software engineer", "software developer", "full stack developer",
+        "backend developer", "frontend developer", "devops engineer",
+        "cloud engineer", "platform engineer", "site reliability",
+        "machine learning engineer", "data engineer", "data scientist",
     ]
     if any(p in blob for p in exact_phrases):
         return True
-    word_markers = {"ml", "ai", "swe", "cs"}
+    word_phrases = [
+        "python", "javascript", "typescript", "golang", "rust ",
+        "kubernetes", "docker", "terraform",
+    ]
+    if not has_non_tech_context and any(p in blob for p in word_phrases):
+        return True
+    role_specific = [
+        "software developer", "full stack", "backend", "frontend",
+        "devops", "cloud computing", "deep learning",
+        "artificial intelligence", "data science",
+    ]
+    if not has_non_tech_context and any(p in blob for p in role_specific):
+        return True
+    word_markers = {"swe"}
     words = set(re.findall(r"\b[a-z]+\b", blob))
     return bool(words & word_markers)
 
@@ -3003,7 +3040,7 @@ def _role_tokens(role_query: str) -> List[str]:
     return out[:10]
 
 
-def _looks_like_relevant_title(title: str, tokens: List[str]) -> bool:
+def _looks_like_relevant_title(title: str, tokens: List[str], *, broad: bool = False) -> bool:
     t = str(title or "").lower().strip()
     if not t:
         return False
@@ -3011,26 +3048,19 @@ def _looks_like_relevant_title(title: str, tokens: List[str]) -> bool:
     if any(b in t for b in generic_bad):
         return False
     role_words = [
-        "manager",
-        "specialist",
-        "analyst",
-        "coordinator",
-        "consultant",
-        "representative",
-        "technician",
-        "administrator",
-        "designer",
-        "director",
-        "associate",
-        "officer",
-        "planner",
-        "operator",
-        "supervisor",
+        "manager", "specialist", "analyst", "coordinator", "consultant",
+        "representative", "technician", "administrator", "designer",
+        "director", "associate", "officer", "planner", "operator",
+        "supervisor", "recruiter", "recruiting", "marketer", "marketing",
+        "lead", "head", "chief", "president", "executive", "strategist",
+        "advisor", "partner", "producer", "editor", "writer",
     ]
     if not tokens:
         return any(w in t for w in role_words)
     if any(tok in t for tok in tokens):
         return True
+    if broad:
+        return any(w in t for w in role_words)
     return False
 
 
@@ -3256,7 +3286,7 @@ async def get_scraped_roles(
     pref_terms = _preference_terms(prefs, role_query)
     tech_intent = _is_tech_intent(prefs)
     # Keep strict quality for explicit strict mode; broaden when building top-of-funnel.
-    min_match_score = 75 if mode == "strict" else (50 if requested <= 180 else 45)
+    min_match_score = 50 if mode == "strict" else (35 if requested <= 180 else 25)
     positive_kw = _parse_keyword_list(positive_keywords)
     negative_kw = _parse_keyword_list(negative_keywords)
 
@@ -3435,18 +3465,22 @@ async def get_scraped_roles(
                 str(item.get("url") or "").strip(),
             ]
         )
-        if negative_kw and _contains_any_keyword(text_blob, negative_kw):
+        if effective_neg and _contains_any_keyword(text_blob, effective_neg):
             continue
-        if positive_kw and not _contains_any_keyword(text_blob, positive_kw):
-            # In broad mode, treat positive keywords as preference signal rather
-            # than a hard exclusion so discovery doesn't collapse to zero.
+        if positive_kw and not _fuzzy_contains_any_keyword(text_blob, positive_kw):
             if mode == "strict":
                 continue
         if tech_intent and mode == "strict" and _blocked_title_for_tech_seekers(title):
             continue
-        if not tech_intent and _blocked_title_for_non_tech_seekers(title):
-            continue
-        if not _looks_like_relevant_title(title, role_tokens):
+        # ALWAYS hard-block clearly-tech titles unless user explicitly searches for tech
+        if _blocked_title_for_non_tech_seekers(title):
+            pos_blob = " ".join(positive_kw).lower()
+            _tech_opt_in = ["software", "engineer", "developer", "machine learning",
+                            "data science", "devops", "full stack", "backend", "frontend",
+                            "ml ", " ai ", "sre", "cloud engineer", "ios", "android"]
+            if not any(tm in pos_blob for tm in _tech_opt_in):
+                continue
+        if not _looks_like_relevant_title(title, role_tokens, broad=(mode == "broad")):
             continue
         snippet = str(item.get("snippet") or "").strip()[:420]
         salary_range = str(item.get("salary_range") or "").strip() or _extract_salary_range_from_text(f"{title} {snippet}")
@@ -3470,7 +3504,7 @@ async def get_scraped_roles(
             funnel_mode=mode,
             role_tokens=role_tokens,
             apply_tech_blockers=tech_intent,
-            apply_non_tech_blockers=not tech_intent,
+            apply_non_tech_blockers=True,
         )
         if score < min_match_score:
             continue

@@ -130,7 +130,7 @@ _GLOBAL_TITLE_EXCLUDES = [
 def _infer_job_function(target_job_title: str) -> str:
     low = (target_job_title or "").strip().lower()
     if not low:
-        return "engineering"  # default bias for the product demo; overridden when context is provided
+        return "general"
     # Exact-ish signals first
     if "recruit" in low or "talent" in low or "sourcer" in low:
         return "recruiting"
@@ -196,6 +196,10 @@ def _is_relevant_decision_maker_for_job(title: str, job_fn: str) -> bool:
 
     senior = any(k in low for k in ["manager", "director", "head", "vp", "vice president", "chief", "cxo", "cto", "ceo", "founder", "president"])
     if fn_match and senior:
+        return True
+
+    # When no specific function is targeted, accept any senior person
+    if job_fn == "general" and senior:
         return True
 
     # Execs can be relevant even if function keywords don't match (small companies)
@@ -562,13 +566,13 @@ async def search_contacts(request: ContactSearchRequest):
             return False
 
         # 0) Prefer People Data Labs if configured (real people data)
+        pdl_contacts: List[Contact] = []
         if settings.pdl_api_key:
             try:
-                pdl = PDLClient(settings.pdl_api_key)
-                # best-effort: treat query as company name
-                # Use a larger pool when title filters are active, so we can satisfy broad selections.
-                raw = pdl.person_search(company=q, size=60 if title_filters else 14)
+                pdl = PDLClient(settings.pdl_api_key, timeout_seconds=20.0)
+                raw = pdl.person_search(company=q, size=80 if title_filters else 50)
                 people = pdl.extract_people(raw)
+                logger.info("PDL person_search for '%s' returned %d people", q, len(people))
 
                 def _score_person(title: str) -> int:
                     """
@@ -582,12 +586,11 @@ async def search_contacts(request: ContactSearchRequest):
                     if not _is_relevant_decision_maker_for_job(title, job_fn):
                         return -1000
 
-                    # Hard penalties for irrelevant/non-decision roles
                     if any(k in low for k in ["intern", "student", "contractor"]):
                         return -1000
-                    if any(k in low for k in ["sales", "account", "deal", "pursuit", "bd", "business development"]):
+                    if job_fn not in ("general", "sales") and any(k in low for k in ["sales", "account", "deal", "pursuit", "bd", "business development"]):
                         score -= 60
-                    if any(k in low for k in ["marketing", "growth", "partnerships"]):
+                    if job_fn not in ("general", "marketing") and any(k in low for k in ["marketing", "growth", "partnerships"]):
                         score -= 20
 
                     # Seniority
@@ -710,65 +713,10 @@ async def search_contacts(request: ContactSearchRequest):
                         )
                     )
 
-                if not contacts:
-                    raise HTTPException(status_code=404, detail="No decision makers found via PDL for that company query.")
-
-                # GPT helper (same as before)
-                client = get_openai_client()
-                helper_context = {
-                    "query": request.query,
-                    "company": request.company,
-                    "role": request.role,
-                    "level": request.level,
-                    "target_job_title": request.target_job_title,
-                    "candidate_title": request.candidate_title,
-                    "job_function": job_fn,
-                    "contacts": [c.model_dump() for c in contacts],
-                }
-                messages = [
-                    {
-                        "role": "system",
-                        "content": (
-                            "You generate outreach talking points for decision makers. "
-                            "Focus on business value and relevant industry questions.\n\n"
-                            "Style constraints:\n"
-                            "- Hard ban: do NOT use clichés like \"I hope you're doing well\", \"How are you?\", or \"Thank you for your time\".\n"
-                            "- suggestions should be direct and value-oriented.\n\n"
-                            "Return ONLY JSON with keys:\n"
-                            "- talking_points_by_contact: object mapping contact_id -> array of strings\n"
-                            "- opener_suggestions: array of strings\n"
-                            "- questions_to_ask: array of strings\n"
-                        ),
-                    },
-                    {"role": "user", "content": json.dumps(helper_context)},
-                ]
-                stub_json = {
-                    "talking_points_by_contact": {},
-                    "opener_suggestions": [
-                        "Quick question on your priorities for the team",
-                        "Noticed a theme in the roadmap — here’s a concrete idea",
-                    ],
-                    "questions_to_ask": [
-                        "What’s the most urgent outcome you need in the next 90 days?",
-                        "Where is the team currently feeling the most friction (quality or speed)?",
-                    ],
-                }
-                raw_llm = client.run_chat_completion(messages, temperature=0.25, max_tokens=650, stub_json=stub_json)
-                choices = raw_llm.get("choices") or []
-                msg = (choices[0].get("message") if choices else {}) or {}
-                content_str = str(msg.get("content") or "")
-                helper = extract_json_from_text(content_str) or stub_json
-
-                return ContactSearchResponse(
-                    success=True,
-                    message=f"Found {len(contacts)} contacts (PDL ranked)",
-                    contacts=contacts,
-                    helper=helper,
-                )
-            except HTTPException:
-                raise
+                pdl_contacts = list(contacts)
+                logger.info("PDL returned %d relevant contacts for '%s'", len(pdl_contacts), q)
             except Exception:
-                logger.exception("PDL contact search failed; falling back to public-source scrape")
+                logger.exception("PDL contact search failed for '%s'; will try other sources", q)
 
         # 1) Resolve company -> domain using public Clearbit autocomplete
         resolved = await _clearbit_company_suggest(q)
@@ -801,8 +749,8 @@ async def search_contacts(request: ContactSearchRequest):
                 if title_filters:
                     contacts = [c for c in contacts if _matches_title_filters(c.title)]
 
-        # 3) If we still have nothing, try OpenAI as a final backup to identify public personas
-        if not contacts and settings.openai_api_key:
+        # 3) Try OpenAI to identify public personas (supplements PDL + web scraping)
+        if len(contacts) + len(pdl_contacts) < 5 and settings.openai_api_key:
             try:
                 client = get_openai_client()
                 # Ask GPT to identify likely decision makers based on its training data (broad knowledge).
@@ -852,13 +800,28 @@ async def search_contacts(request: ContactSearchRequest):
             except Exception:
                 logger.exception("OpenAI contact backup failed")
 
-        # 4) If we still have nothing, surface a clear failure
+        # 4) Combine PDL contacts with web-scraped / GPT contacts, de-duping by name
+        seen_names: set[str] = set()
+        combined: List[Contact] = []
+        for c in pdl_contacts:
+            key = (c.name or "").strip().lower()
+            if key and key not in seen_names:
+                seen_names.add(key)
+                combined.append(c)
+        for c in contacts:
+            key = (c.name or "").strip().lower()
+            if key and key not in seen_names:
+                seen_names.add(key)
+                combined.append(c)
+        contacts = combined
+        logger.info("Combined contacts for '%s': %d PDL + %d other = %d total", q, len(pdl_contacts), len(contacts) - len(pdl_contacts), len(contacts))
+
         if not contacts:
             raise HTTPException(
                 status_code=404,
                 detail=(
-                    "No public decision makers found for that query. "
-                    "Try a more specific company name (e.g., 'Google LLC') or provide a company website domain."
+                    "No decision makers found for that company. "
+                    "Try a more specific company name (e.g., 'Zapier' instead of 'Z')."
                 ),
             )
 

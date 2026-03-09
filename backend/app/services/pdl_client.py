@@ -153,11 +153,13 @@ class PDLClient:
                     ]
                 }
             },
-            "size": max(1, min(int(size), 25)),
+            "size": max(1, min(int(size), 100)),
             "fields": DEFAULT_PERSON_FIELDS,
         }
         with httpx.Client(timeout=self.timeout_seconds, follow_redirects=True) as client:
             resp = client.post(url, json=query, headers=self._headers())
+            if resp.status_code in (402, 404):
+                return {"data": []}
             resp.raise_for_status()
             return resp.json()
 

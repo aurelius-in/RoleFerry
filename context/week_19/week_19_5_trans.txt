@@ -1,0 +1,641 @@
+Roleferry_part_5
+All right So I’m, uh,
+it’s working on some updates.
+Using a variety of prompts and screenshots that I provided.
+Okay. So you’re, you’re on signal is.com, uh, perfect. Yeah. I’m on Samsung.
+Yeah. And then you can also go to the, the records in there too. In terms of, like, um, getting the contact information,
+um getting the signals.
+All that kind of stuff too.
+Mm-hmm.
+Oh, they increased their pricing now.
+Mm-hmm.
+They went from $100 a month to now they charge $250 a month.
+Okay. Well, that’s good to know that we might be able to get away with charging a little more.
+Ugh.
+All right In a second here, I’m gonna do a push to GitHub and we’ll look at some more updates.
+Hmm.
+Yeah.
+Hmm.
+Hmm. Looks like you can connect your hacker into Cursor.
+It’s very.
+Nice.
+Nice. Unless Tim is screwing again. We’ll see we’ll see what he says.
+That could actually make it our app really much more functional.
+Yeah.
+So I just logged into my account with signals.
+Okay.
+Um,
+and it says here, “Connect your AI agent.” Signals. Paste your MCP URL into Cloud. Cursor or any MCP compatible agent to start running GTM tools from IPI.
+And then you can find and verify emails. Verify find and verify emails. Verify emails and rich company signals. Get all the things you want.
+We’ll go ahead and click the, um,
+yeah, get that Go ahead and do that.
+Connect your AI agent. Paste the MPC URL into Cloud.
+Copy URL I guess.
+Only save. Go back up.
+And maybe Cursor, this one?
+Yeah, yeah.
+Yeah.
+Hmm. Open Cursor settings. Open Cursor. Go to settings. MCP.
+Click Linking Quest. This. And then that.
+Click Add new MCP server. Left type. Server set events.
+I-I’m trying to do that right now So settings MCP.
+Oh, I don’t see MCP. I’m gonna type it here. MCP. There we go. MCP tools protection.
+MCP server. Server. Installed MPC servers. MCP servers.
+No M installed M MCP servers.
+Add custom NCP.
+Okay.
+Copy the URLs. I need to type it.
+So H I guess I need to go This is called Signal is.
+I need to type the full HTTP colon slash slash. Maybe S.
+Colon slash slash.
+API dot signal is. Dot com. Slash. Functions. Slash. V1. Slash.
+Signal is MC MCP.
+The same as dot moving dash MCP.
+Yeah. Dash MCP. Okay.
+Okay.
+Um,
+I did that That’s what I did. So oh, I did it actually did it that way.
+Let me make sure I did MCP servers.
+They use double quotes. I guess I will. And then URL. So mine looks exactly well,
+mine has an extra bracket. Why do I have an extra bracket?
+Oh, I don’t have an extra bracket. Okay. Cool.
+Cool. Yeah. Mine looks exactly like that
+Does it do you do some config or does this URL?
+I use the JSON one.
+‘Cause I didn’t have that field in my thing.
+I’ll show you.
+Uh-huh
+Um,
+oh, this is your Cursor? Mm-hmm. Yeah. So I got the MCP JSON right here and it’s the identical to the one you were showing.
+Hmm.
+Okay.
+Okay.
+So moving on. What’s, what’s the next step?
+Hmm.
+Oh, uh, let’s see here.
+Uh, menu JSON config. Okay. You got that.
+You got that
+Um,
+and so connect your STT agent. Uh,
+uh, Cursor.
+Hmm.
+Once connected, there’s tools here. Cursor’s AI agent. Ask Cursor to find companies in which contacts detect buying signals or execute systems.
+Okay. Well, we’re searching contacts, right?
+Mm-hmm.
+Okay. And then, um, do we we need to sign up for an account?
+Mine has my account set up Yeah. I have I already have the credits and everything, so.
+Okay. Can you connect to our app? Or can you give me the.
+Yeah.
+Whatever
+You know what I can give you the I the API key.
+I need something. Yeah.
+All right. Paste your MCP URL into Cloud. It should it should be this.
+Yeah. Oh, okay.
+I guess put that in chat, please.
+And hold on a second. Not pasted.
+Okay. What’s up with the dot dot dot though? Is that mean it’s not the full thing? Oh, just pop it in the chat and see what happens.
+Or if I’m wrong.
+Uh,
+not pasting.
+Let’s see if there’s something there.
+It’s not pasting into the chat?
+No, it’s not. It’s not copying.
+It’s not copying. Even when you push the copy URL button?
+Let me see. Yeah. Get API key.
+Oh, oh, I see. It wasn’t a real button It was just a demo what you’re supposed to do.
+Uh-huh Maybe this key.
+New key after connected to table?
+Yeah. Shoot me that one. All right. That type of viewport. Those are my API keys.
+Okay.
+So that’s not the full key.
+Nice.
+It’s got dots.
+Yeah. I don’t think we want dots. Maybe click the name.
+Hmm.
+Not the full key. Why is it not the full key?
+Sounds like you’re cussing.
+Fucking full key.
+It’s just it’s not giving it’s giving me the dots.
+Yeah. It’s not
+Maybe I used the key from, hmm,
+current key preview. Paste your full key button. Current key paste your paste your full.
+Maybe you need a new one
+Maybe I should generate a new one.
+Probably should.
+Create a new API key. Okay.
+Um,
+and paste. This is called role variant.
+Hmm.
+A lot better idea, right?
+I think so. There’s one word. Role variant. Role variant underscore API or something like that.
+It’ll be role variant signal is.
+Signal is.
+There you go.
+Change it name. Uh, campaign.
+Uh, like contact.
+Contacts.
+Yeah. Pretty much.
+Production environment. Production? Yeah.
+Pretty much. Yeah.
+Create key.
+This is a one this is the only time you’re full API key will be displayed. Okay. This is what we need.
+Now eyeball it Copy the key. Pop it in the chat and then save it yourself somewhere ‘cause you’re gonna need it later, probably.
+Hmm. That’s the full key.
+Don’t cuss at me.
+I’m sensory Google Chat.
+All right Well, this should help.
+Now we can use that.
+The full contacts and, um, signals and that should work a lot better.
+I agree.
+Okay. Good deal, man.
+Thank you for sharing your API key.
+Um, new.
+Hmm.
+Okay.
+All right What does this cost, by the way?
+Huh?
+Are we looking at the fees for the, the signals right now?
+Yeah. I’m looking at the fees. Yeah.
+All right So you have some credits. What, what your, uh,
+and tell people to start using it Probably won’t cost much, right? Or what did you have to pay anything upfront?
+Yeah. I had to pay a originally, I paid a $100 to, uh, get 10,000. Now, um,
+now they had to pay as you go option.
+Okay.
+Um, and then you have a monthly credit subscription.
+Nice.
+It’s not pay as you go.
+All right. Um,
+so what’s doing some work here.
+And we made a we, we made a big step forward by getting that going. We may need another API to get the emails working, but I feel like that’s gonna be the ticket. So I um, do we have another meeting into before now on the 11th? Probably want to, right?
+Um.
+Um.
+I don’t think we have one scheduled, but
+um the 11th is the Wednesday.
+Probably just do a follow-up tomorrow just in case it doesn’t work out and then we can have the 10th. So we make sure we have at least, like, one meeting before your, your presentation.
+Make things make sure things are squared away and figure out where they’re at. So you know what you’re showing and what works and what doesn’t. You can talk about the right stuff and not get stuck on some thing that’s not working yet, you know?
+Yeah. Yeah. I’m gonna disconfirm the emails too. Looks like I can find the emails.
+Mm-hmm.
+And you can get the signals.
+Hmm.
+Signals, testing,
+finish.
+Hmm. Yeah. You can make a big improvements to this.
+There’s a lot different than how it used to be.
+That’s great.
+So maybe something like um,
+where’s the data going No, that’s really not okay. Eventually, put it into play.
+They need to add a role fairy icon on there, so.
+Yeah. I have.
+I can tell them to do that. I know the guy.
+Oh, yeah
+Yeah.
+Well, since we’re not quite launched yet, maybe we’ll wait.
+Hmm. I’m just kind of just going through to see what would happen.
+What’s happening? Let’s see.
+Hmm.
+Yeah. I think this is gonna make it, uh, a lot better.
+Well, that’s every month going on.
+So the API is working. It returned a 200, which is when it says it returns a 200 status, that means that
+it actually worked like the connection was successful. So five signals returned. The test script had a minor variable name collision. Fixing that and rerunning for the signal data.
+This is progress.
+I’m watching here. I guess I should have let you watch.
+Yeah. Send me what you’ve seen. I don’t even know what you’re seeing. Let me, uh,
+let me see what you’re seeing in your thing. I’m not seeing.
+Okay. No problem.
+Yeah. That’s gonna be huge.
+Am I sharing right now?
+No. I don’t see it
+Okay.
+Yeah. You’re working on it from the coding okay.
+What’s going on here
+All right So.
+Is it happening on the right side? What’s going on on the right side?
+Yeah. Everything’s happening on the right side. So I gave it some screenshots that you were sharing with me earlier. That’s what those little white rectangles at the top are? And, um, anyways, it says, uh, so it created a Python file called signals.py. And
+so let me find where to add the signals call on the research flow is what it says there. And then it looked through the code, found the right place to put that. So now I need to merge signal as signals into the intelligence block after the LLM call. Let me find where that goes. And then it found that and inserted that in the right place in the code. It says now I need to add the newsroom specific search queries to the web search fallback company press release pages or high value sources. Let me update both the server and the keyless search paths to include the newsroom queries.
+Yeah.
+The API is working. 200 status, that means it’s good. Like 400 status means page can’t be found. 200 status means it it loads correctly. The five signals returned. The test script had a minor variable name collision. Let me fix that and rerun. So it fixed the thing.
+Mm-hmm.
+It says interesting. The cast response doesn’t include the full signal context, title, sources, URLs. Let me try and a fresh company that won’t be cached to see the full response.
+So it’s doing some experimentation and it’s working its way through till it gives us a page with the kind of stuff that we want.
+Hmm. It’s gonna give us like a JSON file like we saw in play.
+I don’t know If we ask for it. So, um,
+it says now I understand the signals response structure. The signals have IDs and types with confidence scores while the summary contains the rich outreach content, executive summary, conversation starters, and per signal relevance. This will be the bigger, right? Bigger.
+Mm-hmm.
+That’s better.
+Yeah.
+When you zoom in okay. Now it’s good Okay. Yeah. Yeah.
+So now I understand the signals response structure So right now it’s working on that Python file for signalists so that it interacts with signals better.
+Imagine coding this by hand. It’d just be like poking at it all day trying to get it right. Um, so let me, uh, let me.
+Let’s do it. You do. So yeah. Imagine coding this by hand, right?
+Yeah. It’d be like trying to figure all this shit out one thing at a time. Like it’s hard. It takes a lot of patience to code if you’re not using AI. Like I, um, you know, you just have no choice but to like put your head down and focus for hours and hours until you fix little things. You have to be very patient. Really, that’s just about patience. Just kind of like walk out and get this. Why isn’t this working? Yeah. So you can’t be an impatient person. If you’re coding, but now it’s like my attention span is shortening. I’m like, hurry up, AI.
+So I see the signals data is already in the corpus.
+And thus gets passed to the LLM as context and the merge intelligent function that line 1738 will merge it after passing. Let me also inject signal as data explicitly into the LLM prompt. Give it better context. Let me add a note in the system prompt.
+Now let me also add newsroom specific scraping when we detect a company domain. We can try to find their newsroom press page. All right. That’s kind of cool.
+So I like how it you know, it’s kind of thinking like, how can I make this better?
+And then the context research Python so it’s gonna give us better, more robust kind of complete searches for our context now. We just needed a good API. So thank you for bridging that gap for us, Mr. March. This is your month, isn’t it?
+Month We’re having big things.
+This is, uh, the month of March.
+Yeah. Signals is I knew this guy was gonna be good. This is the guy I’ve been telling you about his whole entire time.
+Oh, yeah.
+The guy that brought me on the path. Even while I was doing the first place.
+Oh, yeah.
+And he was he was he made this API and knew him and.
+Nice.
+He’s been I’ve been getting the coaching and mentoring from him, the one that made this API that is really robust.
+Yeah. Well, we’ve been trying it without this API. I thought it could just do his web search. But, um, you know, this is this is good. We, uh, tired of it.
+Yeah. It’s good Look at all this good technology adoption and earnings.
+Made a few stabs at it I feel like we should at least try to do it without other people’s stuff, you know, which we’ve done.
+So it’s good Like as much as we can just use GitHub, I think that would be great. But.
+Well, I think that is good that we do all the work previously because it has a good foundation to use this API.
+There you go.
+That’s what I wanted to do this whole time. I mean, I told you we needed a good API connection.
+Mm-hmm.
+But I understand where your executive summary got everything in there.
+Oh, I’m gonna have to add some of this stuff to, um, to the railway.
+This is gonna be sick, dude. This is gonna be really, really good.
+Don’t wanna lose this.
+That’s the that’s my API key.
+Don’t wanna lose that. Actually, I already saved it, but let me save it here too.
+Okay. So we got signal. Signal is.
+There’s no the new thing too. He made it capable for cursor before it was the only made it, uh, he made it only made it capable for, uh, claim.
+Yeah. That was a selling point for me because I was like, all right, it’s too easy not to do this. We’ll just do it right now. You know what I mean? It kind of crosses a threshold of being like super easy. And I’m just like, uh, it’s too easy not to do it. Have to do it.
+Yeah. It crossed the threshold.
+Yeah. Yeah. Crosses over my three my laziness threshold. I’m like, fine. All right. So what am I doing? I am going to railway and I need to add to the backend. I need to add variables. So we’ve got PDL API key.
+We need to have a, um,
+signal list. API. Key.
+And the value, what’s this thing you bought?
+Add.
+All right I need to tell cursor.
+That I added a value. On the railway backend. Signal list. API key.
+It’s the first time stuff is going on. It’s like so interesting to watch this thing go.
+You’re telling you, man. Just just imagine doing this yourself. I don’t care how fast you are, man. That would just be like it’s really easy to see the value.
+It isn’t a it isn’t hard to see the value. I don’t care how fast of a coder you are, man. There’s just.
+At the early chunk of the conversation starters, look at all these things doing.
+Mm-hmm.
+Wow
+Well, I mean, these are all things I’ve been complaining that it wasn’t doing. So now that it’s it’s really trying to do it and finally it was like, oh, you’re actually gonna enable me to do the things you’ve been asking for. Cool. Well, here’s what I’ll do then.
+You’re meeting me halfway here, you know?
+Now it’s like, all right I can do all this stuff
+Give me something to work with Oh, you’re not just gonna yell at me.
+No.
+Where is my data Give me my data.
+Let me dig into signal’s full capabilities. Wow, this sounds exciting.
+Some of these are old and it already figured this out. These are like things that hasn’t even read yet. It like already found the API. As soon as I put the API into a file, it’s like, oh, there it is. I didn’t even see here I was telling it, but it never read this message. So these are things that are queued up like prompts that have queued up.
+Mm-hmm.
+Yeah.
+And I said, just be sure don’t show Dave the recruiter and marketer or any machine learning or software jobs when he uploads his resume and goes to the roles. It’s getting tired of seeing that. I’ve asked you to fix it multiple times.
+All right So the context is yeah, the best way to talk to the AI is just how you talk to a person because that’s the way we think. So we’re gonna be able to clarify our thoughts. If you try to talk to it like a robot, it understands you less. So that’s fascinating because when I first started writing software, it was not like that.
+Obviously In fact, you had to think like a robot to even get the software to work. You’re like, okay, it needs a key value pair. It needs like this equals this. And it has to be very explicit and if you try to write the code in a way that’s like any different, it will completely misunderstand what you need and everything breaks.
+This is the biggest blocker number five.
+I’m sorry, what now
+I was reading this thing. It says context, signals.
+The biggest blocker.
+No facts are being found about people. Dave says this is kind of a blocker. He used to manually get facts from LinkedIn. Headlines, recent posts, comments. Well, he didn’t know who he was talking, but 10% reply rates, the app needs to find something personal about each contact. He’s open to paying for more APIs. Signals outreach intelligence. Dave showed how signals on play returns full email sequence strategy, email one angle, email two angle. Email two angle.
+Oh, interesting. So you uploaded my transcript.
+Yeah, our transcript. Yeah.
+Mm-hmm.
+So yeah, I’m just trying to yeah, this is an interesting way to do a meeting. So meetings are kind of different. Like the way I do it at work is we we talk for an hour, right? Me and like the associates and and we talk about what we want changed. I take that transcript, plug that into cursor, and then it updates the stuff, right? Um, but here, we can do it live in the meeting, which is even better.
+Mm-hmm.
+Um, I am on video, but I’m gonna turn off my video. Okay, you can come in. I turned off the video, dear.
+Put on a towel or something. Just kidding.
+The children, think about the children.
+This is teasing.
+It’s fancy.
+Well, everybody was Zoom meetings are in their underwear.
+Mm-hmm.
+I was just joking. She was she was dressed. She just looked a little disheveled. She didn’t want to be on camera.
+Mm-hmm.
+You know how women are Gotta put on their face before anyone sees them.
+Yeah.
+Again.
+I got it
+Yeah.
+I got it. It’s kind of funny. Multiple times we’ve been like rushing, rushing, rushing to get ready for something like our late for church or something. Got to finally pull up to church. Like we’re there on time. She’s in the car like putting on her makeup for five minutes. We’re late.
+Can’t go in there until I put on my makeup.
+Yeah, that’s that’s how it is.
+The world can’t see me like this.
+It’s funny. Can you imagine?
+Couldn’t leave her house until like your eyes were perfect.
+Mm-hmm.
+Well, it’s 4:20, so the car was only until 11:00, so if we got there at like 6:00, we could have like five hours. That’s a long time. Ride rides and expensive snacks. Oh yeah, we should eat some hot dogs before we go so that everybody’s full. Okay, good. Bye.
+So what we’re doing now is saying that it’s getting more information from signal this than from PDF.
+Hmm.
+Interesting. It’s good that they were working together. So we have that.
+So much going on It’s crazy to say we’ve been live like that’s happening.
+Mm-hmm.
+I mean, all the stuff would eventually get done if I had a hand coded. Like it would just take so much longer.
+Like five minutes of this stuff would take me all day. Like all day figuring it out. Like I got a lot done today. And I would feel like I got a lot done. Like, well, I updated this and updated this. I’m a little closer than I was. Oh, and I’ll update this one more thing before bed. And it would be dark. And then and then I’d be like, wake up the next day and I’d plug away at it for another like six hours and five more of this minutes of this would be done. And I’d feel really good about it too. I’d be like, wow, I got so much done today. And I was like, zip, zip, zip, zip, zip, zip, zip, zip, zip, zip, like a month’s worth of work happened in front of my eyes. After you spent years poking at it, right?
+And knowing how much work this is, like it isn’t impossible. You get it done. You end up calling someone to ask a question. You look on Stack Overflow. They have a lot of answers to things. You have to read through like tedious websites with poorly organized information and good Google searches and find everything you need.
+And then you get it all and it’s all working and or it’s not. And then it’s just it’s just beautiful. Like just to see this the AI runs into the same problems you would, but it it’s like fixes it and goes through it and solves it and just telling you there’s not a coder on this planet that won’t be using AI to write the code. Just why would you?
+Yeah.
+Yeah.
+It helps a little bit to know software. It helps a lot, actually. But it isn’t a total requirement. I think it’s like it’s just a learning curve with the tool. I think if you know software, it will shorten your learning curve with knowing how to use the AI to develop your apps. But you could probably use the app fine without any software knowledge. You just need to kind of spend a little more time like learning how to maneuver. Like because all you’re doing is describing what you want it to do. That doesn’t require software knowledge, right? But when you see something crazy, you’re like, wait, why are you doing it like that? You know?
+Mm-hmm.
+That kind of thing helps, but.
+It’s not going to write you bad code, at least not like for the most part.
+There’ll be some
+email, sequence strategy, it’s ridiculous. It’s like.
+Well, it’s an intelligent system. I mean, it’s it’s supposed to be thoughtful. Like if it wasn’t thoughtful about how it did this stuff, I wouldn’t be using it, right? Like we’re we’re using it because it’s it’s really smart. Like it’s smarter than us at figuring this stuff out. We it’s really dumb about certain things. Like it won’t you got to give it some context about what you’re trying to accomplish. It just doesn’t read your mind, right?
+Mm-hmm.
+But we’ve told it what our goal is. Like it’s been we’ve been very clear and like what we’re trying to accomplish and how we’re trying to do it and how we want it to look and the sticking points. And it’s reading all our conversations and being like, okay, well, they clearly want this, you know?
+Right now by the way, I’m using Opus 4.6. I’m not using GPT.
+Oh, you’re using Claude too.
+Yeah, yeah.
+I think that makes a difference.
+Well, after our our talk last night, while I was driving back, um, I was like, is it moving a little slow? Let’s see if we can speed it up.
+Because look, I can I can choose, um,
+so there’s 54 now That’s pretty new. Like this week now. And there’s like 5.3 codecs.
+53 codecs is what I use for coding. But for setting up the work for the coding, sometimes I’ll use this one because it understands context a little better.
+Mm-hmm.
+But Opus 46 is supposed to be I mean, that’s what they use for coding and for other stuff. And so everybody’s been raving about it. You know, I gotten so everybody’s saying good things. Like I haven’t heard anything bad. So I’m like, all right. That’s the best. I should use it.
+I’ve just you know, you you use what works. GPT was working for me. So I was like, why would I switch, you know?
+Seems to be doing a good job But for this, it was kind of like we were kind of hitting some walls, so.
+Try Claude for a while.
+Mm-hmm. Yeah, I tried to install Claude on my computer. I tried to do it through a terminal. I was so confused. So I was like, I’m not doing this shit. I went to the regular installation and then I wrote that up.
+Yeah, there’s like two guys at work that bought new computers just to like put Claude in there. Like open Claude or whatever.
+Yeah.
+Not the chatbots, but you know, like trying to get all these agents to do all this stuff.
+Yeah.
+I’ve got other priorities right now It sounds fun, but I just got like other stuff, you know? I can’t be like playing.
+Yeah, but the security issues are huge. Um.
+Yeah, they’re real.
+That’s why you need some computer. Because it’s like,
+you got to be really careful. It goes through your whole files. It gets through everything.
+I’d be really careful.
+It blocked.
+Is tech intent. So so it’s making so I told it to like it better never do that again. So it’s got a whole like blocked for is tech intent, right?
+Mm-hmm.
+And then determines whether a user is tech seeker. If it so if it accidentally flags Dave, as tech, the block won’t apply.
+Okay. So Dave is a recruiter marketer.
+Yeah.
+Tech intent.
+So it’s got blocked for that, so that’s interesting.
+I mean, it’s unbelievable.
+I’ve been bitching at it about that mistake it keeps making, s
+o. Yeah, it’s not a dumb animal. It’s there’s a little thought behind what it’s doing there. Sometimes when you just look at the UI surface, you don’t realize like the level of complexity and like thought and stuff that it’s putting into it, but. That’s why I’m I have a degree of confidence. I’m like, dude, we can we can get this shit to work. I’m not worried about it. And we haven’t really invested a lot of time. We’ve invested you know time for sure, but not like an insane amount of time where we should just give up yet, you know? Like we’ll get this product on the market. Um,
+so all set. Here we have lives and railway. Cool.
+So let’s try to go ahead and deploy this thing.
+Wow So did it all work in like 20 minutes?
+Yeah, yeah. I didn’t you know, we’ll see how it actually worked, but yeah. Hopefully it works good.
+Do you need to deploy it though? You know you need to deploy it, right?
+Yeah, yeah, yeah. I’m going to deploy it So I got to go to GitHub.
+Hmm.
+And I need to click on things.
+Wow This is crazy Dude, I’m feeling a lot more confident now.
+This is this is shit is really amazing.
+Shit is really going to change the world man. This is like just a matter of time. We’re going to have to actually like test it and keep trying to fix things that are not perfect until we get it. Don’t expect perfection overnight, but if we keep doing what we’re doing, and maybe you know try to meet a little bit more often, we’ll be great.
+Um, so now I need to go to railway and watch it do its thing.
+Dude, coding.
+It’s going to be a new thing, you know, like so like originally code was ones and zeros, and then they had something a little more complex than that, and now they have a little more complex than that. Or well, simpler, actually. Because like when you you you have layers of code on top of code. So the code we do now, like Java and Python, is actually descriptor words that are taking the underlying code, like hundreds of lines of code per descriptor word. So now we have AI, and it’s even more simple. We’re just human language. So the developers of the future won’t really know how to code well. At all. Like it’s going to be a lost language. People aren’t going to master JavaScript and Java and Python and all these C-sharp and C++ and they’re not going to need it. So it’s not going to be learned. Nobody’s going to know those languages anymore except like super nerds. But you won’t be needed. What they’re going to know how to do is use AI really well. And a lot of people are going to think they’re good at it, but there’ll be people that are actually really good at it. And they are able to build magnificent things with it because they know what they’re doing. And then there’ll be amateurs that can still build, you know, little things. You know, it’s like anybody can make a birdhouse, right?
+Yeah. Yeah.
+I think that the MCPs are going to be a big piece of it.
+Let’s see it Let’s take a look. We started the MCP. Yeah, you know me.
+You know, MCP, yeah, you know me.
+All right Um, you go ahead and do it with yours because we’re trying to work out a specific bug. So if you don’t mind.
+I want to make sure that the tech thing’s fixed. Better be, man.
+Let’s see.
+Okay.
+Oh, shit.
+Hold on That shit didn’t get pushed. So don’t test it yet.
+Oh.
+Sorry about that Almost there.
+A couple more minutes.
+What we’re doing now is like an hour, two hours. Would take like two months.
+Oh, yeah. Easily. Probably or never happen because we’re getting to a level of complexity that you would have to like have the patience to get through a grueling two months of very little progress and then finally be like, okay, I’m making a breakthrough. And then you know, you get to something you could release and you know, it takes a lot of um,
+takes a lot of patience. Like you have to be stick to itiveness. You know, it’s not an easy thing.
+Most people don’t survive that level of like yeah, you actually have to like stick through the when it’s not fun, you know?
+Mm-hmm.
+So yeah,
+it might never happen.
+I’ve definitely started a lot of projects that I was just like, is this even worth my time? I’m going to do something else now.
+It’s just, it’s hard to decide like what’s worth the trouble. Only have so many hours in a day. You don’t want to spend all day beating your head against the wall every day.
+Okay.
+I got it I got it.
+All right I’ll let you watch the countdown here.
+I’m going to have like the competitor.
+Oh my gosh
+Yeah.
+After each one.
+Yeah. I told you when I bought my car there was like confetti on the screen.
+Yeah.
+I took a screen. I took a picture Shared it on my family group chat. I was like, bought a car.
+Had like a picture of my car with like confetti in the on the screen.
+You know, yeah, I think it’s going to be good. It’s going to be good.
+Yeah, today was a productive session. I’m glad.
+I’m glad. API key was close.
+Yeah, I want to see this already, man. Come on, let’s do this.
+I want to see how the API key.
+I know it’s pretty exciting.
+And then like it’s also looking at my credits and seeing like what it’s actually using.
+Yeah, just for the testing. Like it’s going to generate some stuff based on tests and stuff.
+Yeah, you know, like it should show me like what it’s been processing and stuff.
+Mm-hmm.
+Not going to be good.
+So MCP is something like machine contact context protocol or something.
+That sounds right.
+Um, let me see.
+Model context protocol.
+It’s a protocol designed to enable AI models to interact seamlessly with external tools and services. It accesses and bridges between AI models and external services. Creating a standardized communication framework that enhances tool integration, accessibility, and AI reasoning capability.
+There you go.
+All right.
+Well, it looks like we’re deployed. So let’s do this. Yeah, you go back to sharing and then we’ll, you know,
+get to see some of our progress.
+Okay. I’ll go back to sharing.
+Third row.
+Okay. So I’m just going to refresh it.
+Let’s start from the start Go through and make sure it loads everything.
+Preferences.
+Did it remove the section we told it to remove?
+Remove location. Industries. Oh, it removed it. Yep.
+Yep There you go.
+It’s nice when it does.
+That’s good I think it’s better that it removed it, you know? That’s a good idea.
+You’re right It’s redundant. Well, that’s why there’s more than one brain on this because I get a little zoomed in and don’t always remember the big picture and it’s good.
+All right And I don’t think you need to clear it. Just kind of save and continue and make sure it takes everything to the well,
+yeah, I don’t see the need to clear it It should have the right stuff in there.
+I don’t know Do you have your resume handy? Is it clearing it going to take time?
+You know, I mean, I can do it. Let me do it.
+Yeah, I don’t want to take a chance that we’re going to see another frustrating screen full of like machine learning jobs for you.
+I mean, I think it’s good
+You think it’ll work
+I don’t know if the resume, I think I probably put a better resume in there.
+You want to
+Yeah, resume, this resume is an older version. It’s like October version. I made some updates in November.
+All right Yeah, I think the best way to test the app is if you’re an actual job seeker. That way you know if you’re getting good results or not.
+Because if you’re happy with the results, then you’re like, well, my customers will be happy with the results too.
+Yeah.
+When I can’t find a job that I’d want to do, I’m like, this app doesn’t work.
+I see this one.
+This resume.
+Okay.
+So this is like what this does is summarizes each section of the resume. And there’s a few words if possible. It seems like.
+All right I’m just going to key metrics.
+This round is skills. These aren’t all the skills, but not bad.
+Okay.
+This is the famous screen here.
+Trim roll There it is.
+Wow We got this.
+We got our slide bar There it is.
+I like the slide bar, man. I like the slide bar.
+I like it’s changing underneath It’s saying strict needs several keyword matches. Very strict needs five plus keyword matches.
+This looks nice.
+It was paying attention. I like it when it pays attention.
+All right Very cool.
+We’re going to go strict.
+Let’s go strict. See matched roles.
+I apologize.
+I’ll put the digital marketing there. I’ll put technical proving there.
+Google search All right. That’s good.
+I’m going to put in negative keyword software engineer.
+There you go.
+What Where’s it? Oh, I see. Right there. Machine learning software engineer. Okay.
+Don’t forget to.
+Okay. So see matched roles.
+Generate and view matched roles.
+Okay. Let’s see what we got.
+Please work.
+Please just God can we just have something work?
+What’s the no matches?
+Let’s go with strict, not need several keyword matches.
+I’ll take it all the way down All right. Do what you want.
+Let’s see. Got something.
+I got to get something. Let me make it less strict.
+Or your first conversation.
+No matches.
+Go to the go to the zero. Go to broad. See what happens.
+Yeah.
+Yeah. Go to broad. I think.
+Oh, go to broad
+I want to know if it works at all. It could just be that it’s not working at all. All the way. We’re saying maybe this thing even if it works at all.
+So it needs only one keyword match.
+Yeah. But I don’t even know if the tool’s working. The tool might be broken. So let’s see.
+I think that’s more than likely. I don’t think the tool’s working.
+Yeah. I’m too cool. But let’s go watch other things. I’m okay. Let’s see the contacts. Let’s see if the API works with the contact.
+All right
+Is the contact should be connected to signal this?
+Well, one good thing is it’s not giving you any software jobs.
+Yes. That’s a good thing.
+Or any jobs, but you know.
+What
+What happened here What’s this? Refresh the page?
+Is that a cached page?
+I got some wrong I got some wrong.
+Oh, there’s a bunch of software roles. Refresh the page? How did you get there? I’m confused.
+I just put broad and refresh it.
+I can’t find any. So see matched roles.
+So there’s actually.
+Moderate.
+If you keyword matches.
+Okay. Scrolling down Finding matched roles. I put software engineer at the negative. Machine learning at the negative.
+Okay.
+No, nothing.
+I’m so confused right now.
+How did you get when you got that? Did you go to another page and go back to this page?
+Oh, no. I don’t think so.
+I just scrolled up
+Go back to the broad thing again because I’m a little confused about what’s happening on this screen.
+Yeah. Very broad.
+If you put very broad, I think it just gives you random shit.
+I still feel optimistic. I just I’m getting impatient.
+But I think this can be fixed. Oh, there we go. Manager.
+Okay. This is what happened. This is what happened. Very broad gave me full-stack engineer role.
+Okay. Well, we don’t want any engineering roles unless you’re an engineer.
+That we crossed this bridge already, man.
+I saw it in their fixing it Yeah.
+This is not a 94% match.
+What now? It shouldn’t be at all matched. I mean, unless you’ve got some stuff in there for I guess you’re a manager.
+Oh, okay.
+I haven’t put anything in around software engineer.
+Yeah.
+Actually, software engineer is a negative keyword.
+Yeah.
+Putting AI as a negative keyword too.
+There’s engineers.
+Sure And AI too.
+At this point my hope’s up that this should work already. I’m not feeling doubtful that we’ll get it to work. I know I can get it to work probably like in an hour if I just poke at it, but I’m just a little impatient.
+Education lead. There you go. There’s one job left. They were all AI jobs. At least it filtered out those words. I mean, that’s
+something.
+There you go.
+There’s no job list for you. Oh, okay.
+Well, it’s there again.
+That’s nice.
+Well,
+but I did notice when you added a second time, it removed it.
+I noticed that some of them have minuses next to them and some don’t.
+Yeah.
+So I don’t know what’s going on with the negative keywords, but it’s letting you put the same keyword, negative keyword twice.
+And some have minuses next to them and some they don’t have minuses next to them.
+So not really sure what that is.
+All right Let’s see what the contact thing says.
+All right. Maybe we made some progress somewhere, right? Okay. Looks different.
+Oh, I told it I liked the icon clean look with the fields hidden, right?
+So you don’t see all the job titles. You got to select them now. It unfolds. Do you like the little icons next to the heading?
+Yeah.
+Borrowed that idea from the other place. You’re showing me.
+No signals, though.
+You do signals is not in here.
+Okay. So right. Go back. Go to search. Click the search button. Did you already do that? Stay there.
+No decision makers found for that company.
+Literally looking at them.
+Okay. We’re seeing a lot of no decision makers found for that company. I don’t know why when we were able to get them before.
+I think we’re going to have a lot more. It’s not even using if I’m pulling in the credit stuff.
+It’s not even using the.
+One of the APIs isn’t working. I mean, we had another API that was working. It was at least giving us contacts and it was and now we have two APIs. That should be searching for contacts and neither of them is giving us contacts. So that’s not progress.
+But I don’t feel discouraged. I just getting impatient. But I’ll get it to work. I think we just need to bug it and like, “Oh, I got a bug here,” and then it’ll fix.
+Everything points to it will work once we get it to work.
+I think that maybe it’s getting confused how much API pull from the.
+It should pull from both I want it to use both APIs and then remove duplicates. That’s what it should be doing.
+Yeah.
+It doesn’t need to pick an API. It should use both APIs. Give me a complete scrape of whatever contacts it finds and then it should just remove any duplicates, but keep information like consolidate, not remove, but consolidate the information for each contact that it finds. Give me all the information it can and then give me anything I can use give me like three recommended additions to the message, right?
+Yeah.
+When we do the campaign, we will have already selected the little personal details we’d like to include to make it more personalized.
+So what’s it doing here?
+I don’t like that word likely.
+That means it’s guessing.
+So it says culture and values Zapier likely values innovation, efficiency, and customer. Is it just guessing? Why is it saying likely? Either it knows what Zapier values or it doesn’t have any information.
+My guess is likely.
+Yeah.
+Likely is not a good word.
+So I don’t know Because it has the word likely, I don’t know if it’s if it didn’t have the word likely, I’d be like, “Oh, cool. It says Zapier values innovation, efficiency, and customer.” I wouldn’t even think twice, but because it put that word likely, I’m thinking it’s fake.
+It’s also not pulling to my credits. It should pull it to my credits.
+Okay. So the API doesn’t seem to be pulling from any credits because there’s no evidence that it’s working or that it’s collecting any data or pulling from credits when we check the billing screen on the signal is.
+So it shouldn’t say under hiring signal, it shouldn’t say the words signals from the imported role description or suggested topics to reference derived from the imported role description. No external web sources in this run. It doesn’t need to say that. Just give us the information or don’t.
+If you don’t have a recent post, then don’t show the option.
+Don’t include them under the signals to include if you didn’t find anything.
+Okay. Well, we’re not there yet. Don’t get too upset about it. We’re going to get there.
+We’re going to get there.
+There’s an API post 500 on internal server error on the research page. Why did you click to get that API post?
+I just clicked on that. And then I clicked on this.
+So you’re just nothing really. You’re just clicking on dropdowns.
+No.
+There’s definitely some prompt.
+There’s definitely information here.
+All right. Well,
+research and log mode for richer results. Yeah. Does that mean we’re not in live mode? Why does it say try running in live mode?
+Why would we not be in live mode? Did this thing go through?
+Yeah. I don’t know There’s a bug somewhere, but it’s just some I just have to work out the bug. Don’t get discouraged. Just hang in there. Be patient. We’ll get it. I feel like we’re there. I feel like we’re right on the verge. There’s like a bug. There’s a bug. I was excited too. I was optimistic that we’d get to see it, but I think we did actually solve the major problem. We needed an API. Now we’re going to use the API we had and the API we have now. We’re getting them to work together. We’re going to fix this bug. And the next time we meet, do you want to try to meet tomorrow?
+Yeah. I’ll meet tomorrow.
+All right So I’m usually off by 5:00 PM my time. Usually earlier, but we’ll say 5:00 my time, 6:00 your time. Does that work for you?
+Yeah.
+Are you free by then Tomorrow?
+Tomorrow. Monday. Yeah. Yeah. I got 5:30. Yeah. That works for me.
+Yeah. We’re getting real close, man. There’s no way we can’t get it to work. We know we have the API that’s going to cross a lot of these bridges for us. Bridge a lot of these gaps. We have what we need. So right now, we need to just be patient with our work super close. There’s this old Taoist proverb. I know you like Eastern stuff. So there’s this he says, “Most people fail when they’re on the verge of success.” So put as much effort into the end as into the beginning, and there will be no failure.
+Lots of us said that So yeah, don’t give up when you’re on the verge, man. We’re super, super close.
+I’m a secret Taoist, so.
+Thank you.
+Yeah. Yeah. So yeah, we’ll be there. Very soon, we’re right there. I’m excited.
+Let’s do it
+All right man. Thanks for hanging in there with me. We actually did make a lot more progress than you think. We just didn’t get the dopamine rush of seeing it all work, but we get that together. Well, I’ll make sure you get that tomorrow first thing when you log in. It’s 6 o’clock tomorrow. Your time will see it. All right, man. I got a carnival to go to. I spent some money on a bunch of crap.
+All right
+Okay, man. Good seeing you. Okay.
+All right Thanks. You too.
+Thanks.
+Are the hair cuts Hi, wifey.
+How’s it going? Okay.
+You’ll feel very pretty today. You look pretty.
+You look really pretty.
+Well done.
+They’re so cold It’s okay.
+I’ll tear my stuff It’s a good look.
+You like it too, or is it just cold?
+I need to get away with you. Yeah. I need to get away. With you. I want to get away. I want that way.
