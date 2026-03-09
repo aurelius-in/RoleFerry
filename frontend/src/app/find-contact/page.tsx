@@ -8,6 +8,12 @@ import { getCurrentDataMode } from "@/lib/dataMode";
 import InlineSpinner from "@/components/InlineSpinner";
 
 
+interface ContactSignal {
+  label: string;
+  value: string;
+  category: string;
+}
+
 interface Contact {
   id: string;
   name: string;
@@ -27,6 +33,8 @@ interface Contact {
   job_company_linkedin_url?: string;
   job_company_industry?: string;
   job_company_size?: string;
+  person_signals?: ContactSignal[];
+  company_signals?: ContactSignal[];
 }
 
 interface VerificationBadge {
@@ -638,7 +646,7 @@ export default function FindContactPage() {
     // If the user just finished Company Research, prefill the company for a smoother workflow.
     try {
       const co = String(localStorage.getItem("selected_company_name") || "").trim();
-      if (co) setSearchQuery((prev) => (String(prev || "").trim() ? prev : co));
+      if (co) setCompanyQuery((prev: string) => (String(prev || "").trim() ? prev : co));
     } catch {}
 
     // Identify user for per-user persistence
@@ -988,6 +996,16 @@ export default function FindContactPage() {
       return;
     }
     localStorage.setItem('selected_contacts', JSON.stringify(chosen));
+
+    const selectedSignals: Record<string, ContactSignal[]> = {};
+    for (const c of chosen) {
+      const sigs = (c.person_signals || []).filter((_: any, idx: number) =>
+        selectedContactSignalIds.has(`${c.id}_psig_${idx}`)
+      );
+      if (sigs.length) selectedSignals[c.id] = sigs;
+    }
+    localStorage.setItem('selected_person_signals', JSON.stringify(selectedSignals));
+
     router.push('/bio-page');
   };
 
@@ -1887,6 +1905,48 @@ export default function FindContactPage() {
                             </div>
                           </div>
                         ) : null}
+
+                        {/* Person signals from PDL */}
+                        {(contact.person_signals?.length ?? 0) > 0 && (
+                          <div className="pt-2">
+                            <div className="text-[11px] font-semibold text-white/60 uppercase tracking-wider mb-1.5">About {contact.name?.split(" ")[0]}</div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {contact.person_signals!.slice(0, 9).map((sig, idx) => {
+                                const sigId = `${contact.id}_psig_${idx}`;
+                                const on = selectedContactSignalIds.has(sigId);
+                                const count = [...selectedContactSignalIds].filter(k => k.startsWith(`${contact.id}_`)).length;
+                                return (
+                                  <button
+                                    key={sigId}
+                                    type="button"
+                                    title={`${sig.label}: ${sig.value}`}
+                                    disabled={!on && count >= 3}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedContactSignalIds(prev => {
+                                        const next = new Set(prev);
+                                        if (next.has(sigId)) { next.delete(sigId); } else if (count < 3) { next.add(sigId); }
+                                        return next;
+                                      });
+                                    }}
+                                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] leading-tight border transition-all ${
+                                      on
+                                        ? "border-emerald-400/70 bg-emerald-500/20 text-emerald-200"
+                                        : count >= 3
+                                          ? "border-white/5 bg-white/3 text-white/30 cursor-not-allowed"
+                                          : "border-white/10 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10"
+                                    }`}
+                                  >
+                                    {on && <span className="text-emerald-300">✓</span>}
+                                    <span className="font-medium">{sig.label}:</span>
+                                    <span className="truncate max-w-[140px]">{sig.value}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <p className="text-[9px] text-white/40 mt-1">Select up to 3 to include in your message</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -2070,7 +2130,7 @@ export default function FindContactPage() {
               <button
                 className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
                 onClick={() => {
-                  const company = searchQuery.trim() || "Company";
+                  const company = companyQuery.trim() || "Company";
                   const id = `manual_${Date.now()}`;
                   const c: Contact = {
                     id,
