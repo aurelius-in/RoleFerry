@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import CollapsibleSection from "@/components/CollapsibleSection";
 
 interface JobPreferences {
   values: string[];
@@ -401,11 +402,7 @@ export default function JobPreferencesPage() {
 
           <div className="space-y-8">
             {/* Values */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4">
-                What do you value in a {" "}
-                {mode === "job-seeker" ? "new role" : "client relationship"}?
-              </h2>
+            <CollapsibleSection title={`What do you value in a ${mode === "job-seeker" ? "new role" : "client relationship"}?`} count={preferences.values.length} defaultOpen>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {VALUES_OPTIONS.map((value) => (
                   <label
@@ -422,13 +419,10 @@ export default function JobPreferencesPage() {
                   </label>
                 ))}
               </div>
-            </div>
+            </CollapsibleSection>
 
             {/* Role Categories */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4">
-                What kinds of roles are you interested in?
-              </h2>
+            <CollapsibleSection title="What kinds of roles are you interested in?" count={preferences.roleCategories.length} defaultOpen>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {ROLE_CATEGORIES.map((category) => (
                   <label
@@ -447,13 +441,10 @@ export default function JobPreferencesPage() {
                   </label>
                 ))}
               </div>
-            </div>
+            </CollapsibleSection>
 
             {/* Location Preferences */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4">
-                Where would you like to work?
-              </h2>
+            <CollapsibleSection title="Where would you like to work?" count={preferences.locationPreferences.length} defaultOpen>
               <div className="space-y-4">
                 <div>
                   <h3 className="text-lg font-medium mb-3">
@@ -520,13 +511,10 @@ export default function JobPreferencesPage() {
                   </div>
                 )}
               </div>
-            </div>
+            </CollapsibleSection>
 
             {/* Role Type */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4">
-                What type of roles are you looking for?
-              </h2>
+            <CollapsibleSection title="What type of roles are you looking for?" count={preferences.roleType.length} defaultOpen>
               <div className="flex space-x-4">
                 {ROLE_TYPE.map((type) => (
                   <label
@@ -543,13 +531,10 @@ export default function JobPreferencesPage() {
                   </label>
                 ))}
               </div>
-            </div>
+            </CollapsibleSection>
 
             {/* Company Size */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4">
-                What is your ideal company size?
-              </h2>
+            <CollapsibleSection title="What is your ideal company size?" count={preferences.companySize.length} defaultOpen>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {COMPANY_SIZE.map((size) => (
                   <label
@@ -566,13 +551,10 @@ export default function JobPreferencesPage() {
                   </label>
                 ))}
               </div>
-            </div>
+            </CollapsibleSection>
 
             {/* Industries */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4">
-                What industries are exciting to you?
-              </h2>
+            <CollapsibleSection title="What industries are exciting to you?" count={preferences.industries.length} defaultOpen>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {INDUSTRIES.map((industry) => (
                   <label
@@ -589,13 +571,10 @@ export default function JobPreferencesPage() {
                   </label>
                 ))}
               </div>
-            </div>
+            </CollapsibleSection>
 
             {/* Minimum Salary */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4">
-                What is your minimum expected salary?
-              </h2>
+            <CollapsibleSection title="What is your minimum expected salary?" defaultOpen>
               <input
                 type="text"
                 placeholder="e.g., $80,000"
@@ -603,13 +582,10 @@ export default function JobPreferencesPage() {
                 onChange={(e) => handleSingleSelect("minimumSalary", e.target.value)}
                 className="w-full max-w-xs border border-gray-300 rounded-md px-3 py-2"
               />
-            </div>
+            </CollapsibleSection>
 
             {/* Role Search Status */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4">
-                Lastly, what's the status of your role search?
-              </h2>
+            <CollapsibleSection title="What's the status of your role search?" defaultOpen>
               <div className="space-y-2">
                 {JOB_SEARCH_STATUS.map((status) => (
                   <label
@@ -630,7 +606,7 @@ export default function JobPreferencesPage() {
                   </label>
                 ))}
               </div>
-            </div>
+            </CollapsibleSection>
           </div>
 
           {helper && (
