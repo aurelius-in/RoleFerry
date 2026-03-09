@@ -92,6 +92,24 @@ class GapAnalysisResponse(BaseModel):
     helper: Optional[Dict[str, Any]] = None
 
 
+_SOFT_GENERIC_SKILLS = {
+    "collaboration", "communication", "teamwork", "problem solving",
+    "problem-solving", "leadership", "time management", "adaptability",
+    "creativity", "critical thinking", "attention to detail",
+    "detail-oriented", "detail oriented", "interpersonal skills",
+    "organizational skills", "work ethic", "self-motivated",
+    "self motivated", "multitasking", "decision making",
+    "decision-making", "conflict resolution", "negotiation",
+    "presentation skills", "writing", "written communication",
+    "verbal communication", "analytical skills", "research",
+    "customer service", "customer focus", "relationship building",
+    "stakeholder management", "initiative", "motivation",
+    "reliability", "flexibility", "positive attitude",
+    "emotional intelligence", "mentoring", "coaching",
+    "strategic thinking", "planning", "organization",
+}
+
+
 def _norm_list(xs: Any) -> List[str]:
     out: List[str] = []
     if not xs:
@@ -761,17 +779,10 @@ def _deterministic_rank(
                 pref_gaps.append(
                     f"Salary preference mismatch: you want at least ${pref_floor:,}/yr, but this job appears to start around ${job_floor:,}/yr."
                 )
-            elif pref_floor is not None and job_floor is None:
-                pref_gaps.append("Salary preference not checked yet (salary is missing or not parseable from this job).")
+            # If salary is missing from the job, that's not a gap -- absence of evidence is not evidence of absence.
 
-        # Role category mismatch (soft): user selected categories but title doesn't match.
-        if role_cats:
-            title_tokens = set(_tokenize(j.title))
-            cat_hit = any(tok in title_tokens for cat in role_cats for tok in _tokenize(cat))
-            if not cat_hit:
-                pref_gaps.append(
-                    f"Role-category fit not obvious: you selected {', '.join(sorted(list(role_cats))[:4])}, but the title may not match those categories."
-                )
+        # Role category: only flag if job explicitly names a conflicting category, not just because
+        # the title doesn't contain exact tokens (absence of evidence != evidence of absence).
 
         # Location preferences (soft): if user selected specific places, check job location when available.
         # Note: location_preferences typically contains work-mode values (Remote/Hybrid/In-Person). We also accept a freeform
@@ -787,11 +798,7 @@ def _deterministic_rank(
             # If user picked a state, require it when job is onsite/hybrid and location is known.
             if loc_floor and job_work in {"onsite", "hybrid"} and jl and loc_floor.lower() not in jl:
                 pref_gaps.append(f"Location preference mismatch: you selected {loc_floor}, but this job appears to be in {job_loc or 'an unspecified location'}.")
-            # If user picked explicit cities/states and job location is known and doesn't mention any, flag as a soft mismatch.
-            if jl and loc_prefs and not any(p.lower() in jl for p in loc_prefs):
-                pref_gaps.append(
-                    "Location preference not confirmed: your preferred locations don’t appear to match this job’s listed location."
-                )
+
 
         # Industry preferences (soft): we can't reliably infer industries without an LLM, but we can surface a check.
         inds = [x.strip() for x in _norm_list(preferences.industries) if str(x).strip()]
@@ -802,8 +809,7 @@ def _deterministic_rank(
                 inter = {x.lower() for x in inds}.intersection({x.lower() for x in job_inds})
                 if not inter:
                     pref_gaps.append(f"Industry preference mismatch: you selected {', '.join(inds[:3])}, but this job appears outside those industries.")
-            else:
-                pref_gaps.append("Industry preference not confirmed: the posting doesn’t clearly state the industry; confirm in screening.")
+
 
         # Values (soft): translate values into screening checks using job text signals.
         vals = [x.strip() for x in _norm_list(preferences.values) if str(x).strip()]
@@ -819,20 +825,19 @@ def _deterministic_rank(
             ):
                 pref_gaps.append("Values fit risk: you want structure/clarity, but the role signals high ambiguity and fast iteration.")
 
-        # Force non-empty preference gaps (user request): add an actionable screening check when none were found.
-        if not pref_gaps:
-            pref_gaps.append("Preference fit looks OK from available signals; confirm work mode, role type, and salary range in the first screen.")
+
 
         pref_gap_objs: List[GapDetail] = [
             GapDetail(gap=g, severity="medium", evidence=["Derived from job text + preferences"], how_to_close="Adjust preferences or focus on better-aligned roles.")
             for g in pref_gaps[:6]
         ]
+        hard_missing = [s for s in missing if s.lower() not in _SOFT_GENERIC_SKILLS]
         resume_gap_objs: List[GapDetail] = []
-        for s in missing[:10]:
+        for s in hard_missing[:10]:
             resume_gap_objs.append(
                 GapDetail(
                     gap=f"Missing required skill: {s}",
-                    severity="high" if len(missing) >= 6 else "medium",
+                    severity="high" if len(hard_missing) >= 6 else "medium",
                     evidence=["Job required_skills vs resume evidence (skills + role descriptions + accomplishments)"],
                     how_to_close=f"Add explicit evidence of {s} to your resume (skill line + 1 bullet), or build/refresh {s} and include a project bullet.",
                 )
@@ -1047,13 +1052,15 @@ async def analyze_gap(req: GapAnalysisRequest):
                     "Rules:\n"
                     "- Do NOT fabricate candidate experience.\n"
                     "- Do NOT invent facts or requirements not present in the inputs.\n"
-                    "- If job text does not specify a preference-related signal (salary/work mode/etc), you MAY include a low-severity 'confirm in screening' gap.\n"
-                    "  Evidence for those must cite: the user's stated preference AND that the job text is missing/unclear.\n"
+                    "- CRITICAL: Absence of evidence is NOT evidence of absence. If a job posting does not mention an industry, salary, or location, that is NOT a gap.\n"
+                    "- A gap is ONLY something explicitly found in the job description that clearly conflicts with the resume, preferences, or personality.\n"
+                    "- Do NOT flag soft/generic skills (Collaboration, Communication, Teamwork, Leadership, etc.) as resume gaps. Only flag hard/technical skills.\n"
+                    "- Do NOT include 'not confirmed' or 'confirm in screening' gaps. Only include actual conflicts.\n"
                     "- Prefer concise, scannable items.\n"
                     "- Output ONLY JSON.\n\n"
-                    "Hard requirements (non-empty buckets):\n"
+                    "Hard requirements:\n"
                     "- If personality_profile or temperament_profile is provided, EACH ranked item MUST include at least 1 personality_gaps entry.\n"
-                    "- EACH ranked item MUST include at least 2 preference_gaps entries (can be 'confirm in screening' when unclear).\n"
+                    "- Only include preference_gaps when there is an actual conflict between user preferences and job requirements.\n"
                     "- Use ALL preference inputs when relevant: values, role_categories, location_preferences, work_type, role_type, company_size, industries, skills, minimum_salary.\n\n"
                     "Return a JSON object with:\n"
                     "- ranked: array of items {\n"
