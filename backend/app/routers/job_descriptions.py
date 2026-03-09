@@ -3623,7 +3623,7 @@ async def get_scraped_roles(
 
     ranked = sorted(roles, key=lambda r: (r.match_score, bool(r.salary_range)), reverse=True)
 
-    MAX_PER_COMPANY = 10
+    MAX_PER_COMPANY = 5
 
     # Pass 1: one best role per company for maximum diversity.
     selected: List[ScrapedRole] = []
