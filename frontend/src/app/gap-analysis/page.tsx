@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import StarRating from "@/components/StarRating";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
 
@@ -53,8 +52,6 @@ type GapAnalysisItem = {
   title: string;
   company: string;
   score: number;
-  // UI-only: star rating assigned on first analysis run (should not re-scale when roles are dropped)
-  ui_stars?: 1 | 2 | 3 | 4 | 5;
   recommendation: "pursue" | "maybe" | "skip";
   matched_skills: string[];
   missing_skills: string[];
@@ -153,13 +150,10 @@ function buildMinimalTemperamentProfileFromAnswers(rawAnswers: any): Temperament
   return { version: "answers-v1", completed_at: new Date().toISOString(), scores };
 }
 
-function badgeByStars(stars: number | undefined) {
-  const s = Number(stars || 0);
-  if (s >= 5) return { label: "Excellent", cls: "bg-emerald-500/15 border-emerald-500/30 text-emerald-200" };
-  if (s >= 4) return { label: "Great", cls: "bg-lime-500/15 border-lime-500/30 text-lime-200" };
-  if (s >= 3) return { label: "Good", cls: "bg-yellow-500/15 border-yellow-500/30 text-yellow-200" };
-  if (s >= 2) return { label: "Fair", cls: "bg-orange-500/15 border-orange-500/30 text-orange-200" };
-  return { label: "Poor", cls: "bg-red-500/15 border-red-500/30 text-red-200" };
+function gapTierBadge(totalGaps: number) {
+  if (totalGaps <= 2) return { label: "Minor Gaps", cls: "bg-emerald-500/15 border-emerald-500/30 text-emerald-200" };
+  if (totalGaps <= 5) return { label: "Moderate Gaps", cls: "bg-yellow-500/15 border-yellow-500/30 text-yellow-200" };
+  return { label: "Major Gaps", cls: "bg-red-500/15 border-red-500/30 text-red-200" };
 }
 
 export default function GapAnalysisPage() {
@@ -214,33 +208,7 @@ export default function GapAnalysisPage() {
     return `${top.title} @ ${formatCompanyName(top.company)}`;
   }, [ranked]);
 
-  function starsForRank(idx: number, total: number): 2 | 3 | 4 | 5 {
-    const n = Math.max(0, Number(total) || 0);
-    if (n <= 1) return 5;
-    if (n === 2) return idx === 0 ? 5 : 3; // default: best 5, other 3
-    if (n === 3) return idx === 0 ? 5 : idx === 1 ? 4 : 3;
-    // n > 3: top 2 => 5, 3rd => 4, rest => 2
-    if (idx <= 1) return 5;
-    if (idx === 2) return 4;
-    return 2;
-  }
-
-  function applyResumeGapPenalty(baseStars: 2 | 3 | 4 | 5, resumeGaps: any): 1 | 2 | 3 | 4 | 5 {
-    const count = Array.isArray(resumeGaps) ? resumeGaps.length : 0;
-    const penalty = Math.floor(count / 4); // subtract 1 star per 4 resume gaps
-    const adjusted = Math.max(1, Number(baseStars) - penalty);
-    return adjusted as 1 | 2 | 3 | 4 | 5;
-  }
-
-  const rankedUi = useMemo(() => {
-    const list = Array.isArray(ranked) ? ranked : [];
-    return list.map((r, idx) => ({
-      ...r,
-      // IMPORTANT: once assigned, keep static (dropping roles shouldn't re-scale stars)
-      ui_stars: (r as any)?.ui_stars ?? applyResumeGapPenalty(starsForRank(idx, list.length), (r as any)?.resume_gaps),
-    }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ranked]);
+  const rankedUi = useMemo(() => Array.isArray(ranked) ? ranked : [], [ranked]);
 
   async function runAnalysis() {
     setError(null);
@@ -276,13 +244,7 @@ export default function GapAnalysisPage() {
         job_descriptions: jobDescriptions,
       });
       if (!resp.success) throw new Error(resp.message || "Analysis failed");
-      const rawRanked = resp.ranked || [];
-      // Assign stars ONCE based on initial rank order.
-      const initial = (Array.isArray(rawRanked) ? rawRanked : []).map((r, idx, arr) => ({
-        ...r,
-        ui_stars: (r as any)?.ui_stars ?? applyResumeGapPenalty(starsForRank(idx, arr.length), (r as any)?.resume_gaps),
-      }));
-      setRanked(initial as any);
+      setRanked(resp.ranked || []);
       setHelper(resp.helper || null);
     } catch (e: any) {
       setError(e?.message || "Failed to run gap analysis.");
@@ -467,8 +429,8 @@ export default function GapAnalysisPage() {
             <div className="mt-8 space-y-1">
               {rankedUi.map((r) => {
                 const isOpen = expandedJobIds.has(r.job_id);
-                const badge = badgeByStars(r.ui_stars);
                 const totalGaps = (r.resume_gaps?.length || 0) + (r.personality_gaps?.length || 0) + (r.preference_gaps?.length || 0);
+                const badge = gapTierBadge(totalGaps);
                 return (
                   <div key={r.job_id} className="rounded-lg border border-white/10 bg-black/20 overflow-hidden">
                     <button
@@ -484,8 +446,7 @@ export default function GapAnalysisPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        {totalGaps > 0 && <span className="text-[10px] text-white/40">{totalGaps} gap{totalGaps !== 1 ? "s" : ""}</span>}
-                        <StarRating value={r.ui_stars / 5} scale="fraction" showNumeric={false} className="text-[10px]" />
+                        <span className="text-[10px] text-white/40">{totalGaps} gap{totalGaps !== 1 ? "s" : ""}</span>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] ${badge.cls}`}>{badge.label}</span>
                       </div>
                     </button>
