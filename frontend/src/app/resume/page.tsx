@@ -507,9 +507,9 @@ export default function ResumePage() {
                 {extract.positions.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
-                <div className="space-y-4">
+                <div className="space-y-2">
                   {extract.positions.map((position, index) => (
-                    <div key={index} className="border border-white/10 bg-black/20 rounded-lg p-4">
+                    <div key={index} className="border border-white/10 bg-black/20 rounded-lg p-3">
                       {isEditing ? (
                         <div className="space-y-3">
                           <div className="grid grid-cols-2 gap-3">
@@ -560,16 +560,16 @@ export default function ResumePage() {
                         </div>
                       ) : (
                         <div>
-                          <div className="flex justify-between items-start mb-2">
+                          <div className="flex justify-between items-start mb-1">
                             <div>
-                              <h4 className="font-semibold text-lg">{position.title}</h4>
-                              <p className="text-gray-600">{formatCompanyName(position.company)}</p>
+                              <h4 className="font-semibold text-xs text-white">{position.title}</h4>
+                              <p className="text-[11px] text-white/60">{formatCompanyName(position.company)}</p>
                             </div>
-                            <span className="text-sm text-gray-500">
+                            <span className="text-[11px] text-white/50">
                               {position.startDate} - {position.current ? "Present" : position.endDate}
                             </span>
                           </div>
-                          <p className="text-gray-700">{position.description}</p>
+                          <p className="text-[11px] text-white/70 leading-relaxed">{position.description}</p>
                         </div>
                       )}
                     </div>
@@ -582,9 +582,9 @@ export default function ResumePage() {
                 {extract.keyMetrics.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                   {extract.keyMetrics.map((metric, index) => (
-                    <div key={index} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div key={index} className="bg-blue-950/30 border border-blue-400/20 rounded-lg p-2.5">
                       {isEditing ? (
                         <div className="space-y-2">
                           <input
@@ -617,13 +617,13 @@ export default function ResumePage() {
                         </div>
                       ) : (
                         <div>
-                          <h4 className="font-semibold text-blue-900">{metric.metric}</h4>
+                          <h4 className="font-semibold text-[11px] text-blue-200">{metric.metric}</h4>
                           {metric.value ? (
-                            <p className="text-2xl font-bold text-blue-600">{metric.value}</p>
+                            <p className="text-sm font-bold text-blue-400">{metric.value}</p>
                           ) : (
-                            <p className="text-sm font-semibold text-blue-700">Qualitative outcome</p>
+                            <p className="text-[11px] font-semibold text-blue-300">Qualitative outcome</p>
                           )}
-                          {metric.context ? <p className="text-sm text-blue-700">{metric.context}</p> : null}
+                          {metric.context ? <p className="text-[11px] text-blue-300/70">{metric.context}</p> : null}
                         </div>
                       )}
                     </div>
@@ -636,21 +636,21 @@ export default function ResumePage() {
                 {extract.businessChallenges.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
-                <ul className="space-y-2">
+                <ul className="space-y-1">
                   {extract.businessChallenges.map((challenge, index) => (
-                    <li key={index} className="flex items-start space-x-2">
-                      <span className="text-orange-500 mt-1">•</span>
+                    <li key={index} className="flex items-start space-x-2 text-[11px] text-white/70">
+                      <span className="text-orange-400/60 mt-0.5">•</span>
                       {isEditing ? (
                          <div className="flex-1 flex space-x-2">
                            <input
                              type="text"
                              value={challenge}
                              onChange={(e) => handleEdit('businessChallenges', index, e.target.value)}
-                             className="flex-1 border border-gray-300 rounded-md px-3 py-2"
+                             className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-xs"
                            />
                            <button
                              onClick={() => handleRemoveItem('businessChallenges', index)}
-                             className="text-red-600 hover:text-red-800 text-sm"
+                             className="text-red-600 hover:text-red-800 text-xs"
                            >
                              Remove
                            </button>
@@ -668,11 +668,11 @@ export default function ResumePage() {
                 {extract.skills.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {extract.skills.map((skill, index) => (
                     <span
                       key={index}
-                      className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm"
+                      className="bg-white/5 border border-white/10 text-white/70 px-2 py-0.5 rounded-full text-[11px]"
                     >
                       {skill}
                     </span>
@@ -685,10 +685,10 @@ export default function ResumePage() {
                 {extract.accomplishments.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
-                <ul className="space-y-2">
+                <ul className="space-y-1">
                   {extract.accomplishments.map((accomplishment, index) => (
-                    <li key={index} className="flex items-start space-x-2">
-                      <span className="text-green-500 mt-1">•</span>
+                    <li key={index} className="flex items-start space-x-2 text-[11px] text-white/70">
+                      <span className="text-green-400/60 mt-0.5">•</span>
                       <span>{accomplishment}</span>
                     </li>
                   ))}
@@ -700,14 +700,14 @@ export default function ResumePage() {
                 {extract.tenure.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
-                <div className="space-y-2">
+                <div className="space-y-0.5">
                   {extract.tenure.map((tenure, index) => (
-                    <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <div>
-                        <span className="font-medium">{tenure.role}</span> at{" "}
-                        <span className="font-medium">{formatCompanyName(tenure.company)}</span>
+                    <div key={index} className="flex justify-between items-center py-1.5 border-b border-white/5 text-[11px]">
+                      <div className="text-white/70">
+                        <span className="font-medium text-white/85">{tenure.role}</span> at{" "}
+                        <span className="font-medium text-white/85">{formatCompanyName(tenure.company)}</span>
                       </div>
-                      <span className="text-gray-600">{tenure.duration}</span>
+                      <span className="text-white/50">{tenure.duration}</span>
                     </div>
                   ))}
                 </div>
@@ -718,19 +718,19 @@ export default function ResumePage() {
                 {extract.education.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
-                <div className="space-y-3">
+                <div className="space-y-1.5">
                   {extract.education.map((edu, index) => (
-                    <div key={index} className="border border-white/10 bg-black/20 rounded-lg p-4">
-                      <div className="flex justify-between items-start gap-4">
+                    <div key={index} className="border border-white/10 bg-black/20 rounded-lg p-2.5">
+                      <div className="flex justify-between items-start gap-3">
                         <div className="min-w-0">
-                          <div className="font-semibold text-white">
+                          <div className="font-semibold text-xs text-white">
                             {edu.degree}
                             {edu.field ? `, ${edu.field}` : ""}
                           </div>
-                          <div className="text-white/70">{edu.school}</div>
-                          {edu.notes ? <div className="mt-1 text-white/60 text-sm">{edu.notes}</div> : null}
+                          <div className="text-[11px] text-white/60">{edu.school}</div>
+                          {edu.notes ? <div className="mt-0.5 text-white/50 text-[11px]">{edu.notes}</div> : null}
                         </div>
-                        <div className="text-sm text-white/60 whitespace-nowrap">
+                        <div className="text-[11px] text-white/50 whitespace-nowrap">
                           {edu.startYear || edu.endYear ? `${edu.startYear || ""}${edu.startYear && edu.endYear ? " - " : ""}${edu.endYear || ""}` : ""}
                         </div>
                       </div>
