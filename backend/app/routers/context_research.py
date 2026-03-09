@@ -49,8 +49,120 @@ def _strip_likely_language(s: str) -> str:
     t = re.sub(r":\s*\n", ":\n", t)
     return t.strip()
 
-# PDL can be expensive; default OFF unless explicitly enabled.
-_ENABLE_PDL = str(os.getenv("ROLEFERRY_ENABLE_PDL", "false")).lower() == "true"
+# PDL runs whenever PDL_API_KEY is present. No separate gate needed.
+_ENABLE_PDL = True
+
+
+def _build_company_signals_from_pdl(pdl: Dict[str, Any]) -> List[Dict[str, str]]:
+    """Extract up to 9 structured company signals from the raw PDL company enrich response."""
+    if not pdl:
+        return []
+    signals: List[Dict[str, str]] = []
+
+    industry = pdl.get("industry")
+    if industry:
+        signals.append({"label": "Industry", "value": str(industry).title(), "category": "industry"})
+
+    size = pdl.get("size")
+    if size:
+        signals.append({"label": "Company Size", "value": f"{size} employees", "category": "size"})
+
+    ec = pdl.get("employee_count")
+    if isinstance(ec, int) and ec > 0:
+        signals.append({"label": "Employee Count", "value": f"{ec:,}", "category": "headcount"})
+
+    growth = pdl.get("employee_growth_rate")
+    if isinstance(growth, dict):
+        g12 = growth.get("12_month")
+        if isinstance(g12, (int, float)):
+            pct = round(g12 * 100, 1)
+            direction = "growing" if pct > 0 else "shrinking"
+            signals.append({"label": "12-Month Growth", "value": f"{pct:+.1f}% ({direction})", "category": "growth"})
+
+    funding = pdl.get("total_funding_raised")
+    if isinstance(funding, (int, float)) and funding > 0:
+        if funding >= 1_000_000_000:
+            fmt = f"${funding / 1_000_000_000:.1f}B"
+        elif funding >= 1_000_000:
+            fmt = f"${funding / 1_000_000:.0f}M"
+        else:
+            fmt = f"${funding:,.0f}"
+        signals.append({"label": "Total Funding Raised", "value": fmt, "category": "funding"})
+
+    revenue = pdl.get("inferred_revenue")
+    if revenue:
+        signals.append({"label": "Estimated Revenue", "value": str(revenue), "category": "revenue"})
+
+    founded = pdl.get("founded")
+    if isinstance(founded, int) and founded > 1800:
+        signals.append({"label": "Founded", "value": str(founded), "category": "founded"})
+
+    co_type = pdl.get("type")
+    if co_type:
+        signals.append({"label": "Company Type", "value": str(co_type).title(), "category": "type"})
+
+    hq = pdl.get("location")
+    if isinstance(hq, dict):
+        hq_name = hq.get("name") or hq.get("locality")
+        if hq_name:
+            signals.append({"label": "Headquarters", "value": str(hq_name).title(), "category": "hq"})
+
+    return signals[:9]
+
+
+def _build_unified_company_signals(
+    pdl_company: Dict[str, Any],
+    signaliz_data: Dict[str, Any],
+    intelligence: Optional["CompanyIntelligence"] = None,
+    company_summary: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, str]]:
+    """Merge company signals from PDL, Signaliz, and web research into one
+    deduplicated best-of-9 list.  Prioritises live signals (Signaliz > PDL >
+    web-derived) and avoids redundant categories."""
+    seen_categories: set[str] = set()
+    unified: List[Dict[str, str]] = []
+
+    def _add(label: str, value: str, category: str, priority: int = 50):
+        if category in seen_categories:
+            return
+        val = str(value or "").strip()
+        if not val or len(val) < 3 or val.lower() in ("unknown", "none", "n/a"):
+            return
+        seen_categories.add(category)
+        unified.append({"label": label, "value": val[:280], "category": category, "_prio": str(priority)})
+
+    # Signaliz signals (highest priority -- real-time intelligence)
+    if intelligence and hasattr(intelligence, "signals"):
+        for sig in (intelligence.signals or [])[:6]:
+            content = str(getattr(sig, "signal_content", "") or "").strip()
+            title = str(getattr(sig, "signal_title", "") or "").strip()
+            stype = str(getattr(sig, "signal_type", "") or "").strip()
+            text = title if title else content
+            if not text or len(text) < 10:
+                continue
+            cat = f"signaliz_{stype}" if stype else f"signaliz_{len(unified)}"
+            _add(stype.replace("_", " ").title() if stype else "Signal", text, cat, 100)
+
+    # PDL company data (structured facts)
+    for sig in _build_company_signals_from_pdl(pdl_company):
+        _add(sig["label"], sig["value"], sig["category"], 80)
+
+    # Company summary fallback (from LLM / web research)
+    cs = company_summary or {}
+    if cs.get("industry") and "industry" not in seen_categories:
+        _add("Industry", str(cs["industry"]), "industry", 40)
+    if cs.get("size") and "size" not in seen_categories:
+        _add("Company Size", str(cs["size"]), "size", 40)
+    if cs.get("founded") and "founded" not in seen_categories:
+        _add("Founded", str(cs["founded"]), "founded", 40)
+    if cs.get("headquarters") and "hq" not in seen_categories:
+        _add("Headquarters", str(cs["headquarters"]), "hq", 40)
+
+    unified.sort(key=lambda s: int(s.get("_prio", "50")), reverse=True)
+    for s in unified:
+        s.pop("_prio", None)
+    return unified[:9]
+
 
 class SelectedContact(BaseModel):
     id: str
@@ -141,6 +253,11 @@ class CompanyIntelligence(BaseModel):
     overall_relevance_score: float = 0.0
 
 
+class CompanySignal(BaseModel):
+    label: str
+    value: str
+    category: str
+
 class ResearchData(BaseModel):
     company_summary: CompanySummary
     contact_bios: List[ContactBio]
@@ -157,6 +274,7 @@ class ResearchData(BaseModel):
     background_report_title: Optional[str] = None
     background_report_sections: Optional[List[Dict[str, Any]]] = None
     intelligence: Optional[CompanyIntelligence] = None
+    company_signals: Optional[List[CompanySignal]] = None
 
 class ResearchRequest(BaseModel):
     contact_ids: List[str]
@@ -2070,6 +2188,18 @@ async def conduct_research(request: ResearchRequest):
                     _parse_intelligence(entry.get("intelligence")),
                     signaliz_data,
                 ),
+                company_signals=[
+                    CompanySignal(**s)
+                    for s in _build_unified_company_signals(
+                        pdl_company=corpus.get("pdl_company_enrich") or {},
+                        signaliz_data=signaliz_data,
+                        intelligence=_merge_intelligence(
+                            _parse_intelligence(entry.get("intelligence")),
+                            signaliz_data,
+                        ),
+                        company_summary=cs,
+                    )
+                ] or None,
             )
 
         # Back-compat: also return a single research_data (first contact).

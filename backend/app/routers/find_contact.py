@@ -4,7 +4,7 @@ from typing import List, Optional, Dict, Any
 from ..services.email_verifier import verify_email_async, get_verification_badge
 from ..clients.openai_client import get_openai_client, extract_json_from_text
 from ..config import settings
-from ..services.pdl_client import PDLClient
+from ..services.pdl_client import PDLClient, extract_person_signals, extract_company_signals
 import json
 import logging
 import re
@@ -373,6 +373,11 @@ def _extract_contacts_from_text(text: str, company: str, domain: str, source_url
 
     return contacts
 
+class ContactSignal(BaseModel):
+    label: str
+    value: str
+    category: str
+
 class Contact(BaseModel):
     id: str
     name: str
@@ -392,6 +397,8 @@ class Contact(BaseModel):
     job_company_linkedin_url: Optional[str] = None
     job_company_industry: Optional[str] = None
     job_company_size: Optional[str] = None
+    person_signals: Optional[List[ContactSignal]] = None
+    company_signals: Optional[List[ContactSignal]] = None
 
 class ContactSearchRequest(BaseModel):
     query: str
@@ -710,6 +717,8 @@ async def search_contacts(request: ContactSearchRequest):
                             job_company_linkedin_url=p.job_company_linkedin_url,
                             job_company_industry=p.job_company_industry,
                             job_company_size=p.job_company_size,
+                            person_signals=[ContactSignal(**s) for s in extract_person_signals(p)],
+                            company_signals=[ContactSignal(**s) for s in extract_company_signals(p)],
                         )
                     )
 
@@ -800,21 +809,66 @@ async def search_contacts(request: ContactSearchRequest):
             except Exception:
                 logger.exception("OpenAI contact backup failed")
 
-        # 4) Combine PDL contacts with web-scraped / GPT contacts, de-duping by name
-        seen_names: set[str] = set()
+        # 4) Combine PDL contacts with web-scraped / GPT contacts, de-duping by name.
+        # When both sources have the same person, merge their data (keep the richer one
+        # but backfill any missing fields from the other).
+        seen_names: dict[str, int] = {}
         combined: List[Contact] = []
         for c in pdl_contacts:
             key = (c.name or "").strip().lower()
             if key and key not in seen_names:
-                seen_names.add(key)
+                seen_names[key] = len(combined)
                 combined.append(c)
         for c in contacts:
             key = (c.name or "").strip().lower()
-            if key and key not in seen_names:
-                seen_names.add(key)
+            if not key:
+                continue
+            if key in seen_names:
+                existing = combined[seen_names[key]]
+                if not existing.email and c.email:
+                    existing.email = c.email
+                    existing.email_source = c.email_source
+                if not existing.linkedin_url and c.linkedin_url:
+                    existing.linkedin_url = c.linkedin_url
+                if not existing.location_name and c.location_name:
+                    existing.location_name = c.location_name
+                if not existing.job_company_website and c.job_company_website:
+                    existing.job_company_website = c.job_company_website
+            else:
+                seen_names[key] = len(combined)
                 combined.append(c)
         contacts = combined
         logger.info("Combined contacts for '%s': %d PDL + %d other = %d total", q, len(pdl_contacts), len(contacts) - len(pdl_contacts), len(contacts))
+
+        # 4c) Enrich contacts that have no signals via PDL Person Enrichment API.
+        # This fills in rich data for web-scraped and GPT contacts so every card
+        # shows up to 9 selectable person signals and company signals.
+        if settings.pdl_api_key:
+            pdl_enricher = PDLClient(settings.pdl_api_key, timeout_seconds=10.0)
+            enrich_count = 0
+            for c in contacts:
+                if enrich_count >= 6:
+                    break
+                if c.person_signals and len(c.person_signals) > 0:
+                    continue
+                try:
+                    raw = pdl_enricher.person_enrich(
+                        name=c.name or "",
+                        company=c.company or q,
+                        linkedin_url=c.linkedin_url or "",
+                        title=c.title or "",
+                    )
+                    p = pdl_enricher.extract_enriched_person(raw)
+                    if p:
+                        c.person_signals = [ContactSignal(**s) for s in extract_person_signals(p)]
+                        if not c.company_signals or len(c.company_signals) == 0:
+                            c.company_signals = [ContactSignal(**s) for s in extract_company_signals(p)]
+                        if p.email and not c.email:
+                            c.email = p.email
+                            c.email_source = p.email_source
+                        enrich_count += 1
+                except Exception:
+                    logger.debug("PDL person_enrich failed for %s; skipping", c.name)
 
         if not contacts:
             raise HTTPException(

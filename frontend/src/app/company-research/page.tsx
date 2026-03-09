@@ -41,6 +41,12 @@ type CompanyIntelligence = {
   overall_relevance_score: number;
 };
 
+type PdlCompanySignal = {
+  label: string;
+  value: string;
+  category: string;
+};
+
 type CompanyResearch = {
   company_name: string;
   overview: string;
@@ -57,6 +63,7 @@ type CompanyResearch = {
   hooks?: string[];
   intelligence?: CompanyIntelligence;
   updated_at: string;
+  pdl_company_signals?: PdlCompanySignal[];
 };
 
 type CompanySignal = {
@@ -417,22 +424,44 @@ export default function CompanyResearchPage() {
   const [savedByCompany, setSavedByCompany] = useState<Record<string, CompanyResearch>>({});
   const [selectedSignalIds, setSelectedSignalIds] = useState<Set<string>>(new Set());
   const [briefingOpen, setBriefingOpen] = useState(false);
+  const [selectedPdlSignalIds, setSelectedPdlSignalIds] = useState<Set<string>>(new Set());
 
   const topSignals = useMemo(() => extractTopSignals(draft), [draft]);
+  const pdlSignals = useMemo(() => draft?.pdl_company_signals || [], [draft]);
+
+  const totalSelectedCompanySignals = (): number => selectedSignalIds.size + selectedPdlSignalIds.size;
 
   const toggleSignal = (id: string) => {
     setSelectedSignalIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      try {
-        const selected = topSignals.filter((s) => next.has(s.id));
-        localStorage.setItem(
-          "rf_selected_company_signals",
-          JSON.stringify(selected.map((s) => ({ category: s.category, text: s.text }))),
-        );
-      } catch {}
+      if (next.has(id)) next.delete(id);
+      else if (totalSelectedCompanySignals() < 3) next.add(id);
+      else return prev;
+      persistAllCompanySignals(next, selectedPdlSignalIds);
       return next;
     });
+  };
+
+  const togglePdlSignal = (idx: number) => {
+    const sigId = `pdl_${idx}`;
+    setSelectedPdlSignalIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(sigId)) next.delete(sigId);
+      else if (totalSelectedCompanySignals() < 3) next.add(sigId);
+      else return prev;
+      persistAllCompanySignals(selectedSignalIds, next);
+      return next;
+    });
+  };
+
+  const persistAllCompanySignals = (webIds: Set<string>, pdlIds: Set<string>) => {
+    try {
+      const webSelected = topSignals.filter((s) => webIds.has(s.id)).map((s) => ({ category: s.category, text: s.text }));
+      const pdlSelected = pdlSignals
+        .filter((_: any, idx: number) => pdlIds.has(`pdl_${idx}`))
+        .map((s: PdlCompanySignal) => ({ category: s.category, text: `${s.label}: ${s.value}` }));
+      localStorage.setItem("rf_selected_company_signals", JSON.stringify([...webSelected, ...pdlSelected]));
+    } catch {}
   };
 
   const companyOptions = useMemo(() => {
@@ -573,6 +602,7 @@ export default function CompanyResearchPage() {
         hooks: Array.isArray(resp?.helper?.hooks) ? resp.helper!.hooks : undefined,
         intelligence: entry?.intelligence || undefined,
         updated_at: new Date().toISOString(),
+        pdl_company_signals: Array.isArray(entry?.company_signals) ? entry.company_signals : undefined,
       };
 
       if (!hasWebSources) {
@@ -922,36 +952,31 @@ export default function CompanyResearchPage() {
                   ) : null}
                   </div>
 
-                  {/* Top Signals for outreach */}
-                  {topSignals.length > 0 ? (
+                  {/* Unified Company Signals -- best from all sources (PDL, Signaliz, web) */}
+                  {(pdlSignals.length > 0 || topSignals.length > 0) ? (
                   <div className="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
-                    <div className="text-sm font-bold text-white mb-1">Signals to Include in Outreach</div>
+                    <div className="text-sm font-bold text-white mb-1">Company Signals for Outreach</div>
                     <div className="text-xs text-white/60 mb-3">
-                      The best facts we found about <span className="font-semibold text-white/80">{activeCompanyDisplay}</span>. Select which to include in your messages.
+                      The best facts about <span className="font-semibold text-white/80">{activeCompanyDisplay}</span> from all sources. Select up to 3 to include in your messages.
                     </div>
                     <div className="space-y-1.5">
-                      {topSignals.map((sig) => {
-                        const on = selectedSignalIds.has(sig.id);
-                        const catColors: Record<string, string> = {
-                          "Product Launch": "bg-blue-500/20 text-blue-300 border-blue-500/30",
-                          "Leadership Change": "bg-purple-500/20 text-purple-300 border-purple-500/30",
-                          "Recent News": "bg-amber-500/20 text-amber-300 border-amber-500/30",
-                          "Recent Post": "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
-                          "Culture & Values": "bg-pink-500/20 text-pink-300 border-pink-500/30",
-                          "Market Position": "bg-white/10 text-white/70 border-white/20",
-                          "Hiring Signal": "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-                          "Publication": "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
-                        };
-                        const badgeClass = catColors[sig.category] || "bg-white/10 text-white/70 border-white/20";
+                      {/* Backend-unified signals (PDL + Signaliz + web research) */}
+                      {pdlSignals.slice(0, 9).map((sig: PdlCompanySignal, idx: number) => {
+                        const sigId = `pdl_${idx}`;
+                        const on = selectedPdlSignalIds.has(sigId);
+                        const total = totalSelectedCompanySignals();
                         return (
                           <button
-                            key={sig.id}
+                            key={sigId}
                             type="button"
-                            onClick={() => toggleSignal(sig.id)}
+                            disabled={!on && total >= 3}
+                            onClick={() => togglePdlSignal(idx)}
                             className={`w-full text-left rounded-md border p-2.5 transition-colors ${
                               on
                                 ? "border-emerald-400/50 bg-emerald-500/15"
-                                : "border-white/10 bg-white/5 hover:bg-white/10"
+                                : total >= 3
+                                  ? "border-white/5 bg-white/3 text-white/30 cursor-not-allowed"
+                                  : "border-white/10 bg-white/5 hover:bg-white/10"
                             }`}
                           >
                             <div className="flex items-start gap-2">
@@ -961,16 +986,69 @@ export default function CompanyResearchPage() {
                                 {on ? "✓" : ""}
                               </span>
                               <div className="min-w-0 flex-1">
-                                <span className={`inline-block rounded-full border px-1.5 py-0.5 text-[9px] font-semibold mb-1 ${badgeClass}`}>
-                                  {sig.category}
+                                <span className="inline-block rounded-full border border-white/20 bg-white/10 px-1.5 py-0.5 text-[9px] font-semibold text-white/70 mb-1">
+                                  {sig.label}
                                 </span>
-                                <div className="text-[13px] text-white/80 leading-tight">{sig.text}</div>
+                                <div className="text-[13px] text-white/80 leading-tight">{sig.value}</div>
                               </div>
                             </div>
                           </button>
                         );
                       })}
+
+                      {/* Web-extracted signals as fallback (only categories not already covered) */}
+                      {topSignals
+                        .filter((sig) => {
+                          const pdlCategories = new Set(pdlSignals.map((p: PdlCompanySignal) => p.category.toLowerCase()));
+                          return !pdlCategories.has(sig.category.toLowerCase().replace(/\s+/g, "_"));
+                        })
+                        .slice(0, Math.max(0, 9 - pdlSignals.length))
+                        .map((sig) => {
+                          const on = selectedSignalIds.has(sig.id);
+                          const total = totalSelectedCompanySignals();
+                          const catColors: Record<string, string> = {
+                            "Product Launch": "bg-blue-500/20 text-blue-300 border-blue-500/30",
+                            "Leadership Change": "bg-purple-500/20 text-purple-300 border-purple-500/30",
+                            "Recent News": "bg-amber-500/20 text-amber-300 border-amber-500/30",
+                            "Recent Post": "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
+                            "Culture & Values": "bg-pink-500/20 text-pink-300 border-pink-500/30",
+                            "Market Position": "bg-white/10 text-white/70 border-white/20",
+                            "Hiring Signal": "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+                            "Publication": "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
+                          };
+                          const badgeClass = catColors[sig.category] || "bg-white/10 text-white/70 border-white/20";
+                          return (
+                            <button
+                              key={sig.id}
+                              type="button"
+                              disabled={!on && total >= 3}
+                              onClick={() => { if (!on && total >= 3) return; toggleSignal(sig.id); }}
+                              className={`w-full text-left rounded-md border p-2.5 transition-colors ${
+                                on
+                                  ? "border-emerald-400/50 bg-emerald-500/15"
+                                  : total >= 3
+                                    ? "border-white/5 bg-white/3 text-white/30 cursor-not-allowed"
+                                    : "border-white/10 bg-white/5 hover:bg-white/10"
+                              }`}
+                            >
+                              <div className="flex items-start gap-2">
+                                <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] font-bold ${
+                                  on ? "border-emerald-400 bg-emerald-500 text-black" : "border-white/30 text-white/40"
+                                }`}>
+                                  {on ? "✓" : ""}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                  <span className={`inline-block rounded-full border px-1.5 py-0.5 text-[9px] font-semibold mb-1 ${badgeClass}`}>
+                                    {sig.category}
+                                  </span>
+                                  <div className="text-[13px] text-white/80 leading-tight">{sig.text}</div>
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
                     </div>
+                    <p className="text-[9px] text-white/40 mt-2">Select up to 3 to include in your outreach message</p>
                   </div>
                   ) : null}
 
