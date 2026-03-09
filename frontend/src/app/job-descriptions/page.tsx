@@ -286,7 +286,7 @@ export default function JobDescriptionsPage() {
   const [hasEverLoadedRoles, setHasEverLoadedRoles] = useState(false);
   const [strictness, setStrictness] = useState(25);
   const funnelMode = strictness > 50 ? "strict" : "broad";
-  const discoveryLimit: 120 | 220 | 300 = strictness > 70 ? 120 : strictness > 40 ? 220 : 300;
+  const discoveryLimit = strictness > 70 ? 200 : strictness > 40 ? 350 : 500;
   const highFitOnly = false;
   const [ignoredScrapedRoleIds, setIgnoredScrapedRoleIds] = useState<string[]>([]);
   const [importedScrapedRoleIds, setImportedScrapedRoleIds] = useState<string[]>([]);

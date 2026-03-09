@@ -3332,7 +3332,7 @@ async def _discover_roles_without_serper(
 
 @router.get("/scraped-roles", response_model=ScrapedRolesResponse)
 async def get_scraped_roles(
-    limit: int = 120,
+    limit: int = 500,
     positive_keywords: Optional[str] = None,
     negative_keywords: Optional[str] = None,
     funnel_mode: str = "broad",
