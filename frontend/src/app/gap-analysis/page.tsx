@@ -172,7 +172,7 @@ export default function GapAnalysisPage() {
 
   const [ranked, setRanked] = useState<GapAnalysisItem[]>([]);
   const [helper, setHelper] = useState<GapAnalysisResponse["helper"] | null>(null);
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [expandedJobIds, setExpandedJobIds] = useState<Set<string>>(new Set());
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -284,8 +284,6 @@ export default function GapAnalysisPage() {
       }));
       setRanked(initial as any);
       setHelper(resp.helper || null);
-      const firstId = (initial || [])[0]?.job_id || null;
-      setSelectedJobId(firstId);
     } catch (e: any) {
       setError(e?.message || "Failed to run gap analysis.");
     } finally {
@@ -293,10 +291,13 @@ export default function GapAnalysisPage() {
     }
   }
 
-  const selected = useMemo(() => {
-    const list = rankedUi;
-    return list.find((r) => r.job_id === selectedJobId) || list[0] || null;
-  }, [rankedUi, selectedJobId]);
+  const toggleExpand = (jobId: string) => {
+    setExpandedJobIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(jobId)) next.delete(jobId); else next.add(jobId);
+      return next;
+    });
+  };
 
   const getJobById = (jobId: string) => {
     const id = String(jobId || "");
@@ -325,13 +326,8 @@ export default function GapAnalysisPage() {
       } catch {}
       return next;
     });
-    // Remove from ranked list (current view).
-    setRanked((prev) => {
-      const next = (prev || []).filter((r) => String(r.job_id || "") !== id);
-      // If we dropped the selected role, move selection to the next one.
-      if (selectedJobId === id) setSelectedJobId(next[0]?.job_id || null);
-      return next;
-    });
+    setRanked((prev) => (prev || []).filter((r) => String(r.job_id || "") !== id));
+    setExpandedJobIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
     // If we dropped the persisted selected role, clear it.
     try {
       const cur = String(localStorage.getItem("selected_job_description_id") || "");
@@ -463,49 +459,46 @@ export default function GapAnalysisPage() {
             </div>
           ) : null}
 
-          {rankedUi.length > 0 ? (
-            <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-4">
-              <div className="lg:col-span-3">
-                <div className="rounded-lg border border-white/10 bg-black/20 p-2">
-                  <div className="text-xs font-semibold text-white/70 px-2 py-2">Ranked roles</div>
-                  {notice ? (
-                    <div className="px-2 pb-2 text-[11px] text-white/70">
-                      {notice}
-                    </div>
-                  ) : null}
-                  <div className="max-h-[560px] overflow-auto">
-                    {rankedUi.map((r) => (
-                      <div
-                        key={r.job_id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => setSelectedJobId(r.job_id)}
-                        onKeyDown={(e) => e.key === "Enter" && setSelectedJobId(r.job_id)}
-                        className={`w-full text-left px-2.5 py-2 border-t border-white/10 hover:bg-white/5 transition-colors cursor-pointer ${
-                          selectedJobId === r.job_id ? "bg-white/5" : ""
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="text-xs font-bold text-white truncate">{r.title}</div>
-                              <div className="text-xs text-white/60 truncate">{formatCompanyName(r.company)}</div>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <StarRating value={r.ui_stars / 5} scale="fraction" showNumeric={false} className="text-[10px]" />
-                            <div className={`mt-1 inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] ${badgeByStars(r.ui_stars).cls}`}>
-                              {badgeByStars(r.ui_stars).label}
-                            </div>
-                          </div>
-                        </div>
+          {notice ? (
+            <div className="mt-4 text-[11px] text-emerald-300 font-medium">{notice}</div>
+          ) : null}
 
-                        <div className="mt-1.5 flex items-center justify-end gap-1.5">
+          {rankedUi.length > 0 ? (
+            <div className="mt-8 space-y-1">
+              {rankedUi.map((r) => {
+                const isOpen = expandedJobIds.has(r.job_id);
+                const badge = badgeByStars(r.ui_stars);
+                const totalGaps = (r.resume_gaps?.length || 0) + (r.personality_gaps?.length || 0) + (r.preference_gaps?.length || 0);
+                return (
+                  <div key={r.job_id} className="rounded-lg border border-white/10 bg-black/20 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => toggleExpand(r.job_id)}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors text-left"
+                    >
+                      <svg className={`w-3 h-3 text-white/40 shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-bold text-white truncate">{r.title}</span>
+                          <span className="text-xs text-white/50 truncate">{formatCompanyName(r.company)}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {totalGaps > 0 && <span className="text-[10px] text-white/40">{totalGaps} gap{totalGaps !== 1 ? "s" : ""}</span>}
+                        <StarRating value={r.ui_stars / 5} scale="fraction" showNumeric={false} className="text-[10px]" />
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] ${badge.cls}`}>{badge.label}</span>
+                      </div>
+                    </button>
+
+                    {isOpen && (
+                      <div className="px-4 pb-4 border-t border-white/5">
+                        <div className="mt-3 flex items-center gap-2">
                           <button
                             type="button"
-                            className="px-2 py-1 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 text-[10px] font-semibold"
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            className="px-2.5 py-1 rounded-md border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 text-[10px] font-semibold"
+                            onClick={() => {
                               const ok = persistSelectedRole(r.job_id);
-                              setNotice(ok ? "Saved role for downstream steps." : "Couldn’t save role (storage blocked).");
+                              setNotice(ok ? "Saved role for downstream steps." : "Couldn\u2019t save role.");
                               window.setTimeout(() => setNotice(null), 1600);
                             }}
                           >
@@ -513,9 +506,8 @@ export default function GapAnalysisPage() {
                           </button>
                           <button
                             type="button"
-                            className="px-2 py-1 rounded-md border border-red-500/25 bg-red-500/10 text-red-200 hover:bg-red-500/15 text-[10px] font-semibold"
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            className="px-2.5 py-1 rounded-md border border-red-500/25 bg-red-500/10 text-red-200 hover:bg-red-500/15 text-[10px] font-semibold"
+                            onClick={() => {
                               dropRole(r.job_id);
                               setNotice("Dropped role from your list.");
                               window.setTimeout(() => setNotice(null), 1600);
@@ -524,91 +516,65 @@ export default function GapAnalysisPage() {
                             Drop Role
                           </button>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
 
-              <div className="lg:col-span-9">
-                {selected ? (
-                  <div className="rounded-lg border border-white/10 bg-black/20 p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-xl font-bold text-white">{selected.title}</div>
-                        <div className="text-xs text-white/70">{formatCompanyName(selected.company)}</div>
-                        <div className="mt-2 flex items-center gap-3">
-                          <StarRating value={(selected as any).ui_stars / 5} scale="fraction" showNumeric={false} className="text-[10px]" />
-                          <div className={`inline-flex items-center px-2 py-1 rounded-full border text-xs ${badgeByStars((selected as any).ui_stars).cls}`}>
-                            {badgeByStars((selected as any).ui_stars).label}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 space-y-3">
-                      {[
-                        { title: "Resume gaps", kind: "resume" as const, items: selected.resume_gaps || [] },
-                        { title: "Personality gaps", kind: "personality" as const, items: selected.personality_gaps || [] },
-                        { title: "Preference gaps", kind: "prefs" as const, items: selected.preference_gaps || [] },
-                      ].map((col) => (
-                        <div key={col.title} className="rounded-lg border border-white/10 bg-white/5 p-4">
-                          <div className="flex items-center gap-2 text-white/80 mb-2">
-                            <span className="text-white/70"><Icon kind={col.kind} /></span>
-                            <div className="text-[11px] font-semibold uppercase tracking-wider">{col.title}</div>
-                          </div>
-                          {col.items.length ? (
-                            <div className="space-y-2">
-                              {col.items.slice(0, 6).map((g, idx) => (
-                                <div key={`${col.title}_${idx}`} className="rounded-md border border-white/10 bg-black/20 p-3">
-                                  <div className="flex items-start gap-3">
-                                    <div className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] ${severityPill(g.severity)}`}>
-                                      {severityLabel(g.severity)}
-                                    </div>
-                                    <div className="min-w-0">
-                                      <div className="text-xs text-white/90">{g.gap}</div>
-                                      {g.how_to_close ? (
-                                        <div className="mt-1 text-[11px] text-white/60">
-                                          {g.how_to_close}
+                        <div className="mt-4 space-y-3">
+                          {[
+                            { title: "Resume gaps", kind: "resume" as const, items: r.resume_gaps || [] },
+                            { title: "Personality gaps", kind: "personality" as const, items: r.personality_gaps || [] },
+                            { title: "Preference gaps", kind: "prefs" as const, items: r.preference_gaps || [] },
+                          ].map((col) => (
+                            <div key={col.title} className="rounded-lg border border-white/10 bg-white/5 p-3">
+                              <div className="flex items-center gap-2 text-white/80 mb-2">
+                                <span className="text-white/70"><Icon kind={col.kind} /></span>
+                                <div className="text-[11px] font-semibold uppercase tracking-wider">{col.title}</div>
+                                <span className="text-[10px] text-white/40">{col.items.length}</span>
+                              </div>
+                              {col.items.length ? (
+                                <div className="space-y-2">
+                                  {col.items.slice(0, 6).map((g, idx) => (
+                                    <div key={`${col.title}_${idx}`} className="rounded-md border border-white/10 bg-black/20 p-3">
+                                      <div className="flex items-start gap-3">
+                                        <div className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] ${severityPill(g.severity)}`}>
+                                          {severityLabel(g.severity)}
                                         </div>
-                                      ) : null}
-                                      {(g.evidence || []).length ? (
-                                        <div className="mt-2 text-[11px] text-white/50">
-                                          Evidence: {(g.evidence || []).slice(0, 2).join(" · ")}
+                                        <div className="min-w-0">
+                                          <div className="text-xs text-white/90">{g.gap}</div>
+                                          {g.how_to_close ? (
+                                            <div className="mt-1 text-[11px] text-white/60">{g.how_to_close}</div>
+                                          ) : null}
+                                          {(g.evidence || []).length ? (
+                                            <div className="mt-2 text-[11px] text-white/50">Evidence: {(g.evidence || []).slice(0, 2).join(" \u00b7 ")}</div>
+                                          ) : null}
                                         </div>
-                                      ) : null}
+                                      </div>
                                     </div>
-                                  </div>
+                                  ))}
                                 </div>
+                              ) : (
+                                <div className="text-[11px] text-white/50">No major gaps detected.</div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+
+                        {(r.matched_skills?.length || r.missing_skills?.length) ? (
+                          <div className="mt-4">
+                            <div className="text-xs font-semibold text-white/70 mb-2">Skill fit (from role required skills)</div>
+                            <div className="flex flex-wrap gap-2">
+                              {(r.matched_skills || []).slice(0, 12).map((s) => (
+                                <span key={`ms_${s}`} className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80 text-xs">{s}</span>
+                              ))}
+                              {(r.missing_skills || []).slice(0, 12).map((s) => (
+                                <span key={`xs_${s}`} className="px-2 py-1 rounded-full border border-red-500/20 bg-red-500/10 text-red-200 text-xs">{s}</span>
                               ))}
                             </div>
-                          ) : (
-                            <div className="text-[11px] text-white/50">No major gaps detected.</div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    {(selected.matched_skills?.length || selected.missing_skills?.length) ? (
-                      <div className="mt-5">
-                        <div className="text-xs font-semibold text-white/70 mb-2">Skill fit (from role required skills)</div>
-                        <div className="flex flex-wrap gap-2">
-                          {(selected.matched_skills || []).slice(0, 12).map((s) => (
-                            <span key={`ms_${s}`} className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80 text-xs">
-                              {s}
-                            </span>
-                          ))}
-                          {(selected.missing_skills || []).slice(0, 12).map((s) => (
-                            <span key={`xs_${s}`} className="px-2 py-1 rounded-full border border-red-500/20 bg-red-500/10 text-red-200 text-xs">
-                              {s}
-                            </span>
-                          ))}
-                        </div>
+                          </div>
+                        ) : null}
                       </div>
-                    ) : null}
+                    )}
                   </div>
-                ) : null}
-              </div>
+                );
+              })}
             </div>
           ) : null}
 
@@ -621,7 +587,7 @@ export default function GapAnalysisPage() {
               Save &amp; Continue
             </button>
           </div>
-        </div>
+</div>
       </div>
     </div>
   );
