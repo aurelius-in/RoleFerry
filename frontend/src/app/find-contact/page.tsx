@@ -64,7 +64,7 @@ export default function FindContactPage() {
   const [otherQuery, setOtherQuery] = useState("");
   const [titleFilters, setTitleFilters] = useState<string[]>([]);
   const [filterOpen, setFilterOpen] = useState<string | null>(null);
-  const [seniorityFilter, setSeniorityFilter] = useState("");
+  const [seniorityFilter, setSeniorityFilter] = useState<string[]>([]);
   const [locationFilter, setLocationFilter] = useState("");
   const [companyOptions, setCompanyOptions] = useState<string[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
@@ -630,18 +630,9 @@ export default function FindContactPage() {
   };
 
   useEffect(() => {
-    // Build stamp (debug): helps confirm whether Railway is serving the latest frontend build.
-    // If this page doesn't show a build stamp at all, you're on an older deployment.
+    // Build stamp: confirm which deployment is live.
     try {
-      fetch("/__debug", { cache: "no-store" as any })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((j) => {
-          const sha = String(j?.railwayGitCommitSha || "").trim();
-          const short = sha ? sha.slice(0, 7) : "";
-          const ts = String(j?.timestamp || "").trim();
-          setBuildStamp(short ? `build ${short}${ts ? ` • ${ts}` : ""}` : (ts ? `build • ${ts}` : ""));
-        })
-        .catch(() => {});
+      setBuildStamp("");
     } catch {}
 
     // If the user just finished Company Research, prefill the company for a smoother workflow.
@@ -806,7 +797,7 @@ export default function FindContactPage() {
         title_filters: titleFilters.length ? titleFilters : undefined,
         target_job_title: targetJobTitle || undefined,
         candidate_title: candidateTitle || undefined,
-        seniority: seniorityFilter || undefined,
+        seniority: seniorityFilter.length ? seniorityFilter.join(",") : undefined,
         location: locationFilter.trim() || undefined,
       });
       if (!res.success || !(res.contacts?.length)) {
@@ -1487,21 +1478,26 @@ export default function FindContactPage() {
             <button type="button" onClick={() => setFilterOpen((p) => p === "seniority" ? null : "seniority")} className="flex w-full items-center gap-3 px-4 py-3 border-b border-white/5 hover:bg-white/[0.03] transition-colors">
               <svg className="w-4 h-4 text-white/50 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" /></svg>
               <span className="text-sm text-white/70 flex-1 text-left">Seniority</span>
-              {seniorityFilter && <span className="text-[10px] text-emerald-300 font-medium shrink-0">{seniorityFilter}</span>}
+              {seniorityFilter.length > 0 && <span className="text-[10px] text-emerald-300 font-medium shrink-0">{seniorityFilter.length === 5 ? "All" : seniorityFilter.join(", ")}</span>}
               <svg className={`w-3 h-3 text-white/30 shrink-0 transition-transform ${filterOpen === "seniority" ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
             </button>
-            {filterOpen === "seniority" && (
-              <div className="px-4 py-3 border-b border-white/5 bg-white/[0.02]">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5">
-                  {["C-Suite", "VP", "Director", "Manager", "Senior", "Entry"].map((lvl) => {
-                    const on = seniorityFilter === lvl;
-                    return (
-                      <button key={lvl} type="button" onClick={() => setSeniorityFilter(on ? "" : lvl)} className={`rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${on ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-100" : "border-white/5 bg-white/[0.02] text-white/45 hover:bg-white/[0.05]"}`}>{lvl}</button>
-                    );
-                  })}
+            {filterOpen === "seniority" && (() => {
+              const LEVELS = ["C-Suite", "VP", "Director", "Manager", "Senior"];
+              const allSelected = LEVELS.every((l) => seniorityFilter.includes(l));
+              return (
+                <div className="px-4 py-3 border-b border-white/5 bg-white/[0.02]">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5">
+                    <button type="button" onClick={() => setSeniorityFilter(allSelected ? [] : [...LEVELS])} className={`rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${allSelected ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-100" : "border-white/10 bg-white/[0.04] text-white/55 hover:bg-white/[0.07]"}`}>Select All</button>
+                    {LEVELS.map((lvl) => {
+                      const on = seniorityFilter.includes(lvl);
+                      return (
+                        <button key={lvl} type="button" onClick={() => setSeniorityFilter((prev) => on ? prev.filter((x) => x !== lvl) : [...prev, lvl])} className={`rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${on ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-100" : "border-white/5 bg-white/[0.02] text-white/45 hover:bg-white/[0.05]"}`}>{lvl}</button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Location */}
             <button type="button" onClick={() => setFilterOpen((p) => p === "location" ? null : "location")} className="flex w-full items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors">

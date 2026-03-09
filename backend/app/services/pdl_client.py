@@ -192,35 +192,52 @@ class PDLClient:
         results = self.extract_people({"data": [person_data]})
         return results[0] if results else None
 
-    def person_search(self, company: str, size: int = 10) -> Dict[str, Any]:
+    def person_search(self, company: str, size: int = 10, domain: str = "") -> Dict[str, Any]:
         """
         Person Search API expects `query` as an Elasticsearch JSON query (string),
         which is easiest to send via POST body.
+        Falls back to domain-based search if company name yields no results.
         """
         import logging
         _log = logging.getLogger(__name__)
         url = f"{PDL_BASE_URL}/person/search"
-        query = {
-            "query": {
-                "bool": {
-                    "must": [
-                        {"match": {"job_company_name": company}},
-                    ]
-                }
-            },
-            "size": max(1, min(int(size), 100)),
-            "fields": DEFAULT_PERSON_FIELDS,
-        }
+        sz = max(1, min(int(size), 100))
+
+        must_clauses = [{"match": {"job_company_name": company}}]
+        query = {"query": {"bool": {"must": must_clauses}}, "size": sz, "fields": DEFAULT_PERSON_FIELDS}
+
         with httpx.Client(timeout=self.timeout_seconds, follow_redirects=True) as client:
             resp = client.post(url, json=query, headers=self._headers())
             _log.info("PDL person_search status=%d for company='%s'", resp.status_code, company)
             if resp.status_code in (401, 402, 403, 404):
                 _log.warning("PDL person_search returned %d for '%s' (auth/credits issue or no results)", resp.status_code, company)
-                return {"data": []}
-            resp.raise_for_status()
-            data = resp.json()
-            _log.info("PDL person_search returned %d records for '%s'", len(data.get("data") or []), company)
-            return data
+            else:
+                resp.raise_for_status()
+                data = resp.json()
+                count = len(data.get("data") or [])
+                _log.info("PDL person_search returned %d records for '%s'", count, company)
+                if count > 0:
+                    return data
+
+            if domain and domain.strip():
+                _log.info("PDL: retrying with domain='%s'", domain)
+                domain_query = {
+                    "query": {"bool": {"must": [{"match": {"job_company_website": domain.strip()}}]}},
+                    "size": sz,
+                    "fields": DEFAULT_PERSON_FIELDS,
+                }
+                try:
+                    resp2 = client.post(url, json=domain_query, headers=self._headers())
+                    if resp2.status_code < 400:
+                        data2 = resp2.json()
+                        count2 = len(data2.get("data") or [])
+                        _log.info("PDL domain-based search returned %d records for '%s'", count2, domain)
+                        if count2 > 0:
+                            return data2
+                except Exception:
+                    _log.debug("PDL domain fallback failed for '%s'", domain)
+
+        return {"data": []}
 
     def extract_people(self, raw: Dict[str, Any]) -> List[PdlPersonResult]:
         data = raw.get("data") or []

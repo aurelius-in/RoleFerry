@@ -586,7 +586,7 @@ class OpenAIClient:
             ],
             "alignment_score": round(0.72 + ((seed % 20) / 100), 2),
         }
-        return self.run_chat_completion(messages, temperature=0.2, stub_json=stub)
+        return self.run_chat_completion(messages, temperature=0.2, stub_json=stub, timeout_seconds=15.0, max_retries=1)
 
     def draft_offer_email(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """

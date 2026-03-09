@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { getCurrentDataMode } from "@/lib/dataMode";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
+import CollapsibleSection from "@/components/CollapsibleSection";
 
 type StructuredSignal = {
   signal_type: string;
@@ -71,16 +72,17 @@ type CompanySignal = {
   category: string;
   text: string;
   priority: number;
+  confidence: number;
 };
 
-function extractTopSignals(d: CompanyResearch | null, max = 5): CompanySignal[] {
+function extractTopSignals(d: CompanyResearch | null, max = 12): CompanySignal[] {
   if (!d) return [];
   const candidates: CompanySignal[] = [];
   const add = (id: string, cat: string, raw: string, priority: number) => {
     const t = String(raw || "").replace(/no\s+(data|info|information)\s+found/gi, "").trim();
     if (!t || t.length < 10) return;
     const firstLine = t.split(/\n/).map(l => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean)[0] || t;
-    candidates.push({ id, category: cat, text: firstLine.slice(0, 280), priority });
+    candidates.push({ id, category: cat, text: firstLine.slice(0, 280), priority, confidence: Math.min(0.95, 0.5 + priority / 200) });
   };
   add("product_launches", "Product Launch", d.product_launches, 100);
   add("leadership_changes", "Leadership Change", d.leadership_changes, 95);
@@ -92,7 +94,7 @@ function extractTopSignals(d: CompanyResearch | null, max = 5): CompanySignal[] 
   add("publications", "Publication", d.publications, 45);
   for (const sig of (d.hiring_signals || []).slice(0, 3)) {
     if (sig.detail && sig.detail.length > 15) {
-      candidates.push({ id: `hs_${sig.label}`, category: sig.label, text: sig.detail.slice(0, 280), priority: 75 });
+      candidates.push({ id: `hs_${sig.label}`, category: sig.label, text: sig.detail.slice(0, 280), priority: 75, confidence: 0.75 });
     }
   }
   candidates.sort((a, b) => b.priority - a.priority);
@@ -426,6 +428,119 @@ function toCsvRow(cols: string[]): string {
   return cols.map(esc).join(",");
 }
 
+const SIGNAL_TYPE_LABELS: Record<string, string> = {
+  leadership_change: "Leadership", product_launch: "Product", hiring_signal: "Hiring",
+  funding_event: "Funding", partnership: "Partnership", market_expansion: "Market",
+  regulatory: "Regulatory", technology_adoption: "Technology", technology: "Technology",
+  earnings: "Earnings", restructuring: "Restructuring", expansion: "Expansion",
+  news: "News", workforce: "Workforce", intent: "Intent", firmographics: "Firmographics",
+  funding: "Funding",
+};
+
+const SIGNAL_CAT_COLORS: Record<string, string> = {
+  "Product Launch": "bg-blue-500/20 text-blue-300 border-blue-500/30",
+  "Product": "bg-blue-500/20 text-blue-300 border-blue-500/30",
+  "Leadership Change": "bg-purple-500/20 text-purple-300 border-purple-500/30",
+  "Leadership": "bg-purple-500/20 text-purple-300 border-purple-500/30",
+  "Recent News": "bg-amber-500/20 text-amber-300 border-amber-500/30",
+  "News": "bg-sky-500/20 text-sky-300 border-sky-500/30",
+  "Recent Post": "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
+  "Culture & Values": "bg-pink-500/20 text-pink-300 border-pink-500/30",
+  "Market Position": "bg-white/10 text-white/70 border-white/20",
+  "Market": "bg-pink-500/20 text-pink-300 border-pink-500/30",
+  "Hiring Signal": "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+  "Hiring": "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+  "Publication": "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
+  "Funding": "bg-amber-500/20 text-amber-300 border-amber-500/30",
+  "Partnership": "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
+  "Technology": "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
+  "Expansion": "bg-pink-500/20 text-pink-300 border-pink-500/30",
+  "Workforce": "bg-teal-500/20 text-teal-300 border-teal-500/30",
+  "Firmographics": "bg-slate-500/20 text-slate-300 border-slate-500/30",
+  "Intent": "bg-violet-500/20 text-violet-300 border-violet-500/30",
+  "Restructuring": "bg-orange-500/20 text-orange-300 border-orange-500/30",
+  "Earnings": "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
+  "Regulatory": "bg-red-500/20 text-red-300 border-red-500/30",
+};
+
+type UnifiedSignal = {
+  id: string;
+  category: string;
+  label: string;
+  text: string;
+  confidence: number;
+  sourceUrl?: string;
+  date?: string;
+};
+
+function formatSignalText(raw: string): string {
+  return String(raw || "")
+    .replace(/\[Source\s*:?\s*\]/gi, "")
+    .replace(/\(Source\s*:?\s*[^)]*\)/gi, "")
+    .replace(/\[([^\]]*)\]/g, "$1")
+    .replace(/\(\s*\)/g, "")
+    .trim();
+}
+
+function friendlySourceLabel(url: string): string {
+  try {
+    const host = new URL(url).hostname.replace("www.", "");
+    if (host.includes("google")) return "Google News";
+    if (host.includes("linkedin")) return "LinkedIn";
+    if (host.includes("twitter") || host.includes("x.com")) return "X";
+    if (host.includes("github")) return "GitHub";
+    const name = host.split(".")[0];
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  } catch {
+    return "Source";
+  }
+}
+
+function RichText({ text }: { text: string }) {
+  if (!text) return null;
+  const cleaned = String(text)
+    .replace(/\[Source\s*:?\s*\]/gi, "")
+    .replace(/\(Source\s*:?\s*[^)]*\)/gi, "")
+    .replace(/\[([^\]]*)\]/g, "$1")
+    .replace(/\(\s*\)/g, "");
+  const lines = cleaned.split(/\n/).map((l) => l.trim()).filter(Boolean);
+
+  function renderLine(line: string, key: number) {
+    const stripped = line.replace(/^[-•*]\s*/, "").trim();
+    if (!stripped) return null;
+    const urlRe = /(https?:\/\/[^\s,;)>"']+)/g;
+    const parts: React.ReactNode[] = [];
+    let lastIdx = 0;
+    let m: RegExpExecArray | null;
+    let k = 0;
+    while ((m = urlRe.exec(stripped)) !== null) {
+      if (m.index > lastIdx) {
+        const before = stripped.slice(lastIdx, m.index).replace(/:\s*$/, "").trim();
+        if (before) parts.push(<em key={`t${key}_${k}`} className="not-italic text-white/75">{before} </em>);
+      }
+      parts.push(
+        <a key={`l${key}_${k}`} href={m[1]} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline text-[11px]">
+          {friendlySourceLabel(m[1])}
+        </a>
+      );
+      k++;
+      lastIdx = m.index + m[0].length;
+    }
+    if (lastIdx < stripped.length) {
+      const rest = stripped.slice(lastIdx).trim();
+      if (rest) parts.push(<span key={`e${key}_${k}`}>{rest}</span>);
+    }
+    return (
+      <li key={key} className="flex items-start gap-1.5 text-[11.5px] text-white/65 leading-relaxed">
+        <span className="text-orange-400/50 mt-0.5 shrink-0">•</span>
+        <span className="break-words">{parts.length > 0 ? parts : stripped}</span>
+      </li>
+    );
+  }
+
+  return <ul className="space-y-1">{lines.map((l, i) => renderLine(l, i))}</ul>;
+}
+
 export default function CompanyResearchPage() {
   const router = useRouter();
   const [activeCompany, setActiveCompany] = useState<string>("");
@@ -436,44 +551,76 @@ export default function CompanyResearchPage() {
   const [savedByCompany, setSavedByCompany] = useState<Record<string, CompanyResearch>>({});
   const [selectedSignalIds, setSelectedSignalIds] = useState<Set<string>>(new Set());
   const [briefingOpen, setBriefingOpen] = useState(false);
-  const [selectedPdlSignalIds, setSelectedPdlSignalIds] = useState<Set<string>>(new Set());
   const [companyOptions, setCompanyOptions] = useState<string[]>([]);
+  const SIGNAL_LIMIT = 10;
 
   const topSignals = useMemo(() => extractTopSignals(draft), [draft]);
   const pdlSignals = useMemo(() => draft?.pdl_company_signals || [], [draft]);
 
-  const totalSelectedCompanySignals = (): number => selectedSignalIds.size + selectedPdlSignalIds.size;
+  const allSignals = useMemo((): UnifiedSignal[] => {
+    const list: UnifiedSignal[] = [];
+    const seen = new Set<string>();
+    const dedupe = (t: string) => t.toLowerCase().replace(/\s+/g, " ").trim().slice(0, 80);
+    for (let i = 0; i < pdlSignals.length; i++) {
+      const sig = pdlSignals[i];
+      const k = dedupe(sig.value);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      list.push({ id: `pdl_${i}`, category: sig.category, label: sig.label, text: sig.value, confidence: 0.8 });
+    }
+    const intelSigs = (draft?.intelligence?.signals || []).filter((sig) => {
+      const c = (sig.signal_content || "").toLowerCase();
+      const t = (sig.signal_title || "").toLowerCase();
+      if (!t && !c) return false;
+      for (const bad of ["no external web sources", "imported role description", "suggested topic", "derived from", "signal detected for", "live mode", "stub mode", "serper", "captured in this run"])
+        if (c.includes(bad)) return false;
+      if (/no\s+\w+\s+(details?|data|signals?)\s*(captured|found|available)/i.test(c)) return false;
+      if (t.includes("no data") || t.includes("no information") || (t.includes("example") && t.includes(":"))) return false;
+      const scrubbed = scrubModePlaceholders(sig.signal_content || "");
+      if (!scrubbed && !scrubModePlaceholders(sig.signal_title || "")) return false;
+      return true;
+    });
+    for (let i = 0; i < intelSigs.length; i++) {
+      const sig = intelSigs[i];
+      const title = scrubModePlaceholders(cleanThemeText(sig.signal_title));
+      const content = scrubModePlaceholders(cleanThemeText(sig.signal_content || ""));
+      const k = dedupe(title || content);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      list.push({
+        id: `intel_${i}`,
+        category: SIGNAL_TYPE_LABELS[sig.signal_type] || sig.signal_type,
+        label: title,
+        text: content,
+        confidence: sig.confidence_score,
+        sourceUrl: sig.signal_source && !sig.signal_source.startsWith("signaliz::") ? sig.signal_source : undefined,
+        date: sig.signal_date ? sig.signal_date.split("T")[0] : undefined,
+      });
+    }
+    for (const sig of topSignals) {
+      const k = dedupe(sig.text);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      list.push({ id: sig.id, category: sig.category, label: sig.category, text: sig.text, confidence: sig.confidence });
+    }
+    return list;
+  }, [draft, topSignals, pdlSignals]);
 
   const toggleSignal = (id: string) => {
     setSelectedSignalIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
-      else if (totalSelectedCompanySignals() < 3) next.add(id);
+      else if (next.size < SIGNAL_LIMIT) next.add(id);
       else return prev;
-      persistAllCompanySignals(next, selectedPdlSignalIds);
+      persistSelectedSignals(next);
       return next;
     });
   };
 
-  const togglePdlSignal = (idx: number) => {
-    const sigId = `pdl_${idx}`;
-    setSelectedPdlSignalIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(sigId)) next.delete(sigId);
-      else if (totalSelectedCompanySignals() < 3) next.add(sigId);
-      else return prev;
-      persistAllCompanySignals(selectedSignalIds, next);
-      return next;
-    });
-  };
-
-  const persistAllCompanySignals = (webIds: Set<string>, pdlIds: Set<string>) => {
+  const persistSelectedSignals = (ids: Set<string>) => {
     try {
-      const webSelected = topSignals.filter((s) => webIds.has(s.id)).map((s) => ({ category: s.category, text: s.text }));
-      const pdlSelected = pdlSignals
-        .filter((_: any, idx: number) => pdlIds.has(`pdl_${idx}`))
-        .map((s: PdlCompanySignal) => ({ category: s.category, text: `${s.label}: ${s.value}` }));
-      localStorage.setItem("rf_selected_company_signals", JSON.stringify([...webSelected, ...pdlSelected]));
+      const selected = allSignals.filter((s) => ids.has(s.id)).map((s) => ({ category: s.category, text: s.label && s.label !== s.category ? `${s.label}: ${s.text}` : s.text }));
+      localStorage.setItem("rf_selected_company_signals", JSON.stringify(selected));
     } catch {}
   };
 
@@ -810,7 +957,6 @@ export default function CompanyResearchPage() {
                       setError(null);
                       setNotice(null);
                       setSelectedSignalIds(new Set());
-                      setSelectedPdlSignalIds(new Set());
                     }}
                     className="rounded-md border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 hover:bg-red-500/20"
                   >
@@ -934,133 +1080,100 @@ export default function CompanyResearchPage() {
                     </div>
                   ) : null}
 
-                  <div className="rounded-lg border border-white/10 bg-black/20 p-4">
-                    {(draft.hiring_signals || []).length > 0 && (
-                      <>
-                        <div className="text-sm font-bold text-white mb-1">Hiring Signals</div>
-                        <div className="text-xs text-white/60 mb-3">
-                          Quick, outreach-relevant signals for <span className="font-semibold text-white/80">{activeCompanyDisplay}</span>.
+                  {/* Company Intelligence (top) */}
+                  {draft.intelligence && (draft.intelligence.outreach_summary?.one_liner_hook || draft.intelligence.executive_summary) ? (
+                    <CollapsibleSection title="Company Intelligence" defaultOpen={true} className="mb-1">
+                      {draft.intelligence.overall_relevance_score > 0 && (
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-[11px] text-white/50">Relevance</span>
+                          <span className={`text-xs font-bold ${draft.intelligence.overall_relevance_score >= 0.7 ? "text-emerald-300" : draft.intelligence.overall_relevance_score >= 0.4 ? "text-amber-300" : "text-white/50"}`}>
+                            {(draft.intelligence.overall_relevance_score * 100).toFixed(0)}%
+                          </span>
                         </div>
-                        <div className="space-y-2">
-                          {(draft.hiring_signals || []).slice(0, 8).map((s, idx) => (
-                            <div key={`sig_${idx}`} className="rounded-md border border-white/10 bg-white/5 p-3">
-                              <div className="text-sm font-semibold text-white/85">{s.label}</div>
-                              <div className="mt-1 text-sm text-white/75 whitespace-pre-wrap">{s.detail}</div>
+                      )}
+                      {draft.intelligence.executive_summary && (
+                        <div className="mb-4">
+                          <div className="text-[13px] font-semibold text-orange-400 mb-1">Executive Summary</div>
+                          <div className="text-[12px] text-white/65 leading-relaxed">{cleanThemeText(draft.intelligence.executive_summary)}</div>
+                        </div>
+                      )}
+                      {draft.intelligence.outreach_summary?.one_liner_hook ? (
+                        <div className="rounded-md border border-blue-500/20 bg-blue-500/10 p-3">
+                          <div className="text-[13px] font-semibold text-orange-400 mb-1">Outreach Summary</div>
+                          <div className="text-[12px] text-white/80 mb-2">{draft.intelligence.outreach_summary.one_liner_hook}</div>
+                          {draft.intelligence.outreach_summary.strongest_signal && (
+                            <div className="text-[12px] text-white/60 mb-1">
+                              <span className="text-amber-400 font-semibold text-[11px]">Strongest signal:</span> {draft.intelligence.outreach_summary.strongest_signal}
                             </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-
-                  {(hasRealData(draft.recent_posts || "") || hasRealData(draft.publications || "")) ? (
-                  <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {hasRealData(draft.recent_posts || "") ? (
-                    <div>
-                      <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
-                        Recent posts (blog/press/LinkedIn topics)
-                      </div>
-                      <textarea
-                        value={scrubModePlaceholders(draft.recent_posts || "")}
-                        onChange={(e) => setDraft({ ...draft, recent_posts: e.target.value })}
-                        rows={6}
-                        className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="- Post/topic: … (include URL when possible)"
-                      />
-                    </div>
-                    ) : null}
-                    {hasRealData(draft.publications || "") ? (
-                    <div>
-                      <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
-                        Publications (case studies / reports)
-                      </div>
-                      <textarea
-                        value={scrubModePlaceholders(draft.publications || "")}
-                        onChange={(e) => setDraft({ ...draft, publications: e.target.value })}
-                        rows={6}
-                        className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="- Publication: … (include URL when possible)"
-                      />
-                    </div>
-                    ) : null}
-                  </div>
-                  ) : null}
-                  </div>
-
-                  {/* Unified Company Signals -- best from all sources (PDL, Signaliz, web) */}
-                  {(pdlSignals.length > 0 || topSignals.length > 0) ? (
-                  <div className="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
-                    <div className="text-sm font-bold text-white mb-1">Company Signals for Outreach</div>
-                    <div className="text-xs text-white/60 mb-3">
-                      The best facts about <span className="font-semibold text-white/80">{activeCompanyDisplay}</span> from all sources. Select up to 3 to include in your messages.
-                    </div>
-                    <div className="space-y-1.5">
-                      {/* Backend-unified signals (PDL + Signaliz + web research) */}
-                      {pdlSignals.slice(0, 9).map((sig: PdlCompanySignal, idx: number) => {
-                        const sigId = `pdl_${idx}`;
-                        const on = selectedPdlSignalIds.has(sigId);
-                        const total = totalSelectedCompanySignals();
-                        return (
-                          <button
-                            key={sigId}
-                            type="button"
-                            disabled={!on && total >= 3}
-                            onClick={() => togglePdlSignal(idx)}
-                            className={`w-full text-left rounded-md border p-2.5 transition-colors ${
-                              on
-                                ? "border-emerald-400/50 bg-emerald-500/15"
-                                : total >= 3
-                                  ? "border-white/5 bg-white/3 text-white/30 cursor-not-allowed"
-                                  : "border-white/10 bg-white/5 hover:bg-white/10"
-                            }`}
-                          >
-                            <div className="flex items-start gap-2">
-                              <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] font-bold ${
-                                on ? "border-emerald-400 bg-emerald-500 text-black" : "border-white/30 text-white/40"
-                              }`}>
-                                {on ? "✓" : ""}
-                              </span>
-                              <div className="min-w-0 flex-1">
-                                <span className="inline-block rounded-full border border-white/20 bg-white/10 px-1.5 py-0.5 text-[9px] font-semibold text-white/70 mb-1">
-                                  {sig.label}
-                                </span>
-                                <div className="text-[13px] text-white/80 leading-tight">{sig.value}</div>
+                          )}
+                          {draft.intelligence.outreach_summary.recommended_angle && (
+                            <div className="text-[12px] text-white/60 mb-2">
+                              <span className="text-emerald-400 font-semibold text-[11px]">Recommended angle:</span> {draft.intelligence.outreach_summary.recommended_angle}
+                            </div>
+                          )}
+                          {draft.intelligence.outreach_summary.conversation_starters?.length ? (
+                            <div className="mt-2 pt-2 border-t border-blue-500/15">
+                              <div className="text-[11px] font-semibold text-orange-300/80 mb-1">Conversation Starters</div>
+                              {draft.intelligence.outreach_summary.conversation_starters.map((s, i) => (
+                                <div key={`cs_${i}`} className="text-[12px] text-white/65 mt-0.5 flex items-start gap-1.5">
+                                  <span className="shrink-0 text-blue-300/50 mt-0.5">→</span>
+                                  <span>{s}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : null}
+                          {draft.intelligence.outreach_summary.sequence_strategy?.length ? (
+                            <div className="mt-2 pt-2 border-t border-blue-500/15">
+                              <div className="text-[11px] font-semibold text-orange-300/80 mb-1.5">Email Sequence Strategy</div>
+                              <div className="space-y-2">
+                                {draft.intelligence.outreach_summary.sequence_strategy.map((step) => (
+                                  <div key={`seq_${step.email_number}`} className="rounded border border-white/10 bg-white/[0.02] p-2">
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                      <span className="inline-block rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 text-[9px] font-bold">
+                                        Email {step.email_number}
+                                      </span>
+                                      <span className="text-[11px] text-white/70 font-medium">{step.angle}</span>
+                                    </div>
+                                    {step.subject_line && (
+                                      <div className="text-[11px] text-white/50 mt-0.5">
+                                        <span className="text-white/30">Subject:</span> {step.subject_line}
+                                      </div>
+                                    )}
+                                    {step.key_point && (
+                                      <div className="text-[11px] text-white/45 mt-0.5">{step.key_point}</div>
+                                    )}
+                                  </div>
+                                ))}
                               </div>
                             </div>
-                          </button>
-                        );
-                      })}
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </CollapsibleSection>
+                  ) : null}
 
-                      {/* Web-extracted signals as fallback (only categories not already covered) */}
-                      {topSignals
-                        .filter((sig) => {
-                          const pdlCategories = new Set(pdlSignals.map((p: PdlCompanySignal) => p.category.toLowerCase()));
-                          return !pdlCategories.has(sig.category.toLowerCase().replace(/\s+/g, "_"));
-                        })
-                        .slice(0, Math.max(0, 9 - pdlSignals.length))
-                        .map((sig) => {
+                  {/* Select Signals for Outreach Drafts */}
+                  {allSignals.length > 0 ? (
+                    <CollapsibleSection title="Select Signals for Outreach Drafts" count={allSignals.length} defaultOpen={true} className="mb-1">
+                      <p className="text-[11px] text-white/50 mb-3">
+                        Pick up to {SIGNAL_LIMIT} signals about <span className="font-semibold text-white/70">{activeCompanyDisplay}</span> to personalize your outreach. The AI will consider your selections when crafting the message — it chooses whichever details personalize best, so more context helps.
+                      </p>
+                      <div className="space-y-1.5">
+                        {allSignals.map((sig) => {
                           const on = selectedSignalIds.has(sig.id);
-                          const total = totalSelectedCompanySignals();
-                          const catColors: Record<string, string> = {
-                            "Product Launch": "bg-blue-500/20 text-blue-300 border-blue-500/30",
-                            "Leadership Change": "bg-purple-500/20 text-purple-300 border-purple-500/30",
-                            "Recent News": "bg-amber-500/20 text-amber-300 border-amber-500/30",
-                            "Recent Post": "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
-                            "Culture & Values": "bg-pink-500/20 text-pink-300 border-pink-500/30",
-                            "Market Position": "bg-white/10 text-white/70 border-white/20",
-                            "Hiring Signal": "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-                            "Publication": "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
-                          };
-                          const badgeClass = catColors[sig.category] || "bg-white/10 text-white/70 border-white/20";
+                          const atLimit = selectedSignalIds.size >= SIGNAL_LIMIT;
+                          const confColor = sig.confidence >= 0.8 ? "text-emerald-300" : sig.confidence >= 0.5 ? "text-amber-300" : "text-white/40";
+                          const badgeClass = SIGNAL_CAT_COLORS[sig.category] || "bg-white/10 text-white/70 border-white/20";
                           return (
                             <button
                               key={sig.id}
                               type="button"
-                              disabled={!on && total >= 3}
-                              onClick={() => { if (!on && total >= 3) return; toggleSignal(sig.id); }}
+                              disabled={!on && atLimit}
+                              onClick={() => toggleSignal(sig.id)}
                               className={`w-full text-left rounded-md border p-2.5 transition-colors ${
                                 on
                                   ? "border-emerald-400/50 bg-emerald-500/15"
-                                  : total >= 3
+                                  : atLimit
                                     ? "border-white/5 bg-white/3 text-white/30 cursor-not-allowed"
                                     : "border-white/10 bg-white/5 hover:bg-white/10"
                               }`}
@@ -1072,188 +1185,70 @@ export default function CompanyResearchPage() {
                                   {on ? "✓" : ""}
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                  <span className={`inline-block rounded-full border px-1.5 py-0.5 text-[9px] font-semibold mb-1 ${badgeClass}`}>
-                                    {sig.category}
-                                  </span>
-                                  <div className="text-[13px] text-white/80 leading-tight">{sig.text}</div>
+                                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                                    <span className={`inline-block rounded-full border px-1.5 py-0.5 text-[9px] font-semibold ${badgeClass}`}>
+                                      {sig.category}
+                                    </span>
+                                    <span className={`text-[9px] font-bold ml-auto ${confColor}`}>
+                                      {(sig.confidence * 100).toFixed(0)}%
+                                    </span>
+                                  </div>
+                                  {sig.label && sig.label !== sig.category && (
+                                    <div className="text-[12px] text-white/80 font-medium leading-tight mb-0.5">{formatSignalText(sig.label)}</div>
+                                  )}
+                                  <div className="text-[11.5px] text-white/60 leading-relaxed break-words">{formatSignalText(sig.text)}</div>
+                                  {(sig.date || sig.sourceUrl) && (
+                                    <div className="flex items-center gap-3 mt-1">
+                                      {sig.date && <span className="text-[10px] text-white/35">{sig.date}</span>}
+                                      {sig.sourceUrl && (
+                                        <a href={sig.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:text-blue-300 underline" onClick={(e) => e.stopPropagation()}>
+                                          {friendlySourceLabel(sig.sourceUrl)}
+                                        </a>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </button>
                           );
                         })}
-                    </div>
-                    <p className="text-[9px] text-white/40 mt-2">Select up to 3 to include in your outreach message</p>
-                  </div>
+                      </div>
+                      <p className="text-[10px] text-white/40 mt-2">{selectedSignalIds.size} of {SIGNAL_LIMIT} selected</p>
+                    </CollapsibleSection>
                   ) : null}
 
-                  {/* Structured Intelligence */}
-                  {draft?.intelligence?.signals?.length ? (
-                    <div className="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="text-sm font-bold text-white">Company Intelligence</div>
-                        {draft.intelligence.overall_relevance_score > 0 && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-white/50">Relevance</span>
-                            <span className={`text-xs font-bold ${draft.intelligence.overall_relevance_score >= 0.7 ? "text-emerald-300" : draft.intelligence.overall_relevance_score >= 0.4 ? "text-amber-300" : "text-white/50"}`}>
-                              {(draft.intelligence.overall_relevance_score * 100).toFixed(0)}%
-                            </span>
-                          </div>
-                        )}
+                  {/* Hiring Signals */}
+                  {(draft.hiring_signals || []).length > 0 ? (
+                    <CollapsibleSection title="Hiring Signals" count={(draft.hiring_signals || []).length} defaultOpen={true} className="mb-1">
+                      <div className="text-[11px] text-white/50 mb-2">
+                        Outreach-relevant signals for <span className="font-semibold text-white/70">{activeCompanyDisplay}</span>.
                       </div>
+                      <div className="space-y-2">
+                        {(draft.hiring_signals || []).slice(0, 8).map((s, idx) => (
+                          <div key={`sig_${idx}`} className="rounded-md border border-white/10 bg-white/5 p-3">
+                            <div className="text-[12px] font-semibold text-orange-400">{s.label}</div>
+                            <div className="mt-1 text-[11.5px] text-white/65 leading-relaxed break-words"><RichText text={s.detail} /></div>
+                          </div>
+                        ))}
+                      </div>
+                    </CollapsibleSection>
+                  ) : null}
 
-                      {draft.intelligence.outreach_summary?.one_liner_hook ? (
-                        <div className="mb-4 rounded-md border border-blue-500/20 bg-blue-500/10 p-3">
-                          <div className="text-[10px] font-semibold text-blue-300 uppercase tracking-wider mb-1">Outreach Summary</div>
-                          <div className="text-sm text-white/90 font-medium mb-2">{draft.intelligence.outreach_summary.one_liner_hook}</div>
-                          {draft.intelligence.outreach_summary.strongest_signal && (
-                            <div className="text-xs text-white/60 mb-1.5">
-                              <span className="text-amber-300 font-semibold">Strongest signal:</span> {draft.intelligence.outreach_summary.strongest_signal}
-                            </div>
-                          )}
-                          {draft.intelligence.outreach_summary.recommended_angle && (
-                            <div className="text-xs text-white/60 mb-2">
-                              <span className="text-emerald-300 font-semibold">Recommended angle:</span> {draft.intelligence.outreach_summary.recommended_angle}
-                            </div>
-                          )}
-                          {draft.intelligence.outreach_summary.conversation_starters?.length ? (
-                            <div className="mt-2 pt-2 border-t border-blue-500/15">
-                              <div className="text-[10px] font-semibold text-blue-200/70 mb-1">Conversation starters</div>
-                              {draft.intelligence.outreach_summary.conversation_starters.map((s, i) => (
-                                <div key={`cs_${i}`} className="text-xs text-white/60 mt-0.5 flex items-start gap-1.5">
-                                  <span className="shrink-0 text-blue-300/50 mt-0.5">→</span>
-                                  <span>{s}</span>
-                                </div>
-                              ))}
-                            </div>
-                          ) : null}
-                          {draft.intelligence.outreach_summary.sequence_strategy?.length ? (
-                            <div className="mt-2 pt-2 border-t border-blue-500/15">
-                              <div className="text-[10px] font-semibold text-blue-200/70 mb-1.5">Email Sequence Strategy</div>
-                              <div className="space-y-2">
-                                {draft.intelligence.outreach_summary.sequence_strategy.map((step) => (
-                                  <div key={`seq_${step.email_number}`} className="rounded border border-white/10 bg-white/[0.02] p-2">
-                                    <div className="flex items-center gap-2 mb-0.5">
-                                      <span className="inline-block rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 text-[9px] font-bold">
-                                        Email {step.email_number}
-                                      </span>
-                                      <span className="text-[10px] text-white/70 font-medium">{step.angle}</span>
-                                    </div>
-                                    {step.subject_line && (
-                                      <div className="text-[10px] text-white/50 mt-0.5">
-                                        <span className="text-white/30">Subject:</span> {step.subject_line}
-                                      </div>
-                                    )}
-                                    {step.key_point && (
-                                      <div className="text-[10px] text-white/45 mt-0.5">{step.key_point}</div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ) : null}
+                  {/* Recent Posts & Publications */}
+                  {(hasRealData(draft.recent_posts || "") || hasRealData(draft.publications || "")) ? (
+                    <div className="mb-1 rounded-lg border border-white/10 bg-black/20 p-4">
+                      {hasRealData(draft.recent_posts || "") ? (
+                        <div className={hasRealData(draft.publications || "") ? "mb-4" : ""}>
+                          <div className="text-[13px] font-semibold text-orange-400 mb-2">Recent Posts</div>
+                          <RichText text={scrubModePlaceholders(draft.recent_posts || "")} />
                         </div>
                       ) : null}
-
-                      {draft.intelligence.executive_summary && (
-                        <div className="mb-4 text-xs text-white/60 leading-relaxed">
-                          {cleanThemeText(draft.intelligence.executive_summary)}
+                      {hasRealData(draft.publications || "") ? (
+                        <div>
+                          <div className="text-[13px] font-semibold text-orange-400 mb-2">Publications</div>
+                          <RichText text={scrubModePlaceholders(draft.publications || "")} />
                         </div>
-                      )}
-
-                      <div className="space-y-2">
-                        {draft.intelligence.signals.filter((sig) => {
-                          const t = (sig.signal_title || "").toLowerCase();
-                          const c = (sig.signal_content || "").toLowerCase();
-                          if (!t && !c) return false;
-                          if (c.includes("no external web sources")) return false;
-                          if (c.includes("imported role description")) return false;
-                          if (c.includes("suggested topic")) return false;
-                          if (c.includes("derived from")) return false;
-                          if (c.includes("signal detected for")) return false;
-                          if (c.includes("live mode")) return false;
-                          if (c.includes("stub mode")) return false;
-                          if (c.includes("serper")) return false;
-                          if (c.includes("captured in this run")) return false;
-                          if (/no\s+\w+\s+(details?|data|signals?)\s*(captured|found|available)/i.test(c)) return false;
-                          if (t.includes("no data") || t.includes("no information")) return false;
-                          if (t.includes("example") && t.includes(":")) return false;
-                          const scrubbed = scrubModePlaceholders(sig.signal_content || "");
-                          if (!scrubbed && !scrubModePlaceholders(sig.signal_title || "")) return false;
-                          return true;
-                        }).map((sig, idx) => {
-                          const typeLabels: Record<string, string> = {
-                            leadership_change: "Leadership",
-                            product_launch: "Product",
-                            hiring_signal: "Hiring",
-                            funding_event: "Funding",
-                            partnership: "Partnership",
-                            market_expansion: "Market",
-                            regulatory: "Regulatory",
-                            technology_adoption: "Technology",
-                            technology: "Technology",
-                            earnings: "Earnings",
-                            restructuring: "Restructuring",
-                            expansion: "Expansion",
-                            news: "News",
-                            workforce: "Workforce",
-                            intent: "Intent",
-                            firmographics: "Firmographics",
-                            funding: "Funding",
-                          };
-                          const typeColors: Record<string, string> = {
-                            leadership_change: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-                            product_launch: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-                            hiring_signal: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-                            funding_event: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-                            partnership: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
-                            market_expansion: "bg-pink-500/20 text-pink-300 border-pink-500/30",
-                            regulatory: "bg-red-500/20 text-red-300 border-red-500/30",
-                            technology_adoption: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
-                            technology: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
-                            earnings: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-                            restructuring: "bg-orange-500/20 text-orange-300 border-orange-500/30",
-                            expansion: "bg-pink-500/20 text-pink-300 border-pink-500/30",
-                            news: "bg-sky-500/20 text-sky-300 border-sky-500/30",
-                            workforce: "bg-teal-500/20 text-teal-300 border-teal-500/30",
-                            intent: "bg-violet-500/20 text-violet-300 border-violet-500/30",
-                            firmographics: "bg-slate-500/20 text-slate-300 border-slate-500/30",
-                            funding: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-                          };
-                          const badge = typeColors[sig.signal_type] || "bg-white/10 text-white/60 border-white/20";
-                          const confColor = sig.confidence_score >= 0.8 ? "text-emerald-300" : sig.confidence_score >= 0.5 ? "text-amber-300" : "text-white/40";
-                          return (
-                            <div key={`intel_${idx}`} className="rounded-md border border-white/10 bg-white/[0.03] p-3">
-                              <div className="flex items-center gap-2 mb-1.5">
-                                <span className={`inline-block rounded-full border px-1.5 py-0.5 text-[9px] font-semibold ${badge}`}>
-                                  {typeLabels[sig.signal_type] || sig.signal_type}
-                                </span>
-                                {sig.signal_source?.startsWith("signaliz::") ? (
-                                  <span className="text-[9px] text-violet-400/80 font-medium border border-violet-500/30 rounded-full px-1.5">Signaliz</span>
-                                ) : sig.source_type === "web_source" ? (
-                                  <span className="text-[9px] text-emerald-400/60 font-medium">Sourced</span>
-                                ) : null}
-                                <span className={`text-[9px] font-bold ml-auto ${confColor}`}>
-                                  {(sig.confidence_score * 100).toFixed(0)}%
-                                </span>
-                              </div>
-                              <div className="text-sm font-medium text-white/90 mb-1">{scrubModePlaceholders(cleanThemeText(sig.signal_title))}</div>
-                              {sig.signal_content && scrubModePlaceholders(sig.signal_content) && (
-                                <div className="text-xs text-white/55 leading-relaxed">{scrubModePlaceholders(cleanThemeText(sig.signal_content))}</div>
-                              )}
-                              <div className="flex items-center gap-3 mt-1.5">
-                                {sig.signal_date && (
-                                  <span className="text-[10px] text-white/35">{sig.signal_date.split("T")[0]}</span>
-                                )}
-                                {sig.signal_source && !sig.signal_source.startsWith("signaliz::") && (
-                                  <a href={sig.signal_source} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-300/60 hover:text-blue-300 underline truncate max-w-[200px]">
-                                    {(() => { try { return new URL(sig.signal_source).hostname.replace("www.", ""); } catch { return "source"; } })()}
-                                  </a>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                      ) : null}
                     </div>
                   ) : null}
 
@@ -1304,12 +1299,12 @@ export default function CompanyResearchPage() {
               <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Overview and Theme are always shown */}
                 <div>
-                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Company Overview</div>
+                  <div className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Company Overview</div>
                   <textarea
                     value={draft.overview}
                     onChange={(e) => setDraft({ ...draft, overview: e.target.value })}
                     rows={6}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[12px] text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <div className="mt-2 text-[11px] text-white/60">
                     Variables:{" "}
@@ -1320,12 +1315,12 @@ export default function CompanyResearchPage() {
                 </div>
 
                 <div>
-                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Theme</div>
+                  <div className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Theme</div>
                   <textarea
                     value={cleanThemeText(draft.theme)}
                     onChange={(e) => setDraft({ ...draft, theme: cleanThemeText(e.target.value) })}
                     rows={6}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[12px] text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="- Theme + mini-plan…"
                   />
                   <div className="mt-2 text-[11px] text-white/60">
@@ -1338,12 +1333,12 @@ export default function CompanyResearchPage() {
 
                 {hasRealData(draft.recent_news) ? (
                 <div>
-                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Recent News</div>
+                  <div className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Recent News</div>
                   <textarea
                     value={draft.recent_news}
                     onChange={(e) => setDraft({ ...draft, recent_news: e.target.value })}
                     rows={6}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[12px] text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="- Headline: short summary"
                   />
                 </div>
@@ -1351,12 +1346,12 @@ export default function CompanyResearchPage() {
 
                 {hasRealData(draft.culture) ? (
                 <div>
-                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Company Culture & Values</div>
+                  <div className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Company Culture & Values</div>
                   <textarea
                     value={draft.culture}
                     onChange={(e) => setDraft({ ...draft, culture: e.target.value })}
                     rows={6}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[12px] text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="What do they value? How do they operate?"
                   />
                 </div>
@@ -1364,12 +1359,12 @@ export default function CompanyResearchPage() {
 
                 {hasRealData(draft.product_launches) ? (
                 <div>
-                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Product launches</div>
+                  <div className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Product launches</div>
                   <textarea
                     value={scrubModePlaceholders(draft.product_launches)}
                     onChange={(e) => setDraft({ ...draft, product_launches: e.target.value })}
                     rows={6}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[12px] text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="- Launch: … (include URL when possible)"
                   />
                 </div>
@@ -1377,12 +1372,12 @@ export default function CompanyResearchPage() {
 
                 {hasRealData(draft.leadership_changes) ? (
                 <div>
-                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Leadership changes</div>
+                  <div className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Leadership changes</div>
                   <textarea
                     value={scrubModePlaceholders(draft.leadership_changes)}
                     onChange={(e) => setDraft({ ...draft, leadership_changes: e.target.value })}
                     rows={6}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[12px] text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="- Change: … (include URL when possible)"
                   />
                 </div>
@@ -1390,12 +1385,12 @@ export default function CompanyResearchPage() {
 
                 {hasRealData(draft.other_hiring_signals) ? (
                 <div className="lg:col-span-2">
-                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Other hiring signals</div>
+                  <div className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Other hiring signals</div>
                   <textarea
                     value={scrubModePlaceholders(draft.other_hiring_signals)}
                     onChange={(e) => setDraft({ ...draft, other_hiring_signals: e.target.value })}
                     rows={6}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[12px] text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="- Signal: … (include URL when possible)"
                   />
                 </div>
@@ -1403,12 +1398,12 @@ export default function CompanyResearchPage() {
 
                 {hasRealData(draft.market_position) ? (
                 <div className="lg:col-span-2">
-                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Market Position</div>
+                  <div className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Market Position</div>
                   <textarea
                     value={draft.market_position}
                     onChange={(e) => setDraft({ ...draft, market_position: e.target.value })}
                     rows={6}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[12px] text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Competitors, positioning, and what matters right now."
                   />
                 </div>

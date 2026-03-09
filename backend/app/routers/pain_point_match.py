@@ -612,7 +612,9 @@ async def generate_painpoint_matches_batch(request: BatchMatchRequest):
     """
     Generate pain point matches for multiple job descriptions in one call.
     Never returns 500 -- always returns a valid JSON response.
+    Each job has a 20-second timeout to prevent the overall request from exceeding Railway limits.
     """
+    import asyncio
     matches_by_job_id: Dict[str, List[PainPointMatch]] = {}
     errors_by_job_id: Dict[str, str] = {}
 
@@ -624,15 +626,22 @@ async def generate_painpoint_matches_batch(request: BatchMatchRequest):
                 job_id = str((j or {}).get("id") or "").strip()
                 if not job_id:
                     continue
-                resp = await generate_painpoint_matches(
-                    MatchRequest(
-                        job_description_id=job_id,
-                        resume_extract_id=request.resume_extract_id or "latest",
-                        job_description=j,
-                        resume_extract=request.resume_extract,
-                    )
+                resp = await asyncio.wait_for(
+                    generate_painpoint_matches(
+                        MatchRequest(
+                            job_description_id=job_id,
+                            resume_extract_id=request.resume_extract_id or "latest",
+                            job_description=j,
+                            resume_extract=request.resume_extract,
+                        )
+                    ),
+                    timeout=20.0,
                 )
                 matches_by_job_id[job_id] = resp.matches or []
+            except asyncio.TimeoutError:
+                logger.warning("Batch painpoint job %s timed out after 20s", job_id)
+                errors_by_job_id[job_id] = "Timed out"
+                matches_by_job_id[job_id] = []
             except HTTPException as he:
                 logger.warning("Batch painpoint job %s HTTPException: %s", job_id, he.detail)
                 errors_by_job_id[job_id] = str(he.detail or "Failed to generate matches")

@@ -257,66 +257,75 @@ export default function PainPointMatchPage() {
     setSelectedJD(null);
 
     try {
-      setProgress({ done: 0, total: jobDescriptions.length, current: "Generating matches for all roles…" });
-
-      const resp = await api<BatchPainPointMatchResponse>("/painpoint-match/generate-batch", "POST", {
-        resume_extract_id: "latest",
-        job_descriptions: jobDescriptions.map((jd) => ({
-          id: jd.id,
-          title: jd.title,
-          company: jd.company,
-          pain_points: jd.painPoints || [],
-          required_skills: jd.requiredSkills || [],
-          success_metrics: jd.successMetrics || [],
-          responsibilities: jd.responsibilities || [],
-          requirements: jd.requirements || [],
-        })),
-        resume_extract: {
-          positions: resumeExtract.positions || [],
-          skills: resumeExtract.skills || [],
-          accomplishments: resumeExtract.accomplishments || [],
-          keyMetrics: resumeExtract.keyMetrics || [],
-        },
-      });
-
       const nextByJob: Record<string, PainPointMatch[]> = {};
-      const rawMap = resp?.matches_by_job_id || {};
-      for (const jd of jobDescriptions) {
-        const key = String(jd.id || "").trim();
-        const rawMatches = (key ? rawMap[key] : undefined) || [];
-        nextByJob[jd.id] = rawMatches.map(mapBackendMatch);
+      const resumePayload = {
+        positions: resumeExtract.positions || [],
+        skills: resumeExtract.skills || [],
+        accomplishments: resumeExtract.accomplishments || [],
+        keyMetrics: resumeExtract.keyMetrics || [],
+      };
+
+      const CHUNK_SIZE = 3;
+      const chunks: typeof jobDescriptions[] = [];
+      for (let i = 0; i < jobDescriptions.length; i += CHUNK_SIZE) {
+        chunks.push(jobDescriptions.slice(i, i + CHUNK_SIZE));
       }
 
-      // Safety fallback: if batch returned empty for everything, try per-role generate.
-      const hasAnyFromBatch = Object.values(nextByJob).some((arr) => Array.isArray(arr) && arr.length > 0);
-      if (!hasAnyFromBatch) {
-        for (const jd of jobDescriptions) {
-          try {
-            const single = await api<PainPointMatchResponse>("/painpoint-match/generate", "POST", {
-              job_description_id: String(jd.id || ""),
-              resume_extract_id: "latest",
-              job_description: {
-                id: jd.id,
-                title: jd.title,
-                company: jd.company,
-                pain_points: jd.painPoints || [],
-                required_skills: jd.requiredSkills || [],
-                success_metrics: jd.successMetrics || [],
-                responsibilities: jd.responsibilities || [],
-                requirements: jd.requirements || [],
-              },
-              resume_extract: {
-                positions: resumeExtract.positions || [],
-                skills: resumeExtract.skills || [],
-                accomplishments: resumeExtract.accomplishments || [],
-                keyMetrics: resumeExtract.keyMetrics || [],
-              },
-            });
-            nextByJob[jd.id] = Array.isArray(single?.matches) ? single.matches.map(mapBackendMatch) : [];
-          } catch {
-            nextByJob[jd.id] = nextByJob[jd.id] || [];
+      let completed = 0;
+      let hadErrors = false;
+
+      for (const chunk of chunks) {
+        setProgress({ done: completed, total: jobDescriptions.length, current: `Analyzing ${completed + 1}–${Math.min(completed + chunk.length, jobDescriptions.length)} of ${jobDescriptions.length} roles…` });
+
+        try {
+          const resp = await api<BatchPainPointMatchResponse>("/painpoint-match/generate-batch", "POST", {
+            resume_extract_id: "latest",
+            job_descriptions: chunk.map((jd) => ({
+              id: jd.id,
+              title: jd.title,
+              company: jd.company,
+              pain_points: jd.painPoints || [],
+              required_skills: jd.requiredSkills || [],
+              success_metrics: jd.successMetrics || [],
+              responsibilities: jd.responsibilities || [],
+              requirements: jd.requirements || [],
+            })),
+            resume_extract: resumePayload,
+          });
+
+          const rawMap = resp?.matches_by_job_id || {};
+          for (const jd of chunk) {
+            const key = String(jd.id || "").trim();
+            const rawMatches = (key ? rawMap[key] : undefined) || [];
+            nextByJob[jd.id] = rawMatches.map(mapBackendMatch);
+          }
+          if (resp?.errors_by_job_id && Object.keys(resp.errors_by_job_id).length) {
+            hadErrors = true;
+          }
+        } catch {
+          for (const jd of chunk) {
+            try {
+              const single = await api<PainPointMatchResponse>("/painpoint-match/generate", "POST", {
+                job_description_id: String(jd.id || ""),
+                resume_extract_id: "latest",
+                job_description: {
+                  id: jd.id, title: jd.title, company: jd.company,
+                  pain_points: jd.painPoints || [], required_skills: jd.requiredSkills || [],
+                  success_metrics: jd.successMetrics || [], responsibilities: jd.responsibilities || [],
+                  requirements: jd.requirements || [],
+                },
+                resume_extract: resumePayload,
+              });
+              nextByJob[jd.id] = Array.isArray(single?.matches) ? single.matches.map(mapBackendMatch) : [];
+            } catch {
+              nextByJob[jd.id] = [];
+              hadErrors = true;
+            }
           }
         }
+
+        completed += chunk.length;
+        setMatchesByJobId((prev) => ({ ...prev, ...nextByJob }));
       }
 
       setMatchesByJobId(nextByJob);
@@ -324,8 +333,7 @@ export default function PainPointMatchPage() {
         localStorage.setItem("painpoint_matches_by_job", JSON.stringify(nextByJob));
       } catch {}
 
-      if (resp?.errors_by_job_id && Object.keys(resp.errors_by_job_id).length) {
-        // Keep it short; this is a UX hint, not a hard stop.
+      if (hadErrors) {
         setError("Some roles failed to generate matches. You can re-run to try again.");
       }
 
@@ -339,8 +347,13 @@ export default function PainPointMatchPage() {
           localStorage.setItem("painpoint_matches", JSON.stringify(nextByJob[first.id] || []));
         } catch {}
       }
-    } catch {
-      setError("Failed to run pain point match analysis. Please try again.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err || "");
+      if (msg.includes("fetch") || msg.includes("network") || msg.includes("ECONNRESET") || msg.includes("socket")) {
+        setError("Cannot reach the analysis service. The backend may be restarting — wait a moment and try again.");
+      } else {
+        setError("Failed to run pain point match analysis. Please try again.");
+      }
     } finally {
       setIsGenerating(false);
       setProgress(null);
