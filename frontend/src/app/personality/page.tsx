@@ -839,6 +839,55 @@ export default function PersonalityPage() {
             </div>
           </div>
 
+          <div className="mt-4 mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="text-xs text-white/60">
+              {activeTest === "temperaments"
+                ? "Tip: choose “It depends” if you’re unsure."
+                : "Tip: choose “It depends” if you’re unsure."}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  resetAll();
+                }}
+                className="bg-white/10 text-white px-4 py-2 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
+              >
+                Reset
+              </button>
+              <button
+                type="button"
+                onClick={activeTest === "temperaments" ? onSubmitTemperaments : onSubmit}
+                disabled={activeTest === "temperaments" ? !tIsComplete : !isComplete}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                See results
+              </button>
+              <button
+                type="button"
+                onClick={saveAndContinue}
+                disabled={isSaving}
+                className={`px-4 py-2 rounded-md font-medium transition-colors border inline-flex items-center gap-2 ${
+                  isSaving
+                    ? "border-white/10 bg-white/5 text-white/50 cursor-not-allowed shadow-inner"
+                    : "border-white/10 bg-white/10 text-white hover:bg-white/15 active:bg-white/20 active:translate-y-[1px]"
+                }`}
+              >
+                {isSaving ? (
+                  <>
+                    <span
+                      aria-hidden="true"
+                      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white/80"
+                    />
+                    <span>Saving…</span>
+                  </>
+                ) : (
+                  <span>Save &amp; Continue</span>
+                )}
+              </button>
+            </div>
+          </div>
+
           <div className="space-y-1">
             {activeTest === "temperaments" ? (
               <CollapsibleSection title="Temperament Identifier">
@@ -1032,55 +1081,6 @@ export default function PersonalityPage() {
                 );
               })
             )}
-          </div>
-
-          <div className="mt-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="text-xs text-white/60">
-              {activeTest === "temperaments"
-                ? "Tip: choose “It depends” if you’re unsure."
-                : "Tip: choose “It depends” if you’re unsure."}
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  resetAll();
-                }}
-                className="bg-white/10 text-white px-4 py-2 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
-              >
-                Reset
-              </button>
-              <button
-                type="button"
-                onClick={activeTest === "temperaments" ? onSubmitTemperaments : onSubmit}
-                disabled={activeTest === "temperaments" ? !tIsComplete : !isComplete}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                See results
-              </button>
-              <button
-                type="button"
-                onClick={saveAndContinue}
-                disabled={isSaving}
-                className={`px-4 py-2 rounded-md font-medium transition-colors border inline-flex items-center gap-2 ${
-                  isSaving
-                    ? "border-white/10 bg-white/5 text-white/50 cursor-not-allowed shadow-inner"
-                    : "border-white/10 bg-white/10 text-white hover:bg-white/15 active:bg-white/20 active:translate-y-[1px]"
-                }`}
-              >
-                {isSaving ? (
-                  <>
-                    <span
-                      aria-hidden="true"
-                      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white/80"
-                    />
-                    <span>Saving…</span>
-                  </>
-                ) : (
-                  <span>Save &amp; Continue</span>
-                )}
-              </button>
-            </div>
           </div>
 
           {temperamentResult && (
