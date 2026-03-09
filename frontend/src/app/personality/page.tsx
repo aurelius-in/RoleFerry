@@ -845,7 +845,7 @@ export default function PersonalityPage() {
                 {/* Big icon tiles stay visible and “narrow down” in real-time */}
                 <div className="flex items-start justify-between gap-3 flex-col md:flex-row md:items-center">
                   <div>
-                    <div className="text-sm font-bold text-white">4 Temperaments Type Finder</div>
+                    <div className="text-sm font-bold text-white">Temperament Identifier</div>
                     <div className="mt-1 text-xs text-white/60">
                       Answer a few questions and watch the likely types narrow down (process of elimination).
                     </div>
@@ -1252,43 +1252,99 @@ export default function PersonalityPage() {
 
             </CollapsibleSection>
 
-            <div className="mt-4">
-            <CollapsibleSection title="Available Variables" count={(temperamentResult ? 4 : 0) + 5}>
-                <div className="text-xs text-white/60 mb-3">
-                  Variables available for downstream steps:
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {temperamentResult ? (
-                    <>
-                      <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                        temperament.type={temperamentResult.temperament}
-                      </code>
-                      <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                        temperament.summary
-                      </code>
-                      <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                        temperament.strengths[]
-                      </code>
-                      <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                        temperament.suggested_roles[]
-                      </code>
-                    </>
-                  ) : null}
-                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    personality.type_code={result.profile_code}
-                  </code>
-                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    personality.summary
-                  </code>
-                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    personality.action_steps[]
-                  </code>
-                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    personality.role_environments[]
-                  </code>
-                  <code className="px-2 py-1 rounded-md border border-white/10 bg-black/30 text-[11px] text-green-200">
-                    personality.suggested_roles[]
-                  </code>
+            <div className="mt-1">
+            <CollapsibleSection title="Available Variables" count={(temperamentResult ? 4 : 0) + 5} defaultOpen={false}>
+                <div className="overflow-x-auto">
+                  <table className="w-full table-fixed border-collapse text-[11px]">
+                    <thead>
+                      <tr className="text-left text-white/70 text-[9px] leading-tight">
+                        <th className="border border-white/10 bg-black/30 px-1.5 py-1.5 align-top whitespace-nowrap w-[28%]">
+                          <span className="font-semibold">Variable</span>
+                        </th>
+                        <th className="border border-white/10 bg-black/30 px-1.5 py-1.5 align-top whitespace-normal">
+                          <span className="font-semibold">Value</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-white/80">
+                      <tr className="align-top">
+                        <td className="border border-white/10 px-1.5 py-1.5">
+                          <code className="text-green-200">Type code</code>
+                        </td>
+                        <td className="border border-white/10 px-1.5 py-1.5 whitespace-normal break-words">
+                          {result.profile_code}
+                        </td>
+                      </tr>
+                      <tr className="align-top">
+                        <td className="border border-white/10 px-1.5 py-1.5">
+                          <code className="text-green-200">Personality summary</code>
+                        </td>
+                        <td className="border border-white/10 px-1.5 py-1.5 whitespace-normal break-words text-white/60">
+                          {result.summary || <span className="text-white/30">—</span>}
+                        </td>
+                      </tr>
+                      <tr className="align-top">
+                        <td className="border border-white/10 px-1.5 py-1.5">
+                          <code className="text-green-200">Role environments</code>
+                        </td>
+                        <td className="border border-white/10 px-1.5 py-1.5 whitespace-normal break-words text-white/60">
+                          {result.role_environments.length ? result.role_environments.join(", ") : <span className="text-white/30">—</span>}
+                        </td>
+                      </tr>
+                      <tr className="align-top">
+                        <td className="border border-white/10 px-1.5 py-1.5">
+                          <code className="text-green-200">Suggested roles</code>
+                        </td>
+                        <td className="border border-white/10 px-1.5 py-1.5 whitespace-normal break-words text-white/60">
+                          {result.suggested_roles.length ? result.suggested_roles.slice(0, 6).join(", ") : <span className="text-white/30">—</span>}
+                        </td>
+                      </tr>
+                      <tr className="align-top">
+                        <td className="border border-white/10 px-1.5 py-1.5">
+                          <code className="text-green-200">Action steps</code>
+                        </td>
+                        <td className="border border-white/10 px-1.5 py-1.5 whitespace-normal break-words text-white/60">
+                          {result.action_steps.length ? result.action_steps.map((s) => s.title).join(", ") : <span className="text-white/30">—</span>}
+                        </td>
+                      </tr>
+                      {temperamentResult ? (
+                        <>
+                          <tr className="align-top">
+                            <td className="border border-white/10 px-1.5 py-1.5">
+                              <code className="text-green-200">Temperament type</code>
+                            </td>
+                            <td className="border border-white/10 px-1.5 py-1.5 whitespace-normal break-words">
+                              {temperamentResult.temperament}
+                            </td>
+                          </tr>
+                          <tr className="align-top">
+                            <td className="border border-white/10 px-1.5 py-1.5">
+                              <code className="text-green-200">Temperament summary</code>
+                            </td>
+                            <td className="border border-white/10 px-1.5 py-1.5 whitespace-normal break-words text-white/60">
+                              {temperamentResult.summary || <span className="text-white/30">—</span>}
+                            </td>
+                          </tr>
+                          <tr className="align-top">
+                            <td className="border border-white/10 px-1.5 py-1.5">
+                              <code className="text-green-200">Temperament strengths</code>
+                            </td>
+                            <td className="border border-white/10 px-1.5 py-1.5 whitespace-normal break-words text-white/60">
+                              {temperamentResult.strengths.length ? temperamentResult.strengths.join(", ") : <span className="text-white/30">—</span>}
+                            </td>
+                          </tr>
+                          <tr className="align-top">
+                            <td className="border border-white/10 px-1.5 py-1.5">
+                              <code className="text-green-200">Temperament suggested roles</code>
+                            </td>
+                            <td className="border border-white/10 px-1.5 py-1.5 whitespace-normal break-words text-white/60">
+                              {temperamentResult.suggested_roles.length ? temperamentResult.suggested_roles.slice(0, 6).join(", ") : <span className="text-white/30">—</span>}
+                            </td>
+                          </tr>
+                        </>
+                      ) : null}
+                    </tbody>
+                  </table>
                 </div>
             </CollapsibleSection>
             </div>
