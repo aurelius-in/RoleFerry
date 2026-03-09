@@ -39,7 +39,12 @@ def _safe_str_list(val: Any) -> List[str]:
 
 def _strip_likely_language(s: str) -> str:
     t = str(s or "")
-    t = re.sub(r"\blikely\b", "", t, flags=re.I)
+    t = re.sub(r"\blikely\s+", "", t, flags=re.I)
+    t = re.sub(r"\bprobably\s+", "", t, flags=re.I)
+    t = re.sub(r"\bmight\b", "can", t, flags=re.I)
+    t = re.sub(r"\bmay be\b", "is", t, flags=re.I)
+    t = re.sub(r"\bappears to\b", "", t, flags=re.I)
+    t = re.sub(r"\bseems to\b", "", t, flags=re.I)
     t = re.sub(r"\s{2,}", " ", t)
     t = re.sub(r":\s*\n", ":\n", t)
     return t.strip()
@@ -876,7 +881,7 @@ async def conduct_research(request: ResearchRequest):
             [c.job_company_size for c in (request.contacts or []) if getattr(c, "job_company_size", None)]
         )
 
-        data_mode = str(request.data_mode or "").strip().lower() or "demo"
+        data_mode = str(request.data_mode or "").strip().lower() or "live"
         want_live = data_mode == "live"
 
         # Build contacts early because live research paths use them.
@@ -1478,7 +1483,7 @@ async def conduct_research(request: ResearchRequest):
                 title = str(c.title or "").strip()
                 co_fallback = str(c.company or "").strip()
                 inferred = [
-                    f"As {title} at {co_fallback}, likely owns key operational and strategic decisions for their team",
+                    f"As {title} at {co_fallback}, owns key operational and strategic decisions for their team",
                     f"Responsible for team performance metrics, hiring, and cross-functional coordination",
                     f"Decision-maker who values concrete, outcome-oriented proposals over generic pitches",
                 ]
@@ -1715,10 +1720,10 @@ async def conduct_research(request: ResearchRequest):
                     "  If web sources are thin, infer from their title, department, and company context.\n"
                     "  Always populate interesting_facts with at least 3 items (inferred facts are OK when labeled as inferred).\n\n"
                     "Quality bar:\n"
-                    "- The company_summary.description should be 2–4 sentences and outreach-useful (what they do + why it matters + likely priorities).\n"
-                    "- company_culture_values should be 4–8 sentences: how they likely operate + values signals (avoid claiming a specific internal culture doc).\n"
+                    "- NEVER use hedging words like 'likely', 'probably', 'may', 'might', 'appears to', 'seems to'. Write assertively or leave it out.\n"
+                    "- The company_summary.description should be 2–4 sentences and outreach-useful (what they do + why it matters + current priorities).\n"
+                    "- company_culture_values should be 4–8 sentences: how they operate + values signals (avoid claiming a specific internal culture doc).\n"
                     "- company_market_position should be 4–8 sentences: who they compete with / positioning / what matters now.\n"
-                    "  - Write assertively when sourced (no filler like 'likely', 'may', 'appears').\n"
                     "  - If you don't have sources, leave it empty.\n"
                     "- company_product_launches should be 3–8 bullet points about recent launches/releases/announcements (with URLs if available in corpus).\n"
                     "- company_leadership_changes should be 2–6 bullet points on exec/VP changes or notable leadership moves (with URLs if available in corpus).\n"
@@ -1934,11 +1939,7 @@ async def conduct_research(request: ResearchRequest):
             # Market position should be sourced; avoid generic "likely/may" filler in demos.
             try:
                 if not culture_values:
-                    culture_values = (
-                        "Culture & values (best-effort): Based on public signals, describe how the company likely operates "
-                        "(speed vs rigor, autonomy vs process, customer focus, and decision-making). "
-                        "Avoid claiming specific internal policies; keep it as plausible, outreach-useful themes."
-                    )
+                    culture_values = ""
                 # Only fill market_position when we had web sources; otherwise keep empty (the UI can prompt to configure SERPER).
                 if not market_position and corpus.get("serper_hits"):
                     market_position = ""
@@ -2043,14 +2044,14 @@ async def conduct_research(request: ResearchRequest):
                     for b in bios
                     if isinstance(b, dict)
                 ],
-                theme=theme,
-                company_culture_values=culture_values,
-                company_market_position=market_position,
-                company_product_launches=product_launches,
-                company_leadership_changes=leadership_changes,
-                company_other_hiring_signals=other_hiring_signals,
-                company_recent_posts=recent_posts,
-                company_publications=publications,
+                theme=_strip_likely_language(theme),
+                company_culture_values=_strip_likely_language(culture_values),
+                company_market_position=_strip_likely_language(market_position),
+                company_product_launches=_strip_likely_language(product_launches),
+                company_leadership_changes=_strip_likely_language(leadership_changes),
+                company_other_hiring_signals=_strip_likely_language(other_hiring_signals),
+                company_recent_posts=_strip_likely_language(recent_posts),
+                company_publications=_strip_likely_language(publications),
                 recent_news=[
                     RecentNews(
                         title=str(n.get("title") or ""),
@@ -2150,13 +2151,13 @@ async def get_research_data(user_id: str):
                 "- Propose a low-risk first sprint (instrument → ship → measure)\n"
                 "- Close with a weekly reporting cadence"
             ),
-            company_culture_values="Likely values execution, reliability, and clear ownership. Expect emphasis on measurable outcomes and crisp cross-functional communication.",
-            company_market_position="Competes in enterprise cloud infrastructure; differentiation likely centers on reliability, performance, and cost. Near-term priorities likely include scaling, reducing risk, and tightening customer experience.",
-            company_product_launches="- Example launch: New platform feature announced (replace with real sources in Live mode).",
-            company_leadership_changes="- Example: Leadership move noted (replace with real sources in Live mode).",
-            company_other_hiring_signals="- Example: Hiring signal noted (replace with real sources in Live mode).",
-            company_recent_posts="- Example post: Blog/press topic (replace with real sources in Live mode).",
-            company_publications="- Example publication: Case study/whitepaper (replace with real sources in Live mode).",
+            company_culture_values="",
+            company_market_position="",
+            company_product_launches="",
+            company_leadership_changes="",
+            company_other_hiring_signals="",
+            company_recent_posts="",
+            company_publications="",
             recent_news=[
                 RecentNews(
                     title="TechCorp Announces $50M Series C Funding Round",

@@ -137,21 +137,30 @@ function safeText(v: any): string {
 }
 
 function scrubModePlaceholders(raw: string): string {
-  const s = String(raw || "").trim();
+  let s = String(raw || "").trim();
   if (!s) return "";
   const lower = s.toLowerCase();
-  // Never show mode/config instructional strings inside user-facing "data" fields.
-  if (lower.includes("not available in stub mode")) return "No data found";
-  if (lower.includes("try live mode")) return "No data found";
-  if (lower.includes("serper configured")) return "No data found";
-  if (lower.includes("serper_api_key")) return "No data found";
-  if (lower.startsWith("no ") && lower.includes("captured in this run")) return "No data found";
-  if (lower.includes("replace with real sources in live mode")) return "No data found";
-  if (lower.includes("no external web sources in this run")) return "No data found";
-  if (lower.includes("live mode") && lower.includes("summarize")) return "No data found";
-  // Never show theme prompt-instructions in the Theme field.
+  if (lower.includes("not available in stub mode")) return "";
+  if (lower.includes("live mode")) return "";
+  if (lower.includes("stub mode")) return "";
+  if (lower.includes("serper configured")) return "";
+  if (lower.includes("serper_api_key")) return "";
+  if (lower.includes("captured in this run")) return "";
+  if (lower.includes("replace with real sources")) return "";
+  if (lower.includes("no external web sources")) return "";
+  if (lower.includes("imported role description")) return "";
+  if (lower.includes("suggested topics to reference")) return "";
+  if (lower.includes("derived from the imported")) return "";
   if (lower.startsWith("theme: what the company likely cares about")) return "";
   if (lower.includes("what the company likely cares about") && lower.includes("mini-plan")) return "";
+  // Remove hedging language that makes the output look like guessing
+  s = s
+    .replace(/\blikely\s+/gi, "")
+    .replace(/\bprobably\s+/gi, "")
+    .replace(/\bmay be\b/gi, "is")
+    .replace(/\bmight be\b/gi, "is")
+    .replace(/\s{2,}/g, " ")
+    .trim();
   return s;
 }
 
@@ -161,6 +170,7 @@ function hasRealData(raw: string): boolean {
   if (s === "no data found") return false;
   if (s === "unknown") return false;
   if (s.startsWith("no ") && s.includes("found")) return false;
+  if (s.startsWith("example ") || s.includes("(replace with")) return false;
   return true;
 }
 
@@ -184,6 +194,8 @@ function cleanThemeText(raw: string): string {
   if (!s) return "";
   return s
     .replace(/\blikely\b/gi, "")
+    .replace(/\bprobably\b/gi, "")
+    .replace(/\bmay be\b/gi, "is")
     .replace(/\s{2,}/g, " ")
     .replace(/:\s*\n/g, ":\n")
     .trim();
@@ -1032,12 +1044,28 @@ export default function CompanyResearchPage() {
 
                       {draft.intelligence.executive_summary && (
                         <div className="mb-4 text-xs text-white/60 leading-relaxed">
-                          {draft.intelligence.executive_summary}
+                          {cleanThemeText(draft.intelligence.executive_summary)}
                         </div>
                       )}
 
                       <div className="space-y-2">
-                        {draft.intelligence.signals.map((sig, idx) => {
+                        {draft.intelligence.signals.filter((sig) => {
+                          const t = (sig.signal_title || "").toLowerCase();
+                          const c = (sig.signal_content || "").toLowerCase();
+                          if (!t && !c) return false;
+                          if (c.includes("no external web sources")) return false;
+                          if (c.includes("imported role description")) return false;
+                          if (c.includes("suggested topic")) return false;
+                          if (c.includes("derived from")) return false;
+                          if (c.includes("signal detected for")) return false;
+                          if (c.includes("live mode")) return false;
+                          if (c.includes("stub mode")) return false;
+                          if (t.includes("no data") || t.includes("no information")) return false;
+                          if (t.includes("example") && t.includes(":")) return false;
+                          const scrubbed = scrubModePlaceholders(sig.signal_content || "");
+                          if (!scrubbed && !scrubModePlaceholders(sig.signal_title || "")) return false;
+                          return true;
+                        }).map((sig, idx) => {
                           const typeLabels: Record<string, string> = {
                             leadership_change: "Leadership",
                             product_launch: "Product",
@@ -1093,9 +1121,9 @@ export default function CompanyResearchPage() {
                                   {(sig.confidence_score * 100).toFixed(0)}%
                                 </span>
                               </div>
-                              <div className="text-sm font-medium text-white/90 mb-1">{sig.signal_title}</div>
-                              {sig.signal_content && (
-                                <div className="text-xs text-white/55 leading-relaxed">{sig.signal_content}</div>
+                              <div className="text-sm font-medium text-white/90 mb-1">{scrubModePlaceholders(cleanThemeText(sig.signal_title))}</div>
+                              {sig.signal_content && scrubModePlaceholders(sig.signal_content) && (
+                                <div className="text-xs text-white/55 leading-relaxed">{scrubModePlaceholders(cleanThemeText(sig.signal_content))}</div>
                               )}
                               <div className="flex items-center gap-3 mt-1.5">
                                 {sig.signal_date && (
@@ -1272,11 +1300,7 @@ export default function CompanyResearchPage() {
                 ) : null}
               </div>
 
-              {emptySections.length > 0 ? (
-                <div className="mt-4 rounded-md border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/60">
-                  No {emptySections.join(", ")} information found for {cn}. Try running research in live mode for richer results.
-                </div>
-              ) : null}
+              {null}
                   </>
                 );
               })()}

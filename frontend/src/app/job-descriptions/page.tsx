@@ -270,7 +270,13 @@ export default function JobDescriptionsPage() {
     "https://www.indeed.com/jobs?q=jobs&l=United+States"
   );
 
-  const normalizeKeyword = (v: any) => String(v || "").split(/\s+/).join(" ").trim();
+  const normalizeKeyword = (v: any) =>
+    String(v || "")
+      .replace(/^[-–—]+/, "")
+      .replace(/^[""']+|[""']+$/g, "")
+      .split(/\s+/)
+      .join(" ")
+      .trim();
 
   const persistKeywordPrefs = (pos: string[], neg: string[]) => {
     try {
@@ -282,21 +288,36 @@ export default function JobDescriptionsPage() {
   const addKeyword = (kind: "positive" | "negative", raw: string) => {
     const kw = normalizeKeyword(raw);
     if (!kw) return;
+    const kwLow = kw.toLowerCase();
     if (kind === "positive") {
+      // Remove from negative if present (cross-list guard)
+      const cleanedNeg = negativeKeywords.filter((x) => normalizeKeyword(x).toLowerCase() !== kwLow);
       const next = Array.from(new Set([...positiveKeywords, kw].map((x) => normalizeKeyword(x)))).filter(Boolean).slice(0, 20);
       setPositiveKeywords(next);
+      if (cleanedNeg.length !== negativeKeywords.length) setNegativeKeywords(cleanedNeg);
       setPositiveSuggestions((prev) =>
         Array.from(new Set([...(Array.isArray(prev) ? prev : []), kw].map((x) => normalizeKeyword(x)))).filter(Boolean).slice(0, 20)
       );
-      persistKeywordPrefs(next, negativeKeywords);
+      persistKeywordPrefs(next, cleanedNeg);
       return;
     }
-    const next = Array.from(new Set([...negativeKeywords, kw].map((x) => normalizeKeyword(x)))).filter(Boolean).slice(0, 20);
-    setNegativeKeywords(next);
+    // Remove from positive if present (cross-list guard)
+    const cleanedPos = positiveKeywords.filter((x) => normalizeKeyword(x).toLowerCase() !== kwLow);
+    if (cleanedPos.length !== positiveKeywords.length) setPositiveKeywords(cleanedPos);
+    const combined = [...negativeKeywords, kw].map((x) => normalizeKeyword(x)).filter(Boolean);
+    const seenLower = new Set<string>();
+    const next: string[] = [];
+    for (const c of combined) {
+      const lo = c.toLowerCase();
+      if (seenLower.has(lo)) continue;
+      seenLower.add(lo);
+      next.push(c);
+    }
+    setNegativeKeywords(next.slice(0, 20));
     setNegativeSuggestions((prev) =>
       Array.from(new Set([...(Array.isArray(prev) ? prev : []), kw].map((x) => normalizeKeyword(x)))).filter(Boolean).slice(0, 20)
     );
-    persistKeywordPrefs(positiveKeywords, next);
+    persistKeywordPrefs(cleanedPos, next);
   };
 
   const addKeywordsFromInput = (kind: "positive" | "negative", rawInput: string): number => {
@@ -1731,7 +1752,7 @@ export default function JobDescriptionsPage() {
                             title="Remove keyword"
                           >
                             <span>{kw}</span>
-                            <span className="ml-1 font-extrabold text-red-300">-</span>
+                            <span className="ml-1 text-emerald-300/60">✕</span>
                           </button>
                         ))}
                       </div>
@@ -1802,8 +1823,9 @@ export default function JobDescriptionsPage() {
                             className="rounded-full border border-rose-400/50 bg-rose-500/20 px-2 py-0.5 text-[11px] text-rose-100"
                             title="Remove keyword"
                           >
+                            <span className="font-bold text-red-300 mr-0.5">−</span>
                             <span>{kw}</span>
-                            <span className="ml-1 font-extrabold text-red-300">-</span>
+                            <span className="ml-1 text-red-300/60">✕</span>
                           </button>
                         ))}
                       </div>
