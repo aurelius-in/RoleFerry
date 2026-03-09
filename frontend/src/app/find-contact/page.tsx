@@ -1957,7 +1957,7 @@ export default function FindContactPage() {
 
           {/* Suggested targets (fallback when no contacts are found) */}
           {contacts.length === 0 && suggested.length > 0 && !isSearching && (
-            <CollapsibleSection title="Suggested Targets" count={suggested.length} defaultOpen>
+            <CollapsibleSection title="Suggested Targets" count={suggested.length}>
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-white/70 text-sm">

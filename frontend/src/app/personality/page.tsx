@@ -1086,7 +1086,7 @@ export default function PersonalityPage() {
 
           {temperamentResult && (
             <div className="mt-8">
-            <CollapsibleSection title={temperamentResult.temperament} defaultOpen>
+            <CollapsibleSection title={temperamentResult.temperament}>
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
                   <div className="text-xs text-white/60">{temperamentResult.summary}</div>
@@ -1196,7 +1196,7 @@ export default function PersonalityPage() {
 
           {result && (
             <div className="mt-8">
-            <CollapsibleSection title="Role Fit Playbook" defaultOpen>
+            <CollapsibleSection title="Role Fit Playbook">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
                   <div className="mt-1 text-xs text-white/60">

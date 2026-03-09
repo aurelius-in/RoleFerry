@@ -1500,7 +1500,7 @@ export default function JobDescriptionsPage() {
 
           <div ref={preferredSectionRef} className="mt-8 grid grid-cols-1 md:grid-cols-12 gap-6">
             <div className="md:col-span-8 md:order-1 space-y-1">
-              <CollapsibleSection title="Preferred Roles" count={jobDescriptions.length} defaultOpen>
+              <CollapsibleSection title="Preferred Roles" count={jobDescriptions.length}>
               {!hasMounted || jobDescriptions.length === 0 ? (
                 <div className="text-center py-8">
                   <h3 className="text-lg font-medium text-white mb-2">No Roles Yet</h3>
@@ -1747,7 +1747,7 @@ export default function JobDescriptionsPage() {
               </CollapsibleSection>
             </div>
             <div className="md:col-span-4 md:order-2">
-              <CollapsibleSection title="Keywords" defaultOpen>
+              <CollapsibleSection title="Keywords">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="mt-1">
@@ -1952,7 +1952,7 @@ export default function JobDescriptionsPage() {
           </div>
 
           <div id="matched-roles-section" className="mt-8">
-          <CollapsibleSection title="Matched Roles" count={scrapedRoles.length} defaultOpen>
+          <CollapsibleSection title="Matched Roles" count={scrapedRoles.length}>
             {isLoadingScrapedRoles ? (
               <div className="rounded-lg border border-white/10 bg-black/20 p-6 text-center">
                 <InlineSpinner className="mx-auto h-5 w-5" />

@@ -1082,7 +1082,7 @@ export default function CompanyResearchPage() {
 
                   {/* Company Intelligence (top) */}
                   {draft.intelligence && (draft.intelligence.outreach_summary?.one_liner_hook || draft.intelligence.executive_summary) ? (
-                    <CollapsibleSection title="Company Intelligence" defaultOpen={true} className="mb-1">
+                    <CollapsibleSection title="Company Intelligence" className="mb-1">
                       {draft.intelligence.overall_relevance_score > 0 && (
                         <div className="flex items-center gap-2 mb-3">
                           <span className="text-[11px] text-white/50">Relevance</span>
@@ -1154,7 +1154,7 @@ export default function CompanyResearchPage() {
 
                   {/* Select Signals for Outreach Drafts */}
                   {allSignals.length > 0 ? (
-                    <CollapsibleSection title="Select Signals for Outreach Drafts" count={allSignals.length} defaultOpen={true} className="mb-1">
+                    <CollapsibleSection title="Select Signals for Outreach Drafts" count={allSignals.length} className="mb-1">
                       <p className="text-[11px] text-white/50 mb-3">
                         Pick up to {SIGNAL_LIMIT} signals about <span className="font-semibold text-white/70">{activeCompanyDisplay}</span> to personalize your outreach. The AI will consider your selections when crafting the message — it chooses whichever details personalize best, so more context helps.
                       </p>
@@ -1219,7 +1219,7 @@ export default function CompanyResearchPage() {
 
                   {/* Hiring Signals */}
                   {(draft.hiring_signals || []).length > 0 ? (
-                    <CollapsibleSection title="Hiring Signals" count={(draft.hiring_signals || []).length} defaultOpen={true} className="mb-1">
+                    <CollapsibleSection title="Hiring Signals" count={(draft.hiring_signals || []).length} className="mb-1">
                       <div className="text-[11px] text-white/50 mb-2">
                         Outreach-relevant signals for <span className="font-semibold text-white/70">{activeCompanyDisplay}</span>.
                       </div>

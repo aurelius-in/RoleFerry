@@ -402,7 +402,7 @@ export default function JobPreferencesPage() {
 
           <div className="space-y-1">
             {/* Values */}
-            <CollapsibleSection title={`What do you value in a ${mode === "job-seeker" ? "new role" : "client relationship"}?`} count={preferences.values.length} defaultOpen>
+            <CollapsibleSection title={`What do you value in a ${mode === "job-seeker" ? "new role" : "client relationship"}?`} count={preferences.values.length}>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {VALUES_OPTIONS.map((value) => (
                   <label
@@ -422,7 +422,7 @@ export default function JobPreferencesPage() {
             </CollapsibleSection>
 
             {/* Role Categories */}
-            <CollapsibleSection title="What kinds of roles are you interested in?" count={preferences.roleCategories.length} defaultOpen>
+            <CollapsibleSection title="What kinds of roles are you interested in?" count={preferences.roleCategories.length}>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {ROLE_CATEGORIES.map((category) => (
                   <label
@@ -444,7 +444,7 @@ export default function JobPreferencesPage() {
             </CollapsibleSection>
 
             {/* Location Preferences */}
-            <CollapsibleSection title="Where would you like to work?" count={preferences.locationPreferences.length} defaultOpen>
+            <CollapsibleSection title="Where would you like to work?" count={preferences.locationPreferences.length}>
               <div className="space-y-4">
                 <div>
                   <h3 className="text-lg font-medium mb-3">

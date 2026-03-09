@@ -503,7 +503,7 @@ export default function ResumePage() {
               </div>
 
               {/* Positions */}
-              <CollapsibleSection title="Work Experience" count={extract.positions.length} defaultOpen>
+              <CollapsibleSection title="Work Experience" count={extract.positions.length}>
                 {extract.positions.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
@@ -578,7 +578,7 @@ export default function ResumePage() {
               </CollapsibleSection>
 
               {/* Key Metrics */}
-              <CollapsibleSection title="Key Metrics" count={extract.keyMetrics.length} defaultOpen>
+              <CollapsibleSection title="Key Metrics" count={extract.keyMetrics.length}>
                 {extract.keyMetrics.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
@@ -632,7 +632,7 @@ export default function ResumePage() {
               </CollapsibleSection>
 
               {/* Business Challenges */}
-              <CollapsibleSection title="Business Challenges Solved" count={extract.businessChallenges.length} defaultOpen>
+              <CollapsibleSection title="Business Challenges Solved" count={extract.businessChallenges.length}>
                 {extract.businessChallenges.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
@@ -664,7 +664,7 @@ export default function ResumePage() {
               </CollapsibleSection>
 
               {/* Skills */}
-              <CollapsibleSection title="Skills" count={extract.skills.length} defaultOpen>
+              <CollapsibleSection title="Skills" count={extract.skills.length}>
                 {extract.skills.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
@@ -681,7 +681,7 @@ export default function ResumePage() {
               </CollapsibleSection>
 
               {/* Accomplishments */}
-              <CollapsibleSection title="Notable Accomplishments" count={extract.accomplishments.length} defaultOpen>
+              <CollapsibleSection title="Notable Accomplishments" count={extract.accomplishments.length}>
                 {extract.accomplishments.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
@@ -696,7 +696,7 @@ export default function ResumePage() {
               </CollapsibleSection>
 
               {/* Tenure */}
-              <CollapsibleSection title="Tenure Summary" count={extract.tenure.length} defaultOpen>
+              <CollapsibleSection title="Tenure Summary" count={extract.tenure.length}>
                 {extract.tenure.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
@@ -714,7 +714,7 @@ export default function ResumePage() {
               </CollapsibleSection>
 
               {/* Education */}
-              <CollapsibleSection title="Education" count={extract.education.length} defaultOpen>
+              <CollapsibleSection title="Education" count={extract.education.length}>
                 {extract.education.length === 0 ? (
                   <div className="text-sm text-red-300 font-semibold">Missing details</div>
                 ) : null}
