@@ -40,21 +40,15 @@ export async function api<T>(path: string, method: HttpMethod = "GET", body?: un
 
     if (!res.ok) {
       const text = await res.text();
-      // Internal fallback: if the backend returns a 5xx, allow a mock response when available.
-      if (!useClientMocks && res.status >= 500 && !isServer) {
-        const mock = tryMock();
-        if (mock !== undefined) {
-          console.warn(`[API] Falling back to mock for ${normalizedPath} due to ${res.status}.`);
-          return mock as T;
-        }
-      }
+      // On 5xx: only fall back to mocks when explicitly enabled (NEXT_PUBLIC_USE_CLIENT_MOCKS=true).
+      // Silent mock fallback masks real backend errors.
       throw new Error(`API ${method} ${url} failed: ${res.status} ${text}`);
     }
 
     return (await res.json()) as T;
   } catch (err) {
-    // Network error / fetch failure → only allow mock fallback if explicitly enabled.
-    if (!isServer) {
+    // Network error / fetch failure → only allow mock fallback when explicitly enabled.
+    if (useClientMocks && !isServer) {
       const mock = tryMock();
       if (mock !== undefined) {
         console.warn(`[API] Falling back to mock for ${normalizedPath} due to network/error.`);

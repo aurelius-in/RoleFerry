@@ -180,14 +180,51 @@ function normalizeFavoriteRanks(list: JobDescription[]): JobDescription[] {
   return out;
 }
 
+function daysAgoLabel(raw: string): string {
+  const s = raw.trim();
+  if (!s) return "";
+
+  const cleaned = s.replace(/^posted:?\s*/i, "").trim();
+  if (!cleaned) return "";
+  const low = cleaned.toLowerCase();
+  if (low === "unknown") return "";
+  if (low === "today") return "Today";
+  if (low === "yesterday") return "1 day ago";
+  if (low === "new") return "Recent";
+
+  const mDays = low.match(/^(\d+)\s*days?\s*ago$/);
+  if (mDays) return `${mDays[1]} day${mDays[1] === "1" ? "" : "s"} ago`;
+  const mWeeks = low.match(/^(\d+)\s*weeks?\s*ago$/);
+  if (mWeeks) return `${Number(mWeeks[1]) * 7} days ago`;
+  const mMonths = low.match(/^(\d+)\s*months?\s*ago$/);
+  if (mMonths) return `${Number(mMonths[1]) * 30} days ago`;
+
+  const dateMatch = cleaned.match(/(\d{4}-\d{2}-\d{2})/);
+  const dateStr = dateMatch ? dateMatch[1] : cleaned;
+  const parsed = new Date(dateStr);
+  if (!Number.isNaN(parsed.getTime())) {
+    const diff = Math.max(0, Math.floor((Date.now() - parsed.getTime()) / 86400000));
+    if (diff === 0) return "Today";
+    return `${diff} day${diff === 1 ? "" : "s"} ago`;
+  }
+  return cleaned;
+}
+
 function postedLabel(jd: JobDescription): string {
   const text = String(jd?.postedText || "").trim();
-  if (text) return text;
+  if (text) {
+    const label = daysAgoLabel(text);
+    if (label) return label;
+  }
   const d = String(jd?.postedDate || "").trim();
-  if (!d) return "Unknown";
-  const parsed = new Date(d);
-  if (Number.isNaN(parsed.getTime())) return d;
-  return parsed.toLocaleDateString();
+  if (!d) return "";
+  return daysAgoLabel(d);
+}
+
+function postedLabelFromScraped(r: ScrapedRole): string {
+  const text = String(r?.posted_text || "").trim();
+  if (!text) return "";
+  return daysAgoLabel(text);
 }
 
 function analyzeIndeedUrl(raw: string): {
@@ -232,11 +269,13 @@ export default function JobDescriptionsPage() {
     value: string;
   } | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [parsingRoleId, setParsingRoleId] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importUrl, setImportUrl] = useState("");
   const [importText, setImportText] = useState("");
   const [importType, setImportType] = useState<'url' | 'text'>('url');
-  const [sortBy, setSortBy] = useState<'date' | 'favoriteRank'>('date');
+  const [sortBy, setSortBy] = useState<'date' | 'favoriteRank' | 'company' | 'minSalary' | 'maxSalary' | 'posted' | 'stars'>('favoriteRank');
+  const [matchedSortBy, setMatchedSortBy] = useState<'fit' | 'company' | 'role' | 'location'>('fit');
   const [trackerNotice, setTrackerNotice] = useState<string | null>(null);
   const [trackerPulseId, setTrackerPulseId] = useState<string | null>(null);
   const [scrapedRoles, setScrapedRoles] = useState<ScrapedRole[]>([]);
@@ -247,7 +286,7 @@ export default function JobDescriptionsPage() {
   const [hasEverLoadedRoles, setHasEverLoadedRoles] = useState(false);
   const [strictness, setStrictness] = useState(25);
   const funnelMode = strictness > 50 ? "strict" : "broad";
-  const discoveryLimit: 120 | 220 | 300 = strictness > 70 ? 120 : strictness > 40 ? 220 : 300;
+  const discoveryLimit = strictness > 70 ? 200 : strictness > 40 ? 350 : 500;
   const highFitOnly = false;
   const [ignoredScrapedRoleIds, setIgnoredScrapedRoleIds] = useState<string[]>([]);
   const [importedScrapedRoleIds, setImportedScrapedRoleIds] = useState<string[]>([]);
@@ -833,9 +872,35 @@ export default function JobDescriptionsPage() {
   };
 
   const sortedJobDescriptions = [...jobDescriptions].sort((a, b) => {
-    if (sortBy === 'date') {
-      return new Date(b.parsedAt).getTime() - new Date(a.parsedAt).getTime();
-    }
+    const parseSalaryNum = (s: string | undefined, which: "min" | "max"): number => {
+      if (!s) return 0;
+      const nums = s.replace(/[^0-9.km]/gi, " ").split(/\s+/).map((t) => {
+        let n = parseFloat(t.replace(/k$/i, ""));
+        if (/k$/i.test(t)) n *= 1000;
+        return Number.isFinite(n) ? n : 0;
+      }).filter(Boolean).sort((x, y) => x - y);
+      if (nums.length === 0) return 0;
+      return which === "min" ? nums[0] : nums[nums.length - 1];
+    };
+
+    const postedDays = (jd: JobDescription): number => {
+      const txt = jd.postedText || jd.postedDate || "";
+      const m = txt.match(/(\d+)\s*day/);
+      if (m) return Number(m[1]);
+      const d = new Date(txt.replace(/^posted:?\s*/i, "").trim());
+      if (!Number.isNaN(d.getTime())) return Math.max(0, Math.floor((Date.now() - d.getTime()) / 86400000));
+      if (/today/i.test(txt)) return 0;
+      if (/yesterday/i.test(txt)) return 1;
+      return 9999;
+    };
+
+    if (sortBy === "company") return (a.company || "").localeCompare(b.company || "");
+    if (sortBy === "minSalary") return parseSalaryNum(b.salaryRange, "min") - parseSalaryNum(a.salaryRange, "min");
+    if (sortBy === "maxSalary") return parseSalaryNum(b.salaryRange, "max") - parseSalaryNum(a.salaryRange, "max");
+    if (sortBy === "posted") return postedDays(a) - postedDays(b);
+    if (sortBy === "stars") return (Number(b.preferenceStars) || 0) - (Number(a.preferenceStars) || 0);
+    if (sortBy === "date") return new Date(b.parsedAt).getTime() - new Date(a.parsedAt).getTime();
+
     const ar = Number((a as any).favoriteRank);
     const br = Number((b as any).favoriteRank);
     const aHas = Number.isFinite(ar) && ar >= 1;
@@ -1403,37 +1468,26 @@ export default function JobDescriptionsPage() {
             
             {hasMounted && jobDescriptions.length > 0 && (
               <div className="flex items-center gap-2">
-                <div className="text-[11px] font-semibold text-white/60">Sort</div>
-                <div className="inline-flex items-center rounded-full border border-white/10 bg-black/20 p-1">
-                  <button
-                    type="button"
-                    onClick={() => setSortBy("date")}
-                    aria-pressed={sortBy === "date"}
-                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                      sortBy === "date" ? "brand-gradient text-black" : "text-white/80 hover:bg-white/10"
-                    }`}
-                    title="Sort by newest import"
-                  >
-                    Date
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSortBy("favoriteRank")}
-                    aria-pressed={sortBy === "favoriteRank"}
-                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                      sortBy === "favoriteRank" ? "brand-gradient text-black" : "text-white/80 hover:bg-white/10"
-                    }`}
-                    title="Sort by Favorite Rank (1..N)"
-                  >
-                    Rank
-                  </button>
-                </div>
+                <div className="text-[11px] font-semibold text-white/60">Sort by</div>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  className="rounded-md border border-white/10 bg-black/30 px-2 py-1 text-xs text-white/80 outline-none focus:border-white/20"
+                >
+                  <option value="favoriteRank">Favorite (rank)</option>
+                  <option value="stars">Preference (stars)</option>
+                  <option value="company">Company</option>
+                  <option value="minSalary">Min Salary</option>
+                  <option value="maxSalary">Max Salary</option>
+                  <option value="posted">Posted (recent)</option>
+                  <option value="date">Import Date</option>
+                </select>
               </div>
             )}
           </div>
 
           <div ref={preferredSectionRef} className="mt-8 grid grid-cols-1 md:grid-cols-12 gap-6">
-            <div className="md:col-span-8 md:order-1 space-y-6">
+            <div className="md:col-span-8 md:order-1 space-y-1">
               <CollapsibleSection title="Preferred Roles" count={jobDescriptions.length} defaultOpen>
               {!hasMounted || jobDescriptions.length === 0 ? (
                 <div className="text-center py-8">
@@ -1455,9 +1509,9 @@ export default function JobDescriptionsPage() {
                               {jd.salaryRange}
                             </span>
                           ) : null}
-                          {postedLabel(jd) && postedLabel(jd) !== "Unknown" ? (
+                          {postedLabel(jd) ? (
                             <span className="px-2 py-1 rounded-full border border-blue-400/25 bg-blue-500/10 text-blue-100">
-                              Posted: {postedLabel(jd)}
+                              {postedLabel(jd)}
                             </span>
                           ) : null}
                         </div>
@@ -1670,7 +1724,7 @@ export default function JobDescriptionsPage() {
                     </div>
                     {/* JD Jargon intentionally removed (low-signal for job seekers) */}
                     <div className="mt-3 pt-3 border-t border-white/10">
-                      <div className="text-xs text-white/60">Posted: {postedLabel(jd)}</div>
+                      {postedLabel(jd) ? <div className="text-xs text-white/60">{postedLabel(jd)}</div> : null}
                       <div className="text-xs text-white/50">Imported on {new Date(jd.parsedAt).toLocaleDateString()}</div>
                     </div>
                     </>
@@ -1919,7 +1973,20 @@ export default function JobDescriptionsPage() {
               const greatFit = visibleScrapedRoles.filter((r) => Number(r.match_score || 0) >= 55);
               const fairFit = visibleScrapedRoles.filter((r) => { const s = Number(r.match_score || 0); return s >= 40 && s < 55; });
               const weakFit = visibleScrapedRoles.filter((r) => Number(r.match_score || 0) < 40).slice(0, 5);
-              const displayRoles = [...greatFit, ...fairFit, ...weakFit];
+              const unsortedRoles = [...greatFit, ...fairFit, ...weakFit];
+              const displayRoles = [...unsortedRoles].sort((a, b) => {
+                if (matchedSortBy === "company") return (a.company || "").localeCompare(b.company || "");
+                if (matchedSortBy === "role") return (a.title || "").localeCompare(b.title || "");
+                if (matchedSortBy === "location") {
+                  const aLoc = (a.location || a.work_mode || "").toLowerCase();
+                  const bLoc = (b.location || b.work_mode || "").toLowerCase();
+                  const aRemote = aLoc.includes("remote") ? 0 : 1;
+                  const bRemote = bLoc.includes("remote") ? 0 : 1;
+                  if (aRemote !== bRemote) return aRemote - bRemote;
+                  return aLoc.localeCompare(bLoc);
+                }
+                return Number(b.match_score || 0) - Number(a.match_score || 0);
+              });
 
               const fitLabel = (score: number) => {
                 if (score >= 55) return { text: "great fit", cls: "border-emerald-400/30 bg-emerald-500/10 text-emerald-100" };
@@ -1930,7 +1997,21 @@ export default function JobDescriptionsPage() {
               return displayRoles.length > 0 ? (
               <div>
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="text-lg font-semibold text-white">Matched Roles</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-semibold text-white/60">Sort</span>
+                      <select
+                        value={matchedSortBy}
+                        onChange={(e) => setMatchedSortBy(e.target.value as typeof matchedSortBy)}
+                        className="rounded-md border border-white/10 bg-black/30 px-2 py-1 text-xs text-white/80 outline-none focus:border-white/20"
+                      >
+                        <option value="fit">Role Fit</option>
+                        <option value="company">Company</option>
+                        <option value="role">Role</option>
+                        <option value="location">Location</option>
+                      </select>
+                    </div>
+                  </div>
                   <div className="flex flex-wrap gap-2 text-[11px]">
                     <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1 text-white/80">
                       {displayRoles.length} roles
@@ -1974,9 +2055,9 @@ export default function JobDescriptionsPage() {
                                 {r.salary_range}
                               </span>
                             ) : null}
-                            {r.posted_text ? (
+                            {postedLabelFromScraped(r) ? (
                               <span className="px-2 py-1 rounded-full border border-blue-400/25 bg-blue-500/10 text-blue-100">
-                                Posted: {r.posted_text}
+                                {postedLabelFromScraped(r)}
                               </span>
                             ) : null}
                             {r.location ? (
@@ -2003,6 +2084,11 @@ export default function JobDescriptionsPage() {
                               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
                               Added
                             </span>
+                          ) : parsingRoleId === String(r.id) ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-400/40 bg-amber-500/15 px-3 py-1.5 text-[11px] font-semibold text-amber-200 cursor-default">
+                              <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+                              Parsing…
+                            </span>
                           ) : (
                           <button
                             type="button"
@@ -2012,10 +2098,11 @@ export default function JobDescriptionsPage() {
                               const roleUrl = String(r.url || "").trim();
                               setImportError(null);
                               setIsImporting(true);
+                              setParsingRoleId(String(r.id));
                               try {
                                 if (roleUrl) {
                                   try {
-                                    await importFromUrl(roleUrl, { seedImporterInput: true });
+                                    await importFromUrl(roleUrl);
                                   } catch {
                                     const fallbackJd: JobDescription = {
                                       id: `scr_import_${r.id}`,
@@ -2065,7 +2152,6 @@ export default function JobDescriptionsPage() {
                                     return normalized;
                                   });
                                 }
-                                setImportType("url");
                                 setImportedScrapedRoleIds((prev) => prev.includes(String(r.id)) ? prev : [...prev, String(r.id)]);
                                 setTimeout(() => preferredSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
                               } catch (err) {
@@ -2073,6 +2159,7 @@ export default function JobDescriptionsPage() {
                                 setImportError(msg);
                               } finally {
                                 setIsImporting(false);
+                                setParsingRoleId(null);
                               }
                             }}
                             title="Add to your Preferred Roles"
