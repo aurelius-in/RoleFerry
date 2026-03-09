@@ -239,11 +239,20 @@ def _skill_supported_by_resume(skill: str, resume_text: str) -> bool:
 
 
 def _job_work_mode(job: GapJobDescription) -> str:
-    # prefer explicit field if present
     for v in [job.workMode, _infer_work_mode(job.content)]:
         t = str(v or "").lower().strip()
-        if t in {"remote", "hybrid", "onsite", "unknown"}:
+        if t in {"remote", "hybrid", "onsite"}:
             return t
+    loc = str(job.location or "").lower().strip()
+    if loc:
+        if "remote" in loc:
+            return "remote"
+        if "hybrid" in loc:
+            return "hybrid"
+        if any(k in loc for k in ["on-site", "onsite", "in-person", "in person", "on site"]):
+            return "onsite"
+        if loc and "remote" not in loc and "unspecified" not in loc and len(loc) > 3:
+            return "onsite"
     return "unknown"
 
 
@@ -258,28 +267,52 @@ def _parse_salary_floor(s: str) -> Optional[int]:
     """
     Parse a rough minimum annual salary if possible.
     Returns USD/year integer or None if unknown/ambiguous (e.g. hourly).
+    Handles: "$187,000", "187k", and stringified dicts like "{'min_value': '187000.0', ...}".
     """
-    txt = str(s or "")
-    low = txt.lower()
-    if not txt.strip():
+    import re, ast
+    txt = str(s or "").strip()
+    if not txt:
         return None
-    # hourly -> skip (preference comparisons can get tricky)
+    low = txt.lower()
     if any(k in low for k in ["/hour", "/hr", "per hour", "an hour", "hourly"]):
         return None
-    import re
-    m = re.search(r"\$\s*([\d,]{2,7})", txt)
-    if not m:
-        m = re.search(r"\b([\d]{2,3})\s*k\b", low)
-        if m:
-            try:
-                return int(m.group(1)) * 1000
-            except Exception:
-                return None
-        return None
-    try:
-        return int(m.group(1).replace(",", ""))
-    except Exception:
-        return None
+
+    # Handle stringified Python dicts: {'unit': 'USD', 'min_value': '187000.0', 'max_value': '240000.0'}
+    if "min_value" in txt or "max_value" in txt:
+        try:
+            d = ast.literal_eval(txt)
+            if isinstance(d, dict):
+                for key in ("min_value", "max_value"):
+                    val = d.get(key)
+                    if val is not None:
+                        n = int(float(str(val)))
+                        if n > 1000:
+                            return n
+        except Exception:
+            pass
+
+    m = re.search(r"\$?\s*([\d,]{2,9})", txt)
+    if m:
+        try:
+            val = int(m.group(1).replace(",", ""))
+            if val >= 10000:
+                return val
+        except Exception:
+            pass
+    m = re.search(r"\b([\d]{2,3})\s*k\b", low)
+    if m:
+        try:
+            return int(m.group(1)) * 1000
+        except Exception:
+            return None
+    # Try bare numbers like "187000" or "187000.0"
+    m = re.search(r"\b(\d{5,7})(?:\.\d+)?\b", txt)
+    if m:
+        try:
+            return int(m.group(1))
+        except Exception:
+            return None
+    return None
 
 
 def _deterministic_personality_gaps(
@@ -742,12 +775,16 @@ def _deterministic_rank(
         pref_work = " ".join([x.lower() for x in (preferences.work_type or preferences.location_preferences or [])])
         job_work = _job_work_mode(j)
         if "remote" in pref_work and "in-person" not in pref_work and "hybrid" not in pref_work:
-            # remote-only
             if job_work in {"onsite", "hybrid"}:
-                pref_gaps.append(f"Work preference mismatch: you selected Remote, but this job looks {job_work} (based on the job text).")
+                job_loc = _job_location(j)
+                loc_hint = f" ({job_loc})" if job_loc else ""
+                pref_gaps.append(f"Work preference mismatch: you selected Remote, but this job appears {job_work}{loc_hint}.")
         if ("in-person" in pref_work or "in person" in pref_work) and "remote" not in pref_work:
             if job_work == "remote":
-                pref_gaps.append("Work preference mismatch: you selected In-Person, but this job looks remote (based on the job text).")
+                pref_gaps.append("Work preference mismatch: you selected In-Person, but this job looks remote.")
+        if "hybrid" in pref_work and "remote" not in pref_work and "in-person" not in pref_work:
+            if job_work == "onsite":
+                pref_gaps.append("Work preference mismatch: you selected Hybrid, but this job appears fully on-site.")
 
         # Employment type mismatch (full-time/part-time/contract/internship)
         pref_types = {x.lower() for x in _norm_list(preferences.role_type)}
@@ -811,19 +848,67 @@ def _deterministic_rank(
                     pref_gaps.append(f"Industry preference mismatch: you selected {', '.join(inds[:3])}, but this job appears outside those industries.")
 
 
-        # Values (soft): translate values into screening checks using job text signals.
+        # Values: compare user-selected values against signals in the job text.
+        # Exact value options from the preferences page:
+        #   "Diversity & inclusion", "Impactful work", "Independence & autonomy",
+        #   "Innovative product & tech", "Mentorship & career development",
+        #   "Progressive leadership", "Recognition & reward", "Role mobility",
+        #   "Social responsibility & sustainability", "Transparency & communication",
+        #   "Work-life balance"
         vals = [x.strip() for x in _norm_list(preferences.values) if str(x).strip()]
+        val_set = {v.lower() for v in vals}
         if vals:
             txt = (j.content or "").lower()
-            # A few high-signal contradictions to surface (best-effort).
-            if any(v.lower() in {"work-life balance", "work life balance", "flexibility"} for v in vals) and any(
-                k in txt for k in ["on-call", "on call", "weekend", "nights", "overtime", "tight deadlines"]
-            ):
-                pref_gaps.append("Values fit risk: you value work-life balance, but the job text suggests on-call or intense deadlines.")
-            if any(v.lower() in {"structure", "clarity", "stability"} for v in vals) and any(
-                k in txt for k in ["0 to 1", "0→1", "ambiguous", "wear many hats", "fast-paced"]
-            ):
-                pref_gaps.append("Values fit risk: you want structure/clarity, but the role signals high ambiguity and fast iteration.")
+
+            # Work-life balance
+            if val_set & {"work-life balance", "work life balance", "flexibility"}:
+                wlb_signals = ["on-call", "on call", "weekend", "nights", "overtime", "tight deadlines",
+                               "extended hours", "long hours", "demanding schedule", "24/7", "always-on",
+                               "high-pressure", "high pressure", "crunch", "intense environment"]
+                if any(k in txt for k in wlb_signals):
+                    pref_gaps.append("Values conflict: you value Work-life balance, but the job text suggests on-call, overtime, or intense deadlines.")
+                if job_type in {"contract"}:
+                    pref_gaps.append("Values conflict: you value Work-life balance, but contract roles typically don't offer PTO or benefits.")
+
+            # Independence & autonomy
+            if val_set & {"independence & autonomy", "independence", "autonomy"}:
+                if any(k in txt for k in ["micromanag", "closely supervised", "strict oversight",
+                                           "approval required", "approval-required", "rigid hierarchy",
+                                           "highly structured", "prescriptive", "must follow established"]):
+                    pref_gaps.append("Values conflict: you value Independence & autonomy, but the job text suggests close oversight or rigid structure.")
+
+            # Progressive leadership
+            if val_set & {"progressive leadership"}:
+                if any(k in txt for k in ["traditional", "hierarchical", "top-down", "top down",
+                                           "command and control", "rigid reporting", "bureaucra"]):
+                    pref_gaps.append("Values conflict: you value Progressive leadership, but the job text suggests a traditional or hierarchical management style.")
+                if job_type in {"contract", "internship"}:
+                    pref_gaps.append(f"Values conflict: you value Progressive leadership, but {job_type} roles rarely offer leadership growth paths.")
+
+            # Role mobility
+            if val_set & {"role mobility"}:
+                if job_type in {"contract", "internship"}:
+                    pref_gaps.append(f"Values conflict: you value Role mobility, but this appears to be a {job_type} role with limited internal mobility.")
+                elif any(k in txt for k in ["temporary", "temp position", "seasonal", "fixed-term", "fixed term",
+                                             "short-term", "short term", "6-month", "3-month", "limited duration"]):
+                    pref_gaps.append("Values conflict: you value Role mobility, but this role appears temporary or short-term with limited growth.")
+
+            # Mentorship & career development
+            if val_set & {"mentorship & career development", "mentorship", "career development"}:
+                if job_type in {"contract", "internship"}:
+                    pref_gaps.append(f"Values conflict: you value Mentorship & career development, but {job_type} roles often lack structured development programs.")
+
+            # Innovative product & tech
+            if val_set & {"innovative product & tech", "innovation", "innovative"}:
+                if any(k in txt for k in ["legacy system", "maintenance", "support role", "sustaining",
+                                           "break-fix", "break fix", "ticket-based", "ticket based",
+                                           "end-of-life", "sunset", "decommission"]):
+                    pref_gaps.append("Values conflict: you value Innovative product & tech, but this role focuses on legacy/maintenance work.")
+
+            # Recognition & reward
+            if val_set & {"recognition & reward", "recognition"}:
+                if job_type == "contract":
+                    pref_gaps.append("Values conflict: you value Recognition & reward, but contract roles typically lack bonus/equity/promotion structures.")
 
 
 
@@ -1060,8 +1145,10 @@ async def analyze_gap(req: GapAnalysisRequest):
                     "- Output ONLY JSON.\n\n"
                     "Hard requirements:\n"
                     "- If personality_profile or temperament_profile is provided, EACH ranked item MUST include at least 1 personality_gaps entry.\n"
-                    "- Only include preference_gaps when there is an actual conflict between user preferences and job requirements.\n"
-                    "- Use ALL preference inputs when relevant: values, role_categories, location_preferences, work_type, role_type, company_size, industries, skills, minimum_salary.\n\n"
+                    "- Include preference_gaps when there is an actual conflict between user preferences and job requirements.\n"
+                    "- Use ALL preference inputs: values, role_categories, location_preferences, work_type, role_type, company_size, industries, skills, minimum_salary.\n"
+                    "- Preference gap examples: user selected Remote but job is on-site; user wants Full-time but job is contract; user set min salary $200k but job pays $150k; user values Work-life balance but job mentions overtime/on-call; user values Independence & autonomy but job suggests micromanagement; user values Role mobility but job is contract/temporary.\n"
+                    "- Every role should have at least 1 preference gap if any user preference conflicts with the job details.\n\n"
                     "Return a JSON object with:\n"
                     "- ranked: array of items {\n"
                     "  job_id, title, company,\n"
