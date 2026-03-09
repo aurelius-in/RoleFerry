@@ -467,7 +467,7 @@ export default function GapAnalysisPage() {
             <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-4">
               <div className="lg:col-span-3">
                 <div className="rounded-lg border border-white/10 bg-black/20 p-2">
-                  <div className="text-xs font-semibold text-white/70 px-2 py-2">Ranked jobs</div>
+                  <div className="text-xs font-semibold text-white/70 px-2 py-2">Ranked roles</div>
                   {notice ? (
                     <div className="px-2 pb-2 text-[11px] text-white/70">
                       {notice}
@@ -591,7 +591,7 @@ export default function GapAnalysisPage() {
 
                     {(selected.matched_skills?.length || selected.missing_skills?.length) ? (
                       <div className="mt-5">
-                        <div className="text-xs font-semibold text-white/70 mb-2">Skill fit (from job required skills)</div>
+                        <div className="text-xs font-semibold text-white/70 mb-2">Skill fit (from role required skills)</div>
                         <div className="flex flex-wrap gap-2">
                           {(selected.matched_skills || []).slice(0, 12).map((s) => (
                             <span key={`ms_${s}`} className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80 text-xs">
