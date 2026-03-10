@@ -83,6 +83,7 @@ export default function BioPageStep() {
   const [resumeMeta, setResumeMeta] = useState<any>(null);
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [userDisplayName, setUserDisplayName] = useState<string>("");
+  const [openCards, setOpenCards] = useState<Set<string>>(new Set());
   const [jobPrefs, setJobPrefs] = useState<any>(null);
   const openPublicPage = (url: string, opts?: { preserveHandle?: boolean }): Window | null => {
     const u = safeStr(url);
@@ -672,6 +673,34 @@ export default function BioPageStep() {
   const colors = useMemo(() => computeBioColors(draft?.theme || null), [draft]);
   const bullet = useMemo(() => bulletGlyph((draft?.theme as any)?.bullet_style), [draft]);
 
+  const toggleCard = (id: string) =>
+    setOpenCards((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const cardHead = (id: string, label: string, extra?: React.ReactNode) => {
+    const isOpen = openCards.has(id);
+    return (
+      <button
+        type="button"
+        onClick={() => toggleCard(id)}
+        className="w-full flex items-center gap-2 text-left"
+      >
+        <svg
+          className={`w-3 h-3 text-white/50 shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+        <span className="text-sm font-bold">{label}</span>
+        {extra}
+      </button>
+    );
+  };
+
   return (
     <div className="min-h-screen py-8" style={{ background: "linear-gradient(to bottom, #020617, #0B1020)", color: "#FFFFFF" }}>
       <div className="max-w-6xl mx-auto px-4">
@@ -693,11 +722,13 @@ export default function BioPageStep() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <div className="lg:col-span-4 space-y-3">
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-              <div className="text-sm font-bold">Actions</div>
-              <div className="text-xs text-white/60 mt-1">
+              {cardHead("actions", "Actions")}
+              {openCards.has("actions") && (
+              <div className="mt-3">
+              <div className="text-xs text-white/60 mb-2">
                 Click Generate to draft your bio page. Publish to get a permanent URL.
               </div>
-              <div className="mt-3 flex flex-col gap-2">
+              <div className="flex flex-col gap-2">
                 <button
                   onClick={generate}
                   disabled={busy === "generate"}
@@ -736,11 +767,15 @@ export default function BioPageStep() {
                 </button>
               </div>
               {msg ? <div className="mt-3 text-xs text-white/70 break-all">{msg}</div> : null}
+              </div>
+              )}
             </div>
 
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-              <div className="text-sm font-bold">Work style</div>
-              <div className="text-xs text-white/60 mt-1">
+              {cardHead("workstyle", "Work style")}
+              {openCards.has("workstyle") && (
+              <div className="mt-3">
+              <div className="text-xs text-white/60 mb-2">
                 Pulled from your Role Preferences (used on the public page and as campaign context).
               </div>
               {(() => {
@@ -761,15 +796,19 @@ export default function BioPageStep() {
                   </ul>
                 );
               })()}
+              </div>
+              )}
             </div>
 
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-              <div className="text-sm font-bold">Style</div>
-              <div className="text-xs text-white/60 mt-1">
+              {cardHead("style", "Style")}
+              {openCards.has("style") && (
+              <div className="mt-3">
+              <div className="text-xs text-white/60 mb-2">
                 Pick backgrounds + bullet style. We automatically choose readable text colors.
               </div>
 
-              <div className="mt-3 space-y-3">
+              <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
                     Slogan line (optional)
@@ -789,16 +828,8 @@ export default function BioPageStep() {
                     {safeStr((draft?.theme as any)?.slogan_line) || "Click to pick a slogan…"}
                   </button>
                   <div className="mt-1 text-[11px] text-white/60">
-                    Tip: click the slogan above to cycle through options (including “none”).
+                    Click to cycle through options (including "none").
                   </div>
-                  <input
-                    // IMPORTANT: don't trim here, or trailing spaces get removed while typing
-                    // and the user can't create spaces between words.
-                    value={String((draft?.theme as any)?.slogan_line ?? "")}
-                    onChange={(e) => updateTheme({ slogan_line: e.target.value })}
-                    placeholder="Or write your own slogan…"
-                    className="mt-2 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                  />
                 </div>
 
                 {/* Mode/Theme toggle + background cyclers (no dropdowns) */}
@@ -968,13 +999,14 @@ export default function BioPageStep() {
 
                 {/* Removed: Preview mode text (Mode toggle makes it obvious). */}
               </div>
+              </div>
+              )}
             </div>
 
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-              <div className="text-sm font-bold">Intro video</div>
-              <div className="text-xs text-white/60 mt-1">
-                Upload an MP4/MOV/WebM that’s <span className="font-semibold">2 minutes or shorter</span>, or paste a hosted video URL.
-              </div>
+              {cardHead("video", "Intro video")}
+              {openCards.has("video") && (
+              <div className="mt-3">
               <div className="mt-3 space-y-2">
                 <input ref={videoInputRef} type="file" accept="video/*" onChange={onVideoChange} className="hidden" />
                 <div className="flex items-center gap-2">
@@ -1029,12 +1061,16 @@ export default function BioPageStep() {
                   <div className="text-xs text-white/60">No video selected.</div>
                 )}
               </div>
+              </div>
+              )}
             </div>
 
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+              {cardHead("script", "1-Minute Bio Video Script")}
+              {openCards.has("script") && (
+              <div className="mt-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-sm font-bold">1-minute bio video script</div>
                   <div className="text-xs text-white/60 mt-1">
                     Generates a tight script you can read in ~60 seconds (bio-page safe: no company-specific mentions).
                   </div>
@@ -1088,10 +1124,13 @@ export default function BioPageStep() {
                   </button>
                 </div>
               </div>
+              </div>
+              )}
             </div>
 
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-              <div className="text-sm font-bold">Record your video (free tools)</div>
+              {cardHead("record", "Record Your Video (Free Tools)")}
+              {openCards.has("record") && (
               <div className="mt-2 space-y-2">
                 <div className="rounded-lg border border-white/10 bg-black/20 p-3">
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
@@ -1165,12 +1204,15 @@ export default function BioPageStep() {
                   </div>
                 </div>
               </div>
+              )}
             </div>
 
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-              <div className="text-sm font-bold">Links (CTA)</div>
-              <div className="text-xs text-white/60 mt-1">These appear on the public bio page buttons.</div>
-              <div className="mt-3 space-y-3">
+              {cardHead("links", "Links (CTA)")}
+              {openCards.has("links") && (
+              <div className="mt-3">
+              <div className="text-xs text-white/60 mb-2">These appear on the public bio page buttons.</div>
+              <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
                     LinkedIn URL
@@ -1200,10 +1242,13 @@ export default function BioPageStep() {
                   />
                 </div>
               </div>
+              </div>
+              )}
             </div>
 
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-              <div className="text-sm font-bold">What will show up</div>
+              {cardHead("showup", "What Will Show Up")}
+              {openCards.has("showup") && (
               <ul className="mt-2 text-xs text-white/60 space-y-1 list-disc list-inside">
                 <li>Headline + summary</li>
                 <li>Proof points grounded in your resume metrics/accomplishments</li>
@@ -1211,17 +1256,18 @@ export default function BioPageStep() {
                 <li>Resume section rendered from your parsed resume (no invented facts)</li>
                 <li>Calls-to-action: Calendly + LinkedIn</li>
               </ul>
+              )}
             </div>
           </div>
 
           <div className="lg:col-span-8">
             <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-bold">Preview</div>
+              {cardHead("preview", "Preview")}
+              {openCards.has("preview") && (
+              <div className="mt-2">
                 <div className="text-xs text-white/60">
                   {draft ? `Draft ready for ${uiDisplayName || "you"}` : "No draft yet"}
                 </div>
-              </div>
 
               {!draft ? (
                 <div className="mt-4 rounded-lg border border-white/10 bg-black/20 p-6 text-sm text-white/70">
@@ -1487,6 +1533,8 @@ export default function BioPageStep() {
                     )}
                   </div>
                 </div>
+              )}
+              </div>
               )}
             </div>
           </div>

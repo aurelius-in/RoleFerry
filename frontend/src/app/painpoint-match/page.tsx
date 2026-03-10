@@ -406,7 +406,7 @@ export default function PainPointMatchPage() {
     const dynamic = Array.isArray(match.alignments) ? match.alignments : [];
     if (dynamic.length > 0) {
       return dynamic
-        .slice(0, 6)
+        .slice(0, 5)
         .map((a, idx) => ({
           n: idx + 1,
           painpoint: String(a?.painpoint || ""),
