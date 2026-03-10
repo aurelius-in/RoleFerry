@@ -151,8 +151,10 @@ function buildMinimalTemperamentProfileFromAnswers(rawAnswers: any): Temperament
 }
 
 function gapTierBadge(totalGaps: number) {
-  if (totalGaps <= 2) return { label: "Minor Gaps", cls: "bg-emerald-500/15 border-emerald-500/30 text-emerald-200" };
-  if (totalGaps <= 5) return { label: "Moderate Gaps", cls: "bg-yellow-500/15 border-yellow-500/30 text-yellow-200" };
+  if (totalGaps === 0) return { label: "No Gaps", cls: "bg-emerald-500/15 border-emerald-500/30 text-emerald-200" };
+  if (totalGaps <= 9) return { label: "Minor Gaps", cls: "bg-emerald-500/15 border-emerald-500/30 text-emerald-200" };
+  if (totalGaps <= 11) return { label: "Moderate Gaps", cls: "bg-yellow-500/15 border-yellow-500/30 text-yellow-200" };
+  if (totalGaps <= 13) return { label: "Significant Gaps", cls: "bg-orange-500/15 border-orange-500/30 text-orange-200" };
   return { label: "Major Gaps", cls: "bg-red-500/15 border-red-500/30 text-red-200" };
 }
 
@@ -190,6 +192,9 @@ export default function GapAnalysisPage() {
     try {
       if (!t && tFromAnswers) localStorage.setItem("temperament_profile", JSON.stringify(tFromAnswers));
     } catch {}
+
+    setRanked(safeJson<GapAnalysisItem[]>(localStorage.getItem("gap_analysis_ranked"), []));
+    setHelper(safeJson<GapAnalysisResponse["helper"] | null>(localStorage.getItem("gap_analysis_helper"), null));
   }, []);
 
   // Allow analysis even without personality; personality gaps will be empty in that case.
@@ -244,8 +249,12 @@ export default function GapAnalysisPage() {
         job_descriptions: jobDescriptions,
       });
       if (!resp.success) throw new Error(resp.message || "Analysis failed");
-      setRanked(resp.ranked || []);
-      setHelper(resp.helper || null);
+      const nextRanked = resp.ranked || [];
+      const nextHelper = resp.helper || null;
+      setRanked(nextRanked);
+      setHelper(nextHelper);
+      try { localStorage.setItem("gap_analysis_ranked", JSON.stringify(nextRanked)); } catch {}
+      try { localStorage.setItem("gap_analysis_helper", JSON.stringify(nextHelper)); } catch {}
     } catch (e: any) {
       setError(e?.message || "Failed to run gap analysis.");
     } finally {
@@ -288,7 +297,11 @@ export default function GapAnalysisPage() {
       } catch {}
       return next;
     });
-    setRanked((prev) => (prev || []).filter((r) => String(r.job_id || "") !== id));
+    setRanked((prev) => {
+      const next = (prev || []).filter((r) => String(r.job_id || "") !== id);
+      try { localStorage.setItem("gap_analysis_ranked", JSON.stringify(next)); } catch {}
+      return next;
+    });
     setExpandedJobIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
     // If we dropped the persisted selected role, clear it.
     try {
@@ -386,21 +399,39 @@ export default function GapAnalysisPage() {
           ) : null}
 
           <div className="mt-6 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={runAnalysis}
-              disabled={!canAnalyze || isAnalyzing}
-              className="px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 inline-flex items-center gap-2"
-            >
-              {isAnalyzing ? (
-                <>
-                  <InlineSpinner />
-                  <span>Analyzing</span>
-                </>
-              ) : (
-                "Run Gap Analysis"
-              )}
-            </button>
+            {rankedUi.length === 0 ? (
+              <button
+                type="button"
+                onClick={runAnalysis}
+                disabled={!canAnalyze || isAnalyzing}
+                className="px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 inline-flex items-center gap-2"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <InlineSpinner />
+                    <span>Analyzing</span>
+                  </>
+                ) : (
+                  "Run Gap Analysis"
+                )}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={runAnalysis}
+                disabled={!canAnalyze || isAnalyzing}
+                className="px-3 py-1.5 rounded-md border border-white/15 bg-white/5 text-white/80 font-semibold hover:bg-white/10 disabled:opacity-50 inline-flex items-center gap-2 text-xs"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <InlineSpinner />
+                    <span>Refreshing</span>
+                  </>
+                ) : (
+                  "Refresh Analysis"
+                )}
+              </button>
+            )}
 
             {topSummary ? (
               <div className="text-xs text-white/70">
@@ -446,7 +477,6 @@ export default function GapAnalysisPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[10px] text-white/40">{totalGaps} gap{totalGaps !== 1 ? "s" : ""}</span>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] ${badge.cls}`}>{badge.label}</span>
                       </div>
                     </button>
