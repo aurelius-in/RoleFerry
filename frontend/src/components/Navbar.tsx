@@ -46,10 +46,10 @@ export default function Navbar() {
         if (path === "/painpoint-match" || path.startsWith("/painpoint-match/")) return 6;
         if (path === "/company-research" || path.startsWith("/company-research/")) return 7;
         if (path === "/find-contact" || path.startsWith("/find-contact/")) return 8;
-        if (path === "/apply" || path.startsWith("/apply/")) return 9;
-        if (path === "/offer" || path.startsWith("/offer/")) return 10;
-        if (path === "/bio-page" || path.startsWith("/bio-page/")) return 11;
-        if (path === "/bio/preview" || path.startsWith("/bio/preview/")) return 11;
+        if (path === "/offer" || path.startsWith("/offer/")) return 9;
+        if (path === "/bio-page" || path.startsWith("/bio-page/")) return 10;
+        if (path === "/bio/preview" || path.startsWith("/bio/preview/")) return 10;
+        if (path === "/apply" || path.startsWith("/apply/")) return 11;
         if (path === "/campaign" || path.startsWith("/campaign/")) return 12;
         if (path === "/deliverability-launch" || path.startsWith("/deliverability-launch/")) return 12;
         return null;
@@ -72,8 +72,8 @@ export default function Navbar() {
       }
       const next = Array.from(new Set([...(steps || []).filter((n) => Number.isFinite(n)), step]))
         .filter((n) => n >= 1 && n <= 12);
-      // v6: Apply (step 9) before Offer (step 10); launch is post-completion action.
-      window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 6, steps: next }));
+      // v7: Offer=9, Bio=10, Apply=11; launch is post-completion action.
+      window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 7, steps: next }));
       window.dispatchEvent(new CustomEvent("roleferry-progress-updated", { detail: { step } }));
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -158,9 +158,9 @@ export default function Navbar() {
             <NavPill href="/painpoint-match" pathname={pathname}>Match</NavPill>
             <NavPill href="/company-research" pathname={pathname}>Research</NavPill>
             <NavPill href="/find-contact" pathname={pathname}>Contact</NavPill>
-            <NavPill href="/apply" pathname={pathname}>Apply</NavPill>
             <NavPill href="/offer" pathname={pathname}>Offer</NavPill>
             <NavPill href="/bio-page" pathname={pathname}>Bio</NavPill>
+            <NavPill href="/apply" pathname={pathname}>Apply</NavPill>
             <NavPill href="/campaign" pathname={pathname}>Campaign</NavPill>
             <NavPill href="/deliverability-launch" pathname={pathname}>Launch</NavPill>
 

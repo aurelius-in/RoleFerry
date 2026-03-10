@@ -510,7 +510,7 @@ export default function OfferPage() {
       setIsSaving(false);
     }
     if (next?.goNext) {
-      router.push("/company-research");
+      router.push("/bio-page");
     }
   };
 
@@ -631,8 +631,8 @@ export default function OfferPage() {
     <div className="min-h-screen py-8 text-slate-100">
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-4">
-          <a href="/apply" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
-            <span className="mr-2">&larr;</span> Back to Apply
+          <a href="/find-contact" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+            <span className="mr-2">&larr;</span> Back to Contact
           </a>
         </div>
 
@@ -1122,7 +1122,7 @@ export default function OfferPage() {
               type="button"
               onClick={() => {
                 if (activeRoleId) saveDraftToCurrentRole({ silent: true });
-                router.push("/apply");
+                router.push("/find-contact");
               }}
               className="rounded-md border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
             >
