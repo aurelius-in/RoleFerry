@@ -1478,29 +1478,29 @@ export default function JobDescriptionsPage() {
               </div>
             </div>
             
-            {hasMounted && jobDescriptions.length > 0 && (
-              <div className="flex items-center gap-2">
-                <div className="text-[11px] font-semibold text-white/60">Sort by</div>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="rounded-md border border-white/10 bg-black/30 px-2 py-1 text-xs text-white/80 outline-none focus:border-white/20"
-                >
-                  <option value="favoriteRank">Favorite (rank)</option>
-                  <option value="stars">Preference (stars)</option>
-                  <option value="company">Company</option>
-                  <option value="minSalary">Min Salary</option>
-                  <option value="maxSalary">Max Salary</option>
-                  <option value="posted">Posted (recent)</option>
-                  <option value="date">Import Date</option>
-                </select>
-              </div>
-            )}
           </div>
 
           <div ref={preferredSectionRef} className="mt-8 grid grid-cols-1 md:grid-cols-12 gap-6">
             <div className="md:col-span-8 md:order-1 space-y-1">
               <CollapsibleSection title="Preferred Roles" count={jobDescriptions.length}>
+              {hasMounted && jobDescriptions.length > 0 && (
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="text-[11px] font-semibold text-white/60">Sort by</div>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                    className="rounded-md border border-white/10 bg-black/30 px-2 py-1 text-xs text-white/80 outline-none focus:border-white/20"
+                  >
+                    <option value="favoriteRank">Favorite (rank)</option>
+                    <option value="stars">Preference (stars)</option>
+                    <option value="company">Company</option>
+                    <option value="minSalary">Min Salary</option>
+                    <option value="maxSalary">Max Salary</option>
+                    <option value="posted">Posted (recent)</option>
+                    <option value="date">Import Date</option>
+                  </select>
+                </div>
+              )}
               {!hasMounted || jobDescriptions.length === 0 ? (
                 <div className="text-center py-8">
                   <h3 className="text-lg font-medium text-white mb-2">No Roles Yet</h3>

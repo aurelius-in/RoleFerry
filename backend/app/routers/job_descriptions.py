@@ -2863,6 +2863,18 @@ def _is_tech_intent(pref: Dict[str, Any]) -> bool:
         "recruiting", "recruiter", "recruitment", "talent acquisition",
         "sales", "marketing", "account", "business development",
         "training", "enablement", "staffing", "headhunt",
+        "go-to-market", "gtm", "growth marketing", "brand marketing",
+        "content marketing", "demand generation", "product marketing",
+        "finance", "accounting", "financial analyst", "controller",
+        "coaching", "teaching", "instructor", "professor", "educator",
+        "biotech", "pharmaceutical", "clinical", "life science",
+        "decision science", "experimentation", "a/b testing",
+        "human resources", "people operations", "compensation",
+        "operations", "supply chain", "logistics", "procurement",
+        "consulting", "strategy", "management consulting",
+        "communications", "public relations", "copywriting",
+        "customer success", "customer support", "community manager",
+        "project manager", "program manager", "scrum master",
     ]
     has_non_tech_context = any(nt in blob for nt in non_tech_contexts)
     exact_phrases = [
@@ -3043,6 +3055,38 @@ def _source_from_url(url: str) -> str:
         return "Workday"
     if "jobs.ashbyhq.com" in u:
         return "Ashby"
+    if "linkedin.com" in u:
+        return "LinkedIn"
+    if "indeed.com" in u:
+        return "Indeed"
+    if "glassdoor.com" in u:
+        return "Glassdoor"
+    if "ziprecruiter.com" in u:
+        return "ZipRecruiter"
+    if "monster.com" in u:
+        return "Monster"
+    if "simplyhired.com" in u:
+        return "SimplyHired"
+    if "careerbuilder.com" in u:
+        return "CareerBuilder"
+    if "themuse.com" in u:
+        return "The Muse"
+    if "dice.com" in u:
+        return "Dice"
+    if "remoteok.com" in u:
+        return "Remote OK"
+    if "weworkremotely.com" in u:
+        return "We Work Remotely"
+    if "remotive.com" in u:
+        return "Remotive"
+    if "remote.co" in u:
+        return "Remote.co"
+    if "builtin.com" in u:
+        return "Built In"
+    if "wellfound.com" in u:
+        return "Wellfound"
+    if "flexjobs.com" in u:
+        return "FlexJobs"
     if "/careers" in u or "careers." in u:
         return "Company careers"
     return "Career pages"
@@ -3219,11 +3263,26 @@ async def _discover_roles_without_serper(
         "roberthalf", "kforce", "insightsoftware", "hireright",
         "paychex", "paylocity", "bamboohr", "lattice", "cultureamp",
         "deel", "remote", "oysterhr", "justworks",
+        # Large employers that hire across marketing, recruiting, finance, GTM, ops
+        "walmart", "target", "costco", "nike", "starbucks", "disney", "netflix",
+        "deloitte", "mckinsey", "bcg", "accenture", "pwc", "ey", "kpmg",
+        "jpmorgan", "goldmansachs", "bankofamerica", "citi", "wellsfargo",
+        "unitedhealth", "cvs", "kaiserpermanente", "johnsonandjohnson",
+        "pfizer", "merck", "abbvie", "amgen", "genentech", "modernatx",
+        "coca-cola", "pepsico", "mars", "unilever", "pg",
+        "verizon", "att", "comcast", "tmobile",
+        "fedex", "ups", "uber", "lyft", "airbnb", "doordash",
+        "linkedin", "indeed", "glassdoor",
     ]
     general_lever = [
         "eventbrite", "coursera", "udemy", "flexport", "calendly", "clearbit",
         "mixpanel", "heap", "crunchbase", "webflow", "rippling", "motive",
         "lever", "greenhouse", "beamery", "phenom", "eightfold",
+        # Broader employers across industries
+        "nerdwallet", "betterup", "gopuff", "sweetgreen", "warbyparker",
+        "allbirds", "glossier", "thirdlove", "hims", "ro",
+        "masterclass", "brilliant", "duolingo", "khan-academy",
+        "peloton", "oatly", "impossible-foods", "calm", "headspace",
     ]
 
     is_tech = _is_tech_intent(pref or {}) if pref else False
@@ -3429,8 +3488,8 @@ async def get_scraped_roles(
                 effective_neg.append(an)
     negative_clause = " ".join([f'-"{kw}"' for kw in effective_neg[:10]]) if effective_neg else ""
 
-    # Broaden to multiple ATS ecosystems + public careers surfaces.
-    domains = [
+    # --- Domain lists: ATS platforms vs general job boards ---
+    ats_domains = [
         "boards.greenhouse.io",
         "jobs.lever.co",
         "myworkdayjobs.com",
@@ -3443,10 +3502,31 @@ async def get_scraped_roles(
         "boards.eu.greenhouse.io",
         "jobs.smartrecruiters.com",
         "boards.jobvite.com",
-        "jobs.indeed.com",
+    ]
+    general_boards = [
+        "linkedin.com/jobs",
+        "indeed.com",
+        "glassdoor.com/job",
+        "ziprecruiter.com",
+        "monster.com/jobs",
+        "simplyhired.com",
+        "careerbuilder.com",
+        "themuse.com/jobs",
+        "flexjobs.com",
+        "dice.com",
+        "remoteok.com",
+        "weworkremotely.com",
+        "remotive.com",
+        "remote.co/remote-jobs",
         "builtin.com/jobs",
         "wellfound.com/jobs",
     ]
+    # For tech seekers ATS platforms are rich; for non-tech, lean into general boards
+    # that list all types of roles across industries.
+    if tech_intent:
+        domains = ats_domains + general_boards[:6]
+    else:
+        domains = general_boards + ats_domains[:6]
 
     queries: List[str] = []
     for term in role_terms:
@@ -3459,8 +3539,12 @@ async def get_scraped_roles(
         # Non site-locked queries to catch direct career pages outside ATS providers.
         queries.append(f'"{term}" "careers" "remote" "united states" {negative_clause}'.strip())
         queries.append(f'"{term}" "job opening" "apply now" {negative_clause}'.strip())
+        queries.append(f'"{term}" "hiring" "apply" {negative_clause}'.strip())
         if skill_clause:
             queries.append(f'"{term}" ({skill_clause}) "careers" "remote" {negative_clause}'.strip())
+        if not tech_intent:
+            queries.append(f'"{term}" "job" "hiring" {negative_clause}'.strip())
+            queries.append(f'"{term}" "open position" "apply" {negative_clause}'.strip())
     # Keep to a reasonable cap to avoid runaway API usage / timeouts.
     query_cap = 120 if requested >= 220 else 90
     if positive_kw or negative_kw:
