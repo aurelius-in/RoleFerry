@@ -3295,10 +3295,12 @@ async def _discover_roles_without_serper(
 
     timeout = httpx.Timeout(6.0, connect=4.0)
     headers = {"User-Agent": "RoleFerry/1.0 (+https://roleferry.app)"}
+    fallback_start = time.monotonic()
+    fallback_budget = 20
     async with httpx.AsyncClient(timeout=timeout, headers=headers, follow_redirects=True) as client:
         # Greenhouse public board API
         for board in greenhouse_boards:
-            if len(out) >= cap:
+            if len(out) >= cap or (time.monotonic() - fallback_start) > fallback_budget:
                 break
             try:
                 url = f"https://boards-api.greenhouse.io/v1/boards/{board}/jobs?content=true"
@@ -3339,7 +3341,7 @@ async def _discover_roles_without_serper(
 
         # Lever postings API
         for company in lever_companies:
-            if len(out) >= cap:
+            if len(out) >= cap or (time.monotonic() - fallback_start) > fallback_budget:
                 break
             try:
                 url = f"https://api.lever.co/v0/postings/{company}?mode=json"
@@ -3407,6 +3409,39 @@ async def get_scraped_roles(
     Auto-discover role links from common career page ecosystems using user preferences.
     This is additive to the existing manual URL import flow.
     """
+    try:
+        return await _discover_scraped_roles_inner(
+            limit=limit,
+            positive_keywords=positive_keywords,
+            negative_keywords=negative_keywords,
+            funnel_mode=funnel_mode,
+            role_categories=role_categories,
+            skills=skills,
+            industries=industries,
+            resume_skills=resume_skills,
+            minimum_salary_pref=minimum_salary_pref,
+            location_preferences=location_preferences,
+            state=state,
+        )
+    except Exception:
+        logger.exception("Unhandled error in get_scraped_roles")
+        raise HTTPException(status_code=500, detail="Role discovery encountered an error. Please try again.")
+
+
+async def _discover_scraped_roles_inner(
+    *,
+    limit: int = 500,
+    positive_keywords: Optional[str] = None,
+    negative_keywords: Optional[str] = None,
+    funnel_mode: str = "broad",
+    role_categories: Optional[str] = None,
+    skills: Optional[str] = None,
+    industries: Optional[str] = None,
+    resume_skills: Optional[str] = None,
+    minimum_salary_pref: Optional[str] = None,
+    location_preferences: Optional[str] = None,
+    state: Optional[str] = None,
+) -> ScrapedRolesResponse:
     # Always build prefs from caller-supplied params. Never use the global demo store.
     role_cats_in = _parse_keyword_list(role_categories)
     skills_in = _parse_keyword_list(skills)
