@@ -551,7 +551,7 @@ export default function ApplyPage() {
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-6 shadow-2xl shadow-black/20">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
             <div>
-              <div className="text-xs text-white/60">Step 7 of 12</div>
+              <div className="text-xs text-white/60">Step 9 of 12</div>
               <h1 className="text-3xl font-bold text-white">Apply</h1>
               <p className="text-white/70 text-sm mt-1">
                 Select roles to track your applications. Click a job link to apply on the company site, then mark it here to keep your Tracker up to date.
@@ -601,32 +601,20 @@ export default function ApplyPage() {
                 </div>
               ) : null}
 
-              {autoApply && missingRequiredFields.length > 0 ? (
-                <div className="space-y-2 rounded-md border border-yellow-400/30 bg-yellow-500/10 p-3">
-                  <div className="text-xs font-semibold text-yellow-100">Complete required fields</div>
+              {autoApply ? (
+                <div className="space-y-2 rounded-md border border-white/10 bg-white/5 p-3">
+                  <div className="text-xs font-semibold text-white/80">Profile details</div>
                   <div className="grid grid-cols-2 gap-2">
-                    {missingRequiredKeys.has("first_name") && (
-                      <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white" />
-                    )}
-                    {missingRequiredKeys.has("last_name") && (
-                      <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white" />
-                    )}
+                    <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" className={`w-full rounded-md border ${missingRequiredKeys.has("first_name") ? "border-yellow-400/40" : "border-white/15"} bg-black/20 px-3 py-2 text-sm text-white`} />
+                    <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" className={`w-full rounded-md border ${missingRequiredKeys.has("last_name") ? "border-yellow-400/40" : "border-white/15"} bg-black/20 px-3 py-2 text-sm text-white`} />
                   </div>
-                  {missingRequiredKeys.has("email") && (
-                    <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white" />
-                  )}
-                  {missingRequiredKeys.has("phone") && (
-                    <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white" />
-                  )}
+                  <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className={`w-full rounded-md border ${missingRequiredKeys.has("email") ? "border-yellow-400/40" : "border-white/15"} bg-black/20 px-3 py-2 text-sm text-white`} />
+                  <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className={`w-full rounded-md border ${missingRequiredKeys.has("phone") ? "border-yellow-400/40" : "border-white/15"} bg-black/20 px-3 py-2 text-sm text-white`} />
                   <div className="grid grid-cols-2 gap-2">
-                    {missingRequiredKeys.has("city") && (
-                      <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white" />
-                    )}
-                    {missingRequiredKeys.has("postal_code") && (
-                      <input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="Postal code" className="w-full rounded-md border border-white/15 bg-black/20 px-3 py-2 text-sm text-white" />
-                    )}
+                    <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className={`w-full rounded-md border ${missingRequiredKeys.has("city") ? "border-yellow-400/40" : "border-white/15"} bg-black/20 px-3 py-2 text-sm text-white`} />
+                    <input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="Postal code" className={`w-full rounded-md border ${missingRequiredKeys.has("postal_code") ? "border-yellow-400/40" : "border-white/15"} bg-black/20 px-3 py-2 text-sm text-white`} />
                   </div>
-                  {missingRequiredKeys.has("resume") && (
+                  {!resumePresent && (
                     <div className="flex items-center justify-between gap-2">
                       <label className="inline-flex items-center gap-2 text-xs text-white/80">
                         <input type="checkbox" checked={resumePresent} onChange={(e) => setResumePresent(e.target.checked)} />

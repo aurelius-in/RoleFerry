@@ -1,0 +1,781 @@
+let’s say this is three.
+Everything is not on
+Nine.
+Three, nine. Um. Twenty-six. I’m just creating this little meeting here so I can I can, uh, not have any trouble later. Okay, so. Here we go. So we got this, uh, most of these industries are fine. Sounds boring.
+I might want to exclude that I already know for a fact defense doesn’t pay. Robotics, automation can be very cool. Agriculture
+I don’t want to talk to too many country folk.
+Um, so I’ll just stick with that. Maybe hardware.
+Finance is lame. I already work for PwC. I didn’t like that. Social impact. Doesn’t sound like it pays well. Restaurant service. That’s a lot of stress. Hospitality. Also a lot of stress. All right, I’m going to stick with that. All right, so. There. Done. And then minimum expected salary. By the way, this is now factored in with, like, gaps and stuff, so that’s an important value. And then what is the status of your role search? So there. See, the collapse is good. We like collapsed. Um,
+by the way, while while that’s let me just do this real quick.
+Um,
+all right so. Stage commit and push. But the whole collapsing thing is something I just implemented right now, so I needed to actually, like,
+take effect.
+Develop There’s a couple steps involved. Apparently, there’s been six commits that I still need to merge.
+All right And merge.
+Okay, now the rest really we’ll do on its own. Right? I love how it constantly checking. So within a couple seconds, it already knows, like, wait, watch it’ll it’ll do it. It’ll it’ll just notice that that, um, that GitHub got updated and then these things will start building. But anyways. Oh, except for this. What’s going on here?
+Oh, wow We may not get to do some immediate updates today. Um, based on that message. But let’s go ahead and go back to the app and show you what we did already. So the resume thing is good. I like the.
+Everything is coming up You you planned it anyway.
+Not like everything, everything, but the most of the pages we focused on yesterday are. Um, so this is good. It’s going to start actually in this state. So you extract and then you can, like, look at stuff. Because nobody wants to scroll in this eliminates the need to scroll so you can just expand the section you’re working on. Right?
+Mm-hmm.
+The text is a little big, right?
+It’s good
+I’m just going to like,
+so maybe it’s a little too a little bit too big, so. Produce the size of the body text on the resume screen and the ver.
+I don’t think it’s that good. I mean, I don’t think you should change it. And I mean, you want to have a little bit bigger.
+Yeah, yeah, yeah. No, just, like, a little bit.
+See if we can see.
+It’s like really big. What should be consistent? There’s no reason to have it, like, huge on this screen and then, like, small on another one. This is just, like, like, like 16 point font and, like, 14 or 12 would look a little bit cleaner. It’d be more consistent with the rest of the site. Like, it’s bigger than the headings. You know what I mean?
+Mm-hmm.
+Like, it’s just kind of huge. And also this lighting right here, this spacing here is kind of big. It’s padding, so.
+Mm-hmm.
+Anyway so we can look at the key metrics. We can look at my so you know my resume, but there. There it is. So all right. Um, this is going to be collapsible. I didn’t make it collapsible before, but I just, um, pushed to change to GitHub to make this one collapsible too. This I said to move it up here.
+I don’t think it’s collapsible
+I think it’s good. I think collapsible is good. I just realized I realized I should have done it earlier because there’s too much scrolling going on with this app.
+I really like the clean once I saw it in action for that other site, I’m like, you know what? That’s the answer. It makes it a lot cleaner, a lot more professional, a lot easier to navigate. There’s no scrolling. Right now, one of the problems with our site with our app is that, like, you get kind of overloaded with info all at once, and it’s just like, I don’t even know where to begin. I’m scared. I’m not going to be able to deal with this. Right? So it needs to be complex enough for them to realize it’s complex, but feel simple enough to think about and compartmentalize and be like, okay, I’m going to do this task now. Okay, now I’m going to close this one. I’m going to do this task. Much easier to focus. I think it’s more like it’s just easier on on people that are like ADHD or are prone to anxiety and just nobody wants to be overloaded, so.
+Nobody wants to be overloaded. Yeah.
+So, um anyway, so this is the role search page, and man, it’s going great. Telling you. Very happy. So oh, I’m very happy with it. So here we we can start at a collapse state, right? So the preferred roles are ones that I’ve already picked off the thing, but let’s start with the keywords.
+Yeah. That’s what I’m saying. You got to have preferred roles and then match roles because not all the match roles are preferred roles. You’re just trying to sort through the match roles first.
+So when I click refresh roles, right, um, it’s mostly going off of my resume and my preferences. Right? Including salary preferences and those preferences. Right? And I I expand this. Okay. I got 249 roles instantly.
+Is that a is that a counter What’s that over there?
+Oh, over where here?
+Yeah, 300. What is that, 300?
+300 is like the max. I think we’ll try to expand it to 500, but I don’t want to crash it. But 300 is probably enough where you can, like,
+go through them and feel like I’m tired of going through roles with too many roles to go through. 300 is plenty. And 64 of them are a great fit. 180 of them are a fair fit, and 5 of them are a weak fit. So that tells you. So and I agree based on what I’ve what I’m seeing here. If I click preferred, it says parsing just like as if I’d pasted the URL up at the top there.
+I love the whole thing. Yeah. I love the whole thing. Yeah.
+So it does the parsing thing. It’s it’s scraping this role off that site.
+And um when it’s done, it says added. For three seconds, and then it disappears from the match roles part. And now it’s up here. So if I look at my preferred roles, right, it’s got the roles I’ve added.
+There’s a counter too. You have a counter.
+A counter?
+Yeah. It says 14.
+Well, yeah. So that that’s how you know that there’s stuff. So because everything’s collapsed, right, when there’s, like, items, you need to know what’s here. So if I click here, I know there’s, like, 300 items. If I click here, I know there’s 14 things. So I don’t need to I don’t need to expand just to see how many there are. I know what I’m expanding. So there’s nothing to expand on. There’s, like, one item here. I won’t even you know what I mean?
+So I that was my idea just to kind of say, like, I know what I’m expanding. It’s not just, like, a bunch of collapsed stuff. It’s blank screen. I know there’s there’s some data behind this collapsed thing.
+So, yeah, I like the counter. The counter just kind of helps us know what’s going on. Some of these roles are really well paid. So I’m kind of ranking them. So this one has, like, a 400 salary. So I should probably move this down, right? And then I can, um, you know, this one can be up. So so move that to one, right? So I can kind of rank these by salary, right? Here’s a great one. So this one is machine learning systems engineer, 500 to 850,000. So that one should definitely be number one, right?
+Mm-hmm.
+So yeah. So anyways, that’s what we do. And we have our roles. Um, we can put them as preferences. Anything above 300k is going to be preferred, right?
+So yeah.
+Anyways, you get the idea. And then, um, these are the ones that I’ve already that I’ve already clicked preferred on. It’s kind of getting it’s already long. Not I mean, not long. 14 isn’t long, but long for scrolling. So it’s nice that I can collapse it. Collapsing was probably needed as soon as I saw this page. I saw the problem. I got two very distinct lists. I can’t have both lists visible at the same time. I’m going to need to collapse one of them while I work on the other one, right? So I can go through these. Um, they don’t show salary and tell you scrape them, but they do show, like, who’s hiring, where they are, and then how it’s aligned, which is nice. So it’s got the AIML alignment. It’s got the preference skills. So this is from the preferences screen. The skills match engineer learning machine and platform, right?
+Oh, so now it’s actually useful now.
+Yeah. And then the title alignment has that. So it’s already doing and then it tells me the great the fitness, you know,
+and um, that might be adjusted. But yeah, so these are all good roles for me. And I’ll know even better after I put them up here and I’ll get to see the salary. Because honestly, I wouldn’t dream of leaving my job unless I mean, if I got offered 400, 500,000 for a role, I I might take it because, I mean, shoot. That’s a lot of money. Um, but I mean, I one thing I like about the job now is I’m doing well at it, and I have a good relationship with my colleagues. So here it actually tells me if it finds the, you know, the salary easily, it already puts it here, right?
+Mm-hmm.
+But see, since I already know, like, 240k at the peak is is not enough to leave my current job. I’m not even going to I’m not even going to put it on my list, even though it’s like a good salary, but I’ve already got a job, so I’m not going to even consider another job unless it’s, like, you know, so here’s 234. But another thing to keep in mind is there’s, like, 300 roles here. And they’re, like,
+these are jobs that pay over 200k.
+You know what I mean
+You’re also getting a lot of roles. I noticed that in both the simply apply and the, um, in this right now. Like, you got you’re getting a ton of roles. Like, um, your skill set must be just, like, everybody needs that. They need, like, senior AI people.
+Like, it’s like supply and demand.
+Demand. Yeah. AI just kind of, like, came out of nowhere and be like, oh, shit, we need some experts in this. So you’re right. Like, I’m I found myself in a nice little corner of skills.
+Um,
+yeah, yeah. I’m happy with where my career ended up that way. Um, so yeah, like, I can ignore stuff if I don’t like it, and it’ll take it off the list. Um,
+I mean, I’m not really applying seriously right now anyways, but see how they kind of make some disappear. So I have a different company. Oh, yeah. So it actually tells you here or does it? Yeah, 11 companies.
+Okay.
+Okay. So not a lot of companies considering it’s 243 roles. But, you know, if I did more roles, I’d probably get more companies. I don’t mind that it’s not that many companies. Um, I mean, but we probably want it more. So director of technical recruiting isn’t a bad job. Put it at the bottom because of, you know, keyword matching. But it’s actually something I’d consider because it probably pays good. Technical program manager, people solutions.
+Technical recruiting You get into technical why would you get into technical recruiting?
+I think it’s it’s very loosely matching. These are at the bottom. I scrolled to the bottom to see which ones aren’t going to match it because I wanted to show you how the ignore works, right? Technical program manager, that’s not specific enough to my skill set. Technical, technical review manager. See, these aren’t these aren’t great for me. These might be better for you. Technical recruiter would be more your speed.
+AI agent architect.
+So 11 companies.
+I think we need more I think we need more companies and less of the same.
+Yeah. Maybe so. So what we could tell Cursor is, um, on the roles screen, we don’t want more than the 10 best fit roles per company. So we can’t have 300 roles. And, um, only, you know, 20 companies.
+We need more companies per role. Or more more roles.
+Yeah. In terms of outreach, you’re going to be you really only you only reaching out to, um,
+you know, one company with the one company one CEO one manager, right?
+Yeah. So it’s like, you’re only going to send out the role seeker. We got to start calling them role seekers to stay on brand with role fair. We got to stop saying job. It’s got to be role, role, role. Everything role. Just to be like, you know, our whole branding thing. So because of the role seekers, um,
+they got to be role seekers. Like, we got to rebrand our thing. Our thing is all about branding. Like, role fairy, we got to make it, like, role.
+Um, it’s got to roll off the tongue. So because of the role seekers, um,
+aren’t going to apply for multiple jobs per company.
+So we need to not list more than 10 companies 10 roles per company.
+Yeah. We got to change.
+I said that four different ways, but anyways.
+We’re going to change your time.
+Yeah, no thanks. Um, I like the role thing. I think role is a nicer word. It tells you that you are, like, part of a team. Like, you play a role. And the job is just, you know, like, it’s not a nice thing. Who wants a job? It just overbroke and will be I think having a role speaks to your identity as a person and your ability to contribute and play a role on a team. It’s a much nicer if you, you know, it’s placed in the world to have a role than to have a job. Job is something you do. Role is something you are. And you’re it speaks to your your your responsibility and and your relationships, you know? It’s much better.
+I don’t think we can be like, I got a job. Like, I got a role. Much better.
+I have a role to play in all this.
+Yeah, exactly. It’s more grown up.
+Senior software engineer platform AI acceleration.
+It says it’s only a 50. These are some even the ones that say they’re only a fair fit, a lot of these are a great fit. I would totally apply for these. Only thing, like you said, like, anthropic, just like, you know, 50 of them or something. So yeah, we need, like,
+we need fewer.
+Yeah, I would say five. Five for each company.
+Well,
+we have 300 roles here. If we had, yeah, 10’s a lot, right?
+10’s a lot. Because obviously, you can’t really change your resume for each role at a company. That is such a red flag.
+Oh, yeah.
+What do you do if I can Batman for this role, but then, like,
+Superman for the next role Are you the same person? What is the same company? You’re the same.
+Like, I have your resume. Five different ways in the same company. Something is wrong. You’re lying somewhere.
+You know It’s like, in one resume, it’s the same exact company.
+You have all the certifications for marketing. And then in another role for the same company, you have all the certifications for DevOps. And then in another role for the same company, you have all the certifications for financing. And it’s like, how is that possible? You’re lying somewhere.
+Yeah, yeah. No, I get it You’re right You’re totally totally valid. So and I’ve experienced that before, too. This is like a problem I ran into when I was, like, trying to apply. I was like, shit, I
+actually, it was just two roles, and they, like, well, which one do you want to apply for? And I’m like,
+I mean, they both pay good. Like, one’s more technical and one’s more, like, oversight. And they both paid really well. And I was like, huh.
+I don’t know. And like, which one do you think I’d be better for? I was like, asking the recruiter. And they’re like, well, you have to decide. Like, or you could apply to both. And I was like, well, I could apply to both. Then I thought that through. And I was like, I’m going to need two very different resumes.
+And how do I apply How do I send this recruiter two different resumes to her, like, so different? And like, oh, I guess that doesn’t work great. So, yeah. You’re right. Five five max. And then they can pick their favorite one or two of those five. And
+yeah, hopefully, they’re not too different, too.
+Require a change in resume that raises flags.
+Yeah.
+Okay. So you get the idea. Mine’s going great. I hope yours does, too. I’ve fought with it enough about this whole not showing tech jobs for non-tech people thing that I think it’s fixed it. Hoping it’s fixed it. Right now, I’ve got 18 roles. Let me find two more roles so I can start with a little bigger number. I don’t know why I didn’t see. This is why scrolling is done. We can just collapse this. And boom. Collapse that, too. You know, I really need the keywords. Continuously. You need it, like, one time, and then it can collapse.
+Okay. So that’s a high-paid role. I already know manager, too, is probably a pretty high-paid role. Oh, it tells me right there.
+Yeah. So the max is, you know, what I’m going to ask for, or close to the max. So that would probably be like let’s see.
+I’m going to look at your screen, though. So go ahead and share.
+Okay.
+I’m more interested in yours because we had a real problem with that whole tech thing. So I’m praying that doesn’t keep popping up because I’ve been fighting with it about that.
+Find out
+Can you share
+Yeah, yeah, yeah. It should be.
+Here we go.
+Okay.
+Maybe engineer. You don’t want technical? Oh, yeah. I thought sorry. I thought you were putting another one below.
+No, technical recruiter positive. For negative, I’ll put an engineer.
+Okay.
+Maybe both places.
+I think it’s not twice. It’s telling you that it just added it.
+Okay.
+Oh, and it selected.
+Let’s put sourcer.
+Let’s put town acquisition.
+All right.
+Let’s put engineer negative. Let’s put developer. Negative.
+Machine.
+What about career developer Wouldn’t that be a thing? You might want?
+Developer?
+Yeah, developer could be, like, skilled developer.
+I don’t know
+I don’t know Well, I mean, let me just put, like, software.
+Yeah, software.
+Developer.
+Then you put it in quotation marks. It’s too hard. Like, boom.
+No, it seems to be creating them that way anyways. Like, in separate little things.
+All right So go ahead and go back. Scroll back up. To the top there. And you’re going to have to click that little button there. It says refresh roles.
+And oh, yeah, you can sort it by role fit. But by other things, too, does it show other options or no?
+Company role location. Yeah, that’s really cool.
+Yeah, good
+I like those options. But company’s going technical curriculum development. It’s kind of more recruiter roles.
+Can you, like, make it less strict
+We’ll fix it later. It should show more even when it’s strict. But just make it, you know, a little where do I have mine at?
+Because mine is collecting a shit ton, so.
+I have mine at strictness 25%.
+Yeah, technical recruiter. 38% week fit.
+Oh, how many roles did it give you, by the way?
+This is 19.
+No, 19. Well, it says 127. So that’s not sure which it is.
+127.
+I feel like I don’t know why it says that.
+Okay.
+Can you scroll up to the thing? I’m just curious. So can you click the little slide bar at the top there? I’m just trying to see what’s going on. So click that real quick. Does it say, like, 25% or something?
+I’m just not sure. 15 it said. Yeah.
+Okay.
+Just scroll it all the way down and just see what it does.
+All the way down to broad.
+I’ll fix the mechanism so it doesn’t filter out so much stuff.
+All right So all right. How is it doing in terms I mean, it should be pulling up more roles for you. But how is it doing in terms of the roles that are showing you?
+I mean, this looks good too. Technical recruiter for Discord sounds interesting.
+Let me see. Maybe I got to go back to preferences.
+Yeah.
+You might also not want to skip steps. You might want to go through the whole thing.
+What kind of roles are you interested in?
+You don’t want tech uncheck technical and engineering.
+Yeah. There you go.
+All right. Yeah, there you go.
+Okay.
+Not in person at all?
+Hybrid. That’d be okay. Yeah, I like in person.
+I’m up with all three.
+Okay.
+What kind of roles are you full-time? Which idea come your size?
+Let’s take a Zach Whenever you say you’re looking for. I mean, I don’t mind a machine learning industry.
+Is that even an industry anymore? I feel like it’s been like ubiquitized to where it’s like literally everywhere and everything.
+Like, every single industry uses it now. Probably doesn’t hurt to add it because it just kind of broadens you into everything. But I’m not sure it’s I mean, I know there is, like, specifically just AI companies. I work for a company called what’s my company called? I forgot. What do I work for? Denali AI.
+So yeah, so it’s.
+That’s in terms of time.
+I’m open to 330.
+There you go. It’ll accept comma or not either way.
+Oh, yeah. Comma or not. Okay.
+Yeah.
+What’s this
+This is options that lengthen offers, right? It asks you if you’re actively looking, not looking, but open to offers or not looking. And closed to offers. So that would just be, like, kind of dumb because, you know, obviously, you’re actively looking. You wouldn’t be using this app. But maybe you already found like, I guess I’m kind of the middle one now.
+I’m not really open because I get, like, a lot of offers. And I just ignore them. But I suppose if the right offer came along and they were able to get me excited because they paid, like, so much, I might go through the trouble. I just hate applying for jobs and going through that.
+And also, I hate the idea of, like, abandoning my people that I’m working with now because they’ve been good to me and they’re paying me good. And I feel like I have a lot of job security there. Like, it’s going really well. So
+I would they would I’d have to I mean, I would do it for the right price, obviously. Like, my family comes first. If they’re going to give me an extra 100K, that means my family gets to, you know, do a lot of stuff they can’t do right now, so.
+All right This is new. I feel like I just need seconds.
+It’s nice.
+I wish I was rational What did it put for me, like, dreamer or something?
+Yeah. I like this new sorting.
+Looks cool.
+Except I don’t like that it’s up there.
+I think it’s cool enough.
+Yeah, but it should be down next to the preferred roles.
+Yeah.
+Okay. LinkedIn recruiter. I think this is better keyword now.
+Yeah. Let’s refresh roles.
+Well, it’s a zero now So something happened, right? I think it’s better now. Maybe I had to go from the beginning.
+That would make sense. I mean, it’s got to populate new fields because when this was kind of revamped, a lot of new fields were created. Like, you know, variables. Available variables from other fields.
+It didn’t exist before.
+So.
+This looks a little bit better for me.
+I don’t know where you got AI applied scientist, but it’s no big deal. You just ignore it, right?
+Yeah. I mean, it looks better than just like having every role being an engineer.
+Well, obviously, we’re better from there. We’re trying to get it good enough to show people, so.
+All right So member of technical staff. Research lead. Training insights. These are not great, actually. Manager tech. See, there we go. Solutions counseling.
+I would like to see something along the lines of like recruiting.
+Well, go up to the preferred role. What do you call it? Keywords?
+Preferred keywords
+Uh-huh.
+You can put something around like marketing.
+Is recruiting even in your keywords? Well, technical recruiter. It’s just like the word recruiter by itself in there?
+Yeah. Recruiter right there.
+Oh, okay.
+Try recruiting.
+Yeah.
+I was going to say the other thing. Like, recruiter, recruiting.
+Well, if it’s like head of recruiting or recruiting specialist, I mean, yeah, yeah, it would be a title, potentially.
+Are these keywords or titles, though? Maybe we should put like a title thing.
+I mean, I don’t know, but works either way, I suppose. I think.
+It’s like I put like director of recruiting.
+I mean, sure.
+I’m not going to put like director of marketing.
+Scroll all the way down Did you already try going down to the broadest broad?
+Although it’s already showing you weird stuff. But yeah, go ahead and do that.
+Because it should be basing it mostly on your resume and your preferences.
+Well, I have my resume in there.
+Yeah, yeah. But yeah.
+I wonder. Clear your resume and reload it. I’m wondering if when we because, like I said, we added new variables to make this work better. Which means that it may not have pulled those unless it read as your resume. You know what I’m saying?
+Yeah.
+That’s why I keep telling you to redeload your resume each time because there’s new things to catch from it. You know what I mean? There’s new things to collect from your Yeah, I mean, people are getting excited about Wednesday, though, for sure. It’s going to be a cool day.
+I hope so.
+Yeah, it’d be nice to get a little energy behind this and get some people nice to have some customers.
+I got one person already that’s interested in getting some coaching done.
+Once we get this thing working,
+the second we get this thing working, I’m going to start talking about price structure. The testers, how we’re going to do that. But I want to I don’t want to skip, put the cart before the core horse or we’re just going to waste time. So I just want to get this thing out there, and then we’ll start talking about all that stuff.
+I want to get this thing working.
+I need to give you a hard time on red mirror now.
+In what sense Are you having trouble finding it?
+Yes. Yeah. Give me a hard time now.
+He used to do flipping automobiles.
+Kind of like buy cars and auction and sell them.
+You buy a house in foreclosure. You sell it. And he wants to go into a lot of the field.
+And not like a home in the field, but more like a SaaS company instead of what he’s doing right now.
+He’s looking for a new job All right. Did I do this right? All right. We went to preferences.
+Got this thing. Got the rules I’m looking for. We have technical and engineering now. Life sciences. Everything looks good.
+All right Good. We saved that. We got the new resume. We uploaded it. Everything looks good here.
+Skills. Cool.
+All right. Then continue this. Personality.
+Job search We’re going to go broad. We can recruit our email. And then playbox. Yes, yeah.
+GTM here too. GTM.
+Direct recruiting, marketing, recruiting, kind of position manager.
+I’d like to see something more like GTM.
+Marketing.
+Recruiting.
+I think this takes some time.
+I think that yeah, the thing that’s kind of screwing it is that ours is just screwing it, but viewing it is that your job the ones that you’re looking the ones that you’re looking for, Oliver, are the ones that have a really, really high demand.
+And so not everybody’s in that field. We have to be able to help everybody, not just people that are just in a high-demand field.
+Okay.
+Well, I don’t know for sure. Unless I’m testing this against another app. You still have access to the other one, right? When you put in your stuff for your expertise and one of those other apps,
+I want to base it against what to expect. I don’t want to assume that it’s based on the demand. I mean, I know there’s something to what you’re saying. I just want to make sure that I don’t make that excuse and then ignore a real problem.
+I mean, I’m going to show you this oh, you see my screen? You can see it, right?
+I’m looking at it.
+Okay.
+I have on this simply applied. You have 474 positions.
+Yeah. It’s a lot.
+So honestly, a ton of positions. Now, Jose and I went through this one.
+Looked at his jobs. He’s only got 28.
+We only have one position for each company. Which is really what you want.
+Five is pushing it Five is okay. You really want different companies because different companies is where it’s at.
+Well, I’m going to tell Cursor the problem we’re having is for some roles like recruiter and what’s the other thing? The other thing, GTM?
+Oh, yeah. Go to market. Yeah. Go to market.
+GTM.
+Just marketing. There should be a shit ton of marketing roles.
+There’d be a lot of marketing roles.
+Finding many roles.
+Use more job sites. To find roles. Maybe the job sites it’s looking at are more tech-oriented, and that’s why it’s finding more tech jobs. It’s not just that it was catching my preferences for tech stuff. It was the job sites specifically it’s looking at don’t have as much stuff, right? Because you notice there’s a shit ton from Anthropic and stuff.
+Yeah. I agree with you. And in that sense, it can use the general please job sites that we gave it.
+Okay.
+We have a list of job sites.
+The general please.
+Embedded. So we said we have a list of job sites embedded in the roles page.
+So you can use many of those to get a more diverse collection of jobs for non-tech people. For tech jobs, the job sites you are looking at might be fine.
+Do a broader search across job sites for more types of roles as needed by suspect. You are looking at tech-heavy sites because I get a lot of tech roles when I upload a tech resume but only a few roles when I upload a recruiter or marketing resume.
+What does Joe do? What’s his thing?
+On the site
+Yeah.
+I think it’d be good to use his resume to kind of test our app too. And whoever else you have. Because right now.
+Joe, you mean Jose or Joe?
+Yeah. I met Jose, but whoever. Whoever’s resume you have, what is their job title area?
+I have a ton of resumes.
+What’s that
+I said I have a ton of resumes. You could just put my you could put different resumes in there.
+Do we have different resumes, but who you’re working with so that it can be kind of more you can be aligned kind of in tune with their actual needs. So I think you’ll have a better sense of how well the app is working if you’re thinking more empathetically like, “Okay. They would be happy with these results.” And you have a face and a current goal and everything kind of in mind or at heart when you’re kind of going through it. You can kind of pretend you’re them.
+Yeah.
+Just trying to let’s go back. Go to preferences. Pretend you’re them.
+But give me another job title to look for. I know I’m updating Cursor. I mean, another one of someone who are you going to do next? Who are we going to test this app against?
+Let’s just do Jose. Let’s just do Jose.
+Okay. And what is his deal
+His deal is essentially he’s looking for a director of analytics but specifically, he’d be really happy about positions that revolve around marketing experimentation or decision science. Decision science is a big thing for him.
+So what that means is there’s A/B testing, which is kind of experimentation or training with. And then there’s experimentation, which is much bigger. And that’s the realm of if we were to make if we were to make this big decision about, let’s say,
+putting our money into this supply chain software or if we got all you have some Verizon, let’s say. If we got all of our chips from Russia instead of China,
+what would the impact be on our profit margins? On the production time to create new phones?
+Trying to make this thing much bigger decisions and trying to experiment with those things using data analytics business analytics, business intelligence.
+And kind of looking at it in a much deeper, broader sense instead of a very simple kind of experiment, which would be like, “Would
+people respond better to email A or email B?”
+Because you’re still looking for a job.
+Huh
+Is he still looking for work
+Yeah. He’s still looking for a job, yeah.
+Okay.
+Let’s find him a job.
+What’s that?
+Let’s find him a job Poor guy. I recommended you, Dave. You got to find this guy a job. Just kidding.
+No. I mean,
+it’s the same problem. Everybody has that I work with.
+That I do the work And I told you this to you extensively.
+I know I told you this extensively.
+Most of the time, the issue is people just don’t put in the work.
+Did I put in the work, Dave?
+The whole reason why you’re successful is because you put in the work.
+Fucking all day and all night.
+And I told you this.
+All day and all night.
+I told you this.
+I hustle constantly for that shit. Of course, I got a family to feed. It’s a lot of little sweethearts staring at me all the time, making me feel bad if I’m not looking for work, so.
+I hustle.
+I told you that pretty plainly. I told you that pretty plainly. You were successful because you actually did the work.
+Yeah.
+Yeah. I know how crazy it might sound, but the truth is, I’d say the majority of people pay me and they listen to what I’m saying. They go through the coaching. They hear it. And then they just don’t do the work.
+And we need to make this app for people that aren’t going to do the work.
+Because they’re not That’s most people. So we got to make this app for lazy people. That’s why I’m trying to make it really easy where a big screen is going to scare them away. So we got to make it a tight little clean everything.
+It’s got to be pretty. It’s got to be simple. It’s got to seem easy. It’s super complex in the background, but on the surface, it just looks real, real clean.
+People get scared. People get scared of work.
+I mean, look, the truth is, man, I’d say I coached 50 people. I’d say five people actually got the result you got. And it wasn’t and that’s the whole issue with coaching. Because I can’t be held accountable when you didn’t do any work. At the end of the day, I’m not the one that needs the job. It’s like you’re the one needing the job. You should be more motivated than I am to do the work. No one’s motivated to do the work.
+Yeah.
+So let’s make it that should feed our understanding of how simple and this app has to be. It really has to be I’m not kidding when I say this app is for lazy people.
+It really is for lazy people.
+This app needs to be for the laziest people who want the best jobs. It’s going to do all the stuff they should have been doing. But we’re too lazy to do. And the app’s going to do all that hard stuff for them to get them jobs they don’t deserve.
+That’s the truth though man. I mean, I.
+And that’s what they’re paying for And eventually, we’ll be able to get the price up there. Where we’re making a fortune. Off of a few customers. And then we can just scale that and make a fortune off of more and more customers. I have to drop the price as we get exponentially as we kind of get more and more customers. But yeah, I want to make millions of dollars with this thing, man.
+I mean, look,
+I showed you this guy 100 times.
+This guy, Neil.
+You go to his website.
+This guy is charging $18,000 for this shit.
+I’m a little skeptical, but sure.
+It’s stupid money. It’s just stupid money.
+Yeah.
+We are hitting the market at the perfect time. But let’s talk about that after we get this app done. Let’s get this thing. Let’s focus. I know. You have showed this to me. And I appreciate it. But I want to have something.
+I showed you this 100 times.
+I want to have something to brag about here. So let’s get this app done. By the way, I pushed some recent changes. So we may want to refresh and see how things are looking.
+Yeah. But yeah, definitely marketing analytics. Data and analytics is something Jose will be happy about.
+Just data analytics and data decisioning. These are all pretty good roles that he’s got. He’s a pretty accurate.
+Which is a good thing on Simply Apply.
+But what this and look, this piece he’s not charging for this. For free. And I can just why don’t I just export this shit out? Like I said before,
+and put it into RF because the most interesting things about RF are the signals, are the gaps, are the matches.
+Well, it’s not
+It’s not a surprise if some of these customers we get have already have a whole spreadsheet. That’s why it’s not time wasted. They can upload it, so.
+Yeah.
+But yeah,
+like I said, I’m uploading some recent updates here.
+And yeah.
+Oh, you took out all these things.
+Oh, good So one of these changes went through The temperament identifier is actually collapsing.
+And now it has your personality type collapsed. And then you can look at that.
+And I moved the save and continue to the top because I was tired of having to scroll down to the personality every time I was on there. Especially since it’s kind of an optional thing. I mean, it’s not really optional, but it’s certain types of personalities, they’re going to appreciate it. And some other people will just be like, “Okay, this is not a hard part of my process.”
+Yeah.
+Like we made it simple enough that they’ll do it But fine, I’ll answer these nine questions. Find whatever. Moving on.
+Most of them won’t feel like it’s going to help. That’s okay because they didn’t invest a lot in that. Yeah, see, it’s kind of noisy. I think that’s why I yeah.
+Field marshal.
+You want to go ahead and answer it again?
+So it’s going to just put another resume. I’m going to put a brand new resume. I’m going to put this resume.
+Remember to change the preferences. So that it matches.
+All right.
+It definitely more technical engineering.
+No sales.
+None of this. Marketing.
+What’s that Impactful work.
+What kinds of roles are you interested in? If I was him, he would say technical. He would say marketing.
+He would say just those two.
+What would you add What would you like to work? He’d say would you hybrid? And this would be New Jersey.
+What would you look for? Full-time?
+What’s the size here Let’s say next.
+He’s looking for 200.
+Okay. I’m looking.
+Okay. That’s his resume. Most updated one.
+Yeah. It looks like mutation.
+Yep Okay.
+Different decision-making speed. Let’s go.
+Yep You want to guess how he might answer some stuff? Oh, you’re not going to answer? Oh, you can leave it like yours?
+No, yeah. I’m just like.
+Well, I don’t know if you should leave it blank.
+You think I should leave it blank
+That might break it. Yeah. You need to answer some questions.
+You can answer it like yourself or like Kim or whatever we can try a different personality type just to see what it does, but I don’t think leaving it blank is a good idea because then you’re going to have empty variables on other screens when it’s searching for certain variables and that’s not good.
+That’s good Temperament more.
+So let’s do a reset.
+Okay.
+And reset.
+Probably be more reset.
+So this one has a practice.
+Okay.
+All right He’s more like me? All right.
+All right.
+There you go.
+All right Now we are looking at.
+You saw the you saw where I moved the choose CSV, right? Up there?
+Delete all these.
+Do you see the CSV thing
+Yeah. Choose CSV
+So you can actually upload a bunch of roles that way.
+You want to upload his roles, his job matches?
+Let’s try it first I want to test it. Yeah, fine, but later. First, I want to see if this thing is working.
+Okay. So I believe I want preferred roles.
+That’s good I’ll go to the keywords. That’s how you’re going to get those roles to populate.
+Okay. So these need to be set. These need to be canceled out because we’re doing a these aren’t these haven’t pulled over from his resume.
+No, but it’s okay. Just remove them all. It’s just because it’s holding on to what you put in there.
+There you go.
+Okay.
+Okay.
+Why is that holding on to what I put in there? But I didn’t update the resume.
+Yeah. I mean, I can tell it. So okay.
+So when we upload a new resume, the pre-populated keywords negative and positive should be Oh, okay. Oh, good. Okay. So it just took a minute.
+So I accept all of them and then I went to resume and then I went back.
+Okay. Good So it did populate.
+It did populate. Yeah.
+Well, that’s great. I’m glad.
+So something’s working. It’s nice when things work.
+You’re not going to have any preferred yet because you haven’t clicked any from below.
+So you’re going to have to go to the matched roles. And that loads. Maybe click that again.
+It’s refreshing.
+Yeah.
+Yeah.
+All right Copy and paste that for me, would you?
+All right
+This is just software development, man. It’s just part of only one little thing has to go awry and then the whole thing breaks. Don’t worry about it.
+You just have to get used to the flow of it. Just two steps forward, one step back, another step forward, one step back. Eventually, you get there.
+On the roles page, when I do the what is it called? Refresh.
+Okay.
+But it did one thing right It pulled that stuff over into the keywords. So that’s.
+Yeah.
+That’s kind of neat. I’m not sure what broke. Let me can you right-click? You’re using Windows, right? So you can right-click on the screen. No, not down there. Anywhere. Click on the arrow, for example. There you go. Right-click that. Open DevTools. Go to inspect.
+Go to inspect. There you go. And then click up there where you see that red 40.
+There you go. And click that.
+Did you click the 40 Click the 40. Yeah, that. Click it. Click the 40.
+I clicked the 40
+Oh, you did? Oh, okay.
+I think it’s down here.
+Yeah. So we want all that stuff. Can you try to copy all that stuff from there?
+There you go. Now just copy all that. And paste it in the chat for me. Oh, it’s at the bottom of the screen. Okay.
+There’s a lot here.
+That’s fine. Copy all of it.
+I’ll tell GPT about it and it’ll figure out what’s going on.
+There’s a lot of stuff
+That’s fine. Copy it And paste it. And then I’m going to grab it to get in the cursor and it’s going to be like oh my God. I know what it is. I’ll fix it right now.
+Thank you, sir.
+Good morning.
+Huh It’s fine. I’m sure that’s enough.
+There’s a lot of stuff here. Thank you very much.
+Well, it’s fine. It’ll probably be good. Just enough to point it in the right direction.
+All right Have we looked at the research page yet?
+No.
+Let’s take a look at the research page.
+Let’s see that.
+Okay.
+Do you want me to just copy this again?
+You can look at gaps. I got it. It’s fine. It’s already working on it. Don’t worry about it. Go to the gaps. Actually, if you can go through in order, that’d be good. Let’s go to the gaps. Although that’s going to be kind of hard with I guess we can’t really do gaps. Go to the research.
+Well, I think we should choose SEV and upload the SEV.
+Let’s do that
+And then we can go through everything else.
+Okay.
+So then you got to click it Import There you go.
+And import?
+No, no. It says import, Jose.
+Oh, okay.
+There you go. Look at that.
+Wow
+Okay.
+Now we can rank them or not. Whatever we want to do.
+Five days ago. This is great.
+Cool. That was pretty instantaneous, too. It’s kind of neat.
+All right So we’ll allow sales if you already have a CSV and put it in there.
+It wouldn’t hurt to have a little instructional video. So when they load the first dashboard page, there’s a little video on how to use the app. It could be less than five minutes. And just kind of shows them all the features, how to use them. You know what I mean? It won’t kill them to watch three-minute video on how to do this shit, right?
+Mm-hmm.
+It doesn’t take long to explain it. Just kind of like everything starts in a clap state. So you can expand and have a clean user experience.
+Rank things to help sort them. The ranking is basically just a way for them to sort their list because it can get pretty long, right? Once you have like 300 jobs in there, you don’t want to forget the one you were looking at. You can give it a favorite rank and a preference and sort by either. I think that’s just like a user-friendly thing to add.
+Okay. So they have that. If you want to rank some stuff for him just so you have something to sort by. I don’t know if you have a favorites on there.
+I wish I had salary.
+Show details for one of those?
+Yeah.
+No. The source didn’t have salary.
+Oh, okay. Okay.
+I’m going to be online.
+Speak. It’s good detail
+It does have a salary. It just didn’t your CSV didn’t, I guess.
+Yeah, the CSV didn’t. Yep. It’s correct.
+Because I’m mostly sorting by salary. Because I won’t even look at a role that pays me what I’m making, right? Because that would be like.
+Yeah. We have to have it first You have to have that data point in there.
+Yeah. But you can click on one of the things or actually, instead of view online, right-click it, copy the URL, pop it in the paste URL thing.
+Oh. Yeah.
+Or that
+Makes sense.
+There’s probably at the bottom.
+It’s this one because the other one has a salary.
+All right Here you go. So I don’t know what salary he’s shooting for, but looks like a good one to me.
+Yeah. I mean, the roles that they found here were pretty top-notch, bro. We can go online.
+The only thing that he would have an it would be well, this is in New York.
+Has he been doing interviews
+He hasn’t really been doing much work.
+We have a list of 10 jobs. And he’s not using sales navigator to send out messages. He’s not sending out any messages on his own. He only wants me to send out the messages through email. And I told him not the way to do it. You got to send out emails, messages yourself, and he’s like, “Well, can’t you just do it for me?” I’ll send you the jobs and you send an email.
+So I mean, we got to make role fair for people like that. People who have that attitude. Make it too easy to not do it is like, “Are you on page four yet?” Okay. Now, are you on page five? Are you on page six? All right. Now that you’re on step 12, you’ll be fine.
+By the time they get to the last step they’ve already done all the things and you can leave them alone. So even if it takes three days to get through it, it’s still faster than all right. So go ahead and rank a couple of those just so we have some of the people.
+Yeah. I’m going to hold on I’m going to do this too because I think that oh, no. I doubled it. I doubled it. I just want to see something.
+Oh, yeah. Well, you can delete them too. It’s okay.
+So the director and the trust and safety director. Okay. So this is the one that we uploaded it.
+Yeah. It has a salary. It probably has more details too. Yeah. See. A lot more details.
+Ours is a good little thing. So go ahead and delete that one.
+And
+So I’m going to put this one in ClickUp.
+I’m going to go copy.
+Paste.
+Import Paste. Import.
+Post to ClickUp.
+They don’t like that one.
+I hate that shit.
+Sorry about that one.
+Copy.
+Paste. Import.
+That one worked.
+Where is it now?
+VPNs.
+Oh, sorry. Sort by salary.
+There we go.
+Are they sure they’ve been sorted by salary? It should be the first one.
+You know, I think it’s messing us up is that slide bar. I think we just get rid of it altogether.
+What slide bar
+The broad strict thing.
+And positive keywords, it’s got negative keywords. It’s all it needs. That slide bar is just like, “Don’t.” Because I think it’s filtering stuff too much. So if it doesn’t have at least three of your keywords and the stuff from your resume and the stuff from the preferences, it just doesn’t find anything. So it’s adding more filters, which we don’t want. We want the negative keywords to be a negative filter, but not the positive. It should be additive. So I’m just going to get rid of the slide bar.
+All right In the meantime, I’m just going to try to keep adding these.
+Okay.
+Okay. Target analytics.
+Target analytics. Fine. Okay. Overview. All right. This looks like a good job.
+All right Copy.
+Import your mail. Paste. Import.
+Another post Okay. So that’s twice that it gave me a third post.
+It’s a good job guys.
+Reporting to VP Investment Analytics. This is exactly the type of role he would like.
+And I can see it already.
+That’s copy.
+Paste it in there.
+Reporting URL.
+Paste. Import.
+This is fucking up. It’s not doing anything now.
+All right. So I’ll do that again for you. I’ll do inspect.
+That is 44 and 30.
+I’ll do the most recent ones.
+Yeah. Here’s the most recent.
+Yeah. That slide bar was our problem. I was getting too fancy with that thing. And then it actually killed us. So that’s why. I think once we get rid of that and just have it filter like keywords should be additive only. So the adding a keyword just makes it find more stuff. Because I mean, it even says right there, it’s got to have at least a few of those keywords or it doesn’t even list it. That’s stupid.
+It’s already looking based on your resume.
+100% I’m going to put it off here.
+What was he making before?
+I’m still working right now I didn’t lose a job. I’m still working.
+Oh, he’s just trying to make more money.
+Yeah. He’s trying to well, he’s got the same role for about 10 years. And they’re not really giving him promotion.
+Yeah. The people that we’re going to work with that already have the money,
+the people that they have a job, and they’ve been at the same job, and they’re not getting anywhere with this job.
+Yeah.
+Because I want to get an increase. But they don’t have to market themselves correctly. They get that increase. Because the leadership is egotistical or doesn’t see the value, or is toxic. Or whatever. Things like that. Because most people, the problem with jobs is more the leadership than anything else. Because if you have the same skill set,
+and you’re going if you have a particular skill set, and you do the exact same job, somewhere else, they’re going to give you 100,000 more dollars.
+I know
+It has nothing to do with skill set. It has everything to do with the leadership there, and the value in you.
+I know It’s weird Optimus is terrible about raises.
+I got a text message from this guy, that I worked with, Alec. And he just texted me like, maybe a week ago, and he’s like, “Yeah.
+They did I got my year raise this year. It was like 1%.” I’m like, “That’s not a raise. It’s not even keeping up with inflation, man.” Like, “Yeah.”
+Dude, I made videos about this.
+For years. It’s like this is crazy because this shit always happens. And it’s almost it feels like no one listens. This is the same problems that happen over and over and over again. But it’s also life. It’s like history repeats itself. This is life. This is like this is what happens all the time.
+I made this video let’s see. Where did I make this video? Shorts.
+Viewer channel.
+Shorts.
+I’m talking about job offers.
+Yeah. Yeah.
+And then just to help point out everything, right There’s a choice. You can stick out the company and stick out maybe let’s just go find this big easy numbers. Let’s say it’s no, you know what I’m saying? 3%. 3%. Five years. Let’s say 15% over the five years, right?
+Or you could switch positions and get a 15% increase in salary just by switching your position.
+It’s nuts. And people go, “Why?” And when you see resumes, it’s like jumpers, per se.
+Hugely. I hate to even say it. This is not 1980. It’s not 1970 where people are staying on jobs for 30 to 40 years because they have pensions.
+Right They got pensions. Yeah. Well, I mean, if you’re going to get pensions out, people are going to stay for 30, 40 years.
+And then this is the whole point of retaining.
+So yeah.
+I understand your years ago.
+Yeah.
+And the same problem. Nothing changed.
+Yeah. The thing is, you don’t want to job hop too much. Because then your resume gets all fucked up with like one year, one year, one year, one year.
+Yeah. Yeah. Yeah.
+So I mean, it pays to stick with it a little while. That four years at Optum really helped me.
+It’s really strengthened my resume.
+No. No doubt. But I’m just saying.
+It made up for the next role was only six months. Not even.
+I’m just saying. The whole idea is if you stay at the company and you get 1%, maybe 3%. But stay with us.
+You’re going to do that for five years. 15%. Three times five. And
+or you can just switch to another company and make that 15% in a year.
+It would be a lot nicer to look for a job while you’re employed. Only because you’re not unemployed. So but then again, the motivation’s not there. I was already when I first contacted you, I was still employed.
+And I was just like, “Man, they’re not giving raises. I know I could get more money.” And also, I was seeing the layoffs and a little worried.
+Of other there was whole departments being laid off. One after another, they finally got to mine.
+But yeah.
+And then they’re having all these little fiascos with security and stuff. How’s it going with Mr. what’s his name? Jose?
+Yeah. That’s what he’s doing.
+I mean, know how we’re doing on the app with him?
+Oh, he’s got that issue. That’s not can’t load it anymore. I can’t recall it.
+I got to failed import. Post API.
+Okay. Well, let’s give it a few seconds.
+And I got to go soon because I’ve got to go on the phone with this little jack. She’s got upset with me because I’ll talk to her in a minute.
+Ladies. Hey, can you go to the next you have enough rolls here. We can go to the next step. Can we look at the gaps?
+Yeah.
+And save and continue or whatever It helps to collapse first because then you don’t have to scroll.
+All right.
+Doesn’t have to collapse.
+All right. By the way, the download when you do the export, it looks pretty nice.
+Yeah. I didn’t export it.
+Did you see the export of this CSV it makes? It makes a nice little one.
+Oh, the new one? I clicked on your export.
+Oh, that’s the import I’m talking about export too. It’s at the bottom of that other screen. But let’s just do this first. But yeah, go back later. Oh, good. It started in a collapsed state. And it’s got the run gap analysis. So when you open it up,
+just open up one of those things. Click one of the rolls.
+The record’s in your chat. What the fuck?
+Can you click on one of those rolls There we go. So missing the required skill, SOX. Because we require you that you wear SOX. And then missing skill and ensure compliance. Gixpy. Missing requirement. So it’s got some missing requirements. It talks about a small personality gap.
+At the bottom there, it says missing personality gaps. And there’s no preference gaps.
+And so it also tells you on the right of each one of those, it says seven gaps, seven major gaps. 12 gaps, right?
+It’s only got three.
+These are all rolls he’d be good at I don’t think these are-.
+Okay. Well, though they’re just gaps. They’re just things to think about. He can decide if it’s not removing any of these rolls. It’s just telling them about these gaps so it might help him think about if he’s a good fit or not. Just part of the process. You got to think a little critically. Put on your credit card and think like, “Okay. Is this really a good fit? Are there other personality gaps?” So there’s a personality gap with the work fit style based on how you answer those questions. So these aren’t bad things. They’re just things to think about.
+So these are all.
+Everything is collapsed. Definitely collapsed.
+You do like that?
+I think that’s the biggest improvement we’ve made.
+Well, yeah. Then you save roll or drop roll.
+Well, that’s cool too. You can save roll or drop roll. Yeah.
+I like that.
+So if you look at these gaps and you’re like, “You know what You’re right. I shouldn’t apply for this because I don’t have the skill and there’s no way they’d hire me,” right?
+This kind of helps you filter out your top jobs to apply for. And then moderate gaps. So that one is like the thing is this is the role that he’s least qualified for. And this is the one that they think that has the least amount of gaps. Okay. So maybe we’ll refine our gap judgments and kind of go through those and figure out why he’s doing that. But at least it’s got some kind of a system that just needs to be refined. Right? It’s giving you reasons why these are gaps. This isn’t like a system that’s been around years that’s had a chance to be tested and refined. It’s literally just existed for about 10 minutes. So
+we don’t need to worry about it being perfect right now. We need to worry about it if it’s doing something. All right.
+So these are so these are new things I added, right? The major gaps. So instead of excellent and stars,
+these are things I implemented.
+Well, I definitely like what you yeah. I mean, I know it’s a small victories, right? The small victories is I like the little things you did. I like that you put in save roll or drop. Great. Major gaps. And medium.
+Very visually satisfying.
+It’s all happened in the past 10 minutes, by the way.
+These are things I just these are things I just typed. I’m just like, “Do this.” So while we were talking.
+Yes. Small medium, large. I like visually. I like the UI of it. It’s 10 times better than what it was in terms of.
+Yeah. I had to sometimes you just got to stare at a thing to figure out why you don’t like it. And you’re like, “You know what? I need to do it. I just need to do this and that other thing.” I got rid of that left-hand column. And I consolidated some of that stuff over here. So it doesn’t have the stars anymore. And I was like, “Why do we have two columns?” I never liked remember I was telling you the other day. I was like, “I don’t like this other column over here. But I don’t know what to do with it.” I was like, “Oh, yeah. We don’t need it.” What we can do all of this on one column. So.
+Yeah. I definitely think you’re making progress in the way that it looks. So kudos on that. It’s good on that.
+So did you save that screen? I guess you don’t really need to. It’s kind of already oh, well, go to the match. Gaps analysis doesn’t save a lot of variables. It’s more just for your for you to think about. Let’s see if this is working or not. Pain point match. Pain point match gives me one to three of 29 rolls. Okay.
+I’m not sure why it says it like that. It’s kind of weird.
+So it’s 291 out of 29 jobs.
+It’s just now it’s doing four to six. It’s just doing it in batches. Oh, because I think it was crashing the other day. And I was like, “Do it in batches because it’s crashing.” So pain points, it’s got three pain points for some of these. Some have zero pain points.
+So oh, it just it hasn’t calculated them yet because remember, it just did one to three or one to four or whatever.
+Yeah.
+All right So you know it’s got more. Yeah. It’s going through. It’s calculating the pain points as it go.
+Okay.
+Although I didn’t I haven’t done the collapsing so see how I got rid of the other thing? I think I’m going to do the same thing with this. So see how there’s like a rolls thing on the left that has all the rolls? And then it shows you the roll. And what I did with the other page that you said you liked on the gaps is got rid of that left-hand column. And now the whole thing is just a list that you can collapse so it looks more like the one on the left. But it’s like you know what I mean?
+Yeah. I do like the way you did it.
+So I’m going to do the same thing with this screen here. So I’m thinking about it. So on the pain point match, remove or I guess consolidate, consolidate the left column features with the main screen features. So that we have a list of collapseable rolls. With the pain points visible on expansion and the number of pain points far left. That’s good. Far right.
+So basically, implement it similarly to how you did the gaps. Screen where you removed the left.
+Column and made its view of the center and screen.
+Okay. I think I understand what you mean.
+So yeah. The pain points So yeah. I’ll make those. Instead of a two columns with the left and right, I’ll remove the left. And make all those things happen on the right where they all collapse. And then you just have all the rolls listed. And then collapse them.
+Because yeah. I know you said you liked the gaps. Screen. It looks better.
+All the scrolling I don’t like all the scrolling. I really think that the collapsing is much nicer to look at. And if they really don’t like to scroll, they can just keep collapsing things so they don’t have to scroll.
+Also, scrolling is problematic for phone later. We’re going to want to make these things mobile, right? If we want to really maximize our customers, it’d be like a thing you can buy on the App Store. And we’re going to have more of a subscription model as we expand our customer base.
+So yeah.
+So yeah. I think so save and continue, I guess.
+Yeah. This is nice.
+We haven’t gotten to the research page. And there’s been some updates there. I want to see how they have.
+That’s probably the biggest update, too.
+This is apply I know how to apply section.
+So clear. See how it says clear in the far right there? On the far right? Next to select all shown down?
+Oh, clear.
+Yeah. Clear.
+Why am I not clear yet?
+Well, I don’t know Is it
+Oh, select all shown
+Why are you on apply Go to match. I mean, go to research.
+You skipped a step.
+What is research section?
+How did you do that
+I think it’s apply Wait. I went to match.
+I think it’s apply.
+I don’t know what happened.
+I kind of want to know But I’ll figure that out later. Can you just?
+I’m going to research Yeah.
+Okay.
+All right
+So what I meant was clear all the cached results.
+Stay on research. Click clear all cached results on the right.
+Oh.
+There you go. And then there. Now, click one of the companies. So I think these are the companies that should be the ones that he that are on his resume, right?
+These are the companies that we uploaded from Simply Apply.
+That’s what I meant to say. Sorry. And then click on the ones that you want to run the company research.
+Let’s do.
+And then company research.
+Now it is triggering my thing.
+My credits are going down.
+Oh. Oh, okay. So that’s kind of a good thing.
+Yeah. That’s kind of a good thing. I know that’s weird.
+Unless it’s really expensive. And then it’s not such a good thing.
+We’re just doing a little bit of testing.
+So you said you had to go in a minute. And I wanted to spend a little bit of time looking at that research screen with you. So can we look at your credits later?
+Yeah. I got to go. I really do got to go too.
+So can you go to the research page just for a few more seconds? Because I want to okay. Research service and contact right here. Okay. Well,
+I’ll copy and paste that into the chat. I’ll work on that while you’re doing your thing.
+All righty.
+We’re getting close. We’re getting close.
+This was working yesterday. So it’s all right.
+This is probably the most exciting thing. Because we just looked at hooked us in. Let’s go to Pinterest.
+Also, I think we can probably make this another one-column situation. You know how it’s got the two columns of saved research on the left? Make it a bunch of collapsible companies.
+So it has everything on the left on the right. Yeah. We don’t need the left column. I think it’s noise. It adds confusion.
+Yeah. Another error.
+Okay. Let’s go there.
+These are still having the old these still have the old.
+Okay. Do you remember how you had a clear cache? That button needs to be there, too.
+There’s not a button for a clear cache on that page. Is there yet? Right? Yeah.
+Okay. Here it is.
+Okay. Now we can make a leap stocker. Search.
+Person name, keywords. That’s cool. Job title.
+Okay. Seniority,
+MVP, manager, director, C-suite.
+I don’t know. Did you click searching yet? Or did you click?
+It’s searching.
+Click search again. For me, did any changes?
+Oh, fucking API post.
+Fucking API post.
+Man. This is tough.
+Yeah.
+Hi.
+We’re getting there.
+Okay.
+Boom.
+It’s tough
+Yeah, man. Just realize this is easier than it would have been a year ago.
+We’re able to make an app We’re just going to have to fix a couple of things. It’s not it’d be nice if everything worked the first time. But I can fix those things. We’re going to fix a couple more things. Think about how much better the jobs is. Two days ago or whatever, you were like, “We’re going to need to we need to go through this smart defy or whatever company and use their jobs thing.” You don’t feel like that anymore, right?
+I think that we I think that we have gotten-.
+Like the Simply Apply. Simply Apply you’re not seriously considering wanting to use their services anymore, right?
+I mean, we just uploaded their CSV and it’s really cool.
+Yeah. We can upload their CSV. But someone else can upload well, yeah, because we had a little thing that was temporarily broken. But we’ll fix this other little thing and get it working. There was a bug with the last update that I made that missed a couple of things out somehow. There’s a bug somewhere in the code. It just basically created a bug when I was doing this last update. But that’s a minor annoyance, not a reason to go to another company for their app. You know what I mean?
+I mean, I think that we’re getting we’re definitely getting there.
+Yeah.
+So yeah.
+I did push a change, by the way.
+So this might work now.
+All right Let me call this woman.
+All right You talked to this woman. And this was good. This was productive. I’m glad we were able to have some good stuff happen on the roll screen. I’ll work on the research and the contact screen and fix those bugs so that next time we look at it. Did you want to have another meeting? I mean, optimistically, I was hoping we might get all the way to the launch screen where we’re actually like.
+Yeah.
+Hooking up your email thing. But we’re not quite there. If we can work if we can work through the other screens first, that would be cool.
+Yeah.
+Did you want to try to do another meeting tomorrow this time?
+Same time as today. Does that work? Or is it too early, too late?
+I got another meeting. Like 6:00.
+I’m just trying to get you ready for your deal on the 11th, which is two days from now, so.
+Yeah. I got another call. A meeting, actually. At 6:00 next week.
+I can go next tomorrow, you mean? Do you want to go after that one? Or did you want to try to squeeze in another meeting? I just want you on the 11th, I want you to be able to show this thing confidently, being excited about what you’re showing everybody. All the screens to work, or at least maybe everything except for the email if we don’t get to that yet.
+I mean, we’ll see what we do. Tomorrow, if we want to do something after the meeting, maybe 8:00.
+800 your time or mine
+My time.
+So 7:00? Okay. I’ll book it for 7:00.
+All right man. This was good.
+A couple of bugs to fix. But progress, so. I mean, I just think we’re just inching our way to the finish line. The finish line is millionaires’ status, so. We’ll get there.
+We’ll get there.
+All right
+Have a good one.
+Have a good one, man. Have a good meeting with your lady.
+Thanks.
+Bye.
+Bye.
