@@ -1126,7 +1126,7 @@ export default function CampaignV2() {
                   <div className="mt-8 flex justify-end gap-3">
                     <button
                       type="button"
-                      onClick={() => router.push("/bio-page")}
+                      onClick={() => router.push("/apply")}
                       className="rounded-md border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
                     >
                       Back

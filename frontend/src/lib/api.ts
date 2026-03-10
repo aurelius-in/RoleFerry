@@ -1,7 +1,7 @@
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 import { getMockResponse } from "./mocks";
 
-export async function api<T>(path: string, method: HttpMethod = "GET", body?: unknown): Promise<T> {
+export async function api<T>(path: string, method: HttpMethod = "GET", body?: unknown, opts?: { signal?: AbortSignal }): Promise<T> {
   const isServer = typeof window === "undefined";
   
   let url: string;
@@ -36,6 +36,7 @@ export async function api<T>(path: string, method: HttpMethod = "GET", body?: un
       body: body ? JSON.stringify(body) : undefined,
       cache: "no-store",
       credentials: "include",
+      signal: opts?.signal,
     });
 
     if (!res.ok) {

@@ -387,7 +387,7 @@ export default function PainPointMatchPage() {
       // Ignore storage failures (private mode/quota); navigation still works.
     }
 
-    router.push("/apply");
+    router.push("/company-research");
   };
 
   const getScoreColor = (score: number) => {

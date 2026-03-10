@@ -22,9 +22,9 @@ const STONES: StoneConfig[] = [
   { step: 6, tab: "pain-point-match", label: "Pain Point Match", icon: "🔗", href: "/painpoint-match" },
   { step: 7, tab: "company-research", label: "Company Research", icon: "🏢", href: "/company-research" },
   { step: 8, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
-  { step: 9, tab: "apply", label: "Apply", icon: "✅", href: "/apply" },
-  { step: 10, tab: "offer", label: "Offer", icon: "✨", href: "/offer" },
-  { step: 11, tab: "bio-page", label: "Bio Page", icon: "🌐", href: "/bio-page" },
+  { step: 9, tab: "offer", label: "Offer", icon: "✨", href: "/offer" },
+  { step: 10, tab: "bio-page", label: "Bio Page", icon: "🌐", href: "/bio-page" },
+  { step: 11, tab: "apply", label: "Apply", icon: "✅", href: "/apply" },
   { step: 12, tab: "campaign", label: "Campaign", icon: "📧", href: "/campaign" },
 ];
 
@@ -67,26 +67,40 @@ export default function Home() {
             ? (parsed as any).steps
             : [];
 
-        // v6+: current layout. Apply=9, Offer=10.
-        if (version >= 6) {
+        // v7+: current layout. Offer=9, Bio=10, Apply=11.
+        if (version >= 7) {
           const final = Array.from(new Set((steps || []).filter((n) => Number.isFinite(n) && n >= 1 && n <= 12)));
           setCompleted(new Set(final));
           return;
         }
 
-        // v5 -> v6 remap: swap Apply (was 10) and Offer (was 9).
-        // v5: ...9 offer, 10 apply...
-        // v6: ...9 apply, 10 offer...
-        if (version === 5) {
+        // v6 -> v7 remap: Offer moved from 10→9, Bio from 11→10, Apply from 9→11.
+        if (version === 6) {
           const remapped = (steps || []).map((n) => {
-            if (n === 9) return 10;
-            if (n === 10) return 9;
+            if (n === 9) return 11;  // Apply 9→11
+            if (n === 10) return 9;  // Offer 10→9
+            if (n === 11) return 10; // Bio 11→10
             return n;
           });
           const final = Array.from(new Set(remapped.filter((n) => Number.isFinite(n) && n >= 1 && n <= 12)));
           setCompleted(new Set(final));
           try {
-            window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 6, steps: final }));
+            window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 7, steps: final }));
+          } catch {}
+          return;
+        }
+
+        // v5 -> v7 remap (v5 had Offer=9, Apply=10, Bio=11; v7 has Offer=9, Bio=10, Apply=11):
+        if (version === 5) {
+          const remapped = (steps || []).map((n) => {
+            if (n === 10) return 11; // Apply 10→11
+            if (n === 11) return 10; // Bio 11→10
+            return n;
+          });
+          const final = Array.from(new Set(remapped.filter((n) => Number.isFinite(n) && n >= 1 && n <= 12)));
+          setCompleted(new Set(final));
+          try {
+            window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 7, steps: final }));
           } catch {}
           return;
         }
@@ -204,7 +218,7 @@ export default function Home() {
   }, []);
 
   function saveProgress(next: Set<number>) {
-    window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 5, steps: Array.from(next) }));
+    window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 7, steps: Array.from(next) }));
   }
 
   function playFootstepSequence(targetStep: number, onComplete: () => void) {

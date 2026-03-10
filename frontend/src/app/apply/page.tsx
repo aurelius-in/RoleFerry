@@ -551,7 +551,7 @@ export default function ApplyPage() {
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-6 shadow-2xl shadow-black/20">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
             <div>
-              <div className="text-xs text-white/60">Step 9 of 12</div>
+              <div className="text-xs text-white/60">Step 11 of 12</div>
               <h1 className="text-3xl font-bold text-white">Apply</h1>
               <p className="text-white/70 text-sm mt-1">
                 Select roles to track your applications. Click a job link to apply on the company site, then mark it here to keep your Tracker up to date.
@@ -651,7 +651,7 @@ export default function ApplyPage() {
               <div className="pt-2">
                 <button
                   type="button"
-                  onClick={() => router.push("/offer")}
+                  onClick={() => router.push("/campaign")}
                   className="w-full px-4 py-2 rounded-md border border-white/10 bg-white/10 hover:bg-white/15 text-sm"
                 >
                   Save &amp; Continue

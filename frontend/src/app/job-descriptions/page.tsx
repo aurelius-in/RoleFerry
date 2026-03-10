@@ -311,6 +311,7 @@ export default function JobDescriptionsPage() {
   const [csvErr, setCsvErr] = useState<string | null>(null);
   const trackerPulseTimer = useRef<number | null>(null);
   const preferredSectionRef = useRef<HTMLDivElement | null>(null);
+  const scrapedRolesAbort = useRef<AbortController | null>(null);
   const [suggestedUrl, setSuggestedUrl] = useState(
     "https://www.indeed.com/jobs?q=jobs&l=United+States"
   );
@@ -555,6 +556,12 @@ export default function JobDescriptionsPage() {
   }, []);
 
   const loadScrapedRoles = async () => {
+    if (scrapedRolesAbort.current) {
+      scrapedRolesAbort.current.abort();
+    }
+    const controller = new AbortController();
+    scrapedRolesAbort.current = controller;
+
     setScrapedRolesError(null);
     setIsLoadingScrapedRoles(true);
     try {
@@ -602,11 +609,12 @@ export default function JobDescriptionsPage() {
       let recovered = false;
       try {
         const params = buildParams();
-        res = await api<ScrapedRolesResponse>(`/job-descriptions/scraped-roles?${params.toString()}`, "GET");
-      } catch {
+        res = await api<ScrapedRolesResponse>(`/job-descriptions/scraped-roles?${params.toString()}`, "GET", undefined, { signal: controller.signal });
+      } catch (inner: any) {
+        if (controller.signal.aborted) throw inner;
         // Degraded retry mode: simpler query profile to avoid hard failures.
         const params = buildParams({ simple: true });
-        res = await api<ScrapedRolesResponse>(`/job-descriptions/scraped-roles?${params.toString()}`, "GET");
+        res = await api<ScrapedRolesResponse>(`/job-descriptions/scraped-roles?${params.toString()}`, "GET", undefined, { signal: controller.signal });
         recovered = true;
       }
       const roles = Array.isArray(res?.roles) ? res.roles : [];
@@ -620,12 +628,13 @@ export default function JobDescriptionsPage() {
       );
       setScrapedRolesMeta((res?.helper || null) as any);
     } catch (e: any) {
+      if (controller.signal.aborted) return;
       setScrapedRoles([]);
       setScrapedRolesError(String(e?.message || "Failed to load matched roles."));
       setScrapedRolesMessage("");
       setScrapedRolesMeta(null);
     } finally {
-      setIsLoadingScrapedRoles(false);
+      if (!controller.signal.aborted) setIsLoadingScrapedRoles(false);
     }
   };
 
@@ -658,7 +667,7 @@ export default function JobDescriptionsPage() {
     if (!hasMounted) return;
     const t = window.setTimeout(() => {
       loadScrapedRoles();
-    }, 250);
+    }, 800);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasMounted, positiveKeywords, negativeKeywords]);

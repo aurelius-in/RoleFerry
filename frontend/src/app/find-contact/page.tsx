@@ -1030,7 +1030,7 @@ export default function FindContactPage() {
     }
     localStorage.setItem('selected_person_signals', JSON.stringify(selectedSignals));
 
-    router.push('/bio-page');
+    router.push('/offer');
   };
 
   const runContactResearch = async () => {
