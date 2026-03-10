@@ -1519,6 +1519,11 @@ export default function JobDescriptionsPage() {
                         <h3 className="text-lg font-semibold text-white break-words">{jd.title}</h3>
                         <p className="mt-0.5 text-white/70 break-words text-sm">{formatCompanyName(jd.company)}</p>
                         <div className="mt-1.5 flex flex-wrap gap-2 text-[11px]">
+                          {(jd.location || jd.workMode) ? (
+                            <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/70">
+                              {[jd.location, jd.workMode].filter(Boolean).join(" · ")}
+                            </span>
+                          ) : null}
                           {jd.salaryRange && !/^salary/i.test(jd.salaryRange.trim()) && !/not (listed|provided)/i.test(jd.salaryRange) && !/^\{/.test(jd.salaryRange.trim()) && !/^\$0\s*-\s*\$0/.test(jd.salaryRange) ? (
                             <span className="px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
                               {jd.salaryRange}
