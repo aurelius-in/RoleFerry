@@ -1169,7 +1169,7 @@ export default function FindContactPage() {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Decision Makers</h1>
             <p className="text-white/70">
-              Select a contact to reach out via LinkedIn. We’ll generate a short LinkedIn request note (≤200 chars). Email drafting happens later.
+              Select a contact to reach out via LinkedIn. We'll generate a short LinkedIn request note — under 40 words (200 characters max). Email drafting happens later.
             </p>
             {buildStamp ? (
               <div className="mt-2 text-[11px] text-white/40 font-mono">{buildStamp}</div>
@@ -1188,224 +1188,7 @@ export default function FindContactPage() {
             </div>
           )}
 
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Left column: saved verified contacts */}
-            <div className="lg:w-[360px] shrink-0">
-              <div className="rounded-lg border border-white/10 bg-black/20 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-bold text-white">Saved verified contacts</div>
-                    <div className="text-xs text-white/60">
-                      Saved when you click Verify (Valid only). These carry across multiple company searches.
-                    </div>
-                  </div>
-                  {savedVerified.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSavedVerified([]);
-                        try { localStorage.removeItem(getSavedKey(userKey)); } catch {}
-                      }}
-                      className="text-xs underline text-white/70 hover:text-white"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-
-                {savedVerified.length === 0 ? (
-                  <div className="mt-3 text-sm text-white/60">
-                    No saved contacts yet. Search a company → select contacts → Verify emails.
-                  </div>
-                ) : (
-                  <div className="mt-3 space-y-2 max-h-[420px] overflow-auto pr-1">
-                    {savedVerified.map((c) => {
-                      const badge = getVerificationBadge(c.verification_status, c.verification_score);
-                      return (
-                        <div key={contactIdentity(c)} className="rounded-md border border-white/10 bg-white/5 p-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <div className="text-sm font-semibold text-white truncate">{c.name}</div>
-                              <div className="text-xs text-white/70 truncate">{formatTitleCase(c.title)}</div>
-                              <div className="text-[11px] text-white/50 truncate">{formatCompanyName(c.company)}</div>
-                              {isRealEmail(c.email) ? (
-                                <div className="mt-1 text-[11px] font-mono text-white/70 break-all">{c.email}</div>
-                              ) : null}
-                            </div>
-                            <div className="flex flex-col items-end gap-2">
-                              {badge.label !== "Unknown" ? (
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getBadgeColor(badge.color)}`}>
-                                  {badge.icon} {badge.label}
-                                </span>
-                              ) : null}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSavedVerified((prev) => {
-                                    const next = (prev || []).filter((x) => contactIdentity(x) !== contactIdentity(c));
-                                    try { localStorage.setItem(getSavedKey(userKey), JSON.stringify(next)); } catch {}
-                                    return next;
-                                  });
-                                }}
-                                className="text-[11px] underline text-white/60 hover:text-white"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                <div className="mt-4 rounded-md border border-white/10 bg-black/10 p-3">
-                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">
-                    Contact research (Smart)
-                  </div>
-                  <div className="mt-1 text-[11px] text-white/60">
-                    This runs background research for your saved contacts and stores it for Campaign personalization.
-                  </div>
-                  {researchNotice ? (
-                    <div className="mt-2 rounded-md border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-100">
-                      {researchNotice}
-                    </div>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={runContactResearch}
-                    disabled={isResearching || (savedVerified?.length || 0) === 0}
-                    className="mt-3 w-full rounded-md bg-white/10 border border-white/15 px-3 py-2 text-sm font-semibold text-white/85 hover:bg-white/15 disabled:opacity-50 inline-flex items-center justify-center gap-2"
-                    title="Run background research for saved contacts"
-                  >
-                    {isResearching ? (
-                      <>
-                        <InlineSpinner className="h-3.5 w-3.5" />
-                        <span>Researching</span>
-                      </>
-                    ) : (
-                      "Run research for saved contacts"
-                    )}
-                  </button>
-
-                  {(savedVerified?.length || 0) > 0 ? (
-                    <div className="mt-3">
-                      <div className="text-[11px] text-white/60">
-                        Researched:{" "}
-                        <span className="text-white/80 font-semibold">
-                          {(savedVerified || []).filter((c) => Boolean(researchByContact?.[String(c?.id || "")])).length}/{savedVerified.length}
-                        </span>
-                      </div>
-                      <div className="mt-2 space-y-1">
-                        {(savedVerified || []).slice(0, 6).map((c) => {
-                          const cid = String(c?.id || "").trim();
-                          const has = Boolean(researchByContact?.[cid]);
-                          return (
-                            <div key={`r_${cid}`} className="flex items-center justify-between gap-2 text-[11px]">
-                              <div className="min-w-0 truncate text-white/75">
-                                {String(c?.name || "Contact")}
-                              </div>
-                              <div className={`shrink-0 ${has ? "text-emerald-200" : "text-white/35"}`}>
-                                {has ? "✓ ready" : "—"}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {activeDraftContactId ? (
-                        <div className="mt-3 rounded-md border border-white/10 bg-black/20 p-2.5 space-y-2">
-                          {(() => {
-                            const meta = getContactMeta(activeDraftContactId);
-                            if (meta.urgency_score > 0) {
-                              const color = meta.urgency_score >= 70 ? "text-emerald-300" : meta.urgency_score >= 40 ? "text-amber-300" : "text-white/50";
-                              return (
-                                <div className="flex items-center gap-2">
-                                  <div className={`text-[11px] font-bold ${color}`}>{meta.urgency_score}/100</div>
-                                  <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                                    <div className={`h-full rounded-full ${meta.urgency_score >= 70 ? "bg-emerald-400" : meta.urgency_score >= 40 ? "bg-amber-400" : "bg-white/30"}`} style={{ width: `${meta.urgency_score}%` }} />
-                                  </div>
-                                  {meta.urgency_reason && <div className="text-[9px] text-white/40 max-w-[120px] truncate" title={meta.urgency_reason}>{meta.urgency_reason}</div>}
-                                </div>
-                              );
-                            }
-                            return null;
-                          })()}
-
-                          <div className="text-[11px] font-semibold text-white/80">Signals</div>
-                          <div className="text-[11px] text-white/60 space-y-1">
-                            {(() => {
-                              const facts = getInterestingFactsForContact(activeDraftContactId);
-                              if (!facts.length) return <div className="text-white/40">No signals found yet. Run research to populate.</div>;
-                              return facts.slice(0, 5).map((f, idx) => {
-                                const sigId = `${activeDraftContactId}_fact_${idx}`;
-                                const on = selectedContactSignalIds.has(sigId);
-                                const typeIcon = f.signal_type === "career_move" ? "↗" : f.signal_type === "company_news" ? "★" : f.signal_type === "hiring_signal" ? "⚡" : "●";
-                                return (
-                                  <div key={`f_${idx}`} className={`flex items-start gap-1.5 ${on ? "text-emerald-200" : ""}`}>
-                                    <span className="shrink-0 text-[9px] mt-0.5 opacity-60">{on ? "✓" : typeIcon}</span>
-                                    <span className="min-w-0">
-                                      {f.url ? (
-                                        <a href={f.url} target="_blank" rel="noopener noreferrer" className="hover:underline" title={f.source_title || f.url}>{trimToChars(f.text, 100)}</a>
-                                      ) : trimToChars(f.text, 100)}
-                                    </span>
-                                  </div>
-                                );
-                              });
-                            })()}
-                          </div>
-
-                          {(() => {
-                            const meta = getContactMeta(activeDraftContactId);
-                            if (!meta.outreach_angles.length) return null;
-                            return (
-                              <div className="mt-1.5 pt-1.5 border-t border-white/5">
-                                <div className="text-[10px] font-semibold text-white/60 mb-1">Outreach angles</div>
-                                {meta.outreach_angles.slice(0, 3).map((a, i) => (
-                                  <div key={`oa_${i}`} className="text-[10px] text-blue-200/70 mt-0.5">→ {a}</div>
-                                ))}
-                              </div>
-                            );
-                          })()}
-
-                          {/* Intelligence panel */}
-                          {(() => {
-                            const intel = getIntelligence(activeDraftContactId);
-                            if (!intel) return null;
-                            return (
-                              <div className="mt-2 pt-2 border-t border-white/5">
-                                <div className="flex items-center justify-between mb-1">
-                                  <div className="text-[10px] font-semibold text-white/60">Intelligence</div>
-                                  {intel.overall_relevance_score > 0 && (
-                                    <span className={`text-[9px] font-bold ${intel.overall_relevance_score >= 0.7 ? "text-emerald-300" : "text-amber-300"}`}>
-                                      {(intel.overall_relevance_score * 100).toFixed(0)}%
-                                    </span>
-                                  )}
-                                </div>
-                                {intel.outreach_summary?.one_liner_hook && (
-                                  <div className="text-[10px] text-blue-200/80 mb-1">{intel.outreach_summary.one_liner_hook}</div>
-                                )}
-                                {intel.signals.slice(0, 3).map((s, i) => (
-                                  <div key={`is_${i}`} className="text-[10px] text-white/50 mt-0.5 flex gap-1">
-                                    <span className="shrink-0 text-[8px] mt-0.5 opacity-50">●</span>
-                                    <span className="truncate">{s.signal_title}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
-
-                {/* Continue button lives at the bottom of the right column (single CTA) */}
-              </div>
-            </div>
-
-            {/* Right column: search + results */}
-            <div className="flex-1 min-w-0">
+          <div>
           {/* Filters — Sendr-inspired collapsible rows */}
           <div className="mb-6 rounded-lg border border-white/10 bg-black/20">
             <div className="px-4 py-3 border-b border-white/5">
@@ -1589,7 +1372,7 @@ export default function FindContactPage() {
                       <div>
                         <div className="text-sm font-bold text-white">Outreach drafts</div>
                         <div className="text-xs text-white/60">
-                          LinkedIn connection request notes are capped at <span className="font-semibold">200 characters</span>.
+                          LinkedIn connection request notes must be under 40 words (<span className="font-semibold">200 characters max</span>).
                         </div>
                       </div>
                       {chosen.length > 1 ? (
@@ -1763,7 +1546,7 @@ export default function FindContactPage() {
                                 <div className="mt-2 text-xs text-white/65">
                                   No signals found. Click{" "}
                                   <span className="font-semibold text-white/80">Run research for saved contacts</span>{" "}
-                                  on the left to populate.
+                                  to populate.
                                 </div>
                               )}
                               {meta.outreach_angles.length > 0 && (
@@ -1821,7 +1604,7 @@ export default function FindContactPage() {
                 const hint =
                   verifiableCount === 0
                     ? "No emails detected yet — we’ll still try a best-effort verification/guess when you click."
-                    : "Verify the selected contacts’ emails (Valid contacts get saved on the left).";
+                    : "Verify the selected contacts' emails.";
                 return (
                   <div className="flex justify-end">
                     <button
@@ -2070,7 +1853,7 @@ export default function FindContactPage() {
               <div className="mt-8 flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => router.push("/painpoint-match")}
+                  onClick={() => router.push("/company-research")}
                   className="bg-gray-100 text-gray-700 px-6 py-3 rounded-md font-medium hover:bg-gray-200 transition-colors"
                 >
                   Back
@@ -2094,7 +1877,6 @@ export default function FindContactPage() {
             );
           })()}
 
-            </div>
           </div>
         </div>
       </div>
