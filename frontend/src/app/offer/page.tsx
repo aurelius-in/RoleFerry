@@ -124,17 +124,27 @@ function painPointToOutcome(raw: string): string {
   let s = String(raw || "").trim();
   if (!s) return "";
   s = s
-    .replace(/^(the\s+)?need\s+for\s+/i, "deliver ")
+    .replace(/^(the\s+)?need\s+for\s+(a\s+)?/i, "build ")
     .replace(/^(the\s+)?need\s+to\s+/i, "")
-    .replace(/^(the\s+)?lack\s+of\s+/i, "strengthen ")
-    .replace(/^(the\s+)?absence\s+of\s+/i, "establish ")
+    .replace(/^(the\s+)?lack\s+of\s+(a\s+)?/i, "strengthen ")
+    .replace(/^(the\s+)?absence\s+of\s+(a\s+)?/i, "establish ")
     .replace(/^(the\s+)?challenge\s+of\s+/i, "tackle ")
+    .replace(/^(the\s+)?difficulty\s+(of|in)\s+/i, "simplify ")
+    .replace(/^(the\s+)?requirement\s+(for|to)\s+/i, "deliver ")
     .replace(/\.\s*$/, "")
     .trim();
   s = lowerFirst(s);
-  // If the result starts with an article or adjective (noun phrase), prepend a verb.
-  if (/^(a|an|the|better|more|improved|scalable|robust|reliable|strong|new)\s/i.test(s)) {
-    s = `deliver ${s}`;
+  if (/^(a|an|the|better|more|improved|scalable|robust|reliable|strong|new|solid|effective)\s/i.test(s)) {
+    s = `build ${s}`;
+  }
+  // Gerund phrases ("enhancing developer productivity") → strip gerund, prepend verb
+  if (/^[a-z]\w+ing\s/i.test(s) && !/^(build|deliver|establish|strengthen|tackle|simplify|turn)/i.test(s)) {
+    const rest = s.slice(s.indexOf(" ") + 1).trim();
+    if (rest) s = `elevate ${rest}`;
+  }
+  if (s.length > 60) {
+    const short = s.split(/[,;]/)[0]?.trim();
+    if (short && short.length >= 15) s = short;
   }
   return s;
 }
@@ -249,6 +259,7 @@ export default function OfferPage() {
   const [aiSnippet, setAiSnippet] = useState("");
   const [isGeneratingSnippet, setIsGeneratingSnippet] = useState(false);
   const [showStepHelp, setShowStepHelp] = useState(false);
+  const [collapsedSubs, setCollapsedSubs] = useState<Set<string>>(new Set());
 
   const [resume, setResume] = useState<any>(null);
   const [prefs, setPrefs] = useState<any>(null);
@@ -280,8 +291,17 @@ export default function OfferPage() {
       .slice(0, 4);
     const autoCredibility = deriveCredibilitySignals(resume, roleSkills);
 
+    const looksLikeOldOneLiner = (s: string) => {
+      const t = String(s || "");
+      return /My strengths include/i.test(t) || /Background in/i.test(t) || /Strengths:/i.test(t) || /Context:/i.test(t) || /^For .+ at .+:/i.test(t);
+    };
+
+    const needsOneLinerReseed = !saved?.version || looksLikeOldOneLiner(String(saved?.one_liner || ""));
+
     if (saved?.version === 1) {
-      setOneLiner(normalizeNoEmDash(String(saved.one_liner || "")));
+      if (!needsOneLinerReseed) {
+        setOneLiner(normalizeNoEmDash(String(saved.one_liner || "")));
+      }
       setProofPoints(
         Array.isArray(saved.proof_points) && saved.proof_points.length
           ? saved.proof_points.map((p) => normalizeNoEmDash(String(p || "")))
@@ -304,12 +324,11 @@ export default function OfferPage() {
       setCredibility(savedCred.length ? savedCred : autoCredibility);
       setSoftCta(String(saved.soft_cta || "Worth exploring, or totally not a priority right now?"));
       setDefaultCta(String(saved.hard_cta || saved.default_cta || "Open to a 10-minute chat this week?"));
-      return;
+      if (!needsOneLinerReseed) return;
     }
 
     const title = String(activeRole?.title || selectedRole?.title || "").trim();
     const company = String(activeRole?.company || selectedRole?.company || "").trim();
-    const industry = Array.isArray(prefs?.industries) ? String(prefs.industries[0] || "").trim() : "";
     const resumeSkills = Array.isArray(resume?.skills) ? resume.skills.map((x: any) => String(x || "").trim()).filter(Boolean) : [];
     const overlap = roleSkills.filter((s) => resumeSkills.some((r: string) => r.toLowerCase() === s.toLowerCase())).slice(0, 2);
     const painpoints = (Array.isArray(activeRole?.painPoints) ? activeRole?.painPoints : [])
@@ -324,18 +343,21 @@ export default function OfferPage() {
         ? roleSkills.slice(0, 2).join(" and ")
         : "";
 
-    const seedParts: string[] = [];
-    if (title && company && outcomeRaw) {
-      seedParts.push(`I help teams at ${company} ${outcomeRaw}.`);
-    } else if (title && company) {
-      seedParts.push(`I help teams at ${company} move faster on what matters most.`);
+    let seed = "";
+    if (outcomeRaw) {
+      seed = `I ${outcomeRaw}.`;
+    } else if (title && skillPhrase) {
+      seed = `${title} who turns ${skillPhrase} into real results.`;
     } else if (title) {
-      seedParts.push(`As a ${title}, I help teams move faster on what matters most.`);
+      seed = `${title} who helps teams ship what matters.`;
+    } else if (skillPhrase) {
+      seed = `I turn ${skillPhrase} into real results.`;
     }
-    if (skillPhrase) seedParts.push(`My strengths include ${skillPhrase}.`);
-    if (industry) seedParts.push(`Background in ${industry}.`);
+    seed = seed.replace(/\.\./g, ".").replace(/^i\s/i, "I ");
 
-    setOneLiner(seedParts.join(" "));
+    setOneLiner(seed);
+
+    if (saved?.version === 1) return;
 
     const km = Array.isArray(resume?.keyMetrics) ? resume.keyMetrics : [];
     const metricLines = km
@@ -469,6 +491,48 @@ export default function OfferPage() {
     const skills = Array.isArray(resume?.skills) ? resume.skills : [];
     const uniq = Array.from(new Set(skills.map((s: any) => String(s || "").trim()).filter(Boolean)));
     return uniq.slice(0, 10);
+  }, [resume]);
+
+  const suggestedCaseStudies = useMemo(() => {
+    const out: Array<{ problem: string; actions: string; impact: string }> = [];
+    const seen = new Set<string>();
+
+    const positions = Array.isArray(resume?.positions) ? resume.positions : [];
+    const accomplishments = Array.isArray(resume?.accomplishments) ? resume.accomplishments : [];
+    const km = Array.isArray(resume?.keyMetrics) ? resume.keyMetrics : [];
+
+    for (const pos of positions.slice(0, 4)) {
+      const desc = String(pos?.description || "").trim();
+      const bullets = Array.isArray(pos?.accomplishments)
+        ? pos.accomplishments.map((a: any) => String(a || "").trim()).filter(Boolean)
+        : desc ? desc.split(/[•\n]/).map((s: string) => s.trim()).filter((s: string) => s.length > 20) : [];
+      for (const b of bullets.slice(0, 2)) {
+        const key = b.toLowerCase().slice(0, 40);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push({ problem: "", actions: clampLines(b, 120), impact: "" });
+      }
+    }
+
+    for (const acc of accomplishments.slice(0, 4)) {
+      const text = String(acc?.text || acc || "").trim();
+      if (!text || text.length < 15) continue;
+      const key = text.toLowerCase().slice(0, 40);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ problem: "", actions: clampLines(text, 120), impact: "" });
+    }
+
+    for (const m of km.slice(0, 3)) {
+      const line = metricLine(m?.metric, m?.value, m?.context);
+      if (!line) continue;
+      const key = line.toLowerCase().slice(0, 40);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ problem: "", actions: "", impact: clampLines(line, 120) });
+    }
+
+    return out.slice(0, 6);
   }, [resume]);
 
   const addCredibility = (text: string) => {
@@ -617,14 +681,47 @@ export default function OfferPage() {
     } catch {}
   };
 
+  const toggleSub = (key: string) =>
+    setCollapsedSubs((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  const subHeader = (label: string, subKey: string, extra?: React.ReactNode) => {
+    const open = !collapsedSubs.has(subKey);
+    return (
+      <button
+        type="button"
+        onClick={() => toggleSub(subKey)}
+        className="w-full flex items-center gap-2 text-left group"
+      >
+        <svg
+          className={`w-2.5 h-2.5 text-white/50 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={3}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+        <span className="text-xs font-semibold text-white/70 uppercase tracking-wider">{label}</span>
+        {extra}
+      </button>
+    );
+  };
+
   const defaultAllBtn = (field: "one_liner" | "proof_points" | "case_studies" | "credibility" | "cta") => (
-    <button
-      type="button"
-      onClick={() => applyToAllRoles(field)}
-      className="text-[10px] font-medium text-white/40 hover:text-white/70 border border-white/10 rounded-md px-2 py-0.5 hover:bg-white/5 transition-colors whitespace-nowrap"
-    >
-      &larr; Default for All Roles
-    </button>
+    <div className="flex justify-end mt-2">
+      <button
+        type="button"
+        onClick={() => applyToAllRoles(field)}
+        className="text-[10px] font-bold text-white hover:text-blue-300 border border-white/25 rounded-md px-2.5 py-1 hover:bg-white/10 transition-colors whitespace-nowrap"
+      >
+        Default for All Roles
+      </button>
+    </div>
   );
 
   return (
@@ -674,7 +771,7 @@ export default function OfferPage() {
           <div className="mb-3">
             <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">Roles</div>
             <div className="mt-1 text-[11px] text-white/60">
-              Expand a role to craft its value proposition. Use &ldquo;&larr; Default for All Roles&rdquo; to apply a component across every role.
+              Expand a role to craft its value proposition. Use <span class="font-bold text-white">Default for All Roles</span> at the bottom of each section to apply it across every role.
             </div>
           </div>
 
@@ -731,9 +828,10 @@ export default function OfferPage() {
                       <div className="border-t border-white/5 px-4 pb-5" style={{ paddingLeft: 14 }}>
                         {/* ── Role Signals ── */}
                         {(roleSignals.skills.length > 0 || roleSignals.pains.length > 0 || roleSignals.metrics.length > 0) ? (
-                          <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4">
-                            <div className="text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-2">Role Signals (from this posting)</div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4" style={{ marginLeft: 12 }}>
+                            {subHeader("Role Signals", `${r.id}:signals`)}
+                            {!collapsedSubs.has(`${r.id}:signals`) && (
+                            <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-3">
                               <div>
                                 <div className="text-xs font-bold text-sky-200 mb-1.5">Pain Points</div>
                                 <div className="flex flex-wrap gap-1.5">
@@ -814,48 +912,48 @@ export default function OfferPage() {
                                 </div>
                               </div>
                             </div>
+                            )}
                           </div>
                         ) : null}
 
                         {/* ── One-liner ── */}
-                        <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4">
-                          <div className="flex items-center justify-between gap-3 mb-2">
-                            <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">One-liner</div>
+                        <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4" style={{ marginLeft: 12 }}>
+                          {subHeader("One-liner", `${r.id}:oneliner`)}
+                          {!collapsedSubs.has(`${r.id}:oneliner`) && (
+                          <div className="mt-2">
+                            <div className="text-[10px] text-white/40 mb-2">One punchy sentence that brands you. Think tagline, not resume.</div>
+                            <textarea
+                              value={oneLiner}
+                              onChange={(e) => setOneLiner(e.target.value)}
+                              rows={3}
+                              className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Example: I build scalable data platforms that turn raw pipelines into reliable business decisions."
+                            />
+                            <div className="mt-2 text-[11px] text-white/55">
+                              Variable:{" "}
+                              <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
+                                {"{{offer.one_liner}}"}
+                              </code>
+                            </div>
                             {defaultAllBtn("one_liner")}
                           </div>
-                          <textarea
-                            value={oneLiner}
-                            onChange={(e) => setOneLiner(e.target.value)}
-                            rows={3}
-                            className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Example: I help data teams deliver reliable analytics faster by building pragmatic pipelines and clear stakeholder alignment."
-                          />
-                          <div className="mt-2 text-[11px] text-white/55">
-                            Variable:{" "}
-                            <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
-                              {"{{offer.one_liner}}"}
-                            </code>
-                          </div>
+                          )}
                         </div>
 
                         {/* ── Proof Points ── */}
-                        <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4">
-                          <div className="flex items-center justify-between gap-3 mb-2">
-                            <div>
-                              <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">Proof points (3&ndash;6)</div>
-                              <div className="mt-1 text-[11px] text-white/55">Think: metrics, wins, &ldquo;I&rsquo;ve done this before&rdquo; statements.</div>
-                            </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <button
-                                type="button"
-                                onClick={() => setProofPoints((prev) => ([...(prev || []), ""]).slice(0, 6))}
-                                className="text-[11px] font-semibold rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-white/80 hover:bg-white/10"
-                              >
-                                + Add
-                              </button>
-                              {defaultAllBtn("proof_points")}
-                            </div>
-                          </div>
+                        <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4" style={{ marginLeft: 12 }}>
+                          {subHeader("Proof Points", `${r.id}:proof`, (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setProofPoints((prev) => ([...(prev || []), ""]).slice(0, 6)); }}
+                              className="ml-auto text-[11px] font-semibold rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-white/80 hover:bg-white/10 shrink-0"
+                            >
+                              + Add
+                            </button>
+                          ))}
+                          {!collapsedSubs.has(`${r.id}:proof`) && (
+                          <div className="mt-2">
+                          <div className="mb-2 text-[11px] text-white/55">Think: metrics, wins, &ldquo;I&rsquo;ve done this before&rdquo; statements.</div>
                           <div className="space-y-2">
                             {proofPoints.map((p, idx) => (
                               <div key={`pp_${idx}`} className="flex items-start gap-2">
@@ -921,14 +1019,16 @@ export default function OfferPage() {
                               ) : null}
                             </div>
                           ) : null}
+                          {defaultAllBtn("proof_points")}
+                          </div>
+                          )}
                         </div>
 
                         {/* ── Case Studies ── */}
-                        <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4">
-                          <div className="flex items-center justify-between gap-3 mb-2">
-                            <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">Micro case studies (optional)</div>
-                            {defaultAllBtn("case_studies")}
-                          </div>
+                        <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4" style={{ marginLeft: 12 }}>
+                          {subHeader("Micro Case Studies", `${r.id}:cases`)}
+                          {!collapsedSubs.has(`${r.id}:cases`) && (
+                          <div className="mt-2">
                           <div className={`grid grid-cols-1 ${caseStudies.length > 1 ? "md:grid-cols-2" : "md:grid-cols-1"} gap-4`}>
                             {caseStudies.map((c, idx) => (
                               <div key={`cs_${idx}`} className="rounded-md border border-white/10 bg-black/20 p-3">
@@ -962,14 +1062,55 @@ export default function OfferPage() {
                               {"{{offer.case_studies[]}}"}
                             </code>
                           </div>
+
+                          {/* Quick inserts for case studies */}
+                          {suggestedCaseStudies.length > 0 ? (
+                            <div className="mt-4 rounded-md border border-white/10 bg-white/5 p-3">
+                              <div className="text-[11px] font-semibold text-white/70 uppercase tracking-wider">Quick inserts (from your resume)</div>
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {suggestedCaseStudies.map((s, si) => {
+                                  const label = clampLines(s.actions || s.impact || s.problem, 60);
+                                  if (!label) return null;
+                                  return (
+                                    <button
+                                      key={`csq_${si}`}
+                                      type="button"
+                                      onClick={() =>
+                                        setCaseStudies((prev) => {
+                                          const next = [...(prev || [])];
+                                          const idx = next.findIndex(
+                                            (x) => !String(x.problem || "").trim() && !String(x.actions || "").trim() && !String(x.impact || "").trim()
+                                          );
+                                          const target = idx >= 0 ? idx : 0;
+                                          next[target] = {
+                                            ...next[target],
+                                            problem: s.problem || next[target].problem,
+                                            actions: s.actions || next[target].actions,
+                                            impact: s.impact || next[target].impact,
+                                          };
+                                          return next;
+                                        })
+                                      }
+                                      className="px-2 py-1 rounded-full border border-white/10 bg-black/20 text-[11px] text-white/80 hover:bg-black/30"
+                                      title="Insert into case study"
+                                    >
+                                      + {label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ) : null}
+                          {defaultAllBtn("case_studies")}
+                          </div>
+                          )}
                         </div>
 
-                        {/* ── Credibility / Trust Signals ── */}
-                        <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4">
-                          <div className="flex items-center justify-between gap-3 mb-2">
-                            <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">Credibility / Trust Signals</div>
-                            {defaultAllBtn("credibility")}
-                          </div>
+                        {/* ── Credibility & Trust Signals ── */}
+                        <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4" style={{ marginLeft: 12 }}>
+                          {subHeader("Credibility & Trust Signals", `${r.id}:cred`)}
+                          {!collapsedSubs.has(`${r.id}:cred`) && (
+                          <div className="mt-2">
                           <div className="flex items-center gap-2">
                             <input
                               value={credInput}
@@ -1014,21 +1155,18 @@ export default function OfferPage() {
                               {"{{offer.credibility[]}}"}
                             </code>
                           </div>
+                          {defaultAllBtn("credibility")}
+                          </div>
+                          )}
                         </div>
 
                         {/* ── Offer Snippet ── */}
-                        <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4">
-                          <div className="flex items-start justify-between gap-3 mb-2">
-                            <div>
-                              <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">Offer Snippet (auto)</div>
-                              <div className="mt-1 text-[11px] text-white/60">
-                                AI-composed from your role signals + proof points. Campaign reuses this across emails.
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 shrink-0">
+                        <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4" style={{ marginLeft: 12 }}>
+                          {subHeader("Offer Snippet", `${r.id}:snippet`, (
+                            <div className="ml-auto flex items-center gap-2 shrink-0">
                               <button
                                 type="button"
-                                onClick={composeSnippetWithAI}
+                                onClick={(e) => { e.stopPropagation(); composeSnippetWithAI(); }}
                                 disabled={isGeneratingSnippet}
                                 className="text-[11px] font-semibold rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-white/80 hover:bg-white/10 disabled:opacity-50 inline-flex items-center gap-1.5"
                                 title="Regenerate snippet with AI"
@@ -1038,10 +1176,9 @@ export default function OfferPage() {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => {
-                                  try {
-                                    navigator.clipboard.writeText(snippet || "");
-                                  } catch {}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  try { navigator.clipboard.writeText(snippet || ""); } catch {}
                                 }}
                                 className="text-[11px] font-semibold rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-white/80 hover:bg-white/10"
                                 title="Copy snippet"
@@ -1049,24 +1186,30 @@ export default function OfferPage() {
                                 Copy
                               </button>
                             </div>
+                          ))}
+                          {!collapsedSubs.has(`${r.id}:snippet`) && (
+                          <div className="mt-2">
+                            <div className="mb-2 text-[11px] text-white/60">
+                              AI-composed from your role signals + proof points. Campaign reuses this across emails.
+                            </div>
+                            <pre className="whitespace-pre-wrap rounded-md border border-white/10 bg-black/30 p-3 text-[12px] text-white/85 min-h-[100px]">
+                              {snippet || "Start with a one-liner + 3 proof points to generate your snippet."}
+                            </pre>
+                            <div className="mt-2 text-[11px] text-white/55">
+                              Variable:{" "}
+                              <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
+                                {"{{offer.snippet}}"}
+                              </code>
+                            </div>
                           </div>
-                          <pre className="whitespace-pre-wrap rounded-md border border-white/10 bg-black/30 p-3 text-[12px] text-white/85 min-h-[100px]">
-                            {snippet || "Start with a one-liner + 3 proof points to generate your snippet."}
-                          </pre>
-                          <div className="mt-2 text-[11px] text-white/55">
-                            Variable:{" "}
-                            <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
-                              {"{{offer.snippet}}"}
-                            </code>
-                          </div>
+                          )}
                         </div>
 
                         {/* ── Call-to-Action Strategy ── */}
-                        <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4">
-                          <div className="flex items-center justify-between gap-3 mb-2">
-                            <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">Call-to-Action Strategy</div>
-                            {defaultAllBtn("cta")}
-                          </div>
+                        <div className="mt-4 rounded-lg border border-white/10 bg-white/5 p-4" style={{ marginLeft: 12 }}>
+                          {subHeader("Call-to-Action Strategy", `${r.id}:cta`)}
+                          {!collapsedSubs.has(`${r.id}:cta`) && (
+                          <div className="mt-2">
                           <div className="grid grid-cols-1 gap-4">
                             <div className="rounded-md border border-white/10 bg-black/20 p-3">
                               <div className="text-sm font-bold text-amber-200">Strong / Hard CTA</div>
@@ -1107,6 +1250,19 @@ export default function OfferPage() {
                               {"{{offer.default_cta}}"}
                             </code>
                           </div>
+                          {defaultAllBtn("cta")}
+                          </div>
+                          )}
+                        </div>
+
+                        <div className="mt-5 flex justify-center">
+                          <button
+                            type="button"
+                            onClick={() => toggleRole(r.id)}
+                            className="px-3 py-1 rounded border border-white/10 bg-white/5 text-[10px] font-semibold uppercase tracking-wider text-white/40 hover:text-white/70 hover:bg-white/10 transition-colors"
+                          >
+                            Collapse
+                          </button>
                         </div>
                       </div>
                     )}

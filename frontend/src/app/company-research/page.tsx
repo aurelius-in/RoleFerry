@@ -345,15 +345,23 @@ function extractHiringSignals(sections: any, news: any[]): CompanyResearch["hiri
     }
   })();
 
+  const signalDetail = (title: string, summary: string, insight: string): string => {
+    const t = safeText(title);
+    const s = safeText(summary);
+    const lines: string[] = [];
+    if (t) lines.push(t);
+    if (s && s.toLowerCase() !== t.toLowerCase() && !t.toLowerCase().includes(s.toLowerCase())) lines.push(s);
+    if (insight) lines.push(insight);
+    return lines.join("\n");
+  };
+
   // Funding / financing
   (() => {
     const hit = newsItems.find((n) => /funding|raised|series\s+[a-e]|seed|financing|investor/i.test(`${n?.title || ""} ${n?.summary || ""}`));
     if (hit) {
-      const title = safeText(hit?.title);
-      const summary = safeText(hit?.summary);
       push(
         "Funding / runway signal",
-        `${title || "Funding/news"}${summary ? ` — ${summary}` : ""} Fresh capital often correlates with headcount growth or new team build-outs.`
+        signalDetail(hit?.title || "Funding/news", hit?.summary || "", "Fresh capital often correlates with headcount growth or new team build-outs.")
       );
     }
   })();
@@ -366,11 +374,9 @@ function extractHiringSignals(sections: any, news: any[]): CompanyResearch["hiri
       )
     );
     if (hit) {
-      const title = safeText(hit?.title);
-      const summary = safeText(hit?.summary);
       push(
         "Expansion signal",
-        `${title || "Growth/news"}${summary ? ` — ${summary}` : ""} Expansion usually means new goals + staffing needs (good timing to reach out).`
+        signalDetail(hit?.title || "Growth/news", hit?.summary || "", "Expansion usually means new goals + staffing needs (good timing to reach out).")
       );
     }
   })();
@@ -381,11 +387,9 @@ function extractHiringSignals(sections: any, news: any[]): CompanyResearch["hiri
       /appointed|named|joins?\s+as|new\s+(ceo|cto|cpo|cmo|cfo|vp)|leadership\s+change/i.test(`${n?.title || ""} ${n?.summary || ""}`)
     );
     if (hit) {
-      const title = safeText(hit?.title);
-      const summary = safeText(hit?.summary);
       push(
         "Leadership change",
-        `${title || "Leadership update"}${summary ? ` — ${summary}` : ""} Leadership changes often reset priorities and create new hiring/initiative budgets.`
+        signalDetail(hit?.title || "Leadership update", hit?.summary || "", "Leadership changes often reset priorities and create new hiring/initiative budgets.")
       );
     }
   })();
@@ -396,11 +400,9 @@ function extractHiringSignals(sections: any, news: any[]): CompanyResearch["hiri
       /layoff|restructur|headcount\s+reduc|hiring\s+freeze|downsiz/i.test(`${n?.title || ""} ${n?.summary || ""}`)
     );
     if (hit) {
-      const title = safeText(hit?.title);
-      const summary = safeText(hit?.summary);
       push(
         "Restructuring signal",
-        `${title || "Restructuring/news"}${summary ? ` — ${summary}` : ""} This can indicate tighter budgets or role realignment—target outreach to high-priority teams.`
+        signalDetail(hit?.title || "Restructuring/news", hit?.summary || "", "This can indicate tighter budgets or role realignment — target outreach to high-priority teams.")
       );
     }
   })();
@@ -580,6 +582,7 @@ export default function CompanyResearchPage() {
       if (!scrubbed && !scrubModePlaceholders(sig.signal_title || "")) return false;
       return true;
     });
+    const usedCategories = new Set<string>();
     for (let i = 0; i < intelSigs.length; i++) {
       const sig = intelSigs[i];
       const title = scrubModePlaceholders(cleanThemeText(sig.signal_title));
@@ -587,9 +590,13 @@ export default function CompanyResearchPage() {
       const k = dedupe(title || content);
       if (seen.has(k)) continue;
       seen.add(k);
+      const rawType = String(sig.signal_type || "").replace(/^signaliz_/, "");
+      const cat = SIGNAL_TYPE_LABELS[rawType] || rawType.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+      if (usedCategories.has(cat)) continue;
+      usedCategories.add(cat);
       list.push({
         id: `intel_${i}`,
-        category: SIGNAL_TYPE_LABELS[sig.signal_type] || sig.signal_type,
+        category: cat,
         label: title,
         text: content,
         confidence: sig.confidence_score,
@@ -600,11 +607,54 @@ export default function CompanyResearchPage() {
     for (const sig of topSignals) {
       const k = dedupe(sig.text);
       if (seen.has(k)) continue;
+      if (usedCategories.has(sig.category)) continue;
       seen.add(k);
+      usedCategories.add(sig.category);
       list.push({ id: sig.id, category: sig.category, label: sig.category, text: sig.text, confidence: sig.confidence });
     }
     return list;
   }, [draft, topSignals, pdlSignals]);
+
+  const [expandedSignalIds, setExpandedSignalIds] = useState<Set<string>>(new Set());
+  const toggleSignalExpand = (id: string) => {
+    setExpandedSignalIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const getSignalDetail = (sig: UnifiedSignal): string => {
+    if (!draft) return "";
+    const catLow = sig.category.toLowerCase();
+    const idLow = sig.id.toLowerCase();
+    if (idLow === "product_launches" || catLow === "product launch" || catLow === "product") return scrubModePlaceholders(draft.product_launches || "");
+    if (idLow === "leadership_changes" || catLow === "leadership change" || catLow === "leadership") return scrubModePlaceholders(draft.leadership_changes || "");
+    if (idLow === "recent_news" || catLow === "recent news" || catLow === "news") return scrubModePlaceholders(draft.recent_news || "");
+    if (idLow === "recent_posts" || catLow === "recent post") return scrubModePlaceholders(draft.recent_posts || "");
+    if (idLow === "culture" || catLow === "culture & values") return scrubModePlaceholders(draft.culture || "");
+    if (idLow === "market_position" || catLow === "market position" || catLow === "market" || catLow === "expansion") return scrubModePlaceholders(draft.market_position || "");
+    if (idLow === "other_hiring_signals" || catLow === "hiring signal" || catLow === "hiring") {
+      const parts: string[] = [];
+      if (draft.other_hiring_signals) parts.push(scrubModePlaceholders(draft.other_hiring_signals));
+      for (const s of (draft.hiring_signals || [])) {
+        if (s.detail) parts.push(`${s.label}\n${s.detail}`);
+      }
+      return parts.join("\n");
+    }
+    if (idLow === "publications" || catLow === "publication") return scrubModePlaceholders(draft.publications || "");
+    if (catLow === "restructuring" || catLow === "workforce") {
+      for (const s of (draft.hiring_signals || [])) {
+        if (s.label.toLowerCase().includes(catLow)) return s.detail;
+      }
+    }
+    if (catLow === "funding") {
+      for (const s of (draft.hiring_signals || [])) {
+        if (s.label.toLowerCase().includes("funding") || s.label.toLowerCase().includes("runway")) return s.detail;
+      }
+    }
+    return "";
+  };
 
   const toggleSignal = (id: string) => {
     setSelectedSignalIds((prev) => {
@@ -673,108 +723,125 @@ export default function CompanyResearchPage() {
     setIsRunning(true);
     setError(null);
     setNotice(null);
-    try {
-      const selectedJD = safeJson<any>(localStorage.getItem("selected_job_description"), null);
-      const resumeExtract = safeJson<any>(localStorage.getItem("resume_extract"), null);
-      const selectedJobId = String(localStorage.getItem("selected_job_description_id") || "").trim();
-      const matchesByJob = safeJson<Record<string, any[]>>(localStorage.getItem("painpoint_matches_by_job"), {});
-      const painpointMatches = (selectedJobId && matchesByJob?.[selectedJobId]) ? matchesByJob[selectedJobId] : [];
 
-      // Use the existing backend research engine, but treat this as "company only".
-      // We send a single dummy contact id so the backend returns a stable shape.
-      const resp = await api<ResearchResponse>("/context-research/research", "POST", {
-        contact_ids: ["company"],
-        company_name: company,
-        selected_job_description: selectedJD,
-        resume_extract: resumeExtract,
-        painpoint_matches: painpointMatches,
-        contacts: [{ id: "company", name: formatCompanyName(company), title: "Company", company }],
-        data_mode: getCurrentDataMode(),
-      });
+    const selectedJD = safeJson<any>(localStorage.getItem("selected_job_description"), null);
+    const resumeExtract = safeJson<any>(localStorage.getItem("resume_extract"), null);
+    const selectedJobId = String(localStorage.getItem("selected_job_description_id") || "").trim();
+    const matchesByJob = safeJson<Record<string, any[]>>(localStorage.getItem("painpoint_matches_by_job"), {});
+    const painpointMatches = (selectedJobId && matchesByJob?.[selectedJobId]) ? matchesByJob[selectedJobId] : [];
 
-      if (!resp?.success) throw new Error(resp?.message || "Company research failed");
-      const byContact = resp.research_by_contact || {};
-      const entry = byContact["company"] || Object.values(byContact)[0] || {};
-      const companySummary = entry?.company_summary || {};
-      const rawNews = entry?.recent_news || [];
-      const themeRaw = String(entry?.theme || "").trim();
-      const sections = entry?.background_report_sections || [];
-      const overview = String(companySummary?.description || "").trim();
-      const cultureFromModel = String(entry?.company_culture_values || "").trim();
-      const marketFromModel = String(entry?.company_market_position || "").trim();
-      const productLaunchesFromModel = scrubModePlaceholders(String(entry?.company_product_launches || ""));
-      const leadershipChangesFromModel = scrubModePlaceholders(String(entry?.company_leadership_changes || ""));
-      const otherHiringSignalsFromModel = scrubModePlaceholders(String(entry?.company_other_hiring_signals || ""));
-      const recentPostsFromModel = scrubModePlaceholders(String(entry?.company_recent_posts || ""));
-      const publicationsFromModel = scrubModePlaceholders(String(entry?.company_publications || ""));
-      const culture = cultureFromModel || pickSectionText(sections, "culture") || pickSectionText(sections, "values");
-      const market = marketFromModel || pickSectionText(sections, "market") || pickSectionText(sections, "product") || pickSectionText(sections, "moves") || "";
-      const realNews = Array.isArray(rawNews)
-        ? rawNews.filter((n: any) => {
-            const title = String(n?.title || "").trim().toLowerCase();
-            const url = String(n?.url || "").trim();
-            const source = String(n?.source || "").trim().toLowerCase();
-            if (!url) return false;
-            if (!title) return false;
-            if (title.startsWith("theme:")) return false;
-            if (source === "general_knowledge") return false;
-            return true;
-          })
-        : [];
-      const themeFromNews =
-        Array.isArray(rawNews)
-          ? rawNews
-              .filter((n: any) => String(n?.title || "").trim().toLowerCase().startsWith("theme:"))
-              .map((n: any) => {
-                const t = String(n?.title || "").trim();
-                const s = String(n?.summary || "").trim();
-                return `- ${t}${s ? `: ${s}` : ""}`;
-              })
-              .filter(Boolean)
-              .join("\n")
-          : "";
+    const payload = {
+      contact_ids: ["company"],
+      company_name: company,
+      selected_job_description: selectedJD,
+      resume_extract: resumeExtract,
+      painpoint_matches: painpointMatches,
+      contacts: [{ id: "company", name: formatCompanyName(company), title: "Company", company }],
+      data_mode: getCurrentDataMode(),
+    };
 
-      const signals: CompanyResearch["hiring_signals"] = extractHiringSignals(sections, realNews as any[]);
+    const isRetryable = (msg: string) =>
+      msg.includes("500") || msg.includes("502") || msg.includes("504") ||
+      msg.toLowerCase().includes("timeout") || msg.toLowerCase().includes("econnreset");
 
-      const next: CompanyResearch = {
-        company_name: company,
-        overview: overview || `${formatCompanyName(company)} overview (add a few lines here).`,
-        theme:
-          cleanThemeText(scrubModePlaceholders(themeRaw)) ||
-          cleanThemeText(scrubModePlaceholders(themeFromNews)) ||
-          cleanThemeText(buildThemeFallback({ company, selectedJD, painpointMatches, resumeExtract })) ||
-          "",
-        recent_news: scrubRecentNews(joinNews(realNews as any[])) || "",
-        culture: culture || "",
-        market_position: market || "",
-        product_launches: productLaunchesFromModel || "",
-        leadership_changes: leadershipChangesFromModel || "",
-        other_hiring_signals: otherHiringSignalsFromModel || "",
-        recent_posts: recentPostsFromModel || "",
-        publications: publicationsFromModel || "",
-        hiring_signals: signals,
-        hooks: Array.isArray(resp?.helper?.hooks) ? resp.helper!.hooks : undefined,
-        intelligence: entry?.intelligence || undefined,
-        updated_at: new Date().toISOString(),
-        pdl_company_signals: Array.isArray(entry?.company_signals) ? entry.company_signals : undefined,
-      };
+    const MAX_ATTEMPTS = 2;
+    let lastError: string = "";
 
-      setDraft(sanitizeDraft(next));
-      setActiveCompany(company);
-      localStorage.setItem(STORAGE_ACTIVE_COMPANY, company);
-      localStorage.setItem("selected_company_name", company);
-      setNotice("Company research generated. Review/edit, then Save.");
-      window.setTimeout(() => setNotice(null), 2500);
-    } catch (e: any) {
-      const msg = String(e?.message || "Failed to run company research.");
-      if (msg.includes("500") || msg.includes("502") || msg.includes("504") || msg.toLowerCase().includes("timeout") || msg.toLowerCase().includes("econnreset")) {
-        setError("Research is taking longer than expected. Please try again — results are often faster on a second attempt (cached data).");
-      } else {
-        setError(msg);
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const resp = await api<ResearchResponse>("/context-research/research", "POST", payload);
+
+        if (!resp?.success) throw new Error(resp?.message || "Company research failed");
+        const byContact = resp.research_by_contact || {};
+        const entry = byContact["company"] || Object.values(byContact)[0] || {};
+        const companySummary = entry?.company_summary || {};
+        const rawNews = entry?.recent_news || [];
+        const themeRaw = String(entry?.theme || "").trim();
+        const sections = entry?.background_report_sections || [];
+        const overview = String(companySummary?.description || "").trim()
+          .replace(/\s*Tailored for\s+(outreach to|engineering|talent|product)\s+[^.]*\.\s*/gi, " ").trim();
+        const cultureFromModel = String(entry?.company_culture_values || "").trim();
+        const marketFromModel = String(entry?.company_market_position || "").trim();
+        const productLaunchesFromModel = scrubModePlaceholders(String(entry?.company_product_launches || ""));
+        const leadershipChangesFromModel = scrubModePlaceholders(String(entry?.company_leadership_changes || ""));
+        const otherHiringSignalsFromModel = scrubModePlaceholders(String(entry?.company_other_hiring_signals || ""));
+        const recentPostsFromModel = scrubModePlaceholders(String(entry?.company_recent_posts || ""));
+        const publicationsFromModel = scrubModePlaceholders(String(entry?.company_publications || ""));
+        const culture = cultureFromModel || pickSectionText(sections, "culture") || pickSectionText(sections, "values");
+        const market = marketFromModel || pickSectionText(sections, "market") || pickSectionText(sections, "product") || pickSectionText(sections, "moves") || "";
+        const realNews = Array.isArray(rawNews)
+          ? rawNews.filter((n: any) => {
+              const title = String(n?.title || "").trim().toLowerCase();
+              const url = String(n?.url || "").trim();
+              const source = String(n?.source || "").trim().toLowerCase();
+              if (!url) return false;
+              if (!title) return false;
+              if (title.startsWith("theme:")) return false;
+              if (source === "general_knowledge") return false;
+              return true;
+            })
+          : [];
+        const themeFromNews =
+          Array.isArray(rawNews)
+            ? rawNews
+                .filter((n: any) => String(n?.title || "").trim().toLowerCase().startsWith("theme:"))
+                .map((n: any) => {
+                  const t = String(n?.title || "").trim();
+                  const s = String(n?.summary || "").trim();
+                  return `- ${t}${s ? `: ${s}` : ""}`;
+                })
+                .filter(Boolean)
+                .join("\n")
+            : "";
+
+        const signals: CompanyResearch["hiring_signals"] = extractHiringSignals(sections, realNews as any[]);
+
+        const next: CompanyResearch = {
+          company_name: company,
+          overview: overview || `${formatCompanyName(company)} overview (add a few lines here).`,
+          theme:
+            cleanThemeText(scrubModePlaceholders(themeRaw)) ||
+            cleanThemeText(scrubModePlaceholders(themeFromNews)) ||
+            cleanThemeText(buildThemeFallback({ company, selectedJD, painpointMatches, resumeExtract })) ||
+            "",
+          recent_news: scrubRecentNews(joinNews(realNews as any[])) || "",
+          culture: culture || "",
+          market_position: market || "",
+          product_launches: productLaunchesFromModel || "",
+          leadership_changes: leadershipChangesFromModel || "",
+          other_hiring_signals: otherHiringSignalsFromModel || "",
+          recent_posts: recentPostsFromModel || "",
+          publications: publicationsFromModel || "",
+          hiring_signals: signals,
+          hooks: Array.isArray(resp?.helper?.hooks) ? resp.helper!.hooks : undefined,
+          intelligence: entry?.intelligence || undefined,
+          updated_at: new Date().toISOString(),
+          pdl_company_signals: Array.isArray(entry?.company_signals) ? entry.company_signals : undefined,
+        };
+
+        setDraft(sanitizeDraft(next));
+        setActiveCompany(company);
+        localStorage.setItem(STORAGE_ACTIVE_COMPANY, company);
+        localStorage.setItem("selected_company_name", company);
+        setNotice("Company research generated. Review/edit, then Save.");
+        window.setTimeout(() => setNotice(null), 2500);
+        setIsRunning(false);
+        return;
+      } catch (e: any) {
+        lastError = String(e?.message || "Failed to run company research.");
+        if (isRetryable(lastError) && attempt < MAX_ATTEMPTS) {
+          await new Promise((r) => setTimeout(r, 1500));
+          continue;
+        }
       }
-    } finally {
-      setIsRunning(false);
     }
+
+    if (isRetryable(lastError)) {
+      setError("Research is taking longer than expected. Please try again — results are often faster on a second attempt (cached data).");
+    } else {
+      setError(lastError);
+    }
+    setIsRunning(false);
   }
 
   function saveResearch() {
@@ -1139,47 +1206,78 @@ export default function CompanyResearchPage() {
                       </div>
                     ) : null}
 
-                    {/* Select Signals for Outreach Drafts */}
+                    {/* Select Signals to Break the Ice */}
                     {allSignals.length > 0 ? (
                       <div style={{paddingLeft: 10}}>
-                        <CollapsibleSection title="Select Signals for Outreach Drafts" count={allSignals.length} className="mb-0">
+                        <CollapsibleSection title="Select Signals to Break the Ice" count={allSignals.length} className="mb-0">
                           <p className="text-[10px] text-white/50 mb-2">
                             Pick up to {SIGNAL_LIMIT} signals to personalize your outreach. The AI considers your selections when crafting the message.
                           </p>
-                          <div className="space-y-1">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                            {/* About Us card */}
+                            {hasRealData(draft.overview) ? (
+                              <div className="rounded-md border border-white/10 bg-white/5 p-2">
+                                <button type="button" onClick={() => toggleSignalExpand("__about_us")} className="w-full text-left">
+                                  <div className="flex items-center gap-2 mb-0.5">
+                                    <span className="inline-block rounded-full border px-1.5 py-0.5 text-[9px] font-semibold bg-sky-500/20 text-sky-300 border-sky-500/30">About Us</span>
+                                    <span className="ml-auto text-[9px] text-white/40">{expandedSignalIds.has("__about_us") ? "\u25bc" : "\u25b6"}</span>
+                                  </div>
+                                  <div className="text-[11px] text-white/60 leading-relaxed break-words">{formatSignalText(String(draft.overview || "").split("\n")[0]?.slice(0, 120) || "Company overview")}</div>
+                                </button>
+                                {expandedSignalIds.has("__about_us") && (
+                                  <div className="mt-2 pt-2 border-t border-white/10 text-[11px] text-white/60 leading-relaxed">
+                                    <RichText text={scrubModePlaceholders(draft.overview)} />
+                                  </div>
+                                )}
+                              </div>
+                            ) : null}
+
                             {allSignals.map((sig) => {
                               const on = selectedSignalIds.has(sig.id);
                               const atLimit = selectedSignalIds.size >= SIGNAL_LIMIT;
                               const confColor = sig.confidence >= 0.8 ? "text-emerald-300" : sig.confidence >= 0.5 ? "text-amber-300" : "text-white/40";
                               const badgeClass = SIGNAL_CAT_COLORS[sig.category] || "bg-white/10 text-white/70 border-white/20";
+                              const detail = getSignalDetail(sig);
+                              const isExpanded = expandedSignalIds.has(sig.id);
                               return (
-                                <button
+                                <div
                                   key={sig.id}
-                                  type="button"
-                                  disabled={!on && atLimit}
-                                  onClick={() => toggleSignal(sig.id)}
-                                  className={`w-full text-left rounded-md border p-2 transition-colors ${
+                                  className={`rounded-md border p-2 transition-colors ${
                                     on
                                       ? "border-emerald-400/50 bg-emerald-500/15"
                                       : atLimit
-                                        ? "border-white/5 bg-white/3 text-white/30 cursor-not-allowed"
-                                        : "border-white/10 bg-white/5 hover:bg-white/10"
+                                        ? "border-white/5 bg-white/3 text-white/30"
+                                        : "border-white/10 bg-white/5"
                                   }`}
                                 >
                                   <div className="flex items-start gap-2">
-                                    <span className={`mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border text-[9px] font-bold ${
-                                      on ? "border-emerald-400 bg-emerald-500 text-black" : "border-white/30 text-white/40"
-                                    }`}>
+                                    <button
+                                      type="button"
+                                      disabled={!on && atLimit}
+                                      onClick={() => toggleSignal(sig.id)}
+                                      className={`mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border text-[9px] font-bold ${
+                                        on ? "border-emerald-400 bg-emerald-500 text-black" : "border-white/30 text-white/40"
+                                      } ${!on && atLimit ? "cursor-not-allowed" : "cursor-pointer hover:border-white/50"}`}
+                                    >
                                       {on ? "\u2713" : ""}
-                                    </span>
+                                    </button>
                                     <div className="min-w-0 flex-1">
                                       <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                                         <span className={`inline-block rounded-full border px-1.5 py-0.5 text-[9px] font-semibold ${badgeClass}`}>
                                           {sig.category}
                                         </span>
-                                        <span className={`text-[9px] font-bold ml-auto ${confColor}`}>
+                                        <span className={`text-[9px] font-bold ${confColor}`}>
                                           {(sig.confidence * 100).toFixed(0)}%
                                         </span>
+                                        {detail && (
+                                          <button
+                                            type="button"
+                                            onClick={() => toggleSignalExpand(sig.id)}
+                                            className="ml-auto text-[9px] text-white/40 hover:text-white/70"
+                                          >
+                                            {isExpanded ? "\u25bc details" : "\u25b6 details"}
+                                          </button>
+                                        )}
                                       </div>
                                       {sig.label && sig.label !== sig.category && (
                                         <div className="text-[11.5px] text-white/80 font-medium leading-tight mb-0.5">{formatSignalText(sig.label)}</div>
@@ -1197,7 +1295,12 @@ export default function CompanyResearchPage() {
                                       )}
                                     </div>
                                   </div>
-                                </button>
+                                  {isExpanded && detail && (
+                                    <div className="mt-2 pt-2 border-t border-white/10 text-[11px] text-white/60 leading-relaxed">
+                                      <RichText text={detail} />
+                                    </div>
+                                  )}
+                                </div>
                               );
                             })}
                           </div>
@@ -1206,129 +1309,6 @@ export default function CompanyResearchPage() {
                       </div>
                     ) : null}
 
-                    {/* Hiring Signals */}
-                    {(draft.hiring_signals || []).length > 0 ? (
-                      <div style={{paddingLeft: 10}}>
-                        <CollapsibleSection title="Hiring Signals" count={(draft.hiring_signals || []).length} className="mb-0">
-                          <div className="space-y-1.5">
-                            {(draft.hiring_signals || []).slice(0, 8).map((s, idx) => (
-                              <div key={`sig_${idx}`} className="rounded-md border border-white/10 bg-white/5 p-2.5">
-                                <div className="text-[11.5px] font-semibold text-orange-400">{s.label}</div>
-                                <div className="mt-0.5 text-[11px] text-white/65 leading-relaxed break-words"><RichText text={s.detail} /></div>
-                              </div>
-                            ))}
-                          </div>
-                        </CollapsibleSection>
-                      </div>
-                    ) : null}
-
-                    {/* Recent Posts & Publications */}
-                    {(hasRealData(draft.recent_posts || "") || hasRealData(draft.publications || "")) ? (
-                      <div style={{paddingLeft: 10}}>
-                        <CollapsibleSection title="Recent Posts & Publications" className="mb-0">
-                          {hasRealData(draft.recent_posts || "") ? (
-                            <div className={hasRealData(draft.publications || "") ? "mb-3" : ""}>
-                              <div className="text-[12px] font-semibold text-orange-400 mb-1">Recent Posts</div>
-                              <RichText text={scrubModePlaceholders(draft.recent_posts || "")} />
-                            </div>
-                          ) : null}
-                          {hasRealData(draft.publications || "") ? (
-                            <div>
-                              <div className="text-[12px] font-semibold text-orange-400 mb-1">Publications</div>
-                              <RichText text={scrubModePlaceholders(draft.publications || "")} />
-                            </div>
-                          ) : null}
-                        </CollapsibleSection>
-                      </div>
-                    ) : null}
-
-                    {/* Company Overview */}
-                    {hasRealData(draft.overview) ? (
-                      <div style={{paddingLeft: 10}}>
-                        <CollapsibleSection title="Company Overview" className="mb-0">
-                          <div className="text-[11.5px] text-white/65 leading-relaxed"><RichText text={scrubModePlaceholders(draft.overview)} /></div>
-                        </CollapsibleSection>
-                      </div>
-                    ) : null}
-
-                    {/* Theme */}
-                    {hasRealData(draft.theme) ? (
-                      <div style={{paddingLeft: 10}}>
-                        <CollapsibleSection title="Theme & Mini-Plan" className="mb-0">
-                          <div className="text-[11.5px] text-white/65 leading-relaxed"><RichText text={cleanThemeText(scrubModePlaceholders(draft.theme))} /></div>
-                        </CollapsibleSection>
-                      </div>
-                    ) : null}
-
-                    {/* Recent News */}
-                    {hasRealData(draft.recent_news) ? (
-                      <div style={{paddingLeft: 10}}>
-                        <CollapsibleSection title="Recent News" className="mb-0">
-                          <div className="text-[11.5px] text-white/65 leading-relaxed"><RichText text={scrubModePlaceholders(draft.recent_news)} /></div>
-                        </CollapsibleSection>
-                      </div>
-                    ) : null}
-
-                    {/* Culture & Values */}
-                    {hasRealData(draft.culture) ? (
-                      <div style={{paddingLeft: 10}}>
-                        <CollapsibleSection title="Culture & Values" className="mb-0">
-                          <div className="text-[11.5px] text-white/65 leading-relaxed"><RichText text={scrubModePlaceholders(draft.culture)} /></div>
-                        </CollapsibleSection>
-                      </div>
-                    ) : null}
-
-                    {/* Product Launches */}
-                    {hasRealData(draft.product_launches) ? (
-                      <div style={{paddingLeft: 10}}>
-                        <CollapsibleSection title="Product Launches" className="mb-0">
-                          <div className="text-[11.5px] text-white/65 leading-relaxed"><RichText text={scrubModePlaceholders(draft.product_launches)} /></div>
-                        </CollapsibleSection>
-                      </div>
-                    ) : null}
-
-                    {/* Leadership Changes */}
-                    {hasRealData(draft.leadership_changes) ? (
-                      <div style={{paddingLeft: 10}}>
-                        <CollapsibleSection title="Leadership Changes" className="mb-0">
-                          <div className="text-[11.5px] text-white/65 leading-relaxed"><RichText text={scrubModePlaceholders(draft.leadership_changes)} /></div>
-                        </CollapsibleSection>
-                      </div>
-                    ) : null}
-
-                    {/* Other Hiring Signals */}
-                    {hasRealData(draft.other_hiring_signals) ? (
-                      <div style={{paddingLeft: 10}}>
-                        <CollapsibleSection title="Other Hiring Signals" className="mb-0">
-                          <div className="text-[11.5px] text-white/65 leading-relaxed"><RichText text={scrubModePlaceholders(draft.other_hiring_signals)} /></div>
-                        </CollapsibleSection>
-                      </div>
-                    ) : null}
-
-                    {/* Market Position */}
-                    {hasRealData(draft.market_position) ? (
-                      <div style={{paddingLeft: 10}}>
-                        <CollapsibleSection title="Market Position" className="mb-0">
-                          <div className="text-[11.5px] text-white/65 leading-relaxed"><RichText text={scrubModePlaceholders(draft.market_position)} /></div>
-                        </CollapsibleSection>
-                      </div>
-                    ) : null}
-
-                    {/* Outreach Angles */}
-                    {Array.isArray(draft.hooks) && draft.hooks.length ? (
-                      <div style={{paddingLeft: 10}}>
-                        <CollapsibleSection title="Outreach Angles" count={draft.hooks.length} className="mb-0">
-                          <ul className="space-y-0.5 text-[11.5px] text-white/70">
-                            {draft.hooks.slice(0, 8).map((h, i) => (
-                              <li key={`hk_${i}`} className="flex items-start gap-1.5">
-                                <span className="shrink-0 text-blue-300/50 mt-0.5">\u2192</span>
-                                <span>{h}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </CollapsibleSection>
-                      </div>
-                    ) : null}
                   </div>
                 </div>
 

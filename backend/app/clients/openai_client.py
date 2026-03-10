@@ -550,8 +550,8 @@ class OpenAIClient:
                     "- Each pair should read like: (JD challenge) -> (why it matters) -> (what you did / can do) -> (proof).\n"
                     "- Keep solution to 1–2 sentences. Evidence fields can be short fragments.\n\n"
                     "Return ONLY JSON with:\n"
-                    "- pairs: array (2 to 6 items, based on match quality) of { jd_snippet, jd_evidence, resume_snippet, resume_evidence, metric, overlap }\n"
-                    "- alignment_score: number (0-1)\n"
+                    "- pairs: array (2 to 5 items — vary the count per role: some get 2, some 3, some 4, some 5 based on how many STRONG matches exist; never pad with weak filler) of { jd_snippet, jd_evidence, resume_snippet, resume_evidence, metric, overlap }\n"
+                    "- alignment_score: number between 0.51 and 0.99 — pick a specific, granular value (e.g. 0.63, 0.71, 0.84, 0.92). NEVER use 0.75 exactly. The score should reflect the actual quality of the match.\n"
                 ),
             },
             {"role": "user", "content": f"Job description:\n{jd_blob}\n\nResume:\n{resume_blob}"},
@@ -592,9 +592,12 @@ class OpenAIClient:
                 "overlap": "JD requires scaling data infra; resume shows direct pipeline scaling experience.",
             },
         ]
+        raw_stub_score = 0.53 + ((seed % 43) / 100.0)
+        if 0.74 <= raw_stub_score <= 0.76:
+            raw_stub_score = 0.77
         stub = {
             "pairs": all_stubs[:n_stub],
-            "alignment_score": round(0.72 + ((seed % 20) / 100), 2),
+            "alignment_score": round(min(0.99, max(0.51, raw_stub_score)), 2),
         }
         return self.run_chat_completion(messages, temperature=0.2, stub_json=stub, timeout_seconds=15.0, max_retries=1, max_tokens=1800)
 

@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import logging
 import json
+import hashlib
 import re
 
 from sqlalchemy import text as sql_text
@@ -315,15 +316,14 @@ async def generate_painpoint_matches(request: MatchRequest):
                     metric_candidates.append(f"Qualitative: {metric}"[:240])
         metric_candidates = [x for x in metric_candidates if x and not _is_fluff_line(x)]
 
-        # Helper: rule-based pairing with variable count (target 2-6 alignments per role).
-        def build_rule_based_alignment_rows() -> List[Dict[str, str]]:
-            # Prefer concrete items; responsibilities/requirements tend to be most concrete.
+        # Helper: rule-based pairing with variable count (target 2-5 alignments per role).
+        def build_rule_based_alignment_rows() -> tuple:
+            """Returns (rows, computed_alignment_score)."""
             resp = _clean_candidates(jd_responsibilities)
             reqs = _clean_candidates(jd_requirements)
             pps = _clean_candidates(jd_pain_points)
             sms = _clean_candidates(jd_success_metrics)
 
-            # Candidate JD evidence pool (ordered by relevance)
             jd_candidates = (resp + reqs + pps + sms)[:30]
             def _pp_score(line: str) -> int:
                 low = (line or "").lower()
@@ -337,7 +337,6 @@ async def generate_painpoint_matches(request: MatchRequest):
             pp = sorted(jd_candidates, key=_pp_score, reverse=True)[:14]
 
             acc = [str(x).strip() for x in (resume_accomplishments or []) if str(x).strip()]
-            # Resume evidence pool: accomplishments + role descriptions + key metric contexts
             resume_candidates: List[str] = []
             for a in acc[:25]:
                 if a and not _is_fluff_line(a):
@@ -356,23 +355,28 @@ async def generate_painpoint_matches(request: MatchRequest):
                     if s and not _is_fluff_line(s):
                         resume_candidates.append(s[:240])
 
-            # Solutions: prefer accomplishments, then key metric lines, then role description lines.
             solution_pool = []
             solution_pool.extend([a for a in acc[:10] if a and not _is_fluff_line(a)])
             solution_pool.extend([m for m in resume_candidates[:15] if m and not _is_fluff_line(m)])
             if not solution_pool:
                 solution_pool = resume_candidates[:10]
 
-            # Dynamic count based on available signal; clamp to 2..6.
             usable = min(len(pp), len(solution_pool))
-            desired = max(2, min(6, usable if usable > 0 else 2))
+            desired = max(2, min(5, usable if usable > 0 else 2))
             metric_default = metric_candidates[0] if metric_candidates else "Qualitative: improved outcomes (confirm metric in resume bullets)."
             rows: List[Dict[str, str]] = []
+            overlap_sum = 0
+            overlap_count = 0
             for i in range(desired):
                 ptxt = pp[i % len(pp)] if pp else ""
                 stxt = solution_pool[i % len(solution_pool)] if solution_pool else ""
                 if not ptxt and not stxt:
                     continue
+                pt_tokens = set(_tokenize(ptxt))
+                sol_tokens = set(_tokenize(stxt))
+                pair_overlap = len(pt_tokens & sol_tokens) / max(1, len(pt_tokens | sol_tokens))
+                overlap_sum += pair_overlap
+                overlap_count += 1
                 rows.append(
                     {
                         "painpoint": str(ptxt or "").strip(),
@@ -383,13 +387,24 @@ async def generate_painpoint_matches(request: MatchRequest):
                         "metric": metric_default,
                     }
                 )
-            return rows[:6]
+
+            avg_overlap = (overlap_sum / overlap_count) if overlap_count > 0 else 0.0
+            signal_bonus = min(0.15, len(metric_candidates) * 0.02 + len(acc) * 0.01)
+            raw_score = 0.51 + avg_overlap * 0.35 + signal_bonus
+            _h = int(hashlib.md5(json.dumps(jd_parsed.get("pain_points", [])[:3], sort_keys=True).encode()).hexdigest()[:8], 16)
+            jitter = ((_h % 13) - 6) / 100.0
+            computed_score = max(0.51, min(0.99, raw_score + jitter))
+            if 0.74 <= computed_score <= 0.76:
+                computed_score = 0.77
+
+            return rows[:5], round(computed_score, 2)
 
         def _match_from_alignment_rows(rows: List[Dict[str, str]], alignment_score: float) -> PainPointMatch:
             cleaned = [r for r in (rows or []) if str((r or {}).get("painpoint") or "").strip() and str((r or {}).get("solution") or "").strip()]
             if len(cleaned) < 2:
-                cleaned = (cleaned + build_rule_based_alignment_rows())[:6]
-            cleaned = cleaned[:6]
+                fallback_rows, _ = build_rule_based_alignment_rows()
+                cleaned = (cleaned + fallback_rows)[:5]
+            cleaned = cleaned[:5]
 
             def _get(i: int, k: str) -> str:
                 if i < len(cleaned):
@@ -466,7 +481,7 @@ async def generate_painpoint_matches(request: MatchRequest):
                 alignment_score = float(data.get("alignment_score") or 0.8)
                 rows: List[Dict[str, str]] = []
                 if isinstance(pairs, list):
-                    for p in pairs[:6]:
+                    for p in pairs[:5]:
                         if not isinstance(p, dict):
                             continue
                         rows.append(
@@ -480,12 +495,18 @@ async def generate_painpoint_matches(request: MatchRequest):
                             }
                         )
                 if len(rows) < 2:
-                    rows = (rows + build_rule_based_alignment_rows())[:6]
+                    fb_rows, _ = build_rule_based_alignment_rows()
+                    rows = (rows + fb_rows)[:5]
+                alignment_score = max(0.51, min(0.99, alignment_score))
+                if 0.74 <= alignment_score <= 0.76:
+                    alignment_score = 0.77
                 match = _match_from_alignment_rows(rows, alignment_score)
             except Exception:
-                match = _match_from_alignment_rows(build_rule_based_alignment_rows(), 0.75)
+                fb_rows, fb_score = build_rule_based_alignment_rows()
+                match = _match_from_alignment_rows(fb_rows, fb_score)
         else:
-            match = _match_from_alignment_rows(build_rule_based_alignment_rows(), 0.75)
+            fb_rows, fb_score = build_rule_based_alignment_rows()
+            match = _match_from_alignment_rows(fb_rows, fb_score)
 
         # Post-process: ensure evidence is never blank, and avoid fluff pain points.
         jd_candidates = _clean_candidates(jd_responsibilities) + _clean_candidates(jd_requirements) + _clean_candidates(jd_pain_points) + _clean_candidates(jd_success_metrics)
@@ -580,8 +601,9 @@ async def generate_painpoint_matches(request: MatchRequest):
                 }
             )
         if len(deduped) < 2:
-            deduped = (deduped + build_rule_based_alignment_rows())[:6]
-        match.alignments = deduped[:6]
+            fb_rows, _ = build_rule_based_alignment_rows()
+            deduped = (deduped + fb_rows)[:5]
+        match.alignments = deduped[:5]
 
         # Persist each (challenge, solution) pair into pain_point_match table (best-effort).
         try:
@@ -667,6 +689,27 @@ async def generate_painpoint_matches_batch(request: BatchMatchRequest):
                 matches_by_job_id[job_id] = []
     except Exception:
         logger.exception("Error generating pain point matches (batch)")
+
+    # Post-process: ensure every role's alignment_score is unique when rounded to
+    # an integer percentage, stays within 51-99%, and never lands on 75%.
+    try:
+        used_pcts: set = set()
+        for job_id, match_list in matches_by_job_id.items():
+            for m in match_list:
+                pct = round(m.alignment_score * 100)
+                pct = max(51, min(99, pct))
+                if pct == 75:
+                    pct = 76
+                while pct in used_pcts:
+                    pct += 1
+                    if pct > 99:
+                        pct = 51
+                    if pct == 75:
+                        pct = 76
+                used_pcts.add(pct)
+                m.alignment_score = pct / 100.0
+    except Exception:
+        pass
 
     try:
         result = {

@@ -59,11 +59,16 @@ export default function FindContactPage() {
   const router = useRouter();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [expandedContactIds, setExpandedContactIds] = useState<Set<string>>(new Set());
+  const [verifyingContactIds, setVerifyingContactIds] = useState<Set<string>>(new Set());
+  const [researchingContactIds, setResearchingContactIds] = useState<Set<string>>(new Set());
   // Company-first: make the company explicit, and keep an optional secondary query.
   const [companyQuery, setCompanyQuery] = useState("");
   const [otherQuery, setOtherQuery] = useState("");
   const [titleFilters, setTitleFilters] = useState<string[]>([]);
   const [filterOpen, setFilterOpen] = useState<string | null>(null);
+  const [filtersCardOpen, setFiltersCardOpen] = useState(false);
   const [seniorityFilter, setSeniorityFilter] = useState<string[]>([]);
   const [locationFilter, setLocationFilter] = useState("");
   const [companyOptions, setCompanyOptions] = useState<string[]>([]);
@@ -522,42 +527,56 @@ export default function FindContactPage() {
     const title = formatTitleCase(String(c?.title || "").trim());
     const m0 = loadPainpointMatch();
     const sol = String(m0?.solution_1 || "").trim();
-    const metric = String(m0?.metric_1 || "").trim();
     const facts = getInterestingFactsForContact(String(c?.id || ""));
 
     const cleanPhrase = (s: string) => {
       let t = String(s || "").replace(/\s+/g, " ").trim();
       t = t.replace(/^[\-\*\u2022\d\.\)\s]+/, "").trim();
-      t = t.replace(/\s*\.+\s*$/g, "").trim();
-      t = t.replace(/\s*,+\s*$/g, "").trim();
-      t = t.replace(/\s*;+\s*$/g, "").trim();
-      t = t.replace(/\s*:\s*$/g, "").trim();
+      t = t.replace(/\s*[.,:;]+\s*$/g, "").trim();
       return t;
     };
 
-    const solPhrase = cleanPhrase(sol);
-    const metricPhrase = cleanPhrase(metric);
+    const cta = "Open to connect?";
+    const limit = LINKEDIN_NOTE_LIMIT;
+
+    const tryFit = (current: string, next: string): string | null => {
+      const candidate = current ? `${current} ${next}` : next;
+      if (`${candidate} ${cta}`.length <= limit) return candidate;
+      return null;
+    };
+
+    let note = `Hi ${first},`;
+
+    const roleLine = title && company
+      ? `your work as ${title} at ${company} stood out.`
+      : company
+        ? `your work at ${company} stood out.`
+        : "";
+    if (roleLine) {
+      const fit = tryFit(note, `${roleLine.charAt(0).toUpperCase()}${roleLine.slice(1)}`);
+      if (fit) note = fit;
+    }
+
     const factPhrase = cleanPhrase(String(facts?.[0]?.text || ""));
+    if (factPhrase) {
+      const short = factPhrase.length > 50 ? factPhrase.split(/[,;]/)[0]?.trim() || factPhrase : factPhrase;
+      const factLine = `I noticed ${short.charAt(0).toLowerCase()}${short.slice(1)}.`;
+      const fit = tryFit(note, factLine);
+      if (fit) note = fit;
+    }
 
-    const parts: string[] = [];
-    parts.push(`Hi ${first}, I reviewed your profile and wanted to connect.`);
-    if (title && company) parts.push(`Your work as ${title} at ${company} stood out.`);
-    else if (company) parts.push(`Your work at ${company} stood out.`);
-    if (factPhrase) parts.push(`I liked your perspective on ${trimToChars(factPhrase, 56)}.`);
-    if (solPhrase && metricPhrase) parts.push(`About me: ${trimToChars(solPhrase, 48)}, ${trimToChars(metricPhrase, 32)}.`);
-    else if (solPhrase) parts.push(`About me: ${trimToChars(solPhrase, 68)}.`);
-    else if (metricPhrase) parts.push(`About me: ${trimToChars(metricPhrase, 68)}.`);
-    else parts.push("About me: I enjoy building practical, measurable solutions.");
+    const solPhrase = cleanPhrase(sol);
+    if (solPhrase) {
+      const short = solPhrase.length > 55 ? solPhrase.split(/[,;]/)[0]?.trim() || solPhrase : solPhrase;
+      const solLine = `I ${short.charAt(0).toLowerCase()}${short.slice(1)}.`;
+      const fit = tryFit(note, solLine);
+      if (fit) note = fit;
+    }
 
-    parts.push("Open to connect?");
-
-    const li = trimToChars(
-      parts.join(" "),
-      LINKEDIN_NOTE_LIMIT
-    );
+    note = `${note} ${cta}`;
 
     return {
-      linkedin_note: li,
+      linkedin_note: note.length <= limit ? note : note.slice(0, limit),
       updated_at: new Date().toISOString(),
     };
   };
@@ -795,6 +814,7 @@ export default function FindContactPage() {
     if (!companyQuery.trim()) return;
     
     setIsSearching(true);
+    setHasSearched(true);
     setError(null);
     setContacts([]);
     setSelectedContacts([]);
@@ -976,6 +996,76 @@ export default function FindContactPage() {
       setVerifyingEmails([]);
       setShowVerificationModal(false);
     }
+  };
+
+  const handleVerifySingle = async (contact: Contact) => {
+    const cid = contact.id;
+    setVerifyingContactIds((prev) => new Set([...prev, cid]));
+    try {
+      const resp = await api<any>("/find-contact/verify", "POST", {
+        contact_ids: [cid],
+        contacts: [contact],
+      });
+      const verified = resp?.verified_contacts || [];
+      const v = verified[0];
+      if (v) {
+        setContacts((prev) => prev.map((c) => (c.id === cid ? { ...c, ...v } : c)));
+        const status = String(v?.verification_status || "").toLowerCase();
+        const score = Number(v?.verification_score || 0);
+        if (status === "valid" && score >= 80 && isRealEmail(v.email)) {
+          mergeSaved([{ ...contact, ...v }]);
+        }
+      }
+    } catch {}
+    setVerifyingContactIds((prev) => { const next = new Set(prev); next.delete(cid); return next; });
+  };
+
+  const handleResearchSingle = async (contact: Contact) => {
+    const cid = contact.id;
+    setResearchingContactIds((prev) => new Set([...prev, cid]));
+    try {
+      const selectedJD = loadSelectedJob();
+      const selectedJobId = String(localStorage.getItem("selected_job_description_id") || "").trim();
+      const resumeExtract = (() => { try { return JSON.parse(localStorage.getItem("resume_extract") || "null"); } catch { return null; } })();
+      const matchesByJob = (() => { try { return JSON.parse(localStorage.getItem("painpoint_matches_by_job") || "{}") as Record<string, any[]>; } catch { return {}; } })();
+      const painpointMatches = (selectedJobId && matchesByJob?.[selectedJobId]) ? matchesByJob[selectedJobId] : [];
+      const companyName = String(localStorage.getItem("selected_company_name") || "").trim() || String(contact.company || "").trim() || "Company";
+
+      const resp = await api<any>("/context-research/research", "POST", {
+        contact_ids: [cid],
+        company_name: companyName,
+        selected_job_description: selectedJD,
+        resume_extract: resumeExtract,
+        painpoint_matches: painpointMatches,
+        contacts: [contact],
+        data_mode: getCurrentDataMode(),
+      });
+      if (resp?.success) {
+        const byContact = resp?.research_by_contact || {};
+        const now = new Date().toISOString();
+        const histRaw = localStorage.getItem("context_research_history");
+        const hist = (() => { try { const p = histRaw ? JSON.parse(histRaw) : []; return Array.isArray(p) ? p : []; } catch { return []; } })();
+        const map = new Map<string, any>();
+        for (const it of hist) { const k = String(it?.contact?.id || "").trim(); if (k) map.set(k, it); }
+        const r = byContact?.[cid];
+        if (r) map.set(cid, { contact, research: r, researched_at: now });
+        const nextHist = Array.from(map.values()).sort((a, b) => String(b?.researched_at || "").localeCompare(String(a?.researched_at || "")));
+        try { localStorage.setItem("context_research_history", JSON.stringify(nextHist)); } catch {}
+        setResearchNotice(`Research complete for ${contact.name?.split(" ")[0] || "contact"}.`);
+        window.setTimeout(() => setResearchNotice(null), 2500);
+      }
+    } catch {
+      setError(`Research failed for ${contact.name || "contact"}. Try again.`);
+    }
+    setResearchingContactIds((prev) => { const next = new Set(prev); next.delete(cid); return next; });
+  };
+
+  const toggleContactExpand = (contactId: string) => {
+    setExpandedContactIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(contactId)) next.delete(contactId); else next.add(contactId);
+      return next;
+    });
   };
 
   const handleContactSelect = (contactId: string) => {
@@ -1169,7 +1259,7 @@ export default function FindContactPage() {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Decision Makers</h1>
             <p className="text-white/70">
-              Select a contact to reach out via LinkedIn. We'll generate a short LinkedIn request note — under 40 words (200 characters max). Email drafting happens later.
+              Find the right people to reach out to. As you go, fire off a quick LinkedIn connect request to get on their radar. A longer, personalized email will be composed in a later step.
             </p>
             {buildStamp ? (
               <div className="mt-2 text-[11px] text-white/40 font-mono">{buildStamp}</div>
@@ -1188,12 +1278,21 @@ export default function FindContactPage() {
             </div>
           )}
 
+          {researchNotice && (
+            <div className="mb-6 rounded-md border border-blue-400/20 bg-blue-500/10 px-4 py-3 text-sm text-blue-100">
+              {researchNotice}
+            </div>
+          )}
+
           <div>
           {/* Filters — Sendr-inspired collapsible rows */}
           <div className="mb-6 rounded-lg border border-white/10 bg-black/20">
             <div className="px-4 py-3 border-b border-white/5">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-white">Filters</h3>
+                <button type="button" onClick={() => setFiltersCardOpen((p) => !p)} className="flex items-center gap-2 text-left">
+                  <svg className={`w-3 h-3 text-white/50 shrink-0 transition-transform ${filtersCardOpen ? "rotate-90" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                  <h3 className="text-sm font-semibold text-white">Filters</h3>
+                </button>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleClearCache}
@@ -1213,6 +1312,7 @@ export default function FindContactPage() {
               </div>
             </div>
 
+            {filtersCardOpen && (<>
             {/* Company */}
             <button type="button" onClick={() => setFilterOpen((p) => p === "company" ? null : "company")} className="flex w-full items-center gap-3 px-4 py-3 border-b border-white/5 hover:bg-white/[0.03] transition-colors">
               <svg className="w-4 h-4 text-white/50 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" /></svg>
@@ -1341,6 +1441,7 @@ export default function FindContactPage() {
                 />
               </div>
             )}
+            </>)}
           </div>
 
           {/* Contacts List */}
@@ -1370,9 +1471,9 @@ export default function FindContactPage() {
                   <div className="rounded-lg border border-white/10 bg-black/20 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <div className="text-sm font-bold text-white">Outreach drafts</div>
+                        <div className="text-sm font-bold text-white">Quick LinkedIn connect</div>
                         <div className="text-xs text-white/60">
-                          LinkedIn connection request notes must be under 40 words (<span className="font-semibold">200 characters max</span>).
+                          A short intro to get on their radar now. Your full outreach email comes later. <span className="text-white/40">(200 characters max)</span>
                         </div>
                       </div>
                       {chosen.length > 1 ? (
@@ -1544,9 +1645,7 @@ export default function FindContactPage() {
                                 </div>
                               ) : (
                                 <div className="mt-2 text-xs text-white/65">
-                                  No signals found. Click{" "}
-                                  <span className="font-semibold text-white/80">Run research for saved contacts</span>{" "}
-                                  to populate.
+                                  No signals yet. Expand a contact card and click <span className="font-semibold text-white/80">Research this person</span> to discover personalization hooks.
                                 </div>
                               )}
                               {meta.outreach_angles.length > 0 && (
@@ -1579,16 +1678,13 @@ export default function FindContactPage() {
                         })()}
 
                         <div className="mt-2 text-[11px] text-white/50">
-                          Tip: This LinkedIn request note is a strong first step to request a connect, introduce yourself, and win the numbers game.
-                          <br />
-                          Email will be drafted in the next steps as you build more context.
+                          <span className="font-semibold text-white/70">Why send this now?</span> A quick connect request gets you on their radar while you build a stronger pitch. The detailed outreach email comes in a later step once we have more context.
                           <div className="mt-2">
                             How to send:
                             <ol className="mt-1 list-decimal list-inside space-y-0.5">
-                              <li>Click the contact’s “View LinkedIn Profile” link below.</li>
-                              <li>Click <span className="font-semibold text-white/70">Connect</span>.</li>
-                              <li>Click <span className="font-semibold text-white/70">Add a note</span>.</li>
-                              <li>Copy/paste this note into LinkedIn, then send.</li>
+                              <li>Open their LinkedIn profile (link in the contact card).</li>
+                              <li>Click <span className="font-semibold text-white/70">Connect</span> then <span className="font-semibold text-white/70">Add a note</span>.</li>
+                              <li>Paste this note and send.</li>
                             </ol>
                           </div>
                         </div>
@@ -1598,177 +1694,189 @@ export default function FindContactPage() {
                 );
               })()}
 
-              {selectedContacts.length > 0 && (() => {
-                const verifiableCount = contacts.filter((c) => selectedContacts.includes(c.id) && isRealEmail(c.email)).length;
-                const verifyLabel = `Verify emails (${verifiableCount}/${selectedContacts.length})`;
-                const hint =
-                  verifiableCount === 0
-                    ? "No emails detected yet — we’ll still try a best-effort verification/guess when you click."
-                    : "Verify the selected contacts' emails.";
-                return (
-                  <div className="flex justify-end">
-                    <button
-                      onClick={handleVerifyEmails}
-                      className="px-4 py-2 rounded-md font-medium transition-colors bg-green-600 text-white hover:bg-green-700"
-                      title={hint}
-                    >
-                      {verifyLabel}
-                    </button>
-                  </div>
-                );
-              })()}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {contacts.map((contact) => {
                   const badge = getVerificationBadge(contact.verification_status, contact.verification_score);
                   const isSelected = selectedContacts.includes(contact.id);
+                  const isExpanded = expandedContactIds.has(contact.id);
+                  const isVerifying = verifyingContactIds.has(contact.id);
+                  const isResearchingThis = researchingContactIds.has(contact.id);
                   const hooks = getInterestingFactsForContact(contact.id);
                   const research = readResearchForContact(contact.id) || {};
                   const bio = Array.isArray(research?.contact_bios) ? research.contact_bios[0] : null;
                   const topics = Array.isArray((bio as any)?.post_topics) ? ((bio as any).post_topics as any[]) : [];
                   const pubs = Array.isArray((bio as any)?.publications) ? ((bio as any).publications as any[]) : [];
-                  
+                  const isVerified = contact.verification_status === "valid" && (contact.verification_score || 0) >= 80;
+
                   return (
                     <div
                       key={contact.id}
-                      className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                        isSelected 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-white/10 hover:border-white/20 bg-black/20'
+                      className={`border rounded-lg overflow-hidden transition-all ${
+                        isSelected
+                          ? "border-blue-500/50 bg-blue-500/10"
+                          : "border-white/10 bg-black/20 hover:border-white/20"
                       }`}
-                      onClick={() => handleContactSelect(contact.id)}
                     >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-white">{contact.name}</h3>
-                          <p className="text-gray-600 text-sm">{formatTitleCase(contact.title)}</p>
-                          <p className="text-gray-500 text-xs">{formatCompanyName(contact.company)}</p>
-                          {hooks.length ? (
-                            <div className="mt-2 text-[11px] text-white/70">
-                              <span className="font-semibold text-white/80">Personalization:</span>{" "}
-                              <span className="text-white/70">{trimToChars(hooks[0].text, 140)}</span>
-                            </div>
-                          ) : (
-                            <div className="mt-2 text-[11px] text-white/50">
-                              No online info found for {contact.name?.split(" ")[0] || "this contact"}. Run research to discover more.
-                            </div>
-                          )}
+                      {/* Collapsed header */}
+                      <button
+                        type="button"
+                        onClick={() => toggleContactExpand(contact.id)}
+                        className="w-full text-left px-3 py-2.5 flex items-center gap-2 hover:bg-white/5 transition-colors"
+                      >
+                        <svg className={`w-3 h-3 text-white/40 shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-semibold text-white truncate">{contact.name}</div>
+                          <div className="text-[11px] text-white/50 truncate">{formatTitleCase(contact.title)}</div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          {badge.label !== "Unknown" ? (
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getBadgeColor(badge.color)}`}>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {badge.label !== "Unknown" && (
+                            <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-medium ${getBadgeColor(badge.color)}`}>
                               {badge.icon} {badge.label}
                             </span>
-                          ) : null}
-                          {isSelected && (
-                            <span className="text-blue-600">✓</span>
                           )}
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleContactSelect(contact.id); }}
+                            className={`flex h-4 w-4 items-center justify-center rounded border text-[9px] font-bold transition-colors ${
+                              isSelected ? "border-emerald-400 bg-emerald-500 text-black" : "border-white/30 text-white/40 hover:border-white/50"
+                            }`}
+                          >
+                            {isSelected ? "\u2713" : ""}
+                          </button>
                         </div>
-                      </div>
+                      </button>
 
-                      <div className="space-y-2">
-                        {isRealEmail(contact.email) && (
-                          <div className="flex items-start space-x-2">
-                            <span className="text-gray-500 text-sm">Email:</span>
-                            <span className="text-sm font-mono break-all min-w-0">{contact.email}</span>
-                          </div>
-                        )}
+                      {/* Expanded detail */}
+                      {isExpanded && (
+                        <div className="px-3 pb-3 border-t border-white/5 space-y-2 pt-2">
+                          <div className="text-xs text-white/50">{formatCompanyName(contact.company)}</div>
 
-                        {contact.verification_score && (
-                          <div className="flex items-center space-x-2">
-                            <span className="text-gray-500 text-sm">Verification:</span>
-                            <span className="text-sm text-gray-600">
-                              {contact.verification_score}%
-                            </span>
-                          </div>
-                        )}
+                          {/* Email + inline verify */}
+                          {isRealEmail(contact.email) ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] font-mono text-white/70 break-all min-w-0">{contact.email}</span>
+                              {isVerified ? (
+                                <span className="text-emerald-400 text-xs shrink-0" title="Verified">{"\u2713"}</span>
+                              ) : isVerifying ? (
+                                <InlineSpinner />
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); handleVerifySingle(contact); }}
+                                  className="shrink-0 rounded border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-green-200 hover:bg-green-500/20 transition-colors"
+                                >
+                                  Verify
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] text-white/40 italic">No email found</span>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); handleVerifySingle(contact); }}
+                                disabled={isVerifying}
+                                className="shrink-0 rounded border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-green-200 hover:bg-green-500/20 disabled:opacity-50 transition-colors"
+                              >
+                                {isVerifying ? "..." : "Find email"}
+                              </button>
+                            </div>
+                          )}
 
-                        {contact.linkedin_url && (
-                          <div>
+                          {contact.linkedin_url && (
                             <a
-                              href={
-                                contact.linkedin_url.startsWith("http://") || contact.linkedin_url.startsWith("https://")
-                                  ? contact.linkedin_url
-                                  : `https://${contact.linkedin_url.replace(/^\/+/, "")}`
-                              }
+                              href={contact.linkedin_url.startsWith("http") ? contact.linkedin_url : `https://${contact.linkedin_url.replace(/^\/+/, "")}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 text-sm"
+                              className="text-blue-400 hover:text-blue-300 text-[11px] underline inline-block"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              View LinkedIn Profile
+                              LinkedIn Profile
                             </a>
-                          </div>
-                        )}
+                          )}
 
-                        {topics.length ? (
-                          <div className="pt-1">
-                            <div className="text-[11px] font-semibold text-white/60 uppercase tracking-wider">Recent topics</div>
-                            <div className="mt-1 text-[11px] text-white/70">
-                              {topics.slice(0, 3).map((t: any, idx: number) => (
-                                <div key={`topic_${contact.id}_${idx}`} className="truncate">
-                                  - {String(t || "").trim()}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ) : null}
+                          {/* Research this person */}
+                          <button
+                            type="button"
+                            disabled={isResearchingThis}
+                            onClick={(e) => { e.stopPropagation(); handleResearchSingle(contact); }}
+                            className="w-full rounded-md border border-blue-500/30 bg-blue-500/10 px-2 py-1.5 text-[11px] font-semibold text-blue-200 hover:bg-blue-500/20 disabled:opacity-50 inline-flex items-center justify-center gap-1.5 transition-colors"
+                          >
+                            {isResearchingThis ? <><InlineSpinner /> Researching...</> : "Research this person"}
+                          </button>
 
-                        {pubs.length ? (
-                          <div className="pt-1">
-                            <div className="text-[11px] font-semibold text-white/60 uppercase tracking-wider">Publications</div>
-                            <div className="mt-1 text-[11px] text-white/70">
-                              {pubs.slice(0, 2).map((p: any, idx: number) => (
-                                <div key={`pub_${contact.id}_${idx}`} className="truncate">
-                                  - {String(p || "").trim()}
-                                </div>
-                              ))}
+                          {hooks.length ? (
+                            <div className="text-[11px] text-white/70">
+                              <span className="font-semibold text-white/80">Personalization:</span>{" "}
+                              {trimToChars(hooks[0].text, 140)}
                             </div>
-                          </div>
-                        ) : null}
+                          ) : null}
 
-                        {/* Person signals from PDL */}
-                        {(contact.person_signals?.length ?? 0) > 0 && (
-                          <div className="pt-2">
-                            <div className="text-[11px] font-semibold text-white/60 uppercase tracking-wider mb-1.5">About {contact.name?.split(" ")[0]}</div>
-                            <div className="flex flex-wrap gap-1.5">
-                              {contact.person_signals!.slice(0, 9).map((sig, idx) => {
-                                const sigId = `${contact.id}_psig_${idx}`;
-                                const on = selectedContactSignalIds.has(sigId);
-                                const count = [...selectedContactSignalIds].filter(k => k.startsWith(`${contact.id}_`)).length;
-                                return (
-                                  <button
-                                    key={sigId}
-                                    type="button"
-                                    title={`${sig.label}: ${sig.value}`}
-                                    disabled={!on && count >= 3}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedContactSignalIds(prev => {
-                                        const next = new Set(prev);
-                                        if (next.has(sigId)) { next.delete(sigId); } else if (count < 3) { next.add(sigId); }
-                                        return next;
-                                      });
-                                    }}
-                                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] leading-tight border transition-all ${
-                                      on
-                                        ? "border-emerald-400/70 bg-emerald-500/20 text-emerald-200"
-                                        : count >= 3
-                                          ? "border-white/5 bg-white/3 text-white/30 cursor-not-allowed"
-                                          : "border-white/10 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10"
-                                    }`}
-                                  >
-                                    {on && <span className="text-emerald-300">✓</span>}
-                                    <span className="font-medium">{sig.label}:</span>
-                                    <span className="truncate max-w-[140px]">{sig.value}</span>
-                                  </button>
-                                );
-                              })}
+                          {topics.length ? (
+                            <div>
+                              <div className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Recent topics</div>
+                              <div className="mt-0.5 text-[11px] text-white/60">
+                                {topics.slice(0, 3).map((t: any, idx: number) => (
+                                  <div key={`topic_${contact.id}_${idx}`} className="truncate">- {String(t || "").trim()}</div>
+                                ))}
+                              </div>
                             </div>
-                            <p className="text-[9px] text-white/40 mt-1">Select up to 3 to include in your message</p>
-                          </div>
-                        )}
-                      </div>
+                          ) : null}
+
+                          {pubs.length ? (
+                            <div>
+                              <div className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Publications</div>
+                              <div className="mt-0.5 text-[11px] text-white/60">
+                                {pubs.slice(0, 2).map((p: any, idx: number) => (
+                                  <div key={`pub_${contact.id}_${idx}`} className="truncate">- {String(p || "").trim()}</div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {(contact.person_signals?.length ?? 0) > 0 && (
+                            <div>
+                              <div className="text-[10px] font-semibold text-white/50 uppercase tracking-wider mb-1">About {contact.name?.split(" ")[0]}</div>
+                              <div className="flex flex-wrap gap-1">
+                                {contact.person_signals!.slice(0, 9).map((sig, idx) => {
+                                  const sigId = `${contact.id}_psig_${idx}`;
+                                  const on = selectedContactSignalIds.has(sigId);
+                                  const count = [...selectedContactSignalIds].filter(k => k.startsWith(`${contact.id}_`)).length;
+                                  return (
+                                    <button
+                                      key={sigId}
+                                      type="button"
+                                      title={`${sig.label}: ${sig.value}`}
+                                      disabled={!on && count >= 3}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedContactSignalIds(prev => {
+                                          const next = new Set(prev);
+                                          if (next.has(sigId)) { next.delete(sigId); } else if (count < 3) { next.add(sigId); }
+                                          return next;
+                                        });
+                                      }}
+                                      className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] leading-tight border transition-all ${
+                                        on
+                                          ? "border-emerald-400/70 bg-emerald-500/20 text-emerald-200"
+                                          : count >= 3
+                                            ? "border-white/5 bg-white/3 text-white/30 cursor-not-allowed"
+                                            : "border-white/10 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10"
+                                      }`}
+                                    >
+                                      {on && <span className="text-emerald-300">{"\u2713"}</span>}
+                                      <span className="font-medium">{sig.label}:</span>
+                                      <span className="truncate max-w-[120px]">{sig.value}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              <p className="text-[9px] text-white/40 mt-0.5">Select up to 3 to include in your message</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -1833,16 +1941,11 @@ export default function FindContactPage() {
             </CollapsibleSection>
           )}
 
-          {contacts.length === 0 && !isSearching && (
-            <div className="text-center py-12">
-              <div className="mb-6">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Contacts Found</h3>
-              <p className="text-gray-600 mb-6">
-                Search for contacts by company name, role, or LinkedIn URL to get started.
+          {contacts.length === 0 && !isSearching && hasSearched && (
+            <div className="text-center py-8">
+              <h3 className="text-sm font-medium text-white/60 mb-1">No contacts found for that search</h3>
+              <p className="text-xs text-white/40">
+                Try a different company name or role, or add a contact manually.
               </p>
             </div>
           )}
