@@ -915,6 +915,16 @@ async def conduct_research(request: ResearchRequest):
     Conduct research on company and contacts.
     """
     try:
+        import time as _time
+        _budget_start = _time.monotonic()
+        _BUDGET_SECONDS = 55  # stay under Railway's ~60s proxy timeout
+
+        def _budget_remaining() -> float:
+            return max(0.0, _BUDGET_SECONDS - (_time.monotonic() - _budget_start))
+
+        def _budget_ok(min_seconds: float = 2.0) -> bool:
+            return _budget_remaining() > min_seconds
+
         # Decide whether to research company-level only or a specific division/department.
         company = (request.company_name or "").strip()
         jd = request.selected_job_description or {}
@@ -1101,6 +1111,8 @@ async def conduct_research(request: ResearchRequest):
                 seen: set[str] = set()
                 out: List[Dict[str, Any]] = []
                 for q in queries:
+                    if not _budget_ok(5.0):
+                        break
                     q = str(q or "").strip()
                     if not q:
                         continue
@@ -1173,36 +1185,46 @@ async def conduct_research(request: ResearchRequest):
             # Run overview separately as the general corpus anchor.
             serper_hits = _gather(company_queries["overview"], per_query=6, cap=10)
 
-            # Topic buckets: multiple queries + dedupe.
-            for k, qs in company_queries.items():
+            # Topic buckets: multiple queries + dedupe. Prioritise high-value topics.
+            _priority_topics = ["news", "product_launches", "hiring", "funding", "leadership"]
+            _secondary_topics = [k for k in company_queries if k not in (["overview"] + _priority_topics)]
+            for k in _priority_topics + _secondary_topics:
+                qs = company_queries.get(k)
+                if not qs:
+                    continue
                 if k == "overview":
                     company_serper_by_topic[k] = serper_hits
                     continue
+                if not _budget_ok(8.0):
+                    logger.info("Budget tight (%.1fs left); skipping topic %s", _budget_remaining(), k)
+                    break
                 hits_k = _gather(qs, per_query=6, cap=12)
                 if k == "news":
                     hits_k = [h for h in hits_k if _is_company_relevant_hit(scope_target, h, company_domain=domain_guess)]
                 company_serper_by_topic[k] = hits_k
+            company_serper_by_topic.setdefault("overview", serper_hits)
 
             # Contacts: per-contact facets (keep bounded)
             max_contacts = 8
             for c in contacts[:max_contacts]:
+                if not _budget_ok(8.0):
+                    logger.info("Budget tight (%.1fs left); skipping remaining contact Serper queries", _budget_remaining())
+                    break
                 nm = str(c.name or "").strip()
                 co = str(c.company or company).strip()
                 if not nm:
                     continue
-                # one general query + a few facet queries (posts/writing + talks/interviews + publications)
                 q_general = f"{nm} {co} {c.title or ''}".strip()
                 q_posts = f"{nm} {co} posts articles blog LinkedIn"
                 q_talks = f"{nm} {co} podcast interview conference talk"
                 q_pubs = f"{nm} {co} publication paper whitepaper guest post"
-                # If we have an explicit LinkedIn URL, bias a query toward it (public snippets only).
                 li = str(getattr(c, "linkedin_url", "") or "").strip()
                 q_li = f"{li} {nm} {co}".strip() if li else f'site:linkedin.com/in "{nm}" {co}'
                 hits_general = _serper(q_general, num=6)
-                hits_posts = _serper(q_posts, num=6)
-                hits_talks = _serper(q_talks, num=6)
-                hits_pubs = _serper(q_pubs, num=6)
-                hits_li = _serper(q_li, num=6)
+                hits_posts = _serper(q_posts, num=6) if _budget_ok(5.0) else []
+                hits_talks = _serper(q_talks, num=6) if _budget_ok(5.0) else []
+                hits_pubs = _serper(q_pubs, num=6) if _budget_ok(5.0) else []
+                hits_li = _serper(q_li, num=6) if _budget_ok(5.0) else []
                 contact_serper_hits[c.id] = hits_general
                 contact_serper_by_topic[c.id] = {
                     "general": hits_general,
@@ -1217,6 +1239,8 @@ async def conduct_research(request: ResearchRequest):
                 seen: set[str] = set()
                 out: List[Dict[str, Any]] = []
                 for q in queries or []:
+                    if not _budget_ok(5.0):
+                        break
                     q = str(q or "").strip()
                     if not q:
                         continue
@@ -1250,28 +1274,34 @@ async def conduct_research(request: ResearchRequest):
             }
 
             serper_hits = _gather_free(company_queries["overview"], per_query=6, cap=10)
+            company_serper_by_topic["overview"] = serper_hits
             for k, qs in company_queries.items():
                 if k == "overview":
-                    company_serper_by_topic[k] = serper_hits
-                else:
-                    hits_k = _gather_free(qs, per_query=6, cap=12)
-                    if k == "news":
-                        hits_k = [h for h in hits_k if _is_company_relevant_hit(scope_target, h, company_domain=company_domain_guess)]
-                    company_serper_by_topic[k] = hits_k
+                    continue
+                if not _budget_ok(8.0):
+                    logger.info("Budget tight (%.1fs left); skipping free topic %s", _budget_remaining(), k)
+                    break
+                hits_k = _gather_free(qs, per_query=6, cap=12)
+                if k == "news":
+                    hits_k = [h for h in hits_k if _is_company_relevant_hit(scope_target, h, company_domain=company_domain_guess)]
+                company_serper_by_topic[k] = hits_k
 
             max_contacts = 8
             for c in contacts[:max_contacts]:
+                if not _budget_ok(8.0):
+                    logger.info("Budget tight (%.1fs left); skipping remaining free contact queries", _budget_remaining())
+                    break
                 nm = str(c.name or "").strip()
                 co = str(c.company or company).strip()
                 if not nm:
                     continue
                 title_str = str(c.title or "").strip()
                 hits_general = _free_web_search(f'"{nm}" "{co}" {title_str}', num=6)
-                hits_posts = _free_web_search(f'"{nm}" {co} LinkedIn post article blog', num=6)
-                hits_talks = _free_web_search(f'"{nm}" {co} podcast interview conference speaker', num=6)
-                hits_pubs = _free_web_search(f'"{nm}" {co} publication whitepaper report', num=4)
+                hits_posts = _free_web_search(f'"{nm}" {co} LinkedIn post article blog', num=6) if _budget_ok(5.0) else []
+                hits_talks = _free_web_search(f'"{nm}" {co} podcast interview conference speaker', num=6) if _budget_ok(5.0) else []
+                hits_pubs = _free_web_search(f'"{nm}" {co} publication whitepaper report', num=4) if _budget_ok(5.0) else []
                 li = str(getattr(c, "linkedin_url", "") or "").strip()
-                hits_li = _free_web_search(f'{li} {nm} {co}' if li else f'site:linkedin.com/in "{nm}" {co}', num=4)
+                hits_li = _free_web_search(f'{li} {nm} {co}' if li else f'site:linkedin.com/in "{nm}" {co}', num=4) if _budget_ok(5.0) else []
                 contact_serper_hits[c.id] = hits_general
                 contact_serper_by_topic[c.id] = {
                     "general": hits_general,
@@ -1289,7 +1319,7 @@ async def conduct_research(request: ResearchRequest):
 
         # PDL company enrichment (best effort, but OFF by default due to cost)
         pdl_company: Dict[str, Any] = {}
-        if _ENABLE_PDL and settings.pdl_api_key and contact_company_websites:
+        if _ENABLE_PDL and settings.pdl_api_key and contact_company_websites and _budget_ok(10.0):
             try:
                 pdl = PDLClient(settings.pdl_api_key)
                 pdl_company = pdl.company_enrich(contact_company_websites[0]) or {}
@@ -1298,10 +1328,12 @@ async def conduct_research(request: ResearchRequest):
 
         # PDL person enrichment: get bio, skills, experience for each contact
         pdl_person_by_contact: Dict[str, Dict[str, Any]] = {}
-        if want_live and settings.pdl_api_key:
+        if want_live and settings.pdl_api_key and _budget_ok(10.0):
             try:
-                pdl = PDLClient(settings.pdl_api_key, timeout_seconds=12.0)
+                pdl = PDLClient(settings.pdl_api_key, timeout_seconds=min(8.0, _budget_remaining() - 10.0))
                 for c in contacts[:6]:
+                    if not _budget_ok(10.0):
+                        break
                     nm = str(c.name or "").strip()
                     co = str(c.company or company).strip()
                     li = str(getattr(c, "linkedin_url", "") or "").strip()
@@ -1357,7 +1389,8 @@ async def conduct_research(request: ResearchRequest):
 
         # Signaliz enrichment: if API key is configured, get structured signals.
         signaliz_data: Dict[str, Any] = {}
-        if want_live and signaliz_enabled():
+        _signaliz_timeout = min(20.0, _budget_remaining() - 15.0)
+        if want_live and signaliz_enabled() and _signaliz_timeout > 5.0:
             try:
                 job_context = f" for someone pursuing a {jd_title} role" if jd_title else ""
                 prompt = (
@@ -1371,16 +1404,18 @@ async def conduct_research(request: ResearchRequest):
                     domain=company_domain_guess,
                     target_signal_count=6,
                     lookback_days=180,
-                    timeout=45.0,
+                    timeout=_signaliz_timeout,
                 )
                 if signaliz_data:
                     corpus["signaliz_enrichment"] = signaliz_data
                     logger.info("Signaliz returned %d signals for %s", len(signaliz_data.get("signals") or []), scope_target)
             except Exception as e:
                 logger.warning("Signaliz enrichment failed for %s: %s", scope_target, e)
+        elif want_live and signaliz_enabled():
+            logger.info("Skipping Signaliz (budget %.1fs left)", _budget_remaining())
 
         # Newsroom scraping: try to find the company's press/newsroom page for recent announcements.
-        if want_live and company_domain_guess:
+        if want_live and company_domain_guess and _budget_ok(12.0):
             try:
                 newsroom_hits = _scrape_newsroom(company_domain_guess, max_items=4)
                 if newsroom_hits:
@@ -1992,11 +2027,17 @@ async def conduct_research(request: ResearchRequest):
             {"role": "user", "content": json.dumps({**corpus, "selected_contacts": contacts_dump})},
         ]
 
-        raw = client.run_chat_completion(messages, temperature=0.2, max_tokens=6144, stub_json=stub_json, timeout_seconds=120)
-        choices = raw.get("choices") or []
-        msg = (choices[0].get("message") if choices else {}) or {}
-        content_str = str(msg.get("content") or "")
-        data = extract_json_from_text(content_str) or stub_json
+        if _budget_ok(12.0):
+            _llm_timeout = max(10.0, min(45.0, _budget_remaining() - 5.0))
+            logger.info("Research LLM call: budget %.1fs left, LLM timeout %.1fs", _budget_remaining(), _llm_timeout)
+            raw = client.run_chat_completion(messages, temperature=0.2, max_tokens=6144, stub_json=stub_json, timeout_seconds=_llm_timeout, max_retries=1)
+            choices = raw.get("choices") or []
+            msg = (choices[0].get("message") if choices else {}) or {}
+            content_str = str(msg.get("content") or "")
+            data = extract_json_from_text(content_str) or stub_json
+        else:
+            logger.info("Skipping LLM call (budget %.1fs left); using stub data", _budget_remaining())
+            data = stub_json
 
         rb = data.get("research_by_contact") or stub_json["research_by_contact"]
         hooks = data.get("hooks") or stub_json["hooks"]
@@ -2279,6 +2320,8 @@ async def conduct_research(request: ResearchRequest):
                 },
             },
         )
+        _elapsed = _time.monotonic() - _budget_start
+        logger.info("conduct_research completed in %.1fs for %s", _elapsed, company)
         _cache_set(ck, resp_obj.model_dump() if hasattr(resp_obj, "model_dump") else resp_obj.dict())
         return resp_obj
     except Exception as e:

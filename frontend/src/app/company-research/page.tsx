@@ -550,7 +550,7 @@ export default function CompanyResearchPage() {
   const [draft, setDraft] = useState<CompanyResearch | null>(null);
   const [savedByCompany, setSavedByCompany] = useState<Record<string, CompanyResearch>>({});
   const [selectedSignalIds, setSelectedSignalIds] = useState<Set<string>>(new Set());
-  const [briefingOpen, setBriefingOpen] = useState(false);
+  // briefingOpen removed: all sections are now independent collapsibles
   const [companyOptions, setCompanyOptions] = useState<string[]>([]);
   const SIGNAL_LIMIT = 10;
 
@@ -767,8 +767,8 @@ export default function CompanyResearchPage() {
       window.setTimeout(() => setNotice(null), 2500);
     } catch (e: any) {
       const msg = String(e?.message || "Failed to run company research.");
-      if (msg.includes("500")) {
-        setError("Research service encountered a temporary error. Please try again in a moment.");
+      if (msg.includes("500") || msg.includes("502") || msg.includes("504") || msg.toLowerCase().includes("timeout") || msg.toLowerCase().includes("econnreset")) {
+        setError("Research is taking longer than expected. Please try again — results are often faster on a second attempt (cached data).");
       } else {
         setError(msg);
       }
@@ -1001,456 +1001,357 @@ export default function CompanyResearchPage() {
             </div>
           </div>
 
-          {/* Hiring Signals */}
-          <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left: Saved library */}
-            <div className="lg:col-span-3">
-              <div className="rounded-lg border border-white/10 bg-black/20 p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="text-sm font-bold text-white">Saved research</div>
-                    <div className="text-xs text-white/60">Click a company to load its saved briefing.</div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      disabled={!savedCompanies.length}
-                      onClick={exportCsv}
-                      className="text-xs font-semibold rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-white/80 hover:bg-white/10 disabled:opacity-50"
-                      title="Downloads all saved company research rows as a CSV."
-                    >
-                      Export all CSV
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const by = safeJson<Record<string, CompanyResearch>>(localStorage.getItem(STORAGE_BY_COMPANY), {});
-                        setSavedByCompany(by);
-                        setNotice("Saved library refreshed.");
-                        window.setTimeout(() => setNotice(null), 1200);
-                      }}
-                      className="text-xs underline text-white/70 hover:text-white"
-                    >
-                      Refresh
-                    </button>
+          {/* Main content: single column with collapsible company cards */}
+          <div className="mt-6 space-y-3">
+            {/* Saved companies row */}
+            {savedCompanies.length > 0 && (
+              <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-white/70">Saved Research</span>
+                  <div className="flex items-center gap-2">
+                    <button type="button" disabled={!savedCompanies.length} onClick={exportCsv} className="text-[10px] font-semibold rounded border border-white/10 bg-white/5 px-2 py-0.5 text-white/70 hover:bg-white/10 disabled:opacity-50">Export CSV</button>
                   </div>
                 </div>
-
-                {savedCompanies.length ? (
-                  <div className="mt-3 space-y-2 max-h-[520px] overflow-auto pr-1">
-                    {savedCompanies.slice(0, 30).map((c) => {
-                      const name = String(c.company_name || "").trim();
-                      const isActive = name && name === String(draft?.company_name || "").trim();
-                      return (
-                        <button
-                          key={`saved_${name}`}
-                          type="button"
-                          onClick={() => {
-                            if (!name) return;
-                            setActiveCompany(name);
-                            setDraft(sanitizeDraft(c));
-                            localStorage.setItem(STORAGE_ACTIVE_COMPANY, name);
-                            localStorage.setItem("selected_company_name", name);
-                          }}
-                          className={`w-full text-left rounded-md border px-3 py-2 transition-colors ${
-                            isActive ? "border-blue-400/60 bg-blue-500/10" : "border-white/10 bg-white/5 hover:bg-white/10"
-                          }`}
-                        >
-                          <div className="text-sm font-semibold text-white/85 truncate">{formatCompanyName(name)}</div>
-                          <div className="mt-1 text-[11px] text-white/55">
-                            {c.updated_at ? `updated ${fmtUpdated(c.updated_at)}` : ""}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="mt-3 text-sm text-white/60">No saved companies yet. Run research, then click “Save research”.</div>
-                )}
+                <div className="flex flex-wrap gap-1.5">
+                  {savedCompanies.slice(0, 30).map((c) => {
+                    const name = String(c.company_name || "").trim();
+                    const isActive = name && name === String(draft?.company_name || "").trim();
+                    return (
+                      <button
+                        key={`saved_${name}`}
+                        type="button"
+                        onClick={() => {
+                          if (!name) return;
+                          setActiveCompany(name);
+                          setDraft(sanitizeDraft(c));
+                          localStorage.setItem(STORAGE_ACTIVE_COMPANY, name);
+                          localStorage.setItem("selected_company_name", name);
+                        }}
+                        className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors ${
+                          isActive ? "border-emerald-400/50 bg-emerald-500/15 text-emerald-100" : "border-white/15 bg-white/5 text-white/70 hover:bg-white/10"
+                        }`}
+                      >
+                        {formatCompanyName(name)}
+                        <span className="ml-1 text-[9px] text-white/40">{c.updated_at ? fmtUpdated(c.updated_at) : ""}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Right: Draft details */}
-            <div className="lg:col-span-9">
-              {draft ? (
-                <>
-                  {!isSavedActive ? (
-                    <div className="mb-4 rounded-md border border-yellow-500/20 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-100">
-                      Draft generated but <span className="font-semibold">not saved</span> yet. Click <span className="font-semibold">Save research</span> to add it to the library.
-                    </div>
-                  ) : null}
+            {draft ? (
+              <>
+                {!isSavedActive ? (
+                  <div className="rounded-md border border-yellow-500/20 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-100">
+                    Draft generated but <span className="font-semibold">not saved</span> yet. Click <span className="font-semibold">Save research</span> below.
+                  </div>
+                ) : null}
 
-                  {/* Company Intelligence (top) */}
-                  {draft.intelligence && (draft.intelligence.outreach_summary?.one_liner_hook || draft.intelligence.executive_summary) ? (
-                    <CollapsibleSection title="Company Intelligence" className="mb-1">
-                      {draft.intelligence.overall_relevance_score > 0 && (
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="text-[11px] text-white/50">Relevance</span>
-                          <span className={`text-xs font-bold ${draft.intelligence.overall_relevance_score >= 0.7 ? "text-emerald-300" : draft.intelligence.overall_relevance_score >= 0.4 ? "text-amber-300" : "text-white/50"}`}>
-                            {(draft.intelligence.overall_relevance_score * 100).toFixed(0)}%
-                          </span>
-                        </div>
-                      )}
-                      {draft.intelligence.executive_summary && (
-                        <div className="mb-4">
-                          <div className="text-[13px] font-semibold text-orange-400 mb-1">Executive Summary</div>
-                          <div className="text-[12px] text-white/65 leading-relaxed">{cleanThemeText(draft.intelligence.executive_summary)}</div>
-                        </div>
-                      )}
-                      {draft.intelligence.outreach_summary?.one_liner_hook ? (
-                        <div className="rounded-md border border-blue-500/20 bg-blue-500/10 p-3">
-                          <div className="text-[13px] font-semibold text-orange-400 mb-1">Outreach Summary</div>
-                          <div className="text-[12px] text-white/80 mb-2">{draft.intelligence.outreach_summary.one_liner_hook}</div>
-                          {draft.intelligence.outreach_summary.strongest_signal && (
-                            <div className="text-[12px] text-white/60 mb-1">
-                              <span className="text-amber-400 font-semibold text-[11px]">Strongest signal:</span> {draft.intelligence.outreach_summary.strongest_signal}
-                            </div>
-                          )}
-                          {draft.intelligence.outreach_summary.recommended_angle && (
-                            <div className="text-[12px] text-white/60 mb-2">
-                              <span className="text-emerald-400 font-semibold text-[11px]">Recommended angle:</span> {draft.intelligence.outreach_summary.recommended_angle}
-                            </div>
-                          )}
-                          {draft.intelligence.outreach_summary.conversation_starters?.length ? (
-                            <div className="mt-2 pt-2 border-t border-blue-500/15">
-                              <div className="text-[11px] font-semibold text-orange-300/80 mb-1">Conversation Starters</div>
-                              {draft.intelligence.outreach_summary.conversation_starters.map((s, i) => (
-                                <div key={`cs_${i}`} className="text-[12px] text-white/65 mt-0.5 flex items-start gap-1.5">
-                                  <span className="shrink-0 text-blue-300/50 mt-0.5">→</span>
-                                  <span>{s}</span>
-                                </div>
-                              ))}
-                            </div>
-                          ) : null}
-                          {draft.intelligence.outreach_summary.sequence_strategy?.length ? (
-                            <div className="mt-2 pt-2 border-t border-blue-500/15">
-                              <div className="text-[11px] font-semibold text-orange-300/80 mb-1.5">Email Sequence Strategy</div>
-                              <div className="space-y-2">
-                                {draft.intelligence.outreach_summary.sequence_strategy.map((step) => (
-                                  <div key={`seq_${step.email_number}`} className="rounded border border-white/10 bg-white/[0.02] p-2">
-                                    <div className="flex items-center gap-2 mb-0.5">
-                                      <span className="inline-block rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 text-[9px] font-bold">
-                                        Email {step.email_number}
-                                      </span>
-                                      <span className="text-[11px] text-white/70 font-medium">{step.angle}</span>
-                                    </div>
-                                    {step.subject_line && (
-                                      <div className="text-[11px] text-white/50 mt-0.5">
-                                        <span className="text-white/30">Subject:</span> {step.subject_line}
-                                      </div>
-                                    )}
-                                    {step.key_point && (
-                                      <div className="text-[11px] text-white/45 mt-0.5">{step.key_point}</div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ) : null}
-                        </div>
+                {/* Company card header */}
+                <div className="rounded-lg border border-white/10 bg-black/20">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-sm font-bold text-white">{activeCompanyDisplay}</h2>
+                      {draft.intelligence?.overall_relevance_score ? (
+                        <span className={`text-[11px] font-bold ${draft.intelligence.overall_relevance_score >= 0.7 ? "text-emerald-300" : draft.intelligence.overall_relevance_score >= 0.4 ? "text-amber-300" : "text-white/50"}`}>
+                          {(draft.intelligence.overall_relevance_score * 100).toFixed(0)}% relevant
+                        </span>
                       ) : null}
-                    </CollapsibleSection>
-                  ) : null}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        disabled={isRunning || !draft.company_name}
+                        onClick={() => runResearch(draft.company_name)}
+                        className="rounded-md border border-white/10 bg-black/20 px-3 py-1.5 text-[11px] font-semibold text-white/80 hover:bg-white/10 disabled:opacity-50"
+                      >
+                        Regenerate
+                      </button>
+                      <button
+                        type="button"
+                        onClick={saveResearch}
+                        className="rounded-md bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-emerald-700"
+                      >
+                        Save research
+                      </button>
+                    </div>
+                  </div>
 
-                  {/* Select Signals for Outreach Drafts */}
-                  {allSignals.length > 0 ? (
-                    <CollapsibleSection title="Select Signals for Outreach Drafts" count={allSignals.length} className="mb-1">
-                      <p className="text-[11px] text-white/50 mb-3">
-                        Pick up to {SIGNAL_LIMIT} signals about <span className="font-semibold text-white/70">{activeCompanyDisplay}</span> to personalize your outreach. The AI will consider your selections when crafting the message — it chooses whichever details personalize best, so more context helps.
-                      </p>
-                      <div className="space-y-1.5">
-                        {allSignals.map((sig) => {
-                          const on = selectedSignalIds.has(sig.id);
-                          const atLimit = selectedSignalIds.size >= SIGNAL_LIMIT;
-                          const confColor = sig.confidence >= 0.8 ? "text-emerald-300" : sig.confidence >= 0.5 ? "text-amber-300" : "text-white/40";
-                          const badgeClass = SIGNAL_CAT_COLORS[sig.category] || "bg-white/10 text-white/70 border-white/20";
-                          return (
-                            <button
-                              key={sig.id}
-                              type="button"
-                              disabled={!on && atLimit}
-                              onClick={() => toggleSignal(sig.id)}
-                              className={`w-full text-left rounded-md border p-2.5 transition-colors ${
-                                on
-                                  ? "border-emerald-400/50 bg-emerald-500/15"
-                                  : atLimit
-                                    ? "border-white/5 bg-white/3 text-white/30 cursor-not-allowed"
-                                    : "border-white/10 bg-white/5 hover:bg-white/10"
-                              }`}
-                            >
-                              <div className="flex items-start gap-2">
-                                <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] font-bold ${
-                                  on ? "border-emerald-400 bg-emerald-500 text-black" : "border-white/30 text-white/40"
-                                }`}>
-                                  {on ? "✓" : ""}
-                                </span>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                                    <span className={`inline-block rounded-full border px-1.5 py-0.5 text-[9px] font-semibold ${badgeClass}`}>
-                                      {sig.category}
-                                    </span>
-                                    <span className={`text-[9px] font-bold ml-auto ${confColor}`}>
-                                      {(sig.confidence * 100).toFixed(0)}%
-                                    </span>
+                  <div className="px-4 py-3 space-y-1">
+                    {/* Company Intelligence */}
+                    {draft.intelligence && (draft.intelligence.outreach_summary?.one_liner_hook || draft.intelligence.executive_summary) ? (
+                      <div style={{paddingLeft: 10}}>
+                        <CollapsibleSection title="Company Intelligence" className="mb-0">
+                          {draft.intelligence.executive_summary && (
+                            <div className="mb-3">
+                              <div className="text-[12px] font-semibold text-orange-400 mb-1">Executive Summary</div>
+                              <div className="text-[11.5px] text-white/65 leading-relaxed">{cleanThemeText(draft.intelligence.executive_summary)}</div>
+                            </div>
+                          )}
+                          {draft.intelligence.outreach_summary?.one_liner_hook ? (
+                            <div className="rounded-md border border-blue-500/20 bg-blue-500/10 p-3">
+                              <div className="text-[12px] font-semibold text-orange-400 mb-1">Outreach Summary</div>
+                              <div className="text-[11.5px] text-white/80 mb-2">{draft.intelligence.outreach_summary.one_liner_hook}</div>
+                              {draft.intelligence.outreach_summary.strongest_signal && (
+                                <div className="text-[11.5px] text-white/60 mb-1">
+                                  <span className="text-amber-400 font-semibold text-[10px]">Strongest signal:</span> {draft.intelligence.outreach_summary.strongest_signal}
+                                </div>
+                              )}
+                              {draft.intelligence.outreach_summary.recommended_angle && (
+                                <div className="text-[11.5px] text-white/60 mb-2">
+                                  <span className="text-emerald-400 font-semibold text-[10px]">Recommended angle:</span> {draft.intelligence.outreach_summary.recommended_angle}
+                                </div>
+                              )}
+                              {draft.intelligence.outreach_summary.conversation_starters?.length ? (
+                                <div className="mt-2 pt-2 border-t border-blue-500/15">
+                                  <div className="text-[10px] font-semibold text-orange-300/80 mb-1">Conversation Starters</div>
+                                  {draft.intelligence.outreach_summary.conversation_starters.map((s: string, i: number) => (
+                                    <div key={`cs_${i}`} className="text-[11.5px] text-white/65 mt-0.5 flex items-start gap-1.5">
+                                      <span className="shrink-0 text-blue-300/50 mt-0.5">\u2192</span>
+                                      <span>{s}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : null}
+                              {draft.intelligence.outreach_summary.sequence_strategy?.length ? (
+                                <div className="mt-2 pt-2 border-t border-blue-500/15">
+                                  <div className="text-[10px] font-semibold text-orange-300/80 mb-1.5">Email Sequence Strategy</div>
+                                  <div className="space-y-1.5">
+                                    {draft.intelligence.outreach_summary.sequence_strategy.map((step: SequenceStep) => (
+                                      <div key={`seq_${step.email_number}`} className="rounded border border-white/10 bg-white/[0.02] p-2">
+                                        <div className="flex items-center gap-2 mb-0.5">
+                                          <span className="inline-block rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 text-[9px] font-bold">
+                                            Email {step.email_number}
+                                          </span>
+                                          <span className="text-[10px] text-white/70 font-medium">{step.angle}</span>
+                                        </div>
+                                        {step.subject_line && <div className="text-[10px] text-white/50 mt-0.5"><span className="text-white/30">Subject:</span> {step.subject_line}</div>}
+                                        {step.key_point && <div className="text-[10px] text-white/45 mt-0.5">{step.key_point}</div>}
+                                      </div>
+                                    ))}
                                   </div>
-                                  {sig.label && sig.label !== sig.category && (
-                                    <div className="text-[12px] text-white/80 font-medium leading-tight mb-0.5">{formatSignalText(sig.label)}</div>
-                                  )}
-                                  <div className="text-[11.5px] text-white/60 leading-relaxed break-words">{formatSignalText(sig.text)}</div>
-                                  {(sig.date || sig.sourceUrl) && (
-                                    <div className="flex items-center gap-3 mt-1">
-                                      {sig.date && <span className="text-[10px] text-white/35">{sig.date}</span>}
-                                      {sig.sourceUrl && (
-                                        <a href={sig.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:text-blue-300 underline" onClick={(e) => e.stopPropagation()}>
-                                          {friendlySourceLabel(sig.sourceUrl)}
-                                        </a>
+                                </div>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </CollapsibleSection>
+                      </div>
+                    ) : null}
+
+                    {/* Select Signals for Outreach Drafts */}
+                    {allSignals.length > 0 ? (
+                      <div style={{paddingLeft: 10}}>
+                        <CollapsibleSection title="Select Signals for Outreach Drafts" count={allSignals.length} className="mb-0">
+                          <p className="text-[10px] text-white/50 mb-2">
+                            Pick up to {SIGNAL_LIMIT} signals to personalize your outreach. The AI considers your selections when crafting the message.
+                          </p>
+                          <div className="space-y-1">
+                            {allSignals.map((sig) => {
+                              const on = selectedSignalIds.has(sig.id);
+                              const atLimit = selectedSignalIds.size >= SIGNAL_LIMIT;
+                              const confColor = sig.confidence >= 0.8 ? "text-emerald-300" : sig.confidence >= 0.5 ? "text-amber-300" : "text-white/40";
+                              const badgeClass = SIGNAL_CAT_COLORS[sig.category] || "bg-white/10 text-white/70 border-white/20";
+                              return (
+                                <button
+                                  key={sig.id}
+                                  type="button"
+                                  disabled={!on && atLimit}
+                                  onClick={() => toggleSignal(sig.id)}
+                                  className={`w-full text-left rounded-md border p-2 transition-colors ${
+                                    on
+                                      ? "border-emerald-400/50 bg-emerald-500/15"
+                                      : atLimit
+                                        ? "border-white/5 bg-white/3 text-white/30 cursor-not-allowed"
+                                        : "border-white/10 bg-white/5 hover:bg-white/10"
+                                  }`}
+                                >
+                                  <div className="flex items-start gap-2">
+                                    <span className={`mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border text-[9px] font-bold ${
+                                      on ? "border-emerald-400 bg-emerald-500 text-black" : "border-white/30 text-white/40"
+                                    }`}>
+                                      {on ? "\u2713" : ""}
+                                    </span>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                                        <span className={`inline-block rounded-full border px-1.5 py-0.5 text-[9px] font-semibold ${badgeClass}`}>
+                                          {sig.category}
+                                        </span>
+                                        <span className={`text-[9px] font-bold ml-auto ${confColor}`}>
+                                          {(sig.confidence * 100).toFixed(0)}%
+                                        </span>
+                                      </div>
+                                      {sig.label && sig.label !== sig.category && (
+                                        <div className="text-[11.5px] text-white/80 font-medium leading-tight mb-0.5">{formatSignalText(sig.label)}</div>
+                                      )}
+                                      <div className="text-[11px] text-white/60 leading-relaxed break-words">{formatSignalText(sig.text)}</div>
+                                      {(sig.date || sig.sourceUrl) && (
+                                        <div className="flex items-center gap-3 mt-0.5">
+                                          {sig.date && <span className="text-[9px] text-white/35">{sig.date}</span>}
+                                          {sig.sourceUrl && (
+                                            <a href={sig.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-400 hover:text-blue-300 underline" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                                              {friendlySourceLabel(sig.sourceUrl)}
+                                            </a>
+                                          )}
+                                        </div>
                                       )}
                                     </div>
-                                  )}
-                                </div>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <p className="text-[10px] text-white/40 mt-2">{selectedSignalIds.size} of {SIGNAL_LIMIT} selected</p>
-                    </CollapsibleSection>
-                  ) : null}
-
-                  {/* Hiring Signals */}
-                  {(draft.hiring_signals || []).length > 0 ? (
-                    <CollapsibleSection title="Hiring Signals" count={(draft.hiring_signals || []).length} className="mb-1">
-                      <div className="text-[11px] text-white/50 mb-2">
-                        Outreach-relevant signals for <span className="font-semibold text-white/70">{activeCompanyDisplay}</span>.
-                      </div>
-                      <div className="space-y-2">
-                        {(draft.hiring_signals || []).slice(0, 8).map((s, idx) => (
-                          <div key={`sig_${idx}`} className="rounded-md border border-white/10 bg-white/5 p-3">
-                            <div className="text-[12px] font-semibold text-orange-400">{s.label}</div>
-                            <div className="mt-1 text-[11.5px] text-white/65 leading-relaxed break-words"><RichText text={s.detail} /></div>
+                                  </div>
+                                </button>
+                              );
+                            })}
                           </div>
-                        ))}
+                          <p className="text-[9px] text-white/40 mt-1.5">{selectedSignalIds.size} of {SIGNAL_LIMIT} selected</p>
+                        </CollapsibleSection>
                       </div>
-                    </CollapsibleSection>
-                  ) : null}
+                    ) : null}
 
-                  {/* Recent Posts & Publications */}
-                  {(hasRealData(draft.recent_posts || "") || hasRealData(draft.publications || "")) ? (
-                    <div className="mb-1 rounded-lg border border-white/10 bg-black/20 p-4">
-                      {hasRealData(draft.recent_posts || "") ? (
-                        <div className={hasRealData(draft.publications || "") ? "mb-4" : ""}>
-                          <div className="text-[13px] font-semibold text-orange-400 mb-2">Recent Posts</div>
-                          <RichText text={scrubModePlaceholders(draft.recent_posts || "")} />
-                        </div>
-                      ) : null}
-                      {hasRealData(draft.publications || "") ? (
-                        <div>
-                          <div className="text-[13px] font-semibold text-orange-400 mb-2">Publications</div>
-                          <RichText text={scrubModePlaceholders(draft.publications || "")} />
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
+                    {/* Hiring Signals */}
+                    {(draft.hiring_signals || []).length > 0 ? (
+                      <div style={{paddingLeft: 10}}>
+                        <CollapsibleSection title="Hiring Signals" count={(draft.hiring_signals || []).length} className="mb-0">
+                          <div className="space-y-1.5">
+                            {(draft.hiring_signals || []).slice(0, 8).map((s, idx) => (
+                              <div key={`sig_${idx}`} className="rounded-md border border-white/10 bg-white/5 p-2.5">
+                                <div className="text-[11.5px] font-semibold text-orange-400">{s.label}</div>
+                                <div className="mt-0.5 text-[11px] text-white/65 leading-relaxed break-words"><RichText text={s.detail} /></div>
+                              </div>
+                            ))}
+                          </div>
+                        </CollapsibleSection>
+                      </div>
+                    ) : null}
 
-                  {/* Company Briefing */}
-                  <div className="mt-6 rounded-lg border border-white/10 bg-black/20 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => setBriefingOpen((v) => !v)}
-                  className="flex items-center gap-2 text-sm font-bold text-white hover:text-white/90"
-                >
-                  <span>Company Briefing</span>
-                  <span className="text-white/50 text-xs">{briefingOpen ? "▲" : "▼"}</span>
-                </button>
-                <div className="flex gap-2">
+                    {/* Recent Posts & Publications */}
+                    {(hasRealData(draft.recent_posts || "") || hasRealData(draft.publications || "")) ? (
+                      <div style={{paddingLeft: 10}}>
+                        <CollapsibleSection title="Recent Posts & Publications" className="mb-0">
+                          {hasRealData(draft.recent_posts || "") ? (
+                            <div className={hasRealData(draft.publications || "") ? "mb-3" : ""}>
+                              <div className="text-[12px] font-semibold text-orange-400 mb-1">Recent Posts</div>
+                              <RichText text={scrubModePlaceholders(draft.recent_posts || "")} />
+                            </div>
+                          ) : null}
+                          {hasRealData(draft.publications || "") ? (
+                            <div>
+                              <div className="text-[12px] font-semibold text-orange-400 mb-1">Publications</div>
+                              <RichText text={scrubModePlaceholders(draft.publications || "")} />
+                            </div>
+                          ) : null}
+                        </CollapsibleSection>
+                      </div>
+                    ) : null}
+
+                    {/* Company Overview */}
+                    {hasRealData(draft.overview) ? (
+                      <div style={{paddingLeft: 10}}>
+                        <CollapsibleSection title="Company Overview" className="mb-0">
+                          <div className="text-[11.5px] text-white/65 leading-relaxed"><RichText text={scrubModePlaceholders(draft.overview)} /></div>
+                        </CollapsibleSection>
+                      </div>
+                    ) : null}
+
+                    {/* Theme */}
+                    {hasRealData(draft.theme) ? (
+                      <div style={{paddingLeft: 10}}>
+                        <CollapsibleSection title="Theme & Mini-Plan" className="mb-0">
+                          <div className="text-[11.5px] text-white/65 leading-relaxed"><RichText text={cleanThemeText(scrubModePlaceholders(draft.theme))} /></div>
+                        </CollapsibleSection>
+                      </div>
+                    ) : null}
+
+                    {/* Recent News */}
+                    {hasRealData(draft.recent_news) ? (
+                      <div style={{paddingLeft: 10}}>
+                        <CollapsibleSection title="Recent News" className="mb-0">
+                          <div className="text-[11.5px] text-white/65 leading-relaxed"><RichText text={scrubModePlaceholders(draft.recent_news)} /></div>
+                        </CollapsibleSection>
+                      </div>
+                    ) : null}
+
+                    {/* Culture & Values */}
+                    {hasRealData(draft.culture) ? (
+                      <div style={{paddingLeft: 10}}>
+                        <CollapsibleSection title="Culture & Values" className="mb-0">
+                          <div className="text-[11.5px] text-white/65 leading-relaxed"><RichText text={scrubModePlaceholders(draft.culture)} /></div>
+                        </CollapsibleSection>
+                      </div>
+                    ) : null}
+
+                    {/* Product Launches */}
+                    {hasRealData(draft.product_launches) ? (
+                      <div style={{paddingLeft: 10}}>
+                        <CollapsibleSection title="Product Launches" className="mb-0">
+                          <div className="text-[11.5px] text-white/65 leading-relaxed"><RichText text={scrubModePlaceholders(draft.product_launches)} /></div>
+                        </CollapsibleSection>
+                      </div>
+                    ) : null}
+
+                    {/* Leadership Changes */}
+                    {hasRealData(draft.leadership_changes) ? (
+                      <div style={{paddingLeft: 10}}>
+                        <CollapsibleSection title="Leadership Changes" className="mb-0">
+                          <div className="text-[11.5px] text-white/65 leading-relaxed"><RichText text={scrubModePlaceholders(draft.leadership_changes)} /></div>
+                        </CollapsibleSection>
+                      </div>
+                    ) : null}
+
+                    {/* Other Hiring Signals */}
+                    {hasRealData(draft.other_hiring_signals) ? (
+                      <div style={{paddingLeft: 10}}>
+                        <CollapsibleSection title="Other Hiring Signals" className="mb-0">
+                          <div className="text-[11.5px] text-white/65 leading-relaxed"><RichText text={scrubModePlaceholders(draft.other_hiring_signals)} /></div>
+                        </CollapsibleSection>
+                      </div>
+                    ) : null}
+
+                    {/* Market Position */}
+                    {hasRealData(draft.market_position) ? (
+                      <div style={{paddingLeft: 10}}>
+                        <CollapsibleSection title="Market Position" className="mb-0">
+                          <div className="text-[11.5px] text-white/65 leading-relaxed"><RichText text={scrubModePlaceholders(draft.market_position)} /></div>
+                        </CollapsibleSection>
+                      </div>
+                    ) : null}
+
+                    {/* Outreach Angles */}
+                    {Array.isArray(draft.hooks) && draft.hooks.length ? (
+                      <div style={{paddingLeft: 10}}>
+                        <CollapsibleSection title="Outreach Angles" count={draft.hooks.length} className="mb-0">
+                          <ul className="space-y-0.5 text-[11.5px] text-white/70">
+                            {draft.hooks.slice(0, 8).map((h, i) => (
+                              <li key={`hk_${i}`} className="flex items-start gap-1.5">
+                                <span className="shrink-0 text-blue-300/50 mt-0.5">\u2192</span>
+                                <span>{h}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </CollapsibleSection>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* Save & Continue */}
+                <div className="mt-6 flex justify-end gap-3">
                   <button
                     type="button"
-                    disabled={isRunning || !draft.company_name}
-                    onClick={() => runResearch(draft.company_name)}
-                    className="rounded-md border border-white/10 bg-black/20 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/10 disabled:opacity-50"
+                    disabled={!canContinue}
+                    onClick={() => router.push("/find-contact")}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    title={!canContinue ? "Save company research first." : "Save & Continue"}
                   >
-                    Regenerate briefing
-                  </button>
-                  <button
-                    type="button"
-                    onClick={saveResearch}
-                    className="rounded-md bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700"
-                  >
-                    Save research
+                    Save &amp; Continue
                   </button>
                 </div>
-              </div>
-
-              {briefingOpen ? (
-              <>
-              {(() => {
-                const emptySections: string[] = [];
-                const cn = activeCompanyDisplay;
-                if (!hasRealData(draft.recent_news)) emptySections.push("recent news");
-                if (!hasRealData(draft.culture)) emptySections.push("culture & values");
-                if (!hasRealData(draft.product_launches)) emptySections.push("product launches");
-                if (!hasRealData(draft.leadership_changes)) emptySections.push("leadership changes");
-                if (!hasRealData(draft.other_hiring_signals)) emptySections.push("other hiring signals");
-                if (!hasRealData(draft.publications)) emptySections.push("publications");
-                if (!hasRealData(draft.market_position)) emptySections.push("market position");
-                return (
-                  <>
-              <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Overview and Theme are always shown */}
-                <div>
-                  <div className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Company Overview</div>
-                  <textarea
-                    value={draft.overview}
-                    onChange={(e) => setDraft({ ...draft, overview: e.target.value })}
-                    rows={6}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[12px] text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <div className="mt-2 text-[11px] text-white/60">
-                    Variables:{" "}
-                    <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
-                      {"{{company_summary}}"}
-                    </code>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Theme</div>
-                  <textarea
-                    value={cleanThemeText(draft.theme)}
-                    onChange={(e) => setDraft({ ...draft, theme: cleanThemeText(e.target.value) })}
-                    rows={6}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[12px] text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="- Theme + mini-plan…"
-                  />
-                  <div className="mt-2 text-[11px] text-white/60">
-                    Variable:{" "}
-                    <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
-                      {"{{company_theme}}"}
-                    </code>
-                  </div>
-                </div>
-
-                {hasRealData(draft.recent_news) ? (
-                <div>
-                  <div className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Recent News</div>
-                  <textarea
-                    value={draft.recent_news}
-                    onChange={(e) => setDraft({ ...draft, recent_news: e.target.value })}
-                    rows={6}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[12px] text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="- Headline: short summary"
-                  />
-                </div>
-                ) : null}
-
-                {hasRealData(draft.culture) ? (
-                <div>
-                  <div className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Company Culture & Values</div>
-                  <textarea
-                    value={draft.culture}
-                    onChange={(e) => setDraft({ ...draft, culture: e.target.value })}
-                    rows={6}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[12px] text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="What do they value? How do they operate?"
-                  />
-                </div>
-                ) : null}
-
-                {hasRealData(draft.product_launches) ? (
-                <div>
-                  <div className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Product launches</div>
-                  <textarea
-                    value={scrubModePlaceholders(draft.product_launches)}
-                    onChange={(e) => setDraft({ ...draft, product_launches: e.target.value })}
-                    rows={6}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[12px] text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="- Launch: … (include URL when possible)"
-                  />
-                </div>
-                ) : null}
-
-                {hasRealData(draft.leadership_changes) ? (
-                <div>
-                  <div className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Leadership changes</div>
-                  <textarea
-                    value={scrubModePlaceholders(draft.leadership_changes)}
-                    onChange={(e) => setDraft({ ...draft, leadership_changes: e.target.value })}
-                    rows={6}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[12px] text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="- Change: … (include URL when possible)"
-                  />
-                </div>
-                ) : null}
-
-                {hasRealData(draft.other_hiring_signals) ? (
-                <div className="lg:col-span-2">
-                  <div className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Other hiring signals</div>
-                  <textarea
-                    value={scrubModePlaceholders(draft.other_hiring_signals)}
-                    onChange={(e) => setDraft({ ...draft, other_hiring_signals: e.target.value })}
-                    rows={6}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[12px] text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="- Signal: … (include URL when possible)"
-                  />
-                </div>
-                ) : null}
-
-                {hasRealData(draft.market_position) ? (
-                <div className="lg:col-span-2">
-                  <div className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Market Position</div>
-                  <textarea
-                    value={draft.market_position}
-                    onChange={(e) => setDraft({ ...draft, market_position: e.target.value })}
-                    rows={6}
-                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[12px] text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Competitors, positioning, and what matters right now."
-                  />
-                </div>
-                ) : null}
-              </div>
-
-              {null}
-                  </>
-                );
-              })()}
-
-              {Array.isArray(draft.hooks) && draft.hooks.length ? (
-                <div className="mt-4">
-                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">
-                    Outreach angles (auto)
-                  </div>
-                  <ul className="space-y-1 text-sm text-white/75">
-                    {draft.hooks.slice(0, 8).map((h, i) => (
-                      <li key={`hk_${i}`}>- {h}</li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
               </>
-              ) : (
-                <div className="mt-2 text-xs text-white/50">Click to expand and edit full briefing details.</div>
-              )}
-            </div>
-                </>
-              ) : (
-                <div className="rounded-lg border border-white/10 bg-black/20 p-6 text-sm text-white/70">
-                  Pick a company above and click <span className="font-semibold text-white">Run Company Research</span>.
-                </div>
-              )}
-
-              <div className="mt-8 flex justify-end gap-3">
-                <button
-                  type="button"
-                  disabled={!canContinue}
-                  onClick={() => router.push("/find-contact")}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-                  title={!canContinue ? "Save company research first." : "Save & Continue"}
-                >
-                  Save &amp; Continue
-                </button>
+            ) : (
+              <div className="rounded-lg border border-white/10 bg-black/20 p-6 text-sm text-white/70">
+                Pick a company above and click <span className="font-semibold text-white">Run Company Research</span>.
               </div>
-            </div>
+            )}
+          </div>
+
           </div>
 
         </div>

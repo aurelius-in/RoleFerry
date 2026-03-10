@@ -534,6 +534,16 @@ async def search_contacts(request: ContactSearchRequest):
     Search for contacts at target companies.
     """
     try:
+        import time as _time
+        _budget_start = _time.monotonic()
+        _BUDGET_SECONDS = 50
+
+        def _budget_remaining() -> float:
+            return max(0.0, _BUDGET_SECONDS - (_time.monotonic() - _budget_start))
+
+        def _budget_ok(min_seconds: float = 2.0) -> bool:
+            return _budget_remaining() > min_seconds
+
         q = (request.company or request.query or "").strip()
         if not q:
             raise HTTPException(status_code=400, detail="Query is required")
@@ -573,7 +583,7 @@ async def search_contacts(request: ContactSearchRequest):
         pdl_contacts: List[Contact] = []
         if settings.pdl_api_key:
             try:
-                pdl = PDLClient(settings.pdl_api_key, timeout_seconds=20.0)
+                pdl = PDLClient(settings.pdl_api_key, timeout_seconds=min(15.0, _budget_remaining() - 10.0))
                 raw = pdl.person_search(company=q, size=100, domain=domain)
                 people = pdl.extract_people(raw)
                 logger.info("PDL person_search for '%s' returned %d people", q, len(people))
@@ -737,7 +747,7 @@ async def search_contacts(request: ContactSearchRequest):
 
         # 1) Fetch leadership/team page(s) and extract names/titles
         contacts: List[Contact] = []
-        if domain:
+        if domain and _budget_ok(10.0):
             # Special-case: Google leadership page is on about.google
             urls: List[str] = []
             if domain.lower() == "google.com":
@@ -765,7 +775,7 @@ async def search_contacts(request: ContactSearchRequest):
                 logger.info("Web scrape: no working leadership/team page found for domain='%s'", domain)
 
         # 3) Try OpenAI to identify public personas (supplements PDL + web scraping)
-        if len(contacts) + len(pdl_contacts) < 8 and settings.openai_api_key:
+        if len(contacts) + len(pdl_contacts) < 8 and settings.openai_api_key and _budget_ok(10.0):
             try:
                 client = get_openai_client()
                 # Ask GPT to identify likely decision makers based on its training data (broad knowledge).
@@ -850,13 +860,11 @@ async def search_contacts(request: ContactSearchRequest):
         logger.info("Combined contacts for '%s': %d PDL + %d other = %d total", q, len(pdl_contacts), len(contacts) - len(pdl_contacts), len(contacts))
 
         # 4c) Enrich contacts that have no signals via PDL Person Enrichment API.
-        # This fills in rich data for web-scraped and GPT contacts so every card
-        # shows up to 9 selectable person signals and company signals.
-        if settings.pdl_api_key:
-            pdl_enricher = PDLClient(settings.pdl_api_key, timeout_seconds=10.0)
+        if settings.pdl_api_key and _budget_ok(12.0):
+            pdl_enricher = PDLClient(settings.pdl_api_key, timeout_seconds=min(8.0, _budget_remaining() - 8.0))
             enrich_count = 0
             for c in contacts:
-                if enrich_count >= 6:
+                if enrich_count >= 6 or not _budget_ok(8.0):
                     break
                 if c.person_signals and len(c.person_signals) > 0:
                     continue
@@ -893,10 +901,9 @@ async def search_contacts(request: ContactSearchRequest):
             )
 
         # 4b) AI sanity-check: ensure contacts are truly relevant decision makers for the target job.
-        # We keep deterministic guardrails above, but this catches edge-cases when titles are ambiguous.
         client = get_openai_client()
         target = (request.target_job_title or request.role or "").strip()
-        if client.should_use_real_llm and target and contacts:
+        if client.should_use_real_llm and target and contacts and _budget_ok(10.0):
             try:
                 audit_payload = {
                     "target_job_title": target,
@@ -958,47 +965,54 @@ async def search_contacts(request: ContactSearchRequest):
             pass
 
         # GPT helper: decision-maker talking points + outreach angles per contact.
-        helper_context = {
-            "query": request.query,
-            "company": request.company,
-            "role": request.role,
-            "level": request.level,
-            "target_job_title": request.target_job_title,
-            "candidate_title": request.candidate_title,
-            "job_function": job_fn,
-            "contacts": [c.model_dump() for c in contacts],
-        }
-        messages = [
-            {
-                "role": "system",
-                "content": (
-                    "You generate outreach talking points for decision makers.\n\n"
-                    "Return ONLY JSON with keys:\n"
-                    "- talking_points_by_contact: object mapping contact_id -> array of strings\n"
-                    "- opener_suggestions: array of strings\n"
-                    "- questions_to_ask: array of strings\n"
-                ),
-            },
-            {"role": "user", "content": json.dumps(helper_context)},
-        ]
-        stub_json = {
-            "talking_points_by_contact": {
-                # Will be used only if LLM is disabled/unavailable.
-            },
+        stub_helper = {
+            "talking_points_by_contact": {},
             "opener_suggestions": [
                 "Quick question on your priorities for the role",
-                "Noticed a theme in the job posting — here’s a concrete idea",
+                "Noticed a theme in the job posting \u2014 here\u2019s a concrete idea",
             ],
             "questions_to_ask": [
-                "What’s the most urgent outcome you need in the next 90 days?",
+                "What\u2019s the most urgent outcome you need in the next 90 days?",
                 "Where is the team currently feeling the most pain (quality, speed, cost)?",
             ],
         }
-        raw = client.run_chat_completion(messages, temperature=0.25, max_tokens=650, stub_json=stub_json)
-        choices = raw.get("choices") or []
-        msg = (choices[0].get("message") if choices else {}) or {}
-        content_str = str(msg.get("content") or "")
-        helper = extract_json_from_text(content_str) or stub_json
+        if _budget_ok(8.0):
+            helper_context = {
+                "query": request.query,
+                "company": request.company,
+                "role": request.role,
+                "level": request.level,
+                "target_job_title": request.target_job_title,
+                "candidate_title": request.candidate_title,
+                "job_function": job_fn,
+                "contacts": [c.model_dump() for c in contacts],
+            }
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You generate outreach talking points for decision makers.\n\n"
+                        "Return ONLY JSON with keys:\n"
+                        "- talking_points_by_contact: object mapping contact_id -> array of strings\n"
+                        "- opener_suggestions: array of strings\n"
+                        "- questions_to_ask: array of strings\n"
+                    ),
+                },
+                {"role": "user", "content": json.dumps(helper_context)},
+            ]
+            _llm_timeout = max(8.0, min(30.0, _budget_remaining() - 3.0))
+            raw = client.run_chat_completion(messages, temperature=0.25, max_tokens=650, stub_json=stub_helper, timeout_seconds=_llm_timeout, max_retries=1)
+            choices = raw.get("choices") or []
+            msg = (choices[0].get("message") if choices else {}) or {}
+            content_str = str(msg.get("content") or "")
+            helper = extract_json_from_text(content_str) or stub_helper
+        else:
+            logger.info("Skipping helper LLM (budget %.1fs left)", _budget_remaining())
+            helper = stub_helper
+
+        _elapsed = _time.monotonic() - _budget_start
+        logger.info("search_contacts completed in %.1fs for '%s' (%d contacts)", _elapsed, q, len(contacts))
+
 
         return ContactSearchResponse(
             success=True,

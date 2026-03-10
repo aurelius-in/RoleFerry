@@ -766,12 +766,36 @@ export default function FindContactPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userKey]);
 
+  const handleClearCache = () => {
+    setContacts([]);
+    setSelectedContacts([]);
+    setSuggested([]);
+    setHelper(null);
+    setError(null);
+    setCompanyQuery("");
+    setOtherQuery("");
+    setTitleFilters([]);
+    setSeniorityFilter([]);
+    setLocationFilter("");
+    try { localStorage.removeItem("found_contacts"); } catch {}
+    try { localStorage.removeItem("selected_contacts"); } catch {}
+    try { localStorage.removeItem("selected_person_signals"); } catch {}
+    try { localStorage.removeItem("rf_selected_contact_signals"); } catch {}
+    try { localStorage.removeItem(TITLE_FILTER_STORAGE_KEY); } catch {}
+    try { localStorage.removeItem("context_research_by_contact"); } catch {}
+    try { localStorage.removeItem("context_research_active_contact_id"); } catch {}
+    try { localStorage.removeItem("context_research"); } catch {}
+    try { localStorage.removeItem("research_data"); } catch {}
+    try { localStorage.removeItem("context_research_helper"); } catch {}
+    try { localStorage.removeItem("context_research_meta"); } catch {}
+    try { localStorage.removeItem("context_research_history"); } catch {}
+  };
+
   const handleSearch = async () => {
     if (!companyQuery.trim()) return;
     
     setIsSearching(true);
     setError(null);
-    // Clear any previously cached results so we don't show stale demo contacts on failure.
     setContacts([]);
     setSelectedContacts([]);
     setSuggested([]);
@@ -809,7 +833,14 @@ export default function FindContactPage() {
     } catch (e: any) {
       const msg = String(e?.message || "");
       const isNotFound = msg.includes("404") || msg.toLowerCase().includes("no decision makers") || msg.toLowerCase().includes("no contacts found");
-      setError(isNotFound ? "No decision makers found for that company. Try a more specific company name, or use the suggested targets below." : (msg || "Search failed. Please try again."));
+      const isTimeout = msg.includes("500") || msg.includes("502") || msg.includes("504") || msg.toLowerCase().includes("timeout") || msg.toLowerCase().includes("econnreset");
+      setError(
+        isNotFound
+          ? "No decision makers found for that company. Try a more specific company name, or use the suggested targets below."
+          : isTimeout
+            ? "Search is taking longer than expected. Please try again \u2014 results are often faster on retry."
+            : (msg || "Search failed. Please try again.")
+      );
 
       if (isNotFound) {
         const company = companyQuery.trim();
@@ -1380,13 +1411,22 @@ export default function FindContactPage() {
             <div className="px-4 py-3 border-b border-white/5">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-white">Filters</h3>
-                <button
-                  onClick={handleSearch}
-                  disabled={isSearching || !companyQuery.trim()}
-                  className="bg-blue-600 text-white px-4 py-1.5 rounded-md text-xs font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
-                >
-                  {isSearching ? (<><InlineSpinner /><span>Searching</span></>) : "Search"}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleClearCache}
+                    className="border border-white/15 text-white/60 px-3 py-1.5 rounded-md text-xs font-medium hover:bg-white/10 hover:text-white transition-colors"
+                    title="Clear cached contacts and reset filters"
+                  >
+                    Clear Cache
+                  </button>
+                  <button
+                    onClick={handleSearch}
+                    disabled={isSearching || !companyQuery.trim()}
+                    className="bg-blue-600 text-white px-4 py-1.5 rounded-md text-xs font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+                  >
+                    {isSearching ? (<><InlineSpinner /><span>Searching</span></>) : "Search"}
+                  </button>
+                </div>
               </div>
             </div>
 
