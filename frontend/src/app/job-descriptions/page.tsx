@@ -656,11 +656,6 @@ export default function JobDescriptionsPage() {
   }, []);
 
   useEffect(() => {
-    loadScrapedRoles();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     if (!hasMounted) return;
     const t = window.setTimeout(() => {
       loadScrapedRoles();

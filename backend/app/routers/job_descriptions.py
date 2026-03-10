@@ -2882,12 +2882,22 @@ def _is_tech_intent(pref: Dict[str, Any]) -> bool:
         "full stack developer", "full stack engineer",
         "backend developer", "frontend developer", "devops engineer",
         "cloud engineer", "platform engineer", "site reliability",
-        "machine learning engineer", "machine learning", "data engineer",
-        "data scientist", "ai engineer", "ai architect", "ai researcher",
+        "machine learning engineer", "data engineer",
+        "ai engineer", "ai architect", "ai researcher",
         "ml engineer", "deep learning", "nlp engineer",
-        "computer vision", "artificial intelligence",
+        "computer vision",
     ]
+    # Strong tech job titles override non-tech context (someone IS an ML engineer)
     if any(p in blob for p in exact_phrases):
+        return True
+    # Weaker signals like "machine learning" or "python" appearing in industries or
+    # resume skills should NOT override explicit non-tech role context (e.g. a marketing
+    # person whose industry list includes "ai & machine learning").
+    ambiguous_phrases = [
+        "machine learning", "data scientist", "artificial intelligence",
+        "data science",
+    ]
+    if not has_non_tech_context and any(p in blob for p in ambiguous_phrases):
         return True
     word_markers = [
         "python", "javascript", "typescript", "golang", "rust",
@@ -2898,12 +2908,14 @@ def _is_tech_intent(pref: Dict[str, Any]) -> bool:
         return True
     role_specific = [
         "full stack", "backend", "frontend", "devops",
-        "cloud computing", "data science", "computer science",
+        "cloud computing", "computer science",
     ]
     if not has_non_tech_context and any(p in blob for p in role_specific):
         return True
-    short_markers = {" ai ", " ml ", " swe ", " nlp ", " sre "}
-    return any(m in blob for m in short_markers)
+    short_markers = {" swe ", " nlp ", " sre "}
+    if not has_non_tech_context and any(m in blob for m in short_markers):
+        return True
+    return False
 
 
 def _role_family_from_title(title: str) -> str:
@@ -2960,14 +2972,21 @@ def _preference_terms(pref: Dict[str, Any], role_query: str) -> List[str]:
             continue
         terms.append(wl)
     role_cats = " ".join([str(x).lower() for x in (pref.get("role_categories") or []) if str(x).strip()])
+    # Add terms for ALL matching role families, not just the first match.
     if _is_tech_intent(pref):
         terms.extend(["software", "engineer", "developer", "architect", "platform", "backend", "frontend", "python", "ai", "ml"])
-    elif any(x in role_cats for x in ["recruiting", "talent", "hr", "human resources"]):
+    if any(x in role_cats for x in ["recruiting", "talent", "hr", "human resources"]):
         terms.extend(["recruiter", "talent", "sourcing", "hiring", "staffing", "hr", "people operations"])
-    elif any(x in role_cats for x in ["marketing", "social media", "content", "brand"]):
-        terms.extend(["marketing", "brand", "social media", "content", "digital marketing", "campaigns", "growth"])
-    elif any(x in role_cats for x in ["sales", "business development", "account"]):
+    if any(x in role_cats for x in ["marketing", "social media", "content", "brand", "gtm", "go-to-market", "growth"]):
+        terms.extend(["marketing", "brand", "social media", "content", "digital marketing", "campaigns", "growth", "gtm", "go-to-market", "demand generation"])
+    if any(x in role_cats for x in ["sales", "business development", "account"]):
         terms.extend(["sales", "account executive", "business development", "revenue", "partnerships"])
+    if any(x in role_cats for x in ["data", "analytics", "science", "experimentation"]):
+        terms.extend(["data", "analytics", "data science", "experimentation", "insights", "analyst"])
+    if any(x in role_cats for x in ["finance", "accounting"]):
+        terms.extend(["finance", "financial", "accounting", "controller", "treasury", "analyst"])
+    if any(x in role_cats for x in ["operations", "supply chain", "logistics"]):
+        terms.extend(["operations", "supply chain", "logistics", "procurement"])
     out: List[str] = []
     seen: set[str] = set()
     for t in terms:
