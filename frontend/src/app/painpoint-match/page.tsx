@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import StarRating from "@/components/StarRating";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
 
@@ -150,7 +149,7 @@ export default function PainPointMatchPage() {
   const [resumeExtract, setResumeExtract] = useState<ResumeExtract | null>(null);
   const [matches, setMatches] = useState<PainPointMatch[]>([]);
   const [matchesByJobId, setMatchesByJobId] = useState<Record<string, PainPointMatch[]>>({});
-  const [selectedJD, setSelectedJD] = useState<JobDescription | null>(null);
+  const [expandedJobIds, setExpandedJobIds] = useState<Set<string>>(new Set());
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number; current?: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -201,11 +200,11 @@ export default function PainPointMatchPage() {
   }, []);
 
   useEffect(() => {
-    // When switching selected JD, show its saved matches (if any) without losing others.
-    if (!selectedJD) return;
-    const existing = matchesByJobId[selectedJD.id] || [];
-    setMatches(existing);
-  }, [selectedJD, matchesByJobId]);
+    const first = jobDescriptions[0];
+    if (first && Object.keys(matchesByJobId).length > 0) {
+      setMatches(matchesByJobId[first.id] || []);
+    }
+  }, [jobDescriptions, matchesByJobId]);
 
   const mapBackendMatch = (m: BackendPainPointMatch): PainPointMatch => {
     return {
@@ -251,10 +250,9 @@ export default function PainPointMatchPage() {
     setError(null);
     setProgress({ done: 0, total: jobDescriptions.length });
 
-    // Start blank every time until the user runs it (presentation-friendly).
     setMatches([]);
     setMatchesByJobId({});
-    setSelectedJD(null);
+    setExpandedJobIds(new Set());
 
     try {
       const nextByJob: Record<string, PainPointMatch[]> = {};
@@ -341,7 +339,6 @@ export default function PainPointMatchPage() {
 
       const first = jobDescriptions[0] || null;
       if (first) {
-        setSelectedJD(first);
         setMatches(nextByJob[first.id] || []);
         try {
           localStorage.setItem("painpoint_matches", JSON.stringify(nextByJob[first.id] || []));
@@ -376,7 +373,7 @@ export default function PainPointMatchPage() {
 
       // Convenience: also persist a "current" selection, but do NOT override what the user saved in Gaps.
       const existingId = String(localStorage.getItem("selected_job_description_id") || "").trim();
-      const fallback = selectedJD || jobDescriptions[0] || null;
+      const fallback = jobDescriptions[0] || null;
       if (!existingId && fallback) {
         localStorage.setItem("selected_job_description", JSON.stringify(fallback));
         localStorage.setItem("selected_job_description_id", String(fallback.id || ""));
@@ -556,163 +553,123 @@ export default function PainPointMatchPage() {
               ) : null}
 
               {Object.keys(matchesByJobId).length > 0 ? (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                  {/* Left column: role list */}
-                  <div className="lg:col-span-4">
-                    <div className="rounded-lg border border-white/10 bg-black/20 overflow-hidden">
-                      <div className="px-3 py-2 border-b border-white/10 bg-white/5">
-                        <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">Roles</div>
-                      </div>
-                      <div className="max-h-[640px] overflow-auto">
-                        {jobDescriptions.map((jd) => {
-                          const jobMatches = matchesByJobId[jd.id] || [];
-                          const alignCount = jobMatches.reduce((sum, m) => sum + renderableAlignments(m).length, 0);
-                          const isSelected = selectedJD?.id === jd.id;
-                          return (
-                            <button
-                              key={`role_row_${jd.id}`}
-                              type="button"
-                              onClick={() => {
-                                setSelectedJD(jd);
-                              }}
-                              className={`w-full text-left px-3 py-3 border-b border-white/10 hover:bg-white/5 transition-colors ${
-                                isSelected ? "bg-white/5" : ""
-                              }`}
-                            >
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0">
-                                  <div className="text-sm font-bold text-white truncate">{jd.title}</div>
-                                  <div className="text-xs text-white/60 truncate">{formatCompanyName(jd.company)}</div>
-                                </div>
-                                <div className="shrink-0 text-right">
-                                  <div className="text-[11px] text-white/60">Pain points</div>
-                                  <div className="text-sm font-extrabold text-white tabular-nums">
-                                    {alignCount || 0}
-                                  </div>
-                                </div>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Middle: detailed report */}
-                  <div className="lg:col-span-8">
-                    {(() => {
-                      const jd = selectedJD || jobDescriptions[0] || null;
-                      if (!jd) return null;
-                      const jobMatches = matchesByJobId[jd.id] || [];
-                      const first = jobMatches[0] || null;
-                      const score = first?.alignment_score ?? null;
-                      return (
-                        <div className="rounded-lg border border-white/10 bg-black/20 p-5">
-                          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                <div className="space-y-1">
+                  {jobDescriptions.map((jd) => {
+                    const jobMatches = matchesByJobId[jd.id] || [];
+                    const alignCount = jobMatches.reduce((sum, m) => sum + renderableAlignments(m).length, 0);
+                    const isOpen = expandedJobIds.has(jd.id);
+                    const first = jobMatches[0] || null;
+                    const score = first?.alignment_score ?? null;
+                    return (
+                      <div key={`card_${jd.id}`} className="rounded-lg border border-white/10 bg-black/20 overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setExpandedJobIds((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(jd.id)) next.delete(jd.id);
+                              else next.add(jd.id);
+                              return next;
+                            });
+                          }}
+                          className="w-full text-left px-4 py-3 hover:bg-white/5 transition-colors flex items-center justify-between gap-3"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="text-white/50 text-sm shrink-0">{isOpen ? "\u25bc" : "\u25b6"}</span>
                             <div className="min-w-0">
-                              <div className="text-xl font-extrabold text-white">{jd.title}</div>
-                              <div className="text-sm text-white/70">{formatCompanyName(jd.company)}</div>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-3">
-                              {score === null ? (
-                                <div className="text-xs text-white/60">Alignment: —</div>
-                              ) : (
-                                <div className="inline-flex items-center gap-3 rounded-md border border-white/10 bg-white/5 px-3 py-2">
-                                  <div className="text-sm font-bold text-white">{Math.round(score * 100)}%</div>
-                                  <StarRating value={score} scale="fraction" showNumeric />
-                                </div>
-                              )}
-                              {/* Removed: per-role downstream selection. Roles are dropped in Gaps, not here. */}
+                              <div className="text-sm font-bold text-white truncate">{jd.title}</div>
+                              <div className="text-xs text-white/60 truncate">{formatCompanyName(jd.company)}</div>
                             </div>
                           </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            {score !== null && (
+                              <span className={`text-xs font-semibold ${getScoreColor(score)}`}>
+                                {Math.round(score * 100)}%
+                              </span>
+                            )}
+                            <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs text-white/80">
+                              {alignCount} pain point{alignCount !== 1 ? "s" : ""}
+                            </span>
+                          </div>
+                        </button>
 
-                          {jobMatches.length === 0 ? (
-                            <div className="mt-4 text-sm text-white/60 italic">
-                              No matches generated for this role yet. Click <span className="font-semibold text-white/80">Run Pain Point Match Analysis</span> above.
-                            </div>
-                          ) : (
-                            <div className="mt-5 space-y-6">
-                              {jobMatches.map((match, index) => (
-                                <div key={`match_${jd.id}_${index}`} className="rounded-lg border border-white/10 bg-white/5 p-4">
-                                  <div className="text-xs text-white/60 mb-3">Showing 2-6 best matches for this role.</div>
-                                  <div className="space-y-6">
-                                    {renderableAlignments(match).length === 0 ? (
-                                      <div className="text-sm text-white/60 italic">No alignments were found for this role.</div>
-                                    ) : (
-                                      renderableAlignments(match).map((a) => (
-                                        <div
-                                          key={`align_${jd.id}_${index}_${a.n}`}
-                                          className="rounded-lg p-4 border border-white/10 bg-black/20"
-                                        >
-                                          <div className="flex items-start space-x-3">
-                                            <div className="flex-shrink-0">
-                                              <div className="w-8 h-8 bg-red-500/15 rounded-full flex items-center justify-center border border-red-400/25">
-                                                <span className="text-white/85 font-semibold">{a.n}</span>
-                                              </div>
+                        {isOpen && (
+                          <div className="border-t border-white/10 px-4 py-4">
+                            {jobMatches.length === 0 ? (
+                              <div className="text-sm text-white/60 italic">
+                                No matches generated for this role yet.
+                              </div>
+                            ) : (
+                              <div className="space-y-3">
+                                {jobMatches.map((match, mIdx) =>
+                                  renderableAlignments(match).length === 0 ? (
+                                    <div key={`match_${jd.id}_${mIdx}`} className="text-sm text-white/60 italic">No alignments found.</div>
+                                  ) : (
+                                    renderableAlignments(match).map((a) => (
+                                      <div
+                                        key={`align_${jd.id}_${mIdx}_${a.n}`}
+                                        className="rounded-lg p-4 border border-white/10 bg-white/5"
+                                      >
+                                        <div className="flex items-start space-x-3">
+                                          <div className="flex-shrink-0">
+                                            <div className="w-7 h-7 bg-red-500/15 rounded-full flex items-center justify-center border border-red-400/25">
+                                              <span className="text-white/85 text-xs font-semibold">{a.n}</span>
                                             </div>
-                                            <div className="flex-1">
-                                              <h4 className="text-sm font-semibold text-white/85 mb-2">Pain Point</h4>
-                                              <p className="text-sm text-white/85 mb-3">{a.painpoint}</p>
-                                              {String(a.jdEvidence || "").trim() ? (
-                                                <div className="mb-3 text-sm text-white/85">
-                                                  <span className="text-[15px] font-semibold text-sky-200">From JD:</span>{" "}
-                                                  <span className="italic text-sm text-white/85">“{sanitizeForUi(String(a.jdEvidence), "Missing details")}”</span>
-                                                </div>
-                                              ) : (
-                                                <div className="mb-3 text-sm text-white/85">
-                                                  <span className="text-[15px] font-semibold text-sky-200">From JD:</span>{" "}
-                                                  <span className="text-sm text-white/60 font-semibold">Missing details</span>
-                                                </div>
-                                              )}
-
-                                              {String(a.resumeEvidence || "").trim() ? (
-                                                <div className="mb-3 text-sm text-white/85">
-                                                  <span className="text-[15px] font-semibold text-violet-200">From Resume:</span>{" "}
-                                                  <span className="italic text-sm text-white/85">“{sanitizeForUi(String(a.resumeEvidence), "Missing details")}”</span>
-                                                </div>
-                                              ) : (
-                                                <div className="mb-3 text-sm text-white/85">
-                                                  <span className="text-[15px] font-semibold text-violet-200">From Resume:</span>{" "}
-                                                  <span className="text-sm text-white/60 font-semibold">Missing details</span>
-                                                </div>
-                                              )}
-                                              {String(a.overlap || "").trim() ? (
-                                                <div className="mb-3 text-sm text-white/85">
-                                                  <span className="font-semibold text-white/85">Why it matches:</span>{" "}
-                                                  <span className="text-sm text-white/80">{sanitizeForUi(String(a.overlap), "Missing details")}</span>
-                                                </div>
-                                              ) : null}
-
-                                              <h4 className="text-sm font-semibold text-sky-200 mb-2">Impact Metric</h4>
+                                          </div>
+                                          <div className="flex-1 space-y-2">
+                                            <div>
+                                              <h4 className="text-xs font-semibold text-white/70 uppercase tracking-wider">Pain Point</h4>
+                                              <p className="text-sm text-white/85">{a.painpoint}</p>
+                                            </div>
+                                            {String(a.jdEvidence || "").trim() ? (
+                                              <div className="text-sm text-white/85">
+                                                <span className="font-semibold text-sky-200">From JD:</span>{" "}
+                                                <span className="italic text-white/80">&ldquo;{sanitizeForUi(String(a.jdEvidence), "Missing details")}&rdquo;</span>
+                                              </div>
+                                            ) : null}
+                                            {String(a.resumeEvidence || "").trim() ? (
+                                              <div className="text-sm text-white/85">
+                                                <span className="font-semibold text-violet-200">From Resume:</span>{" "}
+                                                <span className="italic text-white/80">&ldquo;{sanitizeForUi(String(a.resumeEvidence), "Missing details")}&rdquo;</span>
+                                              </div>
+                                            ) : null}
+                                            {String(a.overlap || "").trim() ? (
+                                              <div className="text-sm text-white/85">
+                                                <span className="font-semibold text-white/85">Why it matches:</span>{" "}
+                                                <span className="text-white/80">{sanitizeForUi(String(a.overlap), "Missing details")}</span>
+                                              </div>
+                                            ) : null}
+                                            <div>
+                                              <h4 className="text-xs font-semibold text-sky-200">Impact Metric</h4>
                                               <p className="text-sm text-white/85">{renderValueOrMissing(String(a.metric || ""), "text-white/85")}</p>
                                             </div>
                                           </div>
                                         </div>
-                                      ))
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
+                                      </div>
+                                    ))
+                                  )
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
 
-                    <div className="mt-5 flex justify-end gap-3">
-                      <button
-                        onClick={() => router.push('/job-descriptions')}
-                        className="bg-white/10 text-white px-6 py-3 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
-                      >
-                        Back
-                      </button>
-                      <button
-                        onClick={handleContinue}
-                        className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
-                      >
-                        Save &amp; Continue
-                      </button>
-                    </div>
+                  <div className="mt-5 flex justify-end gap-3">
+                    <button
+                      onClick={() => router.push('/job-descriptions')}
+                      className="bg-white/10 text-white px-6 py-3 rounded-md font-medium hover:bg-white/15 transition-colors border border-white/10"
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={handleContinue}
+                      className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
+                    >
+                      Save &amp; Continue
+                    </button>
                   </div>
                 </div>
               ) : null}
