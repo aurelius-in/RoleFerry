@@ -3010,10 +3010,11 @@ def _score_scraped_role(
     location: Optional[str],
     pref_terms: List[str],
     require_us: bool,
-    funnel_mode: str = "strict",
+    funnel_mode: str = "broad",
     role_tokens: Optional[List[str]] = None,
     apply_tech_blockers: bool = False,
     apply_non_tech_blockers: bool = False,
+    positive_keywords: Optional[List[str]] = None,
 ) -> tuple[int, List[str], str, str]:
     blob = f"{title} {snippet}".lower()
     title_low = str(title or "").lower()
@@ -3034,8 +3035,16 @@ def _score_scraped_role(
         score += min(45, len(unique_hits) * 9)
         reasons.append(f"Preference skills match: {', '.join(unique_hits[:4])}")
     elif pref_terms:
-        score -= 20
+        score -= 10
         reasons.append("No skill/preference overlap")
+
+    # Positive keywords are purely additive: each match boosts the score
+    pos_kw = [str(k or "").strip().lower() for k in (positive_keywords or []) if str(k or "").strip()]
+    if pos_kw:
+        kw_hits = [k for k in pos_kw if k in blob]
+        if kw_hits:
+            score += min(20, len(set(kw_hits)) * 5)
+            reasons.append(f"Keyword match: {', '.join(sorted(set(kw_hits))[:4])}")
 
     if salary_range:
         score += 5
@@ -3053,10 +3062,10 @@ def _score_scraped_role(
         score += 2
 
     if apply_tech_blockers and _blocked_title_for_tech_seekers(title):
-        score -= 45 if str(funnel_mode or "strict").lower() == "strict" else 18
+        score -= 18
 
     if apply_non_tech_blockers and _blocked_title_for_non_tech_seekers(title):
-        score -= 50 if str(funnel_mode or "strict").lower() == "strict" else 25
+        score -= 25
 
     score = max(0, min(100, score))
     work_mode = "Remote" if "remote" in loc_blob.lower() else ("Hybrid" if "hybrid" in loc_blob.lower() else "On-site/Unspecified")
@@ -3481,19 +3490,17 @@ async def _discover_scraped_roles_inner(
     minimum_salary = _parse_min_salary_to_int(str(prefs.get("minimum_salary") or ""))
 
     requested = max(1, min(int(limit or 120), 300))
-    mode = str(funnel_mode or "broad").strip().lower()
-    if mode not in {"strict", "broad"}:
-        mode = "broad"
+    mode = "broad"
     target_companies = min(30, requested)
     require_us = _preferences_require_us(prefs)
     pref_terms = _preference_terms(prefs, role_query)
     tech_intent = _is_tech_intent(prefs)
-    # Keep strict quality for explicit strict mode; broaden when building top-of-funnel.
-    min_match_score = 50 if mode == "strict" else (35 if requested <= 180 else 25)
+    min_match_score = 15
     positive_kw = _parse_keyword_list(positive_keywords)
     negative_kw = _parse_keyword_list(negative_keywords)
 
     # Build multiple role terms so discovery does not collapse to one employer/source.
+    # Positive keywords are added as extra search terms to BROADEN discovery.
     role_terms: List[str] = []
     for x in (prefs.get("role_categories") or [])[:3]:
         t = str(x or "").strip()
@@ -3505,6 +3512,10 @@ async def _discover_scraped_roles_inner(
             role_terms.append(t)
     caller_resume_skills = [str(x).strip() for x in (prefs.get("resume_skills") or []) if str(x).strip()]
     for x in (caller_resume_skills or _resume_skill_hints())[:2]:
+        t = str(x or "").strip()
+        if t:
+            role_terms.append(t)
+    for x in positive_kw[:4]:
         t = str(x or "").strip()
         if t:
             role_terms.append(t)
@@ -3601,8 +3612,6 @@ async def _discover_scraped_roles_inner(
             queries.append(f'"{term}" "open position" "apply" {negative_clause}'.strip())
     # Keep to a reasonable cap to avoid runaway API usage / timeouts.
     query_cap = 120 if requested >= 220 else 90
-    if positive_kw or negative_kw:
-        query_cap = min(query_cap, 80)
     queries = queries[:query_cap]
 
     found: List[Dict[str, Any]] = []
@@ -3695,13 +3704,6 @@ async def _discover_scraped_roles_inner(
         )
         if effective_neg and _contains_any_keyword(text_blob, effective_neg):
             continue
-        if positive_kw and not _fuzzy_contains_any_keyword(text_blob, positive_kw):
-            if mode == "strict":
-                continue
-        if tech_intent and mode == "strict" and _blocked_title_for_tech_seekers(title):
-            continue
-        # Block tech titles only for NON-tech seekers.  If the resume/prefs show
-        # tech intent, skip this filter entirely -- the user IS looking for tech roles.
         if not tech_intent and _blocked_title_for_non_tech_seekers(title):
             pos_blob = f" {' '.join(positive_kw).lower()} "
             _tech_opt_in = ["software", "engineer", "developer", "machine learning",
@@ -3710,7 +3712,7 @@ async def _discover_scraped_roles_inner(
                             "architect", "python", "data engineer"]
             if not any(f" {tm} " in pos_blob or pos_blob.strip().startswith(tm) or pos_blob.strip().endswith(tm) for tm in _tech_opt_in):
                 continue
-        if not _looks_like_relevant_title(title, role_tokens, broad=(mode == "broad")):
+        if not _looks_like_relevant_title(title, role_tokens, broad=True):
             continue
         snippet = str(item.get("snippet") or "").strip()[:420]
         salary_range = _format_salary_value(item.get("salary_range")) or _extract_salary_range_from_text(f"{title} {snippet}")
@@ -3735,6 +3737,7 @@ async def _discover_scraped_roles_inner(
             role_tokens=role_tokens,
             apply_tech_blockers=tech_intent,
             apply_non_tech_blockers=not tech_intent,
+            positive_keywords=positive_kw,
         )
         if score < min_match_score:
             continue
