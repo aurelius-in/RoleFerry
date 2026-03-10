@@ -284,9 +284,8 @@ export default function JobDescriptionsPage() {
   const [scrapedRolesMessage, setScrapedRolesMessage] = useState<string>("");
   const [scrapedRolesMeta, setScrapedRolesMeta] = useState<{ requested_roles?: number; target_companies?: number; unique_companies?: number; discovered_urls?: number; scored_candidates?: number; source_breakdown?: Record<string, number>; fit_breakdown?: { great?: number; fair?: number; weak?: number; high?: number; medium?: number; exploratory?: number } } | null>(null);
   const [hasEverLoadedRoles, setHasEverLoadedRoles] = useState(false);
-  const [strictness, setStrictness] = useState(25);
-  const funnelMode = strictness > 50 ? "strict" : "broad";
-  const discoveryLimit = strictness > 70 ? 200 : strictness > 40 ? 350 : 500;
+  const funnelMode = "broad";
+  const discoveryLimit = 500;
   const highFitOnly = false;
   const [ignoredScrapedRoleIds, setIgnoredScrapedRoleIds] = useState<string[]>([]);
   const [importedScrapedRoleIds, setImportedScrapedRoleIds] = useState<string[]>([]);
@@ -1769,28 +1768,8 @@ export default function JobDescriptionsPage() {
                         )}
                       </button>
                     </div>
-                    <div className="mt-2 text-[11px]">
-                      <div className="flex items-center gap-3">
-                        <span className="text-white/50 font-semibold shrink-0">Broad</span>
-                        <input
-                          type="range"
-                          min={0}
-                          max={100}
-                          step={5}
-                          value={strictness}
-                          onChange={(e) => setStrictness(Number(e.target.value))}
-                          className="flex-1 h-1.5 accent-emerald-400 cursor-pointer"
-                          title={`Strictness: ${strictness}%`}
-                        />
-                        <span className="text-white/50 font-semibold shrink-0">Strict</span>
-                      </div>
-                      <div className="mt-1 text-[10px] text-white/40 text-center">
-                        {strictness <= 33
-                          ? "At least a few keyword matches"
-                          : strictness <= 66
-                          ? "More keyword matches"
-                          : "Most keyword matches"}
-                      </div>
+                    <div className="mt-1.5 text-[10px] text-white/40">
+                      Positive keywords find more roles. Negative keywords filter them out. Sorted by relevance.
                     </div>
                   </div>
                 </div>
@@ -1968,20 +1947,14 @@ export default function JobDescriptionsPage() {
             ) : null}
 
             {(() => {
-              const minScore = strictness <= 33 ? 0 : strictness <= 66 ? 25 : 50;
               const visibleScrapedRoles = scrapedRoles
                 .filter((r) => !ignoredScrapedRoleIds.includes(String(r.id || "")))
-                .filter((r) => Number(r.match_score || 0) >= minScore)
                 .filter((r) => {
                   if (!negativeKeywords.length) return true;
                   const blob = `${r.title} ${r.snippet || ""}`.toLowerCase();
                   return !negativeKeywords.some((kw) => blob.includes(kw.toLowerCase()));
                 });
-              const greatFit = visibleScrapedRoles.filter((r) => Number(r.match_score || 0) >= 55);
-              const fairFit = visibleScrapedRoles.filter((r) => { const s = Number(r.match_score || 0); return s >= 40 && s < 55; });
-              const weakFit = visibleScrapedRoles.filter((r) => Number(r.match_score || 0) < 40).slice(0, 5);
-              const unsortedRoles = [...greatFit, ...fairFit, ...weakFit];
-              const displayRoles = [...unsortedRoles].sort((a, b) => {
+              const displayRoles = [...visibleScrapedRoles].sort((a, b) => {
                 if (matchedSortBy === "company") return (a.company || "").localeCompare(b.company || "");
                 if (matchedSortBy === "role") return (a.title || "").localeCompare(b.title || "");
                 if (matchedSortBy === "location") {
@@ -1994,6 +1967,10 @@ export default function JobDescriptionsPage() {
                 }
                 return Number(b.match_score || 0) - Number(a.match_score || 0);
               });
+
+              const greatFit = displayRoles.filter((r) => Number(r.match_score || 0) >= 55);
+              const fairFit = displayRoles.filter((r) => { const s = Number(r.match_score || 0); return s >= 40 && s < 55; });
+              const weakFit = displayRoles.filter((r) => Number(r.match_score || 0) < 40);
 
               const fitLabel = (score: number) => {
                 if (score >= 55) return { text: "great fit", cls: "border-emerald-400/30 bg-emerald-500/10 text-emerald-100" };
@@ -2012,7 +1989,7 @@ export default function JobDescriptionsPage() {
                         onChange={(e) => setMatchedSortBy(e.target.value as typeof matchedSortBy)}
                         className="rounded-md border border-white/10 bg-black/30 px-2 py-1 text-xs text-white/80 outline-none focus:border-white/20"
                       >
-                        <option value="fit">Role Fit</option>
+                        <option value="fit">Relevance</option>
                         <option value="company">Company</option>
                         <option value="role">Role</option>
                         <option value="location">Location</option>
