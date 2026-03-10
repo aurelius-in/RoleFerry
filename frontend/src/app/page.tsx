@@ -22,8 +22,8 @@ const STONES: StoneConfig[] = [
   { step: 6, tab: "pain-point-match", label: "Pain Point Match", icon: "🔗", href: "/painpoint-match" },
   { step: 7, tab: "company-research", label: "Company Research", icon: "🏢", href: "/company-research" },
   { step: 8, tab: "decision-makers", label: "Decision Makers", icon: "👤", href: "/find-contact" },
-  { step: 9, tab: "offer", label: "Offer", icon: "✨", href: "/offer" },
-  { step: 10, tab: "apply", label: "Apply", icon: "✅", href: "/apply" },
+  { step: 9, tab: "apply", label: "Apply", icon: "✅", href: "/apply" },
+  { step: 10, tab: "offer", label: "Offer", icon: "✨", href: "/offer" },
   { step: 11, tab: "bio-page", label: "Bio Page", icon: "🌐", href: "/bio-page" },
   { step: 12, tab: "campaign", label: "Campaign", icon: "📧", href: "/campaign" },
 ];
@@ -67,17 +67,33 @@ export default function Home() {
             ? (parsed as any).steps
             : [];
 
-        // New format (v5): Apply inserted at step 7, launch removed from steps.
-        // IMPORTANT: do not run legacy remaps or we can accidentally drop step 12 and never unlock Launch.
-        if (version >= 5) {
+        // v6+: current layout. Apply=9, Offer=10.
+        if (version >= 6) {
           const final = Array.from(new Set((steps || []).filter((n) => Number.isFinite(n) && n >= 1 && n <= 12)));
           setCompleted(new Set(final));
           return;
         }
 
-        // v4 -> v5 remap:
+        // v5 -> v6 remap: swap Apply (was 10) and Offer (was 9).
+        // v5: ...9 offer, 10 apply...
+        // v6: ...9 apply, 10 offer...
+        if (version === 5) {
+          const remapped = (steps || []).map((n) => {
+            if (n === 9) return 10;
+            if (n === 10) return 9;
+            return n;
+          });
+          const final = Array.from(new Set(remapped.filter((n) => Number.isFinite(n) && n >= 1 && n <= 12)));
+          setCompleted(new Set(final));
+          try {
+            window.localStorage.setItem("roleferry-progress", JSON.stringify({ v: 6, steps: final }));
+          } catch {}
+          return;
+        }
+
+        // v4 -> v5 remap (v5->v6 swap of steps 9/10 happens on next load):
         // v4: 1 prefs, 2 resume, 3 personality, 4 roles, 5 gaps, 6 match, 7 offer, 8 research, 9 contact, 10 bio, 11 campaign, 12 launch
-        // v5: 1 prefs, 2 resume, 3 personality, 4 roles, 5 gaps, 6 match, 7 apply, 8 offer, 9 research, 10 contact, 11 bio, 12 campaign
+        // v5: 1 prefs, 2 resume, 3 personality, 4 roles, 5 gaps, 6 match, 7 research, 8 contact, 9 offer, 10 apply, 11 bio, 12 campaign
         if (version === 4) {
           const remapped = (steps || []).map((n) => {
             if (n >= 7 && n <= 11) return n + 1;

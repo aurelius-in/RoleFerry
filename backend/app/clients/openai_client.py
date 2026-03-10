@@ -523,7 +523,7 @@ class OpenAIClient:
 
     def generate_pain_point_map(self, jd_blob: str, resume_blob: str) -> Dict[str, Any]:
         """
-        Given a job description and resume text, propose up to three
+        Given a job description and resume text, propose 2-6
         (challenge, solution, metric) triplets with an overall alignment_score.
         """
         messages = [
@@ -531,7 +531,7 @@ class OpenAIClient:
                 "role": "system",
                 "content": (
                     "You match a job's REAL responsibilities/requirements to a candidate's REAL resume evidence.\n"
-                    "Goal: produce up to 3 grounded alignments that feel like a logical, specific flow (not vague or generic).\n\n"
+                    "Goal: produce 2 to 6 grounded alignments (vary the count based on how many strong matches exist). Never pad with weak/generic filler.\n\n"
                     "Inputs:\n"
                     "- The user message contains two JSON blobs: Job description and Resume.\n"
                     "- Prefer JD responsibilities/requirements over fluffy marketing lines.\n\n"
@@ -550,43 +550,53 @@ class OpenAIClient:
                     "- Each pair should read like: (JD challenge) -> (why it matters) -> (what you did / can do) -> (proof).\n"
                     "- Keep solution to 1–2 sentences. Evidence fields can be short fragments.\n\n"
                     "Return ONLY JSON with:\n"
-                    "- pairs: array (max 3) of { jd_snippet, jd_evidence, resume_snippet, resume_evidence, metric, overlap }\n"
+                    "- pairs: array (2 to 6 items, based on match quality) of { jd_snippet, jd_evidence, resume_snippet, resume_evidence, metric, overlap }\n"
                     "- alignment_score: number (0-1)\n"
                 ),
             },
             {"role": "user", "content": f"Job description:\n{jd_blob}\n\nResume:\n{resume_blob}"},
         ]
         seed = self._stable_seed(messages)
+        n_stub = 2 + (seed % 3)  # 2, 3, or 4 stub pairs for variety
+        all_stubs = [
+            {
+                "jd_snippet": "Improve onboarding activation by reducing drop-off in first-week usage",
+                "jd_evidence": "Own onboarding and activation initiatives end-to-end",
+                "resume_snippet": "Redesigned onboarding flow and instrumented key events to identify drop-off and iterate quickly.",
+                "resume_evidence": "Led onboarding funnel revamp; ran experiments to improve activation",
+                "metric": "",
+                "overlap": "Both focus on onboarding activation; resume shows direct experience improving the flow.",
+            },
+            {
+                "jd_snippet": "Reduce churn by improving time-to-value for new customers",
+                "jd_evidence": "Reduce churn by improving time-to-value",
+                "resume_snippet": "Improved time-to-value by prioritizing early-success milestones and lifecycle touchpoints based on usage signals.",
+                "resume_evidence": "Built usage-based lifecycle messaging to reduce early churn",
+                "metric": "",
+                "overlap": "JD targets churn/time-to-value; resume evidence shows lifecycle + usage-signal work.",
+            },
+            {
+                "jd_snippet": "Increase visibility into funnel metrics and attribution for decision-making",
+                "jd_evidence": "Increase visibility into funnel metrics and attribution",
+                "resume_snippet": "Defined an event taxonomy and shipped dashboards so stakeholders could self-serve funnel insights.",
+                "resume_evidence": "Implemented event taxonomy + dashboards for end-to-end attribution",
+                "metric": "",
+                "overlap": "JD needs attribution visibility; resume shows instrumentation + dashboards experience.",
+            },
+            {
+                "jd_snippet": "Scale data infrastructure to handle 10x traffic growth",
+                "jd_evidence": "Scale data pipelines and infrastructure",
+                "resume_snippet": "Migrated ETL pipelines to a distributed architecture, reducing processing time while handling higher volume.",
+                "resume_evidence": "Led migration of data pipelines from monolith to distributed system",
+                "metric": "",
+                "overlap": "JD requires scaling data infra; resume shows direct pipeline scaling experience.",
+            },
+        ]
         stub = {
-            "pairs": [
-                {
-                    "jd_snippet": "Improve onboarding activation by reducing drop-off in first-week usage",
-                    "jd_evidence": "Own onboarding and activation initiatives end-to-end",
-                    "resume_snippet": "Redesigned onboarding flow and instrumented key events to identify drop-off and iterate quickly.",
-                    "resume_evidence": "Led onboarding funnel revamp; ran experiments to improve activation",
-                    "metric": "",
-                    "overlap": "Both focus on onboarding activation; resume shows direct experience improving the flow.",
-                },
-                {
-                    "jd_snippet": "Reduce churn by improving time-to-value for new customers",
-                    "jd_evidence": "Reduce churn by improving time-to-value",
-                    "resume_snippet": "Improved time-to-value by prioritizing early-success milestones and lifecycle touchpoints based on usage signals.",
-                    "resume_evidence": "Built usage-based lifecycle messaging to reduce early churn",
-                    "metric": "",
-                    "overlap": "JD targets churn/time-to-value; resume evidence shows lifecycle + usage-signal work.",
-                },
-                {
-                    "jd_snippet": "Increase visibility into funnel metrics and attribution for decision-making",
-                    "jd_evidence": "Increase visibility into funnel metrics and attribution",
-                    "resume_snippet": "Defined an event taxonomy and shipped dashboards so stakeholders could self-serve funnel insights.",
-                    "resume_evidence": "Implemented event taxonomy + dashboards for end-to-end attribution",
-                    "metric": "",
-                    "overlap": "JD needs attribution visibility; resume shows instrumentation + dashboards experience.",
-                },
-            ],
+            "pairs": all_stubs[:n_stub],
             "alignment_score": round(0.72 + ((seed % 20) / 100), 2),
         }
-        return self.run_chat_completion(messages, temperature=0.2, stub_json=stub, timeout_seconds=15.0, max_retries=1)
+        return self.run_chat_completion(messages, temperature=0.2, stub_json=stub, timeout_seconds=15.0, max_retries=1, max_tokens=1800)
 
     def draft_offer_email(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """

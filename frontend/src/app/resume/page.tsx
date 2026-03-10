@@ -416,11 +416,11 @@ export default function ResumePage() {
         </a>
       </div>
       <div className="max-w-4xl mx-auto px-4">
-        <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
-              <div className="flex justify-between items-center mb-8">
+        <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-6 shadow-2xl shadow-black/20">
+              <div className="flex justify-between items-center mb-6">
                 <div>
-                  <h1 className="text-3xl font-bold text-white mb-2">Resume / Candidate Profile</h1>
-                  <p className="text-white/70">
+                  <h1 className="text-3xl font-bold text-white mb-1">Resume / Candidate Profile</h1>
+                  <p className="text-sm text-white/70">
                     Upload your resume or candidate profile to extract key information for personalized outreach.
                   </p>
                   {cachedFilename ? (
@@ -441,8 +441,8 @@ export default function ResumePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">Upload Resume</h3>
-              <p className="text-white/70 mb-6">
+              <h3 className="text-base font-medium text-white mb-2">Upload Resume</h3>
+              <p className="text-sm text-white/70 mb-5">
                 Upload a PDF or DOCX file to extract your experience, skills, and accomplishments.
               </p>
               {uploadError && (
@@ -484,7 +484,7 @@ export default function ResumePage() {
           ) : (
             <div className="space-y-1">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold">Resume Extract</h2>
+                <h2 className="text-xl font-semibold">Resume Extract</h2>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -619,7 +619,7 @@ export default function ResumePage() {
                         <div>
                           <h4 className="font-semibold text-[11px] text-blue-200">{metric.metric}</h4>
                           {metric.value ? (
-                            <p className="text-sm font-bold text-blue-400">{metric.value}</p>
+                            <p className="text-xs font-bold text-blue-400">{metric.value}</p>
                           ) : (
                             <p className="text-[11px] font-semibold text-blue-300">Qualitative outcome</p>
                           )}

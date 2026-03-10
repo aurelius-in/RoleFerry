@@ -503,6 +503,7 @@ async def generate_painpoint_matches(request: MatchRequest):
                 if s and not _is_fluff_line(s):
                     resume_candidates.append(" ".join(s.split())[:240])
 
+        # Post-process the fixed _1/_2/_3 slots (legacy back-compat).
         for n in (1, 2, 3):
             pp = str(getattr(match, f"painpoint_{n}", "") or "").strip()
             jde = str(getattr(match, f"jd_evidence_{n}", "") or "").strip()
@@ -510,7 +511,6 @@ async def generate_painpoint_matches(request: MatchRequest):
             rse = str(getattr(match, f"resume_evidence_{n}", "") or "").strip()
             met = str(getattr(match, f"metric_{n}", "") or "").strip()
 
-            # If pain point itself is fluff, try to replace from candidates
             if pp and _is_fluff_line(pp) and jd_candidates:
                 pp = jd_candidates[min(n - 1, len(jd_candidates) - 1)]
                 setattr(match, f"painpoint_{n}", pp)
@@ -519,7 +519,6 @@ async def generate_painpoint_matches(request: MatchRequest):
                 setattr(match, f"jd_evidence_{n}", _best_evidence(pp, jd_candidates))
             if sol and not rse:
                 setattr(match, f"resume_evidence_{n}", _best_evidence(sol, resume_candidates))
-            # Never return empty metric; prefer extracted key metrics, otherwise a qualitative placeholder.
             if not met:
                 setattr(
                     match,
@@ -527,7 +526,8 @@ async def generate_painpoint_matches(request: MatchRequest):
                     (metric_candidates[n - 1] if len(metric_candidates) >= n else (metric_candidates[0] if metric_candidates else "Qualitative: positive impact (confirm metric from resume).")),
                 )
 
-        # Ensure dynamic alignments are present and synced with the canonical first 3 fields.
+        # Build the canonical dynamic alignments list (2-6 items).
+        # Prefer the dynamic alignments list over the fixed _1/_2/_3 slots.
         if not isinstance(match.alignments, list):
             match.alignments = []
         base_rows: List[Dict[str, str]] = []
@@ -549,18 +549,33 @@ async def generate_painpoint_matches(request: MatchRequest):
         merged_rows = (match.alignments or []) + base_rows
         deduped: List[Dict[str, str]] = []
         seen_keys: set[str] = set()
+        metric_fallback = metric_candidates[0] if metric_candidates else "Qualitative: positive impact (confirm metric from resume)."
         for row in merged_rows:
-            key = f"{str((row or {}).get('painpoint') or '').strip().lower()}|{str((row or {}).get('solution') or '').strip().lower()}"
-            if not key or key in seen_keys:
+            pp = str((row or {}).get("painpoint") or "").strip()
+            sol = str((row or {}).get("solution") or "").strip()
+            key = f"{pp.lower()}|{sol.lower()}"
+            if not pp or not sol or key in seen_keys:
                 continue
             seen_keys.add(key)
+            jde = str((row or {}).get("jd_evidence") or "").strip()
+            rse = str((row or {}).get("resume_evidence") or "").strip()
+            met = str((row or {}).get("metric") or "").strip()
+            if pp and _is_fluff_line(pp) and jd_candidates:
+                pp = jd_candidates[min(len(deduped), len(jd_candidates) - 1)]
+            if pp and not jde:
+                jde = _best_evidence(pp, jd_candidates)
+            if sol and not rse:
+                rse = _best_evidence(sol, resume_candidates)
+            if not met:
+                idx = min(len(deduped), len(metric_candidates) - 1) if metric_candidates else -1
+                met = metric_candidates[idx] if idx >= 0 else metric_fallback
             deduped.append(
                 {
-                    "painpoint": str((row or {}).get("painpoint") or "").strip(),
-                    "jd_evidence": str((row or {}).get("jd_evidence") or "").strip(),
-                    "solution": str((row or {}).get("solution") or "").strip(),
-                    "resume_evidence": str((row or {}).get("resume_evidence") or "").strip(),
-                    "metric": str((row or {}).get("metric") or "").strip(),
+                    "painpoint": pp,
+                    "jd_evidence": jde,
+                    "solution": sol,
+                    "resume_evidence": rse,
+                    "metric": met,
                     "overlap": str((row or {}).get("overlap") or "").strip(),
                 }
             )

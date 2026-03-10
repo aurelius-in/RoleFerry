@@ -8,6 +8,7 @@ import html as html_lib
 import hashlib
 import httpx
 import time
+import random
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse
 
@@ -2831,7 +2832,7 @@ def _blocked_title_for_non_tech_seekers(title: str) -> bool:
         "devops engineer", "devops ", "cloud engineer",
         "data engineer", "data engineering",
         "machine learning", "ml engineer", "ml ops", "mlops",
-        "ai engineer", "ai research", "ai developer",
+        "ai engineer", "ai research", "ai developer", "ai acceleration",
         "deep learning", "nlp engineer", "computer vision",
         "systems engineer", "infrastructure engineer", "security engineer",
         "cybersecurity engineer", "network engineer",
@@ -2846,6 +2847,10 @@ def _blocked_title_for_non_tech_seekers(title: str) -> bool:
         "data scientist", "applied scientist", "research scientist",
         "solutions architect", "cloud architect",
         "blockchain", "smart contract", "solidity",
+        "member of technical staff", "research lead",
+        "training infrastructure", "model training",
+        "compiler engineer", "kernel engineer", "gpu engineer",
+        "robotics engineer", "hardware engineer",
     ]
     return any(x in low for x in blocked)
 
@@ -3065,7 +3070,7 @@ def _score_scraped_role(
         score -= 18
 
     if apply_non_tech_blockers and _blocked_title_for_non_tech_seekers(title):
-        score -= 25
+        score -= 40
 
     score = max(0, min(100, score))
     work_mode = "Remote" if "remote" in loc_blob.lower() else ("Hybrid" if "hybrid" in loc_blob.lower() else "On-site/Unspecified")
@@ -3275,6 +3280,17 @@ async def _discover_roles_without_serper(
         "snyk", "hashicorp", "elastic", "unity", "checkr", "benchling", "chime", "loom", "optimizely",
         "dataiku", "toast", "newrelic", "fivetran", "dbtlabs", "grafana", "sumologic", "tripactions",
         "cruise", "affirm", "nuro", "udacity", "postman", "monday", "carta", "apolloio", "xai",
+        "twilio", "okta", "pagerduty", "splunk", "confluent", "cockroachlabs", "temporal",
+        "databricks", "anyscale", "coreweave", "together-ai", "huggingface", "weights-and-biases",
+        "labelbox", "deepgram", "assemblyai", "pinecone", "weaviate", "qdrant",
+        "vercel", "supabase", "fly", "railway", "neon", "planetscale",
+        "gitpod", "codespaces", "replit", "linear", "height", "shortcut",
+        "tailscale", "teleport", "boundary", "1password", "bitwarden",
+        "square", "block", "marqeta", "plaid", "moov", "sardine", "alloy",
+        "drata", "secureframe", "launchdarkly", "split", "harness", "env0",
+        "materialize", "starburst", "dremio", "clickhouse", "timescale",
+        "mux", "cloudinary", "imgix", "agora", "dolby",
+        "sift", "sardine", "persona", "onfido", "jumio",
     ]
     tech_lever = [
         "netlify", "sourcegraph", "improbable", "udemy", "eventbrite", "coursera", "gitlab", "robinhood",
@@ -3282,6 +3298,15 @@ async def _discover_roles_without_serper(
         "render", "vercel", "mixpanel", "heap", "newrelic", "fivetran", "airbyte", "dbt-labs",
         "supabase", "sonarqube", "clerk", "retool", "crunchbase", "planet", "duckduckgo", "codecov",
         "launchdarkly", "algolia", "motive", "rippling", "webflow", "zapier", "hashicorp", "apollo",
+        "contentful", "sanity", "storyblok", "hygraph", "strapi",
+        "auth0", "frontegg", "stytch", "descope",
+        "metabase", "preset", "lightdash", "hex", "mode",
+        "doppler", "infisical", "vault",
+        "circleci", "buildkite", "earthly", "depot",
+        "pagerduty", "firehydrant", "rootly", "betteruptime",
+        "chainguard", "aquasecurity", "bridgecrew", "wiz",
+        "tailscale", "ngrok", "zrok",
+        "livekit", "daily", "whereby", "stream",
     ]
     general_gh = [
         "hubspot", "toast", "gusto", "monday", "carta", "asana", "zapier", "canva",
@@ -3291,7 +3316,6 @@ async def _discover_roles_without_serper(
         "roberthalf", "kforce", "insightsoftware", "hireright",
         "paychex", "paylocity", "bamboohr", "lattice", "cultureamp",
         "deel", "remote", "oysterhr", "justworks",
-        # Large employers that hire across marketing, recruiting, finance, GTM, ops
         "walmart", "target", "costco", "nike", "starbucks", "disney", "netflix",
         "deloitte", "mckinsey", "bcg", "accenture", "pwc", "ey", "kpmg",
         "jpmorgan", "goldmansachs", "bankofamerica", "citi", "wellsfargo",
@@ -3301,30 +3325,61 @@ async def _discover_roles_without_serper(
         "verizon", "att", "comcast", "tmobile",
         "fedex", "ups", "uber", "lyft", "airbnb", "doordash",
         "linkedin", "indeed", "glassdoor",
+        "shopify", "squarespace", "wix", "bigcommerce", "bolt",
+        "zillow", "redfin", "compass", "opendoor", "offerpad",
+        "wayfair", "chewy", "etsy", "poshmark", "mercari",
+        "grubhub", "gopuff", "getir", "gorillas",
+        "allstate", "statefarm", "progressive", "geico", "lemonade",
+        "fidelity", "schwab", "vanguard", "betterment", "wealthfront",
+        "stripe", "square", "adyen", "checkout", "payoneer",
+        "hulu", "paramount", "warner", "fox", "nbc",
+        "peloton", "sweetgreen", "warbyparker", "allbirds", "glossier",
+        "zoom", "ringcentral", "vonage", "talkdesk", "dialpad",
+        "snowflake", "databricks", "confluent", "elastic", "sumo",
+        "box", "contentful", "sanity", "airtable", "coda",
+        "notion", "figma", "miro", "lucid", "whimsical",
+        "braze", "iterable", "customer-io", "amplitude", "mixpanel",
+        "gong", "outreach", "salesloft", "apollo", "zoominfo",
+        "greenhouse", "lever", "ashby", "gem", "hired",
+        "qualtrics", "medallia", "surveymonkey", "typeform",
+        "expedia", "booking", "tripadvisor", "kayak", "hopper",
+        "spacex", "relativityspace", "rocketlab", "anduril", "palantir",
+        "rivian", "lucidmotors", "tesla", "ford", "gm",
     ]
     general_lever = [
         "eventbrite", "coursera", "udemy", "flexport", "calendly", "clearbit",
         "mixpanel", "heap", "crunchbase", "webflow", "rippling", "motive",
         "lever", "greenhouse", "beamery", "phenom", "eightfold",
-        # Broader employers across industries
         "nerdwallet", "betterup", "gopuff", "sweetgreen", "warbyparker",
         "allbirds", "glossier", "thirdlove", "hims", "ro",
         "masterclass", "brilliant", "duolingo", "khan-academy",
         "peloton", "oatly", "impossible-foods", "calm", "headspace",
+        "lattice", "cultureamp", "fifteen-five", "bonusly", "motivosity",
+        "gusto", "justworks", "rippling", "paylocity", "paycom",
+        "brex", "divvy", "ramp", "airbase", "center",
+        "notion", "coda", "almanac", "slite",
+        "gong", "chorus", "clari", "outreach", "salesloft",
+        "loom", "grain", "fireflies", "otter",
+        "deel", "remote", "velocity-global", "papaya-global",
+        "plaid", "unit", "treasury-prime", "increase", "column",
+        "vercel", "netlify", "render", "fly", "railway",
+        "figma", "canva", "pitch", "beautiful-ai",
     ]
 
     is_tech = _is_tech_intent(pref or {}) if pref else False
     if is_tech:
-        greenhouse_boards = tech_gh
-        lever_companies = tech_lever
+        greenhouse_boards = list(tech_gh)
+        lever_companies = list(tech_lever)
     else:
-        greenhouse_boards = general_gh
-        lever_companies = general_lever
+        greenhouse_boards = list(general_gh)
+        lever_companies = list(general_lever)
+    random.shuffle(greenhouse_boards)
+    random.shuffle(lever_companies)
 
     timeout = httpx.Timeout(6.0, connect=4.0)
     headers = {"User-Agent": "RoleFerry/1.0 (+https://roleferry.app)"}
     fallback_start = time.monotonic()
-    fallback_budget = 20
+    fallback_budget = 25
     async with httpx.AsyncClient(timeout=timeout, headers=headers, follow_redirects=True) as client:
         # Greenhouse public board API
         for board in greenhouse_boards:
@@ -3593,24 +3648,35 @@ async def _discover_scraped_roles_inner(
     else:
         domains = general_boards + ats_domains[:6]
 
-    queries: List[str] = []
+    site_queries: List[str] = []
+    open_queries: List[str] = []
     for term in role_terms:
         for d in domains:
-            queries.append(f'site:{d} "{term}" "remote" {negative_clause}'.strip())
-            queries.append(f'site:{d} "{term}" "united states" {negative_clause}'.strip())
+            site_queries.append(f'site:{d} "{term}" "remote" {negative_clause}'.strip())
+            site_queries.append(f'site:{d} "{term}" "united states" {negative_clause}'.strip())
             if skill_clause:
-                queries.append(f'site:{d} "{term}" ({skill_clause}) "remote" {negative_clause}'.strip())
-                queries.append(f'site:{d} "{term}" ({skill_clause}) "united states" {negative_clause}'.strip())
-        # Non site-locked queries to catch direct career pages outside ATS providers.
-        queries.append(f'"{term}" "careers" "remote" "united states" {negative_clause}'.strip())
-        queries.append(f'"{term}" "job opening" "apply now" {negative_clause}'.strip())
-        queries.append(f'"{term}" "hiring" "apply" {negative_clause}'.strip())
+                site_queries.append(f'site:{d} "{term}" ({skill_clause}) "remote" {negative_clause}'.strip())
+        open_queries.append(f'"{term}" "careers" "remote" "united states" {negative_clause}'.strip())
+        open_queries.append(f'"{term}" "job opening" "apply now" {negative_clause}'.strip())
+        open_queries.append(f'"{term}" "hiring" "apply" {negative_clause}'.strip())
+        open_queries.append(f'"{term}" "we are hiring" "apply" {negative_clause}'.strip())
+        open_queries.append(f'"{term}" "join our team" "apply" {negative_clause}'.strip())
         if skill_clause:
-            queries.append(f'"{term}" ({skill_clause}) "careers" "remote" {negative_clause}'.strip())
+            open_queries.append(f'"{term}" ({skill_clause}) "careers" "remote" {negative_clause}'.strip())
         if not tech_intent:
-            queries.append(f'"{term}" "job" "hiring" {negative_clause}'.strip())
-            queries.append(f'"{term}" "open position" "apply" {negative_clause}'.strip())
-    # Keep to a reasonable cap to avoid runaway API usage / timeouts.
+            open_queries.append(f'"{term}" "job" "hiring" {negative_clause}'.strip())
+            open_queries.append(f'"{term}" "open position" "apply" {negative_clause}'.strip())
+    # Interleave site-locked and open queries so we don't burn the entire budget
+    # on the same ATS domains before reaching open-web results that surface a
+    # much wider variety of employers.
+    queries: List[str] = []
+    si, oi = 0, 0
+    while si < len(site_queries) or oi < len(open_queries):
+        for _ in range(3):
+            if si < len(site_queries):
+                queries.append(site_queries[si]); si += 1
+        if oi < len(open_queries):
+            queries.append(open_queries[oi]); oi += 1
     query_cap = 120 if requested >= 220 else 90
     queries = queries[:query_cap]
 
@@ -3618,15 +3684,61 @@ async def _discover_scraped_roles_inner(
     max_found_pool = max(requested * 8, 400)
     start_ts = time.monotonic()
     budget_seconds = 18 if requested >= 220 else 14
+    RAW_PER_COMPANY = 6
+    raw_company_counts: Dict[str, int] = {}
+
     for q in queries:
         if (time.monotonic() - start_ts) > budget_seconds:
             break
         try:
-            found.extend(serper_web_search(q, num=10, gl="us", hl="en"))
+            batch = serper_web_search(q, num=10, gl="us", hl="en")
+            for item in batch:
+                url_str = str(item.get("url") or "").strip()
+                title_str = str(item.get("title") or "").strip()
+                comp = (
+                    str(item.get("company") or "").strip().lower()
+                    or _company_from_result(url_str, title_str).strip().lower()
+                )
+                if comp and comp != "unknown" and raw_company_counts.get(comp, 0) >= RAW_PER_COMPANY:
+                    continue
+                found.append(item)
+                if comp and comp != "unknown":
+                    raw_company_counts[comp] = raw_company_counts.get(comp, 0) + 1
             if len(found) >= max_found_pool:
                 break
         except Exception:
             continue
+
+    # Diversity boost: if the raw pool is dominated by a handful of companies,
+    # run additional non-site-restricted queries that exclude them.
+    if found and len(raw_company_counts) < 30 and (time.monotonic() - start_ts) <= (budget_seconds + 5):
+        top_overrep = sorted(raw_company_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+        exclude_clause = " ".join(f'-"{c[0]}"' for c in top_overrep if c[1] >= 2)
+        boost_queries: List[str] = []
+        for term in role_terms[:3]:
+            boost_queries.append(f'"{term}" "careers" "remote" "apply" {exclude_clause} {negative_clause}'.strip())
+            boost_queries.append(f'"{term}" "hiring" "apply" "united states" {exclude_clause} {negative_clause}'.strip())
+        for bq in boost_queries[:8]:
+            if (time.monotonic() - start_ts) > (budget_seconds + 5):
+                break
+            try:
+                batch = serper_web_search(bq, num=10, gl="us", hl="en")
+                for item in batch:
+                    url_str = str(item.get("url") or "").strip()
+                    title_str = str(item.get("title") or "").strip()
+                    comp = (
+                        str(item.get("company") or "").strip().lower()
+                        or _company_from_result(url_str, title_str).strip().lower()
+                    )
+                    if comp and comp != "unknown" and raw_company_counts.get(comp, 0) >= RAW_PER_COMPANY:
+                        continue
+                    found.append(item)
+                    if comp and comp != "unknown":
+                        raw_company_counts[comp] = raw_company_counts.get(comp, 0) + 1
+                if len(found) >= max_found_pool:
+                    break
+            except Exception:
+                continue
 
     used_live = bool(found)
 
@@ -3640,31 +3752,14 @@ async def _discover_scraped_roles_inner(
             pref=prefs,
         )
     else:
-        # If live search is too small or too concentrated (for example, mostly one employer),
-        # augment with ATS API discovery to improve employer diversity and role volume.
-        diversity_threshold = max(4, min(10, requested // 3))
-        size_threshold = max(requested * 3, 60)
-        try:
-            live_companies = {
-                (
-                    str(item.get("company") or "").strip().lower()
-                    or _company_from_result(
-                        str(item.get("url") or "").strip(),
-                        str(item.get("title") or "").strip(),
-                    ).strip().lower()
-                )
-                for item in found
-                if isinstance(item, dict)
-                and str(item.get("url") or "").strip()
-            }
-            live_companies.discard("")
-        except Exception:
-            live_companies = set()
-
-        if (time.monotonic() - start_ts) <= (budget_seconds + 6) and (len(live_companies) < diversity_threshold or len(found) < size_threshold):
+        # Always augment live results with ATS API discovery to maximise company
+        # diversity.  The direct Greenhouse/Lever API calls hit 100+ distinct
+        # employers, which is critical for avoiding Serper's bias toward the most
+        # popular companies.
+        if (time.monotonic() - start_ts) <= (budget_seconds + 8):
             extra = await _discover_roles_without_serper(
                 role_query=role_query,
-                requested=min(max(requested * 2, 90), 220),
+                requested=min(max(requested * 2, 120), 300),
                 minimum_salary=minimum_salary,
                 require_us=require_us,
                 pref=prefs,
@@ -3681,7 +3776,7 @@ async def _discover_scraped_roles_inner(
                         continue
                     found.append(item)
                     seen_live_urls.add(u)
-                    if len(found) >= max(requested * 8, 300):
+                    if len(found) >= max(requested * 10, 500):
                         break
 
     # De-dupe + score + salary filter.
@@ -3808,6 +3903,11 @@ async def _discover_scraped_roles_inner(
         "fair": len([r for r in roles_out if 40 <= int(r.match_score or 0) < 55]),
         "weak": len([r for r in roles_out if int(r.match_score or 0) < 40]),
     }
+    top_companies = sorted(company_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+    logger.info(
+        "Role diversity: %d unique companies in %d roles (pool=%d raw, %d scored). Top 5: %s",
+        unique_companies, len(roles_out), len(found), len(roles), top_companies,
+    )
     msg = f"Found {len(roles_out)} auto-discovered roles" if roles_out else "No roles found yet"
     return ScrapedRolesResponse(
         success=True,
