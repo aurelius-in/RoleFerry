@@ -1,0 +1,529 @@
+Transcript
+Test.
+31 y 34.
+Go, Name.
+Where are you I don’t see you.
+Hello No, I can’t hear you.
+Hello?
+Where’d you go
+No, let me talk to you later. I got to talk to you.
+Oh, sorry You’re on the phone.
+All right Okay. Bye-bye.
+Bye-bye.
+Bye-bye.
+All right All right.
+Things are working better, so this is good. All right. So I’m going to do a walkthrough of how it’s working on my thing. Got all my so got all my stuff here. How are you today? Good. Talking to your dad?
+Yeah.
+I’m doing good. Trying to push forward on the front here. As usual.
+Cool. So it looks like all this stuff is still populated.
+Got all my selections.
+Okay.
+What’s that
+Another offer going to offer again.
+Yep
+Trying again. Hold on Hold on.
+I can just follow along with me, and then you can focus on that after.
+A couple of things I wanted to show you. So anyways, so I did the preferences screen. So this loaded like this, my resume still loaded. I’m just going to save and continue. So the personality screen, everything’s still there. I’m just going to save
+and continue. The job sites, so this is the roles page. Right? It’s still showing the preferred roles.
+If I can pop down some keywords here and see if anything else shows up, but it looks like it’s populating this list here. Right now, it’s got 47 new roles for me.
+I already cleared the list I removed the ones I didn’t want and add the ones I did. So it’s giving me some new stuff here. So I can I’ll just put manager on software engineering on the list. And that should populate up here. This number went up to six. So I know that’s on there. And.
+Try the resume.
+Sure sure. Well, let’s do this first because there’s a couple of things I want to show you. We’ll do a full walkthrough with a different resume, but there’s a couple of new features that I worked on and I wanted to show you that. And then we’ll, like you said, we’ll try and completely different thing.
+Either on my computer or yours, whatever you want to do. I got plenty of resumes.
+In fact, we might even do a completely different login, right? So we create a new account with a different email.
+Yeah, that’d be a good idea.
+It might be better because it’s caching old stuff, and it’s going to mess it up.
+Yeah, let’s do it. Yeah.
+So if we look at the gap analysis, right, I’ve got for these jobs, I’ve got one from Stripe, Anthropic, Figma, and Marketa, right? It tells me it starts at a class state. I can see that I’ve got moderate gaps, moderate gaps, significant gaps, and moderate gaps, right? I can look at further director, which pays the most. I can look and kind of see they want cloud and native environments. These are things I might want to add to my resume. So this is helpful for working on a resume. It’s got some personality gaps I can consider. Do I really want this job? Right? It’s got detail-specific heavy, stakeholder. It’s like, “Fine, if they pay me enough, I’ll do it.” There’s no preference gaps according to this. So anyways, you get the idea. It looks like it’s working. I’ll move on. Do a pain point analysis here.
+It doesn’t in batches because this part crashes it. So I have it only do three at a time. So it does three, and then after it’s done with those three, it does another three. If I try to do all five, the thing crashes, and I get the API error. So it’s fine.
+I know I’ve only got five roles, so it won’t take very long. I’ll just save and continue after it does the first three.
+One thing I need to fix is I’ll do it later, but I need to fix where on the pain point match,
+it doesn’t save it. So I was just here, and it’s doing it all over again. So whatever it generates for the pain point match analysis, it doesn’t need to do that every time I go to the page. If I’ve already done it for those roles, for that account, with that resume, for this person, that should be done already. We go to this screen, it should still be showing.
+Is it saved to do you have a database that I can save everything?
+Well, of course, it’s saving a lot of stuff. It’s just not saving this. It’s not. Yeah. So it’s saving all the jobs, and it’s saving all the people, and of course, yeah. So it’s just not saving this specific screen. So it needs to.
+You think you need to you think you need to refresh because it should have been loaded already?
+For whatever reason, it just takes a little longer than some of the other steps. So see how I just did the first three, and then now we have to wait for it for the other ones.
+I’m not really sure. So for the pain point, it’s having to do LLM consideration for context. So it’s thinking about things that were set on your resume and things that were set in the job description. And it’s thinking about contextually like, “Are these good pain points?” That’s why the output’s kind of good, right? Because it’s thinking, “Is this lead? Let the engineering organization define the technical strategy,” right? That’s their pain point. And then from resume, it says, “Architect and deliver enterprise AI platforms and focus on multi-agent systems and generative AI.” So it kind of and it even tells you why it matches, which is another thought process. So the AI is having to think about a lot of stuff. And if it’s having to think about it for multiple jobs at a time. So anyways, this one has four pain points. These other ones have three. I’m not going to analyze that right now because I’m trying to show you some other stuff. So this is progress. We were having a lot of trouble with this page, right? I can pick any one of these companies and I can open up the company intelligence. It says, “Airtable is showing activity worth monitoring for outreach timing.” Right? And then I can look and I can include any one of these signals in my context for the email.
+Oh, wow What are these
+So yeah, this is progress So I’ve got a hiring signal here. It says Salesforce CEO expresses excitement amid layoffs. Airtable chief encourages skipping meetings for AI play. That comes from Reagan Communications.
+There’s a hiring signal here. The Airtable just launched an AI platform that could change how you work, venture beat. Right? And then the Airtable just launched an AI platform that could change how you work. So this is a Google News thing. I don’t know why it repeated it twice, but it’s not a big deal. And then Airtable jumps into the AI agent game with super agent tech crunch. Airtable jumps into the so it’s just more repetitive. And then this shouldn’t be a URL right here. So the news.google didn’t get turned into for the transcript. This didn’t get turned into a URL like it should be. This is just a little coding glitch here. Because see, it worked up here, and that’s a this is a news.google article, and it got turned into a URL, but this messed up on the product launch one. But same thing here. A lot of these are messing up, but that’s just a little correction we got to fix.
+Yeah, what’s on this What’s on this? Is it a link?
+Yeah, that’s what I’m telling you about. So this whole thing down here,
+it should be translated into this little thing right here where it says Google News, and it’s a link. Right? But there’s a little bug in the code that it’s messing it up, which I just noticed right now. I would have already fixed it before this meeting. So what I’m saying right now is it’s a good link. It does take you where it should go, but it’s not showing up as a blue underlined hyperlink thing like this one. Okay? But again, I tell it about it. It’ll fix it. Problem solved. Right now, it’s just ignore this.
+So signal is coming through The signal’s thing that we set up is working.
+Yeah, yeah. Signal is working. You can see the I’m going to change it so it doesn’t show it like that. But yeah, it’s going to be going to just say hiring signal. We don’t need them to know that it’s signal specifically.
+I have it using both the what do you call it? People data labs, PDL. And the signalist so that it takes the best of both and then consolidates where it’s duplicated and uses the best. This is a bug right here. It actually has a whole market expansion section. That it could be loading. But it’s going to actually have that data here. This is not like missing data. It’s actually a nice little block here that it showed earlier. So yesterday, I looked at this screen, and it had this other thing down here, another little expandable bar. And each of these things were separate sections that expand, but I’m like, that’s not needed because put it in a little thing. So we just have all that here.
+So there’s groundbreaking. This section right here is groundbreaking.
+This is progress for sure. And it’s great. It’s going to be nice. We’ll have it in the app, and it’ll work. There’s a couple of little bugs, but those are just all haven’t fixed in a few minutes, and they won’t be bugs anymore.
+So save and continue. So that’s working. Oh, by the way, I didn’t include any of those things. So also, we only looked at one company. So we could look at other companies too. And right, it’s got specific, right, things for the companies. Right? You can regenerate. You can go to Marketa, right? So it should I probably want to fix yeah.
+Anyways, you might want to fix some of this because it looks like all right. So I got a little work to do on this page still, but you get the idea. It’s actually doing what it’s supposed to in terms of it’s able to get all the information it needs. I don’t love how it has these little companies up here and then the saved research for this. And then it isn’t clear what data is being shown for the specific company. But this is a fixable thing that I’m going to work with the AI, the app, cursor, and get it working. But you can see that it’s going to get there today. All right. And then I’ll just go ahead and save research, move forward.
+So here we have the find contacts. There’s also progress here. So what I decided to do, I liked how this whole fold-out thing is going, right? So it already has about how it has his education, his previous role, his current role, location. So we have a little information about how he already the LinkedIn works. We’ve already verified that this email is valid, right?
+Oh, yeah. Research is personal.
+Yeah. So instead of having one research button, right, somewhere, it’s actually per person. Right?
+Wow
+It says that you may not want to trust this specific email. Right? So especially since there’s an apostrophe in there, I’m pretty sure it’s not legit. So you click verify, and then it says it’s risky. Right? So you can see that this is not so this one’s already verified. This one you clicked, and it said it was not good. See, these ones already have checks. So these are already verified. And then if I click research this person, I’ll get a little bit more information. I think we could get a little bit more than just their job title stuff because this is basically pulling resume stuff. We want for the contact screen, we want to see more like we want to know more. Right? So this is these are all collapsed, but we want to know more like more about them, stuff that you can start a conversation with. I don’t know what you’re going to say. Hey, you’re from San Francisco, huh? So you can select these items, right?
+It only lets you select three of them. I don’t know if that’s necessary.
+But yeah, so you can select items underneath their name. So it’s a conversation starter. Basically, but we can think about how we want to do that. I want to collect a little more info about them. That. So yeah,
+so yeah. You can research individual people and get the but you kind of get the idea how the functionality works.
+It’s so much better. This is like this is actually encouraging.
+I want you to be encouraged. I know you don’t need to get discouraged. Development is a process, right?
+And now up here, we actually have a LinkedIn request note, right? So it’s under 200 characters, and it’s actually a complete sentence. So I mean, you can’t say much in 200 characters, but it says, “Hi, Howie. Your work as co-founder and CEO of Airtable stood out as super generic, but whatever.” I architect and deliver enterprise AI platforms with a focus on multi-agent systems and generative AI open to connect. I mean, it’s not very fun. And I wouldn’t answer this person’s message, but it’s at least makes sense contextually accurate, like it’s getting to a place where it’s not embarrassing to send it out. It’s just and it’s not like jarbled nonsense or disconnected sentences or I mean, it’s an intelligible string of ideas. That are human enough and make sense. I just don’t think it’s very exciting. I wouldn’t be excited to get this in my inbox, right? I’d be like, “No, thank you. Goodbye.” So
+I’ll tell you what the best one I get. I’ll tell you right now.
+Yeah.
+It’s something along the lines of the ones I get the best. I mean, I could pull it up. It’d be better.
+The ones I get me the best is something like I can’t pull it up. I can’t pull it up in my head. We’ll just log it in.
+It’s all right. But yeah, we’ll work on the verbiage later. That’s kind of a later thing. Crafting the perfect message is not where we’re at right now. It’s going to take some time. But right now, we’re trying to get all the flow working. So
+Oh, wow You changed your subtoed into.
+Yeah. Well, I’m going with the whole collapsible thing. And it’s not super different. So it still has all the roles as the main driving thing because you need to know what role you’re editing. And I think that’s where we were kind of weak before. I was like, “I’ll get to a screen on like, how does this even work?” So I mentioned the other day, everything has to be in a hierarchy of what role am I talking about? Everything I’m doing is under a specific role. So I’ve got my role signals, right? The pain points are already here. Right? It carried those over. It’s got my one-liner. I build scalable and inclusive engineering. I build scalable and inclusive engineering organization. That’s a terrible one-liner. But I can
+edit it, right?
+It’s not even like a I don’t know what the hell that is. It’s really bad. But so let’s say I liked this. Let’s say I liked this one. And so I don’t have to go through each of these and edit all this stuff. I added a thing, a button that says default for all roles. So let’s say I have the perfect one-liner here. Right? And now I can say default for all roles. Now it takes that one-liner and now all of the other roles have that one-liner. Right? And so I don’t have to craft a different one-liner for every group. But I can go and I can change this one. And I can put better one-liner. Which is not what I would write. But it saved under this one. And then this one has this one. Right? But then this other one still has the better one-liner. Right?
+Yeah. So you can make it.
+I can edit it And then so I have my proof points. Right?
+Think metric win. So this kind of gives you a little pointer on how to write it if you want to change this as think metric wins. I’ve done this before kind of statement. So this one, it took from my resume, right? Deployed the deployment efficiency by 100%. Right? This is all going to be used as context. Right? These aren’t like direct inserts, but I can change these. Right? So here, if I say architect and deliver, I might want to delete what was in there before. So there we go. Developed AI algorithms for autonomous platforms, collaborating on defense projects, enhancing tactical precision. That’s a complete sentence. And it’s not a terrible thing to say. Right?
+It’s not like I build outcomes and shift the what?
+Well, again, what we’re going to work on verbiage. But what we’re testing now is the capability of our tools that we’re using to do what we need.
+We’re finding the language is definitely a later task. Right? We’re trying to get everything perfect. We want to know that it’ll actually be able to do the thing. So these are things. So this one works kind of the opposite. Instead of clicking here to make the scope here, you type it here. And it goes down here. So these are like credibility, interest signals. So we’ve got one already.
+And structurally, you’re definitely making progress.
+Yeah. Yeah. The flow is going to be a little cleaner. We’re getting to a place where we’re almost to market now. Right? We’ve got a couple of months and people hopefully will be charging for this thing. So it can’t be in draft version much longer. So yeah. So these are role skills.
+This offers them a little bit.
+Yeah. I’ve been working with that a little bit because it was coming out kind of stupid before. You saw the one it had up there yesterday. Right? The offer snippet. It was like.
+Yeah. The offer snippet was not good
+So I noticed Stripe is focused on enhancing the developer productivity and navigating the complexities of engineering practices. My experience and leading AI architecture for health services has equipped me with the skills to boost operational efficiency while ensuring compliance. For instance, I developed LLM and RAG services that significantly improved engineering productivity metrics. It might be worth exploring how I would contribute to your team. But if we don’t like it, boom.
+I see that Stripe is focused on enhancing developer productivity navigating a lot different. Oh, but it has a percentage in here. So as I led design of an AI system that improved navigation and efficiency by 35%. So I can regenerate. Boom. Click it again. Right? And it’s going to give me a different one for a different company. Right? So this is Stripe. Down here,
+I’m going to have a different one. I see that Marquette is focused on scaling innovative credit products for modern fintech experience.
+Ah, great.
+So it actually relates to what they’re actually doing. Right? So it’s taking it’s actually carrying stuff over from the research screen. Right? And it’s carrying stuff over from, well, not really on the personal one yet, but we’ll see how that goes. And then we’ve got our strong and our hard CTA. And if we don’t want to look at something that we’ve already looked at, we can close it.
+That’s important. I haven’t told you, but I didn’t call Action Strategy.
+Oh, yeah, yeah. If you don’t tell them to do nothing, they’re not going to. They’re like, “Okay. Thanks for telling me. Bye.” So if you like to call the action stuff and hard, worth exploring or totally not priority right now. It’s a soft one. And then open to a 10-minute chat this week.
+Yeah. The soft one is just like can I show you some of the projects that I have worked on?
+Yeah. And if we like these, let’s say we edited them or we like them, we’re going to default for all roles. Boom. So now all the roles have this one. So we can go through each one. We don’t have to change everything. The AI is already going to populate what it needs to. And if we want to change our one-liner for all the roles at once, we can just do it in one and then save for all roles. So we’re trying to make it scalable so they can have like a thousand roles in here or whatever, at least a couple hundred roles, and they still manage to complete the process without sitting here all day and going through each one. Right? Supposed to all software is supposed to make things faster and make it so duplicate tasks don’t have to be done duplicatively. Is that a word? Anyway, so here’s the bio page. I did the whole thing.
+Honestly, everything collapsible is such a good idea.
+Yeah. The other day when you were showing me that thing, I was like, “Why aren’t I doing that?” Yeah. Our website has a lot of scrolling and nonsense. So we don’t need that. So maybe I’ll leave the preview not, but anyway, so right now, I can see maybe not all of these need to be collapsed. Maybe not the actions and not the preview, but the rest. Let’s open the public page to see how it looks right now. So right now, I’ve got my resume experience. I’ve got my video.
+I’ve got builds fast, ships clean. My little slogan.
+I’ve got my proof points, my core strengths, my education. There’s nothing that pops out as stupid here. I mean, we can talk about refining the details, but basically, we know that we can get what we want to be from here. Right? This is close enough to something that we might show a to give them because this will be a different hyperlink that will actually be one they can use instead of just like the.
+Yeah.
+Completely.
+Yeah. Yeah. So this will be like a special little thing we generate for them. And then they can pop this in all their emails. And it’ll populate in there automatically.
+The only thing I have to add to this is that I think that’s kind of tracking.
+Can you be more clear?
+Yeah. Yeah. Yeah. So
+the value of doing this landing page resume is tracking. So like.
+Oh, you mean that clicks and the views and all that? Yeah. Yeah.
+Yeah. Yeah. Clicks and the views. We can see like.
+How long they spend on it and all that.
+The metrics are very encouraging. When you’re doing a job search and you put in a thousand resumes and you don’t have any metrics about anything, it just feels like you’re growing your resume to a black hole. It’s really discouraging. But if you have a landing page with tracking metrics to see, “Okay. This one clicked on it,” one-time, 10 times, 15 times,
+they’re helpful.
+Because if they’ve sent out like 100 messages or whatever, and they haven’t gotten any calls back, then they’re like, “Did anything happen?” But if they have like, “Well, like 20 different people spent a minute each on my page,” then maybe it’s my page. Maybe there’s something on my page where it’s enough to keep them on the page for a whole minute, but then they find something and then they’re like, “Hell no.” And then they cut off. So they’re like, “Maybe there’s something wrong with my page. It’s scaring people away.” You know what I mean? So yeah, yeah, that’s great. It’s great to know why you’re not getting responses instead of just like the app is broken or whatever. Nobody’s so they can change all of these things. They can change their color scheme. Right? They can change to a lighter, a dark theme.
+They can change their check marks if they like we should have hearts in there too for the ladies. Maybe not as professional. Never mind. But my wife likes to do signatures with hearts and letters and stuff. I’m like, “Maybe enough of this.”
+I’m going to say that when I present tomorrow.
+There you go.
+Yeah. I don’t do that. So I can upload a video, and it does actually take me to a thing. We’ve already demonstrated this works.
+Oh, the one-minute video script, right? So it actually gives them the script. They can use with the script that’s good. So they actually have a one-minute thing to say, “I’m a principal engineer, an architect with a passion for building scalable, inclusive engineering organizations. My experience spans over eight years as a software engineer.” It’s a lot more than that. I don’t know why it says it here.
+Focusing on AI and distributed systems. I’ve led teams to develop infrastructure and supports. Real-time collaboration ensures seamless user experiences. I thrive on challenges, blah, blah, blah. I’m proud of my track record. This is a pretty nice little message. And so it generated that first shot, right?
+So.
+Yeah. That’s the best message we have in this whole app.
+Yeah. Yeah. So I’m pretty happy with that message. And so here’s record your video, and it gives them instructions. They can either download OBS. It actually opened a download link. Download Loom or download Zoom. And it has them instructions on it tells them what it is. This is the best quality plus control, great if you want a clean as you can see I use OBS here. I like it.
+Am I showing my screen Can you see my bar? And then the fastest record and get a share link immediately. So this is right. You recommended this one. And then the Zoom is a fallback if you already have it installed. So there you go. So there’s three options, and it gives them instructions and there you go. And if they don’t want to look at that no more, I love that it is make it go away. Here’s some links that they can add to their screen. So if they want to schedule an appointment or if they want to have a LinkedIn URL. And then what will show up, and then it tells them a little summary of what they can expect to see.
+All right In case they’re worried about it. And better yet, they have a whole preview here of what it’s going to look like, even though it’s a little different.
+And I think we can save and continue. And we’ll refine that later, but I think it’s close enough.
+Yeah. I like how you put a push and find down. I like how you did that.
+Yeah. So also, by the way, this isn’t doing that thing anymore where it disappears.
+Yeah. I know.
+So that’s good because that was annoying. I don’t even know why it was doing that, but some weird code bug. 78572. So Mark 5 as applied instead of actually apply. Because you actually to apply, you actually have to go there and apply. Right?
+Open it up fill out the form and so on. But if they’re too lazy to apply for jobs after we made this so easy, that’s their problem. We definitely made we put some we gave them a lot of power here. If I like it, I can star it. Right? So pending is status. Once I have marked all five as applied, boom. Right? Applied. So there you go. And then so we can so yeah. And then so five applied, failed, skip, pending. They have a little tracker there. Save and continue. So here we have the email campaign. So this was our old campaign screen. But now it’s per person. Right? So per person, we have the initial, we can change the tone like before. Right? We can generate a message. For Danielle D. McCowen,
+McGowan, see where we go. I noticed that Airtable recently launched an AI platform that has the potential to transform team collaboration. That’s not bad. Right? In my previous role, I led the development of a similar platform that enhanced collaboration efficiency by 30% through real-time not bad at all. I like that. That’s it makes sense. It’s logical. It shows that you’re interested in them, and that they should be interested in you because you can relate. My experience is building scalable systems aligns with Airtable’s objectives. Is it worth exploring or is it not prior? So it’s a soft CTA there. Right? We can give.
+Well, I would say I can change the CTA on it, but yeah. I mean, it looks good.
+Well, on the previous screen, it let you change your CTA.
+But we can start with a better default one. But yeah, that was taken from that other screen where they could have changed it if they wanted. This will have an actual URL to their bio. Right? It loads their actual contact info.
+They can try a different tone if they don’t relate to the tone that they’re if they want to give it special instructions like always mention this or always mention that or whatever they can do that.
+Yeah.
+Yeah.
+And then the context layers. Right? So it takes from all these different places. Remember when we thought about this, right? So let’s say it’s like, you know what? I don’t want to take anything about any of the gaps I don’t know why gaps would even be in there, but I don’t want any of the things from this context in here. I don’t like those pain points or let’s not talk about the company. You know what I mean? Then when we generate it, see what happens when we don’t talk about the company.
+Yeah.
+There it is.
+All right. So I don’t know. But at least it lets them think about that and give them some sense of complexity without making it feel complicated. Just
+I mean,
+we’re definitely making progress We’re definitely making progress.
+Yeah. So here’s the email too, the follow-up. See how it tells you this is a too soft CTAs and too hard CTAs. Right?
+Yeah. I like that
+And so we have the try a different tone.
+A little more salesy. I don’t know. Sales.
+Context layers. It lets you pick from where you want to if you don’t want to include your email or your LinkedIn on there, you don’t have to. Right? These are just things that it includes automatically. All right. And if you want to add another link, it actually gives you a place to add that link too. So if there’s like.
+Well, that’s good because that’s a really smart because the project.
+Like when I was sharing articles, remember?
+Articles, yeah.
+Creating those articles, and I wanted people to look at them.
+I don’t know how much they helped me, but I mean, it was an interesting process. Anyway.
+This looks good I propose a mini plan. Look at that.
+So to support your goals, I propose a mini plan. Conduct a skills assessment, identify gaps in your current team structure, implement a mentorship program to foster inclusivity and knowledge sharing, establish a weekly reporting cadence to track progress and key initiatives. Would you be open to a 10-minute chat this week to discuss how I can help drive these initiatives on Airtable? I mean, it’s not terrible. I mean, if they’re looking for somebody to work at their company and they’re like, getting a lot of duds, this guy seems a little more proactive than a lot of applicants. I’ve been hearing some funny stories lately. So the company I work at, where they’re interviewing people, and some of the interviews are just awful. You know how I said that I was using GPT for stuff. Right? So
+well, some people do that, but they do it hilariously bad. Right? So there’s crazy stuff on the resume, and then when they answer the question, they read this bizarre answer that’s got nothing to do with again, it’s a powerful tool, but if you use it badly, you’re still sound like an idiot. So anyways, so yeah, they’re not funny, unfortunately. They haven’t figured out funny yet. I might even just remove that because it’s promising more than it can deliver. I’m probably not.
+It isn’t hilarious. It’s mildly quirky, at best. Right?
+The question’s like, do you know why the chicken crossed the road?
+Yeah. I think I’m going to reword it like, mildly quirky. And then it’ll be more accurate. So I noticed Airtable’s recent launch, the AI platform, super agent, and how it is poised to transform workflows. I admire your commitment to innovation and engineering, and I believe my experience in building scalable solutions aligns well with your vision. If this isn’t the right time or fit, no worries at all. Just let me know. That’s not even mildly quirky. That’s just boring.
+Yeah.
+Yeah. I don’t know what the point of that was. That was the most boring generic message everywhere.
+You can do one that references.
+That would be a fun one.
+Yeah. Maybe that’s not a bad idea.
+So maybe yeah, that one’s a little so silly worked better than hilarious. I don’t know what that last one was. It was like the most generic thing ever. I understand things can get busy, especially with the launch of Airtable’s new AI platform. I remain very interested in the head of engineering role, but if now isn’t the right time, that’s completely fine. Just let me know if a quick chat this week would be worthwhile. And that’s just not I mean, I guess the title’s a little bit silly.
+Yeah. The subject list.
+Yeah. Fuck you if you don’t hire me. No,
+it has a hard CTA, but
+No, I was looking for like a PS that says like, it says like PS.
+I’m drinking a margarita.
+And the sunset. And I wish you were here. I don’t know. Something stupid.
+So we made it to the last page of our workflow, which obviously needs work, but this is the furthest we’ve made it in one session. So I kind of went fast, but things were working. About 90% on every page, 90, 95%. Things are like at least basically doing what they’re supposed to with some minor tweaks involved, but so here we are. This page is just purely conceptual. It has no actual functionality that I think is actually working. Now, this is where we’re going to need to plug in your stuff and for the inbox.
+I mean, that’s something we can do whenever you’re ready, but that’s what it’s going to need to work, I guess. So we’ve got the warm-up section. Do you want to give me the API now and I’ll see if it can do an overhaul like it did with the signalist?
+Check.
+You want to try that
+I almost feel like I should create another account because I use this account for work.
+That’s fine. I’m just concerned about the warming-up deal.
+Well, I mean, I think I should I think we should get a new account. I think we should get a new account.
+Yeah. Go for it.
+At least we’ll have something connected, and then since it knows what service it’s using, it’s going to know what variables it needs to have in the backend to make all of this work.
+And also, yeah, that’s true. We also need to give it the CSV format in order to plug in the variables correctly.
+Okay.
+Yeah. And then we can redesign this whole page so that it follows a flow that makes more sense. Now, are we going to have to do warm-ups for every person?
+So this is my idea. I’m not sure what I’m doing.
+Okay.
+So instantly,
+you can get these pre-warmed accounts. You see here? There’s a pre-warmed account. And you can also just pull it up here, pre-warmed accounts.
+Okay.
+So that’s part of the price of admission, getting room forever.
+Okay.
+So whatever you do is you just go to add new here. You go to pre-warmed accounts.
+And then you just it’s really simple flow. You just pick through it, see what you want, $15. Goes to next.
+And you pick your persona, your email. Right? You get all these different email accounts for that domain name. And then you place your order. And you put a you can put a forwarding domain in there as well. So if you want to if you have the head website or something like that already in place, let’s say they have Oliver Ellison.com. You can get a forwarding domain. So that doesn’t see the domain here.
+Yeah.
+So that could be easy.
+Yeah.
+But that’s the process. You’d go through that. And they give you really, really good emails. This is already warmed up for four months. I mean, emails. Domains. They do a good job. I actually tested other pre-warmed account service providers.
+And what happened recently was these Gen 2 pre-warmed accounts are much better.
+So the Gen 1s were not as good, but these Gen 2s are really good. And it outperforms other email service providers.
+Okay.
+And so the whole warming-up is already done.
+Just go to some settings here.
+That’ll help remove some barriers for people who again, we’re dealing with inpatient lazy people. So they’re not going to ready to invest the time to wait for things to activate when they’re not even sure if the app works.
+Yeah. So you have to purchase a pre-warmed account. But
+it gets put into a premium warm-up pool already. And it’s already got the settings in place to increase three days.
+Per day, right So it simulates messages going back and forth on that domain and that email account.
+So let’s I get the how it works now as far as I need to. What I need to know is how much interaction does the user have with this aspect of it? In other words, what fields and data are what information and selections does the user have to make on that final page that launch screen?
+To get this all working. So they’re on the launch screen. Let me take over the screen again.
+Oh, I’m already sharing. I guess, yeah. You just have to stop sharing, I guess.
+Okay.
+Okay. So not this screen. This screen. So here we are. So we made it all the way through the workflow. At the end, it’s time for them to send some emails. Okay?
+They’re going to I don’t know what checking deliverability is, but what we want to do is
+You don’t even need that. We don’t need any of these things because that’s all done in the backend with Instantly.
+Okay. So we don’t need the email deliverability check section.
+We don’t need the email warm-up section.
+Choose how you’ll reach out Email, uses pre-flight checks, LinkedIn generates, or I don’t think we can do LinkedIn unless they have a LinkedIn account. Like it’s on premium and most won’t, right? So.
+Yeah.
+Okay. So the.
+Is this Oh, is this giving insights on the email itself?
+Yeah.
+The message that we generated for their email.
+So it tells you email may be too short. Consider adding one concrete proof point to add a minimal greeting.
+Exploring an engineering innovations at Airtable. A quick so this is, again, like we did with the other thing.
+So the launch page needs to be like the other screens where it collapses on a roll. Actually, on a person. Right?
+Because it’s by person.
+Yes. And it’s.
+Yeah. So each person needs to expand because each person did it’s a different message.
+Right Each person has a campaign. And so that campaign is so when you open that launch,
+okay, they’re here. They already figured out how Eloi or Liu’s thing, right?
+All these messages are ready. Now we’re going to go to launch. And we have Howie and the rest of the contacts listed. They still expand but instead of showing all the stuff for setting up the message itself, it’s going to show what? That’s what we’re working on right now.
+Yeah. So we don’t need any of the I think a lot of this noise this page is just like just whatever until we figure out how it works. So ignore what’s here unless it gives you ideas. But there is like a warm-up schedule preview.
+No. That’s all done. That’s all done with the pre-warmed.
+Okay. So we don’t need the warm-up schedule preview. Do we need pre-flight checks?
+No.
+Because that’s all done.
+We don’t need pre-flight checks. We do need the recipients, obviously.
+And we don’t really need their email checked here.
+Well, yeah, we do We can go ahead and check their email. And verify it before we put it through the whole system or whatever.
+So here you have the warm-up inbox. We don’t need it. The whole email warm-up isn’t needed. That’s done by the other thing.
+Instantly.
+Yeah. So the channel, choose how you reach out, email uses pre-flight checks. We might have an option to for people with premium accounts. On LinkedIn.
+I mean, why not right Some people are. There’s people that are looking for jobs that have premium accounts. It’s not like unheard of. It’s just not the majority. So we’ll have a premium account section. And then it should explain under the channel card, we’re going to have premium LinkedIn only premium LinkedIn only users. And then it’s not just add a note. It’s more than that. It’s because we already add a note thing on the other page. Right? But then maybe we should move it here, though.
+It’s kind of weird on the contact page, right
+Yeah.
+So let’s get rid let’s not get rid of it. Let’s move it. So for the quick LinkedIn connect, move it to the launch page. The whole card. Has the LinkedIn request notes. Right?
+We don’t need the signals for outreach card on the LinkedIn request note card. Because we already have the signals for outreach underneath on other stuff. So anyway, just move the whole LinkedIn request note to the launch screen.
+And so that’s going to be under channel. Right? They should probably do both. But for and that’s just for the note. But then and then under the LinkedIn request note for premium users only, send a 400-character message or whatever it is, I don’t know the exact word.
+Yeah. Well, for premium users, you can both use the in-mail. You can do in-mail, LinkedIn in-mail.
+So in-mail.
+And then however many character max that is. So add that. And then put the character max for in-mails. And that’ll be a channel option. And they can just check box it. And then they can check box whether they want to do emails, LinkedIn, some people may not want to do email. They might not want to just do, especially if they have the premium account, they may want to just do the premium. So that should be an option. So the email thing can be an option. But it’s probably.
+Yeah. Whatever floats above.
+Yeah.
+I mean, they’re going to be paying they’re going to be paying for the if they do an email, they’re going to be paying for the for the pre-warmed email account.
+Yeah.
+So you’re going to have to.
+Back here in contact, we already gave them the LinkedIn address of those people. So if they just want to take it from there, they can just start messaging people using that by itself. They don’t have to follow our whole workflow. And they’d be like, “You know what? I’m just going to send this guy a message.” If they already have a premium account or they just want to add a note or whatever.
+And then you can also just use a VA to send the messages through the sequence.
+And then you could also use LinkedIn sequencers and then copy and paste what you have in the sequencing for the emails to LinkedIn. It’s very interchangeable.
+So for the launch page, we want to remove the email warm-up section because that’s going to be handled by the API, the email deliverability check. I mean, sure, why not? But we should combine that with the recipient section because all that really does is list the emails anyways. We don’t need pre-flight check section. That can be removed from the launch page. The warm-up schedule, email warm-up, all that can be removed.
+Because it’s handled by the backend So the only thing we want is the channel. And then maybe check their emails. And then what about all this up here? This campaign summary. So we’ve got the send volume outcome.
+That’s the next page. This is just the launch page. This is the end of this should be in analytics.
+Okay. So the whole campaign summary should be on the analytics page.
+Makes sense. Right now the analytics page looks like this.
+Yes. And this doesn’t need to have a warm-up. Let me see. What does it say here?
+Deliverability and warm-up. Verify ratio based on any verification.
+No.
+What This is obviously mock data. Because we haven’t sent anything yet.
+But yeah, the screen you saw previously should be on analytics.
+Okay. So the campaign summary, all this data, if it’s not already, should be on analytics.
+Okay. Cool. So right now, it’s just going to
+but what we need is for each of these contacts to be expandable. Because they’re each going to have their own campaign. Well, the campaign’s on the previous screen. On the launch screen,
+what are we doing on this launch screen What’s the point of this thing?
+So we’re going to the campaign real quick. Just so I can see.
+Campaign. Campaign name. Campaign ID.
+Campaign ID. What’s the campaign ID?
+I don’t know Whatever we want it to be. It’s our app.
+Oh.
+It’s got an API error.
+I like the campaign name. But if you want to have names, I like it. Campaign name. Campaign ID.
+Yeah. We may not need an ID. Let’s just not have a campaign ID. It’s not needed. At least not to be shown. I mean, in the backend, it’s going to have some kind of ID, right? To just track everything.
+Yeah, yeah, yeah.
+But they don’t need to show them that. That’s not needed.
+You could have a campaign date. That would make more sense.
+Campaign date. Campaign date. Yeah.
+Even a time and date because they might have more than one campaign on the same day. If they’re real ambitious, right? So
+yeah.
+Campaign time and date. That’s nice. That’s good. Yeah.
+And fix this API post on the email campaign screen.
+And there’s an error.
+Just kind of curious.
+What’s going on We’ve got 21 errors on this screen. It’s not having fun with this screen. That’s some problems.
+All right Let me just copy that.
+Pop it in my notepad so I don’t forget to deal with that right after this. I won’t make you wait for me this time. But yeah. So we’re just talking about how we want the flow to work. So on the campaign screen, we can basically write all of our messages here. This is where all the magic happens in terms of what we include in the message, right?
+And as the person’s name already there. So why do we need it in the launch screen?
+So that’s the thing. What does go in the launch screen? We’re moving the campaign summary to the analytics.
+Let’s put that instantly to see what instantly shows you for the launch.
+Okay. Do you want to do it or do you want me to do it?
+I’ll do it.
+Yeah. Because I don’t even have an account or anything. It’s probably easier for you to show it off.
+Yeah. I’m a little I’m not confused. I just I can’t I’m trying to figure out what will go on the launch screen because we kind of removed everything right now. Which leaves us with no launch screen. Not saying that we need a launch screen. There’s no need for it. Let’s not have one.
+So what happens is at the leads in there, at the sequences in there,
+at the schedule,
+there are options. I think options is the launch screen.
+Options is what email account will you be using? Are you going to be using a pre-warm instantly account?
+Do you want to do link tracking?
+Do you want to do that?
+So let me get a can you click control minus?
+Control minus?
+Yeah. Like it’s by the equals and the plus. It’s next to the zero.
+Yeah. I did it.
+A couple more times.
+Mom, mom, mom, mom, mom. Hey, maybe this. I think you can still see that.
+I can’t see shit.
+Yeah. But as long as the AI can read it, we’re good.
+Okay.
+Okay.
+Oh, thank you.
+This is kind of like a launch screen is about auto-optimizing AB testing.
+It’s more of a deliverability advanced deliverability.
+It’s also like you’re putting what the sending pattern is.
+How many leads? Prioritizing reaching out to new leads over scheduled follow-ups. That’s like a more of a launch screen type thing.
+Okay.
+Okay. So all the stuff that’s going to be handled by who’s our API for the email campaign stuff?
+Instantly.
+Instantly So everything that’s going to be handled by Instantly. We don’t need to present to the role seeker.
+Yeah.
+Explicitly say right now out loud and carefully what does do our role seekers on Role Fairy interact with as far as options?
+And just limit your speech to what the Role Fairy people the Role Fairy role seekers are going to be interacting with on the campaign screen specifically.
+Sorry I screwed it up. Not on the campaign screen. On the launch screen, which is very similar to the options screen of this so save the features on the launch screen. What they’re interacting with that aren’t going to be things that are configured on the Instantly screen by us because we’re using Instantly and we’re controlling the Instantly account. They’re just managing their specific options.
+Okay. So there’s going to be an accounts to use. They’re going to select pre-warmed accounts or they’re going to manually enter their own.
+They’re going to select their pre-warmed accounts.
+They’re going to have to.
+And what is their other option for the accounts to use?
+Is it.
+So then it’s not an option.
+It’s going to pick whatever email accounts they’re going to be using.
+Yeah.
+So they can put in their own email account if they don’t want to have that, but it’s going to not going to be two. They can put in their email account. They can use our pre-warmed email accounts. That will ensure their email account would expand or they can take the risk of putting their own email account in and we cannot guarantee any deliverability and your email account may be damaged. That’s fine. It’s a little subtext. That’s good. A little subtitle or whatever underneath the use your own account with a little warning in italics and red font or whatever. That’s fine.
+That’s actually a really good point Because it depends on scale, right? If you’re the type of person like me that wants to send out 1,000 emails in a day or if you’re a person that really just wants to send out 25 emails in a day,
+you can send out anywhere from 10 to 30. Let’s say maximum 30. But 25 is ideal.
+If you have an email account that’s just a regular Gmail,
+everybody and every day
+If you’re applying for 10 jobs,
+shit, use your own email. So maybe we should tell them not recommended for more than 20 applications. Or whatever the.
+Yeah.
+I think you could send 20 emails and not be considered spam. Yeah?
+In a day.
+In a day So for more than 20 in a day,
+you’re good That’s like normal email usage.
+That’s what I do You see what I do here? I have remember it’s vertically integrated.
+You’re vertically scaled. No. You’re horizontally scaled, right? You’re horizontally scaled, right? Because each account, each email account here is sending only 25 emails.
+Let’s simplify it. Let’s simplify it for them. So instead of having to choose either/or, they should go ahead and enter their email and then just tell them like, “Okay, for each email you give us, we’re only going to send out 20 emails a day.” So if you want more than 20 emails sent out today, you’re going to little red text will be like, it’ll pop up if they try to go to the whatever, they try to launch, it’ll be like, “With only one email account, we can only send 20 messages. You are your campaign says that you’re going to be sending out 30. Please add another account so that we can send out the 30 messages.” Right?
+Perfect. That’s exactly what we need to know.
+So that’s good We don’t necessarily need pre-warmed accounts for everybody. Some people are literally only going to send out 20 a day. 20 is a lot. It’s like 20 jobs you’re applying for. So yeah, I think actually it works because a lot of people are just going to use their Gmail account. And we just don’t we won’t let them we won’t let them get blocked because we’re not going to let them send 1,000 emails with that one thing. And I don’t think it’s kind of hard work to go through each one of these job applications and find more than 20 that you like and want to send 20 emails a day. They could also just send 20 today and send 20 tomorrow.
+I mean, to a different group of people. So yeah.
+You see, I have 100 email accounts here. 100.
+Yeah, yeah. But you’re also doing this so when they add their email, it needs to send it needs to send through the API to your Instantly account that you’re setting up. And it needs to add it. But just for them.
+Yeah.
+Yeah. So all that’s already going to work fine. There’s not going to be hiccups.
+Well, they need to well, they need to personally add the email account. That is something that job seeker needs to do. That is their responsibility.
+They need to type it into the Rolf area or they need to come over here.
+No, they need to type it into the Rolf area.
+They’re going to type their email. We’re already going to have their email.
+So it could pre-populate the first option, the first option is the email we already had when they created their account. Right? And then to say limit 20 emails per day per I mean, sorry, yeah, 20 messages per day per email. And then if they want to add more email accounts, they can. But it’s going to cost them. Something.
+So we just figure in what our cost is plus a little more. And then yeah, just they’re already paying something. Right? So we’re okay with should we give them one freebie? Not freebie, but it comes with their account. When they send their pay their 200 bucks or whatever for the app.
+Yeah. They’re paying 250 a month. You get one free one account.
+Yeah. Comes with
+free warmed account plus theirs. And then they are already sending out 40 messages. That’s actually kind of a lot, man.
+40 jobs in a day. Save some for tomorrow.
+You also need to consider how many people you’re sending for a campaign, right? So I don’t recommend sending one person per company per job. Right? So if you let’s say you have 10 jobs within the platform.
+10 jobs in your platform that means 30 emails because you’re going to send it to probably one recruiter, one line manager, and then one C-level person.
+Yeah.
+Okay.
+Right Because let’s say you’re applying for the head of engineering. You’re going to send one email to the technical recruiter. You’re going to send one email to the VP of engineering. And then you’ll send one email to let’s say someone that’s the director of engineering.
+Okay.
+So we might want to rethink okay, so based on what you just said, this page isn’t quite ready. Because right now, I have these people are all for Airtable, right?
+We have one person
+Huh
+Yeah, you have one person right?
+No, right now, I have all these people are for Airtable.
+Yeah, you have yeah, you have all the all for Airtable. Oh, wow.
+Yeah, because back on the research page, I only did research. She only did the save research was for Airtable.
+Oh, so you’re perfect. Yeah, you got five people. That’s even more than I need. Yeah.
+But I don’t have the ability to select other companies here.
+Email campaign Yeah. So what I need on the campaign page is it needs to be expandable by company. So the top-level expanded thing is the company. So for all the companies, there’ll be a separate expandable bar. Right? One of them will be for this example, Airtable. Then when they click on that, they’ll see the people, which are also collapsed automatically. Then they’ll click each one of the contacts that they had for Airtable. And each one of those contacts will have this one that’s already there. So the email one, two, three, four, so they’ll have however many contacts they have.
+Yeah, this is perfect. You see what you did? Director, top position, VP of engineering, head of engineering. Perfect. That’s exactly what I’m saying.
+Yeah.
+Three people.
+But what this is missing is the ability to select the company. So the hierarchy is company, then expand company, you see all the people, each of those are collapsed, you expand each person, each person is collapsed, you expand each person, underneath each person is the four emails, expand each email, edit details, you can collapse the emails, move to the next, and so on. So that way, there should be all the roles listed here.
+Yeah. And each company consists of three people, but each company is one application.
+Actually, it shouldn’t be by company. It should be by role. Because there are some instances where you’re going to be applying for more than one. Role at the same company. It’s not recommended, but it shouldn’t be excluded. So especially if we’re going to show them five roles per company. So I think it doesn’t so you have the role, you expand the role, you see all the people for that role, the name, and you’ve done the research. Yeah, that makes more sense. So there’s all the roles are listed here on the campaign page. For each role, you expand it, you’ll see all the hiring decision makers, right, listed. And then each one of those has their email, and that’s expanded. So there’s three levels of expansion. Right? So there’ll be a third one over here. I mean, not for email, but you know what I mean. So yeah, that’ll work. See, I had it slightly indented so you can tell what’s going on.
+Yeah.
+Makes sense
+Yeah. I think we do.
+Yeah. Yeah. And then so launch screen. So again, on the launch screen, basically, all the options or most of the options some of the options that you have for instantly are going to be here. Right?
+Mm-hmm.
+Instead of all the scrap that’s here now. So forget everything that’s on the launch page right now. Campaign summary is going over to analytics. Probably don’t even need to do the email deliverability check right now.
+What you do also want to have here is tracking, right? This is when because this is when you can toggle link tracking, or email opens, or maybe you want to.
+That doesn’t go on analytics?
+Well,
+you can always put link tracking, but it’s an option, and you can take it on and off. You can just say.
+Oh, you mean on the launch screen is where they select whether they want that kind of tracking?
+Yeah, cash on my screen back to the incident so you can see it.
+Hey, yeah, go ahead.
+Let me unshare. Bam.
+Okay.
+Okay. So now you have the option to toggle link tracking on and off.
+Oh, I see.
+Or open tracking on and off.
+Okay. So the it says cloud campaign. But anyways, the options screen for instantly is basically the launch screen for RoleFerry.
+Yes, option screen for incident is a launch screen for RoleFerry.
+Yeah. So if they can just scrape the launch screen directly and get all of those options from there.
+Yeah. And then what we exactly said before, in terms of daily limit, you could put a daily limit. If we know that there’s only going to be two email accounts in there, we could put a limit on how many emails you send out. So you don’t go over the limit.
+I think maybe instead of that, just tell them the limit’s 20.
+Okay. Yeah, yeah, yeah.
+We’re not trying to get them to get mad at us because we broke their email or whatever, or they’re emails aren’t going out, or we promised them, and then they say we’re scam artists because none of the emails are getting sent. It just like 20 per day. Is 20 a good number? Is 20 the right number?
+20 is great. 20 is great.
+So 20 is the limit per daily limit per email is just 20 automatically. And we’ll tell them that.
+Yeah, tell them we can go to 25 if we wanted to. That’s not going to kill it, but.
+Do you want to do 25? I don’t know what you get away with. I have no clue.
+Yeah, you can get away you can get where you can get away with up to 30 if it’s really warmed up. But.
+Let’s do 25 That way, they could have four and do 100 a day. Not like anyone’s going to want to send 100 a day. Well, maybe they will. I don’t know. I guess if our app works really well and we give them hundreds of potential jobs and they just want to mass apply, maybe. Oh, but we’re sending it for each role. So if there’s 10 roles, and they’re sending it to five contacts per role, that’s already 50 people right there. So they would need two emails their personal email plus the one that we create for them.
+Yeah, 25 emails a day is reasonable. And the only thing that we’d have to do is make sure that there’s space down.
+We do want to make sure that the time gap between emails.
+But that’s probably if it’s being sent through our infrastructure, we can adjust that back in.
+Yeah, once they click launch, it should just do it. It should do the time gap and everything else. It should know whatever’s happening in the backend should just do the right thing and the right time and know when it’s supposed to work. Right?
+Yeah.
+They don’t need to be selecting the time gap. That’s just going to be us making those calls based on what doesn’t get people’s accounts banned or whatever. And then
+yeah, I think that works. Okay. So can you copy-paste? Are you able to drag your cursor over all those settings?
+Yeah, do that for me. It’s actually better than all these screenshots I’m trying to put in there.
+Also,
+yeah, copy the whole thing and then to remove the stuff that we don’t want.
+You don’t need all this stuff
+Go ahead and copy-paste. And then after you paste it into the thing,
+delete the stuff before you send it. Does that make sense?
+Yeah, I’m done.
+And we’ll just go through each thing. And then I can just explicitly tell cursor what features we want on the launch page.
+That’s tracking, tracking opens.
+Link tracking.
+I can’t see you.
+Link
+Maybe automation where it’s like the email says sure, let’s set it up time. This is more like an auto reply thing. That’d be kind of an interesting thing. This is not a topic, but it could be an interesting thing to if the response is like, “Sure, let’s set up an interview.” We can move the job on the job tracker on the job tracker CRM to interview, which could be cool. As an automation.
+And
+So it has an agent that’s scheduling meetings based on.
+Responses
+Yeah.
+I mean, you don’t want it to actually schedule the interview unless it knows your schedule, right?
+Well, no, but it could send a calendar link as an auto reply if the agent sees that the text is, “Sure, let’s set up an interview,” then they’d go, “Okay, here’s the.”
+That would definitely extend our scope and our workflow further.
+That makes it more exciting. In terms of AI agents, let’s get the basics down first, and then we’ll add the AI agents. But we’re in the age where AI agents are kind of exciting and we can do a lot with them. So let’s in fact, that actually brings to mind a lot of different things because the idea of using AI agents, this is kind of a perfect use case because applying for jobs, like rapidly,
+and being able to keep up with all the replies and everything, that’s a great use case for AI agents.
+And our app would be a great way for them to use an AI agent to do that, right?
+Yeah, also, it could update the job tracker because we have this job tracker, and then they can go from applied or sent email to round one interview as an automation on the job tracker.
+Yeah. Yeah, that is a perfect use case for AI agents. We’ll definitely make that a big part of our app going forward. But we definitely need to nail down these last couple of screens first.
+And right now we’re on the last screen. We’re on the only screen we have left to kind of get anything working on. The rest of the screens are like I said, like 90-something percent there. There’s a couple of bugs. A couple of design decisions to fix. A couple of things that don’t always work quite right. The verbiage is not perfect, but all the other screens are basically doing something close to what they’re supposed to be doing, right? And they’re basically laid out and probably pretty close to where they’re going to be laid out when we release it. Unless we get a lot of feedback on something different. But in other words, we’re pretty much done with our architecture design and basic functionality. Once we get this launch page going and once we get your what’s it called? Instantly API running inside our app. And once we get this last page, the buttons working, we’re literally days away from nailing down the complete workflow, basically. So
+we’re on the ground. Now, once we have the complete workflow and we refine it and we get some beta testers, that’s when we start adding agents. And I think that you’re right. It’s the perfect use case for lots of AI agents.
+And the neat thing is we’re coming into it at the perfect time where the AI agents that we can integrate are already built. And straightforward and easy to integrate. And there’s already people that have tested similar use cases that are doing the whole emailing thing is probably the most popular use case, right? Responding, setting up calendar appointments,
+auto responses, that kind of stuff. So these are good ways that this app can kind of do. Basically, they’re going to be looking for an AI agent to help them with this process. And we’re going to give them that.
+So once they kind of put their whole campaign and their job search, we can even have an AI agent that automatically refreshes their job search, right? And based on their preferences, applies to another 20 jobs within all the criteria. So they don’t even have to select the jobs anymore. Once they’ve got the machine going, right? This is later down the road stuff. This is for our next release. But think about it like once they’ve already completed the process once, they never have to complete it again.
+Right It’s going to keep generating however many jobs they want to generate, right?
+They’d have to increase their pricing tier probably if they want more than a certain number of jobs applied for on a daily basis. But basically, we keep it to that 50 jobs a day kind of thing. Where they apply for 50 jobs a day, that’s another use of AI agent is actually going in and applying for the jobs. Rather than making them do it. So it goes in, applies for the job, writes their cover letters, writes their stuff.
+The first time they have to do some of it by hand but after that, the AI agent takes over and it’s just this machine always running in the background applying for them for 50 jobs a day. That would be kind of exciting. And that’s at the bottom tier. Right? Because they’re going to get one email from us and one email that they already provided, 25 a day. It’s kind of not applying for 50 jobs a day. It’d be 50 emails a day, which is what?
+10 jobs a day? 5 contact seats, roughly?
+Yeah, you could do 3, do 5 all the time. You can do 3. You can do 3 to 5.
+Yeah. But still, I think that’s a great AI agents are definitely our next release, though. But yeah, we almost have the full workflow now down. All the pages have basic functionality the way we want them. We’re
+definitely we’re moving in the right direction, and it’s exciting because I could see us releasing this thing in the next month or two. Actually, charging people and stuff. I think what we need is like 60 days of testing. Honestly.
+Yeah. Yeah, yeah.
+Yeah.
+Yeah, remove the ones that are already going to be configured by us in the background. Don’t give them too many options. Remember, this is for lazy, dumb people. Not dumb people, but lazy impatient people.
+Yeah. Yeah. This is for smart people that are just lazy.
+Very lazy and impatient. No patience, they don’t want to spend any energy on this. They’re like, “Ugh, I got all this stuff I want to do.”
+Yeah, that’s exactly what it is.
+It’s like you already have a job, but I guess if it’s easy enough, then sure, look for another job for me.
+Yeah.
+That’s kind of how I feel right now actually.
+I already have a job. But an extra $200,000 a year, I guess I’ll get an interview for that.
+But just set up the interview for me. Don’t make me do nothing else.
+That would be nice.
+If you granted permission once we get the agent thing going, if you can grant it permission to schedule appointments for you, people aren’t going to show up to this stupid appointments, are they? That’s on them. That’s on them.
+Show up to your appointments, loser. We scheduled your shit. If you’re not getting jobs because you’re not showing up to appointments, that’s completely out of our hands.
+Set an alarm, dude.
+They could message you. You could help them a little. We could be like, “You get a text message five minutes before your appointment, 10 minutes before your appointment, 15 minutes.” It reminds you like, “Dude, you have
+a meeting here coming up.” Yeah, I’m good. I like how we’re thinking next steps. It means we’re getting close to the ending this step.
+Yeah.
+Yeah. Maybe it’s a side note to the AI in this transcript would be like, “Create a list of ways we could use AI agents to make this app really powerful and exciting.” After they’ve completed all of the 12 steps, it can automate a lot of steps, including scheduling appointments, responding automatically to emails,
+and applying for jobs that are within the target preferences. For that person. So once they’ve selected once they’ve applied for their first few jobs, it can automate this process and just kind of duplicate it like, “Well, we know what kind of job this person applies for.” We know what kind of emails they write. We kind of just need to automate this whole process so it just duplicates. There’s no reason they still have to go through this process a bunch of times. Once is enough. And then it’s just continue. Just keep sending messages to jobs and applying and, yeah, automate. So and then it’ll be a pricing tier based on that. I could see that’s actually worth $250.
+It doesn’t just send one campaign. It automates a system where you only have to go through it once. And from then on, you can just be in bed. While this thing’s applying for jobs for you, and sending messages for you, and scheduling appointments for you, you just better check your damn schedule and show up to your appointments. But we will be sending you messages or the app will be sending you messages saying, “Hey, don’t forget your appointment. Don’t forget your appointment.”
+Oh, you can do notifications. It’s like everything else in the fucking world. You got notifications.
+Notifications. Yeah. So you’ll be getting updates. You’ll be reminders about your appointments. And yeah, that could be a really powerful tool if the role fairy and it gets you there. If you can’t get a job with the role fairy,
+you died.
+You got to get to the role, though You got to get to the fairy. You got to make your ass to that fairy, bro.
+Up on the fairy.
+Don’t miss the fairy. Don’t miss the fairy.
+Is that a good hop on the fairy? For your next role, role fairy.
+Yeah.
+Yeah.
+Don’t miss the boat.
+Yeah.
+Your biggest problem is being on time for the boat. Don’t miss the boat.
+Yeah. If we send you three notifications and you still miss the fucking boat, that ain’t on us, man.
+You’re just a flake. What do you want?
+Yeah.
+Yeah.
+You missed the boat, man.
+You missed the boat. But maybe when you miss enough boats, you’ll still a lot of agents, recruiters, they’ll stop working with you if you keep showing up late to your appointments. We won’t. We won’t stop. Shit, we’ll send out another 50 emails. Eventually, maybe you’ll show up to a goddamn interview and you’ll get a job.
+Asshole.
+That’s so funny. Yeah. I mean, that’s also the life of a recruiter.
+You’re not going to waste your time on people that don’t show up to interviews. It’s like, no, man.
+It’s like, you’re are you even a recruiter if you haven’t received a call from a candidate saying that they’re random guys? Just randomly at some random time.
+The grandma dies every week.
+Every week.
+We’ve got a lot of grandmas this guy. It’s like, wait a minute.
+It’s not true.
+This guy’s like a seven grandmas, I think.
+I never met with somebody with so many grandmas.
+Well
+Yeah.
+One of my coworkers, it happened so much. He was like, “Oh, yeah? Where should I send the flowers? What’s around us?”
+Oh, yeah.
+Because it happened so much. He’s like, “You’re lying to me. You’re a fucking liar.”
+By the way, did you already send the message to me with the things?
+Yeah. Yeah.
+Okay. So these are all options that we want on the launch page.
+Coworker. I think he just left. He was just so pissed.
+He’s like, “You’re lying. I know you’re lying. Send me the address.” I sent the flowers.
+All right So I’m going to stop the transcript for a minute. So don’t say anything too smart. Save it. I’m going to stop.

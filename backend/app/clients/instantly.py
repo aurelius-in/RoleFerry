@@ -1,5 +1,8 @@
 import httpx
+import logging
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class InstantlyClient:
@@ -8,16 +11,12 @@ class InstantlyClient:
         self.base_url = "https://api.instantly.ai/api/v2"
 
     def _headers(self) -> Dict[str, str]:
-        # Instantly docs show Bearer auth; some integrations use x-api-key.
-        # Sending both keeps us resilient across API key formats.
         return {
             "Authorization": f"Bearer {self.api_key}",
-            "x-api-key": self.api_key,
             "Content-Type": "application/json",
         }
 
     async def push_contacts(self, list_name: str, contacts: list[dict]) -> Dict[str, Any]:
-        # Attempt real API call; fall back to stubbed response on error
         url = f"{self.base_url}/contacts/bulk"
         headers = self._headers()
         payload = {"list": list_name, "contacts": contacts}
@@ -39,11 +38,84 @@ class InstantlyClient:
         url = f"{self.base_url}/accounts"
         try:
             async with httpx.AsyncClient(timeout=30) as client:
-                r = await client.get(url, headers=self._headers())
+                r = await client.get(url, headers=self._headers(), params={"limit": 100})
                 r.raise_for_status()
                 data = r.json()
                 return {"ok": True, "raw": data}
         except Exception as e:
+            return {"ok": False, "error": str(e)}
+
+    async def create_campaign(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a new campaign in Instantly. Returns the campaign object including its id."""
+        url = f"{self.base_url}/campaigns"
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                r = await client.post(url, headers=self._headers(), json=payload)
+                r.raise_for_status()
+                data = r.json()
+                return {"ok": True, "raw": data}
+        except Exception as e:
+            logger.warning("Instantly create_campaign failed: %s", str(e)[:300])
+            return {"ok": False, "error": str(e)}
+
+    async def update_campaign(self, campaign_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Patch an existing campaign (e.g. add sequences after creation)."""
+        url = f"{self.base_url}/campaigns/{campaign_id}"
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                r = await client.patch(url, headers=self._headers(), json=payload)
+                r.raise_for_status()
+                data = r.json()
+                return {"ok": True, "raw": data}
+        except Exception as e:
+            logger.warning("Instantly update_campaign failed: %s", str(e)[:300])
+            return {"ok": False, "error": str(e)}
+
+    async def add_leads(self, campaign_id: str, leads: List[Dict[str, Any]], **kwargs: Any) -> Dict[str, Any]:
+        """Bulk-add leads to a campaign."""
+        url = f"{self.base_url}/leads/add"
+        payload: Dict[str, Any] = {
+            "campaign_id": campaign_id,
+            "leads": leads,
+        }
+        if kwargs.get("verify_leads_on_import"):
+            payload["verify_leads_on_import"] = True
+        if kwargs.get("skip_if_in_workspace"):
+            payload["skip_if_in_workspace"] = True
+        try:
+            async with httpx.AsyncClient(timeout=60) as client:
+                r = await client.post(url, headers=self._headers(), json=payload)
+                r.raise_for_status()
+                data = r.json()
+                return {"ok": True, "raw": data, "count": len(leads)}
+        except Exception as e:
+            logger.warning("Instantly add_leads failed: %s", str(e)[:300])
+            return {"ok": False, "error": str(e), "count": 0}
+
+    async def activate_campaign(self, campaign_id: str) -> Dict[str, Any]:
+        """Activate (launch) a campaign."""
+        url = f"{self.base_url}/campaigns/{campaign_id}/activate"
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                r = await client.post(url, headers=self._headers())
+                r.raise_for_status()
+                data = r.json()
+                return {"ok": True, "raw": data}
+        except Exception as e:
+            logger.warning("Instantly activate_campaign failed: %s", str(e)[:300])
+            return {"ok": False, "error": str(e)}
+
+    async def pause_campaign(self, campaign_id: str) -> Dict[str, Any]:
+        """Pause an active campaign."""
+        url = f"{self.base_url}/campaigns/{campaign_id}/pause"
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                r = await client.post(url, headers=self._headers())
+                r.raise_for_status()
+                data = r.json()
+                return {"ok": True, "raw": data}
+        except Exception as e:
+            logger.warning("Instantly pause_campaign failed: %s", str(e)[:300])
             return {"ok": False, "error": str(e)}
 
     async def enable_warmup(
