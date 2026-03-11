@@ -81,8 +81,9 @@ function extractTopSignals(d: CompanyResearch | null, max = 12): CompanySignal[]
   const add = (id: string, cat: string, raw: string, priority: number) => {
     const t = String(raw || "").replace(/no\s+(data|info|information)\s+found/gi, "").trim();
     if (!t || t.length < 10) return;
-    const firstLine = t.split(/\n/).map(l => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean)[0] || t;
-    candidates.push({ id, category: cat, text: firstLine.slice(0, 280), priority, confidence: Math.min(0.95, 0.5 + priority / 200) });
+    const lines = t.split(/\n/).map(l => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean);
+    const preview = lines.join(" ").slice(0, 480);
+    candidates.push({ id, category: cat, text: preview, priority, confidence: Math.min(0.95, 0.5 + priority / 200) });
   };
   add("product_launches", "Product Launch", d.product_launches, 100);
   add("leadership_changes", "Leadership Change", d.leadership_changes, 95);
@@ -431,8 +432,8 @@ function toCsvRow(cols: string[]): string {
 }
 
 const SIGNAL_TYPE_LABELS: Record<string, string> = {
-  leadership_change: "Leadership", product_launch: "Product", hiring_signal: "Hiring",
-  funding_event: "Funding", partnership: "Partnership", market_expansion: "Market",
+  leadership_change: "Leadership", product_launch: "Product", hiring_signal: "Hiring Signal",
+  funding_event: "Funding", partnership: "Partnership", market_expansion: "Market Expansion",
   regulatory: "Regulatory", technology_adoption: "Technology", technology: "Technology",
   earnings: "Earnings", restructuring: "Restructuring", expansion: "Expansion",
   news: "News", workforce: "Workforce", intent: "Intent", firmographics: "Firmographics",
@@ -449,6 +450,7 @@ const SIGNAL_CAT_COLORS: Record<string, string> = {
   "Recent Post": "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
   "Culture & Values": "bg-pink-500/20 text-pink-300 border-pink-500/30",
   "Market Position": "bg-white/10 text-white/70 border-white/20",
+  "Market Expansion": "bg-pink-500/20 text-pink-300 border-pink-500/30",
   "Market": "bg-pink-500/20 text-pink-300 border-pink-500/30",
   "Hiring Signal": "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
   "Hiring": "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
@@ -633,7 +635,7 @@ export default function CompanyResearchPage() {
     if (idLow === "recent_news" || catLow === "recent news" || catLow === "news") return scrubModePlaceholders(draft.recent_news || "");
     if (idLow === "recent_posts" || catLow === "recent post") return scrubModePlaceholders(draft.recent_posts || "");
     if (idLow === "culture" || catLow === "culture & values") return scrubModePlaceholders(draft.culture || "");
-    if (idLow === "market_position" || catLow === "market position" || catLow === "market" || catLow === "expansion") return scrubModePlaceholders(draft.market_position || "");
+    if (idLow === "market_position" || catLow === "market position" || catLow === "market" || catLow === "market expansion" || catLow === "expansion") return scrubModePlaceholders(draft.market_position || "");
     if (idLow === "other_hiring_signals" || catLow === "hiring signal" || catLow === "hiring") {
       const parts: string[] = [];
       if (draft.other_hiring_signals) parts.push(scrubModePlaceholders(draft.other_hiring_signals));
