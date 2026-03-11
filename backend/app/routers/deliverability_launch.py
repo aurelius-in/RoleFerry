@@ -38,14 +38,52 @@ class CampaignLaunchRequest(BaseModel):
     campaign_id: str
     emails: List[Dict[str, Any]]
     contacts: List[Dict[str, Any]]
-    # Optional: when Campaign generates per-contact emails, include a map of contact_id -> {subject, body}
-    # so "launch" can record the correct primary message per contact.
     primary_by_contact_id: Optional[Dict[str, Dict[str, Any]]] = None
-    # Optional: sender domain info for real DNS checks (SPF/DMARC; DKIM requires selector).
     sending_domain: Optional[str] = None
     dkim_selector: Optional[str] = None
-    # Optional: warm-up plan passed from the UI (best-effort; used for a practical warm-up readiness check).
     warmup_plan: Optional[Dict[str, Any]] = None
+
+
+class InstantlyLaunchOptions(BaseModel):
+    """Campaign options that map to Instantly campaign settings."""
+    campaign_name: str = "RoleFerry Campaign"
+    email_accounts: List[str] = []
+    use_prewarmed: bool = True
+
+    stop_on_reply: bool = True
+    stop_on_auto_reply: bool = True
+    stop_for_company: bool = True
+
+    link_tracking: bool = False
+    open_tracking: bool = False
+    delivery_optimization: bool = True
+
+    daily_limit: int = 25
+    email_gap: int = 5
+    random_wait_max: int = 2
+    max_new_leads_per_day: Optional[int] = None
+    prioritize_new_leads: bool = True
+
+    ab_testing: bool = False
+    ab_winning_metric: Optional[str] = None
+
+    provider_matching: bool = True
+    insert_unsubscribe_header: bool = True
+    allow_risky_emails: bool = False
+
+    cc_list: List[str] = []
+    bcc_list: List[str] = []
+
+    custom_tags: List[str] = []
+    campaign_owner: str = "David March"
+
+
+class InstantlyLaunchRequest(BaseModel):
+    """Full launch request: campaign options + email sequences + contacts."""
+    options: InstantlyLaunchOptions
+    contacts: List[Dict[str, Any]]
+    sequences: List[Dict[str, Any]] = []
+    campaign_id_local: Optional[str] = None
 
 
 class DeliverabilityEmail(BaseModel):
@@ -873,6 +911,160 @@ async def check_deliverability(request: DeliverabilityCheckRequest):
     except Exception:
         logger.exception("Deliverability check failed")
         raise HTTPException(status_code=500, detail="Deliverability check failed")
+
+@router.post("/instantly-launch")
+async def instantly_launch(request: InstantlyLaunchRequest, http_request: Request):
+    """
+    Create a campaign in Instantly, add leads, configure options, and activate.
+    This is the primary launch path used by the redesigned Launch page.
+    """
+    user = await require_current_user(http_request)
+    if not settings.instantly_enabled:
+        raise HTTPException(status_code=400, detail="Instantly is not configured. Set INSTANTLY_API_KEY.")
+
+    client = InstantlyClient(settings.instantly_api_key or "")
+    opts = request.options
+
+    # 1. Resolve email accounts
+    email_list: list[str] = []
+    if opts.use_prewarmed:
+        accts_resp = await client.list_accounts()
+        if accts_resp.get("ok"):
+            raw = accts_resp.get("raw")
+            accounts = []
+            if isinstance(raw, list):
+                accounts = raw
+            elif isinstance(raw, dict):
+                for k in ["items", "data", "accounts", "results"]:
+                    v = raw.get(k)
+                    if isinstance(v, list):
+                        accounts = v
+                        break
+            email_list = [
+                str(a.get("email") or "").strip()
+                for a in accounts
+                if isinstance(a, dict) and str(a.get("email") or "").strip()
+            ]
+    if opts.email_accounts:
+        for e in opts.email_accounts:
+            e = str(e).strip()
+            if e and e not in email_list:
+                email_list.append(e)
+
+    if not email_list:
+        raise HTTPException(status_code=400, detail="No email accounts available for sending.")
+
+    # 2. Build campaign creation payload
+    campaign_payload: dict = {
+        "name": opts.campaign_name,
+        "campaign_schedule": {
+            "schedules": [{
+                "name": "Weekdays",
+                "timing": {"from": "09:00", "to": "17:00"},
+                "days": {"0": False, "1": True, "2": True, "3": True, "4": True, "5": True, "6": False},
+                "timezone": "America/Chicago",
+            }]
+        },
+        "email_list": email_list,
+        "daily_limit": opts.daily_limit,
+        "email_gap": opts.email_gap,
+        "random_wait_max": opts.random_wait_max,
+        "stop_on_reply": opts.stop_on_reply,
+        "stop_on_auto_reply": opts.stop_on_auto_reply,
+        "stop_for_company": opts.stop_for_company,
+        "link_tracking": opts.link_tracking,
+        "open_tracking": opts.open_tracking,
+        "match_lead_esp": opts.provider_matching,
+        "insert_unsubscribe_header": opts.insert_unsubscribe_header,
+        "allow_risky_contacts": opts.allow_risky_emails,
+        "prioritize_new_leads": opts.prioritize_new_leads,
+        "text_only": opts.delivery_optimization,
+    }
+
+    if opts.max_new_leads_per_day is not None:
+        campaign_payload["daily_max_leads"] = opts.max_new_leads_per_day
+
+    if opts.ab_testing and opts.ab_winning_metric:
+        campaign_payload["auto_variant_select"] = {"metric": opts.ab_winning_metric}
+
+    if opts.cc_list:
+        campaign_payload["cc_list"] = opts.cc_list
+    if opts.bcc_list:
+        campaign_payload["bcc_list"] = opts.bcc_list
+
+    # Add sequences (email steps)
+    if request.sequences:
+        campaign_payload["sequences"] = request.sequences
+
+    # 3. Create the campaign
+    create_resp = await client.create_campaign(campaign_payload)
+    if not create_resp.get("ok"):
+        err = create_resp.get("error", "Unknown error")
+        raise HTTPException(status_code=502, detail=f"Failed to create Instantly campaign: {err}")
+
+    campaign_data = create_resp.get("raw", {})
+    campaign_id = str(campaign_data.get("id") or "").strip()
+    if not campaign_id:
+        raise HTTPException(status_code=502, detail="Instantly returned no campaign ID.")
+
+    # 4. Add leads (contacts) to the campaign
+    leads = []
+    for c in request.contacts:
+        email = str(c.get("email") or "").strip()
+        if not email:
+            continue
+        lead: dict = {"email": email}
+        name = str(c.get("name") or "").strip()
+        if name:
+            parts = name.split(" ", 1)
+            lead["first_name"] = parts[0]
+            if len(parts) > 1:
+                lead["last_name"] = parts[1]
+        if c.get("company"):
+            lead["company_name"] = str(c["company"]).strip()
+        if c.get("title"):
+            lead["custom_variables"] = {"job_title": str(c["title"]).strip()}
+        leads.append(lead)
+
+    leads_added = 0
+    if leads:
+        leads_resp = await client.add_leads(campaign_id, leads, skip_if_in_workspace=True)
+        if leads_resp.get("ok"):
+            leads_added = leads_resp.get("count", len(leads))
+        else:
+            logger.warning("Failed to add leads to Instantly campaign %s: %s", campaign_id, leads_resp.get("error"))
+
+    # 5. Activate the campaign
+    activate_resp = await client.activate_campaign(campaign_id)
+    activated = activate_resp.get("ok", False)
+
+    # 6. Record in local outreach table for analytics
+    try:
+        for c in request.contacts:
+            email_addr = str(c.get("email") or "").strip()
+            if not email_addr:
+                continue
+            await record_outreach_send(
+                campaign_id=campaign_id,
+                contact_email=email_addr,
+                subject=f"[Instantly] {opts.campaign_name}",
+                body="Sent via Instantly campaign",
+                user_id=user.id,
+                variant="instantly",
+            )
+    except Exception:
+        logger.warning("Failed to record outreach sends for Instantly campaign %s", campaign_id)
+
+    return {
+        "success": True,
+        "campaign_id": campaign_id,
+        "campaign_name": opts.campaign_name,
+        "email_accounts_used": len(email_list),
+        "leads_added": leads_added,
+        "activated": activated,
+        "message": f"Campaign '{opts.campaign_name}' created and {'activated' if activated else 'created (activation pending)'}.",
+    }
+
 
 @router.post("/launch", response_model=LaunchResult)
 async def launch_campaign(request: CampaignLaunchRequest, http_request: Request):
