@@ -18,6 +18,7 @@ interface JobPreferences {
   minimumSalary: string;
   jobSearchStatus: string;
   state?: string;
+  metroAreas?: string[];
 }
 
 interface BackendJobPreferences {
@@ -33,6 +34,7 @@ interface BackendJobPreferences {
   minimum_salary: string;
   job_search_status: string;
   state?: string;
+  metro_areas?: string[];
   user_mode?: string;
 }
 
@@ -93,7 +95,7 @@ const ROLE_CATEGORIES = [
   "Coaching & Mentorship",
 ];
 
-const LOCATION_PREFERENCES = ["In-Person", "Hybrid", "Remote"];
+const LOCATION_PREFERENCES = ["In-Person", "Hybrid", "Remote (US only)", "Remote (Worldwide)"];
 
 const WORK_TYPE = ["In-Person", "Hybrid", "Remote"];
 
@@ -154,57 +156,62 @@ const JOB_SEARCH_STATUS = [
   "Not looking and closed to offers",
 ];
 
-const US_STATES = [
-  "Alabama",
-  "Alaska",
-  "Arizona",
-  "Arkansas",
-  "California",
-  "Colorado",
-  "Connecticut",
-  "Delaware",
-  "Florida",
-  "Georgia",
-  "Hawaii",
-  "Idaho",
-  "Illinois",
-  "Indiana",
-  "Iowa",
-  "Kansas",
-  "Kentucky",
-  "Louisiana",
-  "Maine",
-  "Maryland",
-  "Massachusetts",
-  "Michigan",
-  "Minnesota",
-  "Mississippi",
-  "Missouri",
-  "Montana",
-  "Nebraska",
-  "Nevada",
-  "New Hampshire",
-  "New Jersey",
-  "New Mexico",
-  "New York",
-  "North Carolina",
-  "North Dakota",
-  "Ohio",
-  "Oklahoma",
-  "Oregon",
-  "Pennsylvania",
-  "Rhode Island",
-  "South Carolina",
-  "South Dakota",
-  "Tennessee",
-  "Texas",
-  "Utah",
-  "Vermont",
-  "Virginia",
-  "Washington",
-  "West Virginia",
-  "Wisconsin",
-  "Wyoming",
+const US_METRO_AREAS = [
+  "Atlanta, GA",
+  "Austin, TX",
+  "Baltimore, MD",
+  "Birmingham, AL",
+  "Boise, ID",
+  "Boston, MA",
+  "Buffalo, NY",
+  "Charlotte, NC",
+  "Chicago, IL",
+  "Cincinnati, OH",
+  "Cleveland, OH",
+  "Columbus, OH",
+  "Dallas, TX",
+  "Denver, CO",
+  "Des Moines, IA",
+  "Detroit, MI",
+  "El Paso, TX",
+  "Hartford, CT",
+  "Honolulu, HI",
+  "Houston, TX",
+  "Indianapolis, IN",
+  "Jacksonville, FL",
+  "Kansas City, MO",
+  "Las Vegas, NV",
+  "Los Angeles, CA",
+  "Louisville, KY",
+  "Memphis, TN",
+  "Miami, FL",
+  "Milwaukee, WI",
+  "Minneapolis, MN",
+  "Nashville, TN",
+  "New Orleans, LA",
+  "New York, NY",
+  "Oklahoma City, OK",
+  "Omaha, NE",
+  "Orlando, FL",
+  "Philadelphia, PA",
+  "Phoenix, AZ",
+  "Pittsburgh, PA",
+  "Portland, OR",
+  "Providence, RI",
+  "Raleigh, NC",
+  "Richmond, VA",
+  "Sacramento, CA",
+  "Salt Lake City, UT",
+  "San Antonio, TX",
+  "San Diego, CA",
+  "San Francisco, CA",
+  "San Jose, CA",
+  "Seattle, WA",
+  "St. Louis, MO",
+  "Tampa, FL",
+  "Tucson, AZ",
+  "Virginia Beach, VA",
+  "Washington, DC",
 ];
 
 export default function JobPreferencesPage() {
@@ -224,6 +231,7 @@ export default function JobPreferencesPage() {
     minimumSalary: "",
     jobSearchStatus: "",
     state: "",
+    metroAreas: [],
   });
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [helper, setHelper] = useState<JobPreferencesResponse["helper"] | null>(null);
@@ -241,13 +249,16 @@ export default function JobPreferencesPage() {
       const cached = localStorage.getItem("job_preferences");
       if (cached) {
         const parsed = JSON.parse(cached);
-        // Only keep state when the UI could have collected it (In-Person selected).
         const locs = Array.isArray(parsed?.locationPreferences) ? parsed.locationPreferences : [];
-        const hasInPerson = locs.includes("In-Person");
+        const hasInPerson = locs.includes("In-Person") || locs.includes("Hybrid");
+        // Migrate old "Remote" to "Remote (US only)"
+        const migratedLocs = locs.map((l: string) => l === "Remote" ? "Remote (US only)" : l);
         setPreferences({
           ...parsed,
+          locationPreferences: migratedLocs,
           locationText: String(parsed?.locationText || ""),
           state: hasInPerson ? String(parsed?.state || "") : "",
+          metroAreas: Array.isArray(parsed?.metroAreas) ? parsed.metroAreas : [],
         });
       }
     } catch {
@@ -262,13 +273,13 @@ export default function JobPreferencesPage() {
         );
         if (resp.preferences) {
           const p = resp.preferences;
-          const hasInPerson = Array.isArray(p.location_preferences)
-            ? p.location_preferences.includes("In-Person")
-            : false;
+          const locs = Array.isArray(p.location_preferences) ? p.location_preferences : [];
+          const hasInPerson = locs.includes("In-Person") || locs.includes("Hybrid");
+          const migratedLocs = locs.map((l: string) => l === "Remote" ? "Remote (US only)" : l);
           const mapped: JobPreferences = {
             values: p.values || [],
             roleCategories: p.role_categories || [],
-            locationPreferences: p.location_preferences || [],
+            locationPreferences: migratedLocs,
             locationText: String((p as any)?.location_text || ""),
             workType: p.work_type || [],
             roleType: p.role_type || [],
@@ -278,6 +289,7 @@ export default function JobPreferencesPage() {
             minimumSalary: p.minimum_salary || "",
             jobSearchStatus: p.job_search_status || "",
             state: hasInPerson ? (p.state || "") : "",
+            metroAreas: Array.isArray(p.metro_areas) ? p.metro_areas : [],
           };
           setPreferences(mapped);
         }
@@ -327,10 +339,14 @@ export default function JobPreferencesPage() {
         ? currentValues.filter((v) => v !== value)
         : [...currentValues, value];
 
-      // If In-Person is not selected, clear state to avoid confusing downstream steps.
       if (field === "locationPreferences") {
-        const hasInPerson = newValues.includes("In-Person");
-        return { ...prev, [field]: newValues, state: hasInPerson ? (prev.state || "") : "" };
+        const hasInPerson = newValues.includes("In-Person") || newValues.includes("Hybrid");
+        return {
+          ...prev,
+          [field]: newValues,
+          state: hasInPerson ? (prev.state || "") : "",
+          metroAreas: hasInPerson ? (prev.metroAreas || []) : [],
+        };
       }
 
       return { ...prev, [field]: newValues };
@@ -360,6 +376,7 @@ export default function JobPreferencesPage() {
         minimum_salary: preferences.minimumSalary,
         job_search_status: preferences.jobSearchStatus,
         state: preferences.state,
+        metro_areas: preferences.metroAreas,
         user_mode: mode,
       };
       const res = await api<JobPreferencesResponse>(
@@ -489,25 +506,38 @@ export default function JobPreferencesPage() {
                   </div>
                 </div>
 
-                {preferences.locationPreferences.includes("In-Person") && (
+                {(preferences.locationPreferences.includes("In-Person") || preferences.locationPreferences.includes("Hybrid")) && (
                   <div>
                     <h3 className="text-lg font-medium mb-3">
-                      United States - what state?
+                      Nearest metropolitan area(s)
                     </h3>
-                    <select
-                      value={preferences.state || ""}
-                      onChange={(e) =>
-                        handleSingleSelect("state", e.target.value)
-                      }
-                      className="w-full max-w-xs border border-gray-300 rounded-md px-3 py-2"
-                    >
-                      <option value="">Select a state</option>
-                      {US_STATES.map((state) => (
-                        <option key={state} value={state}>
-                          {state}
-                        </option>
+                    <p className="text-sm text-white/70 mb-3">
+                      Select all metro areas you&apos;d consider working in.
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-64 overflow-y-auto rounded-md border border-white/10 bg-black/10 p-3">
+                      {US_METRO_AREAS.map((metro) => (
+                        <label
+                          key={metro}
+                          className="flex items-center space-x-2 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={(preferences.metroAreas || []).includes(metro)}
+                            onChange={() => {
+                              setPreferences((prev) => {
+                                const current = prev.metroAreas || [];
+                                const next = current.includes(metro)
+                                  ? current.filter((m) => m !== metro)
+                                  : [...current, metro];
+                                return { ...prev, metroAreas: next };
+                              });
+                            }}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm">{metro}</span>
+                        </label>
                       ))}
-                    </select>
+                    </div>
                   </div>
                 )}
               </div>

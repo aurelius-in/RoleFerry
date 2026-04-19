@@ -33,6 +33,7 @@ class JobPreferences(BaseModel):
     minimum_salary: str
     job_search_status: str
     state: Optional[str] = None
+    metro_areas: List[str] = []
     user_mode: str = "job-seeker"  # job-seeker or recruiter
 
 class JobPreferencesResponse(BaseModel):

@@ -29,6 +29,20 @@ export default function Navbar() {
     if (saved) {
       try { setUser(JSON.parse(saved)); } catch {}
     }
+
+    (async () => {
+      try {
+        const resp = await api<any>("/auth/me", "GET");
+        if (resp?.user) {
+          const serverUser = resp.user;
+          const localUser = saved ? JSON.parse(saved) : null;
+          if (!localUser || localUser.id !== serverUser.id) {
+            localStorage.setItem("rf_user", JSON.stringify(serverUser));
+            setUser(serverUser);
+          }
+        }
+      } catch {}
+    })();
   }, []);
 
   // Mark steps complete even if the user navigates via the navbar (not the dashboard stones).

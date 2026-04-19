@@ -563,6 +563,7 @@ export default function JobDescriptionsPage() {
     scrapedRolesAbort.current = controller;
 
     setScrapedRolesError(null);
+    setScrapedRoles([]);
     setIsLoadingScrapedRoles(true);
     try {
       const buildParams = (opts?: { simple?: boolean }) => {
@@ -665,12 +666,13 @@ export default function JobDescriptionsPage() {
 
   useEffect(() => {
     if (!hasMounted) return;
+    if (hasEverLoadedRoles) return;
     const t = window.setTimeout(() => {
       loadScrapedRoles();
     }, 800);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMounted, positiveKeywords, negativeKeywords]);
+  }, [hasMounted]);
 
   const importFromUrl = async (raw: string, opts?: { clearImporterInput?: boolean; seedImporterInput?: boolean }) => {
     const rawUrl = String(raw || "").trim();
