@@ -67,6 +67,27 @@ export default function LoginPage() {
 
   const primaryCta = useMemo(() => (mode === "login" ? "Log in" : "Create account"), [mode]);
 
+  function clearUserLocalStorage() {
+    const keysToRemove = [
+      "rf_user",
+      "job_preferences",
+      "job_preferences_helper",
+      "resume_extract",
+      "job_descriptions",
+      "personality_profile",
+      "personality_assessment",
+      "roleferry-progress",
+      "tracker_applications",
+      "scraped_roles_cache",
+      "rf_auto_roles_positive_keywords_v1",
+      "rf_auto_roles_negative_keywords_v1",
+      "selected_job_description",
+    ];
+    for (const key of keysToRemove) {
+      try { localStorage.removeItem(key); } catch {}
+    }
+  }
+
   async function submit() {
     setError(null);
     setLoading(true);
@@ -78,6 +99,7 @@ export default function LoginPage() {
         if (password.length < 8) throw new Error("Password must be at least 8 characters.");
         if (password !== password2) throw new Error("Passwords do not match.");
 
+        clearUserLocalStorage();
         const resp = await api<any>("/auth/register", "POST", {
           email,
           password,
@@ -93,6 +115,7 @@ export default function LoginPage() {
         if (!email.trim()) throw new Error("Email is required.");
         if (!password) throw new Error("Password is required.");
 
+        clearUserLocalStorage();
         const resp = await api<any>("/auth/login", "POST", { email, password });
         if (!resp?.success) throw new Error(resp?.message || "Failed to log in.");
         if (resp?.user) localStorage.setItem("rf_user", JSON.stringify(resp.user));

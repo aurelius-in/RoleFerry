@@ -24,6 +24,7 @@ class GapAnalysisPreferences(BaseModel):
     minimum_salary: str = ""
     job_search_status: str = ""
     state: Optional[str] = None
+    metro_areas: List[str] = Field(default_factory=list)
     user_mode: str = "job-seeker"
 
 
@@ -829,11 +830,24 @@ def _deterministic_rank(
         if loc_text:
             loc_prefs.append(loc_text)
         loc_floor = str(preferences.state or "").strip()
+        metro_areas = [x.strip() for x in _norm_list(getattr(preferences, "metro_areas", None)) if str(x).strip()]
         job_loc = _job_location(j)
-        if loc_prefs or loc_floor:
+        if loc_prefs or loc_floor or metro_areas:
             jl = (job_loc or "").lower()
-            # If user picked a state, require it when job is onsite/hybrid and location is known.
-            if loc_floor and job_work in {"onsite", "hybrid"} and jl and loc_floor.lower() not in jl:
+            # Generic US locations like "United States" or "US" are never a mismatch
+            # for users who selected a US state or metro area.
+            jl_is_generic_us = jl in {"united states", "us", "usa", "u.s.", "u.s.a.", "united states of america", ""}
+            # Check metro areas first (new system)
+            if metro_areas and job_work in {"onsite", "hybrid"} and jl and not jl_is_generic_us:
+                metro_match = any(m.lower() in jl or jl in m.lower() for m in metro_areas)
+                # Also check if the state abbreviation from any metro matches
+                if not metro_match:
+                    metro_states = {m.split(", ")[-1].strip().lower() for m in metro_areas if ", " in m}
+                    metro_match = any(st in jl for st in metro_states)
+                if not metro_match:
+                    pref_gaps.append(f"Location preference mismatch: your preferred metro areas are {', '.join(metro_areas[:3])}, but this job appears to be in {job_loc or 'an unspecified location'}.")
+            # Fall back to old state check (backward compat)
+            elif loc_floor and job_work in {"onsite", "hybrid"} and jl and not jl_is_generic_us and loc_floor.lower() not in jl:
                 pref_gaps.append(f"Location preference mismatch: you selected {loc_floor}, but this job appears to be in {job_loc or 'an unspecified location'}.")
 
 
