@@ -22,7 +22,7 @@ _BIO_UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "uploads",
 _BIO_UPLOAD_DIR = os.path.abspath(_BIO_UPLOAD_DIR)
 os.makedirs(_BIO_UPLOAD_DIR, exist_ok=True)
 
-# Allow “2 minutes or shorter” clips with realistic file sizes.
+# Allow "2 minutes or shorter" clips with realistic file sizes.
 # (We enforce duration on the frontend; backend enforces a hard size cap.)
 _MAX_VIDEO_BYTES = 80 * 1024 * 1024  # 80MB
 
@@ -132,7 +132,7 @@ class BioPageDraft(BaseModel):
     # Intro/portfolio video: can be a URL or data URL (demo/localStorage).
     video_url: str = ""
     # A short script to help the user record a 1-minute intro video.
-    # This is never required for the public page; it’s purely a creation aid.
+    # This is never required for the public page; it's purely a creation aid.
     video_script: str = ""
 
     # proof + positioning
@@ -271,7 +271,7 @@ def _build_deterministic_draft(
 @router.post("/bio-pages/generate", response_model=GenerateBioPageResponse)
 async def generate_bio_page(payload: GenerateBioPageRequest, http_request: Request):
     try:
-        # Bio pages should work in demo mode without auth. If logged in, we’ll personalize from the user record.
+        # Bio pages should work in demo mode without auth. If logged in, we'll personalize from the user record.
         user = await get_current_user_optional(http_request)
         user_id = user.id if user else "anon"
 
@@ -494,14 +494,14 @@ async def generate_video_script(payload: GenerateVideoScriptRequest, http_reques
         pm0 = pms[0] if (isinstance(pms, list) and pms and isinstance(pms[0], dict)) else {}
         pain = str(pm0.get("painpoint_1") or "").strip()
         sol = str(pm0.get("solution_1") or "").strip()
-        cta = str(od.get("cta") or "If it sounds useful, I’d love to chat.").strip()
+        cta = str(od.get("cta") or "If it sounds useful, I'd love to chat.").strip()
 
         fallback = "\n".join(
             [
-                f"Hi{‘, ‘ + first if first else ‘’} - I’m {display_name}.",
+                f"Hi{', ' + first if first else ''} - I'm {display_name}.",
                 "I build and lead work that drives outcomes, and I am exploring roles where I can make a measurable impact.",
-                (f"A recent win: {metric_line}." if metric_line else "A recent win: I’ve delivered measurable improvements across teams and systems."),
-                (f"I’m especially strong at tackling problems like: {pain}." if pain else "I’m especially strong at tackling messy, high-impact problems and turning them into clear execution plans."),
+                (f"A recent win: {metric_line}." if metric_line else "A recent win: I've delivered measurable improvements across teams and systems."),
+                (f"I'm especially strong at tackling problems like: {pain}." if pain else "I'm especially strong at tackling messy, high-impact problems and turning them into clear execution plans."),
                 (f"My approach: {sol}." if sol else "My approach: clarify the goal, map constraints, ship an MVP fast, then iterate with feedback."),
                 cta,
             ]
@@ -530,7 +530,7 @@ async def generate_video_script(payload: GenerateVideoScriptRequest, http_reques
             {
                 "role": "system",
                 "content": (
-                    "You write a short first-person script for a job-seeker’s 1-minute intro video.\n"
+                    "You write a short first-person script for a job-seeker's 1-minute intro video.\n"
                     "IMPORTANT:\n"
                     "- This bio page is reusable across multiple companies: DO NOT mention any specific employer.\n"
                     "- Use ONLY the provided JSON; do not invent facts or numbers.\n"

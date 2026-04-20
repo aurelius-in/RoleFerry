@@ -197,12 +197,28 @@ export default function PainPointMatchPage() {
     } catch {
       // ignore malformed cache
     }
+    // Restore previously generated matches
+    try {
+      const savedByJob = typeof window !== "undefined" ? localStorage.getItem("painpoint_matches_by_job") : null;
+      if (savedByJob) {
+        const parsed = JSON.parse(savedByJob);
+        if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0) {
+          setMatchesByJobId(parsed);
+        }
+      }
+    } catch {
+      // ignore malformed cache
+    }
   }, []);
 
   useEffect(() => {
     const first = jobDescriptions[0];
     if (first && Object.keys(matchesByJobId).length > 0) {
       setMatches(matchesByJobId[first.id] || []);
+      setExpandedJobIds((prev) => {
+        if (prev.size > 0) return prev;
+        return new Set([first.id]);
+      });
     }
   }, [jobDescriptions, matchesByJobId]);
 
