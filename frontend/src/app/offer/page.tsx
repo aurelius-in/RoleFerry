@@ -290,8 +290,15 @@ export default function OfferPage() {
     const autoCredibility = deriveCredibilitySignals(resume, roleSkills);
 
     const looksLikeOldOneLiner = (s: string) => {
-      const t = String(s || "");
-      return /My strengths include/i.test(t) || /Background in/i.test(t) || /Strengths:/i.test(t) || /Context:/i.test(t) || /^For .+ at .+:/i.test(t);
+      const t = String(s || "").trim();
+      if (!t) return true;
+      if (/My strengths include/i.test(t) || /Background in/i.test(t) || /Strengths:/i.test(t) || /Context:/i.test(t) || /^For .+ at .+:/i.test(t)) return true;
+      // Catch broken fragments: no verb, or ends without forming a sentence
+      const words = t.split(/\s+/);
+      if (words.length < 4) return true;
+      // Catch patterns like "I build scalable and inclusive engineering organization" (no article, sounds like word salad)
+      if (/^I\s+(build|create|develop|design|lead)\s+\w+\s+and\s+\w+\s+\w+$/i.test(t)) return true;
+      return false;
     };
 
     const needsOneLinerReseed = !saved?.version || looksLikeOldOneLiner(String(saved?.one_liner || ""));
@@ -342,21 +349,23 @@ export default function OfferPage() {
         ? roleSkills.slice(0, 2).join(" and ")
         : "";
 
+    // Build a clean, sentence-form one-liner that reads naturally.
+    const shortTitle = title.replace(/\s*[-–—]\s+.*$/, "").split(",")[0].trim();
     let seed = "";
-    if (outcomeRaw && title) {
-      seed = `${title} focused on ${outcomeRaw}.`;
+    if (outcomeRaw && shortTitle) {
+      seed = `I'm a ${shortTitle} who helps teams ${outcomeRaw}.`;
     } else if (outcomeRaw && skillPhrase) {
-      seed = `I help teams achieve ${outcomeRaw} through ${skillPhrase}.`;
+      seed = `I help teams ${outcomeRaw} through ${skillPhrase}.`;
     } else if (outcomeRaw) {
-      seed = `I help organizations achieve ${outcomeRaw}.`;
-    } else if (title && skillPhrase) {
-      seed = `${title} specializing in ${skillPhrase}.`;
-    } else if (title) {
-      seed = `${title} who helps teams deliver measurable outcomes.`;
+      seed = `I help organizations ${outcomeRaw}.`;
+    } else if (shortTitle && skillPhrase) {
+      seed = `I'm a ${shortTitle} specializing in ${skillPhrase}.`;
+    } else if (shortTitle) {
+      seed = `I'm a ${shortTitle} who helps teams deliver measurable outcomes.`;
     } else if (skillPhrase) {
       seed = `I help teams deliver results through ${skillPhrase}.`;
     }
-    seed = seed.replace(/\.\./g, ".").replace(/^i\s/i, "I ");
+    seed = seed.replace(/\.\./g, ".").replace(/^i\s/i, "I ").replace(/^I'm a a /i, "I'm a ");
 
     setOneLiner(seed);
 

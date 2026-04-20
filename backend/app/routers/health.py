@@ -60,6 +60,7 @@ async def healthcheck():
         "findymail": bool(settings.findymail_api_key),
         "neverbounce": bool(settings.neverbounce_api_key),
         "millionverifier": bool(settings.mv_api_key),
+        "instantly": settings.instantly_enabled,
     }
     return {
         "status": "ok" if db_status == "ok" else "degraded",

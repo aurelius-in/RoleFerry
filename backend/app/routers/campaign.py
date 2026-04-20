@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Any, Dict, List, Optional
 import csv
 import io
+import json
 import re
 import html
 
@@ -178,7 +179,7 @@ async def create_persisted_campaign(payload: PersistedCampaignCreateRequest, htt
                 RETURNING id::text, user_id, name, status, meta, created_at, updated_at
                 """
             ),
-            {"user_id": user_id, "name": name, "status": status, "meta": meta},
+            {"user_id": user_id, "name": name, "status": status, "meta": json.dumps(meta)},
         )
         row = res.first()
         return {"campaign": dict(row._mapping) if row else None}
@@ -207,7 +208,7 @@ async def update_persisted_campaign(campaign_id: str, payload: PersistedCampaign
                 RETURNING id::text, user_id, name, status, meta, created_at, updated_at
                 """
             ),
-            {"id": cid, "user_id": user_id, "name": name, "status": status, "meta": meta},
+            {"id": cid, "user_id": user_id, "name": name, "status": status, "meta": json.dumps(meta) if meta is not None else None},
         )
         row = res.first()
         if not row:
@@ -307,9 +308,9 @@ def _row_params_from_dict(raw: Dict[str, Any]) -> Dict[str, Any]:
         "applied_job_link": pick("applied_job_link", "appliedJobLink", "Applied Job Link"),
         "applied_job_title": pick("applied_job_title", "appliedJobTitle", "Applied Job Title"),
         "personalized_page": pick("personalized_page", "personalizedPage", "Personalized page", "Personalized Page"),
-        "context": pick("context") or {},
-        "emails": pick("emails") or {},
-        "state": pick("state") or {},
+        "context": json.dumps(pick("context") or {}),
+        "emails": json.dumps(pick("emails") or {}),
+        "state": json.dumps(pick("state") or {}),
     }
 
 
@@ -591,7 +592,7 @@ async def generate_email_for_campaign_row(
                 WHERE id = :rid::uuid AND campaign_id = :cid::uuid AND user_id = :user_id
                 """
             ),
-            {"emails": existing, "rid": rid, "cid": cid, "user_id": user_id},
+            {"emails": json.dumps(existing), "rid": rid, "cid": cid, "user_id": user_id},
         )
 
     return result
@@ -837,13 +838,13 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             Expand tone into explicit guardrails, especially for step 4 hail-mary tones.
             """
             base = {
-                "recruiter": "Ultra concise, logistics-forward, easy yes/no.",
-                "manager": "Competent + collaborative, emphasizes team impact.",
-                "exec": "Outcome/ROI + risk reduction, strategic framing.",
-                "developer": "Technical specificity, concrete implementation details, no fluff.",
-                "sales": "Crisp proof points, clear next step, confident but not pushy.",
-                "startup": "High-ownership, fast-moving, momentum and iteration.",
-                "enterprise": "Process-aware, risk-aware, stakeholders + delivery predictability.",
+                "recruiter": "Ultra concise, logistics-forward, easy yes/no. Write like a recruiter who gets 200 emails a day - short, clear, direct. No flowery language.",
+                "manager": "Competent and collaborative. Emphasize team impact and leadership. Write like a peer manager sharing how you could strengthen their team.",
+                "exec": "Strategic, outcome-focused. Lead with ROI and risk reduction. Write like you are briefing a VP - no filler, every sentence earns its place.",
+                "developer": "Technical specificity, concrete implementation details, no fluff. Mention specific technologies, architectures, or methodologies. Write like an engineer talking to another engineer.",
+                "sales": "Crisp proof points, clear next step, confident but not pushy. Structure like a short sales note with a clear value proposition.",
+                "startup": "High-energy, ownership-oriented, fast-moving. Emphasize shipping speed, iteration, and wearing multiple hats. Write like someone who thrives in ambiguity.",
+                "enterprise": "Process-aware, risk-aware. Emphasize stakeholder management, delivery predictability, and compliance. Write like someone who has navigated large-org complexity.",
             }.get(t, "")
 
             hail = {
@@ -868,14 +869,14 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
         soft_cta = str((offer_ctx or {}).get("soft_cta") or "").strip()
         hard_cta = str((offer_ctx or {}).get("hard_cta") or (offer_ctx or {}).get("default_cta") or "").strip()
 
-        prefer_soft = step in (1, 2)
-        preferred_cta = soft_cta if prefer_soft else hard_cta
-        fallback_cta = hard_cta if prefer_soft else soft_cta
+        prefer_hard = step == 2
+        preferred_cta = hard_cta if prefer_hard else soft_cta
+        fallback_cta = soft_cta if prefer_hard else hard_cta
         chosen_cta = str(preferred_cta or fallback_cta or "").strip()
 
         cta_strategy = {
             "step_number": step,
-            "preferred_type": "soft" if prefer_soft else "hard",
+            "preferred_type": "hard" if prefer_hard else "soft",
             "preferred_cta": preferred_cta,
             "secondary_cta": fallback_cta,
             "chosen_cta": chosen_cta,
@@ -1092,7 +1093,7 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
 
             first = ""
             company_name = ""
-            job_title = ""
+            job_title_raw = ""
             try:
                 first = str((contact or {}).get("name") or "").strip().split(" ")[0]
             except Exception:
@@ -1102,70 +1103,149 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             except Exception:
                 company_name = ""
             try:
-                job_title = str((job or {}).get("title") or (job or {}).get("role") or "").strip()
+                job_title_raw = str((job or {}).get("title") or (job or {}).get("role") or "").strip()
             except Exception:
-                job_title = ""
+                job_title_raw = ""
 
+            def _sentence_title(t: str) -> str:
+                """Format a job title for natural sentence use.
+                'Director, Software Engineering - Product Platform' -> 'Director of Software Engineering'
+                """
+                s = str(t or "").strip()
+                if not s:
+                    return "the role"
+                # Drop parenthetical suffixes and dash-separated platform/team qualifiers.
+                s = re.sub(r"\s*[-–—]\s+.*$", "", s)
+                s = re.sub(r"\s*\(.*?\)\s*$", "", s)
+                # "Director, Software Engineering" -> "Director of Software Engineering"
+                parts = [p.strip() for p in s.split(",", 1)]
+                if len(parts) == 2 and parts[1]:
+                    s = f"{parts[0]} of {parts[1]}"
+                return s.strip() or "the role"
+
+            job_title = _sentence_title(job_title_raw)
             greet_name = first or "there"
-            subj = f"Quick follow-up on {job_title or 'the role'}"
+
+            subj = f"Quick follow-up on {job_title}"
             if step == 1:
-                subj = f"{job_title or 'Role'} at {company_name or 'your team'} - quick idea"
+                subj = f"{job_title} at {company_name or 'your team'}"
             elif step == 2:
-                subj = f"Re: {job_title or 'the role'} @ {company_name or 'your team'}"
+                subj = f"Re: {job_title} at {company_name or 'your team'}"
             elif step == 3:
                 subj = f"One more idea for {company_name or 'your team'}"
             elif step == 4:
-                subj = "Closing the loop?"
+                subj = "Closing the loop"
 
             rb = _build_research_brief(ctx)
 
             def _strip_signal_label(s: str) -> str:
-                """Remove internal labels like 'Company theme signal:', 'Market position:', etc."""
+                """Remove internal labels and filter out instruction-like text."""
                 t = str(s or "").strip()
-                t = re.sub(r"^(Company theme signal|Market position|Products?/launches?|Hiring signal|Recent post|Publication|Role success metric|Role required skill|Profile highlight|Posts about|Interesting fact|Theme):\s*", "", t, flags=re.I)
+                t = re.sub(
+                    r"^(Company theme signal|Market position|Products?/launches?|Hiring signal|"
+                    r"Recent post|Publication|Role success metric|Role required skill|Role pain point|"
+                    r"Profile highlight|Posts about|Interesting fact|Theme|Signal|Activity|"
+                    r"Career move|Company news|Hiring|Target role|What the company cares about):\s*",
+                    "", t, flags=re.I,
+                )
+                # Filter out text that looks like LLM instructions or prompt fragments.
+                if re.search(r"(Reference a|without claiming|plausible priority|offer a \d)", t, flags=re.I):
+                    return ""
+                if len(t) > 200:
+                    return ""
                 return t.strip()
 
-            raw_company_sig = ((rb.get("company_signals") or [None])[0] if isinstance(rb, dict) else None) or ""
-            raw_role_sig = ((rb.get("role_scope_signals") or [None])[0] if isinstance(rb, dict) else None) or ""
-            company_sig = _strip_signal_label(raw_company_sig)
-            role_sig = _strip_signal_label(raw_role_sig)
+            def _clean_signal(s: str) -> str:
+                """Strip labels and validate the signal is usable text."""
+                c = _strip_signal_label(s)
+                if not c or len(c) < 8:
+                    return ""
+                # Reject signals that look like placeholders or instructions.
+                if any(x in c.lower() for x in ["no data found", "n/a", "placeholder", "example:", "template"]):
+                    return ""
+                return c
+
+            raw_company_sigs = rb.get("company_signals") or [] if isinstance(rb, dict) else []
+            company_sig = ""
+            for rs in raw_company_sigs:
+                c = _clean_signal(rs)
+                if c:
+                    company_sig = c
+                    break
+
             cta_line = chosen_cta or "Open to a quick 10-15 minute chat?"
 
-            offer_ctx = ctx.get("offer") if isinstance(ctx, dict) else {}
-            one_liner = str((offer_ctx or {}).get("one_liner") or "").strip()
-            proof_points = [str(p).strip() for p in _as_list((offer_ctx or {}).get("proof_points"))[:2] if str(p).strip()]
+            offer_ctx_fb = ctx.get("offer") if isinstance(ctx, dict) else {}
+            one_liner = str((offer_ctx_fb or {}).get("one_liner") or "").strip()
+            raw_proof_points = [str(p).strip() for p in _as_list((offer_ctx_fb or {}).get("proof_points"))[:4] if str(p).strip()]
+
+            # Deduplicate proof points: remove points where one is a substring of another.
+            deduped_pps: List[str] = []
+            for pp in raw_proof_points:
+                pp_low = pp.lower()
+                is_dup = False
+                new_deduped: List[str] = []
+                for existing in deduped_pps:
+                    ex_low = existing.lower()
+                    if pp_low in ex_low:
+                        is_dup = True
+                        new_deduped.append(existing)
+                    elif ex_low in pp_low:
+                        # Keep the longer (more detailed) version.
+                        new_deduped.append(pp)
+                        is_dup = True
+                    else:
+                        new_deduped.append(existing)
+                deduped_pps = new_deduped
+                if not is_dup:
+                    deduped_pps.append(pp)
+            proof_points = deduped_pps[:2]
+
+            # Tone-aware framing for the fallback path.
+            tone_label = tone or "recruiter"
+            if tone_label == "custom" and custom_tone:
+                tone_label = custom_tone.lower()
+
+            def _tone_opener() -> str:
+                """Return a tone-appropriate bridge sentence."""
+                bridges = {
+                    "exec": f"I have been following {company_name or 'the company'}'s trajectory and believe my background could contribute to your goals.",
+                    "manager": f"I came across the {job_title} opening and wanted to share some context on how my experience aligns.",
+                    "developer": f"I noticed the {job_title} opening and wanted to share a few specifics on my relevant work.",
+                    "sales": f"I have a background that maps directly to the challenges facing {company_name or 'your team'}, and I wanted to introduce myself.",
+                    "startup": f"I am drawn to what {company_name or 'the team'} is building and think my experience shipping fast could be valuable.",
+                    "enterprise": f"I have experience navigating the kind of scale and process rigor that {company_name or 'your team'} demands.",
+                }
+                return bridges.get(tone_label, f"I came across the {job_title} opening and wanted to introduce myself.")
 
             body_bits: List[str] = [f"Hi {greet_name},\n\n"]
             if step == 1:
-                if company_sig:
-                    body_bits.append(f"I noticed {company_name or 'your team'} {company_sig[0].lower()}{company_sig[1:].rstrip('.')}. " if company_sig and len(company_sig) > 5 else f"I noticed {company_name or 'your team'} is doing interesting work. ")
-                    if one_liner:
-                        body_bits.append(f"{one_liner.rstrip('.')}. ")
-                    if proof_points:
-                        body_bits.append(f"For example, {proof_points[0][0].lower()}{proof_points[0][1:].rstrip('.')}.")
-                    body_bits.append(f"\n\n{cta_line}\n\n")
-                elif role_sig:
-                    body_bits.append(f"I noticed the {job_title or 'role'} at {company_name or 'your team'} and wanted to introduce myself. ")
-                    if one_liner:
-                        body_bits.append(f"{one_liner.rstrip('.')}. ")
-                    body_bits.append(f"\n\n{cta_line}\n\n")
-                else:
-                    body_bits.append(f"I noticed the {job_title or 'role'} at {company_name or 'your team'} and wanted to introduce myself. ")
+                if company_sig and len(company_sig) > 10:
+                    # Use the signal as a natural opener.
+                    sig_lower = company_sig[0].lower() + company_sig[1:] if company_sig else ""
+                    body_bits.append(f"I noticed {company_name or 'your team'} {sig_lower.rstrip('.')}. ")
                     if one_liner:
                         body_bits.append(f"{one_liner.rstrip('.')}.")
-                    body_bits.append(f"\n\n{cta_line}\n\n")
+                    if proof_points:
+                        body_bits.append(f" For example, I {proof_points[0][0].lower()}{proof_points[0][1:].rstrip('.')}.")
+                else:
+                    body_bits.append(_tone_opener())
+                    if one_liner:
+                        body_bits.append(f" {one_liner.rstrip('.')}.")
+                body_bits.append(f"\n\n{cta_line}\n\n")
             elif step == 2:
-                body_bits.append(f"Just a quick follow-up on my previous note about the {job_title or 'role'}. I'm still very interested and would be glad to speak briefly if the role is still open.\n\n")
+                body_bits.append(f"Just following up on my previous note about the {job_title}. ")
+                body_bits.append(f"I am still very interested and would be happy to speak briefly if the role is still open.\n\n")
                 body_bits.append(f"{cta_line}\n\n")
             elif step == 3:
-                body_bits.append(f"I wanted to share a few highlights from my work that align with what teams typically need in a {job_title or 'role like this'}.\n\n")
+                body_bits.append(f"I wanted to share a few highlights from my work that align with what teams typically need in a {job_title}.\n\n")
                 if proof_points:
-                    for pp in proof_points[:2]:
-                        body_bits.append(f"- {pp}\n")
-                    body_bits.append("\n")
-                body_bits.append(f"{cta_line}\n\n")
+                    for pp in proof_points:
+                        clean_pp = pp.rstrip(".")
+                        body_bits.append(f"{clean_pp}.\n\n")
+                body_bits.append(f"Interested in seeing how this could work for your team? {cta_line}\n\n")
             else:
-                body_bits.append("I realize your time is limited, so this will be my final message. If the role has been filled or I'm not the right fit, no worries at all. If there's someone else I should speak with, I'd be grateful for an introduction.\n\n")
+                body_bits.append(f"I realize your time is limited, so this will be my last note. If the role has been filled or I am not the right fit, no worries at all. If there is someone else on your team I should connect with, I would appreciate an introduction.\n\n")
                 body_bits.append(f"{cta_line}\n\n")
 
             bio = str(((links or {}).get("bio_page_url")) or "").strip()
@@ -1174,12 +1254,13 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
                 body_bits.append(f"I put together a brief overview of my background here: {bio}\n")
             if work:
                 body_bits.append(f"Work samples: {work}\n")
-            body = _append_signature("".join(body_bits))
+            body = "".join(body_bits).rstrip()
             return subj, body
 
         # LLM generation if available; else fallback.
         if not client.should_use_real_llm:
             subj, body = _fallback()
+            body = _append_signature(body)
             return CampaignGenerateStepResponse(
                 success=True,
                 message="Generated (deterministic fallback)",
@@ -1224,9 +1305,9 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
         cta_guidance = (
             f"CTA sequence policy: This is email step {step}. "
             + (
-                "Prefer a soft CTA (small, easy reply) for steps 1-2."
-                if prefer_soft
-                else "Prefer a hard CTA (clear commitment/time ask) for steps 3-4."
+                "Use a hard CTA (clear commitment/time ask) for step 2 only."
+                if prefer_hard
+                else "Use a soft CTA (low-friction, easy reply) for steps 1, 3, and 4."
             )
             + "\n"
             + (f"Preferred CTA from context: {preferred_cta}\n" if preferred_cta else "")
@@ -1276,8 +1357,10 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             "- If a bio_page_url is provided in the links, include it with a brief intro like 'I put together a brief overview of my background here: [url]'. Do NOT just drop the URL without context.\n\n"
             f"Sequence step: {step} of 4.\n"
             f"Step intent: {step_intent}\n\n"
+            f"TONE (CRITICAL - this MUST shape every sentence you write):\n"
             f"{tone_line}\n"
-            f"Tone guardrails: {_tone_guardrails(tone)}\n\n"
+            f"{_tone_guardrails(tone)}\n"
+            f"The tone is the user's primary style choice. The email must unmistakably reflect it.\n\n"
             f"{cta_guidance}\n\n"
             "Personalization rules (CRITICAL for quality):\n"
             "- The research_brief in context contains categorized signals. USE THEM.\n"
@@ -1294,10 +1377,18 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             "- Use at most 2 research details per email (avoid overstuffing).\n"
             "- Do not mention that you used AI or 'research'.\n"
             "- NEVER be generic. Every sentence must contain a specific detail.\n\n"
+            "Social appropriateness rules (the 'networking event' standard):\n"
+            "- Only reference information that is PUBLIC and would be normal to discuss with a stranger at a professional event.\n"
+            "- GOOD to reference: their published articles, blog posts, public talks, company product launches, mergers, news, awards, job title.\n"
+            "- DO NOT reference: where they live, personal life details, job tenure/history, salary, how long they've been at the company.\n"
+            "- DO NOT say 'I noticed you work at [Company]' — it sounds like surveillance. Instead, reference the company's work or news.\n"
+            "- DO NOT open with the contact's name + company in a way that sounds like you're reading from a database.\n"
+            "- The email should feel like it was written by someone who knows the industry, not someone who researched this specific person.\n"
+            "- If referencing company news, frame it positively — never mention layoffs, bankruptcies, or other negative events.\n\n"
             "CTA output rules:\n"
             "- Include exactly ONE CTA sentence/question near the end.\n"
-            "- For steps 1-2, keep CTA low-friction when possible.\n"
-            "- For steps 3-4, move to a clearer commitment ask when possible.\n"
+            "- Steps 1, 3, 4: use the soft CTA (low-friction, easy reply).\n"
+            "- Step 2 only: use the hard CTA (clear commitment/specific time ask).\n"
             "- The CTA MUST appear in the email body. Do not omit it.\n\n"
             "Special instructions (must follow):\n"
             + (special if special else "(none)") +
@@ -1324,7 +1415,7 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
         subject = str(data.get("subject") or "").strip() or _fallback()[0]
         body = str(data.get("body") or "").strip() or _fallback()[1]
 
-        body = re.sub(r"(?:Company theme signal|Market position|Products?/launches?|Hiring signal|Recent post|Publication|Profile highlight|Posts about|Interesting fact|Theme):\s*", "", body, flags=re.I)
+        body = re.sub(r"(?:Company theme signal|Market position|Products?/launches?|Hiring signal|Recent post|Publication|Profile highlight|Posts about|Interesting fact|Theme|Role pain point|Target role|What the company cares about|Signal|Activity|Career move|Company news):\s*", "", body, flags=re.I)
 
         # Enforce quality rules even if the model drifts.
         # IMPORTANT: Never return an email that is only a signature block.
@@ -1348,6 +1439,9 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
         body = _normalize_message_text(body)
         subject = _normalize_message_text(subject)
 
+        # Fix duplicate closings like "Best,\n\nBest," or "Best,\nBest,".
+        body = re.sub(r"(Best,\s*\n)\s*Best,", r"\1", body, flags=re.I)
+
         # AI quality filter: polish the final output so nothing awkward reaches the user.
         try:
             polished = client.quality_filter_message(subject, body, cta_text=chosen_cta, step=step)
@@ -1356,6 +1450,8 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
         except Exception:
             pass
 
+        # Final safety: strip duplicate closings that might survive quality filter.
+        body = re.sub(r"(Best,\s*\n)\s*Best,", r"\1", body, flags=re.I)
         subject = re.sub(r"\s+", " ", subject).strip()[:140]
 
         return CampaignGenerateStepResponse(

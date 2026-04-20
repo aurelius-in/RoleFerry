@@ -83,7 +83,7 @@ export default function BioPageStep() {
   const [resumeMeta, setResumeMeta] = useState<any>(null);
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [userDisplayName, setUserDisplayName] = useState<string>("");
-  const [openCards, setOpenCards] = useState<Set<string>>(new Set(["preview"]));
+  const [openCards, setOpenCards] = useState<Set<string>>(new Set(["preview", "actions"]));
   const [jobPrefs, setJobPrefs] = useState<any>(null);
   const openPublicPage = (url: string, opts?: { preserveHandle?: boolean }): Window | null => {
     const u = safeStr(url);
@@ -281,7 +281,7 @@ export default function BioPageStep() {
       display_name: safeStr(userDisplayName) || safeStr(draft?.display_name),
       profile_image_url: profileImageUrl || draft?.profile_image_url || "",
       work_style_points: workPts,
-      resume_extract: (draft as any)?.resume_extract ?? resumeExtract ?? null,
+      resume_extract: (draft as any)?.resume_extract ?? resumeExtract ?? {},
     };
     try {
       return JSON.stringify(payloadForPublish);
@@ -536,12 +536,13 @@ export default function BioPageStep() {
           display_name: safeStr(userDisplayName) || safeStr(draft.display_name),
           profile_image_url: profileImageUrl || draft.profile_image_url || "",
           video_url: safeStr(videoUrl) || safeStr(draft.video_url) || "",
+          proof_points: Array.isArray(draft.proof_points) ? draft.proof_points : [],
+          fit_points: Array.isArray(draft.fit_points) ? draft.fit_points : [],
           work_style_points:
             (Array.isArray((draft as any)?.work_style_points) && (draft as any).work_style_points.length > 0)
               ? (draft as any).work_style_points
               : workStylePoints,
-          // Ensure the public page renders the same Resume Snapshot as the editor/preview.
-          resume_extract: (draft as any)?.resume_extract ?? resumeExtract ?? null,
+          resume_extract: (draft as any)?.resume_extract ?? resumeExtract ?? {},
         },
       });
       const url = safeStr(res?.public_url);

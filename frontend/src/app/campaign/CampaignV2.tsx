@@ -301,6 +301,7 @@ export default function CampaignV2() {
   // Persisted campaign (DB) metadata
   const [persistedCampaignId, setPersistedCampaignId] = useState<string>("");
   const [persistedCampaignName, setPersistedCampaignName] = useState<string>("");
+  const [persistedCampaignSavedAt, setPersistedCampaignSavedAt] = useState<string>("");
   const [loadCampaignId, setLoadCampaignId] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -329,16 +330,20 @@ export default function CampaignV2() {
     const persisted = safeJson<any>(localStorage.getItem(STORAGE_PERSISTED), null);
     const pid = String(persisted?.id || "").trim();
     const pname = String(persisted?.name || "").trim();
+    const ptime = String(persisted?.saved_at || "").trim();
     setPersistedCampaignId(pid);
     setPersistedCampaignName(pname);
+    setPersistedCampaignSavedAt(ptime);
     setLoadCampaignId(pid);
   }, []);
 
-  const persistPersistedMeta = (next: { id: string; name: string }) => {
+  const persistPersistedMeta = (next: { id: string; name: string; saved_at?: string }) => {
+    const ts = next.saved_at || new Date().toISOString();
     setPersistedCampaignId(String(next?.id || "").trim());
     setPersistedCampaignName(String(next?.name || "").trim());
+    setPersistedCampaignSavedAt(ts);
     try {
-      localStorage.setItem(STORAGE_PERSISTED, JSON.stringify({ id: String(next?.id || "").trim(), name: String(next?.name || "").trim() }));
+      localStorage.setItem(STORAGE_PERSISTED, JSON.stringify({ id: String(next?.id || "").trim(), name: String(next?.name || "").trim(), saved_at: ts }));
     } catch {}
   };
 
@@ -676,8 +681,27 @@ export default function CampaignV2() {
 
   const canContinueToLaunch = Boolean(bioUrl) && (contacts?.length || 0) > 0;
 
+  const [expandedCompanies, setExpandedCompanies] = useState<Set<string>>(new Set());
   const [expandedContacts, setExpandedContacts] = useState<Set<string>>(new Set());
   const [expandedEmails, setExpandedEmails] = useState<Set<string>>(new Set());
+
+  const toggleCompany = (company: string) => {
+    setExpandedCompanies((prev) => {
+      const next = new Set(prev);
+      if (next.has(company)) next.delete(company); else next.add(company);
+      return next;
+    });
+  };
+
+  const contactsByCompany = (() => {
+    const groups: Record<string, any[]> = {};
+    for (const c of contacts) {
+      const key = String(c?.company || "Other").trim() || "Other";
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(c);
+    }
+    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+  })();
 
   const toggleContact = (cid: string) => {
     setExpandedContacts((prev) => {
@@ -960,16 +984,16 @@ export default function CampaignV2() {
                   onChange={(e) => {
                     const v = e.target.value;
                     setPersistedCampaignName(v);
-                    try { localStorage.setItem(STORAGE_PERSISTED, JSON.stringify({ id: String(persistedCampaignId || "").trim(), name: v })); } catch {}
+                    try { localStorage.setItem(STORAGE_PERSISTED, JSON.stringify({ id: String(persistedCampaignId || "").trim(), name: v, saved_at: persistedCampaignSavedAt })); } catch {}
                   }}
                   placeholder="e.g., 26-02-15-analytics-remote_123"
                   className="mt-1 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div className="md:col-span-3">
-                <div className="text-xs font-semibold text-white/60 uppercase tracking-wider">Campaign ID</div>
-                <div className="mt-1 rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/80 font-mono truncate">
-                  {persistedCampaignId || "Not saved yet"}
+                <div className="text-xs font-semibold text-white/60 uppercase tracking-wider">Last Saved</div>
+                <div className="mt-1 rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white/80 truncate">
+                  {persistedCampaignSavedAt ? new Date(persistedCampaignSavedAt).toLocaleString() : "Not saved yet"}
                 </div>
               </div>
               <div className="md:col-span-4 flex gap-2">
@@ -998,76 +1022,111 @@ export default function CampaignV2() {
             <div className="mb-5 rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</div>
           ) : null}
 
-          {/* Contacts */}
+          {/* Contacts grouped by Company */}
           {(contacts?.length || 0) === 0 ? (
             <div className="rounded-lg border border-white/10 bg-black/20 p-6 text-sm text-white/60">
               No contacts selected yet. Go back and save verified contacts from the Find Contact step.
             </div>
           ) : (
-            <div className="space-y-2">
-              {contacts.slice(0, 40).map((c) => {
-                const cid = String(c?.id || "").trim();
-                const isOpen = expandedContacts.has(cid);
-                const camp = campaignByContact[cid] || null;
-                const emailCount = camp?.emails?.filter((e) => Boolean(e.subject || e.body)).length || 0;
+            <div className="space-y-3">
+              {contactsByCompany.map(([company, companyContacts]) => {
+                const companyOpen = expandedCompanies.has(company);
+                const totalDrafted = companyContacts.reduce((sum, c) => {
+                  const camp = campaignByContact[String(c?.id || "")] || null;
+                  return sum + (camp?.emails?.filter((e: any) => Boolean(e.subject || e.body)).length || 0);
+                }, 0);
 
                 return (
-                  <div key={`cc_${cid}`} className="rounded-lg border border-white/10 bg-black/20 overflow-hidden">
+                  <div key={`company_${company}`} className="rounded-lg border border-white/10 bg-black/20 overflow-hidden">
                     <button
                       type="button"
-                      onClick={() => toggleContact(cid)}
+                      onClick={() => toggleCompany(company)}
                       className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors text-left"
                     >
                       <svg
-                        className={`w-3 h-3 text-white/40 shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`}
+                        className={`w-3.5 h-3.5 text-white/40 shrink-0 transition-transform ${companyOpen ? "rotate-90" : ""}`}
                         fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                       </svg>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-bold text-white truncate">{String(c?.name || "Contact")}</span>
-                          <span className="text-xs text-white/50 truncate">
-                            {String(c?.title || "Decision maker")}
-                            {c?.company ? ` \u00B7 ${formatCompanyName(String(c.company))}` : ""}
-                          </span>
-                        </div>
+                        <span className="text-sm font-bold text-white">{formatCompanyName(company)}</span>
+                        <span className="ml-2 text-xs text-white/40">{companyContacts.length} contact{companyContacts.length !== 1 ? "s" : ""}</span>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {emailCount > 0 && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full border border-emerald-400/20 bg-emerald-500/10 text-[10px] text-emerald-200">
-                            {emailCount}/4 drafted
-                          </span>
-                        )}
-                      </div>
+                      {totalDrafted > 0 && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full border border-emerald-400/20 bg-emerald-500/10 text-[10px] text-emerald-200">
+                          {totalDrafted} drafted
+                        </span>
+                      )}
                     </button>
 
-                    {isOpen && camp && (
-                      <div className="border-t border-white/5 px-4 pb-4">
-                        <div className="mt-3 flex items-center justify-between gap-3">
-                          <div className="text-xs text-white/60">
-                            {c?.email ? <span className="text-white/70">{String(c.email)}</span> : null}
-                            {c?.linkedin_url ? (
-                              <a href={String(c.linkedin_url)} target="_blank" rel="noreferrer" className="ml-3 text-sky-300 hover:text-sky-200 underline">LinkedIn</a>
-                            ) : null}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => generateAllForContact(cid)}
-                            disabled={Boolean(busyKey)}
-                            className="px-3 py-1.5 rounded-md bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 disabled:opacity-50 inline-flex items-center gap-2"
-                          >
-                            {busyKey && busyKey.startsWith(cid) ? (
-                              <><InlineSpinner className="h-3.5 w-3.5" /><span>Generating...</span></>
-                            ) : (
-                              "Generate All 4 Emails"
-                            )}
-                          </button>
-                        </div>
+                    {companyOpen && (
+                      <div className="border-t border-white/5 px-2 pb-2 space-y-1.5 pt-1.5">
+                        {companyContacts.map((c) => {
+                          const cid = String(c?.id || "").trim();
+                          const isOpen = expandedContacts.has(cid);
+                          const camp = campaignByContact[cid] || null;
+                          const emailCount = camp?.emails?.filter((e: any) => Boolean(e.subject || e.body)).length || 0;
 
-                        <div className="mt-3 space-y-2">
-                          {camp.emails.map((step) => renderEmailStep(cid, step))}
-                        </div>
+                          return (
+                            <div key={`cc_${cid}`} className="rounded-md border border-white/[0.06] bg-black/10 overflow-hidden">
+                              <button
+                                type="button"
+                                onClick={() => toggleContact(cid)}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-white/[0.03] transition-colors text-left"
+                              >
+                                <svg
+                                  className={`w-2.5 h-2.5 text-white/30 shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`}
+                                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                </svg>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-sm font-semibold text-white truncate">{String(c?.name || "Contact")}</span>
+                                    <span className="text-xs text-white/50 truncate">{String(c?.title || "Decision maker")}</span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  {emailCount > 0 && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full border border-emerald-400/20 bg-emerald-500/10 text-[10px] text-emerald-200">
+                                      {emailCount}/4 drafted
+                                    </span>
+                                  )}
+                                </div>
+                              </button>
+
+                              {isOpen && camp && (
+                                <div className="border-t border-white/5 px-3 pb-3">
+                                  <div className="mt-3 flex items-center justify-between gap-3">
+                                    <div className="text-xs text-white/60">
+                                      {c?.email ? <span className="text-white/70">{String(c.email)}</span> : null}
+                                      {c?.linkedin_url ? (
+                                        <a href={String(c.linkedin_url)} target="_blank" rel="noreferrer" className="ml-3 text-sky-300 hover:text-sky-200 underline">LinkedIn</a>
+                                      ) : null}
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => generateAllForContact(cid)}
+                                      disabled={Boolean(busyKey)}
+                                      className="px-3 py-1.5 rounded-md bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 disabled:opacity-50 inline-flex items-center gap-2"
+                                    >
+                                      {busyKey && busyKey.startsWith(cid) ? (
+                                        <><InlineSpinner className="h-3.5 w-3.5" /><span>Generating...</span></>
+                                      ) : (
+                                        "Generate All 4 Emails"
+                                      )}
+                                    </button>
+                                  </div>
+
+                                  <div className="mt-3 space-y-2">
+                                    {camp.emails.map((step) => renderEmailStep(cid, step))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

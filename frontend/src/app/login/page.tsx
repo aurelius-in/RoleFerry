@@ -68,24 +68,7 @@ export default function LoginPage() {
   const primaryCta = useMemo(() => (mode === "login" ? "Log in" : "Create account"), [mode]);
 
   function clearUserLocalStorage() {
-    const keysToRemove = [
-      "rf_user",
-      "job_preferences",
-      "job_preferences_helper",
-      "resume_extract",
-      "job_descriptions",
-      "personality_profile",
-      "personality_assessment",
-      "roleferry-progress",
-      "tracker_applications",
-      "scraped_roles_cache",
-      "rf_auto_roles_positive_keywords_v1",
-      "rf_auto_roles_negative_keywords_v1",
-      "selected_job_description",
-    ];
-    for (const key of keysToRemove) {
-      try { localStorage.removeItem(key); } catch {}
-    }
+    try { localStorage.clear(); } catch {}
   }
 
   async function submit() {

@@ -505,6 +505,7 @@ function RichText({ text }: { text: string }) {
   const cleaned = String(text)
     .replace(/\[Source\s*:?\s*\]/gi, "")
     .replace(/\(Source\s*:?\s*[^)]*\)/gi, "")
+    .replace(/\[([^\]]*?)\]\((https?:\/\/[^)]+)\)/g, "$1 $2")
     .replace(/\[([^\]]*)\]/g, "$1")
     .replace(/\(\s*\)/g, "");
   const lines = cleaned.split(/\n/).map((l) => l.trim()).filter(Boolean);
@@ -570,7 +571,9 @@ export default function CompanyResearchPage() {
       const k = dedupe(sig.value);
       if (seen.has(k)) continue;
       seen.add(k);
-      list.push({ id: `pdl_${i}`, category: sig.category, label: sig.label, text: sig.value, confidence: 0.8 });
+      const rawCat = String(sig.category || "").replace(/^signaliz_/, "");
+      const cleanCat = SIGNAL_TYPE_LABELS[rawCat] || rawCat.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+      list.push({ id: `pdl_${i}`, category: cleanCat, label: sig.label, text: sig.value, confidence: 0.8 });
     }
     const intelSigs = (draft?.intelligence?.signals || []).filter((sig) => {
       const c = (sig.signal_content || "").toLowerCase();
