@@ -2702,17 +2702,19 @@ def _salary_meets_floor(salary_text: Optional[str], minimum_salary: Optional[int
 def _role_query_from_preferences(pref: Dict[str, Any]) -> str:
     roles = [str(x).strip() for x in (pref.get("role_categories") or []) if str(x).strip()]
     skills = [str(x).strip() for x in (pref.get("skills") or []) if str(x).strip()]
+    resume_skills = [str(x).strip() for x in (pref.get("resume_skills") or []) if str(x).strip()]
     industries = [str(x).strip() for x in (pref.get("industries") or []) if str(x).strip()]
     parts: List[str] = []
     if roles:
         parts.append(roles[0])
     parts.extend(skills[:2])
+    parts.extend(resume_skills[:3])
     if industries:
         parts.append(industries[0])
     q = " ".join(parts).strip()
     if not q:
         q = "professional specialist manager analyst coordinator"
-    return " ".join(q.split())[:120]
+    return " ".join(q.split())[:160]
 
 
 def _resume_skill_hints() -> List[str]:
@@ -2904,13 +2906,18 @@ def _is_tech_intent(pref: Dict[str, Any]) -> bool:
         "machine learning", "data scientist", "artificial intelligence",
         "data science",
     ]
-    if not has_non_tech_context and any(p in blob for p in ambiguous_phrases):
+    if any(p in blob for p in ambiguous_phrases):
         return True
     word_markers = [
         "python", "javascript", "typescript", "golang", "rust",
         "kubernetes", "docker", "terraform", "pytorch", "tensorflow",
         "react", "angular", "vue", "node.js",
     ]
+    # Resume skills like python/docker/react are strong tech signals even if
+    # role_categories include non-tech terms like "finance" or "operations".
+    resume_skills_blob = " " + " ".join(str(x).lower() for x in (pref.get("resume_skills") or [])) + " "
+    if any(p in resume_skills_blob for p in word_markers):
+        return True
     if not has_non_tech_context and any(p in blob for p in word_markers):
         return True
     role_specific = [
@@ -2981,7 +2988,7 @@ def _preference_terms(pref: Dict[str, Any], role_query: str) -> List[str]:
     role_cats = " ".join([str(x).lower() for x in (pref.get("role_categories") or []) if str(x).strip()])
     # Add terms for ALL matching role families, not just the first match.
     if _is_tech_intent(pref):
-        terms.extend(["software", "engineer", "developer", "architect", "platform", "backend", "frontend", "python", "ai", "ml"])
+        terms.extend(["software", "engineer", "developer", "architect", "platform", "backend", "frontend", "python", "ai", "ml", "machine learning", "data engineer", "cloud", "devops"])
     if any(x in role_cats for x in ["recruiting", "talent", "hr", "human resources"]):
         terms.extend(["recruiter", "talent", "sourcing", "hiring", "staffing", "hr", "people operations"])
     if any(x in role_cats for x in ["marketing", "social media", "content", "brand", "gtm", "go-to-market", "growth"]):
@@ -3026,15 +3033,18 @@ def _score_scraped_role(
     blob = f"{title} {snippet}".lower()
     title_low = str(title or "").lower()
     reasons: List[str] = []
-    score = 20
+    score = 10
 
     title_focus_tokens = [str(t or "").strip().lower() for t in (role_tokens or []) if str(t or "").strip() and str(t or "").strip().lower() not in _GENERIC_TITLE_WORDS]
     if not title_focus_tokens:
         title_focus_tokens = [str(t or "").strip().lower() for t in pref_terms[:6] if str(t or "").strip() and str(t or "").strip().lower() not in _GENERIC_TITLE_WORDS]
     title_hits = [t for t in title_focus_tokens if t in title_low]
     if title_hits:
-        score += min(25, len(set(title_hits)) * 7)
+        score += min(30, len(set(title_hits)) * 10)
         reasons.append(f"Title alignment: {', '.join(sorted(set(title_hits))[:3])}")
+    elif title_focus_tokens:
+        score -= 10
+        reasons.append("No title keyword match")
 
     term_hits = [t for t in pref_terms if t in blob and t not in _GENERIC_TITLE_WORDS]
     unique_hits = sorted(set(term_hits))
@@ -3042,7 +3052,7 @@ def _score_scraped_role(
         score += min(45, len(unique_hits) * 9)
         reasons.append(f"Preference skills match: {', '.join(unique_hits[:4])}")
     elif pref_terms:
-        score -= 10
+        score -= 15
         reasons.append("No skill/preference overlap")
 
     # Positive keywords are purely additive: each match boosts the score
@@ -3552,7 +3562,7 @@ async def _discover_scraped_roles_inner(
     require_us = _preferences_require_us(prefs)
     pref_terms = _preference_terms(prefs, role_query)
     tech_intent = _is_tech_intent(prefs)
-    min_match_score = 15
+    min_match_score = 25
     positive_kw = _parse_keyword_list(positive_keywords)
     negative_kw = _parse_keyword_list(negative_keywords)
 
