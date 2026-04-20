@@ -83,7 +83,7 @@ export default function BioPageStep() {
   const [resumeMeta, setResumeMeta] = useState<any>(null);
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [userDisplayName, setUserDisplayName] = useState<string>("");
-  const [openCards, setOpenCards] = useState<Set<string>>(new Set());
+  const [openCards, setOpenCards] = useState<Set<string>>(new Set(["preview"]));
   const [jobPrefs, setJobPrefs] = useState<any>(null);
   const openPublicPage = (url: string, opts?: { preserveHandle?: boolean }): Window | null => {
     const u = safeStr(url);

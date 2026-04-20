@@ -72,12 +72,13 @@ class ComposeOfferSnippetResponse(BaseModel):
 
 
 class GenerateCtaRequest(BaseModel):
-    cta_type: str  # "hard" or "soft"
+    cta_type: str  # "hard", "soft", or "personalized"
     current_cta: str = ""
     role_title: Optional[str] = None
     role_company: Optional[str] = None
     skills: List[str] = []
     one_liner: str = ""
+    pain_points: List[str] = []
 
 
 class GenerateCtaResponse(BaseModel):
@@ -251,7 +252,13 @@ async def compose_offer_snippet(payload: ComposeOfferSnippetRequest):
 async def generate_cta(payload: GenerateCtaRequest):
     import random
 
-    pool = _HARD_CTA_POOL if payload.cta_type == "hard" else _SOFT_CTA_POOL
+    is_personalized = payload.cta_type == "personalized"
+    is_hard = payload.cta_type == "hard"
+
+    if is_personalized:
+        pool = _HARD_CTA_POOL
+    else:
+        pool = _HARD_CTA_POOL if is_hard else _SOFT_CTA_POOL
     current = (payload.current_cta or "").strip().lower().rstrip("?.")
 
     candidates = [c for c in pool if c.strip().lower().rstrip("?.") != current]
@@ -259,12 +266,52 @@ async def generate_cta(payload: GenerateCtaRequest):
 
     client = get_openai_client()
     if not client.should_use_real_llm:
+        if is_personalized:
+            pain = (payload.pain_points[0] if payload.pain_points else "").strip().lower()
+            if pain and payload.role_company:
+                deterministic_pick = f"If {pain} is a priority at {payload.role_company}, I would love to share how I have tackled a similar challenge."
+            elif pain:
+                deterministic_pick = f"If {pain} is on your radar this quarter, I would love to compare notes."
+            else:
+                deterministic_pick = "If this aligns with your priorities, I would love to share how I have tackled a similar challenge."
         return GenerateCtaResponse(success=True, cta=deterministic_pick, used_llm=False)
 
     try:
-        is_hard = payload.cta_type == "hard"
         skills_str = ", ".join((payload.skills or [])[:6]) or "their professional skills"
         role_str = payload.role_title or "the target role"
+        company_str = payload.role_company or "the target company"
+        pain_str = "; ".join((payload.pain_points or [])[:3])
+
+        if is_personalized:
+            type_block = (
+                "TYPE: Personalized CTA\n"
+                "A personalized CTA ties the sender's expertise directly to the recipient's specific challenges.\n"
+                "It references the role's pain points or company priorities and frames the sender's value around them.\n"
+                "It can be a question or an invitation - the key is it feels custom-written for THIS role.\n\n"
+                "Examples:\n"
+                "- 'If enhancing fraud prevention aligns with your priorities, I invite you to watch the included video for a brief overview.'\n"
+                "- 'Is this preemptive approach to securing remote workforce transactions something you are considering this quarter or next?'\n"
+                "- 'If scaling your analytics pipeline is a priority this quarter, I would love to share how I tackled a similar challenge.'\n\n"
+                f"Role pain points: {pain_str or 'not specified'}\n"
+                f"Company: {company_str}\n"
+            )
+            char_limit = "under 140 characters"
+        elif is_hard:
+            type_block = (
+                "TYPE: Hard CTA\n"
+                "A hard CTA asks for a specific commitment: a call, a meeting, a time slot.\n"
+                "It should feel confident but not pushy. Include a time frame or specific action.\n"
+                "Examples: 'Open to a 10-minute chat this week?', 'Could we do a quick call Tuesday or Thursday?'\n\n"
+            )
+            char_limit = "under 100 characters"
+        else:
+            type_block = (
+                "TYPE: Soft CTA\n"
+                "A soft CTA is low-friction: an easy yes/no, a gentle nudge, permission to follow up.\n"
+                "It should feel zero-pressure. The recipient can say no without awkwardness.\n"
+                "Examples: 'Worth exploring, or totally not a priority right now?', 'Curious if this resonates - no worries either way.'\n\n"
+            )
+            char_limit = "under 100 characters"
 
         messages = [
             {
@@ -272,21 +319,11 @@ async def generate_cta(payload: GenerateCtaRequest):
                 "content": (
                     "You generate a single call-to-action sentence for a job seeker's outreach email.\n"
                     "Return ONLY JSON: {\"cta\": string}\n\n"
-                    + (
-                        "TYPE: Hard CTA\n"
-                        "A hard CTA asks for a specific commitment: a call, a meeting, a time slot.\n"
-                        "It should feel confident but not pushy. Include a time frame or specific action.\n"
-                        "Examples: 'Open to a 10-minute chat this week?', 'Could we do a quick call Tuesday or Thursday?'\n\n"
-                        if is_hard else
-                        "TYPE: Soft CTA\n"
-                        "A soft CTA is low-friction: an easy yes/no, a gentle nudge, permission to follow up.\n"
-                        "It should feel zero-pressure. The recipient can say no without awkwardness.\n"
-                        "Examples: 'Worth exploring, or totally not a priority right now?', 'Curious if this resonates - no worries either way.'\n\n"
-                    )
+                    + type_block
                     + f"Context: the sender's skills include {skills_str}. Target role: {role_str}.\n"
                     + f"The sender's one-liner: {(payload.one_liner or '').strip()[:120]}\n\n"
                     "Rules:\n"
-                    "- One sentence only, under 100 characters.\n"
+                    f"- One or two sentences, {char_limit}.\n"
                     "- Do NOT use em dashes or en dashes.\n"
                     "- Do NOT mention applying for a job or the hiring process.\n"
                     "- Do NOT repeat or closely paraphrase the current CTA.\n"
@@ -296,8 +333,9 @@ async def generate_cta(payload: GenerateCtaRequest):
             },
         ]
 
+        max_tok = 80 if is_personalized else 60
         raw = client.run_chat_completion(
-            messages, temperature=0.8, max_tokens=60,
+            messages, temperature=0.8, max_tokens=max_tok,
             stub_json={"cta": deterministic_pick},
         )
         choices = raw.get("choices") or []
@@ -306,7 +344,8 @@ async def generate_cta(payload: GenerateCtaRequest):
         parsed = extract_json_from_text(content_str) or {}
         cta = str(parsed.get("cta") or "").strip()
         cta = re.sub(r"[—–]", "-", cta)
-        if len(cta) < 10 or len(cta) > 120:
+        max_len = 180 if is_personalized else 120
+        if len(cta) < 10 or len(cta) > max_len:
             cta = deterministic_pick
         return GenerateCtaResponse(success=True, cta=cta, used_llm=True)
     except Exception:

@@ -23,6 +23,7 @@ type OfferV1 = {
   default_cta: string;
   soft_cta?: string;
   hard_cta?: string;
+  personalized_cta?: string;
   snippet: string; // compiled preview
 };
 
@@ -251,9 +252,10 @@ export default function OfferPage() {
   const [credInput, setCredInput] = useState("");
   const [softCta, setSoftCta] = useState("Worth exploring, or totally not a priority right now?");
   const [defaultCta, setDefaultCta] = useState("Open to a 10-minute chat this week?");
+  const [personalizedCta, setPersonalizedCta] = useState("");
   const [aiSnippet, setAiSnippet] = useState("");
   const [isGeneratingSnippet, setIsGeneratingSnippet] = useState(false);
-  const [isGeneratingCta, setIsGeneratingCta] = useState<"hard" | "soft" | null>(null);
+  const [isGeneratingCta, setIsGeneratingCta] = useState<"hard" | "soft" | "personalized" | null>(null);
   const [showStepHelp, setShowStepHelp] = useState(false);
   const [collapsedSubs, setCollapsedSubs] = useState<Set<string>>(new Set());
 
@@ -320,6 +322,7 @@ export default function OfferPage() {
       setCredibility(savedCred.length ? savedCred : autoCredibility);
       setSoftCta(String(saved.soft_cta || "Worth exploring, or totally not a priority right now?"));
       setDefaultCta(String(saved.hard_cta || saved.default_cta || "Open to a 10-minute chat this week?"));
+      setPersonalizedCta(String(saved.personalized_cta || ""));
       if (!needsOneLinerReseed) return;
     }
 
@@ -427,6 +430,7 @@ export default function OfferPage() {
         default_cta: String(defaultCta || "").trim(),
         soft_cta: String(softCta || "").trim(),
         hard_cta: String(defaultCta || "").trim(),
+        personalized_cta: String(personalizedCta || "").trim(),
         snippet,
       };
       persistOfferForRole(rid, payload, { updateLegacy: Boolean(opts?.updateLegacy) });
@@ -564,6 +568,7 @@ export default function OfferPage() {
           default_cta: String(defaultCta || "").trim(),
           soft_cta: String(softCta || "").trim(),
           hard_cta: String(defaultCta || "").trim(),
+          personalized_cta: String(personalizedCta || "").trim(),
           snippet,
         };
         const key = String(activeRoleId || "").trim() || String(activeRole?.id || "").trim() || "default";
@@ -610,22 +615,26 @@ export default function OfferPage() {
     }
   };
 
-  const generateNewCta = async (ctaType: "hard" | "soft") => {
+  const generateNewCta = async (ctaType: "hard" | "soft" | "personalized") => {
     if (isGeneratingCta) return;
     setIsGeneratingCta(ctaType);
     try {
       const skills = Array.isArray(resume?.skills) ? resume.skills.map((x: any) => String(x || "").trim()).filter(Boolean).slice(0, 6) : [];
+      const painPoints = Array.isArray(activeRole?.painPoints) ? activeRole.painPoints.map((x: any) => String(x || "").trim()).filter(Boolean).slice(0, 3) : [];
+      const currentCta = ctaType === "hard" ? defaultCta : ctaType === "soft" ? softCta : personalizedCta;
       const resp = await api<{ success: boolean; cta: string }>("/offer-creation/generate-cta", "POST", {
         cta_type: ctaType,
-        current_cta: ctaType === "hard" ? defaultCta : softCta,
+        current_cta: currentCta,
         role_title: activeRole?.title || selectedRole?.title || "",
         role_company: activeRole?.company || selectedRole?.company || "",
         skills,
         one_liner: oneLiner,
+        pain_points: painPoints,
       });
       if (resp?.cta) {
         if (ctaType === "hard") setDefaultCta(resp.cta);
-        else setSoftCta(resp.cta);
+        else if (ctaType === "soft") setSoftCta(resp.cta);
+        else setPersonalizedCta(resp.cta);
       }
     } catch {
       setNotice("Couldn't generate CTA right now.");
@@ -691,6 +700,7 @@ export default function OfferPage() {
             existing.soft_cta = String(softCta || "").trim();
             existing.hard_cta = String(defaultCta || "").trim();
             existing.default_cta = String(defaultCta || "").trim();
+            existing.personalized_cta = String(personalizedCta || "").trim();
             break;
         }
 
@@ -1287,6 +1297,33 @@ export default function OfferPage() {
                                 Variable:{" "}
                                 <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
                                   {"{{offer.soft_cta}}"}
+                                </code>
+                              </div>
+                            </div>
+                            <div className="rounded-md border border-white/10 bg-black/20 p-3">
+                              <div className="flex items-center justify-between">
+                                <div className="text-sm font-bold text-emerald-200">Personalized CTA</div>
+                                <button
+                                  type="button"
+                                  disabled={isGeneratingCta === "personalized"}
+                                  onClick={() => generateNewCta("personalized")}
+                                  className="flex items-center gap-1 px-2 py-0.5 rounded border border-emerald-400/30 bg-emerald-400/10 text-[11px] text-emerald-200 hover:bg-emerald-400/20 disabled:opacity-50"
+                                >
+                                  {isGeneratingCta === "personalized" ? <InlineSpinner className="h-3 w-3" /> : null}
+                                  <span>{isGeneratingCta === "personalized" ? "Generating" : personalizedCta ? "Generate new" : "Generate"}</span>
+                                </button>
+                              </div>
+                              <div className="mt-1 text-[11px] text-white/60">Tailored to the role's pain points and your expertise. Click Generate to create one.</div>
+                              <input
+                                value={personalizedCta}
+                                onChange={(e) => setPersonalizedCta(e.target.value)}
+                                className="mt-2 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Click Generate to create a CTA specific to this role and company."
+                              />
+                              <div className="mt-2 text-[11px] text-white/55">
+                                Variable:{" "}
+                                <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
+                                  {"{{offer.personalized_cta}}"}
                                 </code>
                               </div>
                             </div>
