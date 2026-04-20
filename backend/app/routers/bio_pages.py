@@ -396,23 +396,30 @@ async def generate_bio_page(payload: GenerateBioPageRequest, http_request: Reque
 @router.post("/bio-pages/publish", response_model=PublishBioPageResponse)
 async def publish_bio_page(payload: PublishBioPageRequest, http_request: Request):
     try:
+        import hashlib
+
         user = await get_current_user_optional(http_request)
         user_id = user.id if user else "anon"
+        user_email = str(getattr(user, "email", "") or "").strip()
 
-        # Ensure storage exists
         if not hasattr(store, "bio_pages_by_slug"):
             store.bio_pages_by_slug = {}  # type: ignore[attr-defined]
+        if not hasattr(store, "bio_slug_by_user"):
+            store.bio_slug_by_user = {}  # type: ignore[attr-defined]
 
-        slug_base = _safe_slug(
-            payload.slug_hint
-            or payload.draft.display_name
-            or (str(getattr(user, "email", "")) if user else "")
-            or "bio"
-        )
-        slug = slug_base
-        # Uniqueness
-        while slug in store.bio_pages_by_slug:  # type: ignore[attr-defined]
-            slug = f"{slug_base}-{uuid.uuid4().hex[:6]}"
+        existing_slug = store.bio_slug_by_user.get(user_id)  # type: ignore[attr-defined]
+        if existing_slug and isinstance(existing_slug, str):
+            slug = existing_slug
+        else:
+            name_part = _safe_slug(
+                payload.slug_hint
+                or payload.draft.display_name
+                or user_email
+                or "bio"
+            )
+            uid_hash = hashlib.sha256(user_id.encode()).hexdigest()[:8]
+            slug = f"{name_part}-{uid_hash}"
+            store.bio_slug_by_user[user_id] = slug  # type: ignore[attr-defined]
 
         record = {
             "slug": slug,
