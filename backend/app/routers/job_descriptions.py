@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
@@ -3744,26 +3746,34 @@ async def _discover_scraped_roles_inner(
 
     # Deterministic fallback when Serper isn't configured.
     if not found:
-        found = await _discover_roles_without_serper(
-            role_query=role_query,
-            requested=min(max(requested, 90), 160),
-            minimum_salary=minimum_salary,
-            require_us=require_us,
-            pref=prefs,
-        )
+        try:
+            found = await _discover_roles_without_serper(
+                role_query=role_query,
+                requested=min(max(requested, 90), 160),
+                minimum_salary=minimum_salary,
+                require_us=require_us,
+                pref=prefs,
+            )
+        except Exception:
+            logger.exception("ATS discovery fallback failed")
+            found = []
     else:
         # Always augment live results with ATS API discovery to maximise company
         # diversity.  The direct Greenhouse/Lever API calls hit 100+ distinct
         # employers, which is critical for avoiding Serper's bias toward the most
         # popular companies.
         if (time.monotonic() - start_ts) <= (budget_seconds + 8):
-            extra = await _discover_roles_without_serper(
-                role_query=role_query,
-                requested=min(max(requested * 2, 120), 300),
-                minimum_salary=minimum_salary,
-                require_us=require_us,
-                pref=prefs,
-            )
+            try:
+                extra = await _discover_roles_without_serper(
+                    role_query=role_query,
+                    requested=min(max(requested * 2, 120), 300),
+                    minimum_salary=minimum_salary,
+                    require_us=require_us,
+                    pref=prefs,
+                )
+            except Exception:
+                logger.exception("ATS discovery augmentation failed")
+                extra = []
             if extra:
                 seen_live_urls = {
                     str(item.get("url") or "").strip()
