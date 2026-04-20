@@ -969,10 +969,10 @@ async def search_contacts(request: ContactSearchRequest):
             "talking_points_by_contact": {},
             "opener_suggestions": [
                 "Quick question on your priorities for the role",
-                "Noticed a theme in the job posting \u2014 here\u2019s a concrete idea",
+                "Noticed a theme in the job posting - here's a concrete idea",
             ],
             "questions_to_ask": [
-                "What\u2019s the most urgent outcome you need in the next 90 days?",
+                "What's the most urgent outcome you need in the next 90 days?",
                 "Where is the team currently feeling the most pain (quality, speed, cost)?",
             ],
         }
@@ -1170,7 +1170,7 @@ async def improve_linkedin_note(request: ImproveLinkedInNoteRequest) -> ImproveL
                     "- Keep it about the person and connection intent, not a job process.\n\n"
                     "Style:\n"
                     "- Keep it simple: greeting + profile tie-in + 1-2 about-me details + soft close.\n"
-                    "- Use 1–2 short sentences if possible.\n"
+                    "- Use 1-2 short sentences if possible.\n"
                 ),
             },
             {"role": "user", "content": json.dumps(ctx)},

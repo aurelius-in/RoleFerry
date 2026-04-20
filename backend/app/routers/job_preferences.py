@@ -457,7 +457,7 @@ def _deterministic_recommendations(p: JobPreferences) -> List[JobRecommendation]
             source="indeed",
             url=f"https://www.indeed.com/jobs?q={q_indeed}&l={lc}",
             link_type="job_board_search",
-            rationale="Broad results (Indeed works best with 1 main role + 0–1 skill keywords).",
+            rationale="Broad results (Indeed works best with 1 main role + 0-1 skill keywords).",
             score=70,
             created_at=created_at,
         )
@@ -874,8 +874,8 @@ async def save_job_preferences(preferences: JobPreferences):
             "suggested_skills": ["Product analytics", "Experiment design", "SQL", "Stakeholder management"],
             "suggested_role_categories": preferences.role_categories[:1],
             "notes": [
-                "Keep skills to 8–12 high-signal items; remove near-duplicates.",
-                "Add 1–2 domain skills that match your target industry (e.g., onboarding/activation).",
+                "Keep skills to 8-12 high-signal items; remove near-duplicates.",
+                "Add 1-2 domain skills that match your target industry (e.g., onboarding/activation).",
             ],
         }
         raw = client.run_chat_completion(messages, temperature=0.1, max_tokens=450, stub_json=stub_json)

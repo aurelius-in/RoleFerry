@@ -165,7 +165,7 @@ async def run_pipeline(payload: PipelineRunRequest) -> Dict[str, Any]:
         results.append({
             "domain": d,
             "top_prospect": {
-                "name": preview.get("name") or "—",
+                "name": preview.get("name") or "-",
                 "title": preview.get("title") or payload.role_query,
                 "linkedin_url": preview.get("linkedin_url"),
                 "decision": decision,

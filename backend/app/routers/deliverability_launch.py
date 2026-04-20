@@ -592,7 +592,7 @@ async def run_pre_flight_checks(request: CampaignLaunchRequest):
                 stub_json = {
                     "summary": "Deliverability looks acceptable; tighten the opener and reduce spam-trigger patterns.",
                     "copy_tweaks": [
-                        "Trim the first email to ~120 words and keep 0–1 links.",
+                        "Trim the first email to ~120 words and keep 0-1 links.",
                         "Remove promotional phrasing/excess punctuation; keep the CTA simple.",
                         "Lead with one specific pain point + one proof point.",
                     ],
@@ -689,7 +689,7 @@ async def check_deliverability(request: DeliverabilityCheckRequest):
             # Links
             link_count = len(re.findall(r"https?://", text, flags=re.I))
             if link_count >= 2:
-                warnings.append("Multiple links can increase spam risk (consider 0–1 link in step 1).")
+                warnings.append("Multiple links can increase spam risk (consider 0-1 link in step 1).")
 
             # Spam triggers
             for t in spam_triggers:
@@ -707,7 +707,7 @@ async def check_deliverability(request: DeliverabilityCheckRequest):
             words = re.findall(r"\w+", text)
             word_count = len(words)
             if word_count > 170:
-                warnings.append("Email is long; cold outreach performs better under ~120–150 words.")
+                warnings.append("Email is long; cold outreach performs better under ~120-150 words.")
             if word_count < 35:
                 warnings.append("Email may be too short; consider adding 1 concrete proof point.")
 
@@ -802,7 +802,7 @@ async def check_deliverability(request: DeliverabilityCheckRequest):
                             "- Avoid spammy wording (FREE/URGENT/CLICK HERE/etc), excessive punctuation, and ALL CAPS.\n"
                             "- Avoid canned openers like \"I hope this message finds you well\".\n"
                             "- Keep step 1 under ~120-150 words if possible.\n"
-                            "- Keep 0–1 links in step 1; if you include a link, introduce it naturally.\n"
+                            "- Keep 0-1 links in step 1; if you include a link, introduce it naturally.\n"
                             "- Preserve the user's intent and tone.\n\n"
                             "Return ONLY JSON with keys:\n"
                             "- summary: string\n"

@@ -70,6 +70,15 @@ def _strip_likely_language(s: str) -> str:
     t = re.sub(r":\s*\n", ":\n", t)
     return t.strip()
 
+def _strip_urls(s: str) -> str:
+    t = str(s or "")
+    t = re.sub(r"\(https?://[^\s\)]+\)", "", t)
+    t = re.sub(r"https?://[^\s,\)\]]+", "", t)
+    t = re.sub(r"\(\s*\)", "", t)
+    t = re.sub(r"\s{2,}", " ", t)
+    return t.strip()
+
+
 # PDL runs whenever PDL_API_KEY is present. No separate gate needed.
 _ENABLE_PDL = True
 
@@ -692,25 +701,33 @@ def _cache_set(key: str, value: Dict[str, Any]) -> None:
 
 def _bullets_from_serper_hits(hits: Any, *, max_items: int = 6, label: str | None = None) -> str:
     """
-    Convert Serper hits into outreach-safe bullets with real URLs.
+    Convert Serper hits into outreach-safe bullets (no URLs in output).
     """
+    _GENERIC_TITLES = {
+        "about", "about us", "careers", "home", "contact", "team",
+        "leadership", "our team", "who we are", "company", "values",
+        "culture", "press", "newsroom", "blog", "jobs",
+    }
     out: List[str] = []
     try:
         for h in (hits or [])[: max(0, int(max_items))]:
             if not isinstance(h, dict):
                 continue
             title = str(h.get("title") or "").strip()
-            url = str(h.get("link") or h.get("url") or "").strip()
             snippet = str(h.get("snippet") or "").strip()
-            if not url:
-                continue
             if not title and not snippet:
                 continue
-            bit = title or snippet[:140]
-            if snippet and title and snippet.lower() not in title.lower():
-                bit = f"{title} — {snippet[:180]}"
-            # Keep it short; always include source URL.
-            out.append(f"- {bit} ({url})")
+            title_is_generic = any(
+                title.lower().startswith(g) or title.lower().rstrip(" .-") in _GENERIC_TITLES
+                for g in list(_GENERIC_TITLES) + ["about us -", "about -"]
+            ) if title else True
+            if snippet and (title_is_generic or not title):
+                bit = snippet[:220]
+            elif snippet and title:
+                bit = f"{title} - {snippet[:180]}"
+            else:
+                bit = title[:220]
+            out.append(f"- {bit}")
     except Exception:
         out = []
 
@@ -949,7 +966,7 @@ async def conduct_research(request: ResearchRequest):
             if not t:
                 return None
             # Try to extract a clear unit from common patterns like "Role, Unit" or "Role - Unit".
-            m = re.search(r"[,\\-–—]\\s*([A-Za-z][A-Za-z0-9 &/]+)$", t)
+            m = re.search(r"[,\\-- -]\\s*([A-Za-z][A-Za-z0-9 &/]+)$", t)
             if m:
                 candidate = m.group(1).strip()
                 if 3 <= len(candidate) <= 60:
@@ -982,7 +999,7 @@ async def conduct_research(request: ResearchRequest):
         is_big_company = company.lower() in BIG_COMPANIES
         org_unit = infer_org_unit(company, jd_title) if is_big_company else None
         scope_label = "division" if (is_big_company and org_unit) else "company"
-        scope_target = f"{company} — {org_unit}" if (scope_label == "division") else company
+        scope_target = f"{company}  - {org_unit}" if (scope_label == "division") else company
 
         # Build a *non-fabricated* research corpus.
         # - If data_mode == "live" and SERPER_API_KEY is set, we fetch web snippets via Serper.
@@ -1813,7 +1830,7 @@ async def conduct_research(request: ResearchRequest):
                 },
                 "theme": (
                     "Theme: What the company cares about: Reference a plausible priority (customer experience, reliability, speed, cost) "
-                    "and offer a 2–3 bullet mini-plan—without claiming a specific news event.\n"
+                    "and offer a 2-3 bullet mini-plan, without claiming a specific news event.\n"
                     "- Start with one concrete outcome tied to the role\n"
                     "- Propose a low-risk first sprint (instrument → ship → measure)\n"
                     "- Share a weekly reporting cadence"
@@ -1864,7 +1881,7 @@ async def conduct_research(request: ResearchRequest):
                 "hooks": [
                     "Connect the job’s top pain point to a specific outcome you’ve delivered before",
                     "Reference their org’s likely constraints (speed vs reliability vs cost) and offer a low-risk first step",
-                    "Offer a 2–3 bullet mini-plan tied to a KPI the role is accountable for",
+                    "Offer a 2-3 bullet mini-plan tied to a KPI the role is accountable for",
                 ],
             }
 
@@ -1876,7 +1893,7 @@ async def conduct_research(request: ResearchRequest):
         stub_json = {
             "research_by_contact": stub_research_by_contact,
             "hooks": [
-                "Open with a specific outcome you can improve in 2–3 weeks",
+                "Open with a specific outcome you can improve in 2-3 weeks",
                 "Reference a relevant initiative/news item as timing",
                 "Offer a concrete mini-plan instead of a generic pitch",
             ],
@@ -1901,13 +1918,14 @@ async def conduct_research(request: ResearchRequest):
                     "- Do NOT include meta/system disclaimers like '(no external lookup used)' in any user-facing text.\n"
                     "- If the corpus has limited data, you SHOULD still try:\n"
                     "  - Use general model knowledge to write a useful company description (what they sell, who they sell to, and the buying motion).\n"
-                    "  - Populate industry/size/headquarters/website/linkedin_url ONLY if you are confident (well-known company) — otherwise 'Unknown'.\n"
+                    "  - Populate industry/size/headquarters/website/linkedin_url ONLY if you are confident (well-known company)  - otherwise 'Unknown'.\n"
                     "  - Never invent specific numbers (revenue, headcount) or specific dates.\n"
                     "  - Never invent 'recent_news' URLs.\n"
                     "  - recent_news MUST be actual news items from the corpus web hits (with real URLs). If you don't have web sources, return recent_news: [].\n"
                     "  - company_market_position MUST be sourced from real web data. If no web sources, set company_market_position to an empty string ''.\n"
-                    "  - theme is NOT news. Always populate theme with safe, non-claiming outreach guidance using this exact sentence, then add a 2–3 bullet mini-plan:\n"
-                    "    \"Theme: What the company cares about: Reference a plausible priority (customer experience, reliability, speed, cost) and offer a 2–3 bullet mini-plan—without claiming a specific news event.\"\n"
+                    "  - theme is NOT news. Always populate theme with safe, non-claiming outreach guidance using this exact sentence, then add a 2-3 bullet mini-plan:\n"
+                    "    \"Theme: What the company cares about: Reference a plausible priority (customer experience, reliability, speed, cost) and offer a 2-3 bullet mini-plan -without claiming a specific news event.\"\n"
+                    "- NEVER include raw URLs in any prose/text field (company_culture_values, company_market_position, company_product_launches, company_leadership_changes, company_other_hiring_signals, company_recent_posts, company_publications, theme, bio). URLs belong ONLY in structured fields like recent_news[].url or signal_source. User-facing text must be clean prose with no URLs.\n"
                     "- If information is missing or uncertain, return EMPTY STRINGS (not placeholder text). NEVER write phrases like 'No data found', 'No product launch details captured', 'No leadership changes found', or any similar placeholder. Just return ''.\n"
                     "- shared_connections MUST be an empty array unless provided (it is empty in this corpus).\n\n"
                     "MINIMUM FACTS REQUIREMENT (critical):\n"
@@ -1921,17 +1939,17 @@ async def conduct_research(request: ResearchRequest):
                     "  Always populate interesting_facts with at least 3 items (inferred facts are OK when labeled as inferred).\n\n"
                     "Quality bar:\n"
                     "- NEVER use hedging words like 'likely', 'probably', 'may', 'might', 'appears to', 'seems to'. Write assertively or leave it out.\n"
-                    "- The company_summary.description should be 2–4 sentences and outreach-useful (what they do + why it matters + current priorities).\n"
-                    "- company_culture_values should be 4–8 sentences: how they operate + values signals (avoid claiming a specific internal culture doc).\n"
-                    "- company_market_position should be 4–8 sentences: who they compete with / positioning / what matters now.\n"
+                    "- The company_summary.description should be 2-4 sentences and outreach-useful (what they do + why it matters + current priorities).\n"
+                    "- company_culture_values should be 4-8 sentences: how they operate + values signals (avoid claiming a specific internal culture doc).\n"
+                    "- company_market_position should be 4-8 sentences: who they compete with / positioning / what matters now.\n"
                     "  - If you don't have sources, leave it empty.\n"
-                    "- company_product_launches should be 3–8 bullet points about recent launches/releases/announcements (with URLs if available in corpus).\n"
-                    "- company_leadership_changes should be 2–6 bullet points on exec/VP changes or notable leadership moves (with URLs if available in corpus).\n"
-                    "- company_other_hiring_signals should be 3–8 bullet points on hiring momentum signals beyond generic 'open roles' (with URLs if available).\n"
-                    "- company_recent_posts should be 3–8 bullets summarizing recent company posts (blog/press/LinkedIn topics) with URLs when available.\n"
-                    "- company_publications should be 1–6 bullets summarizing notable publications (case studies, whitepapers, reports) with URLs when available.\n"
-                    "- contact_bios.bio should be 1–2 sentences tailored to the contact's title/department.\n"
-                    "- contact_bios[].interesting_facts MUST have at least 3 items (aim for 5–6). Populate from these sources IN ORDER:\n"
+                    "- company_product_launches should be 3-8 bullet points about recent launches/releases/announcements. Do NOT include URLs in the text.\n"
+                    "- company_leadership_changes should be 2-6 bullet points on exec/VP changes or notable leadership moves. Do NOT include URLs in the text.\n"
+                    "- company_other_hiring_signals should be 3-8 bullet points on hiring momentum signals beyond generic 'open roles'. Do NOT include URLs in the text.\n"
+                    "- company_recent_posts should be 3-8 bullets summarizing recent company posts (blog/press/LinkedIn topics). Do NOT include URLs in the text.\n"
+                    "- company_publications should be 1-6 bullets summarizing notable publications (case studies, whitepapers, reports). Do NOT include URLs in the text.\n"
+                    "- contact_bios.bio should be 1-2 sentences tailored to the contact's title/department.\n"
+                    "- contact_bios[].interesting_facts MUST have at least 3 items (aim for 5-6). Populate from these sources IN ORDER:\n"
                     "  0) PDL person enrichment data (pdl_person_by_contact): skills, experience, education, summary, interests. These are HIGHLY reliable.\n"
                     "  1) REAL signals from contact_serper_by_topic: recent posts, talks, articles, LinkedIn activity (use actual URLs).\n"
                     "  2) Career signals: promotions, role changes, new company joins visible in snippets.\n"
@@ -1942,13 +1960,13 @@ async def conduct_research(request: ResearchRequest):
                     "  fact must be specific and outreach-ready (<=160 chars). BAD: 'Likely oversees reliability'. GOOD: 'Recently posted about scaling observability from 10 to 50 microservices'.\n"
                     "  source_url must be a real URL from the corpus. For role_insight signals, use source_url: '' and source_title: 'Role analysis'.\n"
                     "  NEVER produce vague facts like 'Likely cares about X'. Every fact must be specific enough to open a cold email with.\n"
-                    "- contact_bios[].outreach_angles: array of 2–4 short outreach angle strings, each <100 chars, connecting the contact's signals to the job seeker's value.\n"
-                    "- contact_bios[].urgency_score: integer 0–100 estimating how likely this contact is to respond NOW based on signals (hiring activity=high, recent posts=medium, no activity=low).\n"
+                    "- contact_bios[].outreach_angles: array of 2-4 short outreach angle strings, each <100 chars, connecting the contact's signals to the job seeker's value.\n"
+                    "- contact_bios[].urgency_score: integer 0-100 estimating how likely this contact is to respond NOW based on signals (hiring activity=high, recent posts=medium, no activity=low).\n"
                     "- contact_bios[].urgency_reason: 1 sentence explaining the urgency score.\n"
-                    "- hooks should be 4–8 punchy, concrete outreach angles (no fluff), grounded in the job pain_points / success_metrics if present.\n\n"
+                    "- hooks should be 4-8 punchy, concrete outreach angles (no fluff), grounded in the job pain_points / success_metrics if present.\n\n"
                     "Grounding rules for the Contact Background Report:\n"
                     "- If resume_extract or painpoint_matches are provided, use them to make the report SPECIFIC.\n"
-                    "  Example: cite 1 job pain point + 1 resume proof point + a recommended first 2–3 steps.\n"
+                    "  Example: cite 1 job pain point + 1 resume proof point + a recommended first 2-3 steps.\n"
                     "- Avoid generic coaching language. Make it a brief intelligence brief, not advice.\n\n"
                     "Contact Background Report (dynamic sections):\n"
                     "- Build a report titled 'Contact Background Report' for each contact, containing ~20 possible headings.\n"
@@ -2055,14 +2073,14 @@ async def conduct_research(request: ResearchRequest):
             news = entry.get("recent_news") or []
             if not isinstance(news, list):
                 news = []
-            theme = str(entry.get("theme") or "").strip()
-            culture_values = str(entry.get("company_culture_values") or "").strip()
-            market_position = str(entry.get("company_market_position") or "").strip()
-            product_launches = str(entry.get("company_product_launches") or "").strip()
-            leadership_changes = str(entry.get("company_leadership_changes") or "").strip()
-            other_hiring_signals = str(entry.get("company_other_hiring_signals") or "").strip()
-            recent_posts = str(entry.get("company_recent_posts") or "").strip()
-            publications = str(entry.get("company_publications") or "").strip()
+            theme = _strip_urls(str(entry.get("theme") or "").strip())
+            culture_values = _strip_urls(str(entry.get("company_culture_values") or "").strip())
+            market_position = _strip_urls(str(entry.get("company_market_position") or "").strip())
+            product_launches = _strip_urls(str(entry.get("company_product_launches") or "").strip())
+            leadership_changes = _strip_urls(str(entry.get("company_leadership_changes") or "").strip())
+            other_hiring_signals = _strip_urls(str(entry.get("company_other_hiring_signals") or "").strip())
+            recent_posts = _strip_urls(str(entry.get("company_recent_posts") or "").strip())
+            publications = _strip_urls(str(entry.get("company_publications") or "").strip())
             connections = entry.get("shared_connections") or []
             report_title = str(entry.get("background_report_title") or "Contact Background Report").strip() or "Contact Background Report"
             report_sections = entry.get("background_report_sections") or []
@@ -2184,7 +2202,7 @@ async def conduct_research(request: ResearchRequest):
                             label="Publications / case studies / reports (source-backed)",
                         )
                     if not other_hiring_signals:
-                        # "Other hiring signals" should come from the internet ("tea") — not the role description.
+                        # "Other hiring signals" should come from the internet ("tea")  - not the role description.
                         other_hiring_signals = _bullets_from_serper_hits(
                             (topics.get("signals") or topics.get("hiring") or topics.get("funding") or []),
                             max_items=8,
@@ -2385,7 +2403,7 @@ async def get_research_data(user_id: str):
             ],
             theme=(
                 "Theme: What the company cares about: Reference a plausible priority (customer experience, reliability, speed, cost) "
-                "and offer a 2–3 bullet mini-plan—without claiming a specific news event.\n"
+                "and offer a 2-3 bullet mini-plan -without claiming a specific news event.\n"
                 "- Start with a concrete customer outcome + one KPI\n"
                 "- Propose a low-risk first sprint (instrument → ship → measure)\n"
                 "- Close with a weekly reporting cadence"

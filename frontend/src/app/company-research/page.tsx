@@ -1148,66 +1148,6 @@ export default function CompanyResearchPage() {
                   </div>
 
                   <div className="px-4 py-3 space-y-1">
-                    {/* Company Intelligence */}
-                    {draft.intelligence && (draft.intelligence.outreach_summary?.one_liner_hook || draft.intelligence.executive_summary) ? (
-                      <div style={{paddingLeft: 10}}>
-                        <CollapsibleSection title="Company Intelligence" className="mb-0">
-                          {draft.intelligence.executive_summary && (
-                            <div className="mb-3">
-                              <div className="text-[12px] font-semibold text-orange-400 mb-1">Executive Summary</div>
-                              <div className="text-[11.5px] text-white/65 leading-relaxed">{cleanThemeText(draft.intelligence.executive_summary)}</div>
-                            </div>
-                          )}
-                          {draft.intelligence.outreach_summary?.one_liner_hook ? (
-                            <div className="rounded-md border border-blue-500/20 bg-blue-500/10 p-3">
-                              <div className="text-[12px] font-semibold text-orange-400 mb-1">Outreach Summary</div>
-                              <div className="text-[11.5px] text-white/80 mb-2">{draft.intelligence.outreach_summary.one_liner_hook}</div>
-                              {draft.intelligence.outreach_summary.strongest_signal && (
-                                <div className="text-[11.5px] text-white/60 mb-1">
-                                  <span className="text-amber-400 font-semibold text-[10px]">Strongest signal:</span> {draft.intelligence.outreach_summary.strongest_signal}
-                                </div>
-                              )}
-                              {draft.intelligence.outreach_summary.recommended_angle && (
-                                <div className="text-[11.5px] text-white/60 mb-2">
-                                  <span className="text-emerald-400 font-semibold text-[10px]">Recommended angle:</span> {draft.intelligence.outreach_summary.recommended_angle}
-                                </div>
-                              )}
-                              {draft.intelligence.outreach_summary.conversation_starters?.length ? (
-                                <div className="mt-2 pt-2 border-t border-blue-500/15">
-                                  <div className="text-[10px] font-semibold text-orange-300/80 mb-1">Conversation Starters</div>
-                                  {draft.intelligence.outreach_summary.conversation_starters.map((s: string, i: number) => (
-                                    <div key={`cs_${i}`} className="text-[11.5px] text-white/65 mt-0.5 flex items-start gap-1.5">
-                                      <span className="shrink-0 text-blue-300/50 mt-0.5">\u2192</span>
-                                      <span>{s}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : null}
-                              {draft.intelligence.outreach_summary.sequence_strategy?.length ? (
-                                <div className="mt-2 pt-2 border-t border-blue-500/15">
-                                  <div className="text-[10px] font-semibold text-orange-300/80 mb-1.5">Email Sequence Strategy</div>
-                                  <div className="space-y-1.5">
-                                    {draft.intelligence.outreach_summary.sequence_strategy.map((step: SequenceStep) => (
-                                      <div key={`seq_${step.email_number}`} className="rounded border border-white/10 bg-white/[0.02] p-2">
-                                        <div className="flex items-center gap-2 mb-0.5">
-                                          <span className="inline-block rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 text-[9px] font-bold">
-                                            Email {step.email_number}
-                                          </span>
-                                          <span className="text-[10px] text-white/70 font-medium">{step.angle}</span>
-                                        </div>
-                                        {step.subject_line && <div className="text-[10px] text-white/50 mt-0.5"><span className="text-white/30">Subject:</span> {step.subject_line}</div>}
-                                        {step.key_point && <div className="text-[10px] text-white/45 mt-0.5">{step.key_point}</div>}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              ) : null}
-                            </div>
-                          ) : null}
-                        </CollapsibleSection>
-                      </div>
-                    ) : null}
-
                     {/* Select Signals to Break the Ice */}
                     {allSignals.length > 0 ? (
                       <div style={{paddingLeft: 10}}>

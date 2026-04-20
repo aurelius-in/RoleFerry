@@ -234,7 +234,7 @@ async def create_offer(request: OfferCreationRequest):
                     f"I noticed the challenges around {pain}. "
                     f"I’ve done similar work, for example: {sol}. "
                     f"Impact: {metric_phrase}. "
-                    "If it’s useful, I can share a 2–3 bullet plan tailored to this role."
+                    "If it’s useful, I can share a 2-3 bullet plan tailored to this role."
                 )
             else:
                 raw_label = base_match.get("painpoint_1", "Your Role")

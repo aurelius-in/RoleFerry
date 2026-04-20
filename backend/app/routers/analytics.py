@@ -272,7 +272,7 @@ async def analytics_explain(http_request: Request):
             "Verification is strong; maintain list hygiene to protect deliverability.",
         ],
         "risks": [
-            "Some variants are underperforming—subject lines may be too generic.",
+            "Some variants are underperforming -subject lines may be too generic.",
             "If verified_ratio drops, expect bounce rate and spam placement to worsen.",
         ],
         "next_actions": [
