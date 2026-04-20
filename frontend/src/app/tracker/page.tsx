@@ -498,7 +498,7 @@ export default function TrackerPage() {
             onClick={() => setShowInsights((v) => !v)}
             className="px-6 py-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors font-semibold"
           >
-            {showInsights ? "Hide Insights & Analytics" : "Show Insights & Analytics"}
+            {showInsights ? "Hide Insights" : "Show Insights"}
           </button>
 
           {showInsights && (
