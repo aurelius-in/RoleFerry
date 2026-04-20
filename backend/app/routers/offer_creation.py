@@ -71,6 +71,48 @@ class ComposeOfferSnippetResponse(BaseModel):
     used_llm: bool = False
 
 
+class GenerateCtaRequest(BaseModel):
+    cta_type: str  # "hard" or "soft"
+    current_cta: str = ""
+    role_title: Optional[str] = None
+    role_company: Optional[str] = None
+    skills: List[str] = []
+    one_liner: str = ""
+
+
+class GenerateCtaResponse(BaseModel):
+    success: bool
+    cta: str
+    used_llm: bool = False
+
+
+_HARD_CTA_POOL = [
+    "Open to a 10-minute chat this week?",
+    "Could we do a quick call Tuesday or Thursday?",
+    "Happy to walk through specifics - does 15 minutes work this week?",
+    "Would a brief call be useful? I can share concrete examples.",
+    "Can I show you what this looks like in practice? 15 minutes, any day that works.",
+    "If this sounds relevant, I'd love 10 minutes to compare notes.",
+    "Would it help to see a short walkthrough? Happy to set something up.",
+    "I have a few ideas that might be useful - open to a quick call?",
+    "Interested in seeing how this could work for your team? Let's find 15 minutes.",
+    "Can we grab a brief call? I'll keep it focused and concise.",
+]
+
+_SOFT_CTA_POOL = [
+    "Worth exploring, or totally not a priority right now?",
+    "Does this sound relevant, or is the timing off?",
+    "Curious if this resonates - no worries either way.",
+    "Is this on your radar, or not the right moment?",
+    "Figured it was worth a mention - happy to share more if useful.",
+    "If this isn't a fit, no worries at all - just wanted to flag it.",
+    "Sound interesting, or should I check back another time?",
+    "If the timing is right, I'd love to chat - if not, totally understand.",
+    "Would love your take on whether this is worth a conversation.",
+    "Let me know if this is worth exploring - either way, appreciate your time.",
+]
+
+
 def _build_rule_based_snippet(payload: ComposeOfferSnippetRequest) -> str:
     one = re.sub(r"\s+", " ", str(payload.one_liner or "")).strip()[:220]
     proofs = [re.sub(r"\s+", " ", str(x or "")).strip()[:160] for x in (payload.proof_points or []) if str(x or "").strip()]
@@ -203,6 +245,73 @@ async def compose_offer_snippet(payload: ComposeOfferSnippetRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to compose offer snippet: {str(e)}")
+
+
+@router.post("/generate-cta", response_model=GenerateCtaResponse)
+async def generate_cta(payload: GenerateCtaRequest):
+    import random
+
+    pool = _HARD_CTA_POOL if payload.cta_type == "hard" else _SOFT_CTA_POOL
+    current = (payload.current_cta or "").strip().lower().rstrip("?.")
+
+    candidates = [c for c in pool if c.strip().lower().rstrip("?.") != current]
+    deterministic_pick = random.choice(candidates) if candidates else pool[0]
+
+    client = get_openai_client()
+    if not client.should_use_real_llm:
+        return GenerateCtaResponse(success=True, cta=deterministic_pick, used_llm=False)
+
+    try:
+        is_hard = payload.cta_type == "hard"
+        skills_str = ", ".join((payload.skills or [])[:6]) or "their professional skills"
+        role_str = payload.role_title or "the target role"
+
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You generate a single call-to-action sentence for a job seeker's outreach email.\n"
+                    "Return ONLY JSON: {\"cta\": string}\n\n"
+                    + (
+                        "TYPE: Hard CTA\n"
+                        "A hard CTA asks for a specific commitment: a call, a meeting, a time slot.\n"
+                        "It should feel confident but not pushy. Include a time frame or specific action.\n"
+                        "Examples: 'Open to a 10-minute chat this week?', 'Could we do a quick call Tuesday or Thursday?'\n\n"
+                        if is_hard else
+                        "TYPE: Soft CTA\n"
+                        "A soft CTA is low-friction: an easy yes/no, a gentle nudge, permission to follow up.\n"
+                        "It should feel zero-pressure. The recipient can say no without awkwardness.\n"
+                        "Examples: 'Worth exploring, or totally not a priority right now?', 'Curious if this resonates - no worries either way.'\n\n"
+                    )
+                    + f"Context: the sender's skills include {skills_str}. Target role: {role_str}.\n"
+                    + f"The sender's one-liner: {(payload.one_liner or '').strip()[:120]}\n\n"
+                    "Rules:\n"
+                    "- One sentence only, under 100 characters.\n"
+                    "- Do NOT use em dashes or en dashes.\n"
+                    "- Do NOT mention applying for a job or the hiring process.\n"
+                    "- Do NOT repeat or closely paraphrase the current CTA.\n"
+                    f"- Current CTA to avoid: \"{payload.current_cta}\"\n"
+                    "- Sound human and conversational, not corporate.\n"
+                ),
+            },
+        ]
+
+        raw = client.run_chat_completion(
+            messages, temperature=0.8, max_tokens=60,
+            stub_json={"cta": deterministic_pick},
+        )
+        choices = raw.get("choices") or []
+        msg = (choices[0].get("message") if choices else {}) or {}
+        content_str = str(msg.get("content") or "")
+        parsed = extract_json_from_text(content_str) or {}
+        cta = str(parsed.get("cta") or "").strip()
+        cta = re.sub(r"[—–]", "-", cta)
+        if len(cta) < 10 or len(cta) > 120:
+            cta = deterministic_pick
+        return GenerateCtaResponse(success=True, cta=cta, used_llm=True)
+    except Exception:
+        return GenerateCtaResponse(success=True, cta=deterministic_pick, used_llm=False)
+
 
 @router.post("/create", response_model=OfferCreationResponse)
 async def create_offer(request: OfferCreationRequest):

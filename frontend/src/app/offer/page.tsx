@@ -253,6 +253,7 @@ export default function OfferPage() {
   const [defaultCta, setDefaultCta] = useState("Open to a 10-minute chat this week?");
   const [aiSnippet, setAiSnippet] = useState("");
   const [isGeneratingSnippet, setIsGeneratingSnippet] = useState(false);
+  const [isGeneratingCta, setIsGeneratingCta] = useState<"hard" | "soft" | null>(null);
   const [showStepHelp, setShowStepHelp] = useState(false);
   const [collapsedSubs, setCollapsedSubs] = useState<Set<string>>(new Set());
 
@@ -606,6 +607,31 @@ export default function OfferPage() {
       window.setTimeout(() => setNotice(null), 1500);
     } finally {
       setIsGeneratingSnippet(false);
+    }
+  };
+
+  const generateNewCta = async (ctaType: "hard" | "soft") => {
+    if (isGeneratingCta) return;
+    setIsGeneratingCta(ctaType);
+    try {
+      const skills = Array.isArray(resume?.skills) ? resume.skills.map((x: any) => String(x || "").trim()).filter(Boolean).slice(0, 6) : [];
+      const resp = await api<{ success: boolean; cta: string }>("/offer-creation/generate-cta", "POST", {
+        cta_type: ctaType,
+        current_cta: ctaType === "hard" ? defaultCta : softCta,
+        role_title: activeRole?.title || selectedRole?.title || "",
+        role_company: activeRole?.company || selectedRole?.company || "",
+        skills,
+        one_liner: oneLiner,
+      });
+      if (resp?.cta) {
+        if (ctaType === "hard") setDefaultCta(resp.cta);
+        else setSoftCta(resp.cta);
+      }
+    } catch {
+      setNotice("Couldn't generate CTA right now.");
+      window.setTimeout(() => setNotice(null), 1500);
+    } finally {
+      setIsGeneratingCta(null);
     }
   };
 
@@ -1211,13 +1237,24 @@ export default function OfferPage() {
                           <div className="mt-2">
                           <div className="grid grid-cols-1 gap-4">
                             <div className="rounded-md border border-white/10 bg-black/20 p-3">
-                              <div className="text-sm font-bold text-amber-200">Strong / Hard CTA</div>
+                              <div className="flex items-center justify-between">
+                                <div className="text-sm font-bold text-amber-200">Strong / Hard CTA</div>
+                                <button
+                                  type="button"
+                                  disabled={isGeneratingCta === "hard"}
+                                  onClick={() => generateNewCta("hard")}
+                                  className="flex items-center gap-1 px-2 py-0.5 rounded border border-amber-400/30 bg-amber-400/10 text-[11px] text-amber-200 hover:bg-amber-400/20 disabled:opacity-50"
+                                >
+                                  {isGeneratingCta === "hard" ? <InlineSpinner className="h-3 w-3" /> : null}
+                                  <span>{isGeneratingCta === "hard" ? "Generating" : "Generate new"}</span>
+                                </button>
+                              </div>
                               <div className="mt-1 text-[11px] text-white/60">Ask for clear commitment (time, scheduling, or decision).</div>
                               <input
                                 value={defaultCta}
                                 onChange={(e) => setDefaultCta(e.target.value)}
                                 className="mt-2 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Can we do 15 minutes next week — Tue 11am or Thu 2pm?"
+                                placeholder="Can we do 15 minutes next week - Tue 11am or Thu 2pm?"
                               />
                               <div className="mt-2 text-[11px] text-white/55">
                                 Variable:{" "}
@@ -1227,7 +1264,18 @@ export default function OfferPage() {
                               </div>
                             </div>
                             <div className="rounded-md border border-white/10 bg-black/20 p-3">
-                              <div className="text-sm font-bold text-sky-200">Soft CTA</div>
+                              <div className="flex items-center justify-between">
+                                <div className="text-sm font-bold text-sky-200">Soft CTA</div>
+                                <button
+                                  type="button"
+                                  disabled={isGeneratingCta === "soft"}
+                                  onClick={() => generateNewCta("soft")}
+                                  className="flex items-center gap-1 px-2 py-0.5 rounded border border-sky-400/30 bg-sky-400/10 text-[11px] text-sky-200 hover:bg-sky-400/20 disabled:opacity-50"
+                                >
+                                  {isGeneratingCta === "soft" ? <InlineSpinner className="h-3 w-3" /> : null}
+                                  <span>{isGeneratingCta === "soft" ? "Generating" : "Generate new"}</span>
+                                </button>
+                              </div>
                               <div className="mt-1 text-[11px] text-white/60">Ask for a low-friction response (easy yes/no or routing).</div>
                               <input
                                 value={softCta}
