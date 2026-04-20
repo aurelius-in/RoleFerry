@@ -389,7 +389,7 @@ def _extract_contacts_from_text(text: str, company: str, domain: str, source_url
         return s
 
     uniq = sorted(uniq, key=lambda t: score(t[1]), reverse=True)
-    uniq = [p for p in uniq if score(p[1]) > -1000][:8]
+    uniq = [p for p in uniq if score(p[1]) > -1000][:15]
 
     contacts: List[Contact] = []
     for nm, title in uniq:
@@ -716,7 +716,7 @@ async def search_contacts(request: ContactSearchRequest):
                 talent_dm = [p for _, p in scored if _is_recruiting(p.title)]
                 others = [p for _, p in scored if p not in fn_dm and p not in talent_dm and _is_relevant_decision_maker_for_job(p.title, job_fn)]
 
-                desired = 24
+                desired = 50
 
                 relevant_pool = [p for _, p in scored if _is_relevant_decision_maker_for_job(p.title, job_fn)]
 
@@ -734,9 +734,9 @@ async def search_contacts(request: ContactSearchRequest):
                 else:
                     if relevant_pool:
                         picked: List[Any] = []
-                        for p in fn_dm[:6]:
+                        for p in fn_dm[:12]:
                             picked.append(p)
-                        for p in talent_dm[:5]:
+                        for p in talent_dm[:8]:
                             if p not in picked:
                                 picked.append(p)
                         for p in others:
@@ -823,7 +823,7 @@ async def search_contacts(request: ContactSearchRequest):
                 logger.info("Web scrape: no working leadership/team page found for domain='%s'", domain)
 
         # 3) Try OpenAI to identify public personas (supplements PDL + web scraping)
-        if len(contacts) + len(pdl_contacts) < 8 and settings.openai_api_key and _budget_ok(10.0):
+        if len(contacts) + len(pdl_contacts) < 15 and settings.openai_api_key and _budget_ok(10.0):
             try:
                 client = get_openai_client()
                 # Ask GPT to identify likely decision makers based on its training data (broad knowledge).
@@ -832,7 +832,7 @@ async def search_contacts(request: ContactSearchRequest):
                 filters = [str(x).strip() for x in (request.title_filters or []) if str(x).strip()]
                 prompt = "".join(
                     [
-                        f"Identify 6-12 REAL people who work at '{company}' in leadership, management, recruiting, or executive roles.\n\n",
+                        f"Identify 12-20 REAL people who work at '{company}' in leadership, management, recruiting, or executive roles.\n\n",
                         f"Context: the user is looking for people who might influence hiring for a '{target or 'this role'}' position.\n\n",
                         "Include:\n",
                         "- VP/Director/Head/Manager of Engineering, Product, Design, HR, Talent, etc.\n",
@@ -1014,7 +1014,7 @@ async def search_contacts(request: ContactSearchRequest):
 
         # Hard cap for UI sanity: avoid overwhelming lists.
         try:
-            contacts = (contacts or [])[:24]
+            contacts = (contacts or [])[:30]
         except Exception:
             pass
 
