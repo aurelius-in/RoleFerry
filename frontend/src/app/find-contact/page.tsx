@@ -523,11 +523,10 @@ export default function FindContactPage() {
 
   const buildDefaultDraft = (c: Contact): OutreachDraft => {
     const first = safeFirstName(c?.name || "");
-    const company = formatCompanyName(String(c?.company || "your team").trim());
-    const title = formatTitleCase(String(c?.title || "").trim());
+    const company = formatCompanyName(String(c?.company || "").trim());
+    const industry = String(c?.job_company_industry || "").trim();
     const m0 = loadPainpointMatch();
     const sol = String(m0?.solution_1 || "").trim();
-    const facts = getInterestingFactsForContact(String(c?.id || ""));
 
     const cleanPhrase = (s: string) => {
       let t = String(s || "").replace(/\s+/g, " ").trim();
@@ -536,7 +535,7 @@ export default function FindContactPage() {
       return t;
     };
 
-    const cta = "Open to connect?";
+    const cta = "Let's connect.";
     const limit = LINKEDIN_NOTE_LIMIT;
 
     const tryFit = (current: string, next: string): string | null => {
@@ -547,28 +546,27 @@ export default function FindContactPage() {
 
     let note = `Hi ${first},`;
 
-    const roleLine = title && company
-      ? `your work as ${title} at ${company} stood out.`
-      : company
-        ? `your work at ${company} stood out.`
-        : "";
-    if (roleLine) {
-      const fit = tryFit(note, `${roleLine.charAt(0).toUpperCase()}${roleLine.slice(1)}`);
+    if (industry && company) {
+      const bridge = `I enjoy connecting with leaders in ${industry.toLowerCase()}, always good to expand the network with people at firms like ${company}.`;
+      const fit = tryFit(note, bridge);
       if (fit) note = fit;
-    }
-
-    const factPhrase = cleanPhrase(String(facts?.[0]?.text || ""));
-    if (factPhrase) {
-      const short = factPhrase.length > 50 ? factPhrase.split(/[,;]/)[0]?.trim() || factPhrase : factPhrase;
-      const factLine = `I noticed ${short.charAt(0).toLowerCase()}${short.slice(1)}.`;
-      const fit = tryFit(note, factLine);
+    } else if (industry) {
+      const bridge = `I enjoy connecting with leaders in ${industry.toLowerCase()}, always good to expand the network.`;
+      const fit = tryFit(note, bridge);
+      if (fit) note = fit;
+    } else if (company) {
+      const bridge = `I reviewed your profile and wanted to connect - always good to expand the network with people at ${company}.`;
+      const fit = tryFit(note, bridge);
+      if (fit) note = fit;
+    } else {
+      const fit = tryFit(note, "I reviewed your profile and wanted to connect.");
       if (fit) note = fit;
     }
 
     const solPhrase = cleanPhrase(sol);
     if (solPhrase) {
       const short = solPhrase.length > 55 ? solPhrase.split(/[,;]/)[0]?.trim() || solPhrase : solPhrase;
-      const solLine = `I ${short.charAt(0).toLowerCase()}${short.slice(1)}.`;
+      const solLine = `I post about ${short.charAt(0).toLowerCase()}${short.slice(1)}.`;
       const fit = tryFit(note, solLine);
       if (fit) note = fit;
     }

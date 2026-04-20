@@ -1118,41 +1118,62 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
                 subj = "Closing the loop?"
 
             rb = _build_research_brief(ctx)
-            company_sig = ((rb.get("company_signals") or [None])[0] if isinstance(rb, dict) else None) or None
-            role_sig = ((rb.get("role_scope_signals") or [None])[0] if isinstance(rb, dict) else None) or None
+
+            def _strip_signal_label(s: str) -> str:
+                """Remove internal labels like 'Company theme signal:', 'Market position:', etc."""
+                t = str(s or "").strip()
+                t = re.sub(r"^(Company theme signal|Market position|Products?/launches?|Hiring signal|Recent post|Publication|Role success metric|Role required skill|Profile highlight|Posts about|Interesting fact|Theme):\s*", "", t, flags=re.I)
+                return t.strip()
+
+            raw_company_sig = ((rb.get("company_signals") or [None])[0] if isinstance(rb, dict) else None) or ""
+            raw_role_sig = ((rb.get("role_scope_signals") or [None])[0] if isinstance(rb, dict) else None) or ""
+            company_sig = _strip_signal_label(raw_company_sig)
+            role_sig = _strip_signal_label(raw_role_sig)
             cta_line = chosen_cta or "Open to a quick 10-15 minute chat?"
+
+            offer_ctx = ctx.get("offer") if isinstance(ctx, dict) else {}
+            one_liner = str((offer_ctx or {}).get("one_liner") or "").strip()
+            proof_points = [str(p).strip() for p in _as_list((offer_ctx or {}).get("proof_points"))[:2] if str(p).strip()]
 
             body_bits: List[str] = [f"Hi {greet_name},\n\n"]
             if step == 1:
                 if company_sig:
-                    body_bits.append(f"I'm reaching out after learning about {company_name or 'your team'}'s work. {company_sig}\n\n")
+                    body_bits.append(f"I noticed {company_name or 'your team'} {company_sig[0].lower()}{company_sig[1:].rstrip('.')}. " if company_sig and len(company_sig) > 5 else f"I noticed {company_name or 'your team'} is doing interesting work. ")
+                    if one_liner:
+                        body_bits.append(f"{one_liner.rstrip('.')}. ")
+                    if proof_points:
+                        body_bits.append(f"For example, {proof_points[0][0].lower()}{proof_points[0][1:].rstrip('.')}.")
+                    body_bits.append(f"\n\n{cta_line}\n\n")
                 elif role_sig:
-                    body_bits.append(f"I noticed {company_name or 'your team'} is looking for a {job_title or 'new team member'}. {role_sig}\n\n")
+                    body_bits.append(f"I noticed the {job_title or 'role'} at {company_name or 'your team'} and wanted to introduce myself. ")
+                    if one_liner:
+                        body_bits.append(f"{one_liner.rstrip('.')}. ")
+                    body_bits.append(f"\n\n{cta_line}\n\n")
                 else:
-                    body_bits.append(f"I noticed the {job_title or 'role'} at {company_name or 'your team'} and wanted to introduce myself.\n\n")
-                offer_ctx = ctx.get("offer") if isinstance(ctx, dict) else {}
-                one_liner = str((offer_ctx or {}).get("one_liner") or "").strip()
-                if one_liner:
-                    body_bits.append(f"{one_liner}\n\n")
-                body_bits.append(f"{cta_line}\n\n")
+                    body_bits.append(f"I noticed the {job_title or 'role'} at {company_name or 'your team'} and wanted to introduce myself. ")
+                    if one_liner:
+                        body_bits.append(f"{one_liner.rstrip('.')}.")
+                    body_bits.append(f"\n\n{cta_line}\n\n")
             elif step == 2:
                 body_bits.append(f"Just a quick follow-up on my previous note about the {job_title or 'role'}. I'm still very interested and would be glad to speak briefly if the role is still open.\n\n")
                 body_bits.append(f"{cta_line}\n\n")
             elif step == 3:
                 body_bits.append(f"I wanted to share a few highlights from my work that align with what teams typically need in a {job_title or 'role like this'}.\n\n")
-                body_bits.append("I'd be glad to explore how my background could support your team's goals.\n\n")
+                if proof_points:
+                    for pp in proof_points[:2]:
+                        body_bits.append(f"- {pp}\n")
+                    body_bits.append("\n")
                 body_bits.append(f"{cta_line}\n\n")
             else:
                 body_bits.append("I realize your time is limited, so this will be my final message. If the role has been filled or I'm not the right fit, no worries at all. If there's someone else I should speak with, I'd be grateful for an introduction.\n\n")
                 body_bits.append(f"{cta_line}\n\n")
 
-            # Optional: include bio/work links if provided in context
             bio = str(((links or {}).get("bio_page_url")) or "").strip()
             work = str(((links or {}).get("work_link")) or "").strip()
             if bio:
-                body_bits.append(f"Bio: {bio}\n")
+                body_bits.append(f"I put together a brief overview of my background here: {bio}\n")
             if work:
-                body_bits.append(f"Work: {work}\n")
+                body_bits.append(f"Work samples: {work}\n")
             body = _append_signature("".join(body_bits))
             return subj, body
 
@@ -1250,7 +1271,9 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             "- Avoid startup jargon (e.g., 'ship outcomes', 'drive impact', 'move the needle'). Prefer human phrasing.\n"
             "- Voice must be first-person singular for an individual job seeker: use I/me/my, not we/us/our.\n"
             "- Use real names/companies ONLY if provided in the context JSON. Do not invent.\n"
-            "- Do NOT output template placeholders like {{first_name}}.\n\n"
+            "- Do NOT output template placeholders like {{first_name}}.\n"
+            "- NEVER include internal signal labels in the email body (e.g., 'Company theme signal:', 'Market position:', 'Profile highlight:', 'Theme:'). These are context for you, not email text.\n"
+            "- If a bio_page_url is provided in the links, include it with a brief intro like 'I put together a brief overview of my background here: [url]'. Do NOT just drop the URL without context.\n\n"
             f"Sequence step: {step} of 4.\n"
             f"Step intent: {step_intent}\n\n"
             f"{tone_line}\n"
@@ -1300,6 +1323,8 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
         data = extract_json_from_text(content_str) or {}
         subject = str(data.get("subject") or "").strip() or _fallback()[0]
         body = str(data.get("body") or "").strip() or _fallback()[1]
+
+        body = re.sub(r"(?:Company theme signal|Market position|Products?/launches?|Hiring signal|Recent post|Publication|Profile highlight|Posts about|Interesting fact|Theme):\s*", "", body, flags=re.I)
 
         # Enforce quality rules even if the model drifts.
         # IMPORTANT: Never return an email that is only a signature block.

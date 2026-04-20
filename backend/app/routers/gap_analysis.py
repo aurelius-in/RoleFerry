@@ -455,7 +455,7 @@ def _deterministic_personality_gaps(
                     gap="Role is stakeholder-heavy; your style may be more deep-focus/independent.",
                     severity="medium",
                     evidence=["Personality: focus-charged (energy axis)", "Job text mentions stakeholders/cross-functional work"],
-                    how_to_close="Show 1–2 examples of driving alignment with stakeholders (cadence, docs, decision records) without losing execution speed.",
+                    how_to_close="Show 1-2 examples of driving alignment with stakeholders (cadence, docs, decision records) without losing execution speed.",
                 )
             )
 

@@ -57,7 +57,7 @@ def seed_demo():
             "title": "Director of Product",
             "company": "Acme",
             "location": "Remote (US)",
-            "salary_text": "$220k–$260k + equity",
+            "salary_text": "$220k-$260k + equity",
             "jd_url": "https://example.com/acme/director-product",
             "jd_text": "Own product strategy for the core platform. Lead a team of PMs. Drive PLG and enterprise adoption across key verticals.",
             "tags": ["PLG", "Strategy", "Leadership"],
@@ -68,7 +68,7 @@ def seed_demo():
             "title": "Senior Product Manager, Activation",
             "company": "Acme",
             "location": "NYC (Hybrid)",
-            "salary_text": "$180k–$210k + bonus",
+            "salary_text": "$180k-$210k + bonus",
             "jd_url": "https://example.com/acme/spm-activation",
             "jd_text": "Increase activation, onboard enterprise customers, and run experiments across signup → first value.",
             "tags": ["Activation", "Experiments", "Onboarding"],
@@ -79,7 +79,7 @@ def seed_demo():
             "title": "Senior Product Manager, Data Platform",
             "company": "Acme",
             "location": "NYC (Hybrid)",
-            "salary_text": "$175k–$205k + equity",
+            "salary_text": "$175k-$205k + equity",
             "jd_url": "https://example.com/acme/spm-data",
             "jd_text": "Build self-serve data platform, governance, and metrics layer for analytics at scale.",
             "tags": ["Data Platform", "Governance", "Metrics"],
@@ -91,7 +91,7 @@ def seed_demo():
             "title": "Lead Product Manager, Analytics",
             "company": "Globex",
             "location": "SF Bay Area",
-            "salary_text": "$190k–$230k + equity",
+            "salary_text": "$190k-$230k + equity",
             "jd_url": "https://example.com/globex/lead-pm-analytics",
             "jd_text": "Own analytics roadmap; partner with data science and eng to ship insights and ML-powered workflows.",
             "tags": ["Analytics", "ML", "Insights"],
@@ -102,7 +102,7 @@ def seed_demo():
             "title": "Group PM, Platform",
             "company": "Globex",
             "location": "Remote (US)",
-            "salary_text": "$210k–$250k + equity",
+            "salary_text": "$210k-$250k + equity",
             "jd_url": "https://example.com/globex/gpm-platform",
             "jd_text": "Lead platform initiatives, APIs, and shared services; manage 3 PMs; align with GTM.",
             "tags": ["Platform", "APIs", "Leadership"],
@@ -113,7 +113,7 @@ def seed_demo():
             "title": "Product Manager, Billing",
             "company": "Globex",
             "location": "Remote (US)",
-            "salary_text": "$160k–$190k",
+            "salary_text": "$160k-$190k",
             "jd_url": "https://example.com/globex/pm-billing",
             "jd_text": "Own billing, entitlements, and invoicing. Partner with finance and GTM ops to reduce churn.",
             "tags": ["Billing", "Entitlements", "Payments"],
@@ -125,7 +125,7 @@ def seed_demo():
             "title": "Senior Product Manager, Growth",
             "company": "Initech",
             "location": "Austin, TX",
-            "salary_text": "$170k–$200k",
+            "salary_text": "$170k-$200k",
             "jd_url": "https://example.com/initech/spm-growth",
             "jd_text": "Drive PLG funnel, pricing/packaging experiments, and self-serve monetization.",
             "tags": ["Growth", "Pricing", "Monetization"],
@@ -136,7 +136,7 @@ def seed_demo():
             "title": "Director of Product, AI",
             "company": "Initech",
             "location": "Seattle, WA",
-            "salary_text": "$230k–$270k + equity",
+            "salary_text": "$230k-$270k + equity",
             "jd_url": "https://example.com/initech/dir-prod-ai",
             "jd_text": "Define AI product strategy, partner with research, and ship copilots and intelligent automation.",
             "tags": ["AI", "Copilots", "Automation"],
@@ -147,7 +147,7 @@ def seed_demo():
             "title": "Product Manager, Core",
             "company": "Initech",
             "location": "Remote (US)",
-            "salary_text": "$150k–$180k",
+            "salary_text": "$150k-$180k",
             "jd_url": "https://example.com/initech/pm-core",
             "jd_text": "Own core workflows, reliability, and user journeys across web and mobile.",
             "tags": ["Core", "Reliability", "Web/Mobile"],
@@ -158,7 +158,7 @@ def seed_demo():
             "title": "Head of Product",
             "company": "Initech",
             "location": "SF Bay Area",
-            "salary_text": "$260k–$320k + equity",
+            "salary_text": "$260k-$320k + equity",
             "jd_url": "https://example.com/initech/head-product",
             "jd_text": "Scale product org, hire PM leaders, and drive cross-functional roadmap alignment.",
             "tags": ["Leadership", "Hiring", "Strategy"],
@@ -170,7 +170,7 @@ def seed_demo():
             "title": "Technical Program Manager, Platform",
             "company": "Umbrella",
             "location": "Chicago, IL",
-            "salary_text": "$140k–$175k",
+            "salary_text": "$140k-$175k",
             "jd_url": "https://example.com/umbrella/tpm-platform",
             "jd_text": "Drive execution across platform teams; manage dependencies and risk; partner with PM/Eng leads.",
             "tags": ["TPM", "Execution", "Platform"],
@@ -182,7 +182,7 @@ def seed_demo():
             "title": "Senior Product Manager, Relevance",
             "company": "Hooli",
             "location": "Remote (US)",
-            "salary_text": "$180k–$220k",
+            "salary_text": "$180k-$220k",
             "jd_url": "https://example.com/hooli/spm-relevance",
             "jd_text": "Improve search and recommendation relevance; partner with ML to lift CTR and retention.",
             "tags": ["Search", "Relevance", "ML"],
@@ -194,7 +194,7 @@ def seed_demo():
             "title": "Product Manager, Supply Chain",
             "company": "Vandelay Industries",
             "location": "Remote (US)",
-            "salary_text": "$155k–$185k",
+            "salary_text": "$155k-$185k",
             "jd_url": "https://example.com/vandelay/pm-supply-chain",
             "jd_text": "Build tools for logistics, inventory optimization, and vendor performance analytics.",
             "tags": ["Supply Chain", "Logistics", "Analytics"],
@@ -206,7 +206,7 @@ def seed_demo():
             "title": "Product Manager, Security",
             "company": "WayneTech",
             "location": "Gotham, NJ",
-            "salary_text": "$165k–$195k",
+            "salary_text": "$165k-$195k",
             "jd_url": "https://example.com/waynetech/pm-security",
             "jd_text": "Ship security features (SSO, SCIM, audit logs, anomaly detection) for enterprise customers.",
             "tags": ["Security", "SSO", "Enterprise"],
@@ -218,7 +218,7 @@ def seed_demo():
             "title": "Product Manager, AI Ops",
             "company": "Stark Industries",
             "location": "Los Angeles, CA",
-            "salary_text": "$175k–$210k + equity",
+            "salary_text": "$175k-$210k + equity",
             "jd_url": "https://example.com/stark/pm-ai-ops",
             "jd_text": "Automate internal ops with AI agents; build oversight tooling; comply with governance.",
             "tags": ["AI", "Agents", "Ops"],
@@ -230,7 +230,7 @@ def seed_demo():
             "title": "Product Manager, Commerce",
             "company": "Wonka",
             "location": "Remote (US/EU)",
-            "salary_text": "$150k–$180k",
+            "salary_text": "$150k-$180k",
             "jd_url": "https://example.com/wonka/pm-commerce",
             "jd_text": "Own checkout, subscriptions, and promotions; lift conversion and lifetime value.",
             "tags": ["Checkout", "Subscriptions", "Growth"],
@@ -242,7 +242,7 @@ def seed_demo():
             "title": "Group PM, Distributed Systems",
             "company": "Pied Piper",
             "location": "Palo Alto, CA",
-            "salary_text": "$220k–$260k + equity",
+            "salary_text": "$220k-$260k + equity",
             "jd_url": "https://example.com/piedpiper/gpm-distributed",
             "jd_text": "Lead distributed storage and compression initiatives; manage PM team; define 2-year roadmap.",
             "tags": ["Distributed Systems", "Compression", "Leadership"],
@@ -254,7 +254,7 @@ def seed_demo():
             "title": "Product Manager, Mobile",
             "company": "Acme",
             "location": "Remote (US)",
-            "salary_text": "$150k–$180k",
+            "salary_text": "$150k-$180k",
             "jd_url": "https://example.com/acme/pm-mobile",
             "jd_text": "Own iOS/Android roadmap, performance, and engagement. Coordinate with design and growth.",
             "tags": ["Mobile", "iOS", "Android"],
@@ -265,7 +265,7 @@ def seed_demo():
             "title": "Product Manager, Integrations",
             "company": "Globex",
             "location": "Remote (Americas)",
-            "salary_text": "$155k–$185k",
+            "salary_text": "$155k-$185k",
             "jd_url": "https://example.com/globex/pm-integrations",
             "jd_text": "Ship integrations marketplace and SDKs; partner ecosystem growth; developer relations.",
             "tags": ["Integrations", "SDK", "Marketplace"],
@@ -276,7 +276,7 @@ def seed_demo():
             "title": "Product Manager, UX Research Ops",
             "company": "Initech",
             "location": "Remote (US)",
-            "salary_text": "$145k–$170k",
+            "salary_text": "$145k-$170k",
             "jd_url": "https://example.com/initech/pm-ux-research",
             "jd_text": "Build research repository, panel, and insight workflows; speed up discovery.",
             "tags": ["UX Research", "Repository", "Discovery"],
@@ -813,7 +813,7 @@ def seed_demo():
     outreach_presets = [
         {
             "id": "preset_short_email_pm",
-            "label": "Short Email – PM intro",
+            "label": "Short Email - PM intro",
             "mode": "email",
             "length": "short",
             "variables": {
@@ -831,7 +831,7 @@ def seed_demo():
         },
         {
             "id": "preset_li_note_growth",
-            "label": "LinkedIn Note – Growth angle",
+            "label": "LinkedIn Note - Growth angle",
             "mode": "linkedin",
             "length": "short",
             "variables": {
@@ -846,7 +846,7 @@ def seed_demo():
         },
         {
             "id": "preset_intro_mutual_ai",
-            "label": "Intro via Mutual – AI copilot",
+            "label": "Intro via Mutual - AI copilot",
             "mode": "intro-via-mutual",
             "length": "medium",
             "variables": {
@@ -862,7 +862,7 @@ def seed_demo():
         },
         {
             "id": "preset_email_long_billing",
-            "label": "Email – Long – Billing/Entitlements case",
+            "label": "Email - Long - Billing/Entitlements case",
             "mode": "email",
             "length": "long",
             "variables": {
@@ -880,7 +880,7 @@ def seed_demo():
         },
         {
             "id": "preset_email_medium_security",
-            "label": "Email – Medium – Security/SSO + Audit",
+            "label": "Email - Medium - Security/SSO + Audit",
             "mode": "email",
             "length": "medium",
             "variables": {
@@ -896,7 +896,7 @@ def seed_demo():
         },
         {
             "id": "preset_li_note_data_platform",
-            "label": "LinkedIn Note – Data Platform / Metrics Catalog",
+            "label": "LinkedIn Note - Data Platform / Metrics Catalog",
             "mode": "linkedin",
             "length": "short",
             "variables": {
@@ -911,7 +911,7 @@ def seed_demo():
         },
         {
             "id": "preset_email_medium_i18n",
-            "label": "Email – Medium – i18n/Regional Pricing",
+            "label": "Email - Medium - i18n/Regional Pricing",
             "mode": "email",
             "length": "medium",
             "variables": {
@@ -927,7 +927,7 @@ def seed_demo():
         },
         {
             "id": "preset_intro_mutual_platform_sdk",
-            "label": "Intro via Mutual – Platform SDKs",
+            "label": "Intro via Mutual - Platform SDKs",
             "mode": "intro-via-mutual",
             "length": "short",
             "variables": {
@@ -942,7 +942,7 @@ def seed_demo():
         },
         {
             "id": "preset_email_long_ai_ops",
-            "label": "Email – Long – AI Ops / Copilots",
+            "label": "Email - Long - AI Ops / Copilots",
             "mode": "email",
             "length": "long",
             "variables": {
@@ -958,7 +958,7 @@ def seed_demo():
         },
         {
             "id": "preset_li_note_growth_marketplace",
-            "label": "LinkedIn Note – Marketplace Growth",
+            "label": "LinkedIn Note - Marketplace Growth",
             "mode": "linkedin",
             "length": "short",
             "variables": {
@@ -1105,7 +1105,7 @@ def seed_demo():
             {"id": "apac.ops@umbrella.sg", "name": "Kenji Tanaka", "note": "APAC ops; schedule early PT slot", "assignee": "Oliver", "due_date": None},
         ],
         "Conversation": [
-            {"id": "cpo@wonka.com", "name": "Augustus Bloom", "note": "Positive reply; propose intro call (15–20m)", "assignee": "Oliver", "due_date": "2025-09-12"},
+            {"id": "cpo@wonka.com", "name": "Augustus Bloom", "note": "Positive reply; propose intro call (15-20m)", "assignee": "Oliver", "due_date": "2025-09-12"},
             {"id": "cto@stark.com", "name": "Morgan Stark", "note": "Replied with interest on AI Ops; share 1-pager", "assignee": "Oliver", "due_date": "2025-09-13"},
             {"id": "head.analytics@vandelay.com", "name": "Elaine Benes", "note": "Asked for metrics catalog examples", "assignee": "Oliver", "due_date": "2025-09-14"}
         ],
@@ -1156,7 +1156,7 @@ def seed_demo():
         {"type": "product_news", "detail": "Rolling out admin audit center; seeking examples of anomaly detection UX"},
     ])
     store.upsert_warm_angles("li:https://linkedin.com/in/leadubois", [
-        {"type": "alma_mater", "detail": "HEC Paris alum (2016) – Paris product meetup organizer"},
+        {"type": "alma_mater", "detail": "HEC Paris alum (2016) - Paris product meetup organizer"},
         {"type": "recent_post", "detail": "French-language note on i18n pitfalls and RTL testing"},
     ])
     store.upsert_warm_angles("domain:wonka.com", [
@@ -1171,7 +1171,7 @@ def seed_demo():
         {"type": "podcast_mention", "detail": "Mentioned on APAC Ops Leaders roundtable"},
     ])
     store.upsert_warm_angles("li:https://linkedin.com/in/elainebenes", [
-        {"type": "recent_post", "detail": "Metrics governance article – seeking examples of lineage UI"},
+        {"type": "recent_post", "detail": "Metrics governance article - seeking examples of lineage UI"},
         {"type": "mutual", "detail": "Connection to Jordan Lee (Data) and analytics guild lead"},
     ])
     store.upsert_warm_angles("domain:vandelay.com", [
@@ -1653,13 +1653,13 @@ def seed_demo():
         {"id": "unsubscribe:sam@globex.com", "reason": "Unsubscribe requested"},
         {"id": "block:enterprise@acme.com", "reason": "Do-not-contact (enterprise policy)"},
         {"id": "gdpr:eu.pm@wonka.eu", "reason": "GDPR delete request"},
-        {"id": "domain:*@examplebank.com", "reason": "Financial institution – restrict unsolicited outreach"},
+        {"id": "domain:*@examplebank.com", "reason": "Financial institution - restrict unsolicited outreach"},
         {"id": "role:*legal*@*", "reason": "Exclude legal/compliance roles from sequences"},
         {"id": "region:DE", "reason": "German recipients opted out of marketing"},
-        {"id": "unsubscribe:cto@stark.com", "reason": "Unsubscribe – internal policy"},
-        {"id": "bounce:recruiting@globex.com", "reason": "Hard bounce – suppress"},
-        {"id": "complaint:ops@umbrella.sg", "reason": "Complaint received – add to DNC"},
-        {"id": "privacy:head.analytics@vandelay.com", "reason": "Privacy request – no further contact"}
+        {"id": "unsubscribe:cto@stark.com", "reason": "Unsubscribe - internal policy"},
+        {"id": "bounce:recruiting@globex.com", "reason": "Hard bounce - suppress"},
+        {"id": "complaint:ops@umbrella.sg", "reason": "Complaint received - add to DNC"},
+        {"id": "privacy:head.analytics@vandelay.com", "reason": "Privacy request - no further contact"}
     ]
     store.set_dnc(dnc)
     # Seed Webhook-like events into Audit + reflect on messages
@@ -1787,7 +1787,7 @@ def seed_demo():
         scored.sort(key=lambda x: x["score"], reverse=True)
         for rank, m in enumerate(scored[:6], start=1):
             m["rank"] = rank
-            m["summary"] = f"{m['candidate_id']} vs {m['company']} – {m['title']}"
+            m["summary"] = f"{m['candidate_id']} vs {m['company']} - {m['title']}"
             m["created_at"] = "2025-09-10T10:00:00Z"
             seeded_matches.append(m)
     store.set_matches(seeded_matches)
@@ -1883,7 +1883,7 @@ def seed_demo():
     store.set_portfolio_assets("cand_alex_pm", [
         {"id": "pa_alex_1", "type": "doc", "title": "PLG Playbook", "url": "https://drive.example.com/alex-plg", "tags": ["PLG", "Activation"], "thumbnail_url": "https://img.example.com/plg.png", "preview_text": "Activation system design...", "source": "doc", "relevance_score": 0.92, "created_at": "2024-11-12"},
         {"id": "pa_alex_2", "type": "deck", "title": "Onboarding Redesign", "url": "https://drive.example.com/alex-onboarding", "tags": ["Onboarding"], "thumbnail_url": "https://img.example.com/onboarding.png", "preview_text": "Guided flows and value moments...", "source": "deck", "relevance_score": 0.88, "created_at": "2025-02-20"},
-        {"id": "pa_alex_3", "type": "link", "title": "Case Study – Conversion", "url": "https://portfolio.example.com/case-conv", "tags": ["CaseStudy"], "thumbnail_url": "https://img.example.com/case.png", "preview_text": "Trial→paid uplift...", "source": "link", "relevance_score": 0.81, "created_at": "2025-05-02"},
+        {"id": "pa_alex_3", "type": "link", "title": "Case Study - Conversion", "url": "https://portfolio.example.com/case-conv", "tags": ["CaseStudy"], "thumbnail_url": "https://img.example.com/case.png", "preview_text": "Trial→paid uplift...", "source": "link", "relevance_score": 0.81, "created_at": "2025-05-02"},
     ])
     store.set_portfolio_assets("cand_sam_ai", [
         {"id": "pa_sam_1", "type": "deck", "title": "AI Copilot Overview", "url": "https://drive.example.com/ai-copilot", "tags": ["AI", "Copilot"], "thumbnail_url": "https://img.example.com/copilot.png", "preview_text": "Guardrails and evaluation...", "source": "deck", "relevance_score": 0.9, "created_at": "2025-01-10"},
@@ -1891,9 +1891,9 @@ def seed_demo():
     ])
     # Seed Instantly campaign objects (mock)
     campaigns = [
-        {"id": "cmp_001", "name": "Demo – PM Intro", "variant": "preset_short_email_pm", "list_size": 50, "status": "active", "created_at": "2025-09-09T09:00:00Z"},
-        {"id": "cmp_002", "name": "Demo – AI Ops", "variant": "preset_email_long_ai_ops", "list_size": 40, "status": "paused", "created_at": "2025-09-09T11:30:00Z"},
-        {"id": "cmp_003", "name": "Demo – Billing", "variant": "preset_email_long_billing", "list_size": 35, "status": "draft", "created_at": "2025-09-10T08:45:00Z"},
+        {"id": "cmp_001", "name": "Demo - PM Intro", "variant": "preset_short_email_pm", "list_size": 50, "status": "active", "created_at": "2025-09-09T09:00:00Z"},
+        {"id": "cmp_002", "name": "Demo - AI Ops", "variant": "preset_email_long_ai_ops", "list_size": 40, "status": "paused", "created_at": "2025-09-09T11:30:00Z"},
+        {"id": "cmp_003", "name": "Demo - Billing", "variant": "preset_email_long_billing", "list_size": 35, "status": "draft", "created_at": "2025-09-10T08:45:00Z"},
     ]
     for c in campaigns:
         store.add_campaign(c)

@@ -214,6 +214,34 @@ _NAME_STOPWORDS = {
     "privacy",
     "terms",
     "google",
+    "draw",
+    "design",
+    "board",
+    "canvas",
+    "studio",
+    "cloud",
+    "platform",
+    "tools",
+    "features",
+    "solutions",
+    "services",
+    "enterprise",
+    "connect",
+    "share",
+    "create",
+    "build",
+    "explore",
+    "discover",
+    "learn",
+    "start",
+    "pricing",
+    "support",
+    "blog",
+    "docs",
+    "community",
+    "resources",
+    "login",
+    "signup",
 }
 
 
@@ -245,17 +273,39 @@ def _looks_like_title(s: str) -> bool:
 
 def _infer_level(title: str) -> str:
     low = (title or "").lower()
-    if any(k in low for k in ["chief", "ceo", "cto", "cfo", "coo"]):
-        return "C-Level"
-    if "vp" in low or "vice president" in low:
+    if any(k in low for k in ["chief", "ceo", "cto", "cfo", "coo", "founder", "president"]):
+        return "C-Suite"
+    if "vp" in low or "vice president" in low or "svp" in low:
         return "VP"
-    if "director" in low:
+    if "director" in low or "head" in low:
         return "Director"
-    if "head" in low:
-        return "Head"
     if "manager" in low:
         return "Manager"
-    return "Lead"
+    if any(k in low for k in ["senior", "staff", "principal", "lead", "sr."]):
+        return "Senior"
+    return "Senior"
+
+
+def _matches_seniority_filter(level: str, seniority_csv: str) -> bool:
+    if not seniority_csv:
+        return True
+    allowed = {s.strip().lower() for s in seniority_csv.split(",") if s.strip()}
+    if not allowed:
+        return True
+    lvl = (level or "").strip().lower()
+    if lvl in allowed:
+        return True
+    aliases = {
+        "c-suite": {"c-level", "c-suite", "executive"},
+        "c-level": {"c-suite", "c-level", "executive"},
+        "vp": {"vp", "vice president"},
+        "director": {"director", "head"},
+        "head": {"director", "head"},
+        "manager": {"manager"},
+        "senior": {"senior", "lead", "principal", "staff"},
+        "lead": {"senior", "lead"},
+    }
+    return bool(allowed & aliases.get(lvl, set()))
 
 
 def _infer_department(title: str) -> str:
@@ -339,7 +389,7 @@ def _extract_contacts_from_text(text: str, company: str, domain: str, source_url
         return s
 
     uniq = sorted(uniq, key=lambda t: score(t[1]), reverse=True)
-    uniq = [p for p in uniq if score(p[1]) > -1000][:8]
+    uniq = [p for p in uniq if score(p[1]) > -1000][:15]
 
     contacts: List[Contact] = []
     for nm, title in uniq:
@@ -394,11 +444,10 @@ class ContactSearchRequest(BaseModel):
     query: str
     company: Optional[str] = None
     role: Optional[str] = None
-    # Optional: explicit title filters (Apollo/SalesNav-style). When provided, we try to return
-    # decision makers whose titles match ANY of these options.
     title_filters: Optional[List[str]] = None
     level: Optional[str] = None
-    # Context from upstream steps so we can pick ONLY relevant decision makers for the role being applied for.
+    seniority: Optional[str] = None
+    location: Optional[str] = None
     target_job_title: Optional[str] = None
     candidate_title: Optional[str] = None
     user_mode: Optional[str] = None
@@ -503,28 +552,27 @@ def _painpoint_phrase(pain: str) -> str:
 def _deterministic_improve_linkedin_note(req: ImproveLinkedInNoteRequest) -> str:
     name = (req.contact_name or "").strip()
     first = (name.split()[0] if name else "").strip() or "there"
-    company = (req.contact_company or "").strip() or "your team"
-    title = (req.contact_title or "").strip()
+    company = (req.contact_company or "").strip()
     sol = (req.solution or "").strip()
-    metric = (req.metric or "").strip()
+    painpoint = (req.painpoint or "").strip()
 
-    # Keep it warm/casual but professional; no role/job language.
     bits: List[str] = [f"Hi {first},"]
-    bits.append("I reviewed your profile and wanted to connect.")
-    if title and company:
-        bits.append(f"Your work as {title} at {company} stood out.")
+
+    # Bridge: shared industry/community framing, not title-targeting.
+    if painpoint and company:
+        bits.append(f"I enjoy connecting with leaders in {painpoint.lower().split(',')[0].strip()}, always good to expand the network with people at firms like {company}.")
     elif company:
-        bits.append(f"Your work at {company} stood out.")
-    if sol and len(sol) <= 72:
-        if metric and len(metric) <= 42:
-            bits.append(f"A bit about me: {sol}, {metric}.")
-        else:
-            bits.append(f"A bit about me: {sol}.")
-    elif metric and len(metric) <= 64:
-        bits.append(f"A bit about me: {metric}.")
+        bits.append(f"I reviewed your profile and wanted to connect - always good to expand the network with people at {company}.")
+    elif painpoint:
+        bits.append(f"I enjoy connecting with leaders in {painpoint.lower().split(',')[0].strip()}, always good to expand the network.")
     else:
-        bits.append("A bit about me: I enjoy building practical, measurable solutions.")
-    bits.append("Open to connect?")
+        bits.append("I reviewed your profile and wanted to connect.")
+
+    # Value prop: what sender posts about / works on.
+    if sol and len(sol) <= 72:
+        bits.append(f"I post about {sol.rstrip('.')}.")
+
+    bits.append("Let's connect.")
     return " ".join([b.strip() for b in bits if b.strip()])
 
 
@@ -668,7 +716,7 @@ async def search_contacts(request: ContactSearchRequest):
                 talent_dm = [p for _, p in scored if _is_recruiting(p.title)]
                 others = [p for _, p in scored if p not in fn_dm and p not in talent_dm and _is_relevant_decision_maker_for_job(p.title, job_fn)]
 
-                desired = 24
+                desired = 50
 
                 relevant_pool = [p for _, p in scored if _is_relevant_decision_maker_for_job(p.title, job_fn)]
 
@@ -686,9 +734,9 @@ async def search_contacts(request: ContactSearchRequest):
                 else:
                     if relevant_pool:
                         picked: List[Any] = []
-                        for p in fn_dm[:6]:
+                        for p in fn_dm[:12]:
                             picked.append(p)
-                        for p in talent_dm[:5]:
+                        for p in talent_dm[:8]:
                             if p not in picked:
                                 picked.append(p)
                         for p in others:
@@ -775,7 +823,7 @@ async def search_contacts(request: ContactSearchRequest):
                 logger.info("Web scrape: no working leadership/team page found for domain='%s'", domain)
 
         # 3) Try OpenAI to identify public personas (supplements PDL + web scraping)
-        if len(contacts) + len(pdl_contacts) < 8 and settings.openai_api_key and _budget_ok(10.0):
+        if len(contacts) + len(pdl_contacts) < 15 and settings.openai_api_key and _budget_ok(10.0):
             try:
                 client = get_openai_client()
                 # Ask GPT to identify likely decision makers based on its training data (broad knowledge).
@@ -784,7 +832,7 @@ async def search_contacts(request: ContactSearchRequest):
                 filters = [str(x).strip() for x in (request.title_filters or []) if str(x).strip()]
                 prompt = "".join(
                     [
-                        f"Identify 6-12 REAL people who work at '{company}' in leadership, management, recruiting, or executive roles.\n\n",
+                        f"Identify 12-20 REAL people who work at '{company}' in leadership, management, recruiting, or executive roles.\n\n",
                         f"Context: the user is looking for people who might influence hiring for a '{target or 'this role'}' position.\n\n",
                         "Include:\n",
                         "- VP/Director/Head/Manager of Engineering, Product, Design, HR, Talent, etc.\n",
@@ -957,10 +1005,16 @@ async def search_contacts(request: ContactSearchRequest):
             except Exception:
                 logger.exception("LLM contact relevance audit failed (non-blocking)")
 
+        # Apply seniority filter from UI (if provided).
+        seniority_csv = (request.seniority or "").strip()
+        if seniority_csv and contacts:
+            filtered = [c for c in contacts if _matches_seniority_filter(c.level, seniority_csv)]
+            if filtered:
+                contacts = filtered
+
         # Hard cap for UI sanity: avoid overwhelming lists.
-        # (Users can widen title filters to change *which* contacts show, not how many.)
         try:
-            contacts = (contacts or [])[:24]
+            contacts = (contacts or [])[:30]
         except Exception:
             pass
 
@@ -969,10 +1023,10 @@ async def search_contacts(request: ContactSearchRequest):
             "talking_points_by_contact": {},
             "opener_suggestions": [
                 "Quick question on your priorities for the role",
-                "Noticed a theme in the job posting \u2014 here\u2019s a concrete idea",
+                "Noticed a theme in the job posting - here's a concrete idea",
             ],
             "questions_to_ask": [
-                "What\u2019s the most urgent outcome you need in the next 90 days?",
+                "What's the most urgent outcome you need in the next 90 days?",
                 "Where is the team currently feeling the most pain (quality, speed, cost)?",
             ],
         }
@@ -1150,27 +1204,33 @@ async def improve_linkedin_note(request: ImproveLinkedInNoteRequest) -> ImproveL
                 "content": (
                     "You rewrite LinkedIn connection request notes.\n\n"
                     "Goal:\n"
-                    "- Make the message sound human, casual, warm, and personal, while still professional for a first contact.\n\n"
+                    "- Create a warm, community-building connection request that frames the sender and receiver as peers in the same space.\n\n"
                     "Hard constraints:\n"
                     "- Output MUST be valid JSON ONLY (no markdown) with key: note\n"
                     "- note MUST be a single paragraph (no bullets)\n"
                     "- note MUST be <= limit characters\n"
-                    "- Do NOT use em dashes or en dashes (— or –). Use commas/periods/parentheses or simple hyphens.\n"
-                    "- Do NOT include clichés like 'I hope you're doing well'.\n"
+                    "- Do NOT use em dashes or en dashes. Use commas/periods/parentheses or simple hyphens.\n"
+                    "- Do NOT include cliches like 'I hope you're doing well'.\n"
                     "- Do NOT mention that you are an AI.\n"
-                    "- Do NOT fabricate facts.\n\n"
+                    "- Do NOT fabricate facts.\n"
                     "- Do NOT mention applying for a role or job.\n"
-                    "- Do NOT mention 'job title', 'opening', 'application', or 'hiring process'.\n\n"
+                    "- Do NOT mention 'job title', 'opening', 'application', or 'hiring process'.\n"
+                    "- Do NOT mention the contact's specific job title. Saying 'Chief Executive Officer' or 'VP of Engineering' sounds like targeting.\n"
+                    "- Do NOT lead with the sender's accomplishments or metrics. That sounds like a pitch.\n\n"
                     "Rewrite rules:\n"
                     "- You may rewrite from scratch. Do NOT preserve awkward grammar from the input note.\n"
-                    "- Use a clean opening like: 'Hi <first>, I reviewed your profile and wanted to connect.'\n"
-                    "- Include 2-3 short details total across:\n"
-                    "  (a) one profile-based mention about the contact, and\n"
-                    "  (b) one or two short 'about me' points from provided solution/metric context when available.\n"
-                    "- Keep it about the person and connection intent, not a job process.\n\n"
+                    "- Build a BRIDGE between sender and receiver: shared industry, shared interests, or value the sender brings to the network.\n"
+                    "- Frame the connection as community/network building, NOT transactional.\n"
+                    "- If painpoint/industry context is provided, use it to frame shared space (e.g., 'I enjoy connecting with leaders in [industry]').\n"
+                    "- If solution context is provided, frame it as what the sender posts about or works on, NOT as an accomplishment.\n"
+                    "- Good patterns:\n"
+                    "  'I enjoy connecting with leaders in [industry], always good to expand the network with people at firms like [company].'\n"
+                    "  'I work with [industry] leaders across [region], would love to add you to my network.'\n"
+                    "  'I post about [topics]. Let's connect.'\n"
+                    "- End with a soft close like 'Let's connect.' or 'Would love to add you to my network.'\n\n"
                     "Style:\n"
-                    "- Keep it simple: greeting + profile tie-in + 1-2 about-me details + soft close.\n"
-                    "- Use 1–2 short sentences if possible.\n"
+                    "- 2-3 short sentences max. Warm and casual but professional.\n"
+                    "- The note should feel like a peer reaching out, not someone asking for something.\n"
                 ),
             },
             {"role": "user", "content": json.dumps(ctx)},

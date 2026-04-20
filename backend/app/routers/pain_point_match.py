@@ -311,7 +311,7 @@ async def generate_painpoint_matches(request: MatchRequest):
                 value = str(m.get("value") or "").strip()
                 ctx = str(m.get("context") or "").strip()
                 if value:
-                    metric_candidates.append(" — ".join([x for x in [metric, value, ctx] if x]).strip(" —")[:240])
+                    metric_candidates.append(", ".join([x for x in [metric, value, ctx] if x]).strip(", ")[:240])
                 elif metric:
                     metric_candidates.append(f"Qualitative: {metric}"[:240])
         metric_candidates = [x for x in metric_candidates if x and not _is_fluff_line(x)]
@@ -351,7 +351,7 @@ async def generate_painpoint_matches(request: MatchRequest):
                     ctx = str(m.get("context") or "").strip()
                     metric = str(m.get("metric") or "").strip()
                     val = str(m.get("value") or "").strip()
-                    s = " — ".join([x for x in [metric, val, ctx] if x])
+                    s = ", ".join([x for x in [metric, val, ctx] if x])
                     if s and not _is_fluff_line(s):
                         resume_candidates.append(s[:240])
 
@@ -520,7 +520,7 @@ async def generate_painpoint_matches(request: MatchRequest):
                     resume_candidates.append(" ".join(d.split())[:240])
         for m in (resume_parsed.get("keyMetrics") or resume_parsed.get("KeyMetrics") or resume_parsed.get("key_metrics") or [])[:40]:
             if isinstance(m, dict):
-                s = " — ".join([str(m.get("metric") or "").strip(), str(m.get("value") or "").strip(), str(m.get("context") or "").strip()]).strip(" —")
+                s = ", ".join([x for x in [str(m.get("metric") or "").strip(), str(m.get("value") or "").strip(), str(m.get("context") or "").strip()] if x]).strip(", ")
                 if s and not _is_fluff_line(s):
                     resume_candidates.append(" ".join(s.split())[:240])
 

@@ -216,7 +216,7 @@ def _build_deterministic_draft(
 
     # Keep the public bio reusable across many applications.
     # Never shape the headline around one selected role.
-    headline = f"{display_name} — job seeker bio page"
+    headline = f"{display_name} - job seeker bio page"
 
     subheadline = "A concise overview of experience, proof points, and fit."
     if tone_hint:
@@ -230,7 +230,7 @@ def _build_deterministic_draft(
                 metric = str(m.get("metric") or "").strip()
                 value = str(m.get("value") or "").strip()
                 ctx = str(m.get("context") or "").strip()
-                line = " — ".join([p for p in [metric, value] if p])
+                line = ", ".join([p for p in [metric, value] if p])
                 if ctx:
                     line = f"{line} ({ctx})" if line else ctx
                 if line:
@@ -396,23 +396,30 @@ async def generate_bio_page(payload: GenerateBioPageRequest, http_request: Reque
 @router.post("/bio-pages/publish", response_model=PublishBioPageResponse)
 async def publish_bio_page(payload: PublishBioPageRequest, http_request: Request):
     try:
+        import hashlib
+
         user = await get_current_user_optional(http_request)
         user_id = user.id if user else "anon"
+        user_email = str(getattr(user, "email", "") or "").strip()
 
-        # Ensure storage exists
         if not hasattr(store, "bio_pages_by_slug"):
             store.bio_pages_by_slug = {}  # type: ignore[attr-defined]
+        if not hasattr(store, "bio_slug_by_user"):
+            store.bio_slug_by_user = {}  # type: ignore[attr-defined]
 
-        slug_base = _safe_slug(
-            payload.slug_hint
-            or payload.draft.display_name
-            or (str(getattr(user, "email", "")) if user else "")
-            or "bio"
-        )
-        slug = slug_base
-        # Uniqueness
-        while slug in store.bio_pages_by_slug:  # type: ignore[attr-defined]
-            slug = f"{slug_base}-{uuid.uuid4().hex[:6]}"
+        existing_slug = store.bio_slug_by_user.get(user_id)  # type: ignore[attr-defined]
+        if existing_slug and isinstance(existing_slug, str):
+            slug = existing_slug
+        else:
+            name_part = _safe_slug(
+                payload.slug_hint
+                or payload.draft.display_name
+                or user_email
+                or "bio"
+            )
+            uid_hash = hashlib.sha256(user_id.encode()).hexdigest()[:8]
+            slug = f"{name_part}-{uid_hash}"
+            store.bio_slug_by_user[user_id] = slug  # type: ignore[attr-defined]
 
         record = {
             "slug": slug,
@@ -481,7 +488,7 @@ async def generate_video_script(payload: GenerateVideoScriptRequest, http_reques
             if isinstance(m0, dict):
                 metric = str(m0.get("metric") or "").strip()
                 value = str(m0.get("value") or "").strip()
-                metric_line = " — ".join([x for x in [metric, value] if x]).strip()
+                metric_line = ", ".join([x for x in [metric, value] if x]).strip()
             else:
                 metric_line = str(m0).strip()
         pm0 = pms[0] if (isinstance(pms, list) and pms and isinstance(pms[0], dict)) else {}
@@ -491,7 +498,7 @@ async def generate_video_script(payload: GenerateVideoScriptRequest, http_reques
 
         fallback = "\n".join(
             [
-                f"Hi{', ' + first if first else ''} — I’m {display_name}.",
+                f"Hi{‘, ‘ + first if first else ‘’} - I’m {display_name}.",
                 "I build and lead work that drives outcomes, and I am exploring roles where I can make a measurable impact.",
                 (f"A recent win: {metric_line}." if metric_line else "A recent win: I’ve delivered measurable improvements across teams and systems."),
                 (f"I’m especially strong at tackling problems like: {pain}." if pain else "I’m especially strong at tackling messy, high-impact problems and turning them into clear execution plans."),
@@ -527,7 +534,7 @@ async def generate_video_script(payload: GenerateVideoScriptRequest, http_reques
                     "IMPORTANT:\n"
                     "- This bio page is reusable across multiple companies: DO NOT mention any specific employer.\n"
                     "- Use ONLY the provided JSON; do not invent facts or numbers.\n"
-                    "- Keep it ~60 seconds when read aloud (roughly 110–160 words).\n"
+                    "- Keep it ~60 seconds when read aloud (roughly 110-160 words).\n"
                     "- Keep sentences short and natural.\n"
                     "Return ONLY JSON: { script: string }"
                 ),

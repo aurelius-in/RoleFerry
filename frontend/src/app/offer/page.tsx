@@ -23,6 +23,7 @@ type OfferV1 = {
   default_cta: string;
   soft_cta?: string;
   hard_cta?: string;
+  personalized_cta?: string;
   snippet: string; // compiled preview
 };
 
@@ -97,6 +98,9 @@ function metricLine(metric: any, value: any, context: any) {
     if (!t) return "";
     return /[.!?]$/.test(t) ? t : `${t}.`;
   };
+  if (c && m && c.toLowerCase().includes(m.toLowerCase())) {
+    return endSentence(c);
+  }
   if (m && v && c) {
     const byPart = /^by\b/i.test(v) ? `${m} ${v}` : `${m} by ${v}`;
     return `${endSentence(byPart)} ${endSentence(c)}`.trim();
@@ -106,7 +110,7 @@ function metricLine(metric: any, value: any, context: any) {
     return endSentence(byPart);
   }
   if (m && c) return `${endSentence(m)} ${endSentence(c)}`.trim();
-  return m || v || c;
+  return c || m || v;
 }
 
 function ensureSentenceEnd(s: string): string {
@@ -124,24 +128,16 @@ function painPointToOutcome(raw: string): string {
   let s = String(raw || "").trim();
   if (!s) return "";
   s = s
-    .replace(/^(the\s+)?need\s+for\s+(a\s+)?/i, "build ")
+    .replace(/^(the\s+)?need\s+for\s+/i, "")
     .replace(/^(the\s+)?need\s+to\s+/i, "")
-    .replace(/^(the\s+)?lack\s+of\s+(a\s+)?/i, "strengthen ")
-    .replace(/^(the\s+)?absence\s+of\s+(a\s+)?/i, "establish ")
-    .replace(/^(the\s+)?challenge\s+of\s+/i, "tackle ")
-    .replace(/^(the\s+)?difficulty\s+(of|in)\s+/i, "simplify ")
-    .replace(/^(the\s+)?requirement\s+(for|to)\s+/i, "deliver ")
+    .replace(/^(the\s+)?lack\s+of\s+/i, "")
+    .replace(/^(the\s+)?absence\s+of\s+/i, "")
+    .replace(/^(the\s+)?challenge\s+of\s+/i, "")
+    .replace(/^(the\s+)?difficulty\s+(of|in)\s+/i, "")
+    .replace(/^(the\s+)?requirement\s+(for|to)\s+/i, "")
     .replace(/\.\s*$/, "")
     .trim();
   s = lowerFirst(s);
-  if (/^(a|an|the|better|more|improved|scalable|robust|reliable|strong|new|solid|effective)\s/i.test(s)) {
-    s = `build ${s}`;
-  }
-  // Gerund phrases ("enhancing developer productivity") → strip gerund, prepend verb
-  if (/^[a-z]\w+ing\s/i.test(s) && !/^(build|deliver|establish|strengthen|tackle|simplify|turn)/i.test(s)) {
-    const rest = s.slice(s.indexOf(" ") + 1).trim();
-    if (rest) s = `elevate ${rest}`;
-  }
   if (s.length > 60) {
     const short = s.split(/[,;]/)[0]?.trim();
     if (short && short.length >= 15) s = short;
@@ -256,8 +252,10 @@ export default function OfferPage() {
   const [credInput, setCredInput] = useState("");
   const [softCta, setSoftCta] = useState("Worth exploring, or totally not a priority right now?");
   const [defaultCta, setDefaultCta] = useState("Open to a 10-minute chat this week?");
+  const [personalizedCta, setPersonalizedCta] = useState("");
   const [aiSnippet, setAiSnippet] = useState("");
   const [isGeneratingSnippet, setIsGeneratingSnippet] = useState(false);
+  const [isGeneratingCta, setIsGeneratingCta] = useState<"hard" | "soft" | "personalized" | null>(null);
   const [showStepHelp, setShowStepHelp] = useState(false);
   const [collapsedSubs, setCollapsedSubs] = useState<Set<string>>(new Set());
 
@@ -324,6 +322,7 @@ export default function OfferPage() {
       setCredibility(savedCred.length ? savedCred : autoCredibility);
       setSoftCta(String(saved.soft_cta || "Worth exploring, or totally not a priority right now?"));
       setDefaultCta(String(saved.hard_cta || saved.default_cta || "Open to a 10-minute chat this week?"));
+      setPersonalizedCta(String(saved.personalized_cta || ""));
       if (!needsOneLinerReseed) return;
     }
 
@@ -344,14 +343,18 @@ export default function OfferPage() {
         : "";
 
     let seed = "";
-    if (outcomeRaw) {
-      seed = `I ${outcomeRaw}.`;
+    if (outcomeRaw && title) {
+      seed = `${title} focused on ${outcomeRaw}.`;
+    } else if (outcomeRaw && skillPhrase) {
+      seed = `I help teams achieve ${outcomeRaw} through ${skillPhrase}.`;
+    } else if (outcomeRaw) {
+      seed = `I help organizations achieve ${outcomeRaw}.`;
     } else if (title && skillPhrase) {
-      seed = `${title} who turns ${skillPhrase} into real results.`;
+      seed = `${title} specializing in ${skillPhrase}.`;
     } else if (title) {
-      seed = `${title} who helps teams ship what matters.`;
+      seed = `${title} who helps teams deliver measurable outcomes.`;
     } else if (skillPhrase) {
-      seed = `I turn ${skillPhrase} into real results.`;
+      seed = `I help teams deliver results through ${skillPhrase}.`;
     }
     seed = seed.replace(/\.\./g, ".").replace(/^i\s/i, "I ");
 
@@ -427,6 +430,7 @@ export default function OfferPage() {
         default_cta: String(defaultCta || "").trim(),
         soft_cta: String(softCta || "").trim(),
         hard_cta: String(defaultCta || "").trim(),
+        personalized_cta: String(personalizedCta || "").trim(),
         snippet,
       };
       persistOfferForRole(rid, payload, { updateLegacy: Boolean(opts?.updateLegacy) });
@@ -564,6 +568,7 @@ export default function OfferPage() {
           default_cta: String(defaultCta || "").trim(),
           soft_cta: String(softCta || "").trim(),
           hard_cta: String(defaultCta || "").trim(),
+          personalized_cta: String(personalizedCta || "").trim(),
           snippet,
         };
         const key = String(activeRoleId || "").trim() || String(activeRole?.id || "").trim() || "default";
@@ -607,6 +612,35 @@ export default function OfferPage() {
       window.setTimeout(() => setNotice(null), 1500);
     } finally {
       setIsGeneratingSnippet(false);
+    }
+  };
+
+  const generateNewCta = async (ctaType: "hard" | "soft" | "personalized") => {
+    if (isGeneratingCta) return;
+    setIsGeneratingCta(ctaType);
+    try {
+      const skills = Array.isArray(resume?.skills) ? resume.skills.map((x: any) => String(x || "").trim()).filter(Boolean).slice(0, 6) : [];
+      const painPoints = Array.isArray(activeRole?.painPoints) ? activeRole.painPoints.map((x: any) => String(x || "").trim()).filter(Boolean).slice(0, 3) : [];
+      const currentCta = ctaType === "hard" ? defaultCta : ctaType === "soft" ? softCta : personalizedCta;
+      const resp = await api<{ success: boolean; cta: string }>("/offer-creation/generate-cta", "POST", {
+        cta_type: ctaType,
+        current_cta: currentCta,
+        role_title: activeRole?.title || selectedRole?.title || "",
+        role_company: activeRole?.company || selectedRole?.company || "",
+        skills,
+        one_liner: oneLiner,
+        pain_points: painPoints,
+      });
+      if (resp?.cta) {
+        if (ctaType === "hard") setDefaultCta(resp.cta);
+        else if (ctaType === "soft") setSoftCta(resp.cta);
+        else setPersonalizedCta(resp.cta);
+      }
+    } catch {
+      setNotice("Couldn't generate CTA right now.");
+      window.setTimeout(() => setNotice(null), 1500);
+    } finally {
+      setIsGeneratingCta(null);
     }
   };
 
@@ -666,6 +700,7 @@ export default function OfferPage() {
             existing.soft_cta = String(softCta || "").trim();
             existing.hard_cta = String(defaultCta || "").trim();
             existing.default_cta = String(defaultCta || "").trim();
+            existing.personalized_cta = String(personalizedCta || "").trim();
             break;
         }
 
@@ -849,7 +884,7 @@ export default function OfferPage() {
                                               const arr = [...(pps || [])];
                                               const idx = arr.findIndex((x) => !String(x || "").trim());
                                               const t = idx >= 0 ? idx : Math.min(arr.length - 1, 5);
-                                              arr[t] = `Pain point: ${clampLines(p, 120)}`;
+                                              arr[t] = clampLines(p, 130);
                                               return arr.slice(0, 6);
                                             });
                                           }
@@ -1212,13 +1247,24 @@ export default function OfferPage() {
                           <div className="mt-2">
                           <div className="grid grid-cols-1 gap-4">
                             <div className="rounded-md border border-white/10 bg-black/20 p-3">
-                              <div className="text-sm font-bold text-amber-200">Strong / Hard CTA</div>
+                              <div className="flex items-center justify-between">
+                                <div className="text-sm font-bold text-amber-200">Strong / Hard CTA</div>
+                                <button
+                                  type="button"
+                                  disabled={isGeneratingCta === "hard"}
+                                  onClick={() => generateNewCta("hard")}
+                                  className="flex items-center gap-1 px-2 py-0.5 rounded border border-amber-400/30 bg-amber-400/10 text-[11px] text-amber-200 hover:bg-amber-400/20 disabled:opacity-50"
+                                >
+                                  {isGeneratingCta === "hard" ? <InlineSpinner className="h-3 w-3" /> : null}
+                                  <span>{isGeneratingCta === "hard" ? "Generating" : "Generate new"}</span>
+                                </button>
+                              </div>
                               <div className="mt-1 text-[11px] text-white/60">Ask for clear commitment (time, scheduling, or decision).</div>
                               <input
                                 value={defaultCta}
                                 onChange={(e) => setDefaultCta(e.target.value)}
                                 className="mt-2 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Can we do 15 minutes next week — Tue 11am or Thu 2pm?"
+                                placeholder="Can we do 15 minutes next week - Tue 11am or Thu 2pm?"
                               />
                               <div className="mt-2 text-[11px] text-white/55">
                                 Variable:{" "}
@@ -1228,7 +1274,18 @@ export default function OfferPage() {
                               </div>
                             </div>
                             <div className="rounded-md border border-white/10 bg-black/20 p-3">
-                              <div className="text-sm font-bold text-sky-200">Soft CTA</div>
+                              <div className="flex items-center justify-between">
+                                <div className="text-sm font-bold text-sky-200">Soft CTA</div>
+                                <button
+                                  type="button"
+                                  disabled={isGeneratingCta === "soft"}
+                                  onClick={() => generateNewCta("soft")}
+                                  className="flex items-center gap-1 px-2 py-0.5 rounded border border-sky-400/30 bg-sky-400/10 text-[11px] text-sky-200 hover:bg-sky-400/20 disabled:opacity-50"
+                                >
+                                  {isGeneratingCta === "soft" ? <InlineSpinner className="h-3 w-3" /> : null}
+                                  <span>{isGeneratingCta === "soft" ? "Generating" : "Generate new"}</span>
+                                </button>
+                              </div>
                               <div className="mt-1 text-[11px] text-white/60">Ask for a low-friction response (easy yes/no or routing).</div>
                               <input
                                 value={softCta}
@@ -1240,6 +1297,33 @@ export default function OfferPage() {
                                 Variable:{" "}
                                 <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
                                   {"{{offer.soft_cta}}"}
+                                </code>
+                              </div>
+                            </div>
+                            <div className="rounded-md border border-white/10 bg-black/20 p-3">
+                              <div className="flex items-center justify-between">
+                                <div className="text-sm font-bold text-emerald-200">Personalized CTA</div>
+                                <button
+                                  type="button"
+                                  disabled={isGeneratingCta === "personalized"}
+                                  onClick={() => generateNewCta("personalized")}
+                                  className="flex items-center gap-1 px-2 py-0.5 rounded border border-emerald-400/30 bg-emerald-400/10 text-[11px] text-emerald-200 hover:bg-emerald-400/20 disabled:opacity-50"
+                                >
+                                  {isGeneratingCta === "personalized" ? <InlineSpinner className="h-3 w-3" /> : null}
+                                  <span>{isGeneratingCta === "personalized" ? "Generating" : personalizedCta ? "Generate new" : "Generate"}</span>
+                                </button>
+                              </div>
+                              <div className="mt-1 text-[11px] text-white/60">Tailored to the role's pain points and your expertise. Click Generate to create one.</div>
+                              <input
+                                value={personalizedCta}
+                                onChange={(e) => setPersonalizedCta(e.target.value)}
+                                className="mt-2 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Click Generate to create a CTA specific to this role and company."
+                              />
+                              <div className="mt-2 text-[11px] text-white/55">
+                                Variable:{" "}
+                                <code className="px-1.5 py-0.5 rounded border border-white/10 bg-black/30 text-emerald-200">
+                                  {"{{offer.personalized_cta}}"}
                                 </code>
                               </div>
                             </div>
