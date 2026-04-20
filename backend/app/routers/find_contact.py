@@ -552,28 +552,27 @@ def _painpoint_phrase(pain: str) -> str:
 def _deterministic_improve_linkedin_note(req: ImproveLinkedInNoteRequest) -> str:
     name = (req.contact_name or "").strip()
     first = (name.split()[0] if name else "").strip() or "there"
-    company = (req.contact_company or "").strip() or "your team"
-    title = (req.contact_title or "").strip()
+    company = (req.contact_company or "").strip()
     sol = (req.solution or "").strip()
-    metric = (req.metric or "").strip()
+    painpoint = (req.painpoint or "").strip()
 
-    # Keep it warm/casual but professional; no role/job language.
     bits: List[str] = [f"Hi {first},"]
-    bits.append("I reviewed your profile and wanted to connect.")
-    if title and company:
-        bits.append(f"Your work as {title} at {company} stood out.")
+
+    # Bridge: shared industry/community framing, not title-targeting.
+    if painpoint and company:
+        bits.append(f"I enjoy connecting with leaders in {painpoint.lower().split(',')[0].strip()}, always good to expand the network with people at firms like {company}.")
     elif company:
-        bits.append(f"Your work at {company} stood out.")
-    if sol and len(sol) <= 72:
-        if metric and len(metric) <= 42:
-            bits.append(f"A bit about me: {sol}, {metric}.")
-        else:
-            bits.append(f"A bit about me: {sol}.")
-    elif metric and len(metric) <= 64:
-        bits.append(f"A bit about me: {metric}.")
+        bits.append(f"I reviewed your profile and wanted to connect - always good to expand the network with people at {company}.")
+    elif painpoint:
+        bits.append(f"I enjoy connecting with leaders in {painpoint.lower().split(',')[0].strip()}, always good to expand the network.")
     else:
-        bits.append("A bit about me: I enjoy building practical, measurable solutions.")
-    bits.append("Open to connect?")
+        bits.append("I reviewed your profile and wanted to connect.")
+
+    # Value prop: what sender posts about / works on.
+    if sol and len(sol) <= 72:
+        bits.append(f"I post about {sol.rstrip('.')}.")
+
+    bits.append("Let's connect.")
     return " ".join([b.strip() for b in bits if b.strip()])
 
 
@@ -1205,27 +1204,33 @@ async def improve_linkedin_note(request: ImproveLinkedInNoteRequest) -> ImproveL
                 "content": (
                     "You rewrite LinkedIn connection request notes.\n\n"
                     "Goal:\n"
-                    "- Make the message sound human, casual, warm, and personal, while still professional for a first contact.\n\n"
+                    "- Create a warm, community-building connection request that frames the sender and receiver as peers in the same space.\n\n"
                     "Hard constraints:\n"
                     "- Output MUST be valid JSON ONLY (no markdown) with key: note\n"
                     "- note MUST be a single paragraph (no bullets)\n"
                     "- note MUST be <= limit characters\n"
-                    "- Do NOT use em dashes or en dashes (— or –). Use commas/periods/parentheses or simple hyphens.\n"
-                    "- Do NOT include clichés like 'I hope you're doing well'.\n"
+                    "- Do NOT use em dashes or en dashes. Use commas/periods/parentheses or simple hyphens.\n"
+                    "- Do NOT include cliches like 'I hope you're doing well'.\n"
                     "- Do NOT mention that you are an AI.\n"
-                    "- Do NOT fabricate facts.\n\n"
+                    "- Do NOT fabricate facts.\n"
                     "- Do NOT mention applying for a role or job.\n"
-                    "- Do NOT mention 'job title', 'opening', 'application', or 'hiring process'.\n\n"
+                    "- Do NOT mention 'job title', 'opening', 'application', or 'hiring process'.\n"
+                    "- Do NOT mention the contact's specific job title. Saying 'Chief Executive Officer' or 'VP of Engineering' sounds like targeting.\n"
+                    "- Do NOT lead with the sender's accomplishments or metrics. That sounds like a pitch.\n\n"
                     "Rewrite rules:\n"
                     "- You may rewrite from scratch. Do NOT preserve awkward grammar from the input note.\n"
-                    "- Use a clean opening like: 'Hi <first>, I reviewed your profile and wanted to connect.'\n"
-                    "- Include 2-3 short details total across:\n"
-                    "  (a) one profile-based mention about the contact, and\n"
-                    "  (b) one or two short 'about me' points from provided solution/metric context when available.\n"
-                    "- Keep it about the person and connection intent, not a job process.\n\n"
+                    "- Build a BRIDGE between sender and receiver: shared industry, shared interests, or value the sender brings to the network.\n"
+                    "- Frame the connection as community/network building, NOT transactional.\n"
+                    "- If painpoint/industry context is provided, use it to frame shared space (e.g., 'I enjoy connecting with leaders in [industry]').\n"
+                    "- If solution context is provided, frame it as what the sender posts about or works on, NOT as an accomplishment.\n"
+                    "- Good patterns:\n"
+                    "  'I enjoy connecting with leaders in [industry], always good to expand the network with people at firms like [company].'\n"
+                    "  'I work with [industry] leaders across [region], would love to add you to my network.'\n"
+                    "  'I post about [topics]. Let's connect.'\n"
+                    "- End with a soft close like 'Let's connect.' or 'Would love to add you to my network.'\n\n"
                     "Style:\n"
-                    "- Keep it simple: greeting + profile tie-in + 1-2 about-me details + soft close.\n"
-                    "- Use 1-2 short sentences if possible.\n"
+                    "- 2-3 short sentences max. Warm and casual but professional.\n"
+                    "- The note should feel like a peer reaching out, not someone asking for something.\n"
                 ),
             },
             {"role": "user", "content": json.dumps(ctx)},
