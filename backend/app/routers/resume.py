@@ -407,6 +407,8 @@ async def upload_resume(file: UploadFile = File(...)):
         if client.should_use_real_llm and raw_text:
             try:
                 raw = client.summarize_resume(raw_text)
+                if str(raw.get("id") or "").startswith("stub"):
+                    raise ValueError("OpenAI returned stub; falling back to rule-based parser")
                 choices = raw.get("choices") or []
                 msg = (choices[0].get("message") if choices else {}) or {}
                 content_str = str(msg.get("content") or "")
