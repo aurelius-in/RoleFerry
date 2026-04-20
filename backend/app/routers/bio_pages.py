@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import Any, Dict, List, Optional
 import re
 import uuid
@@ -144,12 +144,23 @@ class BioPageDraft(BaseModel):
 
     # deterministic resume section (rendered client-side from resume_extract)
     # we keep the extract here for convenience, but do not invent anything.
-    resume_extract: Dict[str, Any] = Field(default_factory=dict)
+    resume_extract: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
     # optional links
     portfolio_url: str = ""
 
     theme: BioPageTheme = Field(default_factory=BioPageTheme)
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_nulls(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if data.get("resume_extract") is None:
+                data["resume_extract"] = {}
+            for k in ("proof_points", "fit_points", "work_style_points"):
+                if data.get(k) is None:
+                    data[k] = []
+        return data
 
 
 class GenerateBioPageRequest(BaseModel):

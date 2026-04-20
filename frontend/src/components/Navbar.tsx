@@ -96,7 +96,7 @@ export default function Navbar() {
   async function logout() {
     try {
       await api("/auth/logout", "POST");
-      localStorage.removeItem("rf_user");
+      localStorage.clear();
       router.push("/login");
       router.refresh();
     } catch {}

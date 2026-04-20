@@ -252,8 +252,37 @@ def _looks_like_name(s: str) -> bool:
     if not re.match(r"^[A-Z][a-z]+(?:\s[A-Z][a-z]+){1,2}$", t):
         return False
     parts = [p.strip().lower() for p in t.split() if p.strip()]
-    # Avoid page/navigation titles being mis-detected as "people"
     if any(p in _NAME_STOPWORDS for p in parts):
+        return False
+    return True
+
+
+def _is_real_person(name: str, title: str) -> bool:
+    """Filter out entries that are clearly not real people (product names, generic titles used as names, etc.)."""
+    n = (name or "").strip()
+    t = (title or "").strip().lower()
+    if not n or len(n) < 3:
+        return False
+    nl = n.lower()
+    # Name contains title keywords — likely a title mis-parsed as a name
+    if any(k in nl for k in ["chief", "officer", "director", "board", "administrative", "manager", "coordinator"]):
+        return False
+    # Name contains "or" joining two things — e.g. "Chief Administrative Officer or Board of Directors"
+    if " or " in nl:
+        return False
+    # Only one word (real names have at least first + last)
+    if len(n.split()) < 2:
+        return False
+    # Name is mostly digits or symbols
+    alpha = sum(1 for c in n if c.isalpha())
+    if alpha < len(n) * 0.6:
+        return False
+    # Name word appears in product/navigation stopwords
+    parts = [w.lower() for w in n.split() if w.strip()]
+    if any(p in _NAME_STOPWORDS for p in parts):
+        return False
+    # Name is suspiciously long (> 5 words)
+    if len(parts) > 5:
         return False
     return True
 
@@ -479,6 +508,10 @@ class ImproveLinkedInNoteRequest(BaseModel):
     solution: Optional[str] = None
     metric: Optional[str] = None
     limit: Optional[int] = 200
+    interesting_facts: Optional[List[str]] = None
+    post_topics: Optional[List[str]] = None
+    profile_highlights: Optional[List[str]] = None
+    company_theme: Optional[str] = None
 
 
 class ImproveLinkedInNoteResponse(BaseModel):
@@ -550,30 +583,126 @@ def _painpoint_phrase(pain: str) -> str:
 
 
 def _deterministic_improve_linkedin_note(req: ImproveLinkedInNoteRequest) -> str:
+    import hashlib as _hashlib
+
     name = (req.contact_name or "").strip()
     first = (name.split()[0] if name else "").strip() or "there"
     company = (req.contact_company or "").strip()
     sol = (req.solution or "").strip()
     painpoint = (req.painpoint or "").strip()
+    pain_short = _painpoint_phrase(painpoint) if painpoint else ""
 
-    bits: List[str] = [f"Hi {first},"]
+    facts = [str(f).strip() for f in (req.interesting_facts or []) if str(f).strip()][:3]
+    topics = [str(t).strip() for t in (req.post_topics or []) if str(t).strip()][:3]
+    highlights = [str(h).strip() for h in (req.profile_highlights or []) if str(h).strip()][:3]
+    theme = (req.company_theme or "").strip()
 
-    # Bridge: shared industry/community framing, not title-targeting.
-    if painpoint and company:
-        bits.append(f"I enjoy connecting with leaders in {painpoint.lower().split(',')[0].strip()}, always good to expand the network with people at firms like {company}.")
-    elif company:
-        bits.append(f"I reviewed your profile and wanted to connect - always good to expand the network with people at {company}.")
-    elif painpoint:
-        bits.append(f"I enjoy connecting with leaders in {painpoint.lower().split(',')[0].strip()}, always good to expand the network.")
+    # Pick the best fact/topic (short enough for a connection note).
+    best_fact = ""
+    for f in facts:
+        if 10 < len(f) <= 90:
+            best_fact = f.rstrip(".")
+            break
+    best_topic = ""
+    for t in topics:
+        if 5 < len(t) <= 60:
+            best_topic = t.rstrip(".")
+            break
+    best_highlight = ""
+    for h in highlights:
+        if 10 < len(h) <= 80:
+            best_highlight = h.rstrip(".")
+            break
+
+    # Use a hash of the contact name to pick a template variant for variety.
+    seed = int(_hashlib.md5((name + company).encode()).hexdigest()[:8], 16)
+
+    # Build candidate note strategies ordered by personalization quality.
+    candidates: List[str] = []
+
+    # Strategy 1: Reference a specific fact about the contact.
+    if best_fact and company:
+        candidates.append(
+            f"Hi {first}, I came across your work at {company} and was impressed by {best_fact}. "
+            f"I work in a similar space and would love to connect."
+        )
+    elif best_fact:
+        candidates.append(
+            f"Hi {first}, I noticed {best_fact} and found it really compelling. "
+            f"Would love to connect and follow your work."
+        )
+
+    # Strategy 2: Reference their post topics.
+    if best_topic and company:
+        candidates.append(
+            f"Hi {first}, your perspective on {best_topic} caught my attention. "
+            f"I work on related problems and always appreciate connecting with thoughtful people at {company}."
+        )
+    elif best_topic:
+        candidates.append(
+            f"Hi {first}, I have been following discussions around {best_topic} and liked your take. "
+            f"Would be great to connect."
+        )
+
+    # Strategy 3: Reference a profile highlight.
+    if best_highlight and company:
+        candidates.append(
+            f"Hi {first}, {best_highlight} really stood out on your profile. "
+            f"I am building in a similar area and would love to have you in my network."
+        )
+
+    # Strategy 4: Company theme + shared space.
+    if theme and len(theme) <= 80 and company:
+        theme_clean = theme.split("\n")[0].strip().rstrip(".")
+        if 10 < len(theme_clean) <= 70:
+            candidates.append(
+                f"Hi {first}, {company}'s focus on {theme_clean.lower()} resonates with the work I do. "
+                f"Would love to connect and exchange ideas."
+            )
+
+    # Strategy 5: Pain point bridge (shared domain interest).
+    if pain_short and company:
+        candidates.append(
+            f"Hi {first}, I have been focused on {pain_short} and noticed {company} is tackling similar challenges. "
+            f"Would love to connect."
+        )
+    elif pain_short:
+        candidates.append(
+            f"Hi {first}, I spend a lot of time thinking about {pain_short}. "
+            f"Your background suggests we are in a similar space. Let's connect."
+        )
+
+    # Strategy 6: Company flattery + value add.
+    if company and sol and len(sol) <= 72:
+        candidates.append(
+            f"Hi {first}, I have been following what {company} is building and it is impressive work. "
+            f"I focus on {sol.rstrip('.')} and think we would have a lot to talk about."
+        )
+
+    # Strategy 7: Generic but warm (last resort).
+    if company:
+        generic_variants = [
+            f"Hi {first}, the work coming out of {company} has caught my eye. I would love to connect and learn more about what you are building.",
+            f"Hi {first}, I have a lot of respect for what {company} is doing. Always looking to connect with sharp people in the space.",
+            f"Hi {first}, your background at {company} is impressive. I work in a related area and would value having you in my network.",
+        ]
+        candidates.append(generic_variants[seed % len(generic_variants)])
     else:
-        bits.append("I reviewed your profile and wanted to connect.")
+        candidates.append(
+            f"Hi {first}, your profile stood out and I think we are in a similar space. Would love to connect."
+        )
 
-    # Value prop: what sender posts about / works on.
-    if sol and len(sol) <= 72:
-        bits.append(f"I post about {sol.rstrip('.')}.")
+    # Pick the best candidate (most personalized = first in list), but use seed for variety
+    # when multiple good options exist.
+    if len(candidates) >= 3:
+        # Top 3 are all good; rotate among them for variety.
+        note = candidates[seed % min(3, len(candidates))]
+    elif candidates:
+        note = candidates[0]
+    else:
+        note = f"Hi {first}, would love to connect and exchange ideas."
 
-    bits.append("Let's connect.")
-    return " ".join([b.strip() for b in bits if b.strip()])
+    return note
 
 
 @router.post("/search", response_model=ContactSearchResponse)
@@ -823,7 +952,7 @@ async def search_contacts(request: ContactSearchRequest):
                 logger.info("Web scrape: no working leadership/team page found for domain='%s'", domain)
 
         # 3) Try OpenAI to identify public personas (supplements PDL + web scraping)
-        if len(contacts) + len(pdl_contacts) < 15 and settings.openai_api_key and _budget_ok(10.0):
+        if len(contacts) + len(pdl_contacts) < 25 and settings.openai_api_key and _budget_ok(10.0):
             try:
                 client = get_openai_client()
                 # Ask GPT to identify likely decision makers based on its training data (broad knowledge).
@@ -1004,6 +1133,9 @@ async def search_contacts(request: ContactSearchRequest):
                         contacts = filtered
             except Exception:
                 logger.exception("LLM contact relevance audit failed (non-blocking)")
+
+        # Filter out non-person entries (product names, garbled titles used as names, etc.)
+        contacts = [c for c in contacts if _is_real_person(c.name, c.title)]
 
         # Apply seniority filter from UI (if provided).
         seniority_csv = (request.seniority or "").strip()
@@ -1195,6 +1327,10 @@ async def improve_linkedin_note(request: ImproveLinkedInNoteRequest) -> ImproveL
             "painpoint": (request.painpoint or "").strip(),
             "solution": (request.solution or "").strip(),
             "metric": (request.metric or "").strip(),
+            "interesting_facts": [str(f).strip() for f in (request.interesting_facts or []) if str(f).strip()][:3],
+            "post_topics": [str(t).strip() for t in (request.post_topics or []) if str(t).strip()][:3],
+            "profile_highlights": [str(h).strip() for h in (request.profile_highlights or []) if str(h).strip()][:3],
+            "company_theme": (request.company_theme or "").strip(),
             "limit": limit,
         }
 
@@ -1202,35 +1338,34 @@ async def improve_linkedin_note(request: ImproveLinkedInNoteRequest) -> ImproveL
             {
                 "role": "system",
                 "content": (
-                    "You rewrite LinkedIn connection request notes.\n\n"
-                    "Goal:\n"
-                    "- Create a warm, community-building connection request that frames the sender and receiver as peers in the same space.\n\n"
+                    "You write LinkedIn connection request notes.\n\n"
+                    "Goal: Write a short, personalized note that makes the contact want to accept. "
+                    "Each note must feel unique to THIS person, not a template.\n\n"
+                    "PERSONALIZATION PRIORITY (use the FIRST one that has data):\n"
+                    "1. interesting_facts: Reference something specific they did or said. E.g., 'Your work on [fact] really resonated with me.'\n"
+                    "2. post_topics: Reference what they post about. E.g., 'Your perspective on [topic] is sharp, I have been thinking about similar problems.'\n"
+                    "3. profile_highlights: Reference a career highlight. E.g., 'What you built at [company] is impressive.'\n"
+                    "4. company_theme: Reference something about their company. E.g., '[Company]'s approach to [theme] is really interesting.'\n"
+                    "5. painpoint: Frame a shared domain interest. E.g., 'I spend a lot of time on [pain area] too.'\n"
+                    "6. Only if NOTHING above is available: use company name for a warm but brief note.\n\n"
+                    "EXAMPLES of great notes:\n"
+                    "- 'Hi Sarah, your post on scaling observability at Datadog was spot-on. I have been working on similar challenges and would love to swap notes.'\n"
+                    "- 'Hi Marcus, what you built with the real-time fraud engine at Stripe is impressive. I work in a similar space and would value connecting.'\n"
+                    "- 'Hi Priya, I noticed your talk on ML pipeline reliability. That is exactly the problem I have been focused on. Would love to connect.'\n"
+                    "- 'Hi James, Acme's approach to developer experience is really thoughtful. I focus on related problems and think we would have a lot in common.'\n\n"
                     "Hard constraints:\n"
-                    "- Output MUST be valid JSON ONLY (no markdown) with key: note\n"
-                    "- note MUST be a single paragraph (no bullets)\n"
+                    "- Output MUST be valid JSON ONLY: {\"note\": \"...\"}\n"
+                    "- note MUST be a single paragraph, 2-3 sentences max\n"
                     "- note MUST be <= limit characters\n"
-                    "- Do NOT use em dashes or en dashes. Use commas/periods/parentheses or simple hyphens.\n"
-                    "- Do NOT include cliches like 'I hope you're doing well'.\n"
-                    "- Do NOT mention that you are an AI.\n"
-                    "- Do NOT fabricate facts.\n"
-                    "- Do NOT mention applying for a role or job.\n"
-                    "- Do NOT mention 'job title', 'opening', 'application', or 'hiring process'.\n"
-                    "- Do NOT mention the contact's specific job title. Saying 'Chief Executive Officer' or 'VP of Engineering' sounds like targeting.\n"
-                    "- Do NOT lead with the sender's accomplishments or metrics. That sounds like a pitch.\n\n"
-                    "Rewrite rules:\n"
-                    "- You may rewrite from scratch. Do NOT preserve awkward grammar from the input note.\n"
-                    "- Build a BRIDGE between sender and receiver: shared industry, shared interests, or value the sender brings to the network.\n"
-                    "- Frame the connection as community/network building, NOT transactional.\n"
-                    "- If painpoint/industry context is provided, use it to frame shared space (e.g., 'I enjoy connecting with leaders in [industry]').\n"
-                    "- If solution context is provided, frame it as what the sender posts about or works on, NOT as an accomplishment.\n"
-                    "- Good patterns:\n"
-                    "  'I enjoy connecting with leaders in [industry], always good to expand the network with people at firms like [company].'\n"
-                    "  'I work with [industry] leaders across [region], would love to add you to my network.'\n"
-                    "  'I post about [topics]. Let's connect.'\n"
-                    "- End with a soft close like 'Let's connect.' or 'Would love to add you to my network.'\n\n"
-                    "Style:\n"
-                    "- 2-3 short sentences max. Warm and casual but professional.\n"
-                    "- The note should feel like a peer reaching out, not someone asking for something.\n"
+                    "- Do NOT use em dashes or en dashes\n"
+                    "- Do NOT mention applying for a role, job openings, or hiring\n"
+                    "- Do NOT mention the contact's specific job title (it sounds like 'you can help me get a job')\n"
+                    "- Do NOT open with 'I noticed you work at [Company]' (it sounds like surveillance)\n"
+                    "- Do NOT lead with the sender's metrics or accomplishments\n"
+                    "- Do NOT fabricate facts; only reference what is provided in the context\n"
+                    "- Do NOT be generic. 'I reviewed your profile' is lazy. Every note must reference something SPECIFIC.\n"
+                    "- End with a natural close: 'Would love to connect.' or similar\n\n"
+                    "Style: Warm, genuine, peer-to-peer. Like a thoughtful professional who actually looked at their profile.\n"
                 ),
             },
             {"role": "user", "content": json.dumps(ctx)},

@@ -197,12 +197,28 @@ export default function DeliverabilityLaunchPage() {
             if (!cid) return;
             const draft = draftsById[cid] || "";
             if (!draft) return;
+            const research = readResearchForContact(cid) || {};
+            const bio = Array.isArray(research?.contact_bios) ? research.contact_bios[0] : null;
+            const facts = (Array.isArray((bio as any)?.interesting_facts)
+              ? (bio as any).interesting_facts.map((f: any) => String(f?.fact || f || "").trim()).filter(Boolean)
+              : []).slice(0, 3);
+            const topics = (Array.isArray((bio as any)?.post_topics)
+              ? (bio as any).post_topics.map((t: any) => String(t || "").trim()).filter(Boolean)
+              : []).slice(0, 3);
+            const highlights = (Array.isArray((bio as any)?.public_profile_highlights)
+              ? (bio as any).public_profile_highlights.map((h: any) => String(h || "").trim()).filter(Boolean)
+              : []).slice(0, 3);
+            const theme = String(research?.theme || "").trim();
             const res = await api<{ note: string; used_ai?: boolean }>("/find-contact/improve-linkedin-note", "POST", {
               note: draft,
               contact_name: String(c?.name || "").trim() || undefined,
               contact_title: String(c?.title || "").trim() || undefined,
               contact_company: String(c?.company || "").trim() || undefined,
               solution: solution || undefined,
+              interesting_facts: facts.length ? facts : undefined,
+              post_topics: topics.length ? topics : undefined,
+              profile_highlights: highlights.length ? highlights : undefined,
+              company_theme: theme || undefined,
               limit: 280,
             });
             const improved = String(res?.note || "").replaceAll("\u2014", "-").replaceAll("\u2013", "-").replace(/\s+/g, " ").trim();
