@@ -97,6 +97,9 @@ function metricLine(metric: any, value: any, context: any) {
     if (!t) return "";
     return /[.!?]$/.test(t) ? t : `${t}.`;
   };
+  if (c && m && c.toLowerCase().includes(m.toLowerCase())) {
+    return endSentence(c);
+  }
   if (m && v && c) {
     const byPart = /^by\b/i.test(v) ? `${m} ${v}` : `${m} by ${v}`;
     return `${endSentence(byPart)} ${endSentence(c)}`.trim();
@@ -106,7 +109,7 @@ function metricLine(metric: any, value: any, context: any) {
     return endSentence(byPart);
   }
   if (m && c) return `${endSentence(m)} ${endSentence(c)}`.trim();
-  return m || v || c;
+  return c || m || v;
 }
 
 function ensureSentenceEnd(s: string): string {
@@ -124,24 +127,16 @@ function painPointToOutcome(raw: string): string {
   let s = String(raw || "").trim();
   if (!s) return "";
   s = s
-    .replace(/^(the\s+)?need\s+for\s+(a\s+)?/i, "build ")
+    .replace(/^(the\s+)?need\s+for\s+/i, "")
     .replace(/^(the\s+)?need\s+to\s+/i, "")
-    .replace(/^(the\s+)?lack\s+of\s+(a\s+)?/i, "strengthen ")
-    .replace(/^(the\s+)?absence\s+of\s+(a\s+)?/i, "establish ")
-    .replace(/^(the\s+)?challenge\s+of\s+/i, "tackle ")
-    .replace(/^(the\s+)?difficulty\s+(of|in)\s+/i, "simplify ")
-    .replace(/^(the\s+)?requirement\s+(for|to)\s+/i, "deliver ")
+    .replace(/^(the\s+)?lack\s+of\s+/i, "")
+    .replace(/^(the\s+)?absence\s+of\s+/i, "")
+    .replace(/^(the\s+)?challenge\s+of\s+/i, "")
+    .replace(/^(the\s+)?difficulty\s+(of|in)\s+/i, "")
+    .replace(/^(the\s+)?requirement\s+(for|to)\s+/i, "")
     .replace(/\.\s*$/, "")
     .trim();
   s = lowerFirst(s);
-  if (/^(a|an|the|better|more|improved|scalable|robust|reliable|strong|new|solid|effective)\s/i.test(s)) {
-    s = `build ${s}`;
-  }
-  // Gerund phrases ("enhancing developer productivity") → strip gerund, prepend verb
-  if (/^[a-z]\w+ing\s/i.test(s) && !/^(build|deliver|establish|strengthen|tackle|simplify|turn)/i.test(s)) {
-    const rest = s.slice(s.indexOf(" ") + 1).trim();
-    if (rest) s = `elevate ${rest}`;
-  }
   if (s.length > 60) {
     const short = s.split(/[,;]/)[0]?.trim();
     if (short && short.length >= 15) s = short;
@@ -344,14 +339,18 @@ export default function OfferPage() {
         : "";
 
     let seed = "";
-    if (outcomeRaw) {
-      seed = `I ${outcomeRaw}.`;
+    if (outcomeRaw && title) {
+      seed = `${title} focused on ${outcomeRaw}.`;
+    } else if (outcomeRaw && skillPhrase) {
+      seed = `I help teams achieve ${outcomeRaw} through ${skillPhrase}.`;
+    } else if (outcomeRaw) {
+      seed = `I help organizations achieve ${outcomeRaw}.`;
     } else if (title && skillPhrase) {
-      seed = `${title} who turns ${skillPhrase} into real results.`;
+      seed = `${title} specializing in ${skillPhrase}.`;
     } else if (title) {
-      seed = `${title} who helps teams ship what matters.`;
+      seed = `${title} who helps teams deliver measurable outcomes.`;
     } else if (skillPhrase) {
-      seed = `I turn ${skillPhrase} into real results.`;
+      seed = `I help teams deliver results through ${skillPhrase}.`;
     }
     seed = seed.replace(/\.\./g, ".").replace(/^i\s/i, "I ");
 
@@ -849,7 +848,7 @@ export default function OfferPage() {
                                               const arr = [...(pps || [])];
                                               const idx = arr.findIndex((x) => !String(x || "").trim());
                                               const t = idx >= 0 ? idx : Math.min(arr.length - 1, 5);
-                                              arr[t] = `Pain point: ${clampLines(p, 120)}`;
+                                              arr[t] = clampLines(p, 130);
                                               return arr.slice(0, 6);
                                             });
                                           }
