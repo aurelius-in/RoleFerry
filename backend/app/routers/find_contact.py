@@ -214,6 +214,34 @@ _NAME_STOPWORDS = {
     "privacy",
     "terms",
     "google",
+    "draw",
+    "design",
+    "board",
+    "canvas",
+    "studio",
+    "cloud",
+    "platform",
+    "tools",
+    "features",
+    "solutions",
+    "services",
+    "enterprise",
+    "connect",
+    "share",
+    "create",
+    "build",
+    "explore",
+    "discover",
+    "learn",
+    "start",
+    "pricing",
+    "support",
+    "blog",
+    "docs",
+    "community",
+    "resources",
+    "login",
+    "signup",
 }
 
 
@@ -245,17 +273,39 @@ def _looks_like_title(s: str) -> bool:
 
 def _infer_level(title: str) -> str:
     low = (title or "").lower()
-    if any(k in low for k in ["chief", "ceo", "cto", "cfo", "coo"]):
-        return "C-Level"
-    if "vp" in low or "vice president" in low:
+    if any(k in low for k in ["chief", "ceo", "cto", "cfo", "coo", "founder", "president"]):
+        return "C-Suite"
+    if "vp" in low or "vice president" in low or "svp" in low:
         return "VP"
-    if "director" in low:
+    if "director" in low or "head" in low:
         return "Director"
-    if "head" in low:
-        return "Head"
     if "manager" in low:
         return "Manager"
-    return "Lead"
+    if any(k in low for k in ["senior", "staff", "principal", "lead", "sr."]):
+        return "Senior"
+    return "Senior"
+
+
+def _matches_seniority_filter(level: str, seniority_csv: str) -> bool:
+    if not seniority_csv:
+        return True
+    allowed = {s.strip().lower() for s in seniority_csv.split(",") if s.strip()}
+    if not allowed:
+        return True
+    lvl = (level or "").strip().lower()
+    if lvl in allowed:
+        return True
+    aliases = {
+        "c-suite": {"c-level", "c-suite", "executive"},
+        "c-level": {"c-suite", "c-level", "executive"},
+        "vp": {"vp", "vice president"},
+        "director": {"director", "head"},
+        "head": {"director", "head"},
+        "manager": {"manager"},
+        "senior": {"senior", "lead", "principal", "staff"},
+        "lead": {"senior", "lead"},
+    }
+    return bool(allowed & aliases.get(lvl, set()))
 
 
 def _infer_department(title: str) -> str:
@@ -394,11 +444,10 @@ class ContactSearchRequest(BaseModel):
     query: str
     company: Optional[str] = None
     role: Optional[str] = None
-    # Optional: explicit title filters (Apollo/SalesNav-style). When provided, we try to return
-    # decision makers whose titles match ANY of these options.
     title_filters: Optional[List[str]] = None
     level: Optional[str] = None
-    # Context from upstream steps so we can pick ONLY relevant decision makers for the role being applied for.
+    seniority: Optional[str] = None
+    location: Optional[str] = None
     target_job_title: Optional[str] = None
     candidate_title: Optional[str] = None
     user_mode: Optional[str] = None
@@ -957,8 +1006,14 @@ async def search_contacts(request: ContactSearchRequest):
             except Exception:
                 logger.exception("LLM contact relevance audit failed (non-blocking)")
 
+        # Apply seniority filter from UI (if provided).
+        seniority_csv = (request.seniority or "").strip()
+        if seniority_csv and contacts:
+            filtered = [c for c in contacts if _matches_seniority_filter(c.level, seniority_csv)]
+            if filtered:
+                contacts = filtered
+
         # Hard cap for UI sanity: avoid overwhelming lists.
-        # (Users can widen title filters to change *which* contacts show, not how many.)
         try:
             contacts = (contacts or [])[:24]
         except Exception:
