@@ -1195,13 +1195,16 @@ async def analyze_gap(req: GapAnalysisRequest):
         resp = client.run_chat_completion(
             messages,
             temperature=0.2,
-            max_tokens=900,
+            max_tokens=4096,
             stub_json=stub_json,
-            timeout_seconds=18.0,
-            max_retries=0,
+            timeout_seconds=30.0,
+            max_retries=1,
         )
         content = (((resp or {}).get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+        logger.info("Gap analysis LLM response length: %d chars", len(content))
         data = extract_json_from_text(str(content)) or {}
+        if not data:
+            logger.warning("Gap analysis LLM response could not be parsed. First 500 chars: %s", content[:500])
         items = data.get("ranked") or []
         ranked: List[GapAnalysisItem] = []
         for it in items:
