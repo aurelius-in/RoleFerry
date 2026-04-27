@@ -182,15 +182,19 @@ export default function Settings() {
               </div>
             </div>
 
-            <div className="rounded-lg p-4 bg-white/5 border border-white/10 space-y-2 text-sm">
-              <div>Environment: {s.environment}</div>
-              <div>MV Threshold: {s.mv_threshold}</div>
-              <div>
-                CORS Origins:{" "}
-                {Array.isArray(s.cors_origins) ? s.cors_origins.join(", ") : String(s.cors_origins)}
+            {/* Dev config block — only visible when running locally */}
+            {s.environment === "dev" && typeof window !== "undefined" && /localhost/.test(window.location.hostname) && (
+              <div className="rounded-lg p-4 bg-white/5 border border-white/10 space-y-2 text-sm opacity-60">
+                <div className="text-xs font-medium opacity-70">Developer info</div>
+                <div>Environment: {s.environment}</div>
+                <div>MV Threshold: {s.mv_threshold}</div>
+                <div>
+                  CORS Origins:{" "}
+                  {Array.isArray(s.cors_origins) ? s.cors_origins.join(", ") : String(s.cors_origins)}
+                </div>
+                <div>Instantly Enabled: {String(s.instantly_enabled)}</div>
               </div>
-              <div>Instantly Enabled: {String(s.instantly_enabled)}</div>
-            </div>
+            )}
 
             {sub && (
               <div className="rounded-lg p-4 bg-white/5 border border-white/10 space-y-2 text-sm">
@@ -243,16 +247,21 @@ export default function Settings() {
               </div>
             )}
 
-            <ThresholdForm current={s.mv_threshold} />
             <Citizenship />
-            <div className="text-sm space-x-4">
-              <Link className="underline" href="/replies">
-                Go to Replies tester
-              </Link>
-              <Link className="underline" href="/metrics">
-                Metrics
-              </Link>
-            </div>
+            {/* Dev-only tools — hidden on production deploys */}
+            {typeof window !== "undefined" && /localhost/.test(window.location.hostname) && (
+              <>
+                <ThresholdForm current={s.mv_threshold} />
+                <div className="text-sm space-x-4">
+                  <Link className="underline" href="/replies">
+                    Go to Replies tester
+                  </Link>
+                  <Link className="underline" href="/metrics">
+                    Metrics
+                  </Link>
+                </div>
+              </>
+            )}
           </>
         ) : (
           <div className="text-sm opacity-80">Loading...</div>

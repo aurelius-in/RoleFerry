@@ -1813,6 +1813,21 @@ def _validate_extracted_job(
     if url and _looks_like_job_board_or_listing_url(url):
         return "That looks like a job board/search page. Please open a specific job posting and paste that job’s URL (or paste the job description text)."
 
+    # ATS platforms that render job content via JavaScript (empty HTML shell).
+    _JS_RENDERED_ATS_DOMAINS = [
+        "workforcenow.adp.com",
+        "adp.com/mascsr",
+        "myworkdayjobs.com",
+        "icims.com",
+    ]
+    if url:
+        url_low = url.lower()
+        if any(d in url_low for d in _JS_RENDERED_ATS_DOMAINS):
+            return (
+                "That ATS platform renders job content with JavaScript, so we can’t scrape it directly. "
+                "Please open the job posting in your browser, copy the full description text, and use the ‘Paste text’ tab to import it."
+            )
+
     # Scrapes that only capture header/nav/auth content look like this.
     low = text.lower()
     if any(kw in low for kw in ["enable javascript", "sign in", "log in", "captcha"]) and len(text) < 1200:
@@ -2261,6 +2276,11 @@ async def import_job_description(payload: JobImportRequest):
         if client.should_use_real_llm:
             try:
                 raw = client.extract_job_structure(content)
+                # Guard: when the API fails, the client returns deterministic stub
+                # data (fake titles/companies). Never let stubs overwrite heuristic
+                # extraction — they would replace the real job with nonsense.
+                if raw.get("id") == "stub-chat-completion":
+                    raise RuntimeError("LLM returned stub; skip override")
                 choices = raw.get("choices") or []
                 msg = (choices[0].get("message") if choices else {}) or {}
                 content_str = str(msg.get("content") or "")
@@ -2301,6 +2321,8 @@ async def import_job_description(payload: JobImportRequest):
                             {"role": "user", "content": content},
                         ]
                         raw2 = client.run_chat_completion(retry_messages, temperature=0.0, max_tokens=1400, stub_json={})
+                        if raw2.get("id") == "stub-chat-completion":
+                            raise RuntimeError("LLM retry returned stub")
                         choices2 = raw2.get("choices") or []
                         msg2 = (choices2[0].get("message") if choices2 else {}) or {}
                         content_str2 = str(msg2.get("content") or "")
