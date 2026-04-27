@@ -11,9 +11,19 @@ export default function Navbar() {
   const [dataOpen, setDataOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   
+  // Re-read user from localStorage on every client-side navigation so the
+  // greeting updates after login/register (which write rf_user then navigate).
+  useEffect(() => {
+    const saved = localStorage.getItem("rf_user");
+    if (saved) {
+      try { setUser(JSON.parse(saved)); } catch {}
+    } else {
+      setUser(null);
+    }
+  }, [pathname]);
+
   useEffect(() => {
     // RoleFerry is currently Role-Seeker only.
-    // Keep recruiter mode as a future fallback, but force the app into job-seeker mode now.
     try {
       localStorage.setItem("rf_mode", "job-seeker");
       window.dispatchEvent(new CustomEvent("modeChanged", { detail: "job-seeker" }));
@@ -25,21 +35,12 @@ export default function Navbar() {
       window.dispatchEvent(new CustomEvent("dataModeChanged", { detail: "live" }));
     } catch {}
 
-    const saved = localStorage.getItem("rf_user");
-    if (saved) {
-      try { setUser(JSON.parse(saved)); } catch {}
-    }
-
     (async () => {
       try {
         const resp = await api<any>("/auth/me", "GET");
         if (resp?.user) {
-          const serverUser = resp.user;
-          const localUser = saved ? JSON.parse(saved) : null;
-          if (!localUser || localUser.id !== serverUser.id) {
-            localStorage.setItem("rf_user", JSON.stringify(serverUser));
-            setUser(serverUser);
-          }
+          localStorage.setItem("rf_user", JSON.stringify(resp.user));
+          setUser(resp.user);
         }
       } catch {}
     })();

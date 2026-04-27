@@ -40,7 +40,9 @@ export default function InboxPage() {
   const [replies, setReplies] = useState<Reply[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -56,6 +58,30 @@ export default function InboxPage() {
       setErr(String(e?.message || "Failed to load inbox"));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const syncFromInstantly = async () => {
+    setSyncing(true);
+    setSyncMsg(null);
+    try {
+      const res = await api<{ synced: number; total_checked?: number; message?: string; error?: string }>(
+        "/webhooks/sync-replies", "POST"
+      );
+      if (res?.error) {
+        setSyncMsg(res.error);
+      } else if (res?.message) {
+        setSyncMsg(res.message);
+      } else {
+        setSyncMsg(`Synced ${res?.synced ?? 0} new replies`);
+        if (res?.synced && res.synced > 0) await load();
+      }
+      setTimeout(() => setSyncMsg(null), 4000);
+    } catch (e: any) {
+      setSyncMsg(String(e?.message || "Sync failed"));
+      setTimeout(() => setSyncMsg(null), 5000);
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -105,26 +131,49 @@ export default function InboxPage() {
                 Unified inbox: replies from cold outreach land here regardless of which sending address was used.
               </div>
             </div>
-            <button
-              type="button"
-              onClick={load}
-              disabled={loading}
-              className="px-4 py-2 rounded-full border border-white/10 bg-black/20 text-white/80 hover:bg-white/10 font-semibold text-sm disabled:opacity-50 inline-flex items-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <InlineSpinner className="h-3.5 w-3.5" />
-                  <span>Refreshing</span>
-                </>
-              ) : (
-                "Refresh"
-              )}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={syncFromInstantly}
+                disabled={syncing || loading}
+                className="px-4 py-2 rounded-full border border-blue-400/30 bg-blue-500/10 text-blue-200 hover:bg-blue-500/20 font-semibold text-sm disabled:opacity-50 inline-flex items-center gap-2"
+              >
+                {syncing ? (
+                  <>
+                    <InlineSpinner className="h-3.5 w-3.5" />
+                    <span>Syncing</span>
+                  </>
+                ) : (
+                  "Sync from Instantly"
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={load}
+                disabled={loading}
+                className="px-4 py-2 rounded-full border border-white/10 bg-black/20 text-white/80 hover:bg-white/10 font-semibold text-sm disabled:opacity-50 inline-flex items-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <InlineSpinner className="h-3.5 w-3.5" />
+                    <span>Refreshing</span>
+                  </>
+                ) : (
+                  "Refresh"
+                )}
+              </button>
+            </div>
           </div>
 
           {err ? (
             <div className="mb-6 rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
               {err}
+            </div>
+          ) : null}
+
+          {syncMsg ? (
+            <div className="mb-6 rounded-md border border-blue-400/30 bg-blue-500/10 px-4 py-3 text-sm text-blue-100">
+              {syncMsg}
             </div>
           ) : null}
 
