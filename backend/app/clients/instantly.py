@@ -156,3 +156,41 @@ class InstantlyClient:
         except Exception as e:
             return {"ok": False, "error": str(e)}
 
+    async def get_campaign_leads(self, campaign_id: str, limit: int = 100) -> Dict[str, Any]:
+        """Fetch leads for a campaign with their current status (sent, opened, replied, etc.)."""
+        url = f"{self.base_url}/leads"
+        params = {"campaign_id": campaign_id, "limit": limit}
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                r = await client.get(url, headers=self._headers(), params=params)
+                r.raise_for_status()
+                return {"ok": True, "raw": r.json()}
+        except Exception as e:
+            logger.warning("Instantly get_campaign_leads failed: %s", str(e)[:300])
+            return {"ok": False, "error": str(e)}
+
+    async def get_unibox_replies(self, limit: int = 50) -> Dict[str, Any]:
+        """Fetch recent replies from Instantly's unified inbox."""
+        url = f"{self.base_url}/unibox/emails"
+        params: Dict[str, Any] = {"email_type": "received", "limit": limit}
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                r = await client.get(url, headers=self._headers(), params=params)
+                r.raise_for_status()
+                return {"ok": True, "raw": r.json()}
+        except Exception as e:
+            logger.warning("Instantly get_unibox_replies failed: %s", str(e)[:300])
+            return {"ok": False, "error": str(e)}
+
+    async def get_campaign_summary(self, campaign_id: str) -> Dict[str, Any]:
+        """Get campaign analytics summary (sent, opened, replied counts)."""
+        url = f"{self.base_url}/campaigns/{campaign_id}/analytics"
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                r = await client.get(url, headers=self._headers())
+                r.raise_for_status()
+                return {"ok": True, "raw": r.json()}
+        except Exception as e:
+            logger.warning("Instantly get_campaign_summary failed: %s", str(e)[:300])
+            return {"ok": False, "error": str(e)}
+
