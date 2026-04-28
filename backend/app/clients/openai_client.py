@@ -771,10 +771,13 @@ class OpenAIClient:
                 "role": "system",
                 "content": (
                     "You are a professional email editor for job-seeker outreach.\n"
-                    "Your ONLY job is to polish the draft below so it reads naturally and confidently.\n\n"
+                    "Your job is to rewrite the draft below so it reads like a natural, human-written email.\n\n"
+                    "Primary goal: the email must FLOW. Each sentence should connect logically to the next. "
+                    "It should read like one cohesive thought, not a list of disconnected facts stitched together.\n\n"
                     "Rules:\n"
-                    "- Fix awkward phrasing, run-on sentences, and stiff/robotic language.\n"
-                    "- Ensure smooth paragraph transitions.\n"
+                    "- Rewrite for natural flow: add transitions between ideas, vary sentence structure, make it conversational.\n"
+                    "- If the email jumps abruptly from one topic to another, smooth the transition or reorder for logic.\n"
+                    "- Fix awkward phrasing, run-on sentences, and stiff/robotic/formulaic language.\n"
                     "- Remove duplicate ideas and filler. If the same metric or accomplishment appears twice (e.g., short form then expanded form), keep only the best version.\n"
                     "- Remove any internal signal labels like 'Company theme signal:', 'Market position:', 'Profile highlight:', etc.\n"
                     "- Keep the meaning, facts, names, and specifics identical; do NOT invent new information.\n"
@@ -784,6 +787,7 @@ class OpenAIClient:
                     "- Do NOT use cliche openers ('I hope you are well', etc.).\n"
                     "- Voice: first-person singular (I/me/my).\n"
                     "- Keep the length roughly the same (within 15%).\n"
+                    "- The result should sound like a real person wrote it in one sitting, not like an AI assembled it from parts.\n"
                     f"{cta_instruction}"
                     "\nReturn ONLY valid JSON: {\"subject\": \"...\", \"body\": \"...\"}\n"
                 ),
