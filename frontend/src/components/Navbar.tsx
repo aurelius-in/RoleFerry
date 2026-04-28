@@ -97,10 +97,9 @@ export default function Navbar() {
   async function logout() {
     try {
       await api("/auth/logout", "POST");
-      localStorage.clear();
-      router.push("/login");
-      router.refresh();
     } catch {}
+    localStorage.clear();
+    window.location.href = "/login";
   }
   const hideOnAuth = pathname === "/login";
   if (hideOnAuth) return null;

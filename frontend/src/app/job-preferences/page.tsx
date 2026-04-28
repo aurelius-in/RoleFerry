@@ -144,7 +144,6 @@ const INDUSTRIES = [
   "Social Impact",
   "Venture Capital",
   "VR & AR",
-  "Agriculture",
   "Restaurant Service",
   "Hospitality",
   "Other",
@@ -267,8 +266,10 @@ export default function JobPreferencesPage() {
 
     (async () => {
       try {
+        const rfUser = JSON.parse(localStorage.getItem("rf_user") || "{}");
+        const uid = rfUser?.email || rfUser?.id || "me";
         const resp = await api<JobPreferencesResponse>(
-          "/job-preferences/demo-user",
+          `/job-preferences/${encodeURIComponent(uid)}`,
           "GET"
         );
         if (resp.preferences) {

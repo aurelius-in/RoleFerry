@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import InlineSpinner from "@/components/InlineSpinner";
 
@@ -49,7 +48,6 @@ function humanizeAuthError(err: unknown, mode: Mode): string {
 }
 
 export default function LoginPage() {
-  const router = useRouter();
   const [mode, setMode] = useState<Mode>("login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,7 +102,7 @@ export default function LoginPage() {
         if (resp?.user) localStorage.setItem("rf_user", JSON.stringify(resp.user));
       }
 
-      router.push("/job-preferences");
+      window.location.href = "/job-preferences";
     } catch (e: any) {
       setError(humanizeAuthError(e, mode));
     } finally {

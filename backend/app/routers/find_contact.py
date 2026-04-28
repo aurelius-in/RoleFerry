@@ -5,6 +5,12 @@ from ..services.email_verifier import verify_email_async, get_verification_badge
 from ..clients.openai_client import get_openai_client, extract_json_from_text
 from ..config import settings
 from ..services.pdl_client import PDLClient, extract_person_signals, extract_company_signals
+from ..clients.apollo import (
+    ApolloClient,
+    extract_apollo_person_signals,
+    extract_apollo_company_signals,
+    apollo_seniority_to_level,
+)
 import json
 import logging
 import re
@@ -922,6 +928,67 @@ async def search_contacts(request: ContactSearchRequest):
             except Exception as pdl_err:
                 logger.exception("PDL contact search failed for '%s' (%s); will try other sources", q, str(pdl_err)[:120])
 
+        # 0c) Apollo.io people search (free, no credits, augments PDL)
+        apollo_contacts: List[Contact] = []
+        if settings.apollo_api_key and _budget_ok(12.0):
+            try:
+                apollo = ApolloClient(settings.apollo_api_key, timeout_seconds=min(12.0, _budget_remaining() - 8.0))
+                search_domains = [domain] if domain else None
+                apollo_seniorities = ["owner", "founder", "c_suite", "partner", "vp", "head", "director", "manager"]
+                raw_apollo = apollo.people_search(
+                    organization_domains=search_domains,
+                    person_seniorities=apollo_seniorities,
+                    per_page=50,
+                )
+                apollo_people = apollo.extract_people(raw_apollo)
+                logger.info("Apollo people_search for '%s' returned %d people", q, len(apollo_people))
+
+                for ap in apollo_people:
+                    if not _is_relevant_decision_maker_for_job(ap.title, job_fn):
+                        continue
+                    if title_filters and not _matches_title_filters(ap.title):
+                        continue
+
+                    name = (ap.name or "").strip()
+                    if name and name == name.lower():
+                        name = " ".join([w[:1].upper() + w[1:] for w in name.split()])
+
+                    level = apollo_seniority_to_level(ap.seniority) if ap.seniority else _infer_level(ap.title)
+                    loc = ", ".join([x for x in [ap.city, ap.state, ap.country] if x]) or None
+
+                    cid = hashlib.sha256(
+                        f"apollo:{ap.linkedin_url or ''}:{ap.name}:{ap.title}".encode("utf-8", errors="ignore")
+                    ).hexdigest()[:12]
+
+                    apollo_contacts.append(
+                        Contact(
+                            id=f"apo_{cid}",
+                            name=name or ap.name,
+                            title=ap.title,
+                            email=ap.email or "",
+                            linkedin_url=ap.linkedin_url,
+                            confidence=0.88,
+                            verification_status="unknown",
+                            verification_score=None,
+                            company=ap.company or q,
+                            department=_infer_department(ap.title),
+                            level=level,
+                            email_source="apollo" if ap.email else None,
+                            location_name=loc,
+                            location_country=ap.country,
+                            job_company_website=ap.org_website,
+                            job_company_linkedin_url=ap.org_linkedin_url,
+                            job_company_industry=ap.org_industry,
+                            job_company_size=str(ap.org_employee_count) if ap.org_employee_count else None,
+                            person_signals=[ContactSignal(**s) for s in extract_apollo_person_signals(ap)],
+                            company_signals=[ContactSignal(**s) for s in extract_apollo_company_signals(ap)],
+                        )
+                    )
+
+                logger.info("Apollo returned %d relevant contacts for '%s'", len(apollo_contacts), q)
+            except Exception as apollo_err:
+                logger.exception("Apollo contact search failed for '%s' (%s); continuing with other sources", q, str(apollo_err)[:120])
+
         # 1) Fetch leadership/team page(s) and extract names/titles
         contacts: List[Contact] = []
         if domain and _budget_ok(10.0):
@@ -951,8 +1018,8 @@ async def search_contacts(request: ContactSearchRequest):
             else:
                 logger.info("Web scrape: no working leadership/team page found for domain='%s'", domain)
 
-        # 3) Try OpenAI to identify public personas (supplements PDL + web scraping)
-        if len(contacts) + len(pdl_contacts) < 25 and settings.openai_api_key and _budget_ok(10.0):
+        # 3) Try OpenAI to identify public personas (supplements PDL + Apollo + web scraping)
+        if len(contacts) + len(pdl_contacts) + len(apollo_contacts) < 25 and settings.openai_api_key and _budget_ok(10.0):
             try:
                 client = get_openai_client()
                 # Ask GPT to identify likely decision makers based on its training data (broad knowledge).
@@ -1005,36 +1072,51 @@ async def search_contacts(request: ContactSearchRequest):
             except Exception:
                 logger.exception("OpenAI contact backup failed")
 
-        # 4) Combine PDL contacts with web-scraped / GPT contacts, de-duping by name.
-        # When both sources have the same person, merge their data (keep the richer one
-        # but backfill any missing fields from the other).
+        # 4) Combine PDL + Apollo + web-scraped / GPT contacts, de-duping by name.
+        # When multiple sources have the same person, merge fields (keep richer record,
+        # backfill missing fields from others).
+        def _merge_into(existing: Contact, incoming: Contact) -> None:
+            if not existing.email and incoming.email:
+                existing.email = incoming.email
+                existing.email_source = incoming.email_source
+            if not existing.linkedin_url and incoming.linkedin_url:
+                existing.linkedin_url = incoming.linkedin_url
+            if not existing.location_name and incoming.location_name:
+                existing.location_name = incoming.location_name
+            if not existing.location_country and incoming.location_country:
+                existing.location_country = incoming.location_country
+            if not existing.job_company_website and incoming.job_company_website:
+                existing.job_company_website = incoming.job_company_website
+            if not existing.job_company_linkedin_url and incoming.job_company_linkedin_url:
+                existing.job_company_linkedin_url = incoming.job_company_linkedin_url
+            if not existing.job_company_industry and incoming.job_company_industry:
+                existing.job_company_industry = incoming.job_company_industry
+            if not existing.job_company_size and incoming.job_company_size:
+                existing.job_company_size = incoming.job_company_size
+            if (not existing.person_signals or len(existing.person_signals) == 0) and incoming.person_signals:
+                existing.person_signals = incoming.person_signals
+            if (not existing.company_signals or len(existing.company_signals) == 0) and incoming.company_signals:
+                existing.company_signals = incoming.company_signals
+
         seen_names: dict[str, int] = {}
         combined: List[Contact] = []
-        for c in pdl_contacts:
-            key = (c.name or "").strip().lower()
-            if key and key not in seen_names:
-                seen_names[key] = len(combined)
-                combined.append(c)
-        for c in contacts:
-            key = (c.name or "").strip().lower()
-            if not key:
-                continue
-            if key in seen_names:
-                existing = combined[seen_names[key]]
-                if not existing.email and c.email:
-                    existing.email = c.email
-                    existing.email_source = c.email_source
-                if not existing.linkedin_url and c.linkedin_url:
-                    existing.linkedin_url = c.linkedin_url
-                if not existing.location_name and c.location_name:
-                    existing.location_name = c.location_name
-                if not existing.job_company_website and c.job_company_website:
-                    existing.job_company_website = c.job_company_website
-            else:
-                seen_names[key] = len(combined)
-                combined.append(c)
+        # PDL first (highest data richness), then Apollo, then web/GPT
+        for source_list in [pdl_contacts, apollo_contacts, contacts]:
+            for c in source_list:
+                key = (c.name or "").strip().lower()
+                if not key:
+                    continue
+                if key in seen_names:
+                    _merge_into(combined[seen_names[key]], c)
+                else:
+                    seen_names[key] = len(combined)
+                    combined.append(c)
         contacts = combined
-        logger.info("Combined contacts for '%s': %d PDL + %d other = %d total", q, len(pdl_contacts), len(contacts) - len(pdl_contacts), len(contacts))
+        logger.info(
+            "Combined contacts for '%s': %d PDL + %d Apollo + %d other = %d total",
+            q, len(pdl_contacts), len(apollo_contacts),
+            len(contacts) - len(pdl_contacts) - len(apollo_contacts), len(contacts),
+        )
 
         # 4c) Enrich contacts that have no signals via PDL Person Enrichment API.
         if settings.pdl_api_key and _budget_ok(12.0):
@@ -1063,6 +1145,51 @@ async def search_contacts(request: ContactSearchRequest):
                         enrich_count += 1
                 except Exception:
                     logger.debug("PDL person_enrich failed for %s; skipping", c.name)
+
+        # 4d) Apollo person enrichment fallback for contacts still missing signals/email.
+        if settings.apollo_api_key and _budget_ok(8.0):
+            apollo_enricher = ApolloClient(settings.apollo_api_key, timeout_seconds=min(8.0, _budget_remaining() - 5.0))
+            apo_enrich_count = 0
+            for c in contacts:
+                if apo_enrich_count >= 4 or not _budget_ok(5.0):
+                    break
+                has_signals = c.person_signals and len(c.person_signals) > 0
+                has_email = bool(c.email and c.email.strip() and not c.email.endswith("@example.com"))
+                if has_signals and has_email:
+                    continue
+                try:
+                    name_parts = (c.name or "").strip().split()
+                    first_name = name_parts[0] if name_parts else ""
+                    last_name = name_parts[-1] if len(name_parts) >= 2 else ""
+                    raw = apollo_enricher.person_enrich(
+                        first_name=first_name,
+                        last_name=last_name,
+                        organization_name=c.company or q,
+                        linkedin_url=c.linkedin_url or "",
+                        domain=domain,
+                    )
+                    person = raw.get("person") or {}
+                    if person:
+                        apo_email = str(person.get("email") or "").strip()
+                        if apo_email and not has_email:
+                            c.email = apo_email
+                            c.email_source = "apollo_enrich"
+                        if not has_signals:
+                            headline = str(person.get("headline") or "").strip()
+                            seniority = str(person.get("seniority") or "").strip()
+                            dept_list = person.get("departments") or []
+                            enriched_signals = []
+                            if headline:
+                                enriched_signals.append(ContactSignal(label="Headline", value=headline[:200], category="bio"))
+                            if seniority:
+                                enriched_signals.append(ContactSignal(label="Seniority", value=seniority.replace("_", " ").title(), category="level"))
+                            if dept_list:
+                                enriched_signals.append(ContactSignal(label="Departments", value=", ".join(str(d) for d in dept_list[:4]), category="role"))
+                            if enriched_signals:
+                                c.person_signals = enriched_signals
+                        apo_enrich_count += 1
+                except Exception:
+                    logger.debug("Apollo person_enrich failed for %s; skipping", c.name)
 
         if not contacts:
             logger.warning("No contacts found for '%s' after all sources (PDL=%d, web=%d, GPT=%d)",

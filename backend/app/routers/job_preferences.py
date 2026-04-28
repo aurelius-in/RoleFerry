@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import logging
@@ -816,16 +816,17 @@ async def greenhouse_boards(q: str = ""):
 
 
 @router.post("/save", response_model=JobPreferencesResponse)
-async def save_job_preferences(preferences: JobPreferences):
+async def save_job_preferences(preferences: JobPreferences, request: Request):
     """
-    Save job preferences for a user.
-    In a real implementation, this would save to database.
+    Save job preferences for the authenticated user.
     """
     try:
-        # Always cache for demo continuity (even if Postgres is down)
+        from ..auth import get_current_user_optional
+        auth_user = await get_current_user_optional(request)
+        _user_id = auth_user.email if auth_user else DEMO_USER_ID
+
         store.demo_job_preferences = preferences.model_dump()
 
-        # Persist as structured JSONB against a stubbed demo user (best-effort)
         data_obj = preferences.model_dump()
         try:
             stmt = (
@@ -839,7 +840,7 @@ async def save_job_preferences(preferences: JobPreferences):
                 ).bindparams(bindparam("data", type_=JSONB))
             )
             async with engine.begin() as conn:
-                await conn.execute(stmt, {"user_id": DEMO_USER_ID, "data": data_obj})
+                await conn.execute(stmt, {"user_id": _user_id, "data": data_obj})
         except BaseException:
             pass
 
@@ -898,10 +899,8 @@ async def save_job_preferences(preferences: JobPreferences):
 async def get_job_preferences(user_id: str):
     """
     Get job preferences for a user.
-    In a real implementation, this would fetch from database.
     """
-    # For Week 9, we treat all traffic as a single demo user
-    _user_id = DEMO_USER_ID
+    _user_id = user_id.strip() if user_id and user_id != "me" else DEMO_USER_ID
     try:
         async with engine.begin() as conn:
             result = await conn.execute(
@@ -956,32 +955,9 @@ async def get_job_preferences(user_id: str):
         except Exception:
             pass
 
-    # Fallback to existing mock defaults if nothing stored yet or DB unavailable
-    mock_preferences = JobPreferences(
-        values=["Impactful work", "Work-life balance"],
-        role_categories=["Technical & Engineering"],
-        location_preferences=["Remote", "Hybrid"],
-        work_type=["Remote", "Hybrid"],
-        role_type=["Full-Time"],
-        company_size=["51-200 employees", "201-500 employees"],
-        industries=["Enterprise Software", "AI & Machine Learning"],
-        skills=["Python", "JavaScript", "React"],
-        minimum_salary="$80,000",
-        job_search_status="Actively looking",
-        state=None,
-        user_mode="job-seeker",
-    )
-
     return JobPreferencesResponse(
         success=True,
-        message="Job preferences retrieved successfully",
-        preferences=mock_preferences,
-        helper={
-            "normalized_skills": sorted({s.strip() for s in (mock_preferences.skills or []) if str(s).strip()}),
-            "suggested_skills": ["SQL", "Experimentation", "Analytics", "System design"],
-            "suggested_role_categories": mock_preferences.role_categories[:1],
-            "notes": ["These are seeded demo preferences; edit them to match your target role."],
-        },
+        message="No preferences saved yet",
     )
 
 @router.put("/{user_id}", response_model=JobPreferencesResponse)
@@ -1002,7 +978,8 @@ async def update_job_preferences(user_id: str, preferences: JobPreferences):
             ).bindparams(bindparam("data", type_=JSONB))
         )
         async with engine.begin() as conn:
-            await conn.execute(stmt, {"user_id": DEMO_USER_ID, "data": data_obj})
+            _uid = user_id.strip() if user_id and user_id != "me" else DEMO_USER_ID
+            await conn.execute(stmt, {"user_id": _uid, "data": data_obj})
         return JobPreferencesResponse(
             success=True,
             message="Job preferences updated successfully",
@@ -1017,11 +994,12 @@ async def delete_job_preferences(user_id: str):
     """
     Delete job preferences for a user.
     """
+    _uid = user_id.strip() if user_id and user_id != "me" else DEMO_USER_ID
     try:
         async with engine.begin() as conn:
             await conn.execute(
                 text("DELETE FROM job_preferences WHERE user_id = :user_id"),
-                {"user_id": DEMO_USER_ID},
+                {"user_id": _uid},
             )
         return {"success": True, "message": "Job preferences deleted successfully"}
     except Exception as e:
@@ -1079,7 +1057,6 @@ async def get_industries():
             "Industrial & Manufacturing", "Legal", "Quantitative Finance",
             "Real Estate", "Robotics & Automation", "Social Impact",
             "Venture Capital", "VR & AR",
-            "Agriculture",
             "Restaurant Service",
             "Hospitality",
             "Other",

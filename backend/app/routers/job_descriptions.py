@@ -125,6 +125,20 @@ def _is_bad_title(s: str) -> bool:
     # Titles should not contain explicit pay/rate tokens (these belong in salary_range)
     if re.search(r"\$\s*\d", t) and any(k in low for k in ["/hr", "/hour", "per hour", "hourly", "hr"]):
         return True
+    # Work schedule / metadata labels are never real job titles
+    _BAD_TITLE_EXACT = {
+        "standard", "experience", "requirement", "requirements", "location",
+        "schedule", "hours", "duration", "benefits", "compensation", "salary",
+        "qualifications", "responsibilities", "duties", "education", "summary",
+        "overview", "description", "purpose", "objective", "travel", "relocation",
+        "clearance", "certifications", "contact", "level", "seniority", "type",
+        "about", "availability",
+    }
+    stripped = re.sub(r"\s*\([^)]*\)\s*$", "", low).strip()
+    if stripped in _BAD_TITLE_EXACT:
+        return True
+    if re.search(r"\b(?:mon|tue|wed|thu|fri|sat|sun)(?:\s*[-–/]\s*(?:mon|tue|wed|thu|fri|sat|sun))", low):
+        return True
     return False
 
 
@@ -150,6 +164,37 @@ def _is_bad_company(s: str) -> bool:
         "original job post",
         "company-logo",
         "web-link",
+        # Section headers / metadata labels
+        "experience",
+        "experience required",
+        "requirement",
+        "requirements",
+        "qualifications",
+        "responsibilities",
+        "duties",
+        "benefits",
+        "compensation",
+        "salary",
+        "schedule",
+        "work schedule",
+        "hours",
+        "duration",
+        "availability",
+        "contact",
+        "level",
+        "seniority",
+        "type",
+        "employment type",
+        "job type",
+        "education",
+        "certifications",
+        "summary",
+        "purpose",
+        "objective",
+        "about",
+        "travel",
+        "relocation",
+        "clearance",
     }:
         return True
     if low.startswith(("company-logo", "company logo", "original job post")):
@@ -1353,7 +1398,7 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
         if "." in s and not re.search(r"\b(?:sr|jr|dr)\.\b", low):
             return False
         # "You will ..." / "We are ..." are almost always body copy, not the title.
-        if low.startswith(("you will ", "we are ", "we're ", "we’re ")):
+        if low.startswith(("you will ", "we are ", "we’re ", "we’re ")):
             return False
         # Avoid common section headers and obvious non-titles
         if any(low.startswith(h) for h in ["about us", "about the role", "benefits", "location", "requirements", "qualifications"]):
@@ -1367,6 +1412,22 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
         if "responses managed off linkedin" in low:
             return False
         if "get ai-powered advice" in low or "premium" in low:
+            return False
+        # Reject work schedule / metadata patterns that are never job titles
+        if _is_bad_title(s):
+            return False
+        if re.search(r"\b(?:mon|tue|wed|thu|fri|sat|sun)(?:\s*[-–/]\s*(?:mon|tue|wed|thu|fri|sat|sun))", low):
+            return False
+        stripped_parens = re.sub(r"\s*\([^)]*\)\s*$", "", low).strip()
+        _METADATA_LABELS = {
+            "standard", "experience", "requirement", "requirements", "location",
+            "schedule", "hours", "duration", "benefits", "compensation", "salary",
+            "qualifications", "responsibilities", "duties", "education", "summary",
+            "overview", "description", "purpose", "objective", "travel", "relocation",
+            "clearance", "certifications", "contact", "level", "seniority", "type",
+            "about", "availability", "employment type", "job type", "work schedule",
+        }
+        if stripped_parens in _METADATA_LABELS or low in _METADATA_LABELS:
             return False
         # Prefer lines with role-like tokens, but allow others
         # NOTE: avoid treating "lead ..." imperative sentences as titles by not using bare "lead" here.
@@ -1474,8 +1535,13 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
             "onsite",
             "on-site",
             "full-time",
+            "full time",
             "part-time",
+            "part time",
             "contract",
+            "temporary",
+            "intern",
+            "internship",
             # Title-ish words we never want as a company
             "engineer",
             "engineering",
@@ -1488,6 +1554,39 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
             "teams",
             "logo",
             "company",
+            # Section headers / metadata labels often mis-detected as company
+            "experience",
+            "experience required",
+            "years of experience",
+            "requirement",
+            "requirements",
+            "qualifications",
+            "responsibilities",
+            "duties",
+            "benefits",
+            "compensation",
+            "salary",
+            "schedule",
+            "work schedule",
+            "hours",
+            "duration",
+            "availability",
+            "contact",
+            "level",
+            "seniority",
+            "type",
+            "employment type",
+            "job type",
+            "position type",
+            "education",
+            "certifications",
+            "travel",
+            "relocation",
+            "clearance",
+            "about",
+            "summary",
+            "purpose",
+            "objective",
             # Generic words that sometimes get mis-detected (e.g. "This is...")
             "this",
             "we",
@@ -1533,6 +1632,18 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
                 if any(bad in low for bad in ["out of 5 stars", "profile insights", "job details", "full job description"]):
                     continue
                 if low in {"required documents", "how to apply", "summary"}:
+                    continue
+                # Skip section headers / metadata labels
+                if any(x == low for x in [
+                    "experience", "requirements", "qualifications", "responsibilities",
+                    "duties", "benefits", "compensation", "salary", "schedule",
+                    "work schedule", "hours", "duration", "education", "certifications",
+                    "travel", "relocation", "clearance", "about", "purpose", "objective",
+                    "availability", "contact", "level", "seniority", "type",
+                    "employment type", "job type", "position type",
+                ]):
+                    continue
+                if re.search(r"\b(?:mon|tue|wed|thu|fri|sat|sun)(?:\s*[-–/]\s*(?:mon|tue|wed|thu|fri|sat|sun))", low):
                     continue
                 # Skip obvious location/address/salary lines
                 if re.search(r"\$\s?\d", s) or re.search(r"\b\d{5}\b", s):
