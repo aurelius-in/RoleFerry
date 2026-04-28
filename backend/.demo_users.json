@@ -17,10 +17,30 @@
       "last_name": "Ellison",
       "phone": "540-500-3300",
       "linkedin_url": "https://www.linkedin.com/in/oellison/"
+    },
+    "36388a00-413a-4248-bbcb-173800140f4e": {
+      "id": "36388a00-413a-4248-bbcb-173800140f4e",
+      "email": "probe@test.com",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$qpXy/j+nFKK0VoqxVuq91w$qC4cFDA8jHsa1d0JKVOa0QIvtrnlHd8B2r2mPPUxkCs",
+      "first_name": "Probe",
+      "last_name": "User",
+      "phone": "5551234567",
+      "linkedin_url": null
+    },
+    "38a8fdc7-fc59-4b0c-bcc2-77c8d54d96f0": {
+      "id": "38a8fdc7-fc59-4b0c-bcc2-77c8d54d96f0",
+      "email": "test500@example.com",
+      "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$AcBY651zTkmpNQag1JpTKg$svPli7hftHvGnBDpfZM72WKk+6hwxh6fwwarfjfXMJM",
+      "first_name": "Test",
+      "last_name": "User",
+      "phone": "555-0000",
+      "linkedin_url": null
     }
   },
   "by_email": {
     "persist@example.com": "10a6c4d2-e58d-4119-8106-299af332ad1e",
-    "oliveraellison@gmail.com": "2aceb35b-9a7c-4a20-a52c-837192e49eb9"
+    "oliveraellison@gmail.com": "2aceb35b-9a7c-4a20-a52c-837192e49eb9",
+    "probe@test.com": "36388a00-413a-4248-bbcb-173800140f4e",
+    "test500@example.com": "38a8fdc7-fc59-4b0c-bcc2-77c8d54d96f0"
   }
 }

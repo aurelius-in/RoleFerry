@@ -13,6 +13,7 @@ import xml.etree.ElementTree as ET
 router = APIRouter()
 from ..clients.openai_client import get_openai_client, extract_json_from_text
 from ..clients.signaliz import signaliz_enabled, enrich_company_signals
+from ..clients.apollo import ApolloClient
 from ..config import settings
 from ..services.serper_client import serper_web_search
 from ..services.pdl_client import PDLClient
@@ -145,10 +146,11 @@ def _build_unified_company_signals(
     signaliz_data: Dict[str, Any],
     intelligence: Optional["CompanyIntelligence"] = None,
     company_summary: Optional[Dict[str, Any]] = None,
+    apollo_company: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, str]]:
-    """Merge company signals from PDL, Signaliz, and web research into one
+    """Merge company signals from PDL, Apollo, Signaliz, and web research into one
     deduplicated best-of-9 list.  Prioritises live signals (Signaliz > PDL >
-    web-derived) and avoids redundant categories."""
+    Apollo > web-derived) and avoids redundant categories."""
     seen_categories: set[str] = set()
     unified: List[Dict[str, str]] = []
 
@@ -176,6 +178,31 @@ def _build_unified_company_signals(
     # PDL company data (structured facts)
     for sig in _build_company_signals_from_pdl(pdl_company):
         _add(sig["label"], sig["value"], sig["category"], 80)
+
+    # Apollo company data (fills gaps PDL missed)
+    ac = apollo_company or {}
+    if ac.get("industry"):
+        _add("Industry", str(ac["industry"]).title(), "industry", 70)
+    if ac.get("employee_count") and isinstance(ac["employee_count"], int):
+        _add("Employee Count", f"{ac['employee_count']:,}", "headcount", 70)
+    if ac.get("revenue"):
+        _add("Estimated Revenue", str(ac["revenue"]), "revenue", 70)
+    if ac.get("founded_year") and isinstance(ac["founded_year"], int):
+        _add("Founded", str(ac["founded_year"]), "founded", 70)
+    if ac.get("total_funding") and isinstance(ac["total_funding"], (int, float)):
+        funding = ac["total_funding"]
+        if funding >= 1_000_000_000:
+            fmt = f"${funding / 1_000_000_000:.1f}B"
+        elif funding >= 1_000_000:
+            fmt = f"${funding / 1_000_000:.0f}M"
+        else:
+            fmt = f"${funding:,.0f}"
+        _add("Total Funding Raised", fmt, "funding", 70)
+    if ac.get("keywords"):
+        _add("Keywords", ", ".join(str(k) for k in ac["keywords"][:6]), "tags", 60)
+    loc_parts = [x for x in [ac.get("city"), ac.get("state"), ac.get("country")] if x]
+    if loc_parts:
+        _add("Headquarters", ", ".join(loc_parts), "hq", 70)
 
     # Company summary fallback (from LLM / web research)
     cs = company_summary or {}
@@ -905,6 +932,7 @@ def _safe_company_signals(
     signaliz_data: Dict[str, Any],
     entry: Dict[str, Any],
     cs: Dict[str, Any],
+    apollo_company: Optional[Dict[str, Any]] = None,
 ) -> Optional[List["CompanySignal"]]:
     """Build company_signals safely; return None on any error so the rest of the
     research response still succeeds."""
@@ -917,6 +945,7 @@ def _safe_company_signals(
                 signaliz_data,
             ),
             company_summary=cs,
+            apollo_company=apollo_company,
         )
         if not raw:
             return None
@@ -1343,6 +1372,50 @@ async def conduct_research(request: ResearchRequest):
             except Exception:
                 pdl_company = {}
 
+        # Apollo company enrichment (supplements PDL with funding, news, tech stack)
+        apollo_company: Dict[str, Any] = {}
+        if settings.apollo_api_key and company_domain_guess and _budget_ok(8.0):
+            try:
+                apollo = ApolloClient(settings.apollo_api_key, timeout_seconds=min(10.0, _budget_remaining() - 8.0))
+                ac = apollo.company_enrich(company_domain_guess)
+                if ac:
+                    apollo_company = {
+                        "name": ac.name,
+                        "domain": ac.domain,
+                        "industry": ac.industry,
+                        "employee_count": ac.employee_count,
+                        "revenue": ac.revenue,
+                        "founded_year": ac.founded_year,
+                        "linkedin_url": ac.linkedin_url,
+                        "website_url": ac.website_url,
+                        "keywords": ac.keywords,
+                        "city": ac.city,
+                        "state": ac.state,
+                        "country": ac.country,
+                        "total_funding": ac.total_funding,
+                        "latest_funding_date": ac.latest_funding_date,
+                        "apollo_id": ac.apollo_id,
+                    }
+                    if not pdl_company.get("industry") and ac.industry:
+                        pdl_company["industry"] = ac.industry
+                    if not pdl_company.get("employee_count") and ac.employee_count:
+                        pdl_company["employee_count"] = ac.employee_count
+                    if not pdl_company.get("size") and ac.employee_count:
+                        pdl_company["size"] = f"{ac.employee_count:,}"
+                    if not pdl_company.get("founded") and ac.founded_year:
+                        pdl_company["founded"] = ac.founded_year
+                    if not pdl_company.get("inferred_revenue") and ac.revenue:
+                        pdl_company["inferred_revenue"] = ac.revenue
+                    if not pdl_company.get("total_funding_raised") and ac.total_funding:
+                        pdl_company["total_funding_raised"] = ac.total_funding
+                    loc = pdl_company.get("location")
+                    if (not loc or not isinstance(loc, dict) or not loc.get("name")) and ac.city:
+                        parts = [x for x in [ac.city, ac.state, ac.country] if x]
+                        pdl_company["location"] = {"name": ", ".join(parts)}
+                    logger.info("Apollo company_enrich found data for '%s'", company_domain_guess)
+            except Exception as e:
+                logger.debug("Apollo company_enrich failed for '%s': %s", company_domain_guess, e)
+
         # PDL person enrichment: get bio, skills, experience for each contact
         pdl_person_by_contact: Dict[str, Dict[str, Any]] = {}
         if want_live and settings.pdl_api_key and _budget_ok(10.0):
@@ -1392,6 +1465,7 @@ async def conduct_research(request: ResearchRequest):
                 "company_sizes": contact_company_sizes,
             },
             "pdl_company_enrich": pdl_company,
+            "apollo_company_enrich": apollo_company,
             "pdl_person_by_contact": pdl_person_by_contact,
             "serper_hits": serper_hits,
             "contact_serper_hits": contact_serper_hits,
@@ -1430,6 +1504,36 @@ async def conduct_research(request: ResearchRequest):
                 logger.warning("Signaliz enrichment failed for %s: %s", scope_target, e)
         elif want_live and signaliz_enabled():
             logger.info("Skipping Signaliz (budget %.1fs left)", _budget_remaining())
+
+        # Apollo news articles: supplement Signaliz with Apollo's news data
+        if settings.apollo_api_key and apollo_company.get("apollo_id") and _budget_ok(6.0):
+            try:
+                apollo = ApolloClient(settings.apollo_api_key, timeout_seconds=min(8.0, _budget_remaining() - 5.0))
+                apollo_news = apollo.news_search([apollo_company["apollo_id"]], per_page=6)
+                if apollo_news:
+                    apollo_news_items = []
+                    for article in apollo_news:
+                        if not isinstance(article, dict):
+                            continue
+                        title = str(article.get("title") or "").strip()
+                        url = str(article.get("url") or "").strip()
+                        if title:
+                            apollo_news_items.append({
+                                "title": title,
+                                "link": url,
+                                "snippet": str(article.get("snippet") or article.get("description") or "").strip()[:300],
+                                "date": str(article.get("posted_at") or article.get("date") or "").strip(),
+                                "source": "apollo",
+                            })
+                    if apollo_news_items:
+                        corpus.setdefault("apollo_news", apollo_news_items)
+                        if "news" not in company_serper_by_topic:
+                            company_serper_by_topic["news"] = []
+                        company_serper_by_topic["news"].extend(apollo_news_items)
+                        serper_hits.extend(apollo_news_items)
+                        logger.info("Apollo news_search returned %d articles for %s", len(apollo_news_items), scope_target)
+            except Exception as e:
+                logger.debug("Apollo news_search failed for %s: %s", scope_target, e)
 
         # Newsroom scraping: try to find the company's press/newsroom page for recent announcements.
         if want_live and company_domain_guess and _budget_ok(12.0):
@@ -2316,6 +2420,7 @@ async def conduct_research(request: ResearchRequest):
                     signaliz_data,
                     entry,
                     cs,
+                    apollo_company=corpus.get("apollo_company_enrich"),
                 ),
             )
 
@@ -2335,6 +2440,7 @@ async def conduct_research(request: ResearchRequest):
                 "corpus_preview": {
                     "serper_hits": corpus.get("serper_hits", []),
                     "pdl_company_enrich": corpus.get("pdl_company_enrich", {}),
+                    "apollo_company_enrich": corpus.get("apollo_company_enrich", {}),
                 },
             },
         )
