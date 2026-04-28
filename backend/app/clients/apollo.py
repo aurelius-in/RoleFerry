@@ -102,6 +102,7 @@ class ApolloClient:
         self,
         *,
         organization_domains: Optional[List[str]] = None,
+        organization_name: Optional[str] = None,
         person_titles: Optional[List[str]] = None,
         person_seniorities: Optional[List[str]] = None,
         person_locations: Optional[List[str]] = None,
@@ -116,6 +117,8 @@ class ApolloClient:
         }
         if organization_domains:
             body["q_organization_domains_list"] = organization_domains[:200]
+        if organization_name:
+            body["q_organization_name"] = organization_name
         if person_titles:
             body["person_titles"] = person_titles
         if person_seniorities:
