@@ -310,6 +310,26 @@ export default function CampaignV2() {
   const activeCampaign = activeContactId ? campaignByContact[activeContactId] || null : null;
   const activeContact = useMemo(() => contacts.find((c) => String(c?.id || "") === String(activeContactId || "")) || null, [contacts, activeContactId]);
 
+  const generateCampaignName = () => {
+    const now = new Date();
+    const ts = [
+      String(now.getFullYear()).slice(2),
+      String(now.getMonth() + 1).padStart(2, "0"),
+      String(now.getDate()).padStart(2, "0"),
+      String(now.getHours()).padStart(2, "0") + String(now.getMinutes()).padStart(2, "0"),
+    ].join("-");
+    try {
+      const jd = JSON.parse(localStorage.getItem("selected_job_description") || "null");
+      const title = String(jd?.title || "").trim().split(/\s*[-–—|,]\s*/)[0].trim();
+      const company = String(jd?.company || "").trim().split(/\s*[-–—|,]\s*/)[0].trim();
+      const slug = [title, company].filter(Boolean).join(" @ ").slice(0, 50);
+      if (slug) return `${ts} ${slug}`;
+    } catch {}
+    const nc = contacts?.length || 0;
+    if (nc > 0) return `${ts} Campaign (${nc} contacts)`;
+    return `${ts} Campaign`;
+  };
+
   useEffect(() => {
     // Client-only: hydrate from localStorage.
     const storedMode = String(localStorage.getItem("rf_mode") || "").trim();
@@ -332,9 +352,29 @@ export default function CampaignV2() {
     const pname = String(persisted?.name || "").trim();
     const ptime = String(persisted?.saved_at || "").trim();
     setPersistedCampaignId(pid);
-    setPersistedCampaignName(pname);
     setPersistedCampaignSavedAt(ptime);
     setLoadCampaignId(pid);
+    if (pname) {
+      setPersistedCampaignName(pname);
+    } else {
+      const now = new Date();
+      const ts = [
+        String(now.getFullYear()).slice(2),
+        String(now.getMonth() + 1).padStart(2, "0"),
+        String(now.getDate()).padStart(2, "0"),
+        String(now.getHours()).padStart(2, "0") + String(now.getMinutes()).padStart(2, "0"),
+      ].join("-");
+      try {
+        const jd = JSON.parse(localStorage.getItem("selected_job_description") || "null");
+        const title = String(jd?.title || "").trim().split(/\s*[-–—|,]\s*/)[0].trim();
+        const company = String(jd?.company || "").trim().split(/\s*[-–—|,]\s*/)[0].trim();
+        const slug = [title, company].filter(Boolean).join(" @ ").slice(0, 50);
+        if (slug) { setPersistedCampaignName(`${ts} ${slug}`); }
+        else { setPersistedCampaignName(`${ts} Campaign`); }
+      } catch {
+        setPersistedCampaignName(`${ts} Campaign`);
+      }
+    }
   }, []);
 
   const persistPersistedMeta = (next: { id: string; name: string; saved_at?: string }) => {
@@ -979,16 +1019,30 @@ export default function CampaignV2() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
               <div className="md:col-span-5">
                 <div className="text-xs font-semibold text-white/60 uppercase tracking-wider">Campaign name</div>
-                <input
-                  value={persistedCampaignName}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setPersistedCampaignName(v);
-                    try { localStorage.setItem(STORAGE_PERSISTED, JSON.stringify({ id: String(persistedCampaignId || "").trim(), name: v, saved_at: persistedCampaignSavedAt })); } catch {}
-                  }}
-                  placeholder="e.g., 26-02-15-analytics-remote_123"
-                  className="mt-1 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <div className="mt-1 flex gap-1.5">
+                  <input
+                    value={persistedCampaignName}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setPersistedCampaignName(v);
+                      try { localStorage.setItem(STORAGE_PERSISTED, JSON.stringify({ id: String(persistedCampaignId || "").trim(), name: v, saved_at: persistedCampaignSavedAt })); } catch {}
+                    }}
+                    placeholder="e.g., 26-04-27-1830 Sr Analyst @ Acme"
+                    className="flex-1 rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const name = generateCampaignName();
+                      setPersistedCampaignName(name);
+                      try { localStorage.setItem(STORAGE_PERSISTED, JSON.stringify({ id: String(persistedCampaignId || "").trim(), name, saved_at: persistedCampaignSavedAt })); } catch {}
+                    }}
+                    title="Auto-generate campaign name"
+                    className="shrink-0 px-2.5 py-2 rounded-md border border-white/15 bg-black/30 text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" /></svg>
+                  </button>
+                </div>
               </div>
               <div className="md:col-span-3">
                 <div className="text-xs font-semibold text-white/60 uppercase tracking-wider">Last Saved</div>
