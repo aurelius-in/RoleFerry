@@ -476,7 +476,7 @@ class Contact(BaseModel):
     company_signals: Optional[List[ContactSignal]] = None
 
 class ContactSearchRequest(BaseModel):
-    query: str
+    query: str = ""
     company: Optional[str] = None
     role: Optional[str] = None
     title_filters: Optional[List[str]] = None
@@ -486,6 +486,7 @@ class ContactSearchRequest(BaseModel):
     target_job_title: Optional[str] = None
     candidate_title: Optional[str] = None
     user_mode: Optional[str] = None
+    prompt: Optional[str] = None
 
 class ContactSearchResponse(BaseModel):
     success: bool
@@ -711,6 +712,40 @@ def _deterministic_improve_linkedin_note(req: ImproveLinkedInNoteRequest) -> str
     return note
 
 
+def _parse_contact_prompt(prompt: str) -> Dict[str, Any]:
+    """Use LLM to extract structured search params from a natural-language prompt."""
+    client = get_openai_client()
+    system = (
+        "You are a search-parameter extractor. Given a user's natural-language request for finding "
+        "business contacts, extract structured fields. Return ONLY valid JSON with these keys:\n"
+        '- "company": company name (string or null)\n'
+        '- "role": job title or role keywords (string or null)\n'
+        '- "seniority": comma-separated seniority levels from: C-Suite, VP, Director, Manager, Senior (string or null)\n'
+        '- "department": department like Engineering, Sales, Marketing, HR, Operations, Finance, Supply Chain, etc. (string or null)\n'
+        '- "location": city/state/country (string or null)\n'
+        '- "title_filters": array of specific job titles to search for (array of strings or null)\n'
+        '- "count": number of contacts requested (integer or null)\n'
+        "If a field is not mentioned, set it to null. Do not invent information."
+    )
+    data = client.run_chat_completion(
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt},
+        ],
+        max_tokens=300,
+    )
+    text = ""
+    try:
+        choices = data.get("choices") or []
+        text = (choices[0].get("message") or {}).get("content", "") if choices else ""
+    except Exception:
+        pass
+    parsed = extract_json_from_text(text)
+    if not isinstance(parsed, dict):
+        return {}
+    return parsed
+
+
 @router.post("/search", response_model=ContactSearchResponse)
 async def search_contacts(request: ContactSearchRequest):
     """
@@ -726,6 +761,25 @@ async def search_contacts(request: ContactSearchRequest):
 
         def _budget_ok(min_seconds: float = 2.0) -> bool:
             return _budget_remaining() > min_seconds
+
+        # Smart prompt: if the user typed a natural-language query, parse it into structured fields
+        if request.prompt and request.prompt.strip() and settings.openai_api_key:
+            try:
+                parsed = _parse_contact_prompt(request.prompt.strip())
+                if parsed.get("company") and not request.company:
+                    request.company = parsed["company"]
+                    request.query = parsed["company"]
+                if parsed.get("role") and not request.role:
+                    request.role = parsed["role"]
+                if parsed.get("seniority") and not request.seniority:
+                    request.seniority = parsed["seniority"]
+                if parsed.get("location") and not request.location:
+                    request.location = parsed["location"]
+                if parsed.get("department") and not request.title_filters:
+                    request.title_filters = parsed.get("title_filters") or []
+                logger.info("Prompt parsed: %s", {k: v for k, v in parsed.items() if v})
+            except Exception as e:
+                logger.debug("Prompt parsing failed, using raw fields: %s", e)
 
         q = (request.company or request.query or "").strip()
         if not q:
