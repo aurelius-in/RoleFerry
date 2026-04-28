@@ -105,6 +105,10 @@ def create_app() -> FastAPI:
         from .config import settings as _settings
         token = request.cookies.get(_settings.auth_cookie_name)
         if not token:
+            auth_header = request.headers.get("authorization") or ""
+            if auth_header.startswith("Bearer "):
+                token = auth_header[7:].strip()
+        if not token:
             from starlette.responses import JSONResponse
             return JSONResponse({"detail": "Not authenticated"}, status_code=401)
 

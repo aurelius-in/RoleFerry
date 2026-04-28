@@ -30,9 +30,15 @@ export async function api<T>(path: string, method: HttpMethod = "GET", body?: un
   }
 
   try {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (!isServer) {
+      const token = localStorage.getItem("rf_token");
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const res = await fetch(url, {
       method,
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: body ? JSON.stringify(body) : undefined,
       cache: "no-store",
       credentials: "include",

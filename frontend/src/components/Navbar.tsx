@@ -42,6 +42,7 @@ export default function Navbar() {
           localStorage.setItem("rf_user", JSON.stringify(resp.user));
           setUser(resp.user);
         }
+        if (resp?.token) localStorage.setItem("rf_token", resp.token);
       } catch {}
     })();
   }, []);
