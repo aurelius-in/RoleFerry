@@ -1299,7 +1299,7 @@ export default function FindContactPage() {
                   handleSearch();
                 }
               }}
-              placeholder='Describe who you\'re looking for, e.g. "5 directors in supply chain and logistics at Thermo Fisher in the US"'
+              placeholder={"Describe who you're looking for, e.g. \"5 directors in supply chain and logistics at Thermo Fisher in the US\""}
               rows={2}
               className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
             />
