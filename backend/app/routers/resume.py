@@ -272,8 +272,8 @@ async def upload_resume(file: UploadFile = File(...)):
     """
     try:
         # Validate file type
-        if not file.filename.lower().endswith((".pdf", ".docx", ".txt", ".html", ".htm")):
-            raise HTTPException(status_code=400, detail="Only PDF, DOCX, TXT, and HTML files are supported")
+        if not file.filename.lower().endswith((".pdf", ".doc", ".docx", ".txt", ".html", ".htm")):
+            raise HTTPException(status_code=400, detail="Only PDF, DOC, DOCX, TXT, and HTML files are supported")
 
         # Read file contents and extract text. We prefer true PDF/DOCX parsing;
         # if we can't extract meaningful text, we return an explicit error rather
@@ -346,12 +346,52 @@ async def upload_resume(file: UploadFile = File(...)):
             s = re.sub(r"\\n\\s*\\n\\s*\\n+", "\n\n", s)
             return s.strip()
 
+        def extract_text_from_doc(data: bytes) -> str:
+            # Try python-docx first (works for .docx files saved with .doc extension)
+            try:
+                import docx  # type: ignore
+                d = docx.Document(io.BytesIO(data))
+                parts: List[str] = []
+                for p in d.paragraphs:
+                    if p.text and p.text.strip():
+                        parts.append(p.text.strip())
+                for table in d.tables:
+                    for row in table.rows:
+                        for cell in row.cells:
+                            txt = (cell.text or "").strip()
+                            if txt:
+                                parts.append(txt)
+                text = "\n".join(parts).strip()
+                if text and len(text) >= 100:
+                    return text
+            except Exception:
+                pass
+            # Fallback: extract readable text from binary .doc (OLE2 format)
+            try:
+                raw = data.decode("utf-8", errors="ignore")
+                runs = re.findall(r"[\x20-\x7E]{12,}", raw)
+                text = "\n".join(runs).strip()
+                if text and len(text) >= 100:
+                    return text
+            except Exception:
+                pass
+            try:
+                raw = data.decode("utf-16-le", errors="ignore")
+                cleaned = re.sub(r"[^\x20-\x7E\n\r\t]", " ", raw)
+                cleaned = re.sub(r" {3,}", "\n", cleaned)
+                cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+                return cleaned.strip()
+            except Exception:
+                return ""
+
         filename = (file.filename or "").lower()
         raw_text = ""
         if filename.endswith(".pdf"):
             raw_text = extract_text_from_pdf(contents)
         elif filename.endswith(".docx"):
             raw_text = extract_text_from_docx(contents)
+        elif filename.endswith(".doc"):
+            raw_text = extract_text_from_doc(contents)
         elif filename.endswith((".html", ".htm")):
             raw_text = extract_text_from_html(contents)
         else:
