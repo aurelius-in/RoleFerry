@@ -5,6 +5,12 @@ from ..services.email_verifier import verify_email_async, get_verification_badge
 from ..clients.openai_client import get_openai_client, extract_json_from_text
 from ..config import settings
 from ..services.pdl_client import PDLClient, extract_person_signals, extract_company_signals
+from ..clients.apollo import (
+    ApolloClient,
+    extract_apollo_person_signals,
+    extract_apollo_company_signals,
+    apollo_seniority_to_level,
+)
 import json
 import logging
 import re
@@ -470,7 +476,7 @@ class Contact(BaseModel):
     company_signals: Optional[List[ContactSignal]] = None
 
 class ContactSearchRequest(BaseModel):
-    query: str
+    query: str = ""
     company: Optional[str] = None
     role: Optional[str] = None
     title_filters: Optional[List[str]] = None
@@ -480,6 +486,7 @@ class ContactSearchRequest(BaseModel):
     target_job_title: Optional[str] = None
     candidate_title: Optional[str] = None
     user_mode: Optional[str] = None
+    prompt: Optional[str] = None
 
 class ContactSearchResponse(BaseModel):
     success: bool
@@ -705,6 +712,40 @@ def _deterministic_improve_linkedin_note(req: ImproveLinkedInNoteRequest) -> str
     return note
 
 
+def _parse_contact_prompt(prompt: str) -> Dict[str, Any]:
+    """Use LLM to extract structured search params from a natural-language prompt."""
+    client = get_openai_client()
+    system = (
+        "You are a search-parameter extractor. Given a user's natural-language request for finding "
+        "business contacts, extract structured fields. Return ONLY valid JSON with these keys:\n"
+        '- "company": company name (string or null)\n'
+        '- "role": job title or role keywords (string or null)\n'
+        '- "seniority": comma-separated seniority levels from: C-Suite, VP, Director, Manager, Senior (string or null)\n'
+        '- "department": department like Engineering, Sales, Marketing, HR, Operations, Finance, Supply Chain, etc. (string or null)\n'
+        '- "location": city/state/country (string or null)\n'
+        '- "title_filters": array of specific job titles to search for (array of strings or null)\n'
+        '- "count": number of contacts requested (integer or null)\n'
+        "If a field is not mentioned, set it to null. Do not invent information."
+    )
+    data = client.run_chat_completion(
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt},
+        ],
+        max_tokens=300,
+    )
+    text = ""
+    try:
+        choices = data.get("choices") or []
+        text = (choices[0].get("message") or {}).get("content", "") if choices else ""
+    except Exception:
+        pass
+    parsed = extract_json_from_text(text)
+    if not isinstance(parsed, dict):
+        return {}
+    return parsed
+
+
 @router.post("/search", response_model=ContactSearchResponse)
 async def search_contacts(request: ContactSearchRequest):
     """
@@ -720,6 +761,25 @@ async def search_contacts(request: ContactSearchRequest):
 
         def _budget_ok(min_seconds: float = 2.0) -> bool:
             return _budget_remaining() > min_seconds
+
+        # Smart prompt: if the user typed a natural-language query, parse it into structured fields
+        if request.prompt and request.prompt.strip() and settings.openai_api_key:
+            try:
+                parsed = _parse_contact_prompt(request.prompt.strip())
+                if parsed.get("company") and not request.company:
+                    request.company = parsed["company"]
+                    request.query = parsed["company"]
+                if parsed.get("role") and not request.role:
+                    request.role = parsed["role"]
+                if parsed.get("seniority") and not request.seniority:
+                    request.seniority = parsed["seniority"]
+                if parsed.get("location") and not request.location:
+                    request.location = parsed["location"]
+                if parsed.get("department") and not request.title_filters:
+                    request.title_filters = parsed.get("title_filters") or []
+                logger.info("Prompt parsed: %s", {k: v for k, v in parsed.items() if v})
+            except Exception as e:
+                logger.debug("Prompt parsing failed, using raw fields: %s", e)
 
         q = (request.company or request.query or "").strip()
         if not q:
@@ -845,7 +905,7 @@ async def search_contacts(request: ContactSearchRequest):
                 talent_dm = [p for _, p in scored if _is_recruiting(p.title)]
                 others = [p for _, p in scored if p not in fn_dm and p not in talent_dm and _is_relevant_decision_maker_for_job(p.title, job_fn)]
 
-                desired = 50
+                desired = 30
 
                 relevant_pool = [p for _, p in scored if _is_relevant_decision_maker_for_job(p.title, job_fn)]
 
@@ -922,6 +982,109 @@ async def search_contacts(request: ContactSearchRequest):
             except Exception as pdl_err:
                 logger.exception("PDL contact search failed for '%s' (%s); will try other sources", q, str(pdl_err)[:120])
 
+        # 0c) Apollo.io people search (free, no credits, augments PDL)
+        apollo_contacts: List[Contact] = []
+        if settings.apollo_api_key and _budget_ok(12.0):
+            try:
+                apollo = ApolloClient(settings.apollo_api_key, timeout_seconds=min(12.0, _budget_remaining() - 8.0))
+                search_domains = [domain] if domain else None
+                apollo_org_name = q if not search_domains else None
+                apollo_seniorities = ["owner", "founder", "c_suite", "partner", "vp", "head", "director", "manager", "senior"]
+                # Only use role keywords from Smart Search prompt (department intent),
+                # NOT the target_job_title (which is what the candidate applies for).
+                role_keywords = (request.role or "").strip() or None
+                apollo_locations = [request.location] if (request.location or "").strip() else None
+                raw_apollo = apollo.people_search(
+                    organization_domains=search_domains,
+                    organization_name=apollo_org_name,
+                    person_seniorities=apollo_seniorities,
+                    person_locations=apollo_locations,
+                    q_keywords=role_keywords,
+                    per_page=100,
+                )
+                apollo_people = apollo.extract_people(raw_apollo)
+                logger.info("Apollo people_search for '%s' returned %d people", q, len(apollo_people))
+
+                # If sparse results, try a second search with management-specific titles
+                if len(apollo_people) < 20 and _budget_ok(8.0):
+                    mgmt_titles = ["VP", "Director", "Head", "Manager", "Recruiter", "Talent Acquisition"]
+                    raw2 = apollo.people_search(
+                        organization_domains=search_domains,
+                        organization_name=apollo_org_name,
+                        person_titles=mgmt_titles,
+                        per_page=100,
+                    )
+                    extra = apollo.extract_people(raw2)
+                    seen_names = {(ap.name or "").strip().lower() for ap in apollo_people}
+                    for ep in extra:
+                        if (ep.name or "").strip().lower() not in seen_names:
+                            apollo_people.append(ep)
+                            seen_names.add((ep.name or "").strip().lower())
+                    logger.info("Apollo fallback title search added %d more (total %d)", len(extra), len(apollo_people))
+                # If first page was full, grab page 2
+                elif len(apollo_people) >= 90 and _budget_ok(8.0):
+                    raw_p2 = apollo.people_search(
+                        organization_domains=search_domains,
+                        organization_name=apollo_org_name,
+                        person_seniorities=apollo_seniorities,
+                        q_keywords=role_keywords,
+                        per_page=100,
+                        page=2,
+                    )
+                    p2 = apollo.extract_people(raw_p2)
+                    seen_names = {(ap.name or "").strip().lower() for ap in apollo_people}
+                    for pp in p2:
+                        if (pp.name or "").strip().lower() not in seen_names:
+                            apollo_people.append(pp)
+                            seen_names.add((pp.name or "").strip().lower())
+                    logger.info("Apollo page 2 added %d more (total %d)", len(p2), len(apollo_people))
+
+                for ap in apollo_people:
+                    if not _is_relevant_decision_maker_for_job(ap.title, job_fn):
+                        continue
+                    if title_filters and not _matches_title_filters(ap.title):
+                        continue
+
+                    name = (ap.name or "").strip()
+                    if name and name == name.lower():
+                        name = " ".join([w[:1].upper() + w[1:] for w in name.split()])
+
+                    level = apollo_seniority_to_level(ap.seniority) if ap.seniority else _infer_level(ap.title)
+                    loc = ", ".join([x for x in [ap.city, ap.state, ap.country] if x]) or None
+
+                    cid = hashlib.sha256(
+                        f"apollo:{ap.linkedin_url or ''}:{ap.name}:{ap.title}".encode("utf-8", errors="ignore")
+                    ).hexdigest()[:12]
+
+                    apollo_contacts.append(
+                        Contact(
+                            id=f"apo_{cid}",
+                            name=name or ap.name,
+                            title=ap.title,
+                            email=ap.email or "",
+                            linkedin_url=ap.linkedin_url,
+                            confidence=0.88,
+                            verification_status="unknown",
+                            verification_score=None,
+                            company=ap.company or q,
+                            department=_infer_department(ap.title),
+                            level=level,
+                            email_source="apollo" if ap.email else None,
+                            location_name=loc,
+                            location_country=ap.country,
+                            job_company_website=ap.org_website,
+                            job_company_linkedin_url=ap.org_linkedin_url,
+                            job_company_industry=ap.org_industry,
+                            job_company_size=str(ap.org_employee_count) if ap.org_employee_count else None,
+                            person_signals=[ContactSignal(**s) for s in extract_apollo_person_signals(ap)],
+                            company_signals=[ContactSignal(**s) for s in extract_apollo_company_signals(ap)],
+                        )
+                    )
+
+                logger.info("Apollo returned %d relevant contacts for '%s'", len(apollo_contacts), q)
+            except Exception as apollo_err:
+                logger.exception("Apollo contact search failed for '%s' (%s); continuing with other sources", q, str(apollo_err)[:120])
+
         # 1) Fetch leadership/team page(s) and extract names/titles
         contacts: List[Contact] = []
         if domain and _budget_ok(10.0):
@@ -951,8 +1114,8 @@ async def search_contacts(request: ContactSearchRequest):
             else:
                 logger.info("Web scrape: no working leadership/team page found for domain='%s'", domain)
 
-        # 3) Try OpenAI to identify public personas (supplements PDL + web scraping)
-        if len(contacts) + len(pdl_contacts) < 25 and settings.openai_api_key and _budget_ok(10.0):
+        # 3) Try OpenAI to identify public personas (last resort when real APIs returned few)
+        if len(contacts) + len(pdl_contacts) + len(apollo_contacts) < 8 and settings.openai_api_key and _budget_ok(10.0):
             try:
                 client = get_openai_client()
                 # Ask GPT to identify likely decision makers based on its training data (broad knowledge).
@@ -1005,36 +1168,77 @@ async def search_contacts(request: ContactSearchRequest):
             except Exception:
                 logger.exception("OpenAI contact backup failed")
 
-        # 4) Combine PDL contacts with web-scraped / GPT contacts, de-duping by name.
-        # When both sources have the same person, merge their data (keep the richer one
-        # but backfill any missing fields from the other).
+        # 4) Combine PDL + Apollo + web-scraped / GPT contacts, de-duping by name.
+        # When multiple sources have the same person, merge fields (keep richer record,
+        # backfill missing fields from others).
+        def _merge_into(existing: Contact, incoming: Contact) -> None:
+            if not existing.email and incoming.email:
+                existing.email = incoming.email
+                existing.email_source = incoming.email_source
+            if not existing.linkedin_url and incoming.linkedin_url:
+                existing.linkedin_url = incoming.linkedin_url
+            if not existing.location_name and incoming.location_name:
+                existing.location_name = incoming.location_name
+            if not existing.location_country and incoming.location_country:
+                existing.location_country = incoming.location_country
+            if not existing.job_company_website and incoming.job_company_website:
+                existing.job_company_website = incoming.job_company_website
+            if not existing.job_company_linkedin_url and incoming.job_company_linkedin_url:
+                existing.job_company_linkedin_url = incoming.job_company_linkedin_url
+            if not existing.job_company_industry and incoming.job_company_industry:
+                existing.job_company_industry = incoming.job_company_industry
+            if not existing.job_company_size and incoming.job_company_size:
+                existing.job_company_size = incoming.job_company_size
+            # Merge signals: append unique labels from incoming into existing
+            if incoming.person_signals:
+                if not existing.person_signals:
+                    existing.person_signals = list(incoming.person_signals)
+                else:
+                    have = {s.label for s in existing.person_signals}
+                    for s in incoming.person_signals:
+                        if s.label not in have:
+                            existing.person_signals.append(s)
+                            have.add(s.label)
+            if incoming.company_signals:
+                if not existing.company_signals:
+                    existing.company_signals = list(incoming.company_signals)
+                else:
+                    have = {s.label for s in existing.company_signals}
+                    for s in incoming.company_signals:
+                        if s.label not in have:
+                            existing.company_signals.append(s)
+                            have.add(s.label)
+
+        def _dedup_key_li(url: str) -> str:
+            u = (url or "").strip().lower().rstrip("/")
+            u = u.replace("https://www.linkedin.com/in/", "").replace("https://linkedin.com/in/", "")
+            return u
+
         seen_names: dict[str, int] = {}
+        seen_li: dict[str, int] = {}
         combined: List[Contact] = []
-        for c in pdl_contacts:
-            key = (c.name or "").strip().lower()
-            if key and key not in seen_names:
-                seen_names[key] = len(combined)
-                combined.append(c)
-        for c in contacts:
-            key = (c.name or "").strip().lower()
-            if not key:
-                continue
-            if key in seen_names:
-                existing = combined[seen_names[key]]
-                if not existing.email and c.email:
-                    existing.email = c.email
-                    existing.email_source = c.email_source
-                if not existing.linkedin_url and c.linkedin_url:
-                    existing.linkedin_url = c.linkedin_url
-                if not existing.location_name and c.location_name:
-                    existing.location_name = c.location_name
-                if not existing.job_company_website and c.job_company_website:
-                    existing.job_company_website = c.job_company_website
-            else:
-                seen_names[key] = len(combined)
-                combined.append(c)
+        # PDL first (highest data richness), then Apollo, then web/GPT
+        for source_list in [pdl_contacts, apollo_contacts, contacts]:
+            for c in source_list:
+                name_key = (c.name or "").strip().lower()
+                li_key = _dedup_key_li(c.linkedin_url or "")
+                idx = seen_names.get(name_key) if name_key else None
+                if idx is None and li_key:
+                    idx = seen_li.get(li_key)
+                if idx is not None:
+                    _merge_into(combined[idx], c)
+                elif name_key:
+                    idx = len(combined)
+                    seen_names[name_key] = idx
+                    if li_key:
+                        seen_li[li_key] = idx
+                    combined.append(c)
         contacts = combined
-        logger.info("Combined contacts for '%s': %d PDL + %d other = %d total", q, len(pdl_contacts), len(contacts) - len(pdl_contacts), len(contacts))
+        logger.info(
+            "Combined contacts for '%s': %d PDL + %d Apollo + %d other = %d total",
+            q, len(pdl_contacts), len(apollo_contacts),
+            len(contacts) - len(pdl_contacts) - len(apollo_contacts), len(contacts),
+        )
 
         # 4c) Enrich contacts that have no signals via PDL Person Enrichment API.
         if settings.pdl_api_key and _budget_ok(12.0):
@@ -1063,6 +1267,51 @@ async def search_contacts(request: ContactSearchRequest):
                         enrich_count += 1
                 except Exception:
                     logger.debug("PDL person_enrich failed for %s; skipping", c.name)
+
+        # 4d) Apollo person enrichment fallback for contacts still missing signals/email.
+        if settings.apollo_api_key and _budget_ok(8.0):
+            apollo_enricher = ApolloClient(settings.apollo_api_key, timeout_seconds=min(8.0, _budget_remaining() - 5.0))
+            apo_enrich_count = 0
+            for c in contacts:
+                if apo_enrich_count >= 4 or not _budget_ok(5.0):
+                    break
+                has_signals = c.person_signals and len(c.person_signals) > 0
+                has_email = bool(c.email and c.email.strip() and not c.email.endswith("@example.com"))
+                if has_signals and has_email:
+                    continue
+                try:
+                    name_parts = (c.name or "").strip().split()
+                    first_name = name_parts[0] if name_parts else ""
+                    last_name = name_parts[-1] if len(name_parts) >= 2 else ""
+                    raw = apollo_enricher.person_enrich(
+                        first_name=first_name,
+                        last_name=last_name,
+                        organization_name=c.company or q,
+                        linkedin_url=c.linkedin_url or "",
+                        domain=domain,
+                    )
+                    person = raw.get("person") or {}
+                    if person:
+                        apo_email = str(person.get("email") or "").strip()
+                        if apo_email and not has_email:
+                            c.email = apo_email
+                            c.email_source = "apollo_enrich"
+                        if not has_signals:
+                            headline = str(person.get("headline") or "").strip()
+                            seniority = str(person.get("seniority") or "").strip()
+                            dept_list = person.get("departments") or []
+                            enriched_signals = []
+                            if headline:
+                                enriched_signals.append(ContactSignal(label="Headline", value=headline[:200], category="bio"))
+                            if seniority:
+                                enriched_signals.append(ContactSignal(label="Seniority", value=seniority.replace("_", " ").title(), category="level"))
+                            if dept_list:
+                                enriched_signals.append(ContactSignal(label="Departments", value=", ".join(str(d) for d in dept_list[:4]), category="role"))
+                            if enriched_signals:
+                                c.person_signals = enriched_signals
+                        apo_enrich_count += 1
+                except Exception:
+                    logger.debug("Apollo person_enrich failed for %s; skipping", c.name)
 
         if not contacts:
             logger.warning("No contacts found for '%s' after all sources (PDL=%d, web=%d, GPT=%d)",
@@ -1128,9 +1377,11 @@ async def search_contacts(request: ContactSearchRequest):
                 if isinstance(keep_ids, list) and keep_ids:
                     keep = {str(x) for x in keep_ids if str(x).strip()}
                     filtered = [c for c in contacts if c.id in keep]
-                    # If the model filtered everything, fall back to deterministic list.
-                    if filtered:
+                    # Don't let the audit drop us below 8 contacts.
+                    if len(filtered) >= 8:
                         contacts = filtered
+                    elif filtered:
+                        contacts = filtered + [c for c in contacts if c.id not in keep][:8 - len(filtered)]
             except Exception:
                 logger.exception("LLM contact relevance audit failed (non-blocking)")
 
@@ -1144,11 +1395,8 @@ async def search_contacts(request: ContactSearchRequest):
             if filtered:
                 contacts = filtered
 
-        # Hard cap for UI sanity: avoid overwhelming lists.
-        try:
-            contacts = (contacts or [])[:30]
-        except Exception:
-            pass
+        # Hard cap: 8-20 results for a focused, high-quality list.
+        contacts = (contacts or [])[:20]
 
         # GPT helper: decision-maker talking points + outreach angles per contact.
         stub_helper = {

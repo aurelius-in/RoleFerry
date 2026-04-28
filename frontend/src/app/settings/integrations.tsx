@@ -25,6 +25,7 @@ export default function IntegrationsPage() {
     { key: "findymail", label: "Findymail" },
     { key: "neverbounce", label: "NeverBounce" },
     { key: "millionverifier", label: "MillionVerifier" },
+    { key: "apollo", label: "Apollo.io" },
   ];
 
   return (

@@ -53,6 +53,8 @@ class Settings(BaseModel):
     neverbounce_api_key: str | None = Field(default=os.getenv("NEVERBOUNCE_API_KEY"))
     # People Data Labs (decision-maker search)
     pdl_api_key: str | None = Field(default=os.getenv("PDL_API_KEY"))
+    # Apollo.io (people search, company enrichment, email finder)
+    apollo_api_key: str | None = Field(default=os.getenv("APOLLO_API_KEY"))
 
     # Google Sheets (optional)
     gsheet_service_json_path: str | None = Field(default=os.getenv("GOOGLE_SHEETS_SERVICE_JSON_PATH"))
