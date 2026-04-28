@@ -848,13 +848,38 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             }.get(t, "")
 
             hail = {
-                "hilarious": "Funny and memorable, but still respectful and professional; no sarcasm that reads hostile.",
-                "silly": "Playful and light; no cringe; keep it short and kind.",
-                "wacky": "Unexpected and quirky, but still professional; do NOT be random; keep it tied to the role.",
-                "alarmist": "Urgent framing without fear-mongering; no threats; no manipulation; keep it ethical.",
-                "flirty": "Warm and charming, but NEVER sexual or suggestive; keep it workplace-safe; no pet names.",
-                "sad": "Vulnerable but confident; no guilt-tripping; no desperation.",
-                "ridiculous": "Absurdly playful in a safe way; no profanity; no insults; still about the role.",
+                "hilarious": (
+                    "Write a GENUINELY FUNNY email. Use wordplay, clever analogies, unexpected comparisons, "
+                    "or self-deprecating humor. The reader should actually smile or laugh. Think late-night talk show "
+                    "monologue energy applied to a job search. Still professional enough to send, but unmistakably comedic. "
+                    "Do NOT write a normal email with one joke - the whole email should be entertaining."
+                ),
+                "silly": (
+                    "Write in a playful, whimsical style. Light-hearted metaphors, fun word choices, maybe a running gag. "
+                    "Think of a friendly colleague who always makes meetings fun. No cringe; keep it kind and warm."
+                ),
+                "wacky": (
+                    "Unexpected and quirky. Use surprising metaphors, absurd-but-apt comparisons, unconventional structure. "
+                    "The reader should think 'I've never gotten an email like this before.' Still tied to the role and professional."
+                ),
+                "alarmist": (
+                    "Write with dramatic urgency - like a movie trailer narrator. Bold claims, exclamation energy, 'this can't wait' framing. "
+                    "Keep it ethical and factual, but make it feel like the most important email they'll read today."
+                ),
+                "flirty": (
+                    "Warm, charming, and confident. Playful compliments about their company or work. Think suave networking, not dating. "
+                    "NEVER sexual or suggestive; keep it workplace-safe; no pet names."
+                ),
+                "sad": (
+                    "Write with genuine vulnerability and emotional honesty. Acknowledge the inherent awkwardness of cold outreach. "
+                    "Be self-aware and a little melancholy but still hopeful. Think indie movie protagonist energy. "
+                    "Not desperate or guilt-tripping - just authentically human and a bit wistful."
+                ),
+                "ridiculous": (
+                    "Go absurdly over the top in a delightful way. Dramatic metaphors, comically formal language for mundane things, "
+                    "treat the job application like an epic quest or a nature documentary. Still about the role, but entertainingly unhinged. "
+                    "No profanity or insults."
+                ),
             }.get(t, "")
 
             guard = "Hard safety: do not be inappropriate, sexual, hostile, or manipulative. No guilt trips."
@@ -1302,7 +1327,11 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
         }.get(step, "Email step")
 
         # Expand "custom" tone into concrete instructions for the model.
-        tone_line = f"Tone: {tone}."
+        _creative_tones = {"hilarious", "silly", "wacky", "alarmist", "flirty", "sad", "ridiculous"}
+        if tone in _creative_tones:
+            tone_line = f"Tone: {tone}. This is a CREATIVE tone — the email must read dramatically different from a standard professional email. A reader should immediately notice the distinctive style."
+        else:
+            tone_line = f"Tone: {tone}."
         if tone == "custom" and custom_tone:
             # Keep this workplace-safe even if the user experiments (e.g., "wacky clown on drugs").
             # We treat custom_tone as *style direction*, not permission to be inappropriate.
