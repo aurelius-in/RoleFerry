@@ -127,6 +127,8 @@ function lowerFirst(s: string): string {
 function painPointToOutcome(raw: string): string {
   let s = String(raw || "").trim();
   if (!s) return "";
+  // Filter out job posting details that aren't actual pain points
+  if (/\b(application window|deadline|apply by|open until|posting closes)\b/i.test(s)) return "";
   s = s
     .replace(/^(the\s+)?need\s+for\s+/i, "")
     .replace(/^(the\s+)?need\s+to\s+/i, "")
@@ -365,7 +367,7 @@ export default function OfferPage() {
     } else if (skillPhrase) {
       seed = `I help teams deliver results through ${skillPhrase}.`;
     }
-    seed = seed.replace(/\.\./g, ".").replace(/^i\s/i, "I ").replace(/^I'm a a /i, "I'm a ");
+    seed = seed.replace(/\.\./g, ".").replace(/^i\s/i, "I ").replace(/^I'm a a /i, "I'm a ").replace(/\bI'm a ([aeiouAEIOU])/g, "I'm an $1");
 
     setOneLiner(seed);
 
