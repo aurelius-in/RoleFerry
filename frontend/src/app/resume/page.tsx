@@ -443,7 +443,7 @@ export default function ResumePage() {
               </div>
               <h3 className="text-base font-medium text-white mb-2">Upload Resume</h3>
               <p className="text-sm text-white/70 mb-5">
-                Upload a PDF or DOCX file to extract your experience, skills, and accomplishments.
+                Upload a PDF, DOC, or DOCX file to extract your experience, skills, and accomplishments.
               </p>
               {uploadError && (
                 <div className="mx-auto mb-4 max-w-xl rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100 text-left">
@@ -453,7 +453,7 @@ export default function ResumePage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf,.docx,.html,.htm"
+                accept=".pdf,.doc,.docx,.html,.htm"
                 onChange={handleFileUpload}
                 className="hidden"
               />
