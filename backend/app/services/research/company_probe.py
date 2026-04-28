@@ -1,13 +1,18 @@
 from typing import Dict, Any, List
+import logging
 from ...services.serper_client import serper_web_search
 from ...clients.openai_client import get_openai_client, extract_json_from_text
+from ...clients.apollo import ApolloClient
+from ...config import settings
 import json
+
+_log = logging.getLogger(__name__)
 
 
 async def probe(company: str, jd_url: str | None = None) -> Dict[str, Any]:
     """
-    Research real business problems/challenges for a company using web search
-    and LLM summarization. Returns at least 3 items when possible.
+    Research real business problems/challenges for a company using web search,
+    Apollo news, and LLM summarization. Returns at least 3 items when possible.
     """
     company = (company or "").strip()
     if not company:
@@ -31,6 +36,28 @@ async def probe(company: str, jd_url: str | None = None) -> Dict[str, Any]:
                 snippets.append(f"{t}: {s}" if t else s)
             if u:
                 urls.append(u)
+
+    # Apollo news articles: supplement Serper with targeted company news
+    if settings.apollo_api_key:
+        try:
+            apollo = ApolloClient(settings.apollo_api_key, timeout_seconds=10.0)
+            domain = company.lower().replace(" ", "") + ".com"
+            ac = apollo.company_enrich(domain)
+            if ac and ac.apollo_id:
+                news = apollo.news_search([ac.apollo_id], per_page=6)
+                for article in news:
+                    if not isinstance(article, dict):
+                        continue
+                    title = str(article.get("title") or "").strip()
+                    snippet = str(article.get("snippet") or article.get("description") or "").strip()
+                    url = str(article.get("url") or "").strip()
+                    if title:
+                        snippets.append(f"{title}: {snippet[:200]}" if snippet else title)
+                    if url:
+                        urls.append(url)
+                _log.info("Apollo news added %d articles for %s", len(news), company)
+        except Exception as e:
+            _log.debug("Apollo news probe failed for %s: %s", company, e)
 
     client = get_openai_client()
     if snippets and client.should_use_real_llm:
