@@ -601,23 +601,22 @@ async def upload_resume(file: UploadFile = File(...)):
                     if bad >= max(2, len(extract_obj.positions[:8]) // 2):
                         bad_positions = True
 
-                if bad_positions:
-                    pos_raw = parsed.get("Positions") or []
-                    positions: List[Position] = []
-                    for p in pos_raw[:10] if isinstance(pos_raw, list) else []:
-                        if isinstance(p, dict):
-                            positions.append(
-                                Position(
-                                    company=str(p.get("company") or p.get("Company") or ""),
-                                    title=str(p.get("title") or p.get("Title") or ""),
-                                    start_date=str(p.get("start_date") or p.get("StartDate") or ""),
-                                    end_date=str(p.get("end_date") or p.get("EndDate") or ""),
-                                    current=bool(p.get("current") or False),
-                                    description=str(p.get("description") or p.get("Description") or ""),
-                                )
+                pos_raw = parsed.get("Positions") or []
+                rb_positions: List[Position] = []
+                for p in pos_raw[:10] if isinstance(pos_raw, list) else []:
+                    if isinstance(p, dict):
+                        rb_positions.append(
+                            Position(
+                                company=str(p.get("company") or p.get("Company") or ""),
+                                title=str(p.get("title") or p.get("Title") or ""),
+                                start_date=str(p.get("start_date") or p.get("StartDate") or ""),
+                                end_date=str(p.get("end_date") or p.get("EndDate") or ""),
+                                current=bool(p.get("current") or False),
+                                description=str(p.get("description") or p.get("Description") or ""),
                             )
-                    if positions:
-                        extract_obj.positions = _filter_non_experience_positions(positions)[:8]
+                        )
+                if rb_positions and (bad_positions or len(rb_positions) > len(extract_obj.positions or [])):
+                    extract_obj.positions = _filter_non_experience_positions(rb_positions)[:8]
 
                     tenure_raw = parsed.get("Tenure") or []
                     if isinstance(tenure_raw, list) and tenure_raw:
