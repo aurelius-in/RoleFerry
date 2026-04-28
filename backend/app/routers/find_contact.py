@@ -782,6 +782,8 @@ async def search_contacts(request: ContactSearchRequest):
                 logger.debug("Prompt parsing failed, using raw fields: %s", e)
 
         q = (request.company or request.query or "").strip()
+        if not q and request.prompt:
+            q = request.prompt.strip()
         if not q:
             raise HTTPException(status_code=400, detail="Query is required")
 
