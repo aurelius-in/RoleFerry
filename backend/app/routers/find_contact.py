@@ -783,7 +783,11 @@ async def search_contacts(request: ContactSearchRequest):
 
         q = (request.company or request.query or "").strip()
         if not q and request.prompt:
-            q = request.prompt.strip()
+            # Try to extract company name from raw prompt with simple patterns
+            # e.g. "Find me recruiters at Google Cloud" → "Google Cloud"
+            _co_m = re.search(r"\b(?:at|for|from)\s+(.+?)(?:\s+(?:in|within|who|with|that)\b|$)", request.prompt.strip(), re.I)
+            if _co_m:
+                q = _co_m.group(1).strip().rstrip(".,;")
         if not q:
             raise HTTPException(status_code=400, detail="Query is required")
 
