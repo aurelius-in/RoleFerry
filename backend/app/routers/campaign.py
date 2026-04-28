@@ -1278,9 +1278,9 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
                     for pp in proof_points:
                         clean_pp = pp.rstrip(".")
                         body_bits.append(f"{clean_pp}.\n\n")
-                body_bits.append(f"Interested in seeing how this could work for your team? {cta_line}\n\n")
+                body_bits.append(f"\n{cta_line}\n\n")
             else:
-                body_bits.append(f"I realize your time is limited, so this will be my last note. If the role has been filled or I am not the right fit, no worries at all. If there is someone else on your team I should connect with, I would appreciate an introduction.\n\n")
+                body_bits.append(f"I realize your time is limited, so this will be my last note. If the role has been filled or I am not the right fit, no worries at all.\n\n")
                 body_bits.append(f"{cta_line}\n\n")
 
             bio = str(((links or {}).get("bio_page_url")) or "").strip()
@@ -1465,8 +1465,16 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
                 subject = fb_subj
             body_core = _strip_existing_signature(_strip_fluff_openers(fb_body)).strip()
 
-        # Deterministic CTA injection: if the chosen CTA is not present in the body, append it.
-        if chosen_cta and chosen_cta.lower() not in body_core.lower():
+        # Deterministic CTA injection: only add if the body has no question/ask near the end.
+        _has_cta = False
+        if chosen_cta and chosen_cta.lower() in body_core.lower():
+            _has_cta = True
+        else:
+            # Check if the last ~200 chars already contain a question or CTA-like phrase
+            tail = body_core[-200:].lower() if len(body_core) > 200 else body_core.lower()
+            if "?" in tail or any(k in tail for k in ["worth exploring", "open to", "happy to", "interested in", "let me know", "would you be", "chat", "connect", "conversation", "call", "meet"]):
+                _has_cta = True
+        if chosen_cta and not _has_cta:
             cta_sentence = chosen_cta.strip()
             if not cta_sentence[-1:] in ".?!":
                 cta_sentence += "?"
