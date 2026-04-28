@@ -464,7 +464,12 @@ export default function DeliverabilityLaunchPage() {
         } catch {}
       }
     } catch (e: any) {
-      setError(String(e?.message || "Failed to launch campaign."));
+      const msg = String(e?.message || "Failed to launch campaign.");
+      if (msg.includes("401") || msg.toLowerCase().includes("not authenticated")) {
+        setError("You must be logged in to launch a campaign. Please sign in and try again.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setIsLaunching(false);
     }
