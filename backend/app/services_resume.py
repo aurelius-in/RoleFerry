@@ -1968,7 +1968,7 @@ def extract_education(sections: Dict[str, List[str]], all_lines: List[str]) -> L
     if not lines:
         # Fallback: look for lines that contain degree keywords.
         candidates = []
-        deg_re = re.compile(r"\b(b\.?s\.?|b\.?a\.?|bachelor|m\.?s\.?|m\.?a\.?|master|mba|phd|doctorate|associate|a\.?a\.?s\.?|a\.?a\.?|b\.?f\.?a\.?|bfa|b\.?s\.?n\.?|bsn|apprenticeship|certificate|diploma)(?=\W|$)", re.I)
+        deg_re = re.compile(r"\b(b\.?s\.?|b\.?a\.?|bachelor|m\.?s\.?|m\.?a\.?|master|mba|ph\.?d\.?|phd|ed\.?d\.?|j\.?d\.?|d\.?o\.?|doctorate|associate|a\.?a\.?s\.?|a\.?a\.?|b\.?f\.?a\.?|bfa|b\.?s\.?n\.?|bsn|apprenticeship|certificate|diploma)(?=\W|$)", re.I)
         for l in all_lines:
             if deg_re.search(l):
                 candidates.append(_normalize_text(l).strip())
@@ -1983,7 +1983,7 @@ def extract_education(sections: Dict[str, List[str]], all_lines: List[str]) -> L
     # Also support month-year spans like "May 2020 - Nov 2021"
     month_name = r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
     month_year_span = re.compile(rf"\b{month_name}\s+\d{{4}}\b\s*(?:--|–|—|-|to)\s*\b{month_name}\s+\d{{4}}\b", re.I)
-    degree_kw = re.compile(r"\b(b\.?s\.?|b\.?a\.?|bachelor|m\.?s\.?|m\.?a\.?|master|mba|phd|doctorate|associate|a\.?a\.?s\.?|a\.?a\.?|b\.?f\.?a\.?|bfa|b\.?s\.?n\.?|bsn|apprenticeship|certificate|diploma)(?=\W|$)", re.I)
+    degree_kw = re.compile(r"\b(b\.?s\.?|b\.?a\.?|bachelor|m\.?s\.?|m\.?a\.?|master|mba|ph\.?d\.?|phd|ed\.?d\.?|j\.?d\.?|d\.?o\.?|doctorate|associate|a\.?a\.?s\.?|a\.?a\.?|b\.?f\.?a\.?|bfa|b\.?s\.?n\.?|bsn|apprenticeship|certificate|diploma)(?=\W|$)", re.I)
     for l in lines:
         t = (l or "").strip().lstrip("-•* ").strip()
         if not t or len(t) > 240:
@@ -2022,22 +2022,33 @@ def extract_education(sections: Dict[str, List[str]], all_lines: List[str]) -> L
         # Heuristic split examples:
         # - "B.S. Electrical Engineering, TCNJ, Ewing NJ 2014 - 2019"
         # - "Lambda School, Full Stack Web Development May 2020 - Nov 2021"
+        # - "MBA - Columbia Business School, New York, NY, May 2013"
         parts = [p.strip() for p in re.split(r"[|•]", t) if p.strip()]
         core = parts[0] if parts else t
         # Remove years from core for parsing
         core_wo_years = single_year.sub("", core).strip(" ,;-")
         # Remove month names left behind from month-year spans
         core_wo_years = re.sub(rf"\b{month_name}\b", "", core_wo_years, flags=re.I).strip(" ,;-")
-        # Split by commas
-        comma_parts = [p.strip() for p in core_wo_years.split(",") if p.strip()]
-        if comma_parts:
-            # If first part looks like a degree, treat it as degree+field
-            if re.search(r"\b(b\.?s\.?|b\.?a\.?|bachelor|m\.?s\.?|m\.?a\.?|master|mba|phd|doctorate|associate|a\.?a\.?s\.?|a\.?a\.?|b\.?f\.?a\.?|bfa|b\.?s\.?n\.?|bsn|apprenticeship|certificate|diploma)(?=\W|$)", comma_parts[0], re.I):
-                degree = comma_parts[0]
-                if len(comma_parts) >= 2:
-                    school = comma_parts[1]
-                if len(comma_parts) >= 3:
-                    notes = ", ".join(comma_parts[2:])
+        # Handle "Degree - School, Location" format (split on em-dash or spaced dash first)
+        dash_m = re.match(r"^(.+?)\s+(?:—|–|-)\s+(.+)$", core_wo_years)
+        if dash_m and degree_kw.search(dash_m.group(1)):
+            degree = dash_m.group(1).strip()
+            rest = dash_m.group(2).strip()
+            rest_parts = [p.strip() for p in rest.split(",") if p.strip()]
+            school = rest_parts[0] if rest_parts else rest
+            if len(rest_parts) >= 2:
+                notes = ", ".join(rest_parts[1:])
+        else:
+            # Split by commas
+            comma_parts = [p.strip() for p in core_wo_years.split(",") if p.strip()]
+            if comma_parts:
+                # If first part looks like a degree, treat it as degree+field
+                if re.search(r"\b(b\.?s\.?|b\.?a\.?|bachelor|m\.?s\.?|m\.?a\.?|master|mba|ph\.?d\.?|phd|ed\.?d\.?|j\.?d\.?|d\.?o\.?|doctorate|associate|a\.?a\.?s\.?|a\.?a\.?|b\.?f\.?a\.?|bfa|b\.?s\.?n\.?|bsn|apprenticeship|certificate|diploma)(?=\W|$)", comma_parts[0], re.I):
+                    degree = comma_parts[0]
+                    if len(comma_parts) >= 2:
+                        school = comma_parts[1]
+                    if len(comma_parts) >= 3:
+                        notes = ", ".join(comma_parts[2:])
             else:
                 # Otherwise treat first as school
                 school = comma_parts[0]
