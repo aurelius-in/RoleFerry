@@ -342,8 +342,18 @@ async def authenticate(email: str, password: str) -> Optional[AuthUser]:
     )
 
 
-async def get_current_user_optional(request: Request) -> Optional[AuthUser]:
+def _extract_token(request: Request) -> Optional[str]:
     token = request.cookies.get(settings.auth_cookie_name) if request else None
+    if token:
+        return token
+    auth_header = (request.headers.get("authorization") or "") if request else ""
+    if auth_header.startswith("Bearer "):
+        return auth_header[7:].strip() or None
+    return None
+
+
+async def get_current_user_optional(request: Request) -> Optional[AuthUser]:
+    token = _extract_token(request)
     if not token:
         return None
     try:

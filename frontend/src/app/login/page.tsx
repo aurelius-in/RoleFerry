@@ -92,6 +92,7 @@ export default function LoginPage() {
         });
         if (!resp?.success) throw new Error(resp?.message || "Failed to create account.");
         if (resp?.user) localStorage.setItem("rf_user", JSON.stringify(resp.user));
+        if (resp?.token) localStorage.setItem("rf_token", resp.token);
       } else {
         if (!email.trim()) throw new Error("Email is required.");
         if (!password) throw new Error("Password is required.");
@@ -100,6 +101,7 @@ export default function LoginPage() {
         const resp = await api<any>("/auth/login", "POST", { email, password });
         if (!resp?.success) throw new Error(resp?.message || "Failed to log in.");
         if (resp?.user) localStorage.setItem("rf_user", JSON.stringify(resp.user));
+        if (resp?.token) localStorage.setItem("rf_token", resp.token);
       }
 
       window.location.href = "/job-preferences";

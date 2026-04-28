@@ -37,6 +37,7 @@ class AuthResponse(BaseModel):
     success: bool
     message: str
     user: Optional[UserProfile] = None
+    token: Optional[str] = None
 
 
 class UpdateMeRequest(BaseModel):
@@ -72,6 +73,7 @@ async def register(req: RegisterRequest, response: Response):
     return AuthResponse(
         success=True,
         message="Account created",
+        token=token,
         user=UserProfile(
             id=user.id,
             email=user.email,
@@ -101,6 +103,7 @@ async def login(req: LoginRequest, response: Response):
     return AuthResponse(
         success=True,
         message="Logged in",
+        token=token,
         user=UserProfile(
             id=user.id,
             email=user.email,
@@ -121,9 +124,11 @@ async def logout(response: Response):
 @router.get("/me", response_model=AuthResponse)
 async def me(request: Request):
     user = await require_current_user(request)
+    token = request.cookies.get(settings.auth_cookie_name) or None
     return AuthResponse(
         success=True,
         message="OK",
+        token=token,
         user=UserProfile(
             id=user.id,
             email=user.email,
