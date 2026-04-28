@@ -681,22 +681,24 @@ async def upload_resume(file: UploadFile = File(...)):
                 ]
             if not extract_obj.accomplishments:
                 extract_obj.accomplishments = [str(a) for a in (parsed.get("NotableAccomplishments") or [])]
-            if not extract_obj.tenure:
-                tenure_raw = parsed.get("Tenure") or []
-                if isinstance(tenure_raw, list):
-                    extract_obj.tenure = [
-                        Tenure(
-                            company=str(t.get("company") or ""),
-                            duration=str(t.get("duration") or ""),
-                            role=str(t.get("role") or ""),
-                        )
-                        for t in tenure_raw
-                        if isinstance(t, dict)
-                    ]
-            if not extract_obj.education:
-                edu_raw = parsed.get("Education") or []
-                if isinstance(edu_raw, list):
-                    extract_obj.education = [
+            # Prefer rule-based tenure if GPT tenure is empty or has garbled company names
+            tenure_raw_rb = parsed.get("Tenure") or []
+            if isinstance(tenure_raw_rb, list) and tenure_raw_rb:
+                rb_tenure = [
+                    Tenure(
+                        company=str(t.get("company") or ""),
+                        duration=str(t.get("duration") or ""),
+                        role=str(t.get("role") or ""),
+                    )
+                    for t in tenure_raw_rb
+                    if isinstance(t, dict)
+                ]
+                if not extract_obj.tenure or len(rb_tenure) > len(extract_obj.tenure or []):
+                    extract_obj.tenure = rb_tenure
+            # Prefer rule-based education if it found more entries than GPT
+            edu_raw = parsed.get("Education") or []
+            if isinstance(edu_raw, list) and len(edu_raw) > len(extract_obj.education or []):
+                extract_obj.education = [
                         EducationItem(
                             school=str(e.get("school") or ""),
                             degree=str(e.get("degree") or ""),
