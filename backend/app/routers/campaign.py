@@ -1017,6 +1017,16 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
                 if url and len(source_urls) < 6 and url not in source_urls:
                     source_urls.append(url)
 
+            # Structured company signals (from PDL/Apollo via company_signals list)
+            for sig in _as_list(comp.get("company_signals") or context_obj.get("selected_company_signals"))[:6]:
+                if isinstance(sig, dict):
+                    label = str(sig.get("label") or "").strip()
+                    value = str(sig.get("value") or sig.get("text") or "").strip()
+                    if label and value and value.lower() not in ("unknown", "none", "n/a"):
+                        _push_unique(company_signals, f"{label}: {value}", 9)
+                elif isinstance(sig, str) and sig.strip():
+                    _push_unique(company_signals, sig.strip(), 9)
+
             # Contact signals from contact research + sourced facts.
             contact_bios = _as_list(ctc.get("contact_bios"))
             b0 = contact_bios[0] if contact_bios and isinstance(contact_bios[0], dict) else {}
