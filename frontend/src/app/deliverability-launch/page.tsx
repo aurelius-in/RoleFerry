@@ -690,18 +690,11 @@ export default function DeliverabilityLaunchPage() {
                     />
                   </div>
 
-                  {/* Campaign Owner & Tags */}
+                  {/* Tags & Settings */}
                   <div className="bg-white/5 border border-white/10 rounded-lg p-5">
-                    <h2 className="text-base font-semibold text-white mb-3">Campaign Details</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label className="block text-xs text-white/50 mb-1">Campaign Owner</label>
-                        <div className="bg-black/20 border border-white/10 rounded px-3 py-2 text-sm text-white/80">{campaignOwner}</div>
-                      </div>
-                      <div>
-                        <label className="block text-xs text-white/50 mb-1">Daily Limit per Account</label>
-                        <div className="bg-black/20 border border-white/10 rounded px-3 py-2 text-sm text-white/80">{dailyLimit} emails/day</div>
-                      </div>
+                    <div className="mb-4">
+                      <label className="block text-xs text-white/50 mb-1">Daily Limit per Account</label>
+                      <div className="bg-black/20 border border-white/10 rounded px-3 py-2 text-sm text-white/80">{dailyLimit} emails/day</div>
                     </div>
                     <div>
                       <label className="block text-xs text-white/50 mb-1">Custom Tags</label>
