@@ -5,11 +5,18 @@ import { useRouter, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import DataModal from "./DataModal";
 
+const STEP_PATHS: Record<number, string> = {
+  1: "/job-preferences", 2: "/resume", 3: "/personality", 4: "/job-descriptions",
+  5: "/gap-analysis", 6: "/painpoint-match", 7: "/company-research", 8: "/find-contact",
+  9: "/offer", 10: "/bio-page", 11: "/apply", 12: "/campaign",
+};
+
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [dataOpen, setDataOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   
   // Re-read user from localStorage on every client-side navigation so the
   // greeting updates after login/register (which write rf_user then navigate).
@@ -20,6 +27,15 @@ export default function Navbar() {
     } else {
       setUser(null);
     }
+
+    try {
+      const raw = localStorage.getItem("roleferry-progress");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const steps: number[] = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.steps) ? parsed.steps : [];
+        setCompletedSteps(new Set(steps.filter((n) => Number.isFinite(n))));
+      }
+    } catch {}
   }, [pathname]);
 
   useEffect(() => {
@@ -164,18 +180,18 @@ export default function Navbar() {
             <NavPill href="/" pathname={pathname} kind="utility" size="md">Dashboard</NavPill>
             <span className="mx-2 h-4 w-px bg-white/15" />
 
-            <NavPill href="/job-preferences" pathname={pathname}>Preferences</NavPill>
-            <NavPill href="/resume" pathname={pathname}>Resume</NavPill>
-            <NavPill href="/personality" pathname={pathname}>Personality</NavPill>
-            <NavPill href="/job-descriptions" pathname={pathname}>Roles</NavPill>
-            <NavPill href="/gap-analysis" pathname={pathname}>Gaps</NavPill>
-            <NavPill href="/painpoint-match" pathname={pathname}>Match</NavPill>
-            <NavPill href="/company-research" pathname={pathname}>Research</NavPill>
-            <NavPill href="/find-contact" pathname={pathname}>Contact</NavPill>
-            <NavPill href="/offer" pathname={pathname}>Offer</NavPill>
-            <NavPill href="/bio-page" pathname={pathname}>Bio</NavPill>
-            <NavPill href="/apply" pathname={pathname}>Apply</NavPill>
-            <NavPill href="/campaign" pathname={pathname}>Campaign</NavPill>
+            <NavPill href="/job-preferences" pathname={pathname} done={completedSteps.has(1)}>Prefs</NavPill>
+            <NavPill href="/resume" pathname={pathname} done={completedSteps.has(2)}>Resume</NavPill>
+            <NavPill href="/personality" pathname={pathname} done={completedSteps.has(3)}>Persona</NavPill>
+            <NavPill href="/job-descriptions" pathname={pathname} done={completedSteps.has(4)}>Roles</NavPill>
+            <NavPill href="/gap-analysis" pathname={pathname} done={completedSteps.has(5)}>Gaps</NavPill>
+            <NavPill href="/painpoint-match" pathname={pathname} done={completedSteps.has(6)}>Match</NavPill>
+            <NavPill href="/company-research" pathname={pathname} done={completedSteps.has(7)}>Research</NavPill>
+            <NavPill href="/find-contact" pathname={pathname} done={completedSteps.has(8)}>Contact</NavPill>
+            <NavPill href="/offer" pathname={pathname} done={completedSteps.has(9)}>Offer</NavPill>
+            <NavPill href="/bio-page" pathname={pathname} done={completedSteps.has(10)}>Bio</NavPill>
+            <NavPill href="/apply" pathname={pathname} done={completedSteps.has(11)}>Apply</NavPill>
+            <NavPill href="/campaign" pathname={pathname} done={completedSteps.has(12)}>Campaign</NavPill>
             <NavPill href="/deliverability-launch" pathname={pathname}>Launch</NavPill>
 
             {/* Big spacing: steps vs non-step utilities */}
@@ -225,15 +241,17 @@ function NavPill({
   children,
   kind = "primary",
   size = "sm",
+  done = false,
 }: {
   href: string;
   pathname: string | null;
   children: React.ReactNode;
   kind?: "primary" | "utility";
   size?: "sm" | "md" | "lg";
+  done?: boolean;
 }) {
   const active = pathname === href || (href !== "/" && pathname?.startsWith(href));
-  const base = "inline-flex items-center justify-center rounded-full border font-semibold tracking-normal transition-colors select-none";
+  const base = "inline-flex items-center gap-1 justify-center rounded-full border font-semibold tracking-normal transition-colors select-none";
   const sizing =
     size === "md"
       ? "px-2.5 py-1 text-[11px] leading-4"
@@ -243,14 +261,14 @@ function NavPill({
   const inactive =
     kind === "utility"
       ? "bg-white/5 text-white/80 border-white/10 hover:bg-white/10 hover:text-white"
-      : "bg-black/20 text-white/80 border-white/10 hover:bg-white/10 hover:text-white";
-  const activeCls =
-    kind === "utility"
-      ? "brand-gradient text-black border-white/10 shadow-sm shadow-black/20"
-      : "brand-gradient text-black border-white/10 shadow-sm shadow-black/20";
+      : done
+        ? "bg-emerald-900/20 text-emerald-300/90 border-emerald-500/25 hover:bg-emerald-900/30"
+        : "bg-black/20 text-white/80 border-white/10 hover:bg-white/10 hover:text-white";
+  const activeCls = "brand-gradient text-black border-white/10 shadow-sm shadow-black/20";
 
   return (
     <Link href={href} className={`${base} ${sizing} ${active ? activeCls : inactive}`}>
+      {done && !active && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />}
       {children}
     </Link>
   );

@@ -47,6 +47,12 @@ type JobDescription = {
 
 type GapSeverity = "small" | "medium" | "large" | "low" | "high";
 
+type Dream100Bridge = {
+  pain_this_role_feels?: string;
+  deliverable_angle?: string;
+  outreach_hook?: string;
+};
+
 type GapAnalysisItem = {
   job_id: string;
   title: string;
@@ -58,6 +64,7 @@ type GapAnalysisItem = {
   resume_gaps: Array<{ gap: string; severity: GapSeverity; evidence: string[]; how_to_close: string }>;
   personality_gaps: Array<{ gap: string; severity: GapSeverity; evidence: string[]; how_to_close: string }>;
   preference_gaps: Array<{ gap: string; severity: GapSeverity; evidence: string[]; how_to_close: string }>;
+  dream100_bridge?: Dream100Bridge;
   notes: string[];
 };
 
@@ -576,6 +583,30 @@ export default function GapAnalysisPage() {
                                 <span key={`xs_${s}`} className="px-2 py-1 rounded-full border border-red-500/20 bg-red-500/10 text-red-200 text-xs">{s}</span>
                               ))}
                             </div>
+                          </div>
+                        ) : null}
+
+                        {r.dream100_bridge && (r.dream100_bridge.pain_this_role_feels || r.dream100_bridge.deliverable_angle || r.dream100_bridge.outreach_hook) ? (
+                          <div className="mt-4 rounded-lg border border-blue-500/30 bg-blue-600/10 p-3 space-y-2">
+                            <div className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">Dream 100 Bridge</div>
+                            {r.dream100_bridge.pain_this_role_feels && (
+                              <div>
+                                <div className="text-[10px] font-semibold text-white/50 uppercase mb-0.5">Pain they feel</div>
+                                <div className="text-[11px] text-white/80">{r.dream100_bridge.pain_this_role_feels}</div>
+                              </div>
+                            )}
+                            {r.dream100_bridge.deliverable_angle && (
+                              <div>
+                                <div className="text-[10px] font-semibold text-white/50 uppercase mb-0.5">Deliverable angle</div>
+                                <div className="text-[11px] text-white/80">{r.dream100_bridge.deliverable_angle}</div>
+                              </div>
+                            )}
+                            {r.dream100_bridge.outreach_hook && (
+                              <div>
+                                <div className="text-[10px] font-semibold text-white/50 uppercase mb-0.5">Outreach hook</div>
+                                <div className="text-[11px] text-white/90 font-medium">{r.dream100_bridge.outreach_hook}</div>
+                              </div>
+                            )}
                           </div>
                         ) : null}
                       </div>
