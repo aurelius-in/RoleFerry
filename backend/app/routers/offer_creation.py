@@ -62,6 +62,7 @@ class ComposeOfferSnippetRequest(BaseModel):
     success_metrics: List[str] = []
     company_signals: List[Dict[str, Any]] = []
     contact_signals: List[Dict[str, Any]] = []
+    dream100: Optional[Dict[str, Any]] = None
 
 
 class ComposeOfferSnippetResponse(BaseModel):
@@ -179,6 +180,28 @@ async def compose_offer_snippet(payload: ComposeOfferSnippetRequest):
                         {"label": s.get("label", ""), "value": s.get("value", "")}
                         for s in payload.contact_signals[:5]
                     ]
+                d100 = payload.dream100 or {}
+                d100_career_result = str(d100.get("careerResult") or "").strip()
+                d100_deliverable = str(d100.get("freeDeliverable") or "").strip()
+                d100_level = str(d100.get("positioningLevel") or "").strip()
+                if d100_career_result:
+                    ctx["dream100"] = {
+                        "career_result": d100_career_result,
+                        "free_deliverable": d100_deliverable,
+                        "positioning_level": d100_level,
+                    }
+
+                dream100_injection = ""
+                if d100_career_result:
+                    dream100_injection = (
+                        f"\nDream 100 context — incorporate this into the snippet:\n"
+                        f"- Career result: {d100_career_result}\n"
+                        + (f"- Free deliverable they offer: {d100_deliverable}\n" if d100_deliverable else "")
+                        + (f"- Positioning level: {d100_level}\n" if d100_level else "")
+                        + "Use the career result as the core proof point. If a free deliverable is provided, "
+                        "frame the CTA as offering to send the deliverable ('mind if I send it over?') rather than requesting a call.\n"
+                    )
+
                 messages = [
                     {
                         "role": "system",
@@ -206,7 +229,8 @@ async def compose_offer_snippet(payload: ComposeOfferSnippetRequest):
                             "- If hard_cta is provided but no soft_cta, use the hard_cta as the closing ask.\n"
                             "- The CTA must appear naturally as the final sentence, not as a labeled line.\n"
                             "- Use only provided inputs; do not invent facts or numbers.\n"
-                            "- The output must read as a natural paragraph, not a bulleted list.\n"
+                            + dream100_injection
+                            + "- The output must read as a natural paragraph, not a bulleted list.\n"
                         ),
                     },
                     {"role": "user", "content": json.dumps(ctx, ensure_ascii=False)},

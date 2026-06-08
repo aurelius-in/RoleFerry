@@ -1497,6 +1497,19 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             d100_dm_body = _normalize_message_text(_no_em_dashes(d100_dm_body))
             d100_voice_script = _normalize_message_text(_no_em_dashes(d100_voice_script))
 
+            # Apply quality filter to email variant; polish dm/voice as well.
+            try:
+                polished_email = client.quality_filter_message(d100_subject, d100_email_body, cta_text=chosen_cta, step=step)
+                d100_subject = polished_email.get("subject") or d100_subject
+                d100_email_body = polished_email.get("body") or d100_email_body
+            except Exception:
+                pass
+            try:
+                polished_dm = client.quality_filter_message("", d100_dm_body, cta_text=chosen_cta, step=step)
+                d100_dm_body = polished_dm.get("body") or d100_dm_body
+            except Exception:
+                pass
+
             return CampaignGenerateStepResponse(
                 success=True,
                 message="Generated (Dream 100 mode)",
