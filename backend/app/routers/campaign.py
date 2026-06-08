@@ -1457,7 +1457,9 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
                 "  - body: 2-4 sentences max. Even more casual than the email. Same hook, same deliverable, same CTA.\n\n"
                 "voice_note: Loom/voice note script\n"
                 "  - script: 30-45 second spoken script. Open with hook. Explain deliverable in one sentence. End with CTA. Write exactly how you'd say it out loud — no formal language.\n\n"
-                "Return ONLY valid JSON: { \"email\": { \"subject\": \"...\", \"body\": \"...\" }, \"dm\": { \"body\": \"...\" }, \"voice_note\": { \"script\": \"...\" } }\n"
+                "Return ONLY valid JSON:\n"
+                "{ \"email\": { \"subject\": \"...\", \"body\": \"...\", \"subject_alt_1\": \"...\", \"subject_alt_2\": \"...\" }, \"dm\": { \"body\": \"...\" }, \"voice_note\": { \"script\": \"...\" } }\n"
+                "subject_alt_1 and subject_alt_2: two MORE subject line options (different angles — curiosity, specificity, directness). All subjects must be lowercase 2-5 words.\n"
             )
 
             d100_messages = [
@@ -1489,6 +1491,8 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             d100_email_body = str(email_v.get("body") or "").strip()
             d100_dm_body = str(dm_v.get("body") or "").strip()
             d100_voice_script = str(voice_v.get("script") or "").strip()
+            d100_subject_alt_1 = _normalize_message_text(_no_em_dashes(str(email_v.get("subject_alt_1") or "").strip().lower()))[:100]
+            d100_subject_alt_2 = _normalize_message_text(_no_em_dashes(str(email_v.get("subject_alt_2") or "").strip().lower()))[:100]
 
             d100_email_body = _normalize_message_text(_no_em_dashes(
                 _append_signature(_strip_existing_signature(_strip_fluff_openers(d100_email_body)))
@@ -1520,7 +1524,7 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
                     "dream100_mode": True,
                     "positioning_level": positioning_level,
                     "dream100_variants": {
-                        "email": {"subject": d100_subject, "body": d100_email_body},
+                        "email": {"subject": d100_subject, "body": d100_email_body, "subject_alt_1": d100_subject_alt_1, "subject_alt_2": d100_subject_alt_2},
                         "dm": {"body": d100_dm_body},
                         "voice_note": {"script": d100_voice_script},
                     },

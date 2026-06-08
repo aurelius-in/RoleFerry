@@ -38,7 +38,7 @@ type Mode = "job-seeker" | "recruiter";
 type Dream100VariantTab = "email" | "dm" | "voice_note";
 
 type Dream100Variants = {
-  email: { subject: string; body: string };
+  email: { subject: string; body: string; subject_alt_1?: string; subject_alt_2?: string };
   dm: { body: string };
   voice_note: { script: string };
 };
@@ -1074,13 +1074,31 @@ export default function CampaignV2() {
 
                 {activeTab !== "voice_note" && (
                   <div>
-                    <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Subject</div>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">Subject</div>
+                      {step.subject && <CopyButton text={String(step.subject || "")} />}
+                    </div>
                     <input
                       value={String(step.subject || "")}
                       onChange={(e) => updateStep(cid, step.id, { subject: e.target.value })}
                       className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder={activeTab === "dm" ? "No subject for DMs" : "Generate to fill..."}
                     />
+                    {activeTab === "email" && (d100Variants.email.subject_alt_1 || d100Variants.email.subject_alt_2) && (
+                      <div className="mt-2 space-y-1">
+                        <div className="text-[10px] text-white/40 uppercase tracking-wider">A/B alternatives — click to use:</div>
+                        {[d100Variants.email.subject_alt_1, d100Variants.email.subject_alt_2].filter(Boolean).map((alt, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => updateStep(cid, step.id, { subject: cleanMessageText(alt!) })}
+                            className="w-full text-left text-xs text-white/70 border border-white/10 bg-white/5 hover:bg-blue-600/20 hover:border-blue-400/30 rounded px-2.5 py-1.5 transition-colors"
+                          >
+                            {alt}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
                 <div>

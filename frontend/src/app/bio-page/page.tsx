@@ -489,11 +489,16 @@ export default function BioPageStep() {
     setBusy("generate");
     setMsg(null);
     try {
+      const dream100Raw = typeof window !== "undefined" ? localStorage.getItem("rf_dream100") : null;
+      let dream100: any = null;
+      try { dream100 = dream100Raw ? JSON.parse(dream100Raw) : null; } catch {}
+
       const res = await api<{ draft: BioPageDraft }>("/bio-pages/generate", "POST", {
         resume_extract: resumeExtract,
         selected_job_description: selectedJob,
         painpoint_matches: Array.isArray(painpointMatches) ? painpointMatches : [],
         offer_draft: offerDraft,
+        dream100: dream100 || undefined,
       });
       if (res?.draft) {
         // Preserve user-entered URLs across regenerations.
