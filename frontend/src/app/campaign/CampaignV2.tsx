@@ -579,8 +579,8 @@ export default function CampaignV2() {
       });
 
       const d100v = res?.helper?.dream100_variants;
-      if (d100v && step.step_number === 1) {
-        const stepKey = `${cid}_e1`;
+      if (d100v) {
+        const stepKey = `${cid}_e${step.step_number}`;
         setDream100VariantsByStep((prev) => ({ ...prev, [stepKey]: d100v as Dream100Variants }));
         setActiveVariantTab((prev) => ({ ...prev, [stepKey]: "email" }));
       }

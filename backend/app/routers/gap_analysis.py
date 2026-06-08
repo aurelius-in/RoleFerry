@@ -1171,6 +1171,7 @@ async def analyze_gap(req: GapAnalysisRequest):
                     "  resume_gaps: [{gap, severity(low|medium|high), evidence[], how_to_close}],\n"
                     "  personality_gaps: [{gap, severity(low|medium|high), evidence[], how_to_close}],\n"
                     "  preference_gaps: [{gap, severity(low|medium|high), evidence[], how_to_close}],\n"
+                    "  dream100_bridge: { pain_this_role_feels: string (1 sentence: the #1 pain the hiring manager probably feels in this role based on the job requirements and company context), deliverable_angle: string (1 sentence: what kind of free deliverable would directly address that pain and showcase the candidate's matched skills), outreach_hook: string (1 sentence: the most specific hook a candidate could use in a cold message for THIS role at THIS company) },\n"
                     "  notes[]\n"
                     "}\n"
                     "- overall: { resume_gaps[], personality_gaps[], preference_gaps[] } (optional summary buckets)\n"
