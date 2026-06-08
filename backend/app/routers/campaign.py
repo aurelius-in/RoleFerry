@@ -1052,6 +1052,22 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
                 elif isinstance(sig, str) and sig.strip():
                     _push_unique(company_signals, sig.strip(), 9)
 
+            # Dream 100 brief: if present, inject best_hook as the top-priority contact signal.
+            d100_brief = ctc.get("dream100_brief") if isinstance(ctc, dict) else None
+            if isinstance(d100_brief, dict):
+                bh = str(d100_brief.get("best_hook") or "").strip()
+                if bh:
+                    _push_unique(contact_signals, f"[BEST HOOK] {bh}", 8)
+                oa = str(d100_brief.get("outreach_angle") or "").strip()
+                if oa and not outreach_angles:
+                    outreach_angles = [oa]
+                pp = str(d100_brief.get("pain_points") or "").strip()
+                if pp:
+                    _push_unique(contact_signals, f"Pain points: {pp[:300]}", 8)
+                ts = str(d100_brief.get("tone_style") or "").strip()
+                if ts:
+                    _push_unique(contact_signals, f"Tone/style: {ts}", 8)
+
             # Contact signals from contact research + sourced facts.
             contact_bios = _as_list(ctc.get("contact_bios"))
             b0 = contact_bios[0] if contact_bios and isinstance(contact_bios[0], dict) else {}
@@ -1304,6 +1320,200 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
                 helper={"used_llm": False},
             )
 
+        # Dream 100 mode: activate for ALL steps when positioning context is present.
+        d100 = ctx.get("dream100") if isinstance(ctx, dict) else None
+        if isinstance(d100, dict) and (d100.get("career_result") or d100.get("free_deliverable")) and step in (1, 2, 3, 4):
+
+            # Steps 2 and 3: ultra-short follow-up templates (same message, different day)
+            if step in (2, 3):
+                free_del = str(d100.get("free_deliverable") or "").strip()
+                del_name = free_del if free_del else "the deliverable"
+                contact_obj_s23 = ctx.get("contact") if isinstance(ctx, dict) else {}
+                contact_name_s23 = str((contact_obj_s23 or {}).get("name") or "").strip()
+                first_name_s23 = contact_name_s23.split()[0] if contact_name_s23 else ""
+
+                if step == 2:
+                    body_text = f"still have that {del_name} ready for you. worth sending over?"
+                else:
+                    body_text = f"last follow up — {del_name} is done whenever you want it. happy to share."
+
+                body_with_sig = _append_signature(body_text)
+                body_with_sig = _normalize_message_text(_no_em_dashes(body_with_sig))
+
+                return CampaignGenerateStepResponse(
+                    success=True,
+                    message=f"Generated (Dream 100 step {step})",
+                    subject="",
+                    body=body_with_sig,
+                    helper={
+                        "used_llm": False,
+                        "dream100_mode": True,
+                        "positioning_level": str(d100.get("positioning_level") or "2"),
+                        "dream100_variants": {
+                            "email": {"subject": "", "body": body_with_sig},
+                            "dm": {"body": body_text},
+                            "voice_note": {"script": body_text},
+                        },
+                    },
+                )
+
+            # Step 4: gracious close — short, no pressure, optional referral ask
+            if step == 4:
+                contact_obj_s4 = ctx.get("contact") if isinstance(ctx, dict) else {}
+                contact_name_s4 = str((contact_obj_s4 or {}).get("name") or "").strip()
+                first_name_s4 = contact_name_s4.split()[0] if contact_name_s4 else ""
+                greet_s4 = f"Hi {first_name_s4},\n\n" if first_name_s4 else ""
+                free_del_s4 = str(d100.get("free_deliverable") or "").strip()
+
+                d100_s4_system = (
+                    "You are writing a short, gracious final close — the last message in a Dream 100 outreach sequence.\n\n"
+                    "Rules:\n"
+                    "- NEVER start a sentence with 'I'\n"
+                    "- 2-3 sentences maximum\n"
+                    "- No corporate language, no guilt, no pressure\n"
+                    "- EXACTLY ONE ask: either an easy-out ('completely understand if the timing isn't right') OR a referral ask ('if there's someone else on your team I should connect with, I'd appreciate an intro') — NOT BOTH\n"
+                    "- End graciously\n\n"
+                    "Context:\n"
+                    f"- Contact: {contact_name_s4 or 'the hiring manager'}\n"
+                    f"- Free deliverable offered: {free_del_s4 or '(not specified)'}\n\n"
+                    "Return ONLY valid JSON: { \"body\": \"...\" }"
+                )
+                d100_s4_raw = client.run_chat_completion(
+                    [
+                        {"role": "system", "content": d100_s4_system},
+                        {"role": "user", "content": "Write the closing message."},
+                    ],
+                    temperature=0.35,
+                    max_tokens=300,
+                    stub_json={"body": f"{greet_s4}This will be my last note. If the timing isn't right or you've moved in a different direction, completely understand. If there's someone else on your team I should connect with, I'd appreciate an intro."},
+                )
+                s4_choices = d100_s4_raw.get("choices") or []
+                s4_msg = (s4_choices[0].get("message") if s4_choices else {}) or {}
+                s4_data = extract_json_from_text(str(s4_msg.get("content") or "")) or {}
+                s4_body = str(s4_data.get("body") or "").strip()
+                if not s4_body or len(s4_body) < 20:
+                    s4_body = f"{greet_s4}This will be my last note. If the timing isn't right or you've moved in a different direction, completely understand. If there's someone else on your team I should connect with, I'd appreciate an intro."
+                s4_body = _append_signature(_strip_existing_signature(s4_body))
+                s4_body = _normalize_message_text(_no_em_dashes(s4_body))
+                return CampaignGenerateStepResponse(
+                    success=True,
+                    message="Generated (Dream 100 step 4)",
+                    subject="",
+                    body=s4_body,
+                    helper={"used_llm": True, "dream100_mode": True},
+                )
+
+        # Dream 100 step 1 (kept separate for the 3-variant generation)
+        if step == 1 and isinstance(d100, dict) and (d100.get("career_result") or d100.get("free_deliverable")):
+            positioning_level = str(d100.get("positioning_level") or "2")
+            career_result = str(d100.get("career_result") or "").strip()
+            free_deliverable = str(d100.get("free_deliverable") or "").strip()
+
+            level_strategy = {
+                "1": "They have an open role posted. Reference it directly. Still lead with the deliverable, but acknowledge the posting.",
+                "2": "No exact role posted, but the need clearly exists. Lead with a free insight or mini-deliverable. Do NOT mention looking for a job.",
+                "3": "Hidden market — no role, no signal. Lead with substantial free work. Never hint at job hunting in the first message.",
+            }.get(positioning_level, "Lead with the free deliverable and a specific hook from your research.")
+
+            rb = _build_research_brief(llm_context_obj)
+            contact_sigs = rb.get("contact_signals", []) if isinstance(rb, dict) else []
+            company_sigs = rb.get("company_signals", []) if isinstance(rb, dict) else []
+            outreach_angles = rb.get("outreach_angles", []) if isinstance(rb, dict) else []
+            best_hook_candidates = contact_sigs[:3] + company_sigs[:3]
+
+            contact_obj = ctx.get("contact") if isinstance(ctx, dict) else {}
+            contact_name = str((contact_obj or {}).get("name") or "").strip()
+            contact_title = str((contact_obj or {}).get("title") or "").strip()
+            company_name_d100 = str(ctx.get("company_name") or (contact_obj or {}).get("company") or "").strip()
+
+            d100_system = (
+                "You are an expert cold outreach copywriter trained on the Dream 100 method for job seekers.\n\n"
+                "Your goal: help the sender stand out by leading with a free deliverable — never a resume pitch.\n\n"
+                "POSITIONING CONTEXT:\n"
+                f"- Positioning Level: {positioning_level}\n"
+                f"- Strategy: {level_strategy}\n"
+                f"- Sender's strongest career result: {career_result or '(not provided)'}\n"
+                f"- Free deliverable being offered: {free_deliverable or '(not provided)'}\n"
+                f"- Contact: {contact_name or 'the hiring manager'}{(' (' + contact_title + ')') if contact_title else ''}\n"
+                f"- Company: {company_name_d100 or 'the target company'}\n\n"
+                "RESEARCH SIGNALS (use the best one as the hook):\n"
+                + (("\n".join(f"- {s}" for s in best_hook_candidates[:5])) or "- No specific signals available; reference the company's work generally.")
+                + ("\n\nSuggested outreach angles:\n" + "\n".join(f"- {a}" for a in outreach_angles[:3]) if outreach_angles else "")
+                + "\n\n"
+                "DREAM 100 RULES (enforce all):\n"
+                "- NEVER start a sentence with 'I'\n"
+                "- NO corporate language: no synergy, leverage, passionate about, results-driven, excited to, circle back, reach out\n"
+                "- NO generic compliments: no 'love what you're building', 'huge fan', 'amazing company'\n"
+                "- The HOOK must be SPECIFIC — a real post, stat, announcement, or quote they made. Not vague praise.\n"
+                "- The deliverable must be mentioned naturally — never pitch yourself or a call as the first ask\n"
+                "- NEVER mention the word 'resume' in the first message\n"
+                "- The CTA must always be a soft ask: 'mind if I send it over?' or 'want me to send it over?'\n"
+                "- Write like a peer talking to a peer, not an applicant talking to a gatekeeper\n\n"
+                "Generate THREE versions as a JSON object with keys: email, dm, voice_note.\n\n"
+                "email: cold email\n"
+                "  - subject: lowercase, 2-4 words, curiosity-based (question or tension)\n"
+                "  - body: 3-5 sentences max. Open with the BEST HOOK. Bridge to the deliverable. End with the soft CTA.\n\n"
+                "dm: LinkedIn DM\n"
+                "  - body: 2-4 sentences max. Even more casual than the email. Same hook, same deliverable, same CTA.\n\n"
+                "voice_note: Loom/voice note script\n"
+                "  - script: 30-45 second spoken script. Open with hook. Explain deliverable in one sentence. End with CTA. Write exactly how you'd say it out loud — no formal language.\n\n"
+                "Return ONLY valid JSON: { \"email\": { \"subject\": \"...\", \"body\": \"...\" }, \"dm\": { \"body\": \"...\" }, \"voice_note\": { \"script\": \"...\" } }\n"
+            )
+
+            d100_messages = [
+                {"role": "system", "content": d100_system},
+                {"role": "user", "content": f"Research context:\n{json.dumps(_compact_context(llm_context_obj), ensure_ascii=False)[:3000]}"},
+            ]
+
+            d100_raw = client.run_chat_completion(
+                d100_messages,
+                temperature=0.4,
+                max_tokens=1200,
+                stub_json={
+                    "email": {"subject": "quick question", "body": "Saw your recent work and put together a quick teardown. mind if I send it over?"},
+                    "dm": {"body": "Put something together for you — mind if I send it over?"},
+                    "voice_note": {"script": "Hey, saw your recent work on [topic] and put together a quick deliverable for you. Takes about two minutes to look at. Want me to send it over?"},
+                },
+            )
+
+            d100_choices = d100_raw.get("choices") or []
+            d100_msg = (d100_choices[0].get("message") if d100_choices else {}) or {}
+            d100_content = str(d100_msg.get("content") or "")
+            d100_data = extract_json_from_text(d100_content) or {}
+
+            email_v = d100_data.get("email") or {}
+            dm_v = d100_data.get("dm") or {}
+            voice_v = d100_data.get("voice_note") or {}
+
+            d100_subject = str(email_v.get("subject") or "").strip().lower() or "quick question"
+            d100_email_body = str(email_v.get("body") or "").strip()
+            d100_dm_body = str(dm_v.get("body") or "").strip()
+            d100_voice_script = str(voice_v.get("script") or "").strip()
+
+            d100_email_body = _normalize_message_text(_no_em_dashes(
+                _append_signature(_strip_existing_signature(_strip_fluff_openers(d100_email_body)))
+            ))
+            d100_subject = _normalize_message_text(_no_em_dashes(d100_subject))[:100]
+            d100_dm_body = _normalize_message_text(_no_em_dashes(d100_dm_body))
+            d100_voice_script = _normalize_message_text(_no_em_dashes(d100_voice_script))
+
+            return CampaignGenerateStepResponse(
+                success=True,
+                message="Generated (Dream 100 mode)",
+                subject=d100_subject,
+                body=d100_email_body,
+                helper={
+                    "used_llm": True,
+                    "dream100_mode": True,
+                    "positioning_level": positioning_level,
+                    "dream100_variants": {
+                        "email": {"subject": d100_subject, "body": d100_email_body},
+                        "dm": {"body": d100_dm_body},
+                        "voice_note": {"script": d100_voice_script},
+                    },
+                },
+            )
+
         # Step-specific intent -- each email must take a DIFFERENT angle.
         step_intent = {
             1: (
@@ -1380,15 +1590,22 @@ async def generate_campaign_step(payload: CampaignGenerateStepRequest, http_requ
             "Happy to share specifics if helpful.\n\nJohn\"\n\n"
             "EXAMPLE of a good Step 4 (breakup):\n"
             "\"Hi Sarah,\n\n"
-            "This will be my last note. If the timing isn't right or the role's been filled, completely understand. "
-            "If there's someone else on your team I should connect with, I'd appreciate an intro.\n\n"
+            "This will be my last note. If the timing isn't right or the role's been filled, completely understand.\n\n"
             "Thanks for your time,\nJohn\"\n\n"
+            "OR (with referral ask instead of easy-out):\n"
+            "\"Hi Sarah,\n\n"
+            "This will be my last note. If there's someone else on your team I should connect with, I'd appreciate an intro.\n\n"
+            "Thanks,\nJohn\"\n\n"
+            "Rule: pick ONE of these. Never include both in the same message.\n\n"
             "Hard style constraints:\n"
             "- Do NOT use em dashes or en dashes. Use commas, parentheses, or simple hyphens.\n"
-            "- Hard ban: no canned openers like 'I hope you're doing well'.\n"
+            "- EXACTLY ONE ask per email. One CTA, full stop. Never include both an easy-out and a referral ask — pick one.\n"
+            "- Hard ban: no canned openers like 'I hope you're doing well', 'I wanted to reach out', 'I came across', 'I noticed that', 'I recently saw', 'I hope this finds you'.\n"
             "- After any greeting, the next sentence must be value-first (offer/painpoint/proof/ask).\n"
             "- Keep it plain-language and specific.\n"
-            "- Avoid startup jargon (e.g., 'ship outcomes', 'drive impact', 'move the needle'). Prefer human phrasing.\n"
+            "- Avoid startup jargon (e.g., 'ship outcomes', 'drive impact', 'move the needle', 'synergy', 'leverage', 'circle back', 'results-driven', 'passionate about'). Prefer human phrasing.\n"
+            "- Sentences must flow naturally — each sentence follows logically from the last. No jarring topic jumps between sentences.\n"
+            "- Write as if sending from your personal email, not composing a business letter. Short sentences. Natural rhythm.\n"
             "- Voice must be first-person singular for an individual job seeker: use I/me/my, not we/us/our.\n"
             "- Use real names/companies ONLY if provided in the context JSON. Do not invent.\n"
             "- Do NOT output template placeholders like {{first_name}}.\n"

@@ -1841,6 +1841,43 @@ export default function FindContactPage() {
                             {isResearchingThis ? <><InlineSpinner /> Researching...</> : "Research this person"}
                           </button>
 
+                          {/* Dream 100 Brief — shown when research has run */}
+                          {(() => {
+                            const d100b = (research as any)?.dream100_brief;
+                            if (!d100b || (!d100b.best_hook && !d100b.outreach_angle)) return null;
+                            return (
+                              <div className="rounded-lg border border-blue-500/30 bg-blue-600/10 p-3 space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">Dream 100 Brief</span>
+                                </div>
+                                {d100b.best_hook && (
+                                  <div>
+                                    <div className="text-[10px] font-semibold text-white/50 uppercase tracking-wider mb-0.5">Best Hook</div>
+                                    <div className="text-[11px] text-white/80 leading-relaxed">{d100b.best_hook}</div>
+                                  </div>
+                                )}
+                                {d100b.pain_points && (
+                                  <div>
+                                    <div className="text-[10px] font-semibold text-white/50 uppercase tracking-wider mb-0.5">Pain Points</div>
+                                    <div className="text-[11px] text-white/70 leading-relaxed whitespace-pre-line">{d100b.pain_points}</div>
+                                  </div>
+                                )}
+                                {d100b.tone_style && (
+                                  <div>
+                                    <div className="text-[10px] font-semibold text-white/50 uppercase tracking-wider mb-0.5">Tone / Style</div>
+                                    <div className="text-[11px] text-white/70">{d100b.tone_style}</div>
+                                  </div>
+                                )}
+                                {d100b.outreach_angle && (
+                                  <div>
+                                    <div className="text-[10px] font-semibold text-white/50 uppercase tracking-wider mb-0.5">Outreach Angle</div>
+                                    <div className="text-[11px] text-white/80 leading-relaxed">{d100b.outreach_angle}</div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+
                           {hooks.length ? (
                             <div className="text-[11px] text-white/70">
                               <span className="font-semibold text-white/80">Personalization:</span>{" "}
