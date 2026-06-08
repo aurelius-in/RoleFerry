@@ -64,6 +64,77 @@ class JobRecommendationsResponse(BaseModel):
     recommendations: List[JobRecommendation]
 
 
+class SuggestDeliverablesRequest(BaseModel):
+    career_result: str
+    positioning_level: Optional[str] = None
+    role_categories: Optional[List[str]] = None
+    industries: Optional[List[str]] = None
+
+class SuggestDeliverablesResponse(BaseModel):
+    success: bool
+    suggestions: List[str]
+
+@router.post("/suggest-deliverables", response_model=SuggestDeliverablesResponse)
+async def suggest_deliverables(payload: SuggestDeliverablesRequest):
+    """Generate 3 free deliverable ideas based on the candidate's strongest career result and positioning."""
+    client = get_openai_client()
+    career_result = (payload.career_result or "").strip()
+    if not career_result:
+        return SuggestDeliverablesResponse(success=False, suggestions=[
+            "A personalized 30-day onboarding plan for their team",
+            "A short audit of their current process with 3 quick-win recommendations",
+            "A mini case study or example project showing your methodology",
+        ])
+
+    system = (
+        "You are a Dream 100 job search coach. The candidate wants to identify a FREE DELIVERABLE "
+        "they can offer hiring managers upfront — before being asked. The deliverable must be:\n"
+        "- Specific to THEIR skills and track record (not generic)\n"
+        "- Useful to the hiring manager immediately (not just a promise)\n"
+        "- Small enough to actually make in 1-3 hours\n"
+        "- Something they can offer with 'mind if I send it over?' — no hard ask\n\n"
+        "Examples of good deliverables:\n"
+        "- A 30-60-90 day onboarding plan for the role\n"
+        "- A short process audit with 3 specific improvement recommendations\n"
+        "- A sample dashboard or tracking template\n"
+        "- A competitive analysis of 3 companies in their space\n"
+        "- A content calendar or campaign outline for their next quarter\n\n"
+        "Return ONLY valid JSON: { \"suggestions\": [\"...\", \"...\", \"...\"] } — exactly 3 ideas, each 10-20 words."
+    )
+    user_content = f"Career result: {career_result}"
+    if payload.positioning_level:
+        user_content += f"\nPositioning level: {payload.positioning_level}"
+    if payload.role_categories:
+        user_content += f"\nTarget roles: {', '.join(payload.role_categories[:3])}"
+    if payload.industries:
+        user_content += f"\nTarget industries: {', '.join(payload.industries[:3])}"
+
+    try:
+        raw = client.run_chat_completion(
+            [{"role": "system", "content": system}, {"role": "user", "content": user_content}],
+            temperature=0.7,
+            max_tokens=300,
+            stub_json={"suggestions": [
+                "A 30-60-90 day onboarding plan tailored to their open role",
+                "A short audit of their current process with 3 quick wins",
+                "A sample project or case study demonstrating your methodology",
+            ]},
+        )
+        choices = raw.get("choices") or []
+        msg = (choices[0].get("message") if choices else {}) or {}
+        data = extract_json_from_text(str(msg.get("content") or "")) or {}
+        suggestions = data.get("suggestions") or []
+        if not isinstance(suggestions, list) or not suggestions:
+            raise ValueError("empty suggestions")
+        return SuggestDeliverablesResponse(success=True, suggestions=[str(s) for s in suggestions[:3]])
+    except Exception:
+        return SuggestDeliverablesResponse(success=True, suggestions=[
+            "A 30-60-90 day onboarding plan tailored to their open role",
+            "A short audit of their current process with 3 quick wins",
+            "A sample project or case study demonstrating your methodology",
+        ])
+
+
 class GreenhouseBoardsResponse(BaseModel):
     success: bool
     message: str

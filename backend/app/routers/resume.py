@@ -724,6 +724,73 @@ async def upload_resume(file: UploadFile = File(...)):
             except Exception:
                 pass
 
+            # AI validation pass: detect and fix structural errors in parsed positions.
+            # Catches: title = long description, company = candidate name, missing positions.
+            try:
+                _needs_validation = False
+                candidate_name = (parsed.get("Name") or "").strip().lower()
+                for p in (extract_obj.positions or []):
+                    title_words = len((p.title or "").split())
+                    company_lower = (p.company or "").strip().lower()
+                    if title_words > 8:
+                        _needs_validation = True
+                        break
+                    if candidate_name and company_lower and company_lower in candidate_name:
+                        _needs_validation = True
+                        break
+                    if not (p.title or "").strip() or not (p.company or "").strip():
+                        _needs_validation = True
+                        break
+                if not extract_obj.positions or len(extract_obj.positions) < 1:
+                    _needs_validation = True
+
+                if _needs_validation and client.should_use_real_llm and raw_text:
+                    val_messages = [
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are a resume parser quality control agent. The previous parser may have made mistakes.\n\n"
+                                "Common errors to correct:\n"
+                                "1. Title field contains a long description instead of the job title (e.g., 'passionate about scaling evidence-based career development' instead of 'Career Coach'). Fix: extract only the actual job title.\n"
+                                "2. Company field contains the candidate's name instead of the employer name. Fix: extract the actual company/employer name.\n"
+                                "3. Positions list is missing entries — the resume has more jobs than what was parsed. Fix: extract ALL positions.\n"
+                                "4. Education items appearing as work positions. Fix: remove them.\n\n"
+                                "Rules:\n"
+                                "- title: short job title only, max 6 words, no descriptions\n"
+                                "- company: employer/organization name only, not the candidate's name\n"
+                                "- Include every position found in the resume\n"
+                                "- Return ONLY valid JSON: { \"positions\": [{\"company\":\"\",\"title\":\"\",\"start_date\":\"\",\"end_date\":\"\",\"current\":false,\"description\":\"\"}] }"
+                            ),
+                        },
+                        {"role": "user", "content": f"Resume text:\n{raw_text[:4000]}\n\nCurrent parsed positions:\n{[{'title': p.title, 'company': p.company} for p in (extract_obj.positions or [])]}"},
+                    ]
+                    val_raw = client.run_chat_completion(val_messages, temperature=0.0, max_tokens=1200, stub_json={"positions": []})
+                    val_choices = val_raw.get("choices") or []
+                    val_msg = (val_choices[0].get("message") if val_choices else {}) or {}
+                    val_data = extract_json_from_text(str(val_msg.get("content") or "")) or {}
+                    val_positions_raw = val_data.get("positions") or []
+                    if isinstance(val_positions_raw, list) and len(val_positions_raw) >= len(extract_obj.positions or []):
+                        validated_positions: List[Position] = []
+                        for vp in val_positions_raw:
+                            if not isinstance(vp, dict):
+                                continue
+                            t = str(vp.get("title") or "").strip()
+                            c = str(vp.get("company") or "").strip()
+                            if not t or not c:
+                                continue
+                            validated_positions.append(Position(
+                                company=c,
+                                title=t,
+                                start_date=str(vp.get("start_date") or ""),
+                                end_date=str(vp.get("end_date") or ""),
+                                current=bool(vp.get("current") or False),
+                                description=str(vp.get("description") or ""),
+                            ))
+                        if validated_positions:
+                            extract_obj.positions = _filter_non_experience_positions(validated_positions)[:8]
+            except Exception:
+                pass
+
         if extract_obj is None:
             # Rule-based fallback derived from the parsed resume (best-effort).
             # This should still reflect the uploaded resume text, not canned demo data.

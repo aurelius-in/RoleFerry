@@ -1087,6 +1087,18 @@ async def search_contacts(request: ContactSearchRequest):
                         )
                     )
 
+                # Filter out contacts whose company is clearly a different org than what was searched.
+                q_words = set(w.lower() for w in re.split(r'\W+', q) if len(w) > 2)
+                def _company_matches_query(contact_company: str) -> bool:
+                    if not q_words or not contact_company:
+                        return True
+                    co_words = set(w.lower() for w in re.split(r'\W+', contact_company) if len(w) > 2)
+                    return bool(q_words & co_words)
+                before_filter = len(apollo_contacts)
+                apollo_contacts = [c for c in apollo_contacts if _company_matches_query(c.company or "")]
+                if before_filter != len(apollo_contacts):
+                    logger.info("Apollo company filter: removed %d contacts with mismatched company (kept %d)", before_filter - len(apollo_contacts), len(apollo_contacts))
+
                 logger.info("Apollo returned %d relevant contacts for '%s'", len(apollo_contacts), q)
             except Exception as apollo_err:
                 logger.exception("Apollo contact search failed for '%s' (%s); continuing with other sources", q, str(apollo_err)[:120])
