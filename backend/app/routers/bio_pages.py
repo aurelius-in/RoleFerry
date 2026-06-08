@@ -171,6 +171,7 @@ class GenerateBioPageRequest(BaseModel):
     offer_draft: Optional[Dict[str, Any]] = None
     profile_image_url: Optional[str] = None
     theme: Optional[BioPageTheme] = None
+    dream100: Optional[Dict[str, Any]] = None
 
 
 class GenerateBioPageResponse(BaseModel):
@@ -318,6 +319,11 @@ async def generate_bio_page(payload: GenerateBioPageRequest, http_request: Reque
                     for k in ["company", "company_name", "employer", "org", "organization"]:
                         if k in selected_job:
                             selected_job[k] = ""
+                d100 = payload.dream100 or {}
+                d100_career_result = str(d100.get("careerResult") or "").strip()
+                d100_deliverable = str(d100.get("freeDeliverable") or "").strip()
+                d100_level = str(d100.get("positioningLevel") or "").strip()
+
                 prompt = {
                     "display_name": deterministic.display_name,
                     "selected_job": selected_job,
@@ -331,6 +337,12 @@ async def generate_bio_page(payload: GenerateBioPageRequest, http_request: Reque
                         "output_json_only": True,
                     },
                 }
+                if d100_career_result:
+                    prompt["dream100"] = {
+                        "career_result": d100_career_result,
+                        "free_deliverable": d100_deliverable,
+                        "positioning_level": d100_level,
+                    }
                 messages = [
                     {
                         "role": "system",
@@ -343,7 +355,15 @@ async def generate_bio_page(payload: GenerateBioPageRequest, http_request: Reque
                             "- Do NOT claim expertise/certification in any tool, framework, or standard unless it appears in resume_extract.\n"
                             "- Do NOT use the word 'expert' or 'expertise'.\n"
                             "- If resume_extract does not include NIST standards, do NOT mention NIST 800-53 / NIST 800-171.\n"
-                            "Return ONLY valid JSON with keys:\n"
+                            + (
+                                f"Dream 100 context: the candidate's strongest result is '{d100_career_result}'. "
+                                + (f"Their free deliverable offer: '{d100_deliverable}'. " if d100_deliverable else "")
+                                + "The headline and first proof_point MUST incorporate this result. "
+                                "Make the headline reflect their strongest achievement or category leadership. "
+                                "Do NOT say 'expert' or 'seasoned'. Use the result itself as the proof.\n"
+                                if d100_career_result else ""
+                            )
+                            + "Return ONLY valid JSON with keys:\n"
                             "- headline: string\n"
                             "- subheadline: string\n"
                             "- proof_points: array of 3-6 strings (short, punchy)\n"
