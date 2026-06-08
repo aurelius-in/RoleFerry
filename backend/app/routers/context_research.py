@@ -315,6 +315,15 @@ class CompanySignal(BaseModel):
     value: str
     category: str
 
+class Dream100Brief(BaseModel):
+    best_hook: str = ""
+    company_summary: str = ""
+    team_function_context: str = ""
+    pain_points: str = ""
+    tone_style: str = ""
+    recent_news_highlight: str = ""
+    outreach_angle: str = ""
+
 class ResearchData(BaseModel):
     company_summary: CompanySummary
     contact_bios: List[ContactBio]
@@ -332,6 +341,7 @@ class ResearchData(BaseModel):
     background_report_sections: Optional[List[Dict[str, Any]]] = None
     intelligence: Optional[CompanyIntelligence] = None
     company_signals: Optional[List[CompanySignal]] = None
+    dream100_brief: Optional[Dream100Brief] = None
 
 class ResearchRequest(BaseModel):
     contact_ids: List[str]
@@ -883,6 +893,24 @@ def _parse_intelligence(raw: Any) -> Optional[CompanyIntelligence]:
             outreach_summary=outreach_summary,
             executive_summary=str(raw.get("executive_summary") or "").strip()[:1500],
             overall_relevance_score=min(1.0, max(0.0, float(raw.get("overall_relevance_score") or 0.0))),
+        )
+    except Exception:
+        return None
+
+
+def _parse_dream100_brief(raw: Any) -> Optional["Dream100Brief"]:
+    """Parse the dream100_brief block from LLM output."""
+    if not raw or not isinstance(raw, dict):
+        return None
+    try:
+        return Dream100Brief(
+            best_hook=_strip_likely_language(str(raw.get("best_hook") or "").strip()),
+            company_summary=_strip_likely_language(str(raw.get("company_summary") or "").strip()),
+            team_function_context=_strip_likely_language(str(raw.get("team_function_context") or "").strip()),
+            pain_points=_strip_likely_language(str(raw.get("pain_points") or "").strip()),
+            tone_style=_strip_likely_language(str(raw.get("tone_style") or "").strip()),
+            recent_news_highlight=_strip_likely_language(str(raw.get("recent_news_highlight") or "").strip()),
+            outreach_angle=_strip_likely_language(str(raw.get("outreach_angle") or "").strip()),
         )
     except Exception:
         return None
@@ -2143,6 +2171,16 @@ async def conduct_research(request: ResearchRequest):
                     "        Email 1: lead with the strongest signal/hook. Email 2: follow up with a different angle (company news, mutual interest). Email 3: breakup email with a soft CTA.\n"
                     "    - executive_summary: 3-5 sentence executive briefing on the company's current trajectory and what it means for outreach\n"
                     "    - overall_relevance_score: float 0.0-1.0 (how relevant is this company to the job seeker based on signals)\n"
+                    "  - dream100_brief: object with keys (Dream 100 method outreach brief — be specific, no filler):\n"
+                    "    - best_hook: ONE specific, verifiable, impressive thing this person or company has publicly said or achieved.\n"
+                    "      Must be a real post, stat, announcement, quote, or milestone. NOT a generic compliment.\n"
+                    "      Example: 'Sarah posted on LinkedIn that their trial-to-paid conversion dropped after switching ESPs and she is rebuilding from scratch.'\n"
+                    "    - company_summary: What the company sells and who they sell it to. 2 sentences max.\n"
+                    "    - team_function_context: What this hiring manager's team owns and what success looks like for them. 2 sentences.\n"
+                    "    - pain_points: Problems or gaps they have publicly talked about, especially ones a job seeker could solve. 2-4 bullet points as a single string.\n"
+                    "    - tone_style: How the hiring manager communicates (casual, formal, tactical, visionary, data-driven). 1 sentence based on their posts or profile.\n"
+                    "    - recent_news_highlight: The single most notable recent thing about the company or this person. 1-2 sentences.\n"
+                    "    - outreach_angle: Recommended angle for cold outreach based on all of the above. What to lead with and what free thing to offer. 2-3 sentences.\n"
                     "- hooks: array of short talking points for outreach\n"
                 ),
             },
@@ -2422,6 +2460,7 @@ async def conduct_research(request: ResearchRequest):
                     cs,
                     apollo_company=corpus.get("apollo_company_enrich"),
                 ),
+                dream100_brief=_parse_dream100_brief(entry.get("dream100_brief")),
             )
 
         # Back-compat: also return a single research_data (first contact).

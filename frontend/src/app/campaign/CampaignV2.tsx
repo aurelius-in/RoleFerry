@@ -7,7 +7,41 @@ import { persistCampaignContextV1 } from "@/lib/campaignContext";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    if (!text) return;
+    navigator.clipboard.writeText(text).catch(() => {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    });
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="text-[10px] text-white/50 hover:text-white/80 border border-white/10 hover:border-white/30 rounded px-1.5 py-0.5 transition-colors"
+    >
+      {copied ? "Copied!" : "Copy"}
+    </button>
+  );
+}
+
 type Mode = "job-seeker" | "recruiter";
+
+type Dream100VariantTab = "email" | "dm" | "voice_note";
+
+type Dream100Variants = {
+  email: { subject: string; body: string };
+  dm: { body: string };
+  voice_note: { script: string };
+};
 
 type BaseTone =
   | "recruiter"
@@ -88,6 +122,16 @@ type CampaignV2 = {
 const STORAGE_V2 = "rf_campaign_by_contact_v2";
 const STORAGE_ACTIVE = "rf_campaign_active_contact_id";
 const STORAGE_PERSISTED = "rf_persisted_campaign_meta_v1"; // { id, name }
+const STORAGE_OUTREACH_STATUS = "rf_outreach_status";
+
+type OutreachStatus = "none" | "day1" | "day3" | "day7" | "closed";
+const OUTREACH_STATUS_OPTIONS: { value: OutreachStatus; label: string; color: string }[] = [
+  { value: "none",   label: "Not sent",   color: "border-white/10 text-white/40 bg-transparent" },
+  { value: "day1",   label: "Day 1 sent", color: "border-blue-500/40 text-blue-300 bg-blue-600/15" },
+  { value: "day3",   label: "Day 3 sent", color: "border-yellow-500/40 text-yellow-300 bg-yellow-600/10" },
+  { value: "day7",   label: "Day 7 sent", color: "border-orange-500/40 text-orange-300 bg-orange-600/10" },
+  { value: "closed", label: "Closed out", color: "border-white/20 text-white/50 bg-white/5" },
+];
 
 const BASE_TONES: Tone[] = ["recruiter", "manager", "exec", "developer", "sales", "startup", "enterprise", "custom"];
 const EMAIL4_EXTRA_TONES: Tone[] = ["hilarious", "silly", "wacky", "alarmist", "flirty", "sad", "ridiculous"];
@@ -162,30 +206,35 @@ function defaultToneForStep(step: 1 | 2 | 3 | 4): Tone {
 function defaultInstructions(step: 1 | 2 | 3 | 4) {
   if (step === 1) {
     return [
-      "Write a concise, human first email that feels personally written to this person.",
-      "No fluff openers. Lead with a concrete value/idea and one credibility proof.",
-      "Use specifics from the selected context layers, but do not overstuff.",
-      "End with a simple CTA (10–15 min chat).",
+      "Dream 100 step 1 — Day 1 initial outreach.",
+      "Open with ONE specific, verifiable hook about this person or their company (a real post, stat, announcement, or quote — not a generic compliment).",
+      "Bridge to the free deliverable in one sentence.",
+      "End with the soft CTA: 'mind if I send it over?' — never pitch a call or a resume.",
+      "3-5 sentences max. Write like a peer, not an applicant.",
+      "Never start a sentence with 'I'. No corporate language.",
     ].join("\n");
   }
   if (step === 2) {
     return [
-      "Follow up briefly. Assume they are busy, not ignoring you.",
-      "Add one additional helpful detail or angle (not a repeat).",
-      "Keep it short and easy to respond to.",
+      "Dream 100 step 2 — Day 3 follow-up.",
+      "One sentence only. Remind them the deliverable is ready.",
+      "Template: 'still have that [deliverable] ready for you. worth sending over?'",
+      "Do not add context, explanation, or a new pitch. Same message, shorter.",
     ].join("\n");
   }
   if (step === 3) {
     return [
-      "Follow up again with a different angle: alternative proof, different benefit, or a short 2–3 bullet plan.",
-      "Warm and respectful. No guilt. No pressure.",
+      "Dream 100 step 3 — Day 7 final follow-up.",
+      "One sentence only. The deliverable is done and ready to send.",
+      "Template: 'last follow up — [deliverable] is done whenever you want it. happy to share.'",
+      "No pressure, no guilt, no added content.",
     ].join("\n");
   }
   return [
-    "Final follow-up. This is a respectful 'breakup' message.",
-    "If tone is playful/wacky.",
-    "Give them an easy out (reply 'no') and an easy yes (quick chat).",
-    "This is a first-person job seeker contacting a hiring decision maker.  It should should sound person, relatable, human, friendly, and not corporate, salesy or too canned.",
+    "Dream 100 step 4 — Gracious close.",
+    "2-3 sentences. Acknowledge they are busy. Give them an easy out.",
+    "Optionally include a referral ask: 'if there's someone else on your team I should connect with, I'd appreciate an intro.'",
+    "Never start a sentence with 'I'. No corporate language. Not salesy or canned.",
   ].join("\n");
 }
 
@@ -253,9 +302,10 @@ function layerLabel(id: ContextLayerId) {
 }
 
 function emailLabelForNumber(n: number) {
-  if (n === 1) return "Initial";
-  if (n === 4) return "Final check-in";
-  return "Follow-up";
+  if (n === 1) return "Day 1 — Initial Outreach";
+  if (n === 2) return "Day 3 — Follow-Up";
+  if (n === 3) return "Day 7 — Final Follow-Up";
+  return "Breakup / Close";
 }
 
 function recommendedCtaType(stepNumber: number): "Soft CTA" | "Hard CTA" {
@@ -297,6 +347,9 @@ export default function CampaignV2() {
   const [bioUrl, setBioUrl] = useState<string>("");
 
   const [openAccordions, setOpenAccordions] = useState<Record<string, { layers: boolean; instructions: boolean }>>({});
+  const [dream100VariantsByStep, setDream100VariantsByStep] = useState<Record<string, Dream100Variants>>({});
+  const [outreachStatus, setOutreachStatus] = useState<Record<string, OutreachStatus>>({});
+  const [activeVariantTab, setActiveVariantTab] = useState<Record<string, Dream100VariantTab>>({});
 
   // Persisted campaign (DB) metadata
   const [persistedCampaignId, setPersistedCampaignId] = useState<string>("");
@@ -340,6 +393,9 @@ export default function CampaignV2() {
 
     const by = safeJson<Record<string, CampaignV2>>(localStorage.getItem(STORAGE_V2), {});
     setCampaignByContact(by || {});
+
+    const savedStatus = safeJson<Record<string, OutreachStatus>>(localStorage.getItem(STORAGE_OUTREACH_STATUS), {});
+    setOutreachStatus(savedStatus || {});
 
     const savedActive = String(localStorage.getItem(STORAGE_ACTIVE) || "").trim();
     const fallback = selectedContacts?.[0]?.id ? String(selectedContacts[0].id) : "";
@@ -509,7 +565,7 @@ export default function CampaignV2() {
         sender_profile: ctx.sender_profile as SenderProfile,
       };
 
-      const res = await api<{ success: boolean; subject: string; body: string; message?: string }>(
+      const res = await api<{ success: boolean; subject: string; body: string; message?: string; helper?: any }>(
         "/campaign/generate-step",
         "POST",
         payload
@@ -521,6 +577,13 @@ export default function CampaignV2() {
         body: cleanMessageText(res.body || ""),
         last_generated_at: nowIso(),
       });
+
+      const d100v = res?.helper?.dream100_variants;
+      if (d100v && step.step_number === 1) {
+        const stepKey = `${cid}_e1`;
+        setDream100VariantsByStep((prev) => ({ ...prev, [stepKey]: d100v as Dream100Variants }));
+        setActiveVariantTab((prev) => ({ ...prev, [stepKey]: "email" }));
+      }
     } catch (e: any) {
       setError(String(e?.message || "Failed to generate."));
     } finally {
@@ -752,6 +815,14 @@ export default function CampaignV2() {
     if (!expandedContacts.has(cid)) setActive(cid);
   };
 
+  const updateOutreachStatus = (cid: string, status: OutreachStatus) => {
+    setOutreachStatus((prev) => {
+      const next = { ...prev, [cid]: status };
+      try { localStorage.setItem(STORAGE_OUTREACH_STATUS, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
   const toggleEmail = (key: string) => {
     setExpandedEmails((prev) => {
       const next = new Set(prev);
@@ -770,6 +841,9 @@ export default function CampaignV2() {
     const emailKey = `${cid}_e${step.step_number}`;
     const isEmailOpen = expandedEmails.has(emailKey);
     const hasContent = Boolean(step.subject || step.body);
+    const d100Variants = dream100VariantsByStep[emailKey];
+    const activeTab: Dream100VariantTab = activeVariantTab[emailKey] || "email";
+
 
     return (
       <div key={step.id} className="rounded-lg border border-white/10 bg-black/20 overflow-hidden" style={{ marginLeft: 14 }}>
@@ -955,27 +1029,134 @@ export default function CampaignV2() {
               ) : null}
             </div>
 
-            <div className="mt-4 space-y-3">
-              <div>
-                <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Subject</div>
-                <input
-                  value={String(step.subject || "")}
-                  onChange={(e) => updateStep(cid, step.id, { subject: e.target.value })}
-                  className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Generate to fill..."
-                />
+            {d100Variants ? (
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="inline-flex items-center rounded-full border border-blue-400/40 bg-blue-600/20 px-2.5 py-0.5 text-[11px] font-semibold text-blue-200 uppercase tracking-wider">
+                    Dream 100 Mode
+                  </span>
+                  <span className="text-[11px] text-white/40">Select a format to use</span>
+                </div>
+                <div className="flex gap-1 rounded-lg border border-white/10 bg-black/30 p-1">
+                  {(["email", "dm", "voice_note"] as Dream100VariantTab[]).map((tab) => (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => {
+                        setActiveVariantTab((prev) => ({ ...prev, [emailKey]: tab }));
+                        if (tab === "email") {
+                          updateStep(cid, step.id, {
+                            subject: cleanMessageText(d100Variants.email.subject),
+                            body: cleanMessageText(d100Variants.email.body),
+                          });
+                        } else if (tab === "dm") {
+                          updateStep(cid, step.id, {
+                            subject: "",
+                            body: cleanMessageText(d100Variants.dm.body),
+                          });
+                        } else {
+                          updateStep(cid, step.id, {
+                            subject: "",
+                            body: cleanMessageText(d100Variants.voice_note.script),
+                          });
+                        }
+                      }}
+                      className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                        activeTab === tab
+                          ? "bg-blue-600 text-white"
+                          : "text-white/60 hover:text-white hover:bg-white/10"
+                      }`}
+                    >
+                      {tab === "email" ? "Cold Email" : tab === "dm" ? "LinkedIn DM" : "Voice Note / Loom"}
+                    </button>
+                  ))}
+                </div>
+
+                {activeTab !== "voice_note" && (
+                  <div>
+                    <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Subject</div>
+                    <input
+                      value={String(step.subject || "")}
+                      onChange={(e) => updateStep(cid, step.id, { subject: e.target.value })}
+                      className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={activeTab === "dm" ? "No subject for DMs" : "Generate to fill..."}
+                    />
+                  </div>
+                )}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">
+                      {activeTab === "voice_note" ? "Script" : "Body"}
+                    </div>
+                    {step.body && (
+                      <CopyButton text={String(step.body || "")} />
+                    )}
+                  </div>
+                  <textarea
+                    value={String(step.body || "")}
+                    onChange={(e) => updateStep(cid, step.id, { body: e.target.value })}
+                    rows={activeTab === "voice_note" ? 6 : 8}
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
+                    placeholder="Generate to fill..."
+                  />
+                  {activeTab === "voice_note" && (
+                    <p className="mt-1 text-[11px] text-white/40">30–45 second spoken script. Read exactly as written.</p>
+                  )}
+                </div>
+
+                <div className="rounded-lg border border-white/10 bg-black/30 p-4 mt-2">
+                  <div className="text-xs font-semibold text-white/60 uppercase tracking-wider mb-3">Dream 100 Follow-Up Sequence</div>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex gap-3">
+                      <span className="shrink-0 w-14 text-[11px] font-bold text-blue-300 pt-0.5">Day 1</span>
+                      <span className="text-white/70">Your initial outreach above. Generate Email 2 (Day 3) and Email 3 (Day 7) below — they will use the Dream 100 follow-up templates automatically.</span>
+                    </div>
+                    <div className="flex gap-3">
+                      <span className="shrink-0 w-14 text-[11px] font-bold text-blue-300 pt-0.5">Day 3</span>
+                      <div className="text-white/70">
+                        <span className="font-mono text-xs text-white/50 block mb-1">One sentence — no new context:</span>
+                        still have that <span className="text-white font-medium">[deliverable]</span> ready for you. worth sending over?
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <span className="shrink-0 w-14 text-[11px] font-bold text-blue-300 pt-0.5">Day 7</span>
+                      <div className="text-white/70">
+                        <span className="font-mono text-xs text-white/50 block mb-1">Last follow-up:</span>
+                        last follow up — <span className="text-white font-medium">[deliverable]</span> is done whenever you want it. happy to share.
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-white/40 mt-2 pt-2 border-t border-white/10">
+                      Rule: same message, three times. Don&apos;t add context. Don&apos;t apologize. The only ask is &ldquo;want to see the thing I made?&rdquo;
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Body</div>
-                <textarea
-                  value={String(step.body || "")}
-                  onChange={(e) => updateStep(cid, step.id, { body: e.target.value })}
-                  rows={8}
-                  className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
-                  placeholder="Generate to fill..."
-                />
+            ) : (
+              <div className="mt-4 space-y-3">
+                <div>
+                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">Subject</div>
+                  <input
+                    value={String(step.subject || "")}
+                    onChange={(e) => updateStep(cid, step.id, { subject: e.target.value })}
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Generate to fill..."
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="text-xs font-semibold text-white/70 uppercase tracking-wider">Body</div>
+                    {step.body && <CopyButton text={String(step.body || "")} />}
+                  </div>
+                  <textarea
+                    value={String(step.body || "")}
+                    onChange={(e) => updateStep(cid, step.id, { body: e.target.value })}
+                    rows={8}
+                    className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre-wrap"
+                    placeholder="Generate to fill..."
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>
@@ -995,7 +1176,7 @@ export default function CampaignV2() {
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-white mb-1">Email Campaign</h1>
             <p className="text-white/70 text-sm">
-              Expand a contact to generate their 4-email outreach sequence. Each email draws from your resume, offer, company research, pain points, and contact signals.
+              Dream 100 outreach sequence: Day 1 initial outreach with a specific hook and deliverable offer, Day 3 and Day 7 short follow-ups, then a gracious close. Fill in your positioning on the Role Prefs page to activate Dream 100 mode.
             </p>
           </div>
 
@@ -1141,12 +1322,24 @@ export default function CampaignV2() {
                                     <span className="text-xs text-white/50 truncate">{String(c?.title || "Decision maker")}</span>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2 shrink-0">
+                                <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                                   {emailCount > 0 && (
                                     <span className="inline-flex items-center px-2 py-0.5 rounded-full border border-emerald-400/20 bg-emerald-500/10 text-[10px] text-emerald-200">
                                       {emailCount}/4 drafted
                                     </span>
                                   )}
+                                  <select
+                                    value={outreachStatus[cid] || "none"}
+                                    onChange={(e) => updateOutreachStatus(cid, e.target.value as OutreachStatus)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className={`text-[10px] rounded border px-1.5 py-0.5 bg-transparent outline-none cursor-pointer ${
+                                      OUTREACH_STATUS_OPTIONS.find(o => o.value === (outreachStatus[cid] || "none"))?.color || ""
+                                    }`}
+                                  >
+                                    {OUTREACH_STATUS_OPTIONS.map(o => (
+                                      <option key={o.value} value={o.value} className="bg-gray-900 text-white">{o.label}</option>
+                                    ))}
+                                  </select>
                                 </div>
                               </button>
 

@@ -1,3 +1,9 @@
+export type Dream100Context = {
+  positioning_level: "1" | "2" | "3" | "";
+  career_result: string;
+  free_deliverable: string;
+};
+
 export type RFCampaignContextV1 = {
   version: 1;
   updated_at: string;
@@ -23,6 +29,7 @@ export type RFCampaignContextV1 = {
   contact_research?: any;
   selected_contact_signals?: any[];
   selected_company_signals?: any[];
+  dream100?: Dream100Context;
   links?: {
     bio_page_url?: string;
     work_link?: string;
@@ -146,6 +153,16 @@ export function buildCampaignContextV1(contactId: string): RFCampaignContextV1 {
   const contactResearchByContact = safeJson<Record<string, any>>(lsGet("context_research_by_contact"), {});
   const contactResearch = cid && contactResearchByContact ? contactResearchByContact[cid] : null;
 
+  const d100Raw = safeJson<any>(lsGet("rf_dream100"), null);
+  const dream100: Dream100Context | undefined =
+    d100Raw && (d100Raw.positioningLevel || d100Raw.careerResult || d100Raw.freeDeliverable)
+      ? {
+          positioning_level: d100Raw.positioningLevel || "",
+          career_result: d100Raw.careerResult || "",
+          free_deliverable: d100Raw.freeDeliverable || "",
+        }
+      : undefined;
+
   const bioPageUrl = String(lsGet("bio_page_url") || "").trim();
 
   const links = {
@@ -175,6 +192,7 @@ export function buildCampaignContextV1(contactId: string): RFCampaignContextV1 {
     contact_research: contactResearch,
     selected_contact_signals: safeJson<any[]>(lsGet("rf_selected_contact_signals"), []),
     selected_company_signals: safeJson<any[]>(lsGet("rf_selected_company_signals"), []),
+    dream100,
     links,
   };
 }

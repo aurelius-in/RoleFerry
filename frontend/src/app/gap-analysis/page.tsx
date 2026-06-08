@@ -255,6 +255,15 @@ export default function GapAnalysisPage() {
       setHelper(nextHelper);
       try { localStorage.setItem("gap_analysis_ranked", JSON.stringify(nextRanked)); } catch {}
       try { localStorage.setItem("gap_analysis_helper", JSON.stringify(nextHelper)); } catch {}
+      // Also write keys that campaignContext.ts reads so the "Gaps" layer is populated.
+      try {
+        const byJob: Record<string, GapAnalysisItem> = {};
+        for (const item of nextRanked) {
+          if (item.job_id) byJob[item.job_id] = item;
+        }
+        localStorage.setItem("gap_analysis_results_by_job", JSON.stringify(byJob));
+        localStorage.setItem("gap_analysis_results", JSON.stringify(nextRanked));
+      } catch {}
     } catch (e: any) {
       setError(e?.message || "Failed to run gap analysis.");
     } finally {
@@ -300,6 +309,14 @@ export default function GapAnalysisPage() {
     setRanked((prev) => {
       const next = (prev || []).filter((r) => String(r.job_id || "") !== id);
       try { localStorage.setItem("gap_analysis_ranked", JSON.stringify(next)); } catch {}
+      try {
+        const byJob: Record<string, GapAnalysisItem> = {};
+        for (const item of next) {
+          if (item.job_id) byJob[item.job_id] = item;
+        }
+        localStorage.setItem("gap_analysis_results_by_job", JSON.stringify(byJob));
+        localStorage.setItem("gap_analysis_results", JSON.stringify(next));
+      } catch {}
       return next;
     });
     setExpandedJobIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
