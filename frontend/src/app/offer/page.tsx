@@ -268,6 +268,7 @@ export default function OfferPage() {
   const [painpointByJob, setPainpointByJob] = useState<Record<string, PainPointMatchLite[]>>({});
   const [companySignals, setCompanySignals] = useState<any[]>([]);
   const [contactSignals, setContactSignals] = useState<any[]>([]);
+  const [dream100, setDream100] = useState<any>(null);
 
   useEffect(() => {
     setResume(safeJson<any>(localStorage.getItem("resume_extract"), null));
@@ -277,6 +278,7 @@ export default function OfferPage() {
     setPainpointByJob(safeJson<Record<string, PainPointMatchLite[]>>(localStorage.getItem("painpoint_matches_by_job"), {}));
     setCompanySignals(safeJson<any[]>(localStorage.getItem("rf_selected_company_signals"), []));
     setContactSignals(safeJson<any[]>(localStorage.getItem("rf_selected_contact_signals"), []));
+    setDream100(safeJson<any>(localStorage.getItem("rf_dream100"), null));
   }, []);
 
   const activeRole = useMemo(() => {
@@ -611,6 +613,7 @@ export default function OfferPage() {
         success_metrics: Array.isArray(activeRole?.successMetrics) ? activeRole.successMetrics : [],
         company_signals: companySignals,
         contact_signals: contactSignals,
+        dream100: dream100 || undefined,
       });
       const s = String(res?.snippet || "").trim();
       if (s) {
