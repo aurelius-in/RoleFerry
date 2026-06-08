@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import CollapsibleSection from "@/components/CollapsibleSection";
 
+interface Dream100Positioning {
+  positioningLevel: "1" | "2" | "3" | "";
+  careerResult: string;
+  freeDeliverable: string;
+}
+
 interface JobPreferences {
   values: string[];
   roleCategories: string[];
@@ -213,10 +219,38 @@ const US_METRO_AREAS = [
   "Washington, DC",
 ];
 
+const POSITIONING_LEVELS: { level: "1" | "2" | "3"; label: string; subtitle: string; strategy: string }[] = [
+  {
+    level: "1",
+    label: "Level 1 — Open Req",
+    subtitle: "They're actively hiring for your exact role",
+    strategy: "Direct CTA — apply and reach out with a specific hook",
+  },
+  {
+    level: "2",
+    label: "Level 2 — Need Exists",
+    subtitle: "They need someone like you but don't know it yet",
+    strategy: "Lead with a free insight or mini-deliverable",
+  },
+  {
+    level: "3",
+    label: "Level 3 — Hidden Market",
+    subtitle: "No open role — you're creating the need",
+    strategy: "Lead with substantial free work upfront",
+  },
+];
+
 export default function JobPreferencesPage() {
   const router = useRouter();
   const [mode, setMode] = useState<"job-seeker" | "recruiter">("job-seeker");
   const [isSaving, setIsSaving] = useState(false);
+  const [dream100, setDream100] = useState<Dream100Positioning>({
+    positioningLevel: "",
+    careerResult: "",
+    freeDeliverable: "",
+  });
+  const [deliverableSuggestions, setDeliverableSuggestions] = useState<string[]>([]);
+  const [isSuggestingDeliverables, setIsSuggestingDeliverables] = useState(false);
   const [preferences, setPreferences] = useState<JobPreferences>({
     values: [],
     roleCategories: [],
@@ -242,6 +276,20 @@ export default function JobPreferencesPage() {
     const stored = localStorage.getItem("rf_mode");
     if (stored === "recruiter") {
       setMode("recruiter");
+    }
+
+    try {
+      const d100 = localStorage.getItem("rf_dream100");
+      if (d100) {
+        const parsed = JSON.parse(d100);
+        setDream100({
+          positioningLevel: parsed?.positioningLevel || "",
+          careerResult: parsed?.careerResult || "",
+          freeDeliverable: parsed?.freeDeliverable || "",
+        });
+      }
+    } catch {
+      // ignore
     }
 
     try {
@@ -358,10 +406,36 @@ export default function JobPreferencesPage() {
     setPreferences((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleSuggestDeliverables = async () => {
+    if (isSuggestingDeliverables) return;
+    setIsSuggestingDeliverables(true);
+    setDeliverableSuggestions([]);
+    try {
+      const resp = await api.post("/job-preferences/suggest-deliverables", {
+        career_result: dream100.careerResult,
+        positioning_level: dream100.positioningLevel,
+        role_categories: preferences.roleCategories,
+        industries: preferences.industries,
+      });
+      if (resp?.suggestions?.length) {
+        setDeliverableSuggestions(resp.suggestions);
+      }
+    } catch {
+      setDeliverableSuggestions([
+        "A 30-60-90 day onboarding plan tailored to their open role",
+        "A short audit of their current process with 3 quick wins",
+        "A sample project or case study demonstrating your methodology",
+      ]);
+    } finally {
+      setIsSuggestingDeliverables(false);
+    }
+  };
+
   const handleSave = async () => {
     if (isSaving) return;
     setIsSaving(true);
     localStorage.setItem("job_preferences", JSON.stringify(preferences));
+    localStorage.setItem("rf_dream100", JSON.stringify(dream100));
 
     try {
       const payload: BackendJobPreferences = {
@@ -419,6 +493,100 @@ export default function JobPreferencesPage() {
           </div>
 
           <div className="space-y-1">
+            {/* Dream 100 Positioning */}
+            <CollapsibleSection
+              title="Dream 100 Positioning"
+              count={dream100.positioningLevel ? 1 : 0}
+            >
+              <div className="space-y-6">
+                <div>
+                  <p className="text-sm text-white/70 mb-3">
+                    Most great jobs are never posted. Your positioning level determines how much free work you lead with and how you frame your outreach.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {POSITIONING_LEVELS.map(({ level, label, subtitle, strategy }) => {
+                      const selected = dream100.positioningLevel === level;
+                      return (
+                        <button
+                          key={level}
+                          type="button"
+                          onClick={() => setDream100((d) => ({ ...d, positioningLevel: level }))}
+                          className={`text-left rounded-lg border p-4 transition-all ${
+                            selected
+                              ? "border-blue-500 bg-blue-600/20 ring-1 ring-blue-500"
+                              : "border-white/10 bg-white/5 hover:border-white/30 hover:bg-white/10"
+                          }`}
+                        >
+                          <div className="font-semibold text-sm text-white mb-1">{label}</div>
+                          <div className="text-xs text-white/70 mb-2">{subtitle}</div>
+                          <div className={`text-xs font-medium ${selected ? "text-blue-300" : "text-white/40"}`}>
+                            → {strategy}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-1">
+                      Your strongest career result
+                    </label>
+                    <input
+                      type="text"
+                      value={dream100.careerResult}
+                      onChange={(e) => setDream100((d) => ({ ...d, careerResult: e.target.value }))}
+                      placeholder='e.g. "reduced CAC by 40% at X in 6 months"'
+                      className="w-full border border-white/20 rounded-md px-3 py-2 bg-white/5 text-white placeholder-white/30 text-sm focus:outline-none focus:border-blue-400"
+                    />
+                    <p className="mt-1 text-xs text-white/40">Lead with a number. This anchors every message you send.</p>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm font-medium text-white">
+                        Your free deliverable idea
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleSuggestDeliverables}
+                        disabled={isSuggestingDeliverables || !dream100.careerResult.trim()}
+                        className="text-xs text-blue-300 hover:text-blue-200 border border-blue-500/30 rounded px-2 py-0.5 bg-blue-600/10 hover:bg-blue-600/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {isSuggestingDeliverables ? "Generating..." : "Generate ideas"}
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={dream100.freeDeliverable}
+                      onChange={(e) => setDream100((d) => ({ ...d, freeDeliverable: e.target.value }))}
+                      placeholder='e.g. "a teardown of their cold email sequence with 3 rewrites"'
+                      className="w-full border border-white/20 rounded-md px-3 py-2 bg-white/5 text-white placeholder-white/30 text-sm focus:outline-none focus:border-blue-400"
+                    />
+                    <p className="mt-1 text-xs text-white/40">What you offer upfront. The only ask in your first message is "mind if I send it?"</p>
+                    {deliverableSuggestions.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs text-white/50">Click a suggestion to use it:</p>
+                        {deliverableSuggestions.map((s, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => {
+                              setDream100((d) => ({ ...d, freeDeliverable: s }));
+                              setDeliverableSuggestions([]);
+                            }}
+                            className="w-full text-left text-xs text-white/80 border border-white/10 bg-white/5 hover:bg-blue-600/20 hover:border-blue-400/40 rounded px-2.5 py-1.5 transition-colors"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CollapsibleSection>
+
             {/* Values */}
             <CollapsibleSection title={`What do you value in a ${mode === "job-seeker" ? "new role" : "client relationship"}?`} count={preferences.values.length}>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
