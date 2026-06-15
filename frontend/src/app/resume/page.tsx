@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
 import CollapsibleSection from "@/components/CollapsibleSection";
+import WorkflowSummary from "@/components/WorkflowSummary";
 
 
 interface ResumeExtract {
@@ -171,6 +172,20 @@ export default function ResumePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [cachedFilename, setCachedFilename] = useState<string | null>(null);
+  const [careerResult, setCareerResult] = useState("");
+
+  function suggestCareerResult(ex: ResumeExtract | null): string {
+    if (!ex) return "";
+    const km = ex.keyMetrics?.[0];
+    if (km?.metric && km?.value) {
+      return `${km.metric}: ${km.value}${km.context ? ` (${km.context})` : ""}`.trim();
+    }
+    const acc = ex.accomplishments?.[0];
+    if (acc) return String(acc).trim();
+    const pos = ex.positions?.[0];
+    if (pos?.description) return String(pos.description).split(/[•\n]/)[0]?.trim().slice(0, 180) || "";
+    return "";
+  }
 
   const totalYearsExperience = (() => {
     if (!extract?.positions?.length) return null;
@@ -239,6 +254,10 @@ export default function ResumePage() {
         const meta = JSON.parse(metaRaw);
         if (meta?.filename) setCachedFilename(String(meta.filename));
       }
+      const savedCareer = localStorage.getItem("rf_career_result");
+      if (savedCareer) {
+        setCareerResult(savedCareer);
+      }
     } catch {
       // If cache is corrupt, clear it silently.
       try {
@@ -247,6 +266,12 @@ export default function ResumePage() {
       } catch {}
     }
   }, []);
+
+  useEffect(() => {
+    if (!extract || careerResult.trim()) return;
+    const suggested = suggestCareerResult(extract);
+    if (suggested) setCareerResult(suggested);
+  }, [extract]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -374,6 +399,9 @@ export default function ResumePage() {
       };
       localStorage.setItem("resume_extract", JSON.stringify(withNumbered));
       localStorage.setItem("resume_extract_numbered", JSON.stringify(withNumbered.numbered || {}));
+      if (careerResult.trim()) {
+        localStorage.setItem("rf_career_result", careerResult.trim());
+      }
       router.push("/personality");
     }
   };
@@ -848,6 +876,30 @@ export default function ResumePage() {
                   </div>
                 ) : null}
               </CollapsibleSection>
+
+              <CollapsibleSection title="Strongest career result" count={careerResult.trim() ? 1 : 0}>
+                <p className="text-sm text-white/70 mb-3">
+                  Your single best proof point — used in targeting, outreach, and your bio. Auto-filled from your resume; edit if needed.
+                </p>
+                <textarea
+                  value={careerResult}
+                  onChange={(e) => setCareerResult(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder='e.g., "Reduced churn 18% by rebuilding onboarding in 90 days"'
+                />
+                {extract && (
+                  <button
+                    type="button"
+                    onClick={() => setCareerResult(suggestCareerResult(extract))}
+                    className="mt-2 text-xs text-blue-300 hover:text-blue-200 underline"
+                  >
+                    Re-extract from resume
+                  </button>
+                )}
+              </CollapsibleSection>
+
+              <WorkflowSummary />
 
               <div className="flex justify-end space-x-4">
                 <button
