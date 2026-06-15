@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import CollapsibleSection from "@/components/CollapsibleSection";
+import WorkflowSummary from "@/components/WorkflowSummary";
+import { getActiveRoute, ROUTE_DEFINITIONS } from "@/lib/workflowRoutes";
 
 type Choice = -2 | -1 | 0 | 1 | 2;
 
@@ -798,6 +800,19 @@ export default function PersonalityPage() {
             </div>
           </div>
 
+          {(() => {
+            const route = getActiveRoute();
+            const routeDef = ROUTE_DEFINITIONS.find((r) => r.id === route);
+            if (!routeDef) return null;
+            return (
+              <div className="mb-6 flex flex-wrap items-center gap-2 rounded-lg border border-white/10 bg-black/20 px-4 py-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-white/45">Optional on this route</span>
+                <span className="text-xs font-semibold text-white/85">{routeDef.badge} — {routeDef.title}</span>
+                <span className="text-xs text-white/50">· {routeDef.strategy}</span>
+              </div>
+            );
+          })()}
+
           <div className="mb-6 rounded-lg border border-white/10 bg-black/20 p-4">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
@@ -1350,6 +1365,8 @@ export default function PersonalityPage() {
             </div>
           )}
         </div>
+
+        <WorkflowSummary />
       </div>
     </div>
   );

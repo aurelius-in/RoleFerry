@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useRouteGuard } from "@/lib/useRouteGuard";
 import { api } from "@/lib/api";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
@@ -167,6 +168,7 @@ function gapTierBadge(totalGaps: number) {
 
 export default function GapAnalysisPage() {
   const router = useRouter();
+  useRouteGuard(5);
   const [jobDescriptions, setJobDescriptions] = useState<JobDescription[]>([]);
   const [preferences, setPreferences] = useState<JobPreferences | null>(null);
   const [resumeExtract, setResumeExtract] = useState<ResumeExtract | null>(null);

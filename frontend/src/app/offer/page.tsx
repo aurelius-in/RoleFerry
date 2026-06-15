@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
+import WorkflowSummary from "@/components/WorkflowSummary";
 import { api } from "@/lib/api";
+import { getActiveRoute } from "@/lib/workflowRoutes";
 
 type OfferCaseStudy = {
   title: string;
@@ -269,6 +271,11 @@ export default function OfferPage() {
   const [companySignals, setCompanySignals] = useState<any[]>([]);
   const [contactSignals, setContactSignals] = useState<any[]>([]);
   const [dream100, setDream100] = useState<any>(null);
+  const [freeDeliverable, setFreeDeliverable] = useState("");
+  const [caseStudyFocus, setCaseStudyFocus] = useState<{
+    caseIdx: number;
+    field: "problem" | "actions" | "impact";
+  } | null>(null);
 
   useEffect(() => {
     setResume(safeJson<any>(localStorage.getItem("resume_extract"), null));
@@ -279,6 +286,7 @@ export default function OfferPage() {
     setCompanySignals(safeJson<any[]>(localStorage.getItem("rf_selected_company_signals"), []));
     setContactSignals(safeJson<any[]>(localStorage.getItem("rf_selected_contact_signals"), []));
     setDream100(safeJson<any>(localStorage.getItem("rf_dream100"), null));
+    setFreeDeliverable(localStorage.getItem("rf_free_deliverable") || "");
   }, []);
 
   const activeRole = useMemo(() => {
@@ -549,8 +557,65 @@ export default function OfferPage() {
       out.push({ problem: "", actions: "", impact: clampLines(line, 120) });
     }
 
-    return out.slice(0, 6);
-  }, [resume]);
+    const m0 = roleSignals.match0;
+    if (m0?.painpoint_1) {
+      out.push({
+        problem: clampLines(String(m0.painpoint_1), 120),
+        actions: clampLines(String(m0.solution_1 || ""), 120),
+        impact: clampLines(String(m0.metric_1 || ""), 120),
+      });
+    }
+
+    for (const sig of companySignals.slice(0, 3)) {
+      const text = String(sig?.headline || sig?.text || sig?.signal || sig?.title || "").trim();
+      if (!text || text.length < 12) continue;
+      const key = `sig_${text.toLowerCase().slice(0, 40)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ problem: clampLines(text, 120), actions: "", impact: "" });
+    }
+
+    return out.slice(0, 8);
+  }, [resume, roleSignals, companySignals]);
+
+  const suggestFreeDeliverable = () => {
+    const route = getActiveRoute();
+    const company = String(activeRole?.company || selectedRole?.company || "their team").trim();
+    const roleTitle = String(activeRole?.title || prefs?.roleCategories?.[0] || "your function").trim();
+    const signal = String(companySignals[0]?.headline || companySignals[0]?.text || companySignals[0]?.signal || "").trim();
+    if (route === "3") {
+      return `A free working prototype or audit for ${company} showing how ${roleTitle} could solve their top bottleneck`;
+    }
+    if (route === "2") {
+      return signal
+        ? `A free brief connecting "${clampLines(signal, 70)}" to a concrete fix for ${company}`
+        : `A free mini-audit for ${company} with 3 prioritized improvements`;
+    }
+    return `A free sample deliverable tailored to ${company}'s ${roleTitle} priorities`;
+  };
+
+  const insertCaseStudyField = (field: "problem" | "actions" | "impact", text: string) => {
+    const t = String(text || "").trim();
+    if (!t) return;
+    const caseIdx = caseStudyFocus?.caseIdx ?? 0;
+    setCaseStudies((prev) =>
+      prev.map((c, i) => (i === caseIdx ? { ...c, [field]: t } : c))
+    );
+  };
+
+  const caseStudyQuickInserts = useMemo(() => {
+    const groups: Record<"problem" | "actions" | "impact", Array<{ label: string; text: string }>> = {
+      problem: [],
+      actions: [],
+      impact: [],
+    };
+    for (const s of suggestedCaseStudies) {
+      if (s.problem) groups.problem.push({ label: clampLines(s.problem, 55), text: s.problem });
+      if (s.actions) groups.actions.push({ label: clampLines(s.actions, 55), text: s.actions });
+      if (s.impact) groups.impact.push({ label: clampLines(s.impact, 55), text: s.impact });
+    }
+    return groups;
+  }, [suggestedCaseStudies]);
 
   const addCredibility = (text: string) => {
     const t = String(text || "").trim();
@@ -562,6 +627,9 @@ export default function OfferPage() {
   const save = (next?: { goNext?: boolean }) => {
     setIsSaving(true);
     try {
+      if (freeDeliverable.trim()) {
+        localStorage.setItem("rf_free_deliverable", freeDeliverable.trim());
+      }
       if (activeRoleId) {
         const payload: OfferV1 = {
           version: 1,
@@ -814,6 +882,27 @@ export default function OfferPage() {
               </div>
             ) : null}
             {notice ? <div className="mt-2 text-[11px] text-emerald-200/90">{notice}</div> : null}
+          </div>
+
+          <div className="mb-6 rounded-lg border border-white/10 bg-black/20 p-4">
+            <div className="text-xs font-bold text-blue-300 uppercase tracking-wider mb-1">Free deliverable idea</div>
+            <p className="text-sm text-white/60 mb-3">
+              What you would offer for free to earn attention (especially Route 2 &amp; 3). Used in outreach and your bio.
+            </p>
+            <textarea
+              value={freeDeliverable}
+              onChange={(e) => setFreeDeliverable(e.target.value)}
+              rows={2}
+              className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder='e.g., "A free 2-page audit of their onboarding funnel with 3 fixes"'
+            />
+            <button
+              type="button"
+              onClick={() => setFreeDeliverable(suggestFreeDeliverable())}
+              className="mt-2 text-xs text-blue-300 hover:text-blue-200 underline"
+            >
+              Suggest from route + research
+            </button>
           </div>
 
           {/* Section heading */}
@@ -1086,18 +1175,21 @@ export default function OfferPage() {
                                   <input
                                     value={c.problem}
                                     onChange={(e) => setCaseStudies((prev) => prev.map((x, i) => (i === idx ? { ...x, problem: e.target.value } : x)))}
+                                    onFocus={() => setCaseStudyFocus({ caseIdx: idx, field: "problem" })}
                                     className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="Problem (what was broken?)"
                                   />
                                   <input
                                     value={c.actions}
                                     onChange={(e) => setCaseStudies((prev) => prev.map((x, i) => (i === idx ? { ...x, actions: e.target.value } : x)))}
+                                    onFocus={() => setCaseStudyFocus({ caseIdx: idx, field: "actions" })}
                                     className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="Actions (what did you do?)"
                                   />
                                   <input
                                     value={c.impact}
                                     onChange={(e) => setCaseStudies((prev) => prev.map((x, i) => (i === idx ? { ...x, impact: e.target.value } : x)))}
+                                    onFocus={() => setCaseStudyFocus({ caseIdx: idx, field: "impact" })}
                                     className="w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="Impact (what changed?)"
                                   />
@@ -1113,41 +1205,41 @@ export default function OfferPage() {
                           </div>
 
                           {/* Quick inserts for case studies */}
-                          {suggestedCaseStudies.length > 0 ? (
+                          {(caseStudyQuickInserts.problem.length > 0 ||
+                            caseStudyQuickInserts.actions.length > 0 ||
+                            caseStudyQuickInserts.impact.length > 0) ? (
                             <div className="mt-4 rounded-md border border-white/10 bg-white/5 p-3">
-                              <div className="text-[11px] font-semibold text-white/70 uppercase tracking-wider">Quick inserts (from your resume)</div>
-                              <div className="mt-2 flex flex-wrap gap-2">
-                                {suggestedCaseStudies.map((s, si) => {
-                                  const label = clampLines(s.actions || s.impact || s.problem, 60);
-                                  if (!label) return null;
-                                  return (
-                                    <button
-                                      key={`csq_${si}`}
-                                      type="button"
-                                      onClick={() =>
-                                        setCaseStudies((prev) => {
-                                          const next = [...(prev || [])];
-                                          const idx = next.findIndex(
-                                            (x) => !String(x.problem || "").trim() && !String(x.actions || "").trim() && !String(x.impact || "").trim()
-                                          );
-                                          const target = idx >= 0 ? idx : 0;
-                                          next[target] = {
-                                            ...next[target],
-                                            problem: s.problem || next[target].problem,
-                                            actions: s.actions || next[target].actions,
-                                            impact: s.impact || next[target].impact,
-                                          };
-                                          return next;
-                                        })
-                                      }
-                                      className="px-2 py-1 rounded-full border border-white/10 bg-black/20 text-[11px] text-white/80 hover:bg-black/30"
-                                      title="Insert into case study"
-                                    >
-                                      + {label}
-                                    </button>
-                                  );
-                                })}
+                              <div className="text-[11px] font-semibold text-white/70 uppercase tracking-wider">
+                                Quick inserts
+                                {caseStudyFocus ? (
+                                  <span className="normal-case font-normal text-white/50">
+                                    {" "}
+                                    → case study {caseStudyFocus.caseIdx + 1}, {caseStudyFocus.field}
+                                  </span>
+                                ) : (
+                                  <span className="normal-case font-normal text-white/50"> (click a field first)</span>
+                                )}
                               </div>
+                              {(["problem", "actions", "impact"] as const).map((field) =>
+                                caseStudyQuickInserts[field].length ? (
+                                  <div key={field} className="mt-2">
+                                    <div className="text-[10px] font-bold text-white/50 uppercase tracking-wider mb-1">{field}</div>
+                                    <div className="flex flex-wrap gap-2">
+                                      {caseStudyQuickInserts[field].map((item, qi) => (
+                                        <button
+                                          key={`${field}_${qi}`}
+                                          type="button"
+                                          onClick={() => insertCaseStudyField(field, item.text)}
+                                          className="px-2 py-1 rounded-full border border-white/10 bg-black/20 text-[11px] text-white/80 hover:bg-black/30"
+                                          title={`Insert into ${field}`}
+                                        >
+                                          + {item.label}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ) : null
+                              )}
                             </div>
                           ) : null}
                           {defaultAllBtn("case_studies")}
@@ -1369,6 +1461,8 @@ export default function OfferPage() {
               })}
             </div>
           )}
+
+          <WorkflowSummary />
 
           {/* Footer */}
           <div className="mt-8 flex justify-end gap-3">

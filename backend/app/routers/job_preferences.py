@@ -135,6 +135,81 @@ async def suggest_deliverables(payload: SuggestDeliverablesRequest):
         ])
 
 
+class Dream100PositioningInput(BaseModel):
+    positioning_level: Optional[str] = None
+    career_result: Optional[str] = None
+    free_deliverable: Optional[str] = None
+
+
+class Dream100TargetingRequest(BaseModel):
+    preferences: JobPreferences
+    dream100: Optional[Dream100PositioningInput] = None
+    resume_extract: Optional[Dict[str, Any]] = None
+
+
+class IdealCompanyCriteria(BaseModel):
+    headcount: str = ""
+    growth_signals: List[str] = []
+    funding_stage: str = ""
+    tech_stack_clues: List[str] = []
+    content_activity: str = ""
+    summary: str = ""
+
+
+class ActiveNeedSignal(BaseModel):
+    signal: str
+    why_it_matters: str = ""
+
+
+class RedFlag(BaseModel):
+    flag: str
+    disqualify_reason: str = ""
+
+
+class ChannelPlaybookItem(BaseModel):
+    channel: str
+    how_to: List[str] = []
+    example_search: str = ""
+    url: str = ""
+
+
+class ScoringFactor(BaseModel):
+    factor: str
+    weight: str = "medium"
+    score_guide: str = ""
+
+
+class ScoringRubric(BaseModel):
+    overview: str = ""
+    factors: List[ScoringFactor] = []
+    how_to_use: str = ""
+
+
+class SampleTarget(BaseModel):
+    company_type: str
+    team_structure: str = ""
+    why_fit: str = ""
+    where_to_find_contact: str = ""
+    hook_angle: str = ""
+    example_score: int = 7
+
+
+class Dream100TargetingData(BaseModel):
+    ideal_company: IdealCompanyCriteria
+    active_need_signals: List[ActiveNeedSignal] = []
+    red_flags: List[RedFlag] = []
+    channel_playbook: List[ChannelPlaybookItem] = []
+    scoring_rubric: ScoringRubric
+    sample_targets: List[SampleTarget] = []
+
+
+class Dream100TargetingResponse(BaseModel):
+    success: bool
+    message: str
+    targeting: Dream100TargetingData
+    used_llm: bool = False
+
+
 class GreenhouseBoardsResponse(BaseModel):
     success: bool
     message: str
@@ -283,6 +358,334 @@ def _indeed_query(p: JobPreferences) -> str:
 
     # Keep short (indeed behaves better)
     return " ".join(q.split())[:60]
+
+
+def _build_boolean_search_strings(p: JobPreferences) -> Dict[str, str]:
+    """Pre-built Boolean strings for job board channels."""
+    role = _role_keyword_from_categories(p.role_categories or []) or "manager"
+    skill = next((str(s).strip() for s in (p.skills or []) if str(s).strip()), "")
+    industry = next((str(x).strip() for x in (p.industries or []) if str(x).strip()), "")
+    skill_part = f' OR "{skill}"' if skill else ""
+    ind_part = f' AND "{industry}"' if industry else ""
+    return {
+        "linkedin_jobs": f'("{role}" OR "lead {role}" OR "senior {role}"){skill_part}{ind_part}',
+        "indeed": f"{role} {skill}".strip()[:60],
+        "greenhouse_lever": f'site:boards.greenhouse.io OR site:jobs.lever.co "{role}" {skill}'.strip(),
+        "adjacent_roles": f'("{role}" OR "director" OR "head of") AND (hiring OR "we are looking"){ind_part}',
+    }
+
+
+def _channel_playbook_seed(p: JobPreferences) -> List[Dict[str, Any]]:
+    """Deterministic channel playbook with real URLs where possible."""
+    booleans = _build_boolean_search_strings(p)
+    q = quote_plus(_board_query(p, max_len=60))
+    role = _role_keyword_from_categories(p.role_categories or []) or "your function"
+    industries = ", ".join((p.industries or [])[:2]) or "your target industry"
+    return [
+        {
+            "channel": "LinkedIn",
+            "how_to": [
+                "Search company pages in your target size/industry and follow hiring managers who post about team growth",
+                "Use LinkedIn Jobs with your Boolean string, then click through to company pages of adjacent-role postings",
+                "Check 'People also viewed' on profiles of hiring managers in similar companies",
+                "Engage with recent posts (comment thoughtfully) before sending a connection request or DM",
+            ],
+            "example_search": booleans["linkedin_jobs"],
+            "url": _linkedin_url(p),
+        },
+        {
+            "channel": "Job boards (Boolean search)",
+            "how_to": [
+                f'LinkedIn Jobs Boolean: {booleans["linkedin_jobs"]}',
+                f'Indeed search: {booleans["indeed"]}',
+                f'Greenhouse/Lever discovery: {booleans["greenhouse_lever"]}',
+                "Look for adjacent titles (not your exact title) — companies hiring related roles often need your function next",
+            ],
+            "example_search": booleans["adjacent_roles"],
+            "url": f"https://www.indeed.com/jobs?q={quote_plus(booleans['indeed'])}",
+        },
+        {
+            "channel": "Twitter / X",
+            "how_to": [
+                f'Search: "{role}" hiring OR "we\'re hiring" OR "join our team" + industry keywords',
+                "Follow founders and operators who announce headcount milestones or product launches",
+                "Reply to tweets about team building — warm engagement before cold outreach",
+            ],
+            "example_search": f'"{role}" (hiring OR "we are hiring") {industries}',
+            "url": f"https://x.com/search?q={quote_plus(role + ' hiring')}&f=live",
+        },
+        {
+            "channel": "Podcasts",
+            "how_to": [
+                f'Search Listen Notes or Apple Podcasts for "{role}" + "{industries}"',
+                "Target founders/operators who've discussed building teams in your function",
+                "Reference a specific episode moment in your outreach hook",
+            ],
+            "example_search": f"{role} {industries} podcast",
+            "url": f"https://www.listennotes.com/search/?q={quote_plus(role + ' ' + industries)}",
+        },
+        {
+            "channel": "Newsletters / Substacks",
+            "how_to": [
+                f'Search Substack Discover for writers in {industries} covering {role} topics',
+                "Authors often run or advise at target companies — check their bio and linked companies",
+                "Subscribe and engage before reaching out; reference a specific newsletter issue",
+            ],
+            "example_search": f"{industries} {role} substack",
+            "url": f"https://substack.com/search/{quote_plus(industries + ' ' + role)}",
+        },
+        {
+            "channel": "Communities (Slack / Discord)",
+            "how_to": [
+                f'Search for Slack communities in {industries} (e.g. via Slofile, Google "{industries} slack community")',
+                "Join operator/founder communities where hiring managers ask for referrals",
+                "Contribute value in channels before pitching — lurk first, then offer your deliverable",
+            ],
+            "example_search": f"{industries} slack community {role}",
+            "url": "",
+        },
+        {
+            "channel": "Crunchbase / funding announcements",
+            "how_to": [
+                "Filter Crunchbase for companies that raised in the last 6-12 months in your target industries",
+                "Series A/B companies typically hire your function within 3-6 months of a raise",
+                "Cross-reference funding news on TechCrunch with LinkedIn headcount growth signals",
+            ],
+            "example_search": f"{industries} funding 2025 2026",
+            "url": f"https://www.crunchbase.com/discover/organization.companies/{quote_plus(industries)}",
+        },
+    ]
+
+
+def _deterministic_dream100_targeting(p: JobPreferences, d100: Optional[Dream100PositioningInput]) -> Dream100TargetingData:
+    """Fallback targeting plan when LLM is unavailable."""
+    career = str((d100.career_result if d100 else "") or "").strip()
+    deliverable = str((d100.free_deliverable if d100 else "") or "").strip()
+    role = _role_keyword_from_categories(p.role_categories or []) or "your target role"
+    sizes = ", ".join(p.company_size[:2]) if p.company_size else "50-500 employees"
+    industries = ", ".join(p.industries[:3]) if p.industries else "your target industries"
+    skills = ", ".join(p.skills[:4]) if p.skills else "your core skills"
+
+    ideal = IdealCompanyCriteria(
+        headcount=sizes,
+        growth_signals=[
+            "Headcount growing 10%+ in the last 12 months (check LinkedIn company page)",
+            "Recent funding round or revenue milestone announced in the last 18 months",
+            "Active job postings for adjacent roles (signals budget and hiring intent)",
+        ],
+        funding_stage="Series A through growth-stage (post-PMF, pre-IPO) unless you prefer enterprise",
+        tech_stack_clues=[f"Uses tools/skills aligned with: {skills}"] if skills else ["Match stack to your resume skills"],
+        content_activity="Founders or hiring managers posting weekly about product, team, or growth challenges",
+        summary=f"Mid-market companies in {industries} that are scaling {role} capacity and show public hiring or growth signals.",
+    )
+
+    signals = [
+        ActiveNeedSignal(
+            signal="Multiple open roles in your function or adjacent functions",
+            why_it_matters="Budget is allocated and hiring is active — not a cold guess",
+        ),
+        ActiveNeedSignal(
+            signal="Recent funding, product launch, or geographic expansion",
+            why_it_matters="Growth creates new pain points your background can address immediately",
+        ),
+        ActiveNeedSignal(
+            signal="Hiring manager posting about team challenges, process gaps, or scaling pains",
+            why_it_matters="Public pain = a ready-made hook for your deliverable offer",
+        ),
+        ActiveNeedSignal(
+            signal="Company content mentions metrics or outcomes you have directly improved",
+            why_it_matters="Your career result maps cleanly to their stated priorities",
+        ),
+    ]
+
+    red_flags = [
+        RedFlag(flag="Hiring freeze or recent layoffs with no growth counter-signals", disqualify_reason="No budget or appetite to hire your function right now"),
+        RedFlag(flag="No identifiable decision maker reachable on LinkedIn or email", disqualify_reason="Dream 100 requires a person, not a black hole careers page"),
+        RedFlag(flag="Your strongest result does not connect to any visible company pain", disqualify_reason="Outreach will feel generic and get ignored"),
+    ]
+
+    playbook_raw = _channel_playbook_seed(p)
+    playbook = [ChannelPlaybookItem(**item) for item in playbook_raw]
+
+    rubric = ScoringRubric(
+        overview="Score each company 1-10 before adding to your Dream 100 list. Pursue 8+, maybe 5-7, skip below 5.",
+        factors=[
+            ScoringFactor(factor="Growth stage & hiring intent", weight="high", score_guide="1=frozen/shrinking, 10=actively hiring your function with budget signals"),
+            ScoringFactor(factor="Likelihood of needing your function", weight="high", score_guide="1=no visible pain, 10=multiple adjacent roles open + public scaling challenges"),
+            ScoringFactor(factor="Publicly visible pain points", weight="high", score_guide="1=generic company page only, 10=specific posts/news about problems you solve"),
+            ScoringFactor(factor="Reachable hiring manager quality", weight="medium", score_guide="1=no LinkedIn presence, 10=active poster with clear title and email findable"),
+            ScoringFactor(factor="Career result fit", weight="high", score_guide=f"1=no connection to their challenges, 10=your result ({career[:60] or 'your track record'}) directly maps to their stated priority"),
+        ],
+        how_to_use="Research each company for 10 minutes, score on all 5 factors, average or weight toward high factors. Only add 8+ to your active Dream 100 list.",
+    )
+
+    hook_base = deliverable or "a tailored deliverable for their team"
+    career_hook = career or "relevant track record in this space"
+    samples = [
+        SampleTarget(
+            company_type=f"Series B {industries.split(',')[0].strip() if industries else 'SaaS'} company scaling {role}",
+            team_structure=f"50-200 employees, first dedicated {role} hire or small team of 2-3",
+            why_fit=f"They need someone who can {career_hook} without a long ramp",
+            where_to_find_contact="VP/Director on LinkedIn who posted about team growth or hiring",
+            hook_angle=f"Saw you're scaling the team — put together {hook_base}. Mind if I send it?",
+            example_score=9,
+        ),
+        SampleTarget(
+            company_type=f"Growth-stage company post-funding in {industries}",
+            team_structure="200-500 employees, building out a new function or replacing a departed leader",
+            why_fit="Funding creates urgency; they need proven operators not learners",
+            where_to_find_contact="Head of function + founder on LinkedIn; check Crunchbase for recent raise",
+            hook_angle=f"Congrats on the raise — noticed you're hiring adjacent roles. I {career_hook}. Worth a quick look at {hook_base}?",
+            example_score=8,
+        ),
+        SampleTarget(
+            company_type=f"Mid-market {industries} company with visible process/ops pain",
+            team_structure="100-300 employees, lean team overwhelmed by growth",
+            why_fit="Public content mentions challenges your deliverable directly addresses",
+            where_to_find_contact="Hiring manager who commented on industry posts in the last 30 days",
+            hook_angle=f"Your post about [specific challenge] resonated — I built {hook_base} for teams in exactly this situation.",
+            example_score=8,
+        ),
+    ]
+    # Pad to 10 with varied archetypes
+    extras = [
+        ("Enterprise division launching new product line", "500-2000 employees, internal startup team", 7),
+        ("Agency/consultancy adding a practice area", "20-100 employees, partner-led hiring", 6),
+        ("PE-backed rollup consolidating operations", "Multi-site, new COO/VP mandate", 8),
+        ("Remote-first startup hiring US leadership", "30-80 employees, founder still hands-on", 7),
+        ("Company replacing a departed leader (backfill)", "Stable headcount, urgent backfill posting", 9),
+        ("Stealth startup coming out of beta", "10-30 employees, first GTM or ops hire", 6),
+        ("Nonprofit or mission org scaling impact", "50-150 employees, grant-funded growth", 5),
+    ]
+    for i, (ctype, team, score) in enumerate(extras):
+        if len(samples) >= 10:
+            break
+        samples.append(SampleTarget(
+            company_type=ctype,
+            team_structure=team,
+            why_fit=f"Your background in {role} maps to their scaling moment",
+            where_to_find_contact="LinkedIn search + job board adjacent-role discovery",
+            hook_angle=f"I put together {hook_base} — relevant given where you are in the growth curve.",
+            example_score=score,
+        ))
+
+    return Dream100TargetingData(
+        ideal_company=ideal,
+        active_need_signals=signals,
+        red_flags=red_flags,
+        channel_playbook=playbook,
+        scoring_rubric=rubric,
+        sample_targets=samples[:10],
+    )
+
+
+@router.post("/dream100-targeting", response_model=Dream100TargetingResponse)
+async def generate_dream100_targeting(payload: Dream100TargetingRequest):
+    """
+    Generate a full Dream 100 targeting plan: ideal company criteria, active-need signals,
+    red flags, channel playbook, 1-10 scoring rubric, and 10 sample target archetypes.
+    """
+    p = payload.preferences
+    d100 = payload.dream100
+    fallback = _deterministic_dream100_targeting(p, d100)
+    client = get_openai_client()
+
+    resume = payload.resume_extract or {}
+    resume_summary = ""
+    if isinstance(resume, dict):
+        positions = resume.get("positions") or []
+        if positions and isinstance(positions[0], dict):
+            resume_summary = f"{positions[0].get('title', '')} at {positions[0].get('company', '')}"
+        metrics = resume.get("key_metrics") or []
+        if metrics:
+            resume_summary += "; metrics: " + ", ".join(
+                str(m.get("metric", "")) for m in metrics[:3] if isinstance(m, dict)
+            )
+
+    ctx = {
+        "preferences": p.model_dump(),
+        "dream100": (d100.model_dump() if d100 else {}),
+        "resume_summary": resume_summary,
+        "search_urls": {
+            "linkedin_jobs": _linkedin_url(p),
+            "indeed": f"https://www.indeed.com/jobs?q={quote_plus(_indeed_query(p))}",
+        },
+        "boolean_searches": _build_boolean_search_strings(p),
+        "channel_playbook_seed": _channel_playbook_seed(p),
+    }
+
+    system = (
+        "You are a Dream 100 job search strategist. Build a personalized targeting plan for this candidate.\n"
+        "Use ONLY the provided context. Be specific to their role categories, industries, skills, company size prefs, and career result.\n"
+        "Return ONLY valid JSON with this exact structure:\n"
+        "{\n"
+        '  "ideal_company": {\n'
+        '    "headcount": "string", "growth_signals": ["..."], "funding_stage": "string",\n'
+        '    "tech_stack_clues": ["..."], "content_activity": "string", "summary": "string"\n'
+        "  },\n"
+        '  "active_need_signals": [{"signal": "string", "why_it_matters": "string"}],\n'
+        '  "red_flags": [{"flag": "string", "disqualify_reason": "string"}],\n'
+        '  "channel_playbook": [{"channel": "string", "how_to": ["step1","step2"], "example_search": "string", "url": "string"}],\n'
+        '  "scoring_rubric": {\n'
+        '    "overview": "string",\n'
+        '    "factors": [{"factor": "string", "weight": "high|medium|low", "score_guide": "what 1 vs 10 looks like"}],\n'
+        '    "how_to_use": "string"\n'
+        "  },\n"
+        '  "sample_targets": [{\n'
+        '    "company_type": "string", "team_structure": "string", "why_fit": "string",\n'
+        '    "where_to_find_contact": "string", "hook_angle": "string", "example_score": 7\n'
+        "  }]\n"
+        "}\n\n"
+        "Requirements:\n"
+        "- ideal_company: tailored to their preferences (size, industries, skills)\n"
+        "- active_need_signals: exactly 4 signals that mean ACTIVELY IN NEED vs waste of time\n"
+        "- red_flags: exactly 3 immediate disqualifiers\n"
+        "- channel_playbook: exactly 7 channels — LinkedIn, Job boards (Boolean search), Twitter/X, Podcasts, Newsletters/Substacks, Communities (Slack/Discord), Crunchbase/funding announcements. Include concrete example_search strings and url where applicable. Merge/improve the channel_playbook_seed from context.\n"
+        "- scoring_rubric: 5 factors including growth stage, likelihood of needing their function, visible pain points, hiring manager reachability, career result fit. Score guide must explain 1 vs 10 for each.\n"
+        "- sample_targets: exactly 10 varied company archetypes (realistic types, not fake company names). Each needs hook_angle using their deliverable if provided.\n"
+    )
+
+    try:
+        if client.should_use_real_llm:
+            raw = client.run_chat_completion(
+                [{"role": "system", "content": system}, {"role": "user", "content": json.dumps(ctx, ensure_ascii=False)}],
+                temperature=0.35,
+                max_tokens=3500,
+                stub_json=fallback.model_dump(),
+            )
+            choices = raw.get("choices") or []
+            msg = (choices[0].get("message") if choices else {}) or {}
+            data = extract_json_from_text(str(msg.get("content") or "")) or {}
+            if data.get("ideal_company") and data.get("sample_targets"):
+                targeting = Dream100TargetingData(**data)
+                # Ensure playbook URLs from seed if LLM omitted them
+                seed_by_channel = {x["channel"]: x for x in _channel_playbook_seed(p)}
+                merged_playbook = []
+                for item in targeting.channel_playbook:
+                    seed = seed_by_channel.get(item.channel) or {}
+                    merged_playbook.append(ChannelPlaybookItem(
+                        channel=item.channel,
+                        how_to=item.how_to or seed.get("how_to", []),
+                        example_search=item.example_search or seed.get("example_search", ""),
+                        url=item.url or seed.get("url", ""),
+                    ))
+                if merged_playbook:
+                    targeting.channel_playbook = merged_playbook
+                return Dream100TargetingResponse(
+                    success=True,
+                    message="Dream 100 targeting plan generated",
+                    targeting=targeting,
+                    used_llm=True,
+                )
+    except Exception as exc:
+        logger.warning("Dream 100 targeting LLM failed: %s", exc)
+
+    return Dream100TargetingResponse(
+        success=True,
+        message="Dream 100 targeting plan generated (fallback)",
+        targeting=fallback,
+        used_llm=False,
+    )
 
 
 def _location_hint(p: JobPreferences) -> str:

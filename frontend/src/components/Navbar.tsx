@@ -4,12 +4,22 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import DataModal from "./DataModal";
+import { getActiveRoute, getStepsForRoute } from "@/lib/workflowRoutes";
 
-const STEP_PATHS: Record<number, string> = {
-  1: "/job-preferences", 2: "/resume", 3: "/personality", 4: "/job-descriptions",
-  5: "/gap-analysis", 6: "/painpoint-match", 7: "/company-research", 8: "/find-contact",
-  9: "/offer", 10: "/bio-page", 11: "/apply", 12: "/campaign",
-};
+const NAV_STEPS: Array<{ step: number; href: string; label: string }> = [
+  { step: 1, href: "/job-preferences", label: "Prefs" },
+  { step: 2, href: "/resume", label: "Resume" },
+  { step: 3, href: "/personality", label: "Persona" },
+  { step: 4, href: "/job-descriptions", label: "Roles" },
+  { step: 5, href: "/gap-analysis", label: "Gaps" },
+  { step: 6, href: "/painpoint-match", label: "Match" },
+  { step: 7, href: "/company-research", label: "Research" },
+  { step: 8, href: "/find-contact", label: "Contact" },
+  { step: 9, href: "/offer", label: "Offer" },
+  { step: 10, href: "/bio-page", label: "Bio" },
+  { step: 11, href: "/apply", label: "Apply" },
+  { step: 12, href: "/campaign", label: "Campaign" },
+];
 
 export default function Navbar() {
   const router = useRouter();
@@ -17,6 +27,7 @@ export default function Navbar() {
   const [dataOpen, setDataOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [visibleNavSteps, setVisibleNavSteps] = useState<number[]>(NAV_STEPS.map((s) => s.step));
   
   // Re-read user from localStorage on every client-side navigation so the
   // greeting updates after login/register (which write rf_user then navigate).
@@ -36,7 +47,19 @@ export default function Navbar() {
         setCompletedSteps(new Set(steps.filter((n) => Number.isFinite(n))));
       }
     } catch {}
+
+    const route = getActiveRoute();
+    setVisibleNavSteps(getStepsForRoute(route).map((s) => s.step));
   }, [pathname]);
+
+  useEffect(() => {
+    const onRoute = () => {
+      const route = getActiveRoute();
+      setVisibleNavSteps(getStepsForRoute(route).map((s) => s.step));
+    };
+    window.addEventListener("rf-route-changed", onRoute);
+    return () => window.removeEventListener("rf-route-changed", onRoute);
+  }, []);
 
   useEffect(() => {
     // RoleFerry is currently Role-Seeker only.
@@ -180,18 +203,11 @@ export default function Navbar() {
             <NavPill href="/" pathname={pathname} kind="utility" size="md">Dashboard</NavPill>
             <span className="mx-2 h-4 w-px bg-white/15" />
 
-            <NavPill href="/job-preferences" pathname={pathname} done={completedSteps.has(1)}>Prefs</NavPill>
-            <NavPill href="/resume" pathname={pathname} done={completedSteps.has(2)}>Resume</NavPill>
-            <NavPill href="/personality" pathname={pathname} done={completedSteps.has(3)}>Persona</NavPill>
-            <NavPill href="/job-descriptions" pathname={pathname} done={completedSteps.has(4)}>Roles</NavPill>
-            <NavPill href="/gap-analysis" pathname={pathname} done={completedSteps.has(5)}>Gaps</NavPill>
-            <NavPill href="/painpoint-match" pathname={pathname} done={completedSteps.has(6)}>Match</NavPill>
-            <NavPill href="/company-research" pathname={pathname} done={completedSteps.has(7)}>Research</NavPill>
-            <NavPill href="/find-contact" pathname={pathname} done={completedSteps.has(8)}>Contact</NavPill>
-            <NavPill href="/offer" pathname={pathname} done={completedSteps.has(9)}>Offer</NavPill>
-            <NavPill href="/bio-page" pathname={pathname} done={completedSteps.has(10)}>Bio</NavPill>
-            <NavPill href="/apply" pathname={pathname} done={completedSteps.has(11)}>Apply</NavPill>
-            <NavPill href="/campaign" pathname={pathname} done={completedSteps.has(12)}>Campaign</NavPill>
+            {NAV_STEPS.filter((s) => visibleNavSteps.includes(s.step)).map((s) => (
+              <NavPill key={s.step} href={s.href} pathname={pathname} done={completedSteps.has(s.step)}>
+                {s.label}
+              </NavPill>
+            ))}
             <NavPill href="/deliverability-launch" pathname={pathname}>Launch</NavPill>
 
             {/* Big spacing: steps vs non-step utilities */}

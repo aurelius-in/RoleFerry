@@ -1,7 +1,17 @@
+import { getActiveRoute } from "./workflowRoutes";
+
 export type Dream100Context = {
   positioning_level: "1" | "2" | "3" | "";
   career_result: string;
   free_deliverable: string;
+};
+
+export type Dream100TargetingContext = {
+  ideal_company?: Record<string, unknown>;
+  active_need_signals?: Array<{ signal: string; why_it_matters?: string }>;
+  red_flags?: Array<{ flag: string; disqualify_reason?: string }>;
+  scoring_rubric?: Record<string, unknown>;
+  sample_targets?: Array<Record<string, unknown>>;
 };
 
 export type RFCampaignContextV1 = {
@@ -30,6 +40,7 @@ export type RFCampaignContextV1 = {
   selected_contact_signals?: any[];
   selected_company_signals?: any[];
   dream100?: Dream100Context;
+  dream100_targeting?: Dream100TargetingContext;
   links?: {
     bio_page_url?: string;
     work_link?: string;
@@ -154,14 +165,33 @@ export function buildCampaignContextV1(contactId: string): RFCampaignContextV1 {
   const contactResearch = cid && contactResearchByContact ? contactResearchByContact[cid] : null;
 
   const d100Raw = safeJson<any>(lsGet("rf_dream100"), null);
+  const activeRoute = getActiveRoute();
+  const careerResult =
+    String(lsGet("rf_career_result") || "").trim() ||
+    String(d100Raw?.careerResult || "").trim();
+  const freeDeliverable =
+    String(lsGet("rf_free_deliverable") || "").trim() ||
+    String(d100Raw?.freeDeliverable || "").trim();
+  const positioningLevel = activeRoute || d100Raw?.positioningLevel || d100Raw?.selectedRoute || "";
   const dream100: Dream100Context | undefined =
-    d100Raw && (d100Raw.positioningLevel || d100Raw.careerResult || d100Raw.freeDeliverable)
+    positioningLevel || careerResult || freeDeliverable
       ? {
-          positioning_level: d100Raw.positioningLevel || "",
-          career_result: d100Raw.careerResult || "",
-          free_deliverable: d100Raw.freeDeliverable || "",
+          positioning_level: positioningLevel as Dream100Context["positioning_level"],
+          career_result: careerResult,
+          free_deliverable: freeDeliverable,
         }
       : undefined;
+
+  const d100TargetingRaw = safeJson<any>(lsGet("rf_dream100_targeting"), null);
+  const dream100_targeting: Dream100TargetingContext | undefined = d100TargetingRaw
+    ? {
+        ideal_company: d100TargetingRaw.ideal_company,
+        active_need_signals: d100TargetingRaw.active_need_signals,
+        red_flags: d100TargetingRaw.red_flags,
+        scoring_rubric: d100TargetingRaw.scoring_rubric,
+        sample_targets: d100TargetingRaw.sample_targets,
+      }
+    : undefined;
 
   const bioPageUrl = String(lsGet("bio_page_url") || "").trim();
 
@@ -193,6 +223,7 @@ export function buildCampaignContextV1(contactId: string): RFCampaignContextV1 {
     selected_contact_signals: safeJson<any[]>(lsGet("rf_selected_contact_signals"), []),
     selected_company_signals: safeJson<any[]>(lsGet("rf_selected_company_signals"), []),
     dream100,
+    dream100_targeting,
     links,
   };
 }

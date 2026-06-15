@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useRouteGuard } from "@/lib/useRouteGuard";
 import { api } from "@/lib/api";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
@@ -256,6 +257,7 @@ function analyzeIndeedUrl(raw: string): {
 
 export default function JobDescriptionsPage() {
   const router = useRouter();
+  useRouteGuard(4);
   const AUTO_POS_KW_KEY = "rf_auto_roles_positive_keywords_v1";
   const AUTO_NEG_KW_KEY = "rf_auto_roles_negative_keywords_v1";
   // Important: avoid reading localStorage during the initial render to prevent
