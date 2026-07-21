@@ -48,7 +48,9 @@ class InstantlyLaunchOptions(BaseModel):
     """Campaign options that map to Instantly campaign settings."""
     campaign_name: str = "RoleFerry Campaign"
     email_accounts: List[str] = []
-    use_prewarmed: bool = True
+    # Prefer Instantly account tags (private sending infra). Pre-warmed purchase path is deprecated.
+    account_tag_ids: List[str] = []
+    use_prewarmed: bool = False
 
     stop_on_reply: bool = True
     stop_on_auto_reply: bool = True
@@ -76,6 +78,32 @@ class InstantlyLaunchOptions(BaseModel):
 
     custom_tags: List[str] = []
     campaign_owner: str = "David March"
+
+
+def _extract_instantly_items(raw: Any) -> List[Dict[str, Any]]:
+    if isinstance(raw, list):
+        return [x for x in raw if isinstance(x, dict)]
+    if isinstance(raw, dict):
+        for k in ("items", "data", "accounts", "results", "tags"):
+            v = raw.get(k)
+            if isinstance(v, list):
+                return [x for x in v if isinstance(x, dict)]
+        nested = raw.get("data")
+        if isinstance(nested, dict):
+            for k in ("items", "accounts", "tags", "results"):
+                v = nested.get(k)
+                if isinstance(v, list):
+                    return [x for x in v if isinstance(x, dict)]
+    return []
+
+
+def _account_emails_from_raw(raw: Any) -> List[str]:
+    emails: List[str] = []
+    for a in _extract_instantly_items(raw):
+        email = str(a.get("email") or "").strip()
+        if email and email not in emails:
+            emails.append(email)
+    return emails
 
 
 class InstantlyLaunchRequest(BaseModel):
@@ -133,29 +161,15 @@ async def roleferry_warmup_accounts(http_request: Request):
         raise HTTPException(status_code=400, detail="Instantly is not configured")
 
     client = InstantlyClient(settings.instantly_api_key or "")
-    resp = await client.list_accounts()
+    resp = await client.list_accounts(include_tags=True)
     if not resp.get("ok"):
         raise HTTPException(status_code=502, detail=f"Instantly accounts lookup failed: {resp.get('error')}")
 
-    raw = resp.get("raw")
-    accounts = []
-    if isinstance(raw, list):
-        accounts = raw
-    elif isinstance(raw, dict):
-        # Try common shapes
-        for k in ["accounts", "data", "items", "results"]:
-            v = raw.get(k)
-            if isinstance(v, list):
-                accounts = v
-                break
-        if not accounts and isinstance(raw.get("data"), dict) and isinstance(raw["data"].get("accounts"), list):
-            accounts = raw["data"]["accounts"]
+    accounts = _extract_instantly_items(resp.get("raw"))
 
     # Normalize to a stable, minimal shape for the frontend.
     out = []
     for a in accounts[:200]:
-        if not isinstance(a, dict):
-            continue
         email = str(a.get("email") or "").strip()
         if not email:
             continue
@@ -167,10 +181,60 @@ async def roleferry_warmup_accounts(http_request: Request):
                 "status": a.get("status"),
                 "provider_code": a.get("provider_code"),
                 "timestamp_warmup_start": a.get("timestamp_warmup_start"),
+                "tags": a.get("tags") or [],
                 "raw": a,
             }
         )
     return {"accounts": out}
+
+
+@router.get("/instantly-account-tags")
+async def instantly_account_tags(http_request: Request):
+    """
+    List Instantly custom tags with how many email accounts are assigned to each.
+    Used on Launch to pick a client/infra tag instead of purchasing pre-warmed accounts.
+    """
+    await require_current_user(http_request)
+    if not settings.instantly_enabled:
+        raise HTTPException(status_code=400, detail="Instantly is not configured")
+
+    client = InstantlyClient(settings.instantly_api_key or "")
+    tags_resp = await client.list_custom_tags(limit=100)
+    if not tags_resp.get("ok"):
+        raise HTTPException(status_code=502, detail=f"Instantly tags lookup failed: {tags_resp.get('error')}")
+
+    tags_raw = _extract_instantly_items(tags_resp.get("raw"))
+    accts_resp = await client.list_accounts(include_tags=True, limit=100)
+    accounts = _extract_instantly_items(accts_resp.get("raw")) if accts_resp.get("ok") else []
+
+    counts: Dict[str, int] = {}
+    for a in accounts:
+        tags = a.get("tags") or []
+        if not isinstance(tags, list):
+            continue
+        for t in tags:
+            if not isinstance(t, dict):
+                continue
+            tid = str(t.get("id") or "").strip()
+            if tid:
+                counts[tid] = counts.get(tid, 0) + 1
+
+    out = []
+    for t in tags_raw:
+        tid = str(t.get("id") or "").strip()
+        if not tid:
+            continue
+        label = str(t.get("label") or t.get("name") or tid).strip()
+        out.append(
+            {
+                "id": tid,
+                "label": label,
+                "description": t.get("description"),
+                "account_count": counts.get(tid, 0),
+            }
+        )
+    out.sort(key=lambda x: (str(x.get("label") or "").lower(), str(x.get("id"))))
+    return {"tags": out, "total_accounts": len(accounts)}
 
 
 class RoleFerryWarmupEnableRequest(BaseModel):
@@ -925,26 +989,23 @@ async def instantly_launch(request: InstantlyLaunchRequest, http_request: Reques
     client = InstantlyClient(settings.instantly_api_key or "")
     opts = request.options
 
-    # 1. Resolve email accounts
+    # 1. Resolve email accounts — prefer Instantly account tags (private infra).
     email_list: list[str] = []
-    if opts.use_prewarmed:
+    tag_ids = [str(t).strip() for t in (opts.account_tag_ids or []) if str(t or "").strip()]
+    if tag_ids:
+        accts_resp = await client.list_accounts(tag_ids=tag_ids, include_tags=True)
+        if not accts_resp.get("ok"):
+            raise HTTPException(
+                status_code=502,
+                detail=f"Instantly account lookup by tag failed: {accts_resp.get('error')}",
+            )
+        email_list = _account_emails_from_raw(accts_resp.get("raw"))
+    elif opts.use_prewarmed:
+        # Legacy fallback: all workspace accounts (no longer the primary path).
         accts_resp = await client.list_accounts()
         if accts_resp.get("ok"):
-            raw = accts_resp.get("raw")
-            accounts = []
-            if isinstance(raw, list):
-                accounts = raw
-            elif isinstance(raw, dict):
-                for k in ["items", "data", "accounts", "results"]:
-                    v = raw.get(k)
-                    if isinstance(v, list):
-                        accounts = v
-                        break
-            email_list = [
-                str(a.get("email") or "").strip()
-                for a in accounts
-                if isinstance(a, dict) and str(a.get("email") or "").strip()
-            ]
+            email_list = _account_emails_from_raw(accts_resp.get("raw"))
+
     if opts.email_accounts:
         for e in opts.email_accounts:
             e = str(e).strip()
@@ -952,7 +1013,15 @@ async def instantly_launch(request: InstantlyLaunchRequest, http_request: Reques
                 email_list.append(e)
 
     if not email_list:
-        raise HTTPException(status_code=400, detail="No email accounts available for sending.")
+        if tag_ids:
+            raise HTTPException(
+                status_code=400,
+                detail="No Instantly email accounts found for the selected tag(s). Tag accounts in Instantly, then retry.",
+            )
+        raise HTTPException(
+            status_code=400,
+            detail="No email accounts available for sending. Select an Instantly account tag on Launch.",
+        )
 
     # 2. Build campaign creation payload
     campaign_payload: dict = {

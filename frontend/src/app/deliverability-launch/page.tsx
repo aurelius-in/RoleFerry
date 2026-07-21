@@ -18,6 +18,13 @@ interface InstantlyLaunchResult {
   message?: string;
 }
 
+interface InstantlyAccountTag {
+  id: string;
+  label: string;
+  description?: string | null;
+  account_count: number;
+}
+
 function cleanMessageText(v: any): string {
   return String(v ?? "")
     .replace(/&nbsp;?/gi, " ")
@@ -58,9 +65,10 @@ export default function DeliverabilityLaunchPage() {
   const [linkedinNotice, setLinkedinNotice] = useState<string | null>(null);
 
   // --- Instantly campaign options state ---
-  const [usePrewarmed, setUsePrewarmed] = useState(true);
-  const [userEmails, setUserEmails] = useState<string[]>([]);
-  const [newEmailInput, setNewEmailInput] = useState("");
+  const [accountTags, setAccountTags] = useState<InstantlyAccountTag[]>([]);
+  const [selectedAccountTagIds, setSelectedAccountTagIds] = useState<string[]>([]);
+  const [tagsLoading, setTagsLoading] = useState(false);
+  const [tagsError, setTagsError] = useState<string | null>(null);
   const [stopOnReply, setStopOnReply] = useState(true);
   const [linkTracking, setLinkTracking] = useState(false);
   const [openTracking, setOpenTracking] = useState(false);
@@ -274,6 +282,37 @@ export default function DeliverabilityLaunchPage() {
     return slug ? `${slug}_${suffix}` : `campaign_${suffix}`;
   };
 
+  const loadAccountTags = async () => {
+    setTagsLoading(true);
+    setTagsError(null);
+    try {
+      const resp = await api<{ tags: InstantlyAccountTag[]; total_accounts?: number }>(
+        "/deliverability-launch/instantly-account-tags",
+        "GET",
+      );
+      const tags = Array.isArray(resp?.tags) ? resp.tags : [];
+      setAccountTags(tags);
+      setSelectedAccountTagIds((prev) => {
+        const valid = new Set(tags.map((t) => t.id));
+        const kept = prev.filter((id) => valid.has(id));
+        if (kept.length) return kept;
+        // Auto-select the first tag that has accounts, if any.
+        const withAccounts = tags.find((t) => Number(t.account_count || 0) > 0);
+        return withAccounts ? [withAccounts.id] : [];
+      });
+    } catch (e: any) {
+      const msg = String(e?.message || "Failed to load Instantly account tags.");
+      setTagsError(msg);
+      setAccountTags([]);
+    } finally {
+      setTagsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadAccountTags();
+  }, []);
+
   // --- Load data on mount ---
   useEffect(() => {
     const stored = localStorage.getItem("rf_mode");
@@ -413,8 +452,9 @@ export default function DeliverabilityLaunchPage() {
       const payload = {
         options: {
           campaign_name: campaignName,
-          email_accounts: userEmails,
-          use_prewarmed: usePrewarmed,
+          email_accounts: [],
+          account_tag_ids: selectedAccountTagIds,
+          use_prewarmed: false,
           stop_on_reply: stopOnReply,
           stop_on_auto_reply: stopOnAutoReply,
           stop_for_company: stopForCompany,
@@ -478,8 +518,16 @@ export default function DeliverabilityLaunchPage() {
   // --- Derived ---
   const selectedContacts = loadSelectedContacts();
   const totalContacts = selectedContacts.length;
-  const emailAccountCount = (usePrewarmed ? 1 : 0) + userEmails.length;
+  const emailAccountCount = accountTags
+    .filter((t) => selectedAccountTagIds.includes(t.id))
+    .reduce((sum, t) => sum + Number(t.account_count || 0), 0);
   const maxDailyCapacity = emailAccountCount * dailyLimit;
+
+  const toggleAccountTag = (tagId: string) => {
+    setSelectedAccountTagIds((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId],
+    );
+  };
 
   // --- Render ---
   return (
@@ -592,69 +640,70 @@ export default function DeliverabilityLaunchPage() {
                 <>
                   {/* --- Instantly Campaign Options --- */}
 
-                  {/* Accounts to use */}
+                  {/* Instantly account tags (private sending infra) */}
                   <div className="bg-white/5 border border-white/10 rounded-lg p-5">
-                    <h2 className="text-base font-semibold text-white mb-1">Accounts to Use</h2>
-                    <p className="text-xs text-white/50 mb-4">Select one or more accounts to send emails from.</p>
-
-                    <label className="flex items-center gap-2.5 mb-3 cursor-pointer">
-                      <input type="checkbox" checked={usePrewarmed} onChange={(e) => setUsePrewarmed(e.target.checked)}
-                        className="w-4 h-4 rounded border-white/30 bg-transparent accent-emerald-500" />
-                      <span className="text-sm text-white">Pre-warmed accounts (Instantly)</span>
-                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full px-2 py-0.5 font-semibold">Recommended</span>
-                    </label>
-
-                    <div className="mb-3">
-                      <div className="text-xs text-white/50 mb-1.5">Or add your own email account:</div>
-                      <div className="flex gap-2">
-                        <input
-                          type="email"
-                          placeholder="you@example.com"
-                          value={newEmailInput}
-                          onChange={(e) => setNewEmailInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && newEmailInput.trim()) {
-                              setUserEmails((prev) => [...prev, newEmailInput.trim()]);
-                              setNewEmailInput("");
-                            }
-                          }}
-                          className="flex-1 bg-black/20 border border-white/10 rounded px-3 py-1.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (newEmailInput.trim()) {
-                              setUserEmails((prev) => [...prev, newEmailInput.trim()]);
-                              setNewEmailInput("");
-                            }
-                          }}
-                          className="bg-white/10 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-white/20 transition-colors"
-                        >
-                          Add
-                        </button>
-                      </div>
-                      {!usePrewarmed && userEmails.length === 0 && (
-                        <p className="text-[10px] text-red-400 mt-1.5 italic">
-                          Not recommended for more than 20 applications/day. Your email may be flagged and deliverability cannot be guaranteed.
-                        </p>
-                      )}
+                    <div className="flex items-start justify-between gap-3 mb-1">
+                      <h2 className="text-base font-semibold text-white">Sending Account Tag</h2>
+                      <button
+                        type="button"
+                        onClick={() => void loadAccountTags()}
+                        className="text-xs text-white/50 hover:text-white/80 transition-colors"
+                      >
+                        Refresh tags
+                      </button>
                     </div>
+                    <p className="text-xs text-white/50 mb-4">
+                      RoleFerry sends from Instantly accounts you already host. Pick the tag that maps to this client&apos;s mailboxes.
+                    </p>
 
-                    {userEmails.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {userEmails.map((email, i) => (
-                          <span key={i} className="inline-flex items-center gap-1.5 bg-white/10 text-white/80 text-xs px-2.5 py-1 rounded-full">
-                            {email}
-                            <button type="button" onClick={() => setUserEmails((prev) => prev.filter((_, j) => j !== i))} className="text-white/40 hover:text-white/80">&times;</button>
-                          </span>
-                        ))}
+                    {tagsLoading ? (
+                      <div className="flex items-center gap-2 text-sm text-white/60 py-2">
+                        <InlineSpinner /> Loading Instantly tags...
+                      </div>
+                    ) : tagsError ? (
+                      <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-3 py-2">
+                        {tagsError}
+                      </div>
+                    ) : accountTags.length === 0 ? (
+                      <div className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded px-3 py-2">
+                        No Instantly account tags found yet. In Instantly, tag email accounts (e.g. per client), then refresh here.
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {accountTags.map((tag) => {
+                          const selected = selectedAccountTagIds.includes(tag.id);
+                          return (
+                            <label
+                              key={tag.id}
+                              className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2.5 cursor-pointer transition-colors ${
+                                selected
+                                  ? "border-emerald-500/40 bg-emerald-500/10"
+                                  : "border-white/10 bg-black/20 hover:border-white/20"
+                              }`}
+                            >
+                              <span className="flex items-center gap-2.5 min-w-0">
+                                <input
+                                  type="checkbox"
+                                  checked={selected}
+                                  onChange={() => toggleAccountTag(tag.id)}
+                                  className="w-4 h-4 rounded border-white/30 bg-transparent accent-emerald-500"
+                                />
+                                <span className="text-sm text-white truncate">{tag.label}</span>
+                              </span>
+                              <span className="text-[11px] text-white/50 shrink-0">
+                                {tag.account_count} account{tag.account_count === 1 ? "" : "s"}
+                              </span>
+                            </label>
+                          );
+                        })}
                       </div>
                     )}
 
                     <div className="mt-3 text-xs text-white/40">
-                      Daily limit: <span className="font-semibold text-white/60">{dailyLimit}</span> emails per account/day
-                      &middot; Total capacity: <span className="font-semibold text-white/60">{maxDailyCapacity}</span>/day
-                      &middot; {totalContacts} recipient(s) selected
+                      Selected accounts: <span className="font-semibold text-white/60">{emailAccountCount}</span>
+                      &middot; Daily limit: <span className="font-semibold text-white/60">{dailyLimit}</span>/account
+                      &middot; Capacity: <span className="font-semibold text-white/60">{maxDailyCapacity}</span>/day
+                      &middot; {totalContacts} recipient(s)
                     </div>
                   </div>
 
@@ -926,9 +975,14 @@ export default function DeliverabilityLaunchPage() {
                         You have more contacts than your daily capacity. Add more email accounts or the campaign will take multiple days.
                       </div>
                     )}
-                    {emailAccountCount === 0 && (
+                    {selectedAccountTagIds.length === 0 && (
                       <div className="mt-3 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-3 py-2">
-                        No email accounts configured. Enable pre-warmed accounts or add your own email above.
+                        Select an Instantly account tag above before launching.
+                      </div>
+                    )}
+                    {selectedAccountTagIds.length > 0 && emailAccountCount === 0 && (
+                      <div className="mt-3 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded px-3 py-2">
+                        Selected tag has 0 Instantly email accounts. Assign mailboxes to that tag in Instantly, then refresh.
                       </div>
                     )}
                   </div>
@@ -943,7 +997,7 @@ export default function DeliverabilityLaunchPage() {
                       <button
                         type="button"
                         onClick={launchInstantly}
-                        disabled={isLaunching || emailAccountCount === 0 || totalContacts === 0}
+                        disabled={isLaunching || selectedAccountTagIds.length === 0 || emailAccountCount === 0 || totalContacts === 0}
                         className="bg-emerald-600 text-white px-8 py-3 rounded-md font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-2 text-sm"
                       >
                         {isLaunching ? (

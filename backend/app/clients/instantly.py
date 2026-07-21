@@ -34,11 +34,36 @@ class InstantlyClient:
         except Exception as e:
             return {"status": "queued", "list": list_name, "count": len(contacts), "error": str(e)}
 
-    async def list_accounts(self) -> Dict[str, Any]:
-        url = f"{self.base_url}/accounts"
+    async def list_custom_tags(self, limit: int = 100) -> Dict[str, Any]:
+        """List Instantly custom tags (used to group sending accounts per client)."""
+        url = f"{self.base_url}/custom-tags"
         try:
             async with httpx.AsyncClient(timeout=30) as client:
-                r = await client.get(url, headers=self._headers(), params={"limit": 100})
+                r = await client.get(url, headers=self._headers(), params={"limit": limit})
+                r.raise_for_status()
+                return {"ok": True, "raw": r.json()}
+        except Exception as e:
+            logger.warning("Instantly list_custom_tags failed: %s", str(e)[:300])
+            return {"ok": False, "error": str(e)}
+
+    async def list_accounts(
+        self,
+        *,
+        tag_ids: Optional[List[str]] = None,
+        include_tags: bool = False,
+        limit: int = 100,
+    ) -> Dict[str, Any]:
+        url = f"{self.base_url}/accounts"
+        params: Dict[str, Any] = {"limit": limit}
+        if tag_ids:
+            cleaned = [str(t).strip() for t in tag_ids if str(t or "").strip()]
+            if cleaned:
+                params["tag_ids"] = ",".join(cleaned)
+        if include_tags:
+            params["include_tags"] = "true"
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                r = await client.get(url, headers=self._headers(), params=params)
                 r.raise_for_status()
                 data = r.json()
                 return {"ok": True, "raw": data}
