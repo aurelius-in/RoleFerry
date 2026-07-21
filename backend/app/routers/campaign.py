@@ -204,7 +204,7 @@ async def update_persisted_campaign(campaign_id: str, payload: PersistedCampaign
                   status = COALESCE(:status, status),
                   meta = COALESCE(:meta, meta),
                   updated_at = now()
-                WHERE id = :id::uuid AND user_id = :user_id
+                WHERE id = CAST(:id AS uuid) AND user_id = :user_id
                 RETURNING id::text, user_id, name, status, meta, created_at, updated_at
                 """
             ),
@@ -228,7 +228,7 @@ async def get_persisted_campaign(campaign_id: str, http_request: Request):
                 """
                 SELECT id::text, user_id, name, status, meta, created_at, updated_at
                 FROM campaign
-                WHERE id = :id::uuid AND user_id = :user_id
+                WHERE id = CAST(:id AS uuid) AND user_id = :user_id
                 LIMIT 1
                 """
             ),
@@ -265,7 +265,7 @@ async def get_persisted_campaign(campaign_id: str, http_request: Request):
                   created_at,
                   updated_at
                 FROM campaign_row
-                WHERE campaign_id = :id::uuid AND user_id = :user_id
+                WHERE campaign_id = CAST(:id AS uuid) AND user_id = :user_id
                 ORDER BY created_at ASC
                 """
             ),
@@ -330,7 +330,7 @@ async def upsert_campaign_rows(campaign_id: str, payload: PersistedCampaignRowUp
     async with engine.begin() as conn:
         # Validate campaign ownership first
         camp = await conn.execute(
-            sql_text("SELECT 1 FROM campaign WHERE id = :id::uuid AND user_id = :user_id LIMIT 1"),
+            sql_text("SELECT 1 FROM campaign WHERE id = CAST(:id AS uuid) AND user_id = :user_id LIMIT 1"),
             {"id": cid, "user_id": user_id},
         )
         if not camp.first():
@@ -367,7 +367,7 @@ async def upsert_campaign_rows(campaign_id: str, payload: PersistedCampaignRowUp
                           emails = :emails,
                           state = :state,
                           updated_at = now()
-                        WHERE id = :id::uuid AND campaign_id = :campaign_id::uuid AND user_id = :user_id
+                        WHERE id = CAST(:id AS uuid) AND campaign_id = CAST(:campaign_id AS uuid) AND user_id = :user_id
                         RETURNING id::text
                         """
                     ),
@@ -405,7 +405,7 @@ async def upsert_campaign_rows(campaign_id: str, payload: PersistedCampaignRowUp
                       state
                     )
                     VALUES (
-                      :campaign_id::uuid,
+                      CAST(:campaign_id AS uuid),
                       :user_id,
                       :email,
                       :email_provider,
@@ -470,7 +470,7 @@ async def export_campaign_csv(campaign_id: str, http_request: Request):
                   applied_job_title,
                   personalized_page
                 FROM campaign_row
-                WHERE campaign_id = :id::uuid AND user_id = :user_id
+                WHERE campaign_id = CAST(:id AS uuid) AND user_id = :user_id
                 ORDER BY created_at ASC
                 """
             ),
@@ -567,7 +567,7 @@ async def generate_email_for_campaign_row(
                 """
                 SELECT emails
                 FROM campaign_row
-                WHERE id = :rid::uuid AND campaign_id = :cid::uuid AND user_id = :user_id
+                WHERE id = CAST(:rid AS uuid) AND campaign_id = CAST(:cid AS uuid) AND user_id = :user_id
                 LIMIT 1
                 """
             ),
@@ -589,7 +589,7 @@ async def generate_email_for_campaign_row(
                 """
                 UPDATE campaign_row
                 SET emails = :emails, updated_at = now()
-                WHERE id = :rid::uuid AND campaign_id = :cid::uuid AND user_id = :user_id
+                WHERE id = CAST(:rid AS uuid) AND campaign_id = CAST(:cid AS uuid) AND user_id = :user_id
                 """
             ),
             {"emails": json.dumps(existing), "rid": rid, "cid": cid, "user_id": user_id},

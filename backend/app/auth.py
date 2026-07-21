@@ -133,7 +133,7 @@ async def _db_get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
                 """
                 SELECT id::text, email, password_hash, first_name, last_name, phone, linkedin_url
                 FROM user_account
-                WHERE id = :id::uuid
+                WHERE id = CAST(:id AS uuid)
                 LIMIT 1
                 """
             ),
@@ -179,7 +179,7 @@ async def _db_update_user(user_id: str, payload: Dict[str, Any]) -> Dict[str, An
                   last_name = COALESCE(:last_name, last_name),
                   phone = COALESCE(:phone, phone),
                   linkedin_url = COALESCE(:linkedin_url, linkedin_url)
-                WHERE id = :id::uuid
+                WHERE id = CAST(:id AS uuid)
                 RETURNING id::text, email, password_hash, first_name, last_name, phone, linkedin_url
                 """
             ),

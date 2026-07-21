@@ -4218,7 +4218,7 @@ async def get_job_description(user_id: str, jd_id: str):
                     """
                     SELECT id, title, company, url, content, parsed_json, created_at
                     FROM job
-                    WHERE user_id = :user_id AND id = :job_id::uuid
+                    WHERE user_id = :user_id AND id = CAST(:job_id AS uuid)
                     """
                 ),
                 {"user_id": DEMO_USER_ID, "job_id": jd_id},
@@ -4293,7 +4293,7 @@ async def update_job_description(user_id: str, jd_id: str, job_description: JobD
                     url = :url,
                     content = :content,
                     parsed_json = :parsed
-                WHERE id = :id::uuid AND user_id = :user_id
+                WHERE id = CAST(:id AS uuid) AND user_id = :user_id
                 """
             ).bindparams(bindparam("parsed", type_=JSONB))
         )
@@ -4328,7 +4328,7 @@ async def delete_job_description(user_id: str, jd_id: str):
     try:
         async with engine.begin() as conn:
             await conn.execute(
-                sql_text("DELETE FROM job WHERE id = :id::uuid AND user_id = :user_id"),
+                sql_text("DELETE FROM job WHERE id = CAST(:id AS uuid) AND user_id = :user_id"),
                 {"id": jd_id, "user_id": DEMO_USER_ID},
             )
         return {"success": True, "message": "Job description deleted successfully"}
