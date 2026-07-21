@@ -680,19 +680,6 @@ export default function JobPreferencesPage() {
               </div>
             </CollapsibleSection>
 
-            {/* Dream 100 Targeting — after role/industry prefs so generation has context */}
-            <CollapsibleSection
-              title="Dream 100 Targeting"
-              count={dream100Targeting ? 1 : 0}
-            >
-              <Dream100TargetingPanel
-                preferences={preferences}
-                dream100={dream100}
-                targeting={dream100Targeting}
-                onTargetingChange={setDream100Targeting}
-              />
-            </CollapsibleSection>
-
             {/* Minimum Salary */}
             <CollapsibleSection title="What is your minimum expected salary?">
               <input
@@ -726,6 +713,19 @@ export default function JobPreferencesPage() {
                   </label>
                 ))}
               </div>
+            </CollapsibleSection>
+
+            {/* Dream 100 last: it generates from the prefs collected above */}
+            <CollapsibleSection
+              title="Dream 100 Targeting"
+              count={dream100Targeting ? 1 : 0}
+            >
+              <Dream100TargetingPanel
+                preferences={preferences}
+                dream100={dream100}
+                targeting={dream100Targeting}
+                onTargetingChange={setDream100Targeting}
+              />
             </CollapsibleSection>
           </div>
 
