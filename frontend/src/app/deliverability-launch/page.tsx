@@ -73,7 +73,7 @@ export default function DeliverabilityLaunchPage() {
   const [linkTracking, setLinkTracking] = useState(false);
   const [openTracking, setOpenTracking] = useState(false);
   const [deliveryOptimization, setDeliveryOptimization] = useState(true);
-  const [dailyLimit] = useState(25);
+  const [dailyLimit] = useState(15);
   const [campaignOwner] = useState("David March");
   const [customTags, setCustomTags] = useState<string[]>([]);
   const [newTagInput, setNewTagInput] = useState("");

@@ -60,7 +60,7 @@ class InstantlyLaunchOptions(BaseModel):
     open_tracking: bool = False
     delivery_optimization: bool = True
 
-    daily_limit: int = 25
+    daily_limit: int = 15  # matches Instantly account daily campaign limit for new batches
     email_gap: int = 5
     random_wait_max: int = 2
     max_new_leads_per_day: Optional[int] = None
