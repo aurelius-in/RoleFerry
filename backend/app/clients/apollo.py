@@ -110,7 +110,8 @@ class ApolloClient:
         per_page: int = 25,
         page: int = 1,
     ) -> Dict[str, Any]:
-        url = f"{APOLLO_BASE}/mixed_people/search"
+        # Apollo deprecated /mixed_people/search for API callers (returns 422).
+        url = f"{APOLLO_BASE}/mixed_people/api_search"
         body: Dict[str, Any] = {
             "per_page": min(per_page, 100),
             "page": page,
@@ -121,6 +122,7 @@ class ApolloClient:
             body["q_organization_name"] = organization_name
         if person_titles:
             body["person_titles"] = person_titles
+            body["include_similar_titles"] = True
         if person_seniorities:
             body["person_seniorities"] = person_seniorities
         if person_locations:
@@ -138,6 +140,9 @@ class ApolloClient:
                 if resp.status_code in (401, 403):
                     _log.warning("Apollo auth error %d — check API key (master key required)", resp.status_code)
                     return {"people": []}
+                if resp.status_code == 422:
+                    _log.warning("Apollo people_search validation error: %s", (resp.text or "")[:240])
+                    return {"people": []}
                 resp.raise_for_status()
                 return resp.json()
         except Exception as e:
@@ -152,6 +157,9 @@ class ApolloClient:
                 continue
             first = str(p.get("first_name") or "").strip()
             last = str(p.get("last_name") or "").strip()
+            # api_search obfuscates surnames (e.g. "Ph***m") until people/match enrichment.
+            if not last:
+                last = str(p.get("last_name_obfuscated") or "").strip()
             name = f"{first} {last}".strip()
             title = str(p.get("title") or "").strip()
             if not name or not title:
@@ -162,17 +170,12 @@ class ApolloClient:
             if linkedin and not linkedin.startswith("http"):
                 linkedin = f"https://www.linkedin.com/{linkedin.lstrip('/')}"
 
-            location_parts = [
-                str(p.get("city") or "").strip(),
-                str(p.get("state") or "").strip(),
-                str(p.get("country") or "").strip(),
-            ]
-
             out.append(ApolloPersonResult(
                 name=name,
                 title=title,
                 linkedin_url=linkedin or None,
                 company=str(org.get("name") or p.get("organization_name") or "").strip() or None,
+                # api_search does not return emails; Find email / enrich fills this later.
                 email=str(p.get("email") or "").strip() or None,
                 email_status=str(p.get("email_status") or "").strip() or None,
                 city=str(p.get("city") or "").strip() or None,

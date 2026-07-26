@@ -142,14 +142,59 @@ def _is_bad_title(s: str) -> bool:
     return False
 
 
+_JOB_BOARD_COMPANY_NAMES = {
+    "linkedin",
+    "indeed",
+    "glassdoor",
+    "ziprecruiter",
+    "monster",
+    "simplyhired",
+    "dice",
+    "wellfound",
+    "angelist",
+    "angellist",
+    "flexjobs",
+    "builtin",
+    "levels fyi",
+    "levels.fyi",
+    "otta",
+    "reed",
+    "seek",
+    "careerbuilder",
+    "talent",
+    "google jobs",
+    "company careers",
+    "career pages",
+}
+
+
+def _clean_company_candidate(s: str) -> str:
+    """Strip job-board suffixes / separators from a company candidate."""
+    t = str(s or "").strip().strip("-—|@•")
+    if not t:
+        return ""
+    # Drop trailing " | LinkedIn", " • Indeed", etc.
+    t = re.sub(r"\s*[\|•].*$", "", t).strip()
+    t = re.sub(
+        r"\s*[-–—]\s*(?:linkedin|indeed|glassdoor|ziprecruiter|monster|wellfound|angell?ist|flexjobs|levels\.?fyi|builtin|otta|reed|seek)\s*$",
+        "",
+        t,
+        flags=re.I,
+    ).strip()
+    t = re.sub(r"\s+", " ", t).strip()
+    return t
+
+
 def _is_bad_company(s: str) -> bool:
-    t = str(s or "").strip()
+    t = _clean_company_candidate(s)
     low = t.lower().strip()
     if not t:
         return True
-    # UI labels / noise frequently mis-parsed as "company"
+    # UI labels / pronouns / section headers frequently mis-parsed as "company"
     if low in {
         "company",
+        "the company",
+        "our company",
         "overview",
         "position",
         "location",
@@ -164,7 +209,30 @@ def _is_bad_company(s: str) -> bool:
         "original job post",
         "company-logo",
         "web-link",
+        # Pronouns / generic subjects (common JD openers: "You will...", "The team...")
+        "you",
+        "we",
+        "us",
+        "our",
+        "they",
+        "this",
+        "that",
+        "it",
+        "the",
+        "a",
+        "an",
+        "and",
+        "or",
+        "team",
+        "teams",
+        "the team",
+        "our team",
+        "your team",
+        "the teams",
         # Section headers / metadata labels
+        "industry",
+        "industries",
+        "department",
         "experience",
         "experience required",
         "requirement",
@@ -192,12 +260,42 @@ def _is_bad_company(s: str) -> bool:
         "purpose",
         "objective",
         "about",
+        "about us",
+        "about the company",
+        "about the role",
+        "about the team",
+        "the role",
+        "the job",
+        "job",
+        "role",
+        "description",
+        "job description",
         "travel",
         "relocation",
         "clearance",
-    }:
+        "unknown",
+        "n/a",
+        "na",
+        "none",
+        "null",
+        "tbd",
+    } | _JOB_BOARD_COMPANY_NAMES:
         return True
-    if low.startswith(("company-logo", "company logo", "original job post")):
+    if low.startswith(
+        (
+            "company-logo",
+            "company logo",
+            "original job post",
+            "you ",
+            "we ",
+            "our ",
+            "your ",
+            "the team",
+            "our team",
+            "about the ",
+            "about us",
+        )
+    ):
         return True
     if any(bad in low for bad in ["find any email", "insider connection", "beyond your network"]):
         return True
@@ -206,7 +304,17 @@ def _is_bad_company(s: str) -> bool:
     # Too long / sentence-y
     if len(t) > 90 or t.endswith("."):
         return True
+    # Single generic English words that are never employers
+    if re.fullmatch(r"(?:you|we|they|team|industry|role|job|company|department)", low):
+        return True
     return False
+
+
+def _safe_company(s: str, default: str = "Unknown") -> str:
+    cleaned = _clean_company_candidate(s)
+    if not cleaned or _is_bad_company(cleaned):
+        return default
+    return cleaned
 
 
 _TITLE_ROLE_TOKENS = [
@@ -1858,15 +1966,15 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
         if m:
             cand = m.group(1).strip().strip(",.;:-")
             # Guard against generic words
-            if cand and cand.lower() not in {"we", "our team", "the company"} and len(cand) <= 80:
+            if cand and not _is_bad_company(cand) and len(cand) <= 80:
                 company = cand
 
     def _pretty_company(s: str) -> str:
-        s = (s or "").strip().strip("-—|@")
+        s = _clean_company_candidate(s)
         s = re.sub(r"[_\-]+", " ", s).strip()
         s = re.sub(r"\bcompany\s+logo\b", "", s, flags=re.I).strip()
-        if not s:
-            return s
+        if not s or _is_bad_company(s):
+            return "Unknown"
         # Preserve short all-caps brands (IBM, SAP). Otherwise title-case words.
         if len(s) <= 6 and s.upper() == s and s.isalpha():
             return s
@@ -1874,8 +1982,7 @@ def _best_effort_title_company(content: str, url: Optional[str]) -> tuple[str, s
 
     if not title:
         title = "Job Description"
-    if not company:
-        company = "Unknown"
+    company = _safe_company(company)
     return title, _pretty_company(company)
 
 
@@ -2652,8 +2759,9 @@ async def import_job_description(payload: JobImportRequest):
             title, company = _best_effort_title_company(fallback_text, fallback_url)
             if not title:
                 title = "Imported role"
-            if not company:
-                company = _company_from_result(fallback_url, title) if fallback_url else "Unknown"
+            company = _safe_company(
+                company or (_company_from_result(fallback_url, title) if fallback_url else "")
+            )
 
             if fallback_url:
                 job_id = "jd_" + hashlib.md5(fallback_url.encode("utf-8")).hexdigest()[:10]
@@ -3274,31 +3382,58 @@ def _company_from_result(url: str, title: str) -> str:
     # Try URL first
     try:
         p = urlparse(url)
-        host = (p.hostname or "").lower()
+        host = (p.hostname or "").lower().replace("www.", "")
         if "boards.greenhouse.io" in host:
             seg = [x for x in (p.path or "").split("/") if x]
             if seg:
-                return seg[0].replace("-", " ").title()
+                return _safe_company(seg[0].replace("-", " ").title())
         if "jobs.lever.co" in host:
             seg = [x for x in (p.path or "").split("/") if x]
             if seg:
-                return seg[0].replace("-", " ").title()
+                return _safe_company(seg[0].replace("-", " ").title())
         if "jobs.ashbyhq.com" in host:
             seg = [x for x in (p.path or "").split("/") if x]
             if seg:
-                return seg[0].replace("-", " ").title()
+                return _safe_company(seg[0].replace("-", " ").title())
+        # Never treat major job-board hosts as the employer.
+        if any(
+            host == b or host.endswith("." + b)
+            for b in (
+                "linkedin.com",
+                "indeed.com",
+                "glassdoor.com",
+                "ziprecruiter.com",
+                "monster.com",
+                "wellfound.com",
+                "angellist.com",
+                "angel.co",
+                "flexjobs.com",
+            )
+        ):
+            host = ""
         if host:
-            root = host.split(".")
-            if len(root) >= 2:
-                return root[-2].replace("-", " ").title()
+            parts = [p for p in host.split(".") if p]
+            # careers.stripe.com → stripe; www.figma.com → figma
+            if len(parts) >= 3 and parts[0] in {"careers", "jobs", "jobsboard", "talent", "apply", "www"}:
+                candidate_host = parts[-2]
+            elif len(parts) >= 2:
+                candidate_host = parts[-2]
+            else:
+                candidate_host = ""
+            if candidate_host and candidate_host not in _JOB_BOARD_COMPANY_NAMES:
+                cand = _safe_company(candidate_host.replace("-", " ").title())
+                if cand != "Unknown":
+                    return cand
     except Exception:
         pass
-    # Fall back to title prefix conventions.
+    # Fall back to title conventions: "Role - Company" / "Role | Company"
     t = str(title or "")
-    if " - " in t:
-        maybe = t.split(" - ")[-1].strip()
-        if 1 <= len(maybe) <= 80:
-            return maybe
+    for sep in (" - ", " | ", " – ", " — "):
+        if sep in t:
+            maybe = _clean_company_candidate(t.split(sep)[-1])
+            safe = _safe_company(maybe)
+            if safe != "Unknown":
+                return safe
     return "Unknown"
 
 
@@ -3396,7 +3531,7 @@ def _salary_from_greenhouse_metadata(meta: Any) -> Optional[str]:
 
 def _company_from_slug(slug: str) -> str:
     s = str(slug or "").strip().replace("-", " ")
-    return s.title() if s else "Unknown"
+    return _safe_company(s.title() if s else "")
 
 
 async def _discover_roles_without_serper(
@@ -3990,7 +4125,9 @@ async def _discover_scraped_roles_inner(
         if score < min_match_score:
             continue
 
-        company = str(item.get("company") or "").strip() or _company_from_result(url, title)
+        company = _safe_company(
+            str(item.get("company") or "").strip() or _company_from_result(url, title)
+        )
         role_id = hashlib.sha1(f"{url}|{title}".encode("utf-8", errors="ignore")).hexdigest()[:16]
         roles.append(
             ScrapedRole(

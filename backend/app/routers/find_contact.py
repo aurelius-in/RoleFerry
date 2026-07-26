@@ -915,7 +915,8 @@ async def search_contacts(request: ContactSearchRequest):
 
                 relevant_pool = [p for _, p in scored if _is_relevant_decision_maker_for_job(p.title, job_fn)]
 
-                if title_filters:
+                role_intent = (request.role or "").strip()
+                if title_filters and not role_intent:
                     filtered_pool = [p for p in relevant_pool if _matches_title_filters(p.title)]
                     if filtered_pool:
                         people = filtered_pool[:desired]
@@ -996,16 +997,39 @@ async def search_contacts(request: ContactSearchRequest):
                 search_domains = [domain] if domain else None
                 apollo_org_name = q if not search_domains else None
                 apollo_seniorities = ["owner", "founder", "c_suite", "partner", "vp", "head", "director", "manager", "senior"]
-                # Only use role keywords from Smart Search prompt (department intent),
-                # NOT the target_job_title (which is what the candidate applies for).
-                role_keywords = (request.role or "").strip() or None
+                # Role intent from Smart Search / Name-Title filter.
+                # Prefer person_titles over q_keywords — api_search often returns 0 for short keyword phrases.
+                role_intent = (request.role or "").strip()
+                role_titles: List[str] = []
+                if role_intent:
+                    role_titles.append(role_intent)
+                    # Expand common HR/people shorthand so "head of hr" still hits People titles.
+                    low_role = role_intent.lower()
+                    if any(k in low_role for k in ("hr", "human resources", "people", "talent")):
+                        role_titles.extend(
+                            [
+                                "Head of People",
+                                "Head of HR",
+                                "VP People",
+                                "Chief People Officer",
+                                "HR Director",
+                                "Head of Talent",
+                                "Director of Talent Acquisition",
+                            ]
+                        )
+                # Only use checkbox title filters when the user did NOT type a role intent.
+                # Otherwise leftover filters (e.g. 4 eng titles) wipe HR/people searches.
+                if not role_intent and title_filters:
+                    for tf in title_filters[:12]:
+                        if tf and tf not in role_titles:
+                            role_titles.append(tf)
                 apollo_locations = [request.location] if (request.location or "").strip() else None
                 raw_apollo = apollo.people_search(
                     organization_domains=search_domains,
                     organization_name=apollo_org_name,
-                    person_seniorities=apollo_seniorities,
+                    person_seniorities=apollo_seniorities if not role_titles else None,
+                    person_titles=role_titles or None,
                     person_locations=apollo_locations,
-                    q_keywords=role_keywords,
                     per_page=100,
                 )
                 apollo_people = apollo.extract_people(raw_apollo)
@@ -1013,11 +1037,12 @@ async def search_contacts(request: ContactSearchRequest):
 
                 # If sparse results, try a second search with management-specific titles
                 if len(apollo_people) < 20 and _budget_ok(8.0):
-                    mgmt_titles = ["VP", "Director", "Head", "Manager", "Recruiter", "Talent Acquisition"]
+                    mgmt_titles = role_titles or ["VP", "Director", "Head", "Manager", "Recruiter", "Talent Acquisition"]
                     raw2 = apollo.people_search(
                         organization_domains=search_domains,
                         organization_name=apollo_org_name,
                         person_titles=mgmt_titles,
+                        person_seniorities=["owner", "founder", "c_suite", "partner", "vp", "head", "director", "manager"],
                         per_page=100,
                     )
                     extra = apollo.extract_people(raw2)
@@ -1032,8 +1057,8 @@ async def search_contacts(request: ContactSearchRequest):
                     raw_p2 = apollo.people_search(
                         organization_domains=search_domains,
                         organization_name=apollo_org_name,
-                        person_seniorities=apollo_seniorities,
-                        q_keywords=role_keywords,
+                        person_seniorities=apollo_seniorities if not role_titles else None,
+                        person_titles=role_titles or None,
                         per_page=100,
                         page=2,
                     )
@@ -1048,7 +1073,8 @@ async def search_contacts(request: ContactSearchRequest):
                 for ap in apollo_people:
                     if not _is_relevant_decision_maker_for_job(ap.title, job_fn):
                         continue
-                    if title_filters and not _matches_title_filters(ap.title):
+                    # Skip rigid checkbox title filters when user typed an explicit role query.
+                    if title_filters and not role_intent and not _matches_title_filters(ap.title):
                         continue
 
                     name = (ap.name or "").strip()
