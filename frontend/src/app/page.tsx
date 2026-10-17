@@ -27,7 +27,12 @@ export default function Home() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [visibleFootstepsUpTo, setVisibleFootstepsUpTo] = useState<number>(0);
   const [bannerClosed, setBannerClosed] = useState(false);
+  const [showFridayBanner, setShowFridayBanner] = useState(false);
   const [activeRoute, setActiveRouteState] = useState<RouteId | null>(null);
+
+  useEffect(() => {
+    setShowFridayBanner(new Date().getDay() === 5);
+  }, []);
 
   useEffect(() => {
     setActiveRouteState(getActiveRoute());
@@ -239,9 +244,9 @@ export default function Home() {
 
   return (
     <div className="rf-home-body">
-      {!bannerClosed && (
+      {!bannerClosed && showFridayBanner && (
         <div className="feedback-banner" id="feedbackBanner">
-          <span>It&apos;s Friday! Time for your weekly feedback.</span>
+          <span>It&apos;s Friday. Time for your weekly feedback.</span>
           <Link href="/feedback">Give Feedback</Link>
           <button className="close-btn" onClick={() => setBannerClosed(true)} aria-label="Close banner">
             &times;

@@ -63,8 +63,11 @@ async def healthcheck():
         "apollo": bool(settings.apollo_api_key),
         "instantly": settings.instantly_enabled,
     }
+    # A skipped database or Redis probe is intentional when those checks are off.
+    # Calling that "degraded" makes a healthy beta look broken.
+    status = "error" if db_status == "error" or redis_status == "error" else "ok"
     return {
-        "status": "ok" if db_status == "ok" else "degraded",
+        "status": status,
         "env": settings.environment,
         "version": settings.app_version,
         "mock_mode": settings.mock_mode,
@@ -111,14 +114,10 @@ async def llm_healthcheck():
         "llm_mode": settings.llm_mode,
         "should_use_real_llm": client.should_use_real_llm,
         "model": settings.openai_model,
-        # Extra diagnostics (do NOT expose secrets)
-        "env_has_RoleFerryKey": bool(os.getenv("RoleFerryKey")),
-        "env_has_ROLEFERRYKEY": bool(os.getenv("ROLEFERRYKEY")),
-        "env_has_ROLEFERRY_KEY": bool(os.getenv("ROLEFERRY_KEY")),
-        "env_has_OPENAI_API_KEY": bool(os.getenv("OPENAI_API_KEY")),
     }
 
-    # Run a very small probe; this will return a stubbed response in mock_mode.
+    # Run a very small probe. Never return the model text: error stubs have
+    # included fragments of the API key.
     try:
         data = client.run_chat_completion(
             messages=[{"role": "user", "content": "LLM health probe: respond with a short acknowledgement."}],
@@ -127,11 +126,19 @@ async def llm_healthcheck():
         choices = data.get("choices") or []
         msg = (choices[0].get("message") if choices else {}) or {}
         content = str(msg.get("content") or "")
-        info["probe_ok"] = True
-        info["probe_preview"] = content[:120]
+        lowered = content.lower()
+        failed = (
+            not content.strip()
+            or "invalid_api_key" in lowered
+            or "incorrect api key" in lowered
+            or "http_error" in lowered
+            or lowered.startswith("[stubbed gpt] (")
+        )
+        info["probe_ok"] = not failed
+        info["probe_preview"] = "unavailable" if failed else "ok"
     except Exception:
         info["probe_ok"] = False
-        info["probe_preview"] = ""
+        info["probe_preview"] = "unavailable"
 
     return info
 

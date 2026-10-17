@@ -21,8 +21,7 @@ export default function ToolsModal({ open, onClose }: { open: boolean; onClose: 
             <Link className="px-3 py-2 rounded bg-white/10 hover:bg-white/15" href="/audit">Audit Log</Link>
             <Link className="px-3 py-2 rounded bg-white/10 hover:bg-white/15" href="/messages">Messages</Link>
             <Link className="px-3 py-2 rounded bg-white/10 hover:bg-white/15" href="/onboarding">Onboarding</Link>
-            <a className="px-3 py-2 rounded bg-white/10 hover:bg-white/15" href="/api/health" target="_blank">Health</a>
-            <a className="px-3 py-2 rounded bg-white/10 hover:bg-white/15" href="http://localhost:8000/docs" target="_blank">API Docs</a>
+            <a className="px-3 py-2 rounded bg-white/10 hover:bg-white/15" href="/help">Help</a>
           </div>
         </div>
       </div>

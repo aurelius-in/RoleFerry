@@ -104,7 +104,7 @@ export default function LoginPage() {
         if (resp?.token) localStorage.setItem("rf_token", resp.token);
       }
 
-      window.location.href = "/job-preferences";
+      window.location.href = "/";
     } catch (e: any) {
       setError(humanizeAuthError(e, mode));
     } finally {
@@ -296,7 +296,8 @@ export default function LoginPage() {
             </button>
 
             <div className="text-xs text-white/50">
-              By continuing, you agree this is a demo environment. In production, set `ROLEFERRY_JWT_SECRET` and enable secure cookies.
+              RoleFerry is in beta. By continuing, you agree we use your account details to run your job search.{" "}
+              <a className="underline" href="/privacy">Privacy</a>
             </div>
           </div>
         </div>

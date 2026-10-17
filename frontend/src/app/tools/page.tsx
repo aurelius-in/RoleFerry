@@ -1,7 +1,26 @@
 "use client";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Tools() {
+  const router = useRouter();
+  const [allowed, setAllowed] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem("rf_show_debug") === "1") {
+        setAllowed(true);
+        return;
+      }
+    } catch {
+      // fall through
+    }
+    router.replace("/");
+  }, [router]);
+
+  if (!allowed) return null;
+
   return (
     <main className="max-w-4xl mx-auto p-6 space-y-5">
       <h1 className="text-2xl md:text-3xl font-semibold">Tools</h1>
@@ -12,8 +31,6 @@ export default function Tools() {
         <li><Link className="underline" href="/onepager">One-pager Generator</Link></li>
         <li><Link className="underline" href="/deliverability">Deliverability</Link></li>
         <li><Link className="underline" href="/compliance">Compliance</Link></li>
-        <li><a className="underline" href="http://localhost:8000/docs" target="_blank">API Docs (OpenAPI)</a></li>
-        <li><a className="underline" href="/api/health" target="_blank">Health</a></li>
         <li><Link className="underline" href="/audit">Audit Log</Link></li>
         <li><Link className="underline" href="/messages">Messages</Link></li>
         <li><Link className="underline" href="/onboarding">Onboarding</Link></li>

@@ -325,7 +325,7 @@ export default function JobPreferencesPage() {
           `/job-preferences/${encodeURIComponent(uid)}`,
           "GET"
         );
-        if (resp.preferences) {
+        if (resp.preferences && resp.message !== "No preferences saved yet") {
           const p = resp.preferences;
           const locs = Array.isArray(p.location_preferences) ? p.location_preferences : [];
           const hasInPerson = locs.includes("In-Person") || locs.includes("Hybrid");

@@ -1400,35 +1400,11 @@ async def get_job_preferences(user_id: str):
                 preferences=prefs_obj,
             )
     except Exception:
-        # If anything goes wrong with the DB, fall back to mock defaults
-        pass
+        logger.exception("Job preferences lookup failed for user %s", _user_id)
 
-    # Prefer demo cache if available
-    if store.demo_job_preferences:
-        try:
-            prefs_obj = JobPreferences(**store.demo_job_preferences)
-            # Only keep state when the UI could have collected it (In-Person selected).
-            try:
-                locs = [str(x).strip().lower() for x in (prefs_obj.location_preferences or []) if str(x).strip()]
-                has_in_person = any(("in-person" in x) or ("in person" in x) for x in locs)
-                if not has_in_person:
-                    prefs_obj = prefs_obj.model_copy(update={"state": None})
-            except Exception:
-                pass
-            return JobPreferencesResponse(
-                success=True,
-                message="Job preferences retrieved successfully",
-                preferences=prefs_obj,
-                helper={
-                    "normalized_skills": sorted({s.strip() for s in (prefs_obj.skills or []) if str(s).strip()}),
-                    "suggested_skills": ["SQL", "Experimentation", "Analytics", "Stakeholder management"],
-                    "suggested_role_categories": prefs_obj.role_categories[:1],
-                    "notes": ["Loaded from demo cache (DB unavailable)."],
-                },
-            )
-        except Exception:
-            pass
-
+    # Never fall back to the process-wide demo cache. That cache is shared by
+    # every visitor, so a new account would see someone else's role, location,
+    # and salary choices.
     return JobPreferencesResponse(
         success=True,
         message="No preferences saved yet",

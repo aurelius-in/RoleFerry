@@ -100,13 +100,44 @@
 
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
-            max-width: 1100px;
+            max-width: 800px;
             width: 100%;
             z-index: 10;
             position: relative;
             margin-top: 0.5rem;
+        }
+
+        .feature-row, .plan-row {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            text-align: left;
+        }
+
+        .feature-col, .plan-card {
+            width: 45%;
+        }
+
+        .plan-card {
+            background: rgba(17, 24, 39, 0.8);
+            border: 1px solid #374151;
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 0;
+        }
+
+        .quiet-links {
+            margin-top: 3rem;
+            color: #6b7280;
+            font-size: 0.85rem;
+        }
+
+        .quiet-links a {
+            color: #6b7280;
+            margin: 0 0.6rem;
         }
 
         /* Medium screens: keep cards roomy */
@@ -326,6 +357,15 @@
             .tagline {
                 font-size: 1.2rem;
             }
+
+            .feature-row, .plan-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .feature-col, .plan-card {
+                width: 100%;
+            }
         }
 
         @media (max-width: 480px) {
@@ -376,33 +416,23 @@
 
         <!-- Primary CTA -->
         <div class="primary-cta fade-in">
-            <a href="https://sunny-spirit-production.up.railway.app/login" target="_blank" rel="noopener noreferrer">
+            <a href="https://sunny-spirit-production.up.railway.app/login">
                 <span>Try RoleFerry</span>
                 <span class="cta-badge">BETA</span>
             </a>
         </div>
 
-        <!-- 2x2 Grid -->
         <div class="grid-container fade-in">
-            <!-- Investment Hub -->
-            <a href="invest.html" class="grid-button invest-button">
-                <span class="button-icon">💰</span>
-                <div class="button-title">Investment Hub</div>
-                <div class="button-description">Comprehensive investment materials, updated for 2026, focusing on agency growth & market fit</div>
+            <a href="https://sunny-spirit-production.up.railway.app/login" class="grid-button ui-button">
+                <span class="button-icon">🧭</span>
+                <div class="button-title">I'm looking for work</div>
+                <div class="button-description">Create a free beta account and walk the 12-step job search</div>
             </a>
 
-            <!-- Architecture Documentation -->
-            <a href="architecture.html" class="grid-button architecture-button">
-                <span class="button-icon">🏗️</span>
-                <div class="button-title">Architecture Hub</div>
-                <div class="button-description">Enterprise-grade system architecture underlying our AI-powered client acquisition engine</div>
-            </a>
-
-            <!-- Marketing Hub -->
-            <a href="marketing.html" class="grid-button documentation-button">
-                <span class="button-icon">📈</span>
-                <div class="button-title">Marketing Hub</div>
-                <div class="button-description">Complete marketing pack for staffing agencies with positioning, messaging, and launch materials</div>
+            <a href="recruiters.html" class="grid-button invest-button">
+                <span class="button-icon">🤝</span>
+                <div class="button-title">I hire people</div>
+                <div class="button-description">The recruiter version is in progress. Book a conversation if you want in early</div>
             </a>
         </div>
 
@@ -410,24 +440,24 @@
         <div class="sales-section fade-in" style="margin-top: 4rem; max-width: 800px; width: 100%; z-index: 10; position: relative; color: white; text-align: center;">
             <h2 style="font-size: 2.5rem; color: #10b981; margin-bottom: 1rem;">Your AI-Powered Job Search Partner</h2>
             
-            <div style="display: flex; justify-content: space-around; margin-top: 2rem; text-align: left;">
-                <div style="width: 45%;">
+            <div class="feature-row">
+                <div class="feature-col">
                     <h3 style="color: #fbbf24;">Find Your Perfect Role Match</h3>
-                    <p style="color: #9ca3af;">Our 12-step program helps you discover opportunities, match with ideal roles, and connect directly with decision-makers—all automated.</p>
+                    <p style="color: #9ca3af;">Our 12-step program helps you discover opportunities, match with ideal roles, and connect directly with decision makers.</p>
                 </div>
-                <div style="width: 45%;">
+                <div class="feature-col">
                     <h3 style="color: #fbbf24;">Save Hours on Job Applications</h3>
-                    <p style="color: #9ca3af;">Automate resume parsing, job matching, personalized outreach, and follow-up sequences to focus on what matters—landing your dream job.</p>
+                    <p style="color: #9ca3af;">Resume parsing, job matching, personalized outreach, and follow-up sequences, so you can focus on landing the role.</p>
                 </div>
             </div>
 
-            <div style="margin-top: 3rem;">
-                <div style="display: inline-block; background: rgba(17, 24, 39, 0.8); border: 1px solid #374151; border-radius: 20px; padding: 2rem; margin: 1rem; width: 40%;">
+            <div class="plan-row">
+                <div class="plan-card">
                     <h3 style="color: #10b981;">Job Seeker Pilot (2026)</h3>
                     <p style="color: #9ca3af;">Free for early adopters</p>
-                    <p style="color: #9ca3af;">Join our beta testing program and help shape the future of job searching.</p>
+                    <p style="color: #9ca3af;">Join the beta and help shape the job search.</p>
                 </div>
-                <div style="display: inline-block; background: rgba(17, 24, 39, 0.8); border: 1px solid #374151; border-radius: 20px; padding: 2rem; margin: 1rem; width: 40%;">
+                <div class="plan-card">
                     <h3 style="color: #2563eb;">Premium Job Seeker Plans (Coming Soon)</h3>
                     <p style="color: #9ca3af;">Advanced features for serious job seekers.</p>
                     <p style="color: #9ca3af;">Priority support, unlimited applications, and analytics.</p>
@@ -444,10 +474,16 @@
                     <h4 style="color: #10b981;">How does the 12-step program work?</h4>
                     <p style="color: #9ca3af;">Our program guides you from discovering opportunities to launching personalized outreach campaigns. Each step builds on the previous one to create a complete job search automation system.</p>
                     <h4 style="color: #10b981;">Is my data secure?</h4>
-                    <p style="color: #9ca3af;">Yes, we take data security seriously. Your resume and personal information are encrypted and stored securely. We never share your data with third parties without your consent.</p>
+                    <p style="color: #9ca3af;">Your resume and account details are used to run your search. We do not sell your personal information.</p>
                     <h4 style="color: #10b981;">Can I use this for multiple job applications?</h4>
                     <p style="color: #9ca3af;">Absolutely! Once you set up your profile and preferences, you can apply to multiple jobs with personalized outreach for each one.</p>
                 </div>
+            </div>
+
+            <div class="quiet-links">
+                <a href="invest.html">Investors</a>
+                <a href="architecture.html">Architecture</a>
+                <a href="marketing.html">Agency marketing</a>
             </div>
         </div>
     </div>

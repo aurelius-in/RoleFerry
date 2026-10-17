@@ -5,6 +5,8 @@ const AUTH_COOKIE_NAME = process.env.NEXT_PUBLIC_AUTH_COOKIE_NAME || "rf_session
 const PUBLIC_PATHS = new Set([
   "/login",
   "/reset",
+  "/about",
+  "/privacy",
 ]);
 
 export function middleware(req: NextRequest) {
@@ -32,7 +34,7 @@ export function middleware(req: NextRequest) {
     // If already logged in, don't let users land on /login again.
     if (pathname === "/login" && session) {
       const url = req.nextUrl.clone();
-      url.pathname = "/job-preferences";
+      url.pathname = "/";
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
