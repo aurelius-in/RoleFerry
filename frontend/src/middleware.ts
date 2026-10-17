@@ -34,7 +34,8 @@ export function middleware(req: NextRequest) {
     // If already logged in, don't let users land on /login again.
     if (pathname === "/login" && session) {
       const url = req.nextUrl.clone();
-      url.pathname = "/";
+      url.pathname = url.searchParams.get("audience") === "recruiter" ? "/recruiter" : "/";
+      url.search = "";
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
@@ -42,7 +43,9 @@ export function middleware(req: NextRequest) {
 
   if (!session) {
     const url = req.nextUrl.clone();
+    const recruiterEntry = pathname === "/recruiter" || pathname.startsWith("/recruiter/");
     url.pathname = "/login";
+    url.search = recruiterEntry ? "audience=recruiter" : "";
     return NextResponse.redirect(url);
   }
 

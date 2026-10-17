@@ -470,15 +470,17 @@ export default function JobPreferencesPage() {
     <div className="min-h-screen py-8">
       <div className="max-w-4xl mx-auto px-4">
         <div className="mb-4">
-          <a href="/" className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
+          <a href={mode === "recruiter" ? "/recruiter" : "/"} className="inline-flex items-center text-white/70 hover:text-white font-medium transition-colors">
             <span className="mr-2">←</span> Back to Dashboard
           </a>
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="mt-2 text-center text-3xl font-bold text-white mb-2">Role Preferences</h1>
+            <h1 className="mt-2 text-center text-3xl font-bold text-white mb-2">{mode === "recruiter" ? "Roles you fill" : "Role Preferences"}</h1>
             <p className="text-center text-white/70">
-              Tell us what you value in a new role and we&apos;ll help you define your ideal job profile (IJP).
+              {mode === "recruiter"
+                ? "Tell us which roles you place and what a good client looks like."
+                : "Tell us what you value in a new role and we'll help you define your ideal job profile (IJP)."}
             </p>
           </div>
 
@@ -516,7 +518,7 @@ export default function JobPreferencesPage() {
             </CollapsibleSection>
 
             {/* Role Categories */}
-            <CollapsibleSection title="What kinds of roles are you interested in?" count={preferences.roleCategories.length}>
+            <CollapsibleSection title={mode === "recruiter" ? "What kinds of roles do you fill?" : "What kinds of roles are you interested in?"} count={preferences.roleCategories.length}>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {ROLE_CATEGORIES.map((category) => (
                   <label

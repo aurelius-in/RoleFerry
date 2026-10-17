@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import RoutePicker from "@/components/RoutePicker";
+import { getAudience } from "@/lib/audience";
 import {
   ALL_STEPS,
   RouteId,
@@ -32,7 +33,8 @@ export default function Home() {
 
   useEffect(() => {
     setShowFridayBanner(new Date().getDay() === 5);
-  }, []);
+    if (getAudience() === "recruiter") router.replace("/recruiter");
+  }, [router]);
 
   useEffect(() => {
     setActiveRouteState(getActiveRoute());

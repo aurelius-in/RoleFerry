@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import InlineSpinner from "@/components/InlineSpinner";
+import { Audience, getAudience, readAudienceFromLocation, setAudience } from "@/lib/audience";
 
 type Mode = "login" | "register";
 
@@ -62,11 +63,20 @@ export default function LoginPage() {
 
   const [showPw1, setShowPw1] = useState(false);
   const [showPw2, setShowPw2] = useState(false);
+  const [audience, setAudienceState] = useState<Audience>("job-seeker");
+
+  useEffect(() => {
+    const fromUrl = readAudienceFromLocation();
+    if (fromUrl) setAudience(fromUrl);
+    setAudienceState(fromUrl || getAudience());
+  }, []);
 
   const primaryCta = useMemo(() => (mode === "login" ? "Log in" : "Create account"), [mode]);
 
   function clearUserLocalStorage() {
+    const keep = readAudienceFromLocation() || getAudience();
     try { localStorage.clear(); } catch {}
+    setAudience(keep);
   }
 
   async function submit() {
@@ -104,7 +114,7 @@ export default function LoginPage() {
         if (resp?.token) localStorage.setItem("rf_token", resp.token);
       }
 
-      window.location.href = "/";
+      window.location.href = getAudience() === "recruiter" ? "/recruiter" : "/";
     } catch (e: any) {
       setError(humanizeAuthError(e, mode));
     } finally {
@@ -144,7 +154,9 @@ export default function LoginPage() {
                 try { (e.currentTarget as HTMLImageElement).src = "/role_ferry_white.png"; } catch {}
               }}
             />
-            <div className="mt-6 text-sm text-white/70">Relationship-first outreach engine</div>
+            <div className="mt-6 text-sm text-white/70">
+              {audience === "recruiter" ? "Recruiter beta: find the hiring manager and start the conversation." : "Relationship-first outreach engine"}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2 mb-6">

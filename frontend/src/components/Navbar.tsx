@@ -5,6 +5,18 @@ import { useRouter, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 import DataModal from "./DataModal";
 import { getActiveRoute, getStepsForRoute } from "@/lib/workflowRoutes";
+import { Audience, getAudience } from "@/lib/audience";
+
+const RECRUITER_NAV: Array<{ href: string; label: string }> = [
+  { href: "/job-preferences", label: "Roles" },
+  { href: "/job-descriptions", label: "Reqs" },
+  { href: "/company-research", label: "Research" },
+  { href: "/find-contact", label: "Contacts" },
+  { href: "/offer", label: "Pitch" },
+  { href: "/campaign", label: "Outreach" },
+  { href: "/deliverability-launch", label: "Launch" },
+  { href: "/tracker", label: "Pipeline" },
+];
 
 const NAV_STEPS: Array<{ step: number; href: string; label: string }> = [
   { step: 1, href: "/job-preferences", label: "Prefs" },
@@ -28,6 +40,7 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [visibleNavSteps, setVisibleNavSteps] = useState<number[]>(NAV_STEPS.map((s) => s.step));
+  const [audience, setAudienceState] = useState<Audience>("job-seeker");
   
   // Re-read user from localStorage on every client-side navigation so the
   // greeting updates after login/register (which write rf_user then navigate).
@@ -62,12 +75,13 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    // RoleFerry is currently Role-Seeker only.
-    try {
-      localStorage.setItem("rf_mode", "job-seeker");
-      window.dispatchEvent(new CustomEvent("modeChanged", { detail: "job-seeker" }));
-    } catch {}
+    setAudienceState(getAudience());
+    const onMode = () => setAudienceState(getAudience());
+    window.addEventListener("modeChanged", onMode as EventListener);
+    return () => window.removeEventListener("modeChanged", onMode as EventListener);
+  }, [pathname]);
 
+  useEffect(() => {
     // Default to live mode. Demo remains an internal fallback when an API is down.
     try {
       localStorage.setItem("rf_data_mode", "live");
@@ -110,6 +124,7 @@ export default function Navbar() {
         return null;
       };
 
+      if (getAudience() === "recruiter") return;
       const step = stepForPath(pathname);
       if (!step) return;
 
@@ -150,7 +165,7 @@ export default function Navbar() {
         {/* Top row: logo + utilities */}
         <div className="flex items-center justify-between gap-3">
           {/* Left: logo + wordmark */}
-          <Link href="/" className="flex items-center gap-2">
+          <Link href={audience === "recruiter" ? "/recruiter" : "/"} className="flex items-center gap-2">
           <img
             src="/rf_logo.png"
             alt="RoleFerry"
@@ -200,15 +215,25 @@ export default function Navbar() {
         <nav className="mt-2 flex items-center justify-between gap-3 pb-1">
           {/* Left: Dashboard + workflow steps (scrollable) */}
           <div className="flex items-center min-w-0 overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <NavPill href="/" pathname={pathname} kind="utility" size="md">Dashboard</NavPill>
+            <NavPill href={audience === "recruiter" ? "/recruiter" : "/"} pathname={pathname} kind="utility" size="md">Dashboard</NavPill>
             <span className="mx-2 h-4 w-px bg-white/15" />
 
-            {NAV_STEPS.filter((s) => visibleNavSteps.includes(s.step)).map((s) => (
-              <NavPill key={s.step} href={s.href} pathname={pathname} done={completedSteps.has(s.step)}>
-                {s.label}
-              </NavPill>
-            ))}
-            <NavPill href="/deliverability-launch" pathname={pathname}>Launch</NavPill>
+            {audience === "recruiter"
+              ? RECRUITER_NAV.map((s) => (
+                  <NavPill key={s.href} href={s.href} pathname={pathname}>
+                    {s.label}
+                  </NavPill>
+                ))
+              : (
+                <>
+                  {NAV_STEPS.filter((s) => visibleNavSteps.includes(s.step)).map((s) => (
+                    <NavPill key={s.step} href={s.href} pathname={pathname} done={completedSteps.has(s.step)}>
+                      {s.label}
+                    </NavPill>
+                  ))}
+                  <NavPill href="/deliverability-launch" pathname={pathname}>Launch</NavPill>
+                </>
+              )}
 
             {/* Big spacing: steps vs non-step utilities */}
             <span className="mx-5 h-5 w-px bg-white/20" />
