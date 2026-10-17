@@ -6,16 +6,22 @@ import { api } from "@/lib/api";
 import DataModal from "./DataModal";
 import { getActiveRoute, getStepsForRoute } from "@/lib/workflowRoutes";
 import { Audience, getAudience } from "@/lib/audience";
+import { getActiveClient } from "@/lib/clients";
+import { RECRUITER_STEP_COPY } from "@/lib/recruiterCopy";
 
-const RECRUITER_NAV: Array<{ href: string; label: string }> = [
-  { href: "/job-preferences", label: "Roles" },
-  { href: "/job-descriptions", label: "Reqs" },
-  { href: "/company-research", label: "Research" },
-  { href: "/find-contact", label: "Contacts" },
-  { href: "/offer", label: "Pitch" },
-  { href: "/campaign", label: "Outreach" },
-  { href: "/deliverability-launch", label: "Launch" },
-  { href: "/tracker", label: "Pipeline" },
+const RECRUITER_NAV = [
+  { href: "/job-preferences", label: RECRUITER_STEP_COPY["/job-preferences"].nav },
+  { href: "/resume", label: RECRUITER_STEP_COPY["/resume"].nav },
+  { href: "/personality", label: RECRUITER_STEP_COPY["/personality"].nav },
+  { href: "/job-descriptions", label: RECRUITER_STEP_COPY["/job-descriptions"].nav },
+  { href: "/gap-analysis", label: RECRUITER_STEP_COPY["/gap-analysis"].nav },
+  { href: "/painpoint-match", label: RECRUITER_STEP_COPY["/painpoint-match"].nav },
+  { href: "/company-research", label: RECRUITER_STEP_COPY["/company-research"].nav },
+  { href: "/find-contact", label: RECRUITER_STEP_COPY["/find-contact"].nav },
+  { href: "/offer", label: RECRUITER_STEP_COPY["/offer"].nav },
+  { href: "/bio-page", label: RECRUITER_STEP_COPY["/bio-page"].nav },
+  { href: "/apply", label: RECRUITER_STEP_COPY["/apply"].nav },
+  { href: "/campaign", label: RECRUITER_STEP_COPY["/campaign"].nav },
 ];
 
 const NAV_STEPS: Array<{ step: number; href: string; label: string }> = [
@@ -41,6 +47,7 @@ export default function Navbar() {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [visibleNavSteps, setVisibleNavSteps] = useState<number[]>(NAV_STEPS.map((s) => s.step));
   const [audience, setAudienceState] = useState<Audience>("job-seeker");
+  const [hasClient, setHasClient] = useState(false);
   
   // Re-read user from localStorage on every client-side navigation so the
   // greeting updates after login/register (which write rf_user then navigate).
@@ -76,9 +83,15 @@ export default function Navbar() {
 
   useEffect(() => {
     setAudienceState(getAudience());
+    setHasClient(Boolean(getActiveClient()));
     const onMode = () => setAudienceState(getAudience());
+    const onClient = () => setHasClient(Boolean(getActiveClient()));
     window.addEventListener("modeChanged", onMode as EventListener);
-    return () => window.removeEventListener("modeChanged", onMode as EventListener);
+    window.addEventListener("rf-client-changed", onClient);
+    return () => {
+      window.removeEventListener("modeChanged", onMode as EventListener);
+      window.removeEventListener("rf-client-changed", onClient);
+    };
   }, [pathname]);
 
   useEffect(() => {
@@ -215,15 +228,23 @@ export default function Navbar() {
         <nav className="mt-2 flex items-center justify-between gap-3 pb-1">
           {/* Left: Dashboard + workflow steps (scrollable) */}
           <div className="flex items-center min-w-0 overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <NavPill href={audience === "recruiter" ? "/recruiter" : "/"} pathname={pathname} kind="utility" size="md">Dashboard</NavPill>
+            <NavPill href={audience === "recruiter" ? "/recruiter" : "/"} pathname={pathname} kind="utility" size="md">{audience === "recruiter" ? "Clients" : "Dashboard"}</NavPill>
             <span className="mx-2 h-4 w-px bg-white/15" />
 
             {audience === "recruiter"
-              ? RECRUITER_NAV.map((s) => (
-                  <NavPill key={s.href} href={s.href} pathname={pathname}>
-                    {s.label}
-                  </NavPill>
-                ))
+              ? hasClient && (
+                  <>
+                    {RECRUITER_NAV.filter((s) => {
+                      const step = NAV_STEPS.find((item) => item.href === s.href);
+                      return step ? visibleNavSteps.includes(step.step) : true;
+                    }).map((s) => (
+                      <NavPill key={s.href} href={s.href} pathname={pathname}>
+                        {s.label}
+                      </NavPill>
+                    ))}
+                    <NavPill href="/deliverability-launch" pathname={pathname}>Launch</NavPill>
+                  </>
+                )
               : (
                 <>
                   {NAV_STEPS.filter((s) => visibleNavSteps.includes(s.step)).map((s) => (

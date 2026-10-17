@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
+import AudienceHeading from "@/components/AudienceHeading";
 
 type RoleItem = {
   id: string;
@@ -552,7 +553,7 @@ export default function ApplyPage() {
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
             <div>
               <div className="text-xs text-white/60">Step 11 of 12</div>
-              <h1 className="text-3xl font-bold text-white">Apply</h1>
+              <AudienceHeading href="/apply" seeker="Apply" className="text-3xl font-bold text-white" />
               <p className="text-white/70 text-sm mt-1">
                 Select roles to track your applications. Click a job link to apply on the company site, then mark it here to keep your Tracker up to date.
               </p>

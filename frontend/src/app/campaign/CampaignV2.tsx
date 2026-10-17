@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { persistCampaignContextV1 } from "@/lib/campaignContext";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
+import AudienceHeading from "@/components/AudienceHeading";
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -1192,7 +1193,7 @@ export default function CampaignV2() {
 
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-white mb-1">Email Campaign</h1>
+            <AudienceHeading href="/campaign" seeker="Email Campaign" className="text-3xl font-bold text-white mb-1" />
             <p className="text-white/70 text-sm">
               Dream 100 outreach sequence: Day 1 initial outreach with a specific hook and deliverable offer, Day 3 and Day 7 short follow-ups, then a gracious close. Fill in your positioning on the Role Prefs page to activate Dream 100 mode.
             </p>

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
+import AudienceHeading from "@/components/AudienceHeading";
 import WorkflowSummary from "@/components/WorkflowSummary";
 import { api } from "@/lib/api";
 import { getActiveRoute } from "@/lib/workflowRoutes";
@@ -855,7 +856,7 @@ export default function OfferPage() {
           <div className="mb-8">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h1 className="text-3xl font-bold text-white mb-2">Offer &ndash; Value Proposition</h1>
+                <AudienceHeading href="/offer" seeker="Offer - Value Proposition" className="text-3xl font-bold text-white mb-2" />
                 <p className="text-white/70">
                   This is the core story RoleFerry uses in your emails. It&rsquo;s not your resume. It&rsquo;s the{" "}
                   <span className="font-semibold text-white/80">why you</span>, in plain language.

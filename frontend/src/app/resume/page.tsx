@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
 import CollapsibleSection from "@/components/CollapsibleSection";
+import AudienceHeading from "@/components/AudienceHeading";
 import WorkflowSummary from "@/components/WorkflowSummary";
 
 
@@ -447,7 +448,7 @@ export default function ResumePage() {
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-6 shadow-2xl shadow-black/20">
               <div className="flex justify-between items-center mb-6">
                 <div>
-                  <h1 className="text-3xl font-bold text-white mb-1">Resume / Candidate Profile</h1>
+                  <AudienceHeading href="/resume" seeker="Resume / Candidate Profile" className="text-3xl font-bold text-white mb-1" />
                   <p className="text-sm text-white/70">
                     Upload your resume or candidate profile to extract key information for personalized outreach.
                   </p>

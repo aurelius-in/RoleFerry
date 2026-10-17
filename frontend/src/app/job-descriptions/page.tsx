@@ -6,6 +6,7 @@ import { useRouteGuard } from "@/lib/useRouteGuard";
 import { api } from "@/lib/api";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
+import AudienceHeading from "@/components/AudienceHeading";
 import CollapsibleSection from "@/components/CollapsibleSection";
 
 const JARGON_PHRASES = [
@@ -1239,7 +1240,7 @@ export default function JobDescriptionsPage() {
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="flex justify-between items-center mb-8">
             <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Role Search</h1>
+            <AudienceHeading href="/job-descriptions" seeker="Role Search" className="text-3xl font-bold text-white mb-2" />
               <p className="text-white/70">
                 Import role descriptions (job postings) to extract business challenges, required skills, and success metrics.
               </p>

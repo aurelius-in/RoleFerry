@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { formatCompanyName } from "@/lib/format";
 import { getCurrentDataMode } from "@/lib/dataMode";
 import InlineSpinner from "@/components/InlineSpinner";
+import AudienceHeading from "@/components/AudienceHeading";
 import CollapsibleSection from "@/components/CollapsibleSection";
 
 
@@ -1257,7 +1258,7 @@ export default function FindContactPage() {
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Decision Makers</h1>
+            <AudienceHeading href="/find-contact" seeker="Decision Makers" className="text-3xl font-bold text-white mb-2" />
             <p className="text-white/70">
               Find the right people to reach out to. As you go, fire off a quick LinkedIn connect request to get on their radar. A longer, personalized email will be composed in a later step.
             </p>

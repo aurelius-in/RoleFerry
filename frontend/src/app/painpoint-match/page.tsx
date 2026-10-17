@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
+import AudienceHeading from "@/components/AudienceHeading";
 
 interface PainPointMatch {
   painpoint_1: string;
@@ -477,7 +478,7 @@ export default function PainPointMatchPage() {
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Pain Point Match</h1>
+            <AudienceHeading href="/painpoint-match" seeker="Pain Point Match" className="text-3xl font-bold text-white mb-2" />
             <p className="text-white/70">
               Compare your solutions to each role's pain points to find the best alignment.
             </p>

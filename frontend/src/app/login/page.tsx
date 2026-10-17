@@ -75,7 +75,21 @@ export default function LoginPage() {
 
   function clearUserLocalStorage() {
     const keep = readAudienceFromLocation() || getAudience();
+    const preserved: Record<string, string> = {};
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        if (key === "rf_clients" || key.startsWith("rf_client_blob_")) {
+          const value = localStorage.getItem(key);
+          if (value != null) preserved[key] = value;
+        }
+      }
+    } catch {}
     try { localStorage.clear(); } catch {}
+    Object.entries(preserved).forEach(([key, value]) => {
+      try { localStorage.setItem(key, value); } catch {}
+    });
     setAudience(keep);
   }
 

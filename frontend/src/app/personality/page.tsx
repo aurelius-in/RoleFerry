@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import CollapsibleSection from "@/components/CollapsibleSection";
+import AudienceHeading from "@/components/AudienceHeading";
 import WorkflowSummary from "@/components/WorkflowSummary";
 import { getActiveRoute, ROUTE_DEFINITIONS } from "@/lib/workflowRoutes";
 
@@ -789,7 +790,7 @@ export default function PersonalityPage() {
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-white">Personality</h1>
+              <AudienceHeading href="/personality" seeker="Personality" className="text-3xl font-bold text-white" />
               <div className="text-sm text-white/60 mt-0.5 mb-2">Role Fit</div>
               <p className="text-white/70">
                 Use personality to align your role search, outreach strategy, and confidence—especially helpful if you’re early-career or pivoting.

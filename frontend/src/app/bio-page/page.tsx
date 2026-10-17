@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import placeholderPat from "@/profile-pat.png";
 import { BIO_BG_OPTIONS, BIO_BULLET_STYLES, BIO_SLOGAN_PRESETS, computeBioColors, normalizeBioTheme, bulletGlyph } from "@/lib/bioTheme";
 import InlineSpinner from "@/components/InlineSpinner";
+import AudienceHeading from "@/components/AudienceHeading";
 
 type BioPageTheme = {
   accent: string;
@@ -713,7 +714,7 @@ export default function BioPageStep() {
         <div className="flex items-start justify-between gap-3 mb-6">
           <div>
             <div className="text-xs text-white/60">Step 10 of 12</div>
-            <h1 className="text-3xl font-bold">Bio Page</h1>
+            <AudienceHeading href="/bio-page" seeker="Bio Page" className="text-3xl font-bold" />
             <p className="text-white/70 mt-1">
               Generate a public bio page link you can paste into email or a LinkedIn note.
             </p>

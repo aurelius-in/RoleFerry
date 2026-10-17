@@ -6,6 +6,7 @@ import { useRouteGuard } from "@/lib/useRouteGuard";
 import { api } from "@/lib/api";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
+import AudienceHeading from "@/components/AudienceHeading";
 
 type JobPreferences = {
   values: string[];
@@ -396,7 +397,7 @@ export default function GapAnalysisPage() {
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="flex items-start justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Gap Analysis</h1>
+              <AudienceHeading href="/gap-analysis" seeker="Gap Analysis" className="text-3xl font-bold text-white mb-2" />
               <p className="text-sm text-white/70">
                 Rank imported roles by fit and quickly spot what to close.
               </p>

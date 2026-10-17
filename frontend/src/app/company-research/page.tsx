@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { getCurrentDataMode } from "@/lib/dataMode";
 import { formatCompanyName } from "@/lib/format";
 import InlineSpinner from "@/components/InlineSpinner";
+import AudienceHeading from "@/components/AudienceHeading";
 import CollapsibleSection from "@/components/CollapsibleSection";
 
 type StructuredSignal = {
@@ -972,7 +973,7 @@ export default function CompanyResearchPage() {
 
         <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur p-8 shadow-2xl shadow-black/20">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-white mb-2">Company Research</h1>
+            <AudienceHeading href="/company-research" seeker="Company Research" className="text-3xl font-bold text-white mb-2" />
             <p className="text-white/70">
               Hiring signals and company intelligence to contextualize your outreach. Select a company (not a person).
             </p>
