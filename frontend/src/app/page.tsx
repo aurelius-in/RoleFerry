@@ -254,27 +254,8 @@ export default function Home() {
         </div>
       )}
 
-      <Link href="/settings" className="settings-link" aria-label="Settings">
-        ⚙️
-      </Link>
-      <Link
-        href="/analytics"
-        className="settings-link"
-        aria-label="Analytics"
-        style={{
-          right: "5.5rem",
-          width: "auto",
-          height: "auto",
-          borderRadius: 12,
-          padding: "0.75rem 0.9rem",
-          fontSize: "0.9rem",
-          gap: "0.35rem",
-        }}
-      >
-        📊 <span style={{ fontWeight: 700 }}>Analytics</span>
-      </Link>
-
       <div className="keypad-container">
+        <div className="dash-tools">
         <div className="progress-indicator">
           <div>
             Steps completed: <span id="progressText">{progressCount}</span>
@@ -290,6 +271,10 @@ export default function Home() {
           >
             Launch
           </Link>
+        </div>
+        <Link href="/settings" className="settings-link" aria-label="Settings">
+          ⚙️
+        </Link>
         </div>
 
         <div className="keypad-header">

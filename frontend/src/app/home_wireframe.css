@@ -6,6 +6,16 @@
   overflow-x: hidden;
 }
 
+.dash-tools {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
 .keypad-container {
   display: flex;
   flex-direction: column;
@@ -144,22 +154,19 @@
 }
 
 .progress-indicator {
-  position: fixed;
-  top: 2rem;
-  left: 2rem;
+  position: static;
   background: rgba(0, 0, 0, 0.9);
   padding: 1rem 1.5rem;
   border-radius: 12px;
   color: white;
   font-weight: 600;
-  z-index: 100;
+  z-index: 10;
   border: 2px solid rgba(74, 144, 226, 0.5);
 }
 
 .settings-link {
-  position: fixed;
-  top: 2rem;
-  right: 2rem;
+  position: static;
+  flex: 0 0 auto;
   background: rgba(0, 0, 0, 0.9);
   padding: 1rem;
   border-radius: 50%;
